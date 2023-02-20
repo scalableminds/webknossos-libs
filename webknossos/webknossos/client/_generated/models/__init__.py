@@ -160,6 +160,7 @@ from .dataset_reserve_upload_json_body import DatasetReserveUploadJsonBody
 from .dataset_sharing_token_response_200 import DatasetSharingTokenResponse200
 from .dataset_update_json_body import DatasetUpdateJsonBody
 from .datastore_list_response_200_item import DatastoreListResponse200Item
+from .folder_tree_response_200_item import FolderTreeResponse200Item
 from .generate_token_for_data_store_response_200 import (
     GenerateTokenForDataStoreResponse200,
 )
@@ -302,6 +303,7 @@ __all__ = (
     "DatasetSharingTokenResponse200",
     "DatasetUpdateJsonBody",
     "DatastoreListResponse200Item",
+    "FolderTreeResponse200Item",
     "GenerateTokenForDataStoreResponse200",
     "ProjectInfoByIdResponse200",
     "ProjectInfoByIdResponse200Owner",

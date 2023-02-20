@@ -26,7 +26,7 @@ T = TypeVar("T", bound="DatasetInfoResponse200")
 class DatasetInfoResponse200:
     """
     Attributes:
-        name (str):  Example: e2006_knossos.
+        name (str):  Example: l4_sample.
         data_source (DatasetInfoResponse200DataSource):
         data_store (DatasetInfoResponse200DataStore):
         allowed_teams (List['DatasetInfoResponse200AllowedTeamsItem']):
@@ -36,16 +36,16 @@ class DatasetInfoResponse200:
         display_name (str):
         created (int):  Example: 1508495293789.
         tags (List[Any]):
+        folder_id (str):  Example: 570b9f4e4bb848d0885ea917.
         owning_organization (Union[Unset, str]):  Example: Organization_X.
         allowed_teams_cumulative (Union[Unset, List['DatasetInfoResponse200AllowedTeamsCumulativeItem']]):
         is_editable (Union[Unset, int]):  Example: True.
-        last_used_by_user (Union[Unset, int]):  Example: 1676366706471.
+        last_used_by_user (Union[Unset, int]):  Example: 1676459044224.
         logo_url (Union[Unset, str]):  Example: /assets/images/mpi-logos.svg.
         sorting_key (Union[Unset, int]):  Example: 1508495293789.
         details (Union[Unset, str]):
         is_unreported (Union[Unset, int]):
         jobs_enabled (Union[Unset, int]):
-        folder_id (Union[Unset, str]):  Example: 570b9f4e4bb848d0885ea917.
         publication (Union[Unset, str]):
     """
 
@@ -59,6 +59,7 @@ class DatasetInfoResponse200:
     display_name: str
     created: int
     tags: List[Any]
+    folder_id: str
     owning_organization: Union[Unset, str] = UNSET
     allowed_teams_cumulative: Union[
         Unset, List["DatasetInfoResponse200AllowedTeamsCumulativeItem"]
@@ -70,7 +71,6 @@ class DatasetInfoResponse200:
     details: Union[Unset, str] = UNSET
     is_unreported: Union[Unset, int] = UNSET
     jobs_enabled: Union[Unset, int] = UNSET
-    folder_id: Union[Unset, str] = UNSET
     publication: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -93,6 +93,7 @@ class DatasetInfoResponse200:
         created = self.created
         tags = self.tags
 
+        folder_id = self.folder_id
         owning_organization = self.owning_organization
         allowed_teams_cumulative: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.allowed_teams_cumulative, Unset):
@@ -111,7 +112,6 @@ class DatasetInfoResponse200:
         details = self.details
         is_unreported = self.is_unreported
         jobs_enabled = self.jobs_enabled
-        folder_id = self.folder_id
         publication = self.publication
 
         field_dict: Dict[str, Any] = {}
@@ -128,6 +128,7 @@ class DatasetInfoResponse200:
                 "displayName": display_name,
                 "created": created,
                 "tags": tags,
+                "folderId": folder_id,
             }
         )
         if owning_organization is not UNSET:
@@ -148,8 +149,6 @@ class DatasetInfoResponse200:
             field_dict["isUnreported"] = is_unreported
         if jobs_enabled is not UNSET:
             field_dict["jobsEnabled"] = jobs_enabled
-        if folder_id is not UNSET:
-            field_dict["folderId"] = folder_id
         if publication is not UNSET:
             field_dict["publication"] = publication
 
@@ -198,6 +197,8 @@ class DatasetInfoResponse200:
 
         tags = cast(List[Any], d.pop("tags"))
 
+        folder_id = d.pop("folderId")
+
         owning_organization = d.pop("owningOrganization", UNSET)
 
         allowed_teams_cumulative = []
@@ -225,8 +226,6 @@ class DatasetInfoResponse200:
 
         jobs_enabled = d.pop("jobsEnabled", UNSET)
 
-        folder_id = d.pop("folderId", UNSET)
-
         publication = d.pop("publication", UNSET)
 
         dataset_info_response_200 = cls(
@@ -240,6 +239,7 @@ class DatasetInfoResponse200:
             display_name=display_name,
             created=created,
             tags=tags,
+            folder_id=folder_id,
             owning_organization=owning_organization,
             allowed_teams_cumulative=allowed_teams_cumulative,
             is_editable=is_editable,
@@ -249,7 +249,6 @@ class DatasetInfoResponse200:
             details=details,
             is_unreported=is_unreported,
             jobs_enabled=jobs_enabled,
-            folder_id=folder_id,
             publication=publication,
         )
 

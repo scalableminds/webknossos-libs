@@ -13,13 +13,14 @@ def _get_kwargs(
     client: Client,
     is_active: Union[Unset, None, bool] = UNSET,
     is_unreported: Union[Unset, None, bool] = UNSET,
-    is_editable: Union[Unset, None, bool] = UNSET,
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
     folder_id: Union[Unset, None, str] = UNSET,
+    include_subfolders: Union[Unset, None, bool] = UNSET,
     search_query: Union[Unset, None, str] = UNSET,
     limit: Union[Unset, None, int] = UNSET,
+    compact: Union[Unset, None, bool] = UNSET,
 ) -> Dict[str, Any]:
     url = "{}/api/datasets".format(client.base_url)
 
@@ -31,8 +32,6 @@ def _get_kwargs(
 
     params["isUnreported"] = is_unreported
 
-    params["isEditable"] = is_editable
-
     params["organizationName"] = organization_name
 
     params["onlyMyOrganization"] = only_my_organization
@@ -41,9 +40,13 @@ def _get_kwargs(
 
     params["folderId"] = folder_id
 
+    params["includeSubfolders"] = include_subfolders
+
     params["searchQuery"] = search_query
 
     params["limit"] = limit
+
+    params["compact"] = compact
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -93,26 +96,28 @@ def sync_detailed(
     client: Client,
     is_active: Union[Unset, None, bool] = UNSET,
     is_unreported: Union[Unset, None, bool] = UNSET,
-    is_editable: Union[Unset, None, bool] = UNSET,
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
     folder_id: Union[Unset, None, str] = UNSET,
+    include_subfolders: Union[Unset, None, bool] = UNSET,
     search_query: Union[Unset, None, str] = UNSET,
     limit: Union[Unset, None, int] = UNSET,
+    compact: Union[Unset, None, bool] = UNSET,
 ) -> Response[Union[Any, List["DatasetListResponse200Item"]]]:
     """List all accessible datasets.
 
     Args:
         is_active (Union[Unset, None, bool]):
         is_unreported (Union[Unset, None, bool]):
-        is_editable (Union[Unset, None, bool]):
         organization_name (Union[Unset, None, str]):
         only_my_organization (Union[Unset, None, bool]):
         uploader_id (Union[Unset, None, str]):
         folder_id (Union[Unset, None, str]):
+        include_subfolders (Union[Unset, None, bool]):
         search_query (Union[Unset, None, str]):
         limit (Union[Unset, None, int]):
+        compact (Union[Unset, None, bool]):
 
     Returns:
         Response[Union[Any, List['DatasetListResponse200Item']]]
@@ -122,13 +127,14 @@ def sync_detailed(
         client=client,
         is_active=is_active,
         is_unreported=is_unreported,
-        is_editable=is_editable,
         organization_name=organization_name,
         only_my_organization=only_my_organization,
         uploader_id=uploader_id,
         folder_id=folder_id,
+        include_subfolders=include_subfolders,
         search_query=search_query,
         limit=limit,
+        compact=compact,
     )
 
     response = httpx.request(
@@ -144,26 +150,28 @@ def sync(
     client: Client,
     is_active: Union[Unset, None, bool] = UNSET,
     is_unreported: Union[Unset, None, bool] = UNSET,
-    is_editable: Union[Unset, None, bool] = UNSET,
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
     folder_id: Union[Unset, None, str] = UNSET,
+    include_subfolders: Union[Unset, None, bool] = UNSET,
     search_query: Union[Unset, None, str] = UNSET,
     limit: Union[Unset, None, int] = UNSET,
+    compact: Union[Unset, None, bool] = UNSET,
 ) -> Optional[Union[Any, List["DatasetListResponse200Item"]]]:
     """List all accessible datasets.
 
     Args:
         is_active (Union[Unset, None, bool]):
         is_unreported (Union[Unset, None, bool]):
-        is_editable (Union[Unset, None, bool]):
         organization_name (Union[Unset, None, str]):
         only_my_organization (Union[Unset, None, bool]):
         uploader_id (Union[Unset, None, str]):
         folder_id (Union[Unset, None, str]):
+        include_subfolders (Union[Unset, None, bool]):
         search_query (Union[Unset, None, str]):
         limit (Union[Unset, None, int]):
+        compact (Union[Unset, None, bool]):
 
     Returns:
         Response[Union[Any, List['DatasetListResponse200Item']]]
@@ -173,13 +181,14 @@ def sync(
         client=client,
         is_active=is_active,
         is_unreported=is_unreported,
-        is_editable=is_editable,
         organization_name=organization_name,
         only_my_organization=only_my_organization,
         uploader_id=uploader_id,
         folder_id=folder_id,
+        include_subfolders=include_subfolders,
         search_query=search_query,
         limit=limit,
+        compact=compact,
     ).parsed
 
 
@@ -188,26 +197,28 @@ async def asyncio_detailed(
     client: Client,
     is_active: Union[Unset, None, bool] = UNSET,
     is_unreported: Union[Unset, None, bool] = UNSET,
-    is_editable: Union[Unset, None, bool] = UNSET,
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
     folder_id: Union[Unset, None, str] = UNSET,
+    include_subfolders: Union[Unset, None, bool] = UNSET,
     search_query: Union[Unset, None, str] = UNSET,
     limit: Union[Unset, None, int] = UNSET,
+    compact: Union[Unset, None, bool] = UNSET,
 ) -> Response[Union[Any, List["DatasetListResponse200Item"]]]:
     """List all accessible datasets.
 
     Args:
         is_active (Union[Unset, None, bool]):
         is_unreported (Union[Unset, None, bool]):
-        is_editable (Union[Unset, None, bool]):
         organization_name (Union[Unset, None, str]):
         only_my_organization (Union[Unset, None, bool]):
         uploader_id (Union[Unset, None, str]):
         folder_id (Union[Unset, None, str]):
+        include_subfolders (Union[Unset, None, bool]):
         search_query (Union[Unset, None, str]):
         limit (Union[Unset, None, int]):
+        compact (Union[Unset, None, bool]):
 
     Returns:
         Response[Union[Any, List['DatasetListResponse200Item']]]
@@ -217,13 +228,14 @@ async def asyncio_detailed(
         client=client,
         is_active=is_active,
         is_unreported=is_unreported,
-        is_editable=is_editable,
         organization_name=organization_name,
         only_my_organization=only_my_organization,
         uploader_id=uploader_id,
         folder_id=folder_id,
+        include_subfolders=include_subfolders,
         search_query=search_query,
         limit=limit,
+        compact=compact,
     )
 
     async with httpx.AsyncClient(verify=client.verify_ssl) as _client:
@@ -237,26 +249,28 @@ async def asyncio(
     client: Client,
     is_active: Union[Unset, None, bool] = UNSET,
     is_unreported: Union[Unset, None, bool] = UNSET,
-    is_editable: Union[Unset, None, bool] = UNSET,
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
     folder_id: Union[Unset, None, str] = UNSET,
+    include_subfolders: Union[Unset, None, bool] = UNSET,
     search_query: Union[Unset, None, str] = UNSET,
     limit: Union[Unset, None, int] = UNSET,
+    compact: Union[Unset, None, bool] = UNSET,
 ) -> Optional[Union[Any, List["DatasetListResponse200Item"]]]:
     """List all accessible datasets.
 
     Args:
         is_active (Union[Unset, None, bool]):
         is_unreported (Union[Unset, None, bool]):
-        is_editable (Union[Unset, None, bool]):
         organization_name (Union[Unset, None, str]):
         only_my_organization (Union[Unset, None, bool]):
         uploader_id (Union[Unset, None, str]):
         folder_id (Union[Unset, None, str]):
+        include_subfolders (Union[Unset, None, bool]):
         search_query (Union[Unset, None, str]):
         limit (Union[Unset, None, int]):
+        compact (Union[Unset, None, bool]):
 
     Returns:
         Response[Union[Any, List['DatasetListResponse200Item']]]
@@ -267,12 +281,13 @@ async def asyncio(
             client=client,
             is_active=is_active,
             is_unreported=is_unreported,
-            is_editable=is_editable,
             organization_name=organization_name,
             only_my_organization=only_my_organization,
             uploader_id=uploader_id,
             folder_id=folder_id,
+            include_subfolders=include_subfolders,
             search_query=search_query,
             limit=limit,
+            compact=compact,
         )
     ).parsed

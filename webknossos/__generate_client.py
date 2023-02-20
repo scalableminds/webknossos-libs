@@ -87,6 +87,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         dataset_list,
         dataset_sharing_token,
         datastore_list,
+        folder_tree,
         generate_token_for_data_store,
         project_info_by_id,
         project_info_by_name,
@@ -102,7 +103,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     from webknossos.utils import snake_to_camel_case
 
     organization_id = "Organization_X"
-    dataset_name = "e2006_knossos"
+    dataset_name = "l4_sample"
     task_id = "581367a82faeb37a008a5352"
     user_id = "570b9f4d2a7c0e4d008da6ef"
     project_id = "58135bfd2faeb3190181c057"
@@ -115,7 +116,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     )
     assert (
         response.status_code == 200 and response.json()["isActive"]
-    ), f"You need to copy or link any dataset to binaryData/{organization_id}/{dataset_name}."
+    ), f"You need to copy https://static.webknossos.org/data/l4_sample.zip to binaryData/{organization_id}/{dataset_name}."
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
@@ -147,6 +148,15 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         "datasetList",
         extract_200_response(
             dataset_list.sync_detailed(
+                client=client,
+            )
+        ),
+    )
+
+    yield (
+        "folderTree",
+        extract_200_response(
+            folder_tree.sync_detailed(
                 client=client,
             )
         ),
@@ -318,6 +328,7 @@ REQUIRED_KEYS = {
     "dataStore",
     "url",
     "dataSource",
+    "folderId",
     # "scale", not available for errors
     # "dataLayers", not available for errors
     "category",

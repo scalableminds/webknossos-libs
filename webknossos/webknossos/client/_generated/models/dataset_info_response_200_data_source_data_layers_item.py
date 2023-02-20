@@ -24,7 +24,7 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
         category (str):  Example: color.
         bounding_box (DatasetInfoResponse200DataSourceDataLayersItemBoundingBox):
         resolutions (List[List[int]]):
-        element_class (str):  Example: uint24.
+        element_class (str):  Example: uint8.
         default_view_configuration (Union[Unset,
             DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration]):
     """

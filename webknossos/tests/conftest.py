@@ -18,6 +18,7 @@ from vcr.request import Request as VcrRequest
 from vcr.stubs import httpx_stubs
 
 import webknossos as wk
+from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -84,8 +85,9 @@ def clear_testoutput() -> Generator:
 
 
 @pytest.fixture(autouse=True, scope="function")
-def clear_context_caches() -> Generator:
+def clear_caches() -> Generator:
     _clear_all_context_caches()
+    _cached_get_upload_datastore.cache_clear()
     yield
 
 

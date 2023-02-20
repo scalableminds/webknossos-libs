@@ -15,12 +15,12 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/datasets/scalable_minds/l4_sample_dev
   response:
-    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true,"tags":[],"publication":null}'
+    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"jobsEnabled":true,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null}'
     headers:
       connection:
       - keep-alive
       content-length:
-      - '1233'
+      - '1263'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -42,7 +42,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -54,7 +54,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -130,7 +130,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -142,7 +142,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -182,7 +182,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -194,7 +194,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -244,7 +244,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '627'
+      - '855'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -269,7 +269,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -278,7 +278,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '627'
+      - '855'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -314,7 +314,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '627'
+      - '855'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -336,12 +336,12 @@ interactions:
     body: null
     headers:
       Range:
-      - bytes=0-626
+      - bytes=0-854
     method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -350,7 +350,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '627'
+      - '855'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -376,7 +376,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -388,7 +388,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -526,106 +526,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1292'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1292'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
@@ -732,7 +632,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -744,7 +644,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -782,7 +682,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -794,7 +694,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -932,106 +832,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1296'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1296'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
   response:
     body:
@@ -1138,7 +938,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -1150,7 +950,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1188,7 +988,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -1200,7 +1000,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1334,106 +1134,6 @@ interactions:
       code: 200
       message: OK
     url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1296'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1296'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -1544,7 +1244,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -1556,7 +1256,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1594,7 +1294,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -1606,7 +1306,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1685,8 +1385,6 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - keep-alive
       content-length:
       - '166'
       content-type:
@@ -1740,106 +1438,6 @@ interactions:
       code: 200
       message: OK
     url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1299'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1299'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1
 - request:
     body: null
     headers: {}
@@ -1950,7 +1548,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -1962,7 +1560,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2000,7 +1598,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -2012,7 +1610,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2150,106 +1748,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1303'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1303'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/.zarray
   response:
     body:
@@ -2327,8 +1825,6 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - keep-alive
       content-length:
       - '166'
       content-type:
@@ -2356,7 +1852,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -2368,7 +1864,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2406,7 +1902,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -2418,7 +1914,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2556,106 +2052,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1303'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1303'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/.zarray
   response:
     body:
@@ -2762,7 +2158,7 @@ interactions:
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
         type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
         (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
@@ -2774,7 +2170,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2804,106 +2200,6 @@ interactions:
       code: 200
       message: OK
     url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1292'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      connection:
-      - keep-alive
-      content-length:
-      - '1292'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
 - request:
     body: null
     headers: {}

@@ -10,9 +10,9 @@ class DatasetInfoResponse200DataSourceDataLayersItemBoundingBox:
     """
     Attributes:
         top_left (List[int]):
-        width (int):  Example: 24.
-        height (int):  Example: 24.
-        depth (int):  Example: 24.
+        width (int):  Example: 1024.
+        height (int):  Example: 1024.
+        depth (int):  Example: 1024.
     """
 
     top_left: List[int]
