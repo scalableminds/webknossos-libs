@@ -31,9 +31,10 @@ class UserInfoByIdResponse200:
         is_dataset_manager (int):  Example: True.
         is_active (int):  Example: True.
         experiences (UserInfoByIdResponse200Experiences):
-        last_activity (int):  Example: 1676366706605.
+        last_activity (int):  Example: 1676459044291.
         organization (str):  Example: Organization_X.
         created (int):  Example: 1460379469000.
+        is_organization_owner (Union[Unset, int]):  Example: True.
         teams (Union[Unset, List['UserInfoByIdResponse200TeamsItem']]):
         is_anonymous (Union[Unset, int]):
         is_editable (Union[Unset, int]):  Example: True.
@@ -54,6 +55,7 @@ class UserInfoByIdResponse200:
     last_activity: int
     organization: str
     created: int
+    is_organization_owner: Union[Unset, int] = UNSET
     teams: Union[Unset, List["UserInfoByIdResponse200TeamsItem"]] = UNSET
     is_anonymous: Union[Unset, int] = UNSET
     is_editable: Union[Unset, int] = UNSET
@@ -78,6 +80,7 @@ class UserInfoByIdResponse200:
         last_activity = self.last_activity
         organization = self.organization
         created = self.created
+        is_organization_owner = self.is_organization_owner
         teams: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.teams, Unset):
             teams = []
@@ -113,6 +116,8 @@ class UserInfoByIdResponse200:
                 "created": created,
             }
         )
+        if is_organization_owner is not UNSET:
+            field_dict["isOrganizationOwner"] = is_organization_owner
         if teams is not UNSET:
             field_dict["teams"] = teams
         if is_anonymous is not UNSET:
@@ -165,6 +170,8 @@ class UserInfoByIdResponse200:
 
         created = d.pop("created")
 
+        is_organization_owner = d.pop("isOrganizationOwner", UNSET)
+
         teams = []
         _teams = d.pop("teams", UNSET)
         for teams_item_data in _teams or []:
@@ -207,6 +214,7 @@ class UserInfoByIdResponse200:
             last_activity=last_activity,
             organization=organization,
             created=created,
+            is_organization_owner=is_organization_owner,
             teams=teams,
             is_anonymous=is_anonymous,
             is_editable=is_editable,

@@ -22,7 +22,7 @@ class BuildInfoResponse200:
     Attributes:
         webknossos (Union[Unset, BuildInfoResponse200Webknossos]):
         webknossos_wrap (Union[Unset, BuildInfoResponse200WebknossosWrap]):
-        schema_version (Union[Unset, int]):  Example: 92.
+        schema_version (Union[Unset, int]):  Example: 99.
         local_data_store_enabled (Union[Unset, int]):  Example: True.
         local_tracing_store_enabled (Union[Unset, int]):  Example: True.
     """

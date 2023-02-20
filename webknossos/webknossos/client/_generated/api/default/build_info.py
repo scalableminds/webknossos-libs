@@ -54,7 +54,7 @@ def sync_detailed(
     *,
     client: Client,
 ) -> Response[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of webKnossos
+    """Information about the version of WEBKNOSSOS
 
     Returns:
         Response[Union[Any, BuildInfoResponse200]]
@@ -76,7 +76,7 @@ def sync(
     *,
     client: Client,
 ) -> Optional[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of webKnossos
+    """Information about the version of WEBKNOSSOS
 
     Returns:
         Response[Union[Any, BuildInfoResponse200]]
@@ -91,7 +91,7 @@ async def asyncio_detailed(
     *,
     client: Client,
 ) -> Response[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of webKnossos
+    """Information about the version of WEBKNOSSOS
 
     Returns:
         Response[Union[Any, BuildInfoResponse200]]
@@ -111,7 +111,7 @@ async def asyncio(
     *,
     client: Client,
 ) -> Optional[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of webKnossos
+    """Information about the version of WEBKNOSSOS
 
     Returns:
         Response[Union[Any, BuildInfoResponse200]]

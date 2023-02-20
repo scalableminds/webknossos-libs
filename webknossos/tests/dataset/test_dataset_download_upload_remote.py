@@ -126,6 +126,8 @@ def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     assert remote_ds.allowed_teams == test_teams
     remote_ds.allowed_teams = ["570b9f4b2a7c0e3b008da6ec"]
     assert remote_ds.allowed_teams == test_teams
+    remote_ds.folder = wk.RemoteFolder.get_by_path("Organization_X/A subfolder!")
+    assert remote_ds.folder.name == "A subfolder!"
 
 
 def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -> None:
