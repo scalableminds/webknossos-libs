@@ -430,7 +430,7 @@ def make_properties_required(  # pylint: disable=dangerous-default-value
 
 def remove_examples(
     x: Any,
-) -> List[str]:
+) -> None:
     if isinstance(x, dict):
         if "example" in x:
             del x["example"]
