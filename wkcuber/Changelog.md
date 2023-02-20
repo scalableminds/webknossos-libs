@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed Docker container startup, by adding version information during build time. [#872](https://github.com/scalableminds/webknossos-libs/pull/872)
 
 
 ## [0.12.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.1) - 2023-02-16
