@@ -1,7 +1,7 @@
 function export_vars {
     export WK_TOKEN=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
     export WK_URL=http://localhost:9000
-    export DOCKER_TAG=master__10303
+    export DOCKER_TAG=master__21723
 }
 
 function ensure_local_test_wk {
@@ -26,7 +26,7 @@ function ensure_local_test_wk {
         while ! curl -sf localhost:9000/api/health; do
             sleep 5
         done
-        OUT=$(docker-compose exec -T webknossos tools/postgres/prepareTestDB.sh 2>&1) || echo "$OUT"
+        OUT=$(docker-compose exec -T webknossos tools/postgres/dbtool.js prepare-test-db 2>&1) || echo "$OUT"
         popd > /dev/null
     else
         echo "Using the already running local webknossos setup at localhost:9000"

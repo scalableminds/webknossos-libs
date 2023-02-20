@@ -23,25 +23,25 @@ T = TypeVar("T", bound="CurrentUserInfoResponse200")
 class CurrentUserInfoResponse200:
     """
     Attributes:
-        id (str):  Example: 570b9f4d2a7c0e4d008da6ef.
-        email (str):  Example: user_A@scalableminds.com.
-        first_name (str):  Example: user_A.
-        last_name (str):  Example: BoyA.
-        is_admin (int):  Example: True.
-        is_dataset_manager (int):  Example: True.
-        is_active (int):  Example: True.
+        id (str):
+        email (str):
+        first_name (str):
+        last_name (str):
+        is_admin (int):
+        is_dataset_manager (int):
+        is_active (int):
         experiences (CurrentUserInfoResponse200Experiences):
-        last_activity (int):  Example: 1676459044291.
-        organization (str):  Example: Organization_X.
-        created (int):  Example: 1460379469000.
-        is_organization_owner (Union[Unset, int]):  Example: True.
+        last_activity (int):
+        organization (str):
+        created (int):
+        is_organization_owner (Union[Unset, int]):
         teams (Union[Unset, List['CurrentUserInfoResponse200TeamsItem']]):
         is_anonymous (Union[Unset, int]):
-        is_editable (Union[Unset, int]):  Example: True.
+        is_editable (Union[Unset, int]):
         novel_user_experience_infos (Union[Unset, CurrentUserInfoResponse200NovelUserExperienceInfos]):
-        selected_theme (Union[Unset, str]):  Example: auto.
+        selected_theme (Union[Unset, str]):
         last_task_type_id (Union[Unset, str]):
-        is_super_user (Union[Unset, int]):  Example: True.
+        is_super_user (Union[Unset, int]):
     """
 
     id: str

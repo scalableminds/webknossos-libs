@@ -23,15 +23,15 @@ T = TypeVar("T", bound="AnnotationInfoResponse200Task")
 class AnnotationInfoResponse200Task:
     """
     Attributes:
-        id (str):  Example: 581367a82faeb37a008a5354.
-        project_id (str):  Example: 68135bfd2faeb3190181c058.
-        team (str):  Example: team_X2.
-        data_set (str):  Example: 2012-06-28_Cortex.
-        created (int):  Example: 1477666728000.
+        id (str):
+        project_id (str):
+        team (str):
+        data_set (str):
+        created (int):
         status (AnnotationInfoResponse200TaskStatus):
         bounding_box (str):
-        formatted_hash (Union[Unset, str]):  Example: 8a5354.
-        project_name (Union[Unset, str]):  Example: Test_Project2.
+        formatted_hash (Union[Unset, str]):
+        project_name (Union[Unset, str]):
         type (Union[Unset, AnnotationInfoResponse200TaskType]):
         needed_experience (Union[Unset, AnnotationInfoResponse200TaskNeededExperience]):
         script (Union[Unset, str]):

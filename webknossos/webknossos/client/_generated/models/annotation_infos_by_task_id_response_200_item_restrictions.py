@@ -11,10 +11,10 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemRestrictions")
 class AnnotationInfosByTaskIdResponse200ItemRestrictions:
     """
     Attributes:
-        allow_access (Union[Unset, int]):  Example: True.
-        allow_update (Union[Unset, int]):  Example: True.
-        allow_finish (Union[Unset, int]):  Example: True.
-        allow_download (Union[Unset, int]):  Example: True.
+        allow_access (Union[Unset, int]):
+        allow_update (Union[Unset, int]):
+        allow_finish (Union[Unset, int]):
+        allow_download (Union[Unset, int]):
     """
 
     allow_access: Union[Unset, int] = UNSET
