@@ -16,13 +16,13 @@ list_packages_by_priority:
 	@echo $(packages_by_priority)
 
 update:
-	$(call in_each_pkg_by_dependency, poetry update --no-dev)
+	$(call in_each_pkg_by_dependency, poetry update --without dev)
 
 update-internal:
 	$(call in_each_pkg_by_dependency, poetry update $(packages_by_dependency))
 
 install:
-	$(call in_each_pkg_by_dependency, poetry install --extras all || poetry install)
+	$(call in_each_pkg_by_dependency, poetry install --all-extras || poetry install)
 
 format:
 	$(call in_each_code_pkg, ./format.sh)

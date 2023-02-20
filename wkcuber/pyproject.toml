@@ -34,8 +34,8 @@ universal-pathlib = "0.0.19"
 [tool.poetry.dev-dependencies]
 black = "^23.1.0"
 mypy = "1.0.0"
-pylint = "^2.15.7"
-pytest = "^6.2.4"
+pylint = "^2.16.2"
+pytest = "^7.2.1"
 s3fs = "^2022.3.0"
 
 [tool.poetry.scripts]
