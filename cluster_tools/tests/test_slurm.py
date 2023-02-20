@@ -89,7 +89,7 @@ def test_slurm_max_submit_user() -> None:
                 futures = executor.map_to_futures(square, range(10))
 
                 result = [fut.result() for fut in futures]
-                assert result == [i ** 2 for i in range(10)]
+                assert result == [i**2 for i in range(10)]
 
                 job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
                 # The 10 work packages should have been scheduled as 2 separate jobs.
@@ -116,7 +116,7 @@ def test_slurm_max_submit_user_env() -> None:
             futures = executor.map_to_futures(square, range(10))
 
             result = [fut.result() for fut in futures]
-            assert result == [i ** 2 for i in range(10)]
+            assert result == [i**2 for i in range(10)]
 
             job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
             # The 10 work packages should have been scheduled as 3 separate jobs.
@@ -348,7 +348,6 @@ def test_pickled_logging() -> None:
 
 
 def test_tailed_logging() -> None:
-
     with cluster_tools.get_executor(
         "slurm",
         debug=True,
@@ -375,7 +374,6 @@ def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
 
 
 def test_preliminary_file_submit() -> None:
-
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         output_pickle_path = Path(tmp_dir) / "test.pickle"
         preliminary_output_path = Path(tmp_dir) / "test.pickle.preliminary"
@@ -422,7 +420,6 @@ def test_executor_args() -> None:
 
 
 def test_preliminary_file_map() -> None:
-
     a_range = range(1, 4)
 
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
@@ -457,7 +454,7 @@ def test_preliminary_file_map() -> None:
                 list(a_range),
                 output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
             )
-            for (fut_2, job_index) in zip(futs_2, a_range):
+            for fut_2, job_index in zip(futs_2, a_range):
                 assert fut_2.result() == square(job_index)
 
             for idx in a_range:

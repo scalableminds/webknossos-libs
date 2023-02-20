@@ -83,13 +83,13 @@ def cube_with_args(args: Namespace) -> None:
     layer_path_to_mags: Dict[Path, List[Mag]] = detect_present_mags(args.target_path)
 
     if not args.no_compress:
-        for (layer_path, mags) in layer_path_to_mags.items():
+        for layer_path, mags in layer_path_to_mags.items():
             layer_name = layer_path.name
             for mag in mags:
                 compress_mag_inplace(args.target_path, layer_name, mag, args)
 
     with get_executor_for_args(args) as executor:
-        for (layer_path, mags) in layer_path_to_mags.items():
+        for layer_path, mags in layer_path_to_mags.items():
             layer_name = layer_path.name
             mags.sort()
             downsample_mags(

@@ -201,7 +201,6 @@ class BoundingBox:
         return cls(Vec3Int.zeros(), Vec3Int.zeros())
 
     def to_wkw_dict(self) -> dict:
-
         (  # pylint: disable=unbalanced-tuple-unpacking
             width,
             height,
@@ -216,11 +215,9 @@ class BoundingBox:
         }
 
     def to_config_dict(self) -> dict:
-
         return {"topleft": self.topleft.to_list(), "size": self.size.to_list()}
 
     def to_checkpoint_name(self) -> str:
-
         x, y, z = self.topleft
         width, height, depth = self.size
         return "{x}_{y}_{z}_{width}_{height}_{depth}".format(
@@ -228,21 +225,17 @@ class BoundingBox:
         )
 
     def to_tuple6(self) -> Tuple[int, int, int, int, int, int]:
-
         return tuple(self.topleft.to_list() + self.size.to_list())  # type: ignore
 
     def to_csv(self) -> str:
-
         return ",".join(map(str, self.to_tuple6()))
 
     def __repr__(self) -> str:
-
         return "BoundingBox(topleft={}, size={})".format(
             str(tuple(self.topleft)), str(tuple(self.size))
         )
 
     def __str__(self) -> str:
-
         return self.__repr__()
 
     def __eq__(self, other: object) -> bool:
@@ -254,7 +247,6 @@ class BoundingBox:
     def padded_with_margins(
         self, margins_left: Vec3IntLike, margins_right: Optional[Vec3IntLike] = None
     ) -> "BoundingBox":
-
         if margins_right is None:
             margins_right = margins_left
 

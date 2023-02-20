@@ -53,7 +53,6 @@ def assert_equality_job(args: Tuple[View, View, int]) -> None:
 def check_equality(
     source_path: Path, target_path: Path, args: Optional[Namespace] = None
 ) -> None:
-
     logging.info(f"Comparing {source_path} with {target_path}")
 
     source_dataset = Dataset.open(source_path)

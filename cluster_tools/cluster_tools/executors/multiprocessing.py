@@ -210,6 +210,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
         futs: List["Future[_T]"] = self.map_to_futures(fn, args)
+
         # Return a separate generator to avoid that map_unordered
         # is executed lazily (otherwise, jobs would be submitted
         # lazily, as well).

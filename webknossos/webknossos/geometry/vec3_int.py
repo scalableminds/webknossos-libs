@@ -63,7 +63,6 @@ class Vec3Int(tuple):
 
     @staticmethod
     def from_vec3_float(vec: Tuple[float, float, float]) -> "Vec3Int":
-
         return Vec3Int(int(vec[0]), int(vec[1]), int(vec[2]))
 
     @staticmethod

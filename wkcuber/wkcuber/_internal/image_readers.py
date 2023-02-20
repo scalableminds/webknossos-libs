@@ -354,7 +354,10 @@ class TiffImageReader(ImageReader):
             output_channel_offset = 0
 
             # Read the data
-            for page_index, (data_c_index, data_s_index,) in self._find_correct_pages(
+            for page_index, (
+                data_c_index,
+                data_s_index,
+            ) in self._find_correct_pages(
                 tif_file,
                 channel_index,
                 sample_index,

@@ -786,7 +786,6 @@ class Annotation:
         volume_layer_id: Optional[int] = None,
         read_only: bool = True,
     ) -> Iterator[SegmentationLayer]:
-
         """
         Given a volume annotation path, create a temporary dataset which
         contains the volume annotation. Returns the corresponding `Layer`.

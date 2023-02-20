@@ -148,7 +148,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_array_size_env)
 
-        max_array_size = 2 ** 32
+        max_array_size = 2**32
         # See https://unix.stackexchange.com/a/364615
         stdout, stderr, exit_code = call(
             "scontrol show config | sed -n '/^MaxArraySize/s/.*= *//p'"
@@ -184,7 +184,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_submit_jobs_env)
 
-        max_submit_jobs = 2 ** 32
+        max_submit_jobs = 2**32
         # Check whether there is a limit per user
         stdout_user, stderr_user, _ = call(
             "sacctmgr list -n user $USER withassoc format=maxsubmitjobsperuser"
@@ -360,7 +360,6 @@ class SlurmExecutor(ClusterExecutor):
     def check_job_state(
         self, job_id_with_index: str
     ) -> Literal["failed", "ignore", "completed"]:
-
         job_states = []
 
         # If the output file was not found, we determine the job status so that
@@ -427,9 +426,9 @@ class SlurmExecutor(ClusterExecutor):
             key, value = line.split(":", 1)
             properties[key.strip()] = value.strip()
 
-        def investigate_memory_consumption() -> Optional[
-            Tuple[str, Type[RemoteOutOfMemoryException]]
-        ]:
+        def investigate_memory_consumption() -> (
+            Optional[Tuple[str, Type[RemoteOutOfMemoryException]]]
+        ):
             if not properties.get("Memory Efficiency", None):
                 return None
 
@@ -454,9 +453,9 @@ class SlurmExecutor(ClusterExecutor):
             reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
             return (reason, RemoteOutOfMemoryException)
 
-        def investigate_exit_code() -> Optional[
-            Tuple[str, Type[RemoteOutOfMemoryException]]
-        ]:
+        def investigate_exit_code() -> (
+            Optional[Tuple[str, Type[RemoteOutOfMemoryException]]]
+        ):
             if not properties.get("State", None):
                 return None
             if "exit code 137" not in properties["State"]:

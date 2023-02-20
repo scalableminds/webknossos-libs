@@ -533,7 +533,6 @@ class ClusterExecutor(futures.Executor):
     ) -> None:
         jobid = jobid_future.result()
         if self.debug:
-
             logging.debug(
                 "Submitted array job {} with JobId {} and {} subjobs.".format(
                     batch_description, jobid, len(futs_with_output_paths)

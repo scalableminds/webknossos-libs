@@ -95,7 +95,6 @@ class Resumable:
     def add_file(
         self, path: Union[PathLike, str], relative_path: Optional[Path]
     ) -> ResumableFile:
-
         file = ResumableFile(
             Path(path),
             relative_path,

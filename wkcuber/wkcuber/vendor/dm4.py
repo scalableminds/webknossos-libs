@@ -168,7 +168,6 @@ def _read_tag_name(dmfile, _endian):
 
 
 def _read_tag_dir_header_dm4(dmfile, endian):
-
     tag_name = _read_tag_name(dmfile, endian)
     tag_byte_length = struct.unpack_from(">Q", dmfile.read(8))[
         0
@@ -208,7 +207,6 @@ def _read_tag_data_info(dmfile):
 def _read_tag_data(dmfile, tag, endian):
     assert tag.type == 21
     try:
-
         endian = _get_struct_endian_str(endian)
         dmfile.seek(tag.data_offset)
 

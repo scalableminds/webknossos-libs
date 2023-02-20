@@ -58,7 +58,6 @@ def move_by_one(
 
 
 def main() -> None:
-
     args = create_parser().parse_args()
 
     src_dataset = Dataset.open(args.source_path)

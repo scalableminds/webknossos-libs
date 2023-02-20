@@ -65,7 +65,6 @@ def download_dataset(
         actual_path, name=parsed.name, voxel_size=voxel_size, exist_ok=exist_ok
     )
     for layer_name in layers or [i.name for i in data_layers]:
-
         response_layers = [i for i in data_layers if i.name == layer_name]
         assert (
             len(response_layers) > 0

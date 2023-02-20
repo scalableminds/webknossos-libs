@@ -26,7 +26,6 @@ def pairs_within_distance(
     pos_b: np.ndarray,
     max_distance: float,
 ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
-
     pos_a_kdtree = cKDTree(pos_a)
     pos_b_kdtree = cKDTree(pos_b)
     indexes = pos_a_kdtree.query_ball_tree(pos_b_kdtree, max_distance)

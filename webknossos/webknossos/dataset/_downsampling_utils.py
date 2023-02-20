@@ -138,7 +138,6 @@ def parse_interpolation_mode(
     interpolation_mode: str, layer_category: LayerCategoryType
 ) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
-
         return (
             InterpolationModes.MODE
             if layer_category == "segmentation"

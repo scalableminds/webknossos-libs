@@ -177,7 +177,6 @@ class PBSExecutor(ClusterExecutor):
             )
             return "ignore"
         else:
-
             job_state_search = re.search("job_state = ([a-zA-Z_]*)", stdout)
             if job_state_search:
                 job_state = job_state_search.group(1)

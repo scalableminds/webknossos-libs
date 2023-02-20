@@ -29,7 +29,8 @@ class Tail:
         Else printed to standard out.
 
         Arguments:
-            seconds - Number of seconds to wait between each iteration; Defaults to 1."""
+            seconds - Number of seconds to wait between each iteration; Defaults to 1.
+        """
 
         self.check_file_validity(self.tailed_file)
         with open(self.tailed_file, errors="replace") as file_:

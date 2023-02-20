@@ -255,7 +255,6 @@ class View:
         aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_shape, ceil=True)
 
         if current_mag_bbox != aligned_bbox:
-
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):

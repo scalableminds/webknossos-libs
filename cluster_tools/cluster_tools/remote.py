@@ -87,7 +87,6 @@ def worker(
         out = pickling.dumps(result)
 
     except Exception:
-
         result = False, format_remote_exc()
         logging.warning(f"Job computation failed with:\n\n{traceback.format_exc()}")
         out = pickling.dumps(result)

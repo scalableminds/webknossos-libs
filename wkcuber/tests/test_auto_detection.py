@@ -58,7 +58,6 @@ def test_wkw_detection(tmp_path: Path, WT1_path: Path) -> None:
 
 def test_tiff_dataset_name_and_layer_name_detection() -> None:
     for prefix in TEST_PREFIXES:
-
         # test if ds name and layer name are correctly detected
         converter = ImageStackConverter()
         converter.source_files = [
@@ -190,7 +189,6 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
 
 def test_knossos_dataset_name_and_layer_path_detection() -> None:
     for prefix in TEST_PREFIXES:
-
         # test if dataset name and layer name and mag are correct
         converter = KnossosConverter()
         converter.source_files = [

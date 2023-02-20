@@ -163,12 +163,10 @@ def test_submit() -> None:
 
 
 def get_pid() -> int:
-
     return os.getpid()
 
 
 def test_process_id() -> None:
-
     outer_pid = os.getpid()
 
     def compare_pids(executor: cluster_tools.Executor) -> None:
@@ -251,7 +249,6 @@ def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
 
 
 def test_map_to_futures_with_pickle_paths() -> None:
-
     for exc in get_executors(with_debug_sequential=True):
         with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
             with exc:
@@ -278,7 +275,7 @@ def test_map_to_futures_with_pickle_paths() -> None:
 
 
 def test_submit_with_pickle_paths() -> None:
-    for (idx, exc) in enumerate(get_executors()):
+    for idx, exc in enumerate(get_executors()):
         with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
 
             def run_square_numbers(idx: int, executor: cluster_tools.Executor) -> Path:
@@ -356,7 +353,6 @@ def test_cloudpickle_serialization() -> None:
 
 
 def test_map_to_futures_with_debug_sequential() -> None:
-
     with cluster_tools.get_executor("debug_sequential") as exc:
         durations = [4, 1]
         futures = exc.map_to_futures(sleep, durations)

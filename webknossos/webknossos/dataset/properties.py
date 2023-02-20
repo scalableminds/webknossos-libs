@@ -230,6 +230,7 @@ for cls in [
         ),
     )
 
+
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
 def mag_view_properties_post_structure(d: Dict[str, Any]) -> Dict[str, Any]:
@@ -319,6 +320,7 @@ for cls in [
             )
         ),
     )
+
 
 # Disambiguation of Unions only work automatically if the two attrs-classes have at least 1 unique attribute
 # This is not the case here because SegmentationLayerProperties inherits LayerProperties

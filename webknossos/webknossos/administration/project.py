@@ -56,7 +56,8 @@ class Project:
     def get_tasks(self, fetch_all: bool = False) -> List["Task"]:
         """Returns the tasks of this project.
         Note: will fetch only the first 1000 entries by default, warns if that means some are missing.
-        set parameter pass fetch_all=True to use pagination to fetch all tasks iteratively with pagination."""
+        set parameter pass fetch_all=True to use pagination to fetch all tasks iteratively with pagination.
+        """
 
         from webknossos.administration import Task
 

@@ -143,7 +143,6 @@ class Parameters(NamedTuple):
 
     @classmethod
     def _parse_bounding_box(cls, bounding_box_element: Element) -> BoundingBox:
-
         topleft = (
             int(bounding_box_element.get("topLeftX", 0)),
             int(bounding_box_element.get("topLeftY", 0)),

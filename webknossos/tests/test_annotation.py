@@ -12,7 +12,6 @@ pytestmark = [pytest.mark.with_vcr]
 
 
 def test_annotation_from_zip_file() -> None:
-
     annotation = wk.Annotation.load(
         TESTDATA_DIR
         / "annotations"
@@ -142,7 +141,6 @@ def test_annotation_from_file_with_multi_volume() -> None:
     ],
 )
 def test_annotation_from_url(url: str) -> None:
-
     annotation = wk.Annotation.download(url)
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
