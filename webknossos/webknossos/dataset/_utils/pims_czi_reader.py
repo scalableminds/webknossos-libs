@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import Iterator, List, Set, Dict
+from typing import Dict, Iterator, List, Set
 
 import numpy as np
 
