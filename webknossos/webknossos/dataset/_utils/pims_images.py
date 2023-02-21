@@ -34,7 +34,6 @@ try:
     import webknossos.dataset._utils.pims_dm_readers
 except ImportError:
     pass
-# pylint: enable=unused-import
 
 try:
     import webknossos.dataset._utils.pims_imagej_tiff_reader

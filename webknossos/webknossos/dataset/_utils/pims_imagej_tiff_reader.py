@@ -37,7 +37,7 @@ class PimsImagejTiffReader(FramesSequenceND):
         channels = tiff.imagej_metadata["channels"]
         z = tiff.imagej_metadata["images"] / channels
 
-        self.memmap = tifffile.memmap(self.path)
+        self.memmap = tifffile.memmap(path)
         # shape should be zcyx
         assert len(self.memmap.shape) == 4
         assert self.memmap.shape[0] == z
