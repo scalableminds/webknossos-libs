@@ -17,14 +17,14 @@ T = TypeVar("T", bound="TaskInfoResponse200Type")
 class TaskInfoResponse200Type:
     """
     Attributes:
-        id (str):  Example: 570b9f4c2a7c0e4c008da6ee.
-        description (str):  Example: Check those cells out!.
-        team_name (str):  Example: team_X1.
-        summary (Union[Unset, str]):  Example: ek_0563_BipolarCells.
-        team_id (Union[Unset, str]):  Example: 570b9f4b2a7c0e3b008da6ec.
+        id (str):
+        description (str):
+        team_name (str):
+        summary (Union[Unset, str]):
+        team_id (Union[Unset, str]):
         settings (Union[Unset, TaskInfoResponse200TypeSettings]):
         recommended_configuration (Union[Unset, str]):
-        tracing_type (Union[Unset, str]):  Example: skeleton.
+        tracing_type (Union[Unset, str]):
     """
 
     id: str

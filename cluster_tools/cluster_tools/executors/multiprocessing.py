@@ -26,7 +26,7 @@ from typing_extensions import Literal, ParamSpec, TypedDict
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.multiprocessing_logging_handler import (
-    _get_multiprocessing_logging_setup_fn,
+    _MultiprocessingLoggingHandlerPool,
 )
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 
@@ -80,6 +80,10 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             initializer=initializer,
             initargs=initargs,
         )
+        if self._mp_context.get_start_method() == "fork":
+            self._mp_logging_handler_pool = None
+        else:
+            self._mp_logging_handler_pool = _MultiprocessingLoggingHandlerPool()
 
     def submit(  # type: ignore[override]
         self,
@@ -111,25 +115,27 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         # The call_stack holds all of these wrapper functions and their arguments in the correct order.
         # For example, call_stack = [wrapper_fn_1, wrapper_fn_1_arg_1, wrapper_fn_2, actual_fn, actual_fn_arg_1]
         # where wrapper_fn_1 is called, which eventually calls wrapper_fn_2, which eventually calls actual_fn.
-        call_stack = []
+        call_stack: List[Callable] = []
 
-        if self._mp_context.get_start_method() != "fork":
+        if self._mp_logging_handler_pool is not None:
             # If a start_method other than the default "fork" is used, logging needs to be re-setup,
             # because the programming context is not inherited in those cases.
-            multiprocessing_logging_setup_fn = _get_multiprocessing_logging_setup_fn()
-            call_stack.extend(
-                [
+            multiprocessing_logging_setup_fn = (
+                self._mp_logging_handler_pool.get_multiprocessing_logging_setup_fn()
+            )
+            call_stack.append(
+                partial(
                     MultiprocessingExecutor._setup_logging_and_execute,
                     multiprocessing_logging_setup_fn,
-                ]
+                )
             )
 
         if output_pickle_path is not None:
-            call_stack.extend(
-                [
+            call_stack.append(
+                partial(
                     MultiprocessingExecutor._execute_and_persist_function,
                     output_pickle_path,
-                ]
+                )
             )
 
         fut = submit_fn(*call_stack, __fn, *args, **kwargs)
@@ -250,3 +256,13 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         # Since the default behavior of process pool executors is to show the log in the main process
         # we don't need to do anything except for blocking until the future is done.
         return fut.result()
+
+    def shutdown(self, wait: bool = True, *, cancel_futures: bool = False) -> None:
+        if cancel_futures:
+            # cancel_futures was added in Python 3.9, ignoring it as 3.8 is supported:
+            logging.warning(
+                "The provided cancel_futures argument is ignored by MultiprocessingExecutor."
+            )
+        super().shutdown(wait=wait)
+        if self._mp_logging_handler_pool is not None:
+            self._mp_logging_handler_pool.close()

@@ -20,11 +20,11 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataSourceDataLayersItem")
 class DatasetInfoResponse200DataSourceDataLayersItem:
     """
     Attributes:
-        name (str):  Example: color.
-        category (str):  Example: color.
+        name (str):
+        category (str):
         bounding_box (DatasetInfoResponse200DataSourceDataLayersItemBoundingBox):
         resolutions (List[List[int]]):
-        element_class (str):  Example: uint8.
+        element_class (str):
         default_view_configuration (Union[Unset,
             DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration]):
     """

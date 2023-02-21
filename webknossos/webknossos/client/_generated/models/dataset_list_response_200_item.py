@@ -26,7 +26,7 @@ T = TypeVar("T", bound="DatasetListResponse200Item")
 class DatasetListResponse200Item:
     """
     Attributes:
-        name (str):  Example: 2012-06-28_Cortex.
+        name (str):
         data_source (DatasetListResponse200ItemDataSource):
         data_store (DatasetListResponse200ItemDataStore):
         allowed_teams (List['DatasetListResponse200ItemAllowedTeamsItem']):
@@ -34,17 +34,17 @@ class DatasetListResponse200Item:
         is_public (int):
         description (str):
         display_name (str):
-        created (int):  Example: 1460379470082.
+        created (int):
         tags (List[Any]):
-        folder_id (str):  Example: 570b9f4e4bb848d0885ea917.
-        owning_organization (Union[Unset, str]):  Example: Organization_X.
+        folder_id (str):
+        owning_organization (Union[Unset, str]):
         allowed_teams_cumulative (Union[Unset, List['DatasetListResponse200ItemAllowedTeamsCumulativeItem']]):
-        is_editable (Union[Unset, int]):  Example: True.
+        is_editable (Union[Unset, int]):
         last_used_by_user (Union[Unset, int]):
-        logo_url (Union[Unset, str]):  Example: /assets/images/mpi-logos.svg.
-        sorting_key (Union[Unset, int]):  Example: 1460379470082.
+        logo_url (Union[Unset, str]):
+        sorting_key (Union[Unset, int]):
         details (Union[Unset, str]):
-        is_unreported (Union[Unset, int]):  Example: True.
+        is_unreported (Union[Unset, int]):
         jobs_enabled (Union[Unset, int]):
         publication (Union[Unset, str]):
     """

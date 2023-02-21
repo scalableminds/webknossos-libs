@@ -41,12 +41,12 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200Item")
 class AnnotationInfosByTaskIdResponse200Item:
     """
     Attributes:
-        state (str):  Example: Active.
-        id (str):  Example: 58135c402faeb34e0081c068.
+        state (str):
+        id (str):
         name (str):
         description (str):
-        typ (str):  Example: Task.
-        organization (str):  Example: Organization_X.
+        typ (str):
+        organization (str):
         data_store (AnnotationInfosByTaskIdResponse200ItemDataStore):
         tags (List[str]):
         modified (Union[Unset, int]):
@@ -54,11 +54,11 @@ class AnnotationInfosByTaskIdResponse200Item:
         task (Union[Unset, None, AnnotationInfosByTaskIdResponse200ItemTask]):
         stats (Union[Unset, AnnotationInfosByTaskIdResponse200ItemStats]):
         restrictions (Union[Unset, AnnotationInfosByTaskIdResponse200ItemRestrictions]):
-        formatted_hash (Union[Unset, str]):  Example: 81c068.
+        formatted_hash (Union[Unset, str]):
         annotation_layers (Union[Unset, List['AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem']]):
-        data_set_name (Union[Unset, str]):  Example: 2012-06-28_Cortex.
+        data_set_name (Union[Unset, str]):
         tracing_store (Union[Unset, AnnotationInfosByTaskIdResponse200ItemTracingStore]):
-        visibility (Union[Unset, str]):  Example: Internal.
+        visibility (Union[Unset, str]):
         settings (Union[Unset, AnnotationInfosByTaskIdResponse200ItemSettings]):
         tracing_time (Union[Unset, None, int]):
         teams (Union[Unset, List[Any]]):

@@ -9,7 +9,7 @@ T = TypeVar("T", bound="GenerateTokenForDataStoreResponse200")
 class GenerateTokenForDataStoreResponse200:
     """
     Attributes:
-        token (str):  Example: sqduSj-lk-PmK8yCrO6alw.
+        token (str):
     """
 
     token: str

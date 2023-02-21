@@ -16,7 +16,7 @@ class UserLoggedTimeResponse200LoggedTimeItem:
     """
     Attributes:
         payment_interval (UserLoggedTimeResponse200LoggedTimeItemPaymentInterval):
-        duration_in_seconds (int):  Example: 265.
+        duration_in_seconds (int):
     """
 
     payment_interval: "UserLoggedTimeResponse200LoggedTimeItemPaymentInterval"

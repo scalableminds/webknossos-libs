@@ -11,7 +11,7 @@ T = TypeVar("T", bound="UserListResponse200ItemExperiences")
 class UserListResponse200ItemExperiences:
     """
     Attributes:
-        abc (Union[Unset, int]):  Example: 5.
+        abc (Union[Unset, int]):
     """
 
     abc: Union[Unset, int] = UNSET

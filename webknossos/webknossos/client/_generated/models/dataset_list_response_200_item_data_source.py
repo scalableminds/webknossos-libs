@@ -18,7 +18,7 @@ class DatasetListResponse200ItemDataSource:
     """
     Attributes:
         id (DatasetListResponse200ItemDataSourceId):
-        status (Union[Unset, str]):  Example: No longer available on datastore..
+        status (Union[Unset, str]):
     """
 
     id: "DatasetListResponse200ItemDataSourceId"

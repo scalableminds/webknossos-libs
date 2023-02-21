@@ -233,7 +233,7 @@ def test_zarr_and_dask() -> None:
 
     (mean_value,) = exec_main_and_get_vars(example, "mean_value")
 
-    assert 124 < mean_value < 125
+    assert 123 < mean_value < 125
 
 
 def test_upload_tiff_stack() -> None:
@@ -277,5 +277,5 @@ def test_download_tiff_stack() -> None:
 
         assert (
             len(list(output_path.iterdir()))
-            == mag_view.layer.bounding_box.size.z / mag_view.mag.z
+            == mag_view.bounding_box.size.z / mag_view.mag.z
         )

@@ -23,15 +23,15 @@ T = TypeVar("T", bound="TaskInfosByProjectIdResponse200Item")
 class TaskInfosByProjectIdResponse200Item:
     """
     Attributes:
-        id (str):  Example: 581367a82faeb37a008a5352.
-        project_id (str):  Example: 58135bfd2faeb3190181c057.
-        team (str):  Example: team_X1.
-        data_set (str):  Example: 2012-06-28_Cortex.
-        created (int):  Example: 1477666728000.
+        id (str):
+        project_id (str):
+        team (str):
+        data_set (str):
+        created (int):
         status (TaskInfosByProjectIdResponse200ItemStatus):
         bounding_box (str):
-        formatted_hash (Union[Unset, str]):  Example: 8a5352.
-        project_name (Union[Unset, str]):  Example: Test_Project.
+        formatted_hash (Union[Unset, str]):
+        project_name (Union[Unset, str]):
         type (Union[Unset, TaskInfosByProjectIdResponse200ItemType]):
         needed_experience (Union[Unset, TaskInfosByProjectIdResponse200ItemNeededExperience]):
         script (Union[Unset, str]):

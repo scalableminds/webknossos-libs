@@ -17,14 +17,14 @@ T = TypeVar("T", bound="ProjectInfoByNameResponse200")
 class ProjectInfoByNameResponse200:
     """
     Attributes:
-        name (str):  Example: Test_Project.
-        team (str):  Example: 570b9f4b2a7c0e3b008da6ec.
-        team_name (str):  Example: team_X1.
-        priority (int):  Example: 100.
+        name (str):
+        team (str):
+        team_name (str):
+        priority (int):
         paused (int):
-        expected_time (int):  Example: 5400000.
-        id (str):  Example: 58135bfd2faeb3190181c057.
-        created (int):  Example: 1477663741000.
+        expected_time (int):
+        id (str):
+        created (int):
         owner (Union[Unset, ProjectInfoByNameResponse200Owner]):
         is_blacklisted_from_report (Union[Unset, int]):
     """

@@ -428,6 +428,19 @@ def make_properties_required(  # pylint: disable=dangerous-default-value
     return handled_required_keys
 
 
+def remove_examples(
+    x: Any,
+) -> None:
+    if isinstance(x, dict):
+        if "example" in x:
+            del x["example"]
+        for i in x.values():
+            remove_examples(i)
+    elif isinstance(x, list):
+        for i in x:
+            remove_examples(i)
+
+
 def set_response_schema_by_example(
     openapi_schema: Dict,
     example_response: bytes,
@@ -453,6 +466,7 @@ def set_response_schema_by_example(
         if path_method["operationId"] == operation_id
     ][0]
     handled_required_keys = make_properties_required(recorded_response_schema)
+    remove_examples(recorded_response_schema)
     request_schema["responses"]["200"]["content"] = recorded_response_schema
     return handled_required_keys
 
