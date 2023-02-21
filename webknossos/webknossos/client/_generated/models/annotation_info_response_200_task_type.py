@@ -17,14 +17,14 @@ T = TypeVar("T", bound="AnnotationInfoResponse200TaskType")
 class AnnotationInfoResponse200TaskType:
     """
     Attributes:
-        id (str):  Example: 570b9f4c2a7c0e4c008da6ff.
-        description (str):  Example: Check those cells out!.
-        team_name (str):  Example: team_X2.
-        summary (Union[Unset, str]):  Example: ek_0674_BipolarCells.
-        team_id (Union[Unset, str]):  Example: 69882b370d889b84020efd4f.
+        id (str):
+        description (str):
+        team_name (str):
+        summary (Union[Unset, str]):
+        team_id (Union[Unset, str]):
         settings (Union[Unset, AnnotationInfoResponse200TaskTypeSettings]):
         recommended_configuration (Union[Unset, str]):
-        tracing_type (Union[Unset, str]):  Example: skeleton.
+        tracing_type (Union[Unset, str]):
     """
 
     id: str

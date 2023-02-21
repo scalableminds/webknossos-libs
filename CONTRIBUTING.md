@@ -104,7 +104,8 @@ The [WEBKNOSSOS-libs repository](https://github.com/scalableminds/webknossos-lib
 See below for specifics of the different packages. Let's have a look at the common tooling first:
 
 * [**poetry**](https://python-poetry.org) is used for dependency management and publishing.
-  By default, it creates a [virtual environment](https://docs.python.org/3/tutorial/venv.html) for each package.
+  Use `poetry install --all-extras` in each package folder to install all dependencies for development.
+  By default, this creates a [virtual environment](https://docs.python.org/3/tutorial/venv.html) for each package.
   To run commands inside this package, prefix them with `poetry run`, e.g. `poetry run python myscript.py`,
   or enter the virtual environment with `poetry shell`.
   The creation of a separate environment can be disabled (e.g. if you want to manage this manually),

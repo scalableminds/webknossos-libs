@@ -22,7 +22,7 @@ update-internal:
 	$(call in_each_pkg_by_dependency, poetry update $(packages_by_dependency))
 
 install:
-	$(call in_each_pkg_by_dependency, poetry install --extras all || poetry install)
+	$(call in_each_pkg_by_dependency, poetry install --all-extras)
 
 format:
 	$(call in_each_code_pkg, ./format.sh)

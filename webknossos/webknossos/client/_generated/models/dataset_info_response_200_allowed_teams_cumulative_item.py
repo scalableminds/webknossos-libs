@@ -9,9 +9,9 @@ T = TypeVar("T", bound="DatasetInfoResponse200AllowedTeamsCumulativeItem")
 class DatasetInfoResponse200AllowedTeamsCumulativeItem:
     """
     Attributes:
-        id (str):  Example: 570b9f4b2a7c0e3b008da6ec.
-        name (str):  Example: team_X1.
-        organization (str):  Example: Organization_X.
+        id (str):
+        name (str):
+        organization (str):
     """
 
     id: str

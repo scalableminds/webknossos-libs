@@ -9,7 +9,7 @@ from logging import getLogger
 from logging.handlers import QueueHandler
 from queue import Empty as QueueEmpty
 from queue import Queue
-from typing import Any, List
+from typing import Any, Callable, List, Tuple
 
 # Inspired by https://stackoverflow.com/a/894284
 
@@ -33,12 +33,14 @@ class _MultiprocessingLoggingHandler(logging.Handler):
             self.setFormatter(self.wrapped_handler.formatter)
         self.filters = self.wrapped_handler.filters
 
-        self.queue = multiprocessing.Manager().Queue(-1)
+        self._manager = multiprocessing.Manager()
+        self.queue = self._manager.Queue(-1)
         self._is_closed = False
         # Use thread to asynchronously receive messages from the queue
         self._queue_thread = threading.Thread(target=self._receive, name=name)
         self._queue_thread.daemon = True
         self._queue_thread.start()
+        self._usage_counter = 1
 
     def _receive(self) -> None:
         while True:
@@ -72,11 +74,27 @@ class _MultiprocessingLoggingHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         self.wrapped_handler.emit(record)
 
+    def increment_usage(self) -> None:
+        self._usage_counter += 1
+
+    def decrement_usage(self) -> None:
+        self._usage_counter -= 1
+        if self._usage_counter == 0:
+            # unwrap inner handler:
+            root_logger = getLogger()
+            root_logger.removeHandler(self)
+            root_logger.addHandler(self.wrapped_handler)
+
+            self._is_closed = True
+            self._queue_thread.join()
+            self._manager.shutdown()
+            super().close()
+
     def close(self) -> None:
         if not self._is_closed:
             self._is_closed = True
             self._queue_thread.join()
-
+            self._manager.shutdown()
             self.wrapped_handler.close()
             super().close()
 
@@ -101,33 +119,36 @@ def _setup_logging_multiprocessing(
         root_logger.addHandler(handler)
 
 
-def _get_multiprocessing_logging_setup_fn() -> Any:
-    root_logger = getLogger()
+class _MultiprocessingLoggingHandlerPool:
+    def __init__(self) -> None:
+        root_logger = getLogger()
 
-    queues = []
-    levels = []
-    for i, handler in enumerate(list(root_logger.handlers)):
-        # Wrap logging handlers in _MultiprocessingLoggingHandlers to make them work in a multiprocessing setup
-        # when using start_methods other than fork, for example, spawn or forkserver
-        if not isinstance(handler, _MultiprocessingLoggingHandler):
-            mp_handler = _MultiprocessingLoggingHandler(
-                f"multi-processing-handler-{i}", handler
-            )
+        self.handlers = []
+        for i, handler in enumerate(list(root_logger.handlers)):
+            # Wrap logging handlers in _MultiprocessingLoggingHandlers to make them work in a multiprocessing setup
+            # when using start_methods other than fork, for example, spawn or forkserver
+            if not isinstance(handler, _MultiprocessingLoggingHandler):
+                mp_handler = _MultiprocessingLoggingHandler(
+                    f"multi-processing-handler-{i}", handler
+                )
+                root_logger.removeHandler(handler)
+                root_logger.addHandler(mp_handler)
+                self.handlers.append(mp_handler)
+            else:
+                handler.increment_usage()
+                self.handlers.append(handler)
 
-            root_logger.removeHandler(handler)
-            root_logger.addHandler(mp_handler)
-        else:
-            mp_handler = handler
+    def get_multiprocessing_logging_setup_fn(self) -> Callable[[], None]:
+        # Return a logging setup function that when called will setup QueueHandler loggers
+        # using the queues of the _MultiprocessingLoggingHandlers. This way all log messages
+        # are forwarded to the main process.
+        return functools.partial(
+            _setup_logging_multiprocessing,
+            queues=[handler.queue for handler in self.handlers],
+            levels=[handler.level for handler in self.handlers],
+            filters=warnings.filters,
+        )
 
-        queues.append(mp_handler.queue)
-        levels.append(mp_handler.level)
-
-    # Return a logging setup function that when called will setup QueueHandler loggers
-    # reusing the queues of each wrapped _MultiprocessingLoggingHandler. This way all log messages
-    # are forwarded to the main process.
-    return functools.partial(
-        _setup_logging_multiprocessing,
-        queues,
-        levels,
-        filters=warnings.filters,
-    )
+    def close(self) -> None:
+        for handler in self.handlers:
+            handler.decrement_usage()

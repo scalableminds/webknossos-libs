@@ -11,9 +11,9 @@ T = TypeVar("T", bound="ShortLinkByKeyResponse200")
 class ShortLinkByKeyResponse200:
     """
     Attributes:
-        long_link (str):  Example: http://localhost:9000.
-        id (Union[Unset, str]):  Example: 63ecbc24e00100ad02ba81ec.
-        key (Union[Unset, str]):  Example: kfu75s6Nm8-imvW4.
+        long_link (str):
+        id (Union[Unset, str]):
+        key (Union[Unset, str]):
     """
 
     long_link: str

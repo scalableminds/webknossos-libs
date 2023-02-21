@@ -11,9 +11,9 @@ T = TypeVar("T", bound="AnnotationInfoResponse200OwnerTeamsItem")
 class AnnotationInfoResponse200OwnerTeamsItem:
     """
     Attributes:
-        id (str):  Example: 570b9f4b2a7c0e3b008da6ec.
-        name (str):  Example: team_X1.
-        is_team_manager (Union[Unset, int]):  Example: True.
+        id (str):
+        name (str):
+        is_team_manager (Union[Unset, int]):
     """
 
     id: str

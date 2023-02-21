@@ -11,7 +11,7 @@ T = TypeVar("T", bound="TaskInfoResponse200NeededExperience")
 class TaskInfoResponse200NeededExperience:
     """
     Attributes:
-        domain (Union[Unset, str]):  Example: abc.
+        domain (Union[Unset, str]):
         value (Union[Unset, int]):
     """
 

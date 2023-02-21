@@ -37,12 +37,12 @@ T = TypeVar("T", bound="AnnotationInfoResponse200")
 class AnnotationInfoResponse200:
     """
     Attributes:
-        state (str):  Example: Active.
-        id (str):  Example: 58135c192faeb34c0081c05d.
+        state (str):
+        id (str):
         name (str):
         description (str):
-        typ (str):  Example: TracingBase.
-        organization (str):  Example: Organization_X.
+        typ (str):
+        organization (str):
         data_store (AnnotationInfoResponse200DataStore):
         tags (List[str]):
         modified (Union[Unset, int]):
@@ -50,11 +50,11 @@ class AnnotationInfoResponse200:
         task (Union[Unset, None, AnnotationInfoResponse200Task]):
         stats (Union[Unset, AnnotationInfoResponse200Stats]):
         restrictions (Union[Unset, AnnotationInfoResponse200Restrictions]):
-        formatted_hash (Union[Unset, str]):  Example: 81c05d.
+        formatted_hash (Union[Unset, str]):
         annotation_layers (Union[Unset, List['AnnotationInfoResponse200AnnotationLayersItem']]):
-        data_set_name (Union[Unset, str]):  Example: 2012-06-28_Cortex.
+        data_set_name (Union[Unset, str]):
         tracing_store (Union[Unset, AnnotationInfoResponse200TracingStore]):
-        visibility (Union[Unset, str]):  Example: Internal.
+        visibility (Union[Unset, str]):
         settings (Union[Unset, AnnotationInfoResponse200Settings]):
         tracing_time (Union[Unset, None, int]):
         teams (Union[Unset, List[Any]]):

@@ -17,12 +17,12 @@ T = TypeVar("T", bound="ProjectInfoByNameResponse200Owner")
 class ProjectInfoByNameResponse200Owner:
     """
     Attributes:
-        id (str):  Example: 570b9f4d2a7c0e4d008da6ef.
-        email (str):  Example: user_A@scalableminds.com.
-        first_name (str):  Example: user_A.
-        last_name (str):  Example: BoyA.
-        is_admin (int):  Example: True.
-        is_dataset_manager (int):  Example: True.
+        id (str):
+        email (str):
+        first_name (str):
+        last_name (str):
+        is_admin (int):
+        is_dataset_manager (int):
         is_anonymous (Union[Unset, int]):
         teams (Union[Unset, List['ProjectInfoByNameResponse200OwnerTeamsItem']]):
     """

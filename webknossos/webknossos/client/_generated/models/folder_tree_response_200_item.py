@@ -11,10 +11,10 @@ T = TypeVar("T", bound="FolderTreeResponse200Item")
 class FolderTreeResponse200Item:
     """
     Attributes:
-        id (str):  Example: 570b9f4e4bb848d08880712a.
-        name (str):  Example: A subfolder!.
-        parent (Union[Unset, str]):  Example: 570b9f4e4bb848d0885ea917.
-        is_editable (Union[Unset, int]):  Example: True.
+        id (str):
+        name (str):
+        parent (Union[Unset, str]):
+        is_editable (Union[Unset, int]):
     """
 
     id: str
