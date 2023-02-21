@@ -1149,11 +1149,17 @@ class Dataset:
                     is_segmentation=category == "segmentation",
                     **pims_open_kwargs,
                 )
+            if dtype is None:
+                current_dtype = np.dtype(pims_images.dtype)
+                if current_dtype.byteorder == ">":
+                    current_dtype = current_dtype.newbyteorder("<")
+            else:
+                current_dtype = np.dtype(dtype)
             layer = self.add_layer(
                 layer_name=layer_name + layer_name_suffix,
                 category=category,
                 data_format=data_format,
-                dtype_per_channel=pims_images.dtype if dtype is None else dtype,
+                dtype_per_channel=current_dtype,
                 num_channels=pims_images.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
@@ -1198,7 +1204,7 @@ class Dataset:
                 pims_images.copy_to_view,
                 mag_view=mag_view,
                 is_segmentation=category == "segmentation",
-                dtype=dtype,
+                dtype=current_dtype,
             )
 
             args = []

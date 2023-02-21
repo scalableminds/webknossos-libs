@@ -36,6 +36,12 @@ except ImportError:
     pass
 # pylint: enable=unused-import
 
+try:
+    import webknossos.dataset._utils.pims_imagej_tiff_reader
+except ImportError:
+    pass
+# pylint: enable=unused-import
+
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry.vec3_int import Vec3Int
 
