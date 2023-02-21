@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed reading czi files with non-zero axis offsets. [#876](https://github.com/scalableminds/webknossos-libs/pull/876)
 
 
 ## [0.12.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.2) - 2023-02-20

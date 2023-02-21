@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import Iterator, List, Set
+from typing import Dict, Iterator, List, Set
 
 import numpy as np
 
@@ -47,20 +47,23 @@ class PimsCziReader(FramesSequenceND):
     def __init__(self, path: PathLike, czi_channel: int = 0) -> None:
         self.path = Path(path)
         self.czi_channel = czi_channel
+        self.axis_offsets: Dict[str, int] = {}
         super().__init__()
         with self.czi_file() as czi_file:
             for axis, (
                 start,
-                length,
+                end,
             ) in czi_file.total_bounding_box.items():
                 axis = axis.lower()
                 if axis == "c":
                     continue
-                assert start == 0
+                length = end - start
                 if axis not in "xy" and length == 1:
                     # not propagating axes of length one
                     continue
+                assert length >= 0, f"axis length must be >= 0, got {length}"
                 self._init_axis(axis, length)
+                self.axis_offsets[axis] = start
             self._czi_pixel_type = czi_file.get_channel_pixel_type(self.czi_channel)
             if self._czi_pixel_type.startswith("Bgra"):
                 self._init_axis("c", 4)
@@ -94,6 +97,9 @@ class PimsCziReader(FramesSequenceND):
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
         plane = {k.upper(): v for k, v in ind.items()}
+        for axis in plane.keys():
+            if axis in self.axis_offsets:
+                plane[axis] += self.axis_offsets[axis]
 
         # safe-guard against x/y in ind argument,
         # we always read the whole slice here:
