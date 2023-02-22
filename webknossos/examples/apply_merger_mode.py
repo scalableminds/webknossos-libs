@@ -7,7 +7,6 @@ import webknossos as wk
 
 
 def main() -> None:
-
     ####################################
     # Opening a merger mode annotation #
     ####################################

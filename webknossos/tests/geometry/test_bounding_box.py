@@ -6,7 +6,6 @@ from webknossos import BoundingBox, Mag
 
 
 def test_align_with_mag_ceiled() -> None:
-
     assert BoundingBox((1, 1, 1), (10, 10, 10)).align_with_mag(
         Mag(2), ceil=True
     ) == BoundingBox(topleft=(0, 0, 0), size=(12, 12, 12))
@@ -22,7 +21,6 @@ def test_align_with_mag_ceiled() -> None:
 
 
 def test_align_with_mag_floored() -> None:
-
     assert BoundingBox((1, 1, 1), (10, 10, 10)).align_with_mag(Mag(2)) == BoundingBox(
         topleft=(2, 2, 2), size=(8, 8, 8)
     )
@@ -38,7 +36,6 @@ def test_align_with_mag_floored() -> None:
 
 
 def test_in_mag() -> None:
-
     with pytest.raises(AssertionError):
         BoundingBox((1, 2, 3), (9, 9, 9)).in_mag(Mag(2))
 
@@ -51,7 +48,6 @@ def test_in_mag() -> None:
 
 
 def test_with_bounds() -> None:
-
     assert BoundingBox((1, 2, 3), (5, 5, 5)).with_bounds_x(0, 10) == BoundingBox(
         (0, 2, 3), (10, 5, 5)
     )
@@ -64,7 +60,6 @@ def test_with_bounds() -> None:
 
 
 def test_contains() -> None:
-
     assert BoundingBox((1, 1, 1), (5, 5, 5)).contains((2, 2, 2))
     assert BoundingBox((1, 1, 1), (5, 5, 5)).contains((1, 1, 1))
 

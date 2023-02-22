@@ -1045,7 +1045,6 @@ class Layer:
 
             # perform upsampling
             with get_executor_for_args(args, executor) as actual_executor:
-
                 if buffer_shape is None:
                     buffer_shape = determine_buffer_shape(prev_mag_view.info)
                 func = named_partial(
@@ -1115,7 +1114,6 @@ class Layer:
 
 
 class SegmentationLayer(Layer):
-
     _properties: SegmentationLayerProperties
 
     @property

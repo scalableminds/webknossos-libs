@@ -60,7 +60,6 @@ class ResumableFile:
         chunk_size: int,
         generate_unique_identifier: Callable[[Path, Path], str],
     ) -> None:
-
         self.path = path
         if relative_path is not None:
             self.relative_path = relative_path

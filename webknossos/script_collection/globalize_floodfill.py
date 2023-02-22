@@ -194,7 +194,6 @@ def execute_floodfill(
 
 @contextmanager
 def temporary_annotation_view(volume_annotation_path: Path) -> Iterator[Layer]:
-
     """
     Given a volume annotation path, create a temporary dataset which
     contains the volume annotation via a symlink. Yield the layer
@@ -236,7 +235,6 @@ def merge_with_fallback_layer(
     volume_annotation_path: Path,
     segmentation_layer_path: Path,
 ) -> MagView:
-
     assert not output_path.exists(), f"Dataset at {output_path} already exists"
 
     # Prepare output dataset by creatign a shallow copy of the dataset
@@ -301,7 +299,6 @@ def merge_with_fallback_layer(
 
 
 def main(args: argparse.Namespace) -> None:
-
     # Use the skeleton API to read the bounding boxes once
     # https://github.com/scalableminds/webknossos-libs/issues/482 is done.
     nml_regex = re.compile(

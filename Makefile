@@ -16,7 +16,7 @@ list_packages_by_priority:
 	@echo $(packages_by_priority)
 
 update:
-	$(call in_each_pkg_by_dependency, poetry update --no-dev)
+	$(call in_each_pkg_by_dependency, poetry update --without dev)
 
 update-internal:
 	$(call in_each_pkg_by_dependency, poetry update $(packages_by_dependency))

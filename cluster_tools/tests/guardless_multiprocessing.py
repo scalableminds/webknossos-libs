@@ -21,7 +21,6 @@ def worker_fn() -> bool:
 
 
 def main() -> None:
-
     res_fut = get_executor("multiprocessing").submit(worker_fn)
     assert res_fut.result() == True, "Function should return True"
     print("success")

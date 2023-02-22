@@ -6,7 +6,6 @@ ANNOTATION_URL = "https://webknossos.org/annotations/622b130a010000220122ebd1"
 
 
 def main() -> None:
-
     annotation = wk.Annotation.download(ANNOTATION_URL)
     stats_per_id = {}
     with annotation.temporary_volume_layer_copy() as seg_layer:

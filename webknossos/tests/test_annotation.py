@@ -12,7 +12,6 @@ pytestmark = [pytest.mark.with_vcr]
 
 
 def test_annotation_from_zip_file() -> None:
-
     annotation = wk.Annotation.load(
         TESTDATA_DIR
         / "annotations"

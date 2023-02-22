@@ -190,7 +190,7 @@ dataset_converter.register_structure_hook(
 )
 
 dataset_converter.register_structure_hook_func(
-    lambda d: d == LayerCategoryType, lambda d, _: str(d)
+    lambda d: d == LayerCategoryType, lambda d, _: str(d)  # type: ignore[comparison-overlap]
 )
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
@@ -229,6 +229,7 @@ for cls in [
             },
         ),
     )
+
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
@@ -319,6 +320,7 @@ for cls in [
             )
         ),
     )
+
 
 # Disambiguation of Unions only work automatically if the two attrs-classes have at least 1 unique attribute
 # This is not the case here because SegmentationLayerProperties inherits LayerProperties

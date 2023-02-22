@@ -49,9 +49,7 @@ def join_messages(strings: List[str]) -> str:
 
 
 class RemoteException(Exception):
-    def __init__(
-        self, error: str, job_id: str
-    ):  # pylint: disable=super-init-not-called
+    def __init__(self, error: str, job_id: str):
         self.error = error
         self.job_id = job_id
 
@@ -312,7 +310,7 @@ class ClusterExecutor(futures.Executor):
 
             result = join_messages(
                 [
-                    f"Job submission/execution failed.",
+                    "Job submission/execution failed.",
                     reason or "",
                     f"Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}.",
                 ]
@@ -436,7 +434,9 @@ class ClusterExecutor(futures.Executor):
         return os.path.join(cfut_dir, f"cfut.main_path.{workerid}.txt")
 
     def store_main_path_to_meta_file(self, workerid: str) -> None:
-        with open(self.get_main_meta_path(self.cfut_dir, workerid), "w") as file:
+        with open(
+            self.get_main_meta_path(self.cfut_dir, workerid), "w", encoding="utf-8"
+        ) as file:
             file.write(file_path_to_absolute_module(sys.argv[0]))
 
     def map_to_futures(
@@ -533,7 +533,6 @@ class ClusterExecutor(futures.Executor):
     ) -> None:
         jobid = jobid_future.result()
         if self.debug:
-
             logging.debug(
                 "Submitted array job {} with JobId {} and {} subjobs.".format(
                     batch_description, jobid, len(futs_with_output_paths)

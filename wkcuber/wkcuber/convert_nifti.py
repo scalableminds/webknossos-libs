@@ -6,6 +6,7 @@ from typing import Any, Optional, Tuple, Union, cast
 import nibabel as nib
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
+
 from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3Int
 from webknossos.utils import time_start, time_stop
 
@@ -266,9 +267,7 @@ def convert_folder_nifti(
         segmentation_path = target_path / segmentation_subpath
         if segmentation_path not in paths:
             logging.warning(
-                "Specified segmentation_file file {} not in source path {}!".format(
-                    segmentation_path, segmentation_path
-                )
+                f"Specified segmentation_file file {segmentation_path} not in source path {segmentation_path}!"
             )
 
     logging.info("Segmentation file will also use uint8 as a datatype.")

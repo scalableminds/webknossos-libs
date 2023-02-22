@@ -59,7 +59,6 @@ def attr_attributes_transform(node):
             else [cdefbodynode.target]
         )
         for target in targets:
-
             rhs_node = astroid.Unknown(
                 lineno=cdefbodynode.lineno,
                 col_offset=cdefbodynode.col_offset,

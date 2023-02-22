@@ -480,7 +480,8 @@ class PimsImages:
         dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
-        args is expected to be the start and end of the z-range, meant for usage with an executor."""
+        args is expected to be the start and end of the z-range, meant for usage with an executor.
+        """
         z_start, z_end = args
         shapes = []
         max_id: Optional[int]
@@ -560,9 +561,9 @@ def _recursive_subclasses(cls: C) -> List[C]:
     ]
 
 
-def _get_all_pims_handlers() -> Iterable[
-    Type[Union[pims.FramesSequence, pims.FramesSequenceND]]
-]:
+def _get_all_pims_handlers() -> (
+    Iterable[Type[Union[pims.FramesSequence, pims.FramesSequenceND]]]
+):
     return chain(
         _recursive_subclasses(pims.FramesSequence),
         _recursive_subclasses(pims.FramesSequenceND),
@@ -581,7 +582,6 @@ def has_image_z_dimension(
     use_bioformats: Optional[bool],
     is_segmentation: bool,
 ) -> bool:
-
     pims_images = PimsImages(
         filepath,
         use_bioformats=use_bioformats,

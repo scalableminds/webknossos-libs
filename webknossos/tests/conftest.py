@@ -65,7 +65,7 @@ st.register_type_strategy(
 
 _mag_strategy = st.builds(
     lambda mag_xy_log2, mag_z_log2: wk.Mag(
-        (2 ** mag_xy_log2, 2 ** mag_xy_log2, 2 ** mag_z_log2)
+        (2**mag_xy_log2, 2**mag_xy_log2, 2**mag_z_log2)
     ),
     st.integers(min_value=0, max_value=12),
     st.integers(min_value=0, max_value=12),
@@ -317,7 +317,7 @@ def _from_special_formats(value: Any) -> bytes:
                     zipfile.writestr(name, entry)
             return buffer.getvalue()
 
-    if not isinstance(value, bytes):
+    if not isinstance(value, dict) and not isinstance(value, bytes):
         try:
             return value.encode("utf-8")
         except Exception:

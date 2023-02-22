@@ -71,17 +71,17 @@ all = ["pims","tifffile","imagecodecs","JPype1","pylibCZIrw",]
 
 [tool.poetry.dev-dependencies]
 # autoflake
-black = "21.7b0"
+black = "^23.1.0"
 dask = "2022.02.0"
 hypothesis = "^6.35.0"
 icecream = "^2.1.1"
 inducoapi = "^2.0.2"
 isort = "^5.9.3"
 jsonschema = "^4.6.0"
-mypy = "0.991"
+mypy = "1.0.0"
 openapi-python-client = "0.12.1"
-pylint = "^2.15.7"
-pytest = "^6.2.4"
+pylint = "^2.16.2"
+pytest = "^7.2.1"
 pytest-custom-exit-code = "^0.3.0"
 pytest-recording = "^0.12.0"
 pytest-split = "^0.8.0"
@@ -124,7 +124,7 @@ ignore = ["webknossos/client/_generated"]
 load-plugins = ["_helpers.pylint_plugins.attrs_ng_api"]
 
 [tool.pylint."MESSAGES CONTROL"]
-disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","protected-access","R","C"]
+disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","broad-exception-raised","protected-access","R","C"]
 
 [tool.pytest.ini_options]
 markers = ["with_vcr: Runs with VCR recording and optionally blocked network"]

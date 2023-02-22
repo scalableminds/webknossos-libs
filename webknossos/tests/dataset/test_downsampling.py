@@ -33,7 +33,6 @@ def test_downsample_cube() -> None:
 
 
 def test_downsample_mode() -> None:
-
     a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
     result = _mode(a)
@@ -43,7 +42,6 @@ def test_downsample_mode() -> None:
 
 
 def test_downsample_median() -> None:
-
     a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
     result = np.median(a, axis=0)
