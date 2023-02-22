@@ -9,8 +9,8 @@ T = TypeVar("T", bound="UserLoggedTimeResponse200LoggedTimeItemPaymentInterval")
 class UserLoggedTimeResponse200LoggedTimeItemPaymentInterval:
     """
     Attributes:
-        month (int):  Example: 8.
-        year (int):  Example: 2018.
+        month (int):
+        year (int):
     """
 
     month: int

@@ -141,24 +141,25 @@ def test_annotation_from_file_with_multi_volume() -> None:
     ],
 )
 def test_annotation_from_url(url: str) -> None:
-    annotation = wk.Annotation.download(url)
+    annotation = wk.Annotation.download(url, skip_volume_data=True)
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
+    mag = wk.Mag("16-16-8")
     node_bbox = wk.BoundingBox.from_points(
         next(annotation.skeleton.flattened_trees()).get_node_positions()
-    )
+    ).align_with_mag(mag, ceil=True)
     with wk.webknossos_context(url="https://webknossos.org"):
         ds = annotation.get_remote_annotation_dataset()
 
-    mag = ds.layers["Volume"].get_finest_mag()
-    annotated_data = mag.read(absolute_bounding_box=node_bbox)
-    assert annotated_data.size > 1000
+    mag_view = ds.layers["Volume"].get_mag(mag)
+    annotated_data = mag_view.read(absolute_bounding_box=node_bbox)
+    assert annotated_data.size > 10
     assert (annotated_data == 2504698).all()
-    assert mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0, 0, 0, 0] == 0
+    assert mag_view.read(absolute_offset=(0, 0, 0), size=(16, 16, 8))[0, 0, 0, 0] == 0
     assert (
-        mag.read(absolute_offset=(128, 128, 128), size=(10, 10, 10))[0, 0, 0, 0]
-        == 286021
+        mag_view.read(absolute_offset=(128, 128, 128), size=(16, 16, 8))[0, 0, 0, 0]
+        == 286022
     )
     segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
     assert segment_info.anchor_position == (2785, 4423, 1792)

@@ -9,8 +9,8 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataSourceId")
 class DatasetInfoResponse200DataSourceId:
     """
     Attributes:
-        name (str):  Example: l4_sample.
-        team (str):  Example: Organization_X.
+        name (str):
+        team (str):
     """
 
     name: str

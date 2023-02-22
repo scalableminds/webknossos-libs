@@ -9,9 +9,9 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTaskStatus")
 class AnnotationInfosByTaskIdResponse200ItemTaskStatus:
     """
     Attributes:
-        open_ (int):  Example: 10.
-        active (int):  Example: 1.
-        finished (int):  Example: -1.
+        open_ (int):
+        active (int):
+        finished (int):
     """
 
     open_: int

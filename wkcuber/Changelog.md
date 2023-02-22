@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.2...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.12.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.2) - 2023-02-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.1...v0.12.2)
+
+### Fixed
+- Fixed Docker container startup, by adding version information during build time. [#872](https://github.com/scalableminds/webknossos-libs/pull/872)
+
 
 
 ## [0.12.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.1) - 2023-02-16

@@ -11,9 +11,9 @@ T = TypeVar("T", bound="DatasetListResponse200ItemDataStore")
 class DatasetListResponse200ItemDataStore:
     """
     Attributes:
-        name (str):  Example: localhost.
-        url (str):  Example: http://localhost:9000.
-        allows_upload (int):  Example: True.
+        name (str):
+        url (str):
+        allows_upload (int):
         is_scratch (Union[Unset, int]):
         is_connector (Union[Unset, int]):
     """

@@ -26,23 +26,23 @@ T = TypeVar("T", bound="DatasetInfoResponse200")
 class DatasetInfoResponse200:
     """
     Attributes:
-        name (str):  Example: l4_sample.
+        name (str):
         data_source (DatasetInfoResponse200DataSource):
         data_store (DatasetInfoResponse200DataStore):
         allowed_teams (List['DatasetInfoResponse200AllowedTeamsItem']):
-        is_active (int):  Example: True.
+        is_active (int):
         is_public (int):
         description (str):
         display_name (str):
-        created (int):  Example: 1508495293789.
+        created (int):
         tags (List[Any]):
-        folder_id (str):  Example: 570b9f4e4bb848d0885ea917.
-        owning_organization (Union[Unset, str]):  Example: Organization_X.
+        folder_id (str):
+        owning_organization (Union[Unset, str]):
         allowed_teams_cumulative (Union[Unset, List['DatasetInfoResponse200AllowedTeamsCumulativeItem']]):
-        is_editable (Union[Unset, int]):  Example: True.
-        last_used_by_user (Union[Unset, int]):  Example: 1676459044224.
-        logo_url (Union[Unset, str]):  Example: /assets/images/mpi-logos.svg.
-        sorting_key (Union[Unset, int]):  Example: 1508495293789.
+        is_editable (Union[Unset, int]):
+        last_used_by_user (Union[Unset, int]):
+        logo_url (Union[Unset, str]):
+        sorting_key (Union[Unset, int]):
         details (Union[Unset, str]):
         is_unreported (Union[Unset, int]):
         jobs_enabled (Union[Unset, int]):

@@ -18,8 +18,8 @@ class TaskInfoResponse200TypeSettings:
     """
     Attributes:
         allowed_modes (Union[Unset, List[str]]):
-        branch_points_allowed (Union[Unset, int]):  Example: True.
-        soma_clicking_allowed (Union[Unset, int]):  Example: True.
+        branch_points_allowed (Union[Unset, int]):
+        soma_clicking_allowed (Union[Unset, int]):
         volume_interpolation_allowed (Union[Unset, int]):
         merger_mode (Union[Unset, int]):
         resolution_restrictions (Union[Unset, TaskInfoResponse200TypeSettingsResolutionRestrictions]):

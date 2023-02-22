@@ -11,9 +11,9 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemAnnotationLayersIt
 class AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem:
     """
     Attributes:
-        typ (str):  Example: Skeleton.
-        tracing_id (Union[Unset, str]):  Example: 07fd0bd7-f7a6-46d1-aaa8-58a381da4d50.
-        name (Union[Unset, str]):  Example: Skeleton.
+        typ (str):
+        tracing_id (Union[Unset, str]):
+        name (Union[Unset, str]):
     """
 
     typ: str
