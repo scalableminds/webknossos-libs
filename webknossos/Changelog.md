@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Upgrades `black`, `mypy`, `pylint`, `pytest`. [#873](https://github.com/scalableminds/webknossos-libs/pull/873)
 
 ### Fixed
 - Fixed reading czi files with non-zero axis offsets. [#876](https://github.com/scalableminds/webknossos-libs/pull/876)
