@@ -14,7 +14,7 @@ function ensure_local_test_wk {
         WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
         docker-compose pull webknossos
-        if [ -n binaryData/Organization_X/l4_sample ]; then
+        if [ ! -d binaryData/Organization_X/l4_sample ]; then
             mkdir -p binaryData/Organization_X
             pushd binaryData/Organization_X > /dev/null
             wget https://static.webknossos.org/data/l4_sample.zip
