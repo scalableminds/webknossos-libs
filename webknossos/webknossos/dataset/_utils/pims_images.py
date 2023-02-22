@@ -34,6 +34,11 @@ try:
     import webknossos.dataset._utils.pims_dm_readers
 except ImportError:
     pass
+
+try:
+    import webknossos.dataset._utils.pims_imagej_tiff_reader
+except ImportError:
+    pass
 # pylint: enable=unused-import
 
 from webknossos.dataset.mag_view import MagView
