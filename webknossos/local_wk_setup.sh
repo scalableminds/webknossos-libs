@@ -14,6 +14,14 @@ function ensure_local_test_wk {
         WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
         docker-compose pull webknossos
+        if [ ! -d binaryData/Organization_X/l4_sample ]; then
+            mkdir -p binaryData/Organization_X
+            pushd binaryData/Organization_X > /dev/null
+            wget https://static.webknossos.org/data/l4_sample.zip
+            unzip l4_sample.zip
+            rm l4_sample.zip
+            popd > /dev/null
+        fi
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
         stop_wk () {
             ARG=$?
