@@ -329,14 +329,14 @@ requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
 [[package]]
 name = "kubernetes"
-version = "23.6.0"
+version = "26.1.0"
 description = "Kubernetes python client"
 category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "kubernetes-23.6.0-py2.py3-none-any.whl", hash = "sha256:dd58e286a53071bc8e32041f07f3c2236b3ed8ca5b9f57794a5077358f7ccb06"},
-    {file = "kubernetes-23.6.0.tar.gz", hash = "sha256:cadb1cd7c44eae5b39b50316313343c0f2aff94529f067ec2ba44d38411158e3"},
+    {file = "kubernetes-26.1.0-py2.py3-none-any.whl", hash = "sha256:e3db6800abf7e36c38d2629b5cb6b74d10988ee0cba6fba45595a7cbe60c0042"},
+    {file = "kubernetes-26.1.0.tar.gz", hash = "sha256:5854b0c508e8d217ca205591384ab58389abdae608576f9c9afc35a3c76a366c"},
 ]
 
 [package.dependencies]
@@ -994,4 +994,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.2"
-content-hash = "0590f29d85aacae43f59f7d87e81e778bcb95bd10989656c410413d2400ff30c"
+content-hash = "0003d9195b459b8a95d494dc0721d80275469cee4e328b75b7daf32b7c023e76"
