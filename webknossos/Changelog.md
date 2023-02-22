@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.3...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.12.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.3) - 2023-02-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.2...v0.12.3)
 
 ### Added
 - Added support to import ImageJ Hyperstack tiff files via `Dataset.from_images` and `dataset.add_layer_from_images`. [#877](https://github.com/scalableminds/webknossos-libs/pull/877)
@@ -22,6 +32,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed reading czi files with non-zero axis offsets. [#876](https://github.com/scalableminds/webknossos-libs/pull/876)
+
 
 
 ## [0.12.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.2) - 2023-02-20
