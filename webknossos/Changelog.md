@@ -15,8 +15,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added support to import ImageJ Hyperstack tiff files via `Dataset.from_images` and `dataset.add_layer_from_images`. [#877](https://github.com/scalableminds/webknossos-libs/pull/877)
 
 ### Changed
+- `Dataset.from_images` and `dataset.add_layer_from_images` now automatically convert big endian dtypes to their little endian counterparts by default. [#877](https://github.com/scalableminds/webknossos-libs/pull/877)
 
 ### Fixed
 - Fixed reading czi files with non-zero axis offsets. [#876](https://github.com/scalableminds/webknossos-libs/pull/876)
