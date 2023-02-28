@@ -88,7 +88,7 @@ jobs:
     - name: Install dependencies (without docker)
       if: ${{ matrix.executors == 'multiprocessing' || matrix.executors == 'kubernetes' }}
       run: |
-        pip install poetry
+        pip install -r ../requirements.txt
         poetry install
 
     - name: Check typing
@@ -154,7 +154,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install poetry
+        pip install -r ../requirements.txt
         poetry install --extras all
 
     - name: Check formatting
@@ -198,13 +198,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
-        pip install poetry
+        pip install -r ../requirements.txt
         poetry install
 
     - name: Check formatting
@@ -245,14 +245,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       shell: bash
       run: |
-        pip install poetry
+        pip install -r ../requirements.txt
         poetry install
 
     - name: Run tests
@@ -278,13 +278,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
-        pip install poetry
+        pip install -r ../requirements.txt
         poetry install
 
     - name: Run tests
@@ -302,7 +302,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: "3.10"
 
