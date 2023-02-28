@@ -1,13 +1,15 @@
-FROM python:3.8
+FROM python:3.10
 
 RUN mkdir /app
 WORKDIR /app
 
+COPY requirements.txt /
+
+RUN pip install -r /requirements.txt
+
 COPY wkcuber/README.md /app
 COPY wkcuber/poetry.lock /app
 COPY wkcuber/pyproject.toml /app
-
-RUN pip install poetry
 
 COPY wkcuber/wkcuber /app/wkcuber
 COPY wkcuber/tests /app/tests
