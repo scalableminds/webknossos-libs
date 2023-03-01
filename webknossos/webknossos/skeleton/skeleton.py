@@ -23,7 +23,9 @@ class Skeleton(Group):
     A small usage example:
 
     ```python
-    annotation = Annotation("my_annotation", voxel_size=(11, 11, 24))
+    annotation = Annotation(
+        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
+    )
     group = annotation.skeleton.add_group("a group")
     tree = group.add_tree("a tree")
     node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
