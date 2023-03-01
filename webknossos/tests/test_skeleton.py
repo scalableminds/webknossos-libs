@@ -51,6 +51,20 @@ def create_dummy_skeleton() -> wk.Skeleton:
     return nml
 
 
+def test_doc_example() -> None:
+    from webknossos import Annotation
+
+    annotation = Annotation(
+        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
+    )
+    group = annotation.skeleton.add_group("a group")
+    tree = group.add_tree("a tree")
+    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
+    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
+
+    tree.add_edge(node_1, node_2)
+
+
 def test_immutability() -> None:
     skeleton = create_dummy_skeleton()
 
