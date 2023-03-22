@@ -121,6 +121,7 @@ nav:
   - Community:
     - webknossos-py/CONTRIBUTING.md
     - webknossos-py/CODE_OF_CONDUCT.md
+    - webknossos/terminology.md
     - Getting Help:
       - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
       - Email Support: mailto:hello@webknossos.org
