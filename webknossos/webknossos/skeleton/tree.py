@@ -136,8 +136,8 @@ class Tree(nx.Graph):
         self.node_dict_factory = _NodeDict
         # The lambda works because self._node is set before self._adj in networkx.Graph.__init__
         # and because the lambda is evaluated lazily.
-        self.adjlist_outer_dict_factory = lambda: _AdjDict(node_dict=self._node)
-        self.adjlist_inner_dict_factory = lambda: _AdjDict(node_dict=self._node)
+        # self.adjlist_outer_dict_factory = lambda: _AdjDict(node_dict=self._node)
+        # self.adjlist_inner_dict_factory = lambda: _AdjDict(node_dict=self._node)
 
         super().__init__()
 
@@ -153,6 +153,31 @@ class Tree(nx.Graph):
 
         # only used internally
         self._skeleton = skeleton
+
+    def adjlist_outer_dict_factory(self):
+        return _AdjDict(node_dict=self._node)
+
+    def adjlist_inner_dict_factory(self):
+        return _AdjDict(node_dict=self._node)
+
+    def __new__(cls,
+        name: str,
+        group: "Group",
+        skeleton: "Skeleton",
+        color: Optional[Vector4] = None,
+        enforced_id: Optional[int] = None,
+    ):
+
+        self = super().__new__(cls)  # Must explicitly create the new object
+        # Aside from explicit construction and return, rest of __new__
+        # is same as __init__
+        self._id = enforced_id
+        return self
+
+
+    def __getnewargs__(self):
+        # Return the arguments that *must* be passed to __new__
+        return (self.name, self.group, self._skeleton, self.color, self._id)
 
     def __to_tuple_for_comparison(self) -> Tuple:
         return (

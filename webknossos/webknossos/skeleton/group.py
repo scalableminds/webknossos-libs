@@ -1,3 +1,4 @@
+import copy
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union, cast
 
 import attr
@@ -83,6 +84,29 @@ class Group:
 
         return new_tree
 
+    def add_copy_of_tree(
+        self,
+        tree: Tree,
+        allow_id_change: Optional[bool] = True,
+    ) -> Tree:
+        """Accepts a tree object and adds a copy of it to the current group. Can be used
+        to copy trees from one skeleton object to another."""
+
+        new_tree = copy.deepcopy(tree)
+
+        if self.has_tree_id(tree.id):
+            if allow_id_change:
+                new_tree
+            else:
+                raise ValueError("Tree cannot be added to Group, as the tree id already exists and allow_id_change is False.")
+
+        new_tree._id = self._skeleton._element_id_generator.__next__()
+        new_tree.group = self
+        new_tree.skeleton = self._skeleton
+
+        self._child_trees.add(new_tree)
+        return new_tree
+
     def add_graph(
         self,
         name: str,
@@ -92,6 +116,12 @@ class Group:
         """Deprecated, please use `add_tree`."""
         warn_deprecated("add_graph()", "add_tree()")
         return self.add_tree(name=name, color=color, _enforced_id=_enforced_id)
+
+    def remove_tree_by_id(
+        self,
+        tree_id: int
+    ):
+        self._child_trees.remove(self.get_tree_by_id(tree_id))
 
     @property
     def children(self) -> Iterator[GroupOrTree]:
@@ -179,6 +209,14 @@ class Group:
             if tree.id == tree_id:
                 return tree
         raise ValueError(f"No tree with id {tree_id} was found")
+
+    def has_tree_id(self, tree_id: int) -> Tree:
+        """Returns true if this group (or a subgroup) contains a tree with the given id."""
+        try:
+            self.get_tree_by_id(tree_id)
+            return True
+        except ValueError:
+            return False
 
     def get_graph_by_id(self, graph_id: int) -> Tree:
         """Deprecated, please use `get_tree_by_id`."""
