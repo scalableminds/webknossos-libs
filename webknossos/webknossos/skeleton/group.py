@@ -64,48 +64,44 @@ class Group:
 
     def add_tree(
         self,
-        name: str,
+        name_or_tree: Union[str, Tree],
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
     ) -> Tree:
-        """Adds a tree to the current group with the provided name (and color if specified)."""
+        """Adds a tree to the current group. If the first parameter is a string,
+           a new tree will be added with the provided name and color if specified.
+           Otherwise, the first parameter is assumed to be a tree object (e.g., from
+           another skeleton). A copy of that tree will then be added. If the id
+           of the tree already exists, a new id will be generated."""
 
-        if color is not None and len(color) == 3:
-            color = cast(Optional[Vector4], color + (1.0,))
-        color = cast(Optional[Vector4], color)
-        new_tree = Tree(
-            name=name,
-            color=color,
-            group=self,
-            skeleton=self._skeleton,
-            enforced_id=_enforced_id,
-        )
-        self._child_trees.add(new_tree)
+        if type(name_or_tree) == str:
+            name = name_or_tree
+            if color is not None and len(color) == 3:
+                color = cast(Optional[Vector4], color + (1.0,))
+            color = cast(Optional[Vector4], color)
+            new_tree = Tree(
+                name=name,
+                color=color,
+                group=self,
+                skeleton=self._skeleton,
+                enforced_id=_enforced_id,
+            )
+            self._child_trees.add(new_tree)
 
-        return new_tree
+            return new_tree
+        else:
+            tree = name_or_tree
+            new_tree = copy.deepcopy(tree)
 
-    def add_copy_of_tree(
-        self,
-        tree: Tree,
-        allow_id_change: Optional[bool] = True,
-    ) -> Tree:
-        """Accepts a tree object and adds a copy of it to the current group. Can be used
-        to copy trees from one skeleton object to another."""
+            if self.has_tree_id(tree.id):
+                new_tree._id = self._skeleton._element_id_generator.__next__()
 
-        new_tree = copy.deepcopy(tree)
+            new_tree.group = self
+            new_tree.skeleton = self._skeleton
 
-        if self.has_tree_id(tree.id):
-            if allow_id_change:
-                new_tree
-            else:
-                raise ValueError("Tree cannot be added to Group, as the tree id already exists and allow_id_change is False.")
+            self._child_trees.add(new_tree)
+            return new_tree
 
-        new_tree._id = self._skeleton._element_id_generator.__next__()
-        new_tree.group = self
-        new_tree.skeleton = self._skeleton
-
-        self._child_trees.add(new_tree)
-        return new_tree
 
     def add_graph(
         self,
