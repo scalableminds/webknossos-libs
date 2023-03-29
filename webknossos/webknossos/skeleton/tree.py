@@ -168,7 +168,6 @@ class Tree(nx.Graph):
         color: Optional[Vector4] = None,
         enforced_id: Optional[int] = None,
     ):
-
         self = super().__new__(cls)  # Must explicitly create the new object
         # Aside from explicit construction and return, rest of __new__
         # is same as __init__
