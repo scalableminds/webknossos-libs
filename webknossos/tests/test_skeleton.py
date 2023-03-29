@@ -276,16 +276,17 @@ def test_load_nml(tmp_path: Path) -> None:
     skeleton_a.save(output_path)
     assert skeleton_a == wk.Skeleton.load(output_path)
 
+
 def test_remove_tree(tmp_path: Path) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
     output_path = tmp_path / "test_a.nml"
     skeleton_a = wk.Skeleton.load(input_path)
-    
+
     # Check that tree exists
     tree = skeleton_a.get_tree_by_id(1)
     assert tree is not None
     assert tree in list(skeleton_a.children)
-    
+
     # Check that tree doesn't exist anymore
     skeleton_a.remove_tree_by_id(1)
     with pytest.raises(ValueError):
@@ -304,15 +305,18 @@ def test_remove_tree(tmp_path: Path) -> None:
     skeleton_a = wk.Skeleton.load(input_path)
     assert tree in list(skeleton_a.children)
 
+
 def test_add_tree_with_obj(tmp_path: Path) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
     output_path = tmp_path / "test_a.nml"
     skeleton_a = wk.Skeleton.load(input_path)
-    
+
     # Check that tree exists
     tree = skeleton_a.get_tree_by_id(1)
-    
-    skeleton_b = wk.Skeleton(voxel_size=skeleton_a.voxel_size, dataset_name=skeleton_a.dataset_name)
+
+    skeleton_b = wk.Skeleton(
+        voxel_size=skeleton_a.voxel_size, dataset_name=skeleton_a.dataset_name
+    )
     skeleton_b.add_tree(tree)
 
     assert tree is not skeleton_b.get_tree_by_id(1)

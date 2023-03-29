@@ -154,13 +154,14 @@ class Tree(nx.Graph):
         # only used internally
         self._skeleton = skeleton
 
-    def adjlist_outer_dict_factory(self):
-        return _AdjDict(node_dict=self._node)
+    # def adjlist_outer_dict_factory(self):
+    #     return _AdjDict(node_dict=self._node)
 
-    def adjlist_inner_dict_factory(self):
-        return _AdjDict(node_dict=self._node)
+    # def adjlist_inner_dict_factory(self):
+    #     return _AdjDict(node_dict=self._node)
 
-    def __new__(cls,
+    def __new__(
+        cls,
         name: str,
         group: "Group",
         skeleton: "Skeleton",
@@ -173,7 +174,6 @@ class Tree(nx.Graph):
         # is same as __init__
         self._id = enforced_id
         return self
-
 
     def __getnewargs__(self):
         # Return the arguments that *must* be passed to __new__

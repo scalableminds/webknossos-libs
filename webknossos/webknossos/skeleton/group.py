@@ -69,10 +69,10 @@ class Group:
         _enforced_id: Optional[int] = None,
     ) -> Tree:
         """Adds a tree to the current group. If the first parameter is a string,
-           a new tree will be added with the provided name and color if specified.
-           Otherwise, the first parameter is assumed to be a tree object (e.g., from
-           another skeleton). A copy of that tree will then be added. If the id
-           of the tree already exists, a new id will be generated."""
+        a new tree will be added with the provided name and color if specified.
+        Otherwise, the first parameter is assumed to be a tree object (e.g., from
+        another skeleton). A copy of that tree will then be added. If the id
+        of the tree already exists, a new id will be generated."""
 
         if type(name_or_tree) == str:
             name = name_or_tree
@@ -102,7 +102,6 @@ class Group:
             self._child_trees.add(new_tree)
             return new_tree
 
-
     def add_graph(
         self,
         name: str,
@@ -113,10 +112,7 @@ class Group:
         warn_deprecated("add_graph()", "add_tree()")
         return self.add_tree(name=name, color=color, _enforced_id=_enforced_id)
 
-    def remove_tree_by_id(
-        self,
-        tree_id: int
-    ):
+    def remove_tree_by_id(self, tree_id: int):
         self._child_trees.remove(self.get_tree_by_id(tree_id))
 
     @property
