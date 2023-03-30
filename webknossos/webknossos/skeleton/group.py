@@ -74,7 +74,7 @@ class Group:
         another skeleton). A copy of that tree will then be added. If the id
         of the tree already exists, a new id will be generated."""
 
-        if type(name_or_tree) == str:
+        if type(name_or_tree) is str:
             name = name_or_tree
             if color is not None and len(color) == 3:
                 color = cast(Optional[Vector4], color + (1.0,))
@@ -90,7 +90,7 @@ class Group:
 
             return new_tree
         else:
-            tree = name_or_tree
+            tree = cast(Tree, name_or_tree)
             new_tree = copy.deepcopy(tree)
 
             if self.has_tree_id(tree.id):
@@ -112,7 +112,7 @@ class Group:
         warn_deprecated("add_graph()", "add_tree()")
         return self.add_tree(name_or_tree=name, color=color, _enforced_id=_enforced_id)
 
-    def remove_tree_by_id(self, tree_id: int):
+    def remove_tree_by_id(self, tree_id: int) -> None:
         self._child_trees.remove(self.get_tree_by_id(tree_id))
 
     @property
@@ -202,7 +202,7 @@ class Group:
                 return tree
         raise ValueError(f"No tree with id {tree_id} was found")
 
-    def has_tree_id(self, tree_id: int) -> Tree:
+    def has_tree_id(self, tree_id: int) -> bool:
         """Returns true if this group (or a subgroup) contains a tree with the given id."""
         try:
             self.get_tree_by_id(tree_id)

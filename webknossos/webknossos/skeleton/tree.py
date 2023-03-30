@@ -148,10 +148,10 @@ class Tree(nx.Graph):
         # only used internally
         self._skeleton = skeleton
 
-    def adjlist_outer_dict_factory(self):
+    def adjlist_outer_dict_factory(self) -> _AdjDict:
         return _AdjDict(node_dict=self._node)
 
-    def adjlist_inner_dict_factory(self):
+    def adjlist_inner_dict_factory(self) -> _AdjDict:
         return _AdjDict(node_dict=self._node)
 
     def __new__(
@@ -161,7 +161,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",  # pylint: disable=unused-argument
         color: Optional[Vector4] = None,  # pylint: disable=unused-argument
         enforced_id: Optional[int] = None,
-    ):
+    ) -> "Tree":
         self = super().__new__(cls)
 
         # read-only member, exposed via properties
@@ -172,7 +172,7 @@ class Tree(nx.Graph):
 
         return self
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> Tuple:
         # Return the arguments that *must* be passed to __new__
         return (self.name, self.group, self._skeleton, self.color, self._id)
 
