@@ -114,7 +114,7 @@ class Tree(nx.Graph):
         group: "Group",
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None, # pylint: disable=unused-argument
+        enforced_id: Optional[int] = None,  # pylint: disable=unused-argument
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -156,14 +156,14 @@ class Tree(nx.Graph):
 
     def __new__(
         cls,
-        name: str, # pylint: disable=unused-argument
-        group: "Group", # pylint: disable=unused-argument
-        skeleton: "Skeleton", # pylint: disable=unused-argument
-        color: Optional[Vector4] = None, # pylint: disable=unused-argument
+        name: str,  # pylint: disable=unused-argument
+        group: "Group",  # pylint: disable=unused-argument
+        skeleton: "Skeleton",  # pylint: disable=unused-argument
+        color: Optional[Vector4] = None,  # pylint: disable=unused-argument
         enforced_id: Optional[int] = None,
     ):
         self = super().__new__(cls)
-        
+
         # read-only member, exposed via properties
         if enforced_id is not None:
             self._id = enforced_id
