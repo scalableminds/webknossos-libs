@@ -114,7 +114,7 @@ class Tree(nx.Graph):
         group: "Group",
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None,
+        enforced_id: Optional[int] = None, # pylint: disable=unused-argument
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -145,33 +145,31 @@ class Tree(nx.Graph):
         self.group = group
         self.color = color
 
+        # only used internally
+        self._skeleton = skeleton
+
+    def adjlist_outer_dict_factory(self):
+        return _AdjDict(node_dict=self._node)
+
+    def adjlist_inner_dict_factory(self):
+        return _AdjDict(node_dict=self._node)
+
+    def __new__(
+        cls,
+        name: str, # pylint: disable=unused-argument
+        group: "Group", # pylint: disable=unused-argument
+        skeleton: "Skeleton", # pylint: disable=unused-argument
+        color: Optional[Vector4] = None, # pylint: disable=unused-argument
+        enforced_id: Optional[int] = None,
+    ):
+        self = super().__new__(cls)
+        
         # read-only member, exposed via properties
         if enforced_id is not None:
             self._id = enforced_id
         else:
             self._id = skeleton._element_id_generator.__next__()
 
-        # only used internally
-        self._skeleton = skeleton
-
-    # def adjlist_outer_dict_factory(self):
-    #     return _AdjDict(node_dict=self._node)
-
-    # def adjlist_inner_dict_factory(self):
-    #     return _AdjDict(node_dict=self._node)
-
-    def __new__(
-        cls,
-        name: str,
-        group: "Group",
-        skeleton: "Skeleton",
-        color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None,
-    ):
-        self = super().__new__(cls)  # Must explicitly create the new object
-        # Aside from explicit construction and return, rest of __new__
-        # is same as __init__
-        self._id = enforced_id
         return self
 
     def __getnewargs__(self):

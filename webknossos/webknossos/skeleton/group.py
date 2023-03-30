@@ -110,7 +110,7 @@ class Group:
     ) -> Tree:
         """Deprecated, please use `add_tree`."""
         warn_deprecated("add_graph()", "add_tree()")
-        return self.add_tree(name=name, color=color, _enforced_id=_enforced_id)
+        return self.add_tree(name_or_tree=name, color=color, _enforced_id=_enforced_id)
 
     def remove_tree_by_id(self, tree_id: int):
         self._child_trees.remove(self.get_tree_by_id(tree_id))
