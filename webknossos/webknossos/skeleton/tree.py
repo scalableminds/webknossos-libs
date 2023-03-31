@@ -160,18 +160,17 @@ class Tree(nx.Graph):
         # tuple is passed as arguments to __new__.
         return (self.name, self.group, self._skeleton, self.color, self._id)
 
-    """
-    node_dict_factory, adjlist_outer_dict_factory and adjlist_inner_dict_factory are used by networkx
-    from which we subclass.
-    To be able to reference nodes by id after adding them for the first time, we use custom dict-like classes
-    for the networkx-graph structures, that have nodes as keys:
-        * `self._node`: _NodeDict
-           holding the attributes of nodes, keeping references from ids to nodes
-        * `self._adj`: _AdjDict on the first two levels
-          holding edge attributes on the last level, using self._node to convert ids to nodes
-    It's important to set the attributes before the parent's init so that they shadow the class-attributes.
-    For further details, see the *Subclasses* section here: https://networkx.org/documentation/stable/reference/classes/graph.html
-    """
+    # node_dict_factory, adjlist_outer_dict_factory and adjlist_inner_dict_factory are used by networkx
+    # from which we subclass.
+    # To be able to reference nodes by id after adding them for the first time, we use custom dict-like classes
+    # for the networkx-graph structures, that have nodes as keys:
+    #     * `self._node`: _NodeDict
+    #        holding the attributes of nodes, keeping references from ids to nodes
+    #     * `self._adj`: _AdjDict on the first two levels
+    #       holding edge attributes on the last level, using self._node to convert ids to nodes
+    # It's important to set the attributes before the parent's init so that they shadow the class-attributes.
+    # For further details, see the *Subclasses* section here: https://networkx.org/documentation/stable/reference/classes/graph.html
+
     node_dict_factory = _NodeDict
 
     def adjlist_outer_dict_factory(self) -> _AdjDict:
