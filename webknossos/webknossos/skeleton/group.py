@@ -74,11 +74,12 @@ class Group:
         another skeleton). A copy of that tree will then be added. If the id
         of the tree already exists, a new id will be generated."""
 
+        if color is not None and len(color) == 3:
+            color = cast(Optional[Vector4], color + (1.0,))
+        color = cast(Optional[Vector4], color)
+        
         if type(name_or_tree) is str:
             name = name_or_tree
-            if color is not None and len(color) == 3:
-                color = cast(Optional[Vector4], color + (1.0,))
-            color = cast(Optional[Vector4], color)
             new_tree = Tree(
                 name=name,
                 color=color,
@@ -92,6 +93,13 @@ class Group:
         else:
             tree = cast(Tree, name_or_tree)
             new_tree = copy.deepcopy(tree)
+
+            if color is not None:
+                new_tree.color = color
+
+            if _enforced_id is not None:
+                assert not self.has_tree_id(_enforced_id), "A tree with the specified _enforced_id already exists in this group."
+                new_tree._id = _enforced_id
 
             if self.has_tree_id(tree.id):
                 new_tree._id = self._skeleton._element_id_generator.__next__()
