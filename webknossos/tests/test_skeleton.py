@@ -324,6 +324,7 @@ def test_add_tree_with_obj(tmp_path: Path) -> None:
 
     skeleton_b.save(output_path)
 
+
 def test_add_tree_with_obj_and_properties(tmp_path: Path) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
     output_path = tmp_path / "test_a.nml"
@@ -336,7 +337,7 @@ def test_add_tree_with_obj_and_properties(tmp_path: Path) -> None:
         voxel_size=skeleton_a.voxel_size, dataset_name=skeleton_a.dataset_name
     )
     new_tree = skeleton_b.add_tree(tree, color=(1, 2, 3), _enforced_id=1337)
-    
+
     assert new_tree is skeleton_b.get_tree_by_id(1337)
     assert new_tree is not tree
     assert new_tree != tree

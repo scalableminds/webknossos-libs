@@ -77,7 +77,7 @@ class Group:
         if color is not None and len(color) == 3:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
-        
+
         if type(name_or_tree) is str:
             name = name_or_tree
             new_tree = Tree(
@@ -98,7 +98,9 @@ class Group:
                 new_tree.color = color
 
             if _enforced_id is not None:
-                assert not self.has_tree_id(_enforced_id), "A tree with the specified _enforced_id already exists in this group."
+                assert not self.has_tree_id(
+                    _enforced_id
+                ), "A tree with the specified _enforced_id already exists in this group."
                 new_tree._id = _enforced_id
 
             if self.has_tree_id(tree.id):
