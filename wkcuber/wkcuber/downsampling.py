@@ -19,7 +19,6 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-
     parser = AsciiArgumentParser()
 
     parser.add_argument(

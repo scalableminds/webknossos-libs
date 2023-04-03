@@ -81,7 +81,6 @@ class AsciiArgumentParser(ArgumentParser):
     IGNORE_FLAG = "--allow-non-ascii"
 
     def parse_args(self, args: Optional[Sequence[str]] = None, namespace: Optional[Namespace] = None) -> Any:  # type: ignore
-
         if args is None:
             args = sys.argv[1:]
 
