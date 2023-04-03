@@ -83,7 +83,7 @@ class AsciiArgumentParser(ArgumentParser):
     def parse_args(self, args: Optional[Sequence[str]] = None, namespace: Optional[Namespace] = None) -> Any:  # type: ignore
 
         if args is None:
-            args = sys.argv
+            args = sys.argv[1:]
 
         results = re.findall(r"[^\x00-\x7F]", " ".join(args))
         if len(results) > 0:
@@ -94,7 +94,7 @@ class AsciiArgumentParser(ArgumentParser):
                     f"The shell command contains non-ascii characters. Please remove them to avoid unintended effects. Alternatively, pass the argument {self.IGNORE_FLAG}. The special characters are: {results}"
                 )
 
-        return super(args, namespace)
+        return super().parse_args(args, namespace)
 
 
 def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:
