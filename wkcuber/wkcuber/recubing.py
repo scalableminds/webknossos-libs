@@ -4,6 +4,7 @@ from webknossos import Dataset
 from webknossos.utils import get_executor_for_args
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_data_format_flags,
     add_distribution_flags,
     add_verbose_flag,
@@ -14,7 +15,7 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path",

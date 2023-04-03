@@ -29,6 +29,7 @@ from webknossos.utils import time_start, time_stop
 
 from ._internal.image_readers import image_reader
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_batch_size_flag,
     add_data_format_flags,
     add_distribution_flags,
@@ -46,7 +47,7 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path", help="Directory containing the input images.", type=Path

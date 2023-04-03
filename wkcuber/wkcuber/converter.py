@@ -9,6 +9,7 @@ from webknossos.utils import get_executor_for_args
 
 from ._internal.image_readers import image_reader
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_data_format_flags,
     add_verbose_flag,
     add_voxel_size_flag,
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser(
+    parser = AsciiArgumentParser(
         epilog="If you want to pass more specific config values, please use the individual converters. See the readme for a complete overview."
     )
 

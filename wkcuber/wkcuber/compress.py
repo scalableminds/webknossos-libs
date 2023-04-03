@@ -7,6 +7,7 @@ from webknossos import Dataset, Mag
 from webknossos.utils import rmtree
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_distribution_flags,
     add_verbose_flag,
     parse_path,
@@ -18,7 +19,7 @@ BACKUP_EXT = ".bak"
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path",

@@ -12,6 +12,7 @@ import wkw
 from webknossos import LayerCategoryType, Mag
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_voxel_size_flag,
     add_verbose_flag,
     setup_logging,
@@ -35,7 +36,7 @@ def get_datasource_path(dataset_path: Path) -> Path:
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument("path", help="Directory containing the dataset.", type=Path)
 

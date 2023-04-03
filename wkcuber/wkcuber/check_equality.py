@@ -7,6 +7,7 @@ import numpy as np
 from webknossos import Dataset, View
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_distribution_flags,
     add_verbose_flag,
     parse_path,
@@ -17,7 +18,7 @@ from .compress import BACKUP_EXT
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path", help="Path to input WKW dataset", type=parse_path

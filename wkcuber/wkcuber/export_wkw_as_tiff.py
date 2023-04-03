@@ -14,6 +14,7 @@ from webknossos.geometry.vec3_int import Vec3Int
 from webknossos.utils import wait_and_ensure_success
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_batch_size_flag,
     add_distribution_flags,
     add_verbose_flag,
@@ -26,7 +27,7 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "--source_path",
