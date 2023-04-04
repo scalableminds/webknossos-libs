@@ -87,13 +87,12 @@ class AsciiArgumentParser(ArgumentParser):
         # Search for non-ascii codes (ASCII itself spans 0-127 or 0x00 to 0x7F).
         results = re.findall(r"[^\x00-\x7F]", " ".join(args))
         if len(results) > 0:
-            if self.IGNORE_FLAG in args:
-                args = [el for el in sys.argv if el != self.IGNORE_FLAG]
-            else:
+            if not self.IGNORE_FLAG in args:
                 raise ValueError(
                     f"The shell command contains non-ascii characters. Please remove them to avoid unintended effects. If you need them, pass {self.IGNORE_FLAG} to suppress this error. The special characters are: {results}"
                 )
 
+        args = [el for el in args if el != self.IGNORE_FLAG]
         return super().parse_args(args, namespace)
 
 
