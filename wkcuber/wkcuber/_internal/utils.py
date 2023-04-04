@@ -90,7 +90,7 @@ class AsciiArgumentParser(ArgumentParser):
                 args = [el for el in sys.argv if el != self.IGNORE_FLAG]
             else:
                 raise ValueError(
-                    f"The shell command contains non-ascii characters. Please remove them to avoid unintended effects. Alternatively, pass the argument {self.IGNORE_FLAG}. The special characters are: {results}"
+                    f"The shell command contains non-ascii characters. Please remove them to avoid unintended effects. If you need them, pass {self.IGNORE_FLAG} to suppress this error. The special characters are: {results}"
                 )
 
         return super().parse_args(args, namespace)
