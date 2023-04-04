@@ -1,3 +1,4 @@
+import copy
 from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union, cast
 
 import attr
@@ -63,25 +64,53 @@ class Group:
 
     def add_tree(
         self,
-        name: str,
+        name_or_tree: Union[str, Tree],
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
     ) -> Tree:
-        """Adds a tree to the current group with the provided name (and color if specified)."""
+        """Adds a tree to the current group. If the first parameter is a string,
+        a new tree will be added with the provided name and color if specified.
+        Otherwise, the first parameter is assumed to be a tree object (e.g., from
+        another skeleton). A copy of that tree will then be added. If the id
+        of the tree already exists, a new id will be generated."""
 
         if color is not None and len(color) == 3:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
-        new_tree = Tree(
-            name=name,
-            color=color,
-            group=self,
-            skeleton=self._skeleton,
-            enforced_id=_enforced_id,
-        )
-        self._child_trees.add(new_tree)
 
-        return new_tree
+        if type(name_or_tree) is str:
+            name = name_or_tree
+            new_tree = Tree(
+                name=name,
+                color=color,
+                group=self,
+                skeleton=self._skeleton,
+                enforced_id=_enforced_id,
+            )
+            self._child_trees.add(new_tree)
+
+            return new_tree
+        else:
+            tree = cast(Tree, name_or_tree)
+            new_tree = copy.deepcopy(tree)
+
+            if color is not None:
+                new_tree.color = color
+
+            if _enforced_id is not None:
+                assert not self.has_tree_id(
+                    _enforced_id
+                ), "A tree with the specified _enforced_id already exists in this group."
+                new_tree._id = _enforced_id
+
+            if self.has_tree_id(tree.id):
+                new_tree._id = self._skeleton._element_id_generator.__next__()
+
+            new_tree.group = self
+            new_tree.skeleton = self._skeleton
+
+            self._child_trees.add(new_tree)
+            return new_tree
 
     def add_graph(
         self,
@@ -91,7 +120,10 @@ class Group:
     ) -> Tree:
         """Deprecated, please use `add_tree`."""
         warn_deprecated("add_graph()", "add_tree()")
-        return self.add_tree(name=name, color=color, _enforced_id=_enforced_id)
+        return self.add_tree(name_or_tree=name, color=color, _enforced_id=_enforced_id)
+
+    def remove_tree_by_id(self, tree_id: int) -> None:
+        self._child_trees.remove(self.get_tree_by_id(tree_id))
 
     @property
     def children(self) -> Iterator[GroupOrTree]:
@@ -179,6 +211,14 @@ class Group:
             if tree.id == tree_id:
                 return tree
         raise ValueError(f"No tree with id {tree_id} was found")
+
+    def has_tree_id(self, tree_id: int) -> bool:
+        """Returns true if this group (or a subgroup) contains a tree with the given id."""
+        try:
+            self.get_tree_by_id(tree_id)
+            return True
+        except ValueError:
+            return False
 
     def get_graph_by_id(self, graph_id: int) -> Tree:
         """Deprecated, please use `get_tree_by_id`."""

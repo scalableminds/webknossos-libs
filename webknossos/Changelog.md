@@ -15,6 +15,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- `Group.add_tree` now also accepts a tree object as a first parameter (instead of only a string). [#891](https://github.com/scalableminds/webknossos-libs/pull/891)
+- `Group.remove_tree_by_id` was added. [#891](https://github.com/scalableminds/webknossos-libs/pull/891)
 
 ### Changed
 - Upgrades `black`, `mypy`, `pylint`, `pytest`. [#873](https://github.com/scalableminds/webknossos-libs/pull/873)
