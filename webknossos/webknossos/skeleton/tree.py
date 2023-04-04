@@ -114,7 +114,7 @@ class Tree(nx.Graph):
         group: "Group",
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None,
+        enforced_id: Optional[int] = None,  # pylint: disable=unused-argument
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -122,37 +122,64 @@ class Tree(nx.Graph):
         attached as a child to the object the method was called on.
         """
 
-        # To be able to reference nodes by id after adding them for the first time, we use custom dict-like classes
-        # for the networkx-graph structures, that have nodes as keys:
-        # * `self._node`: _NodeDict
-        #   holding the attributes of nodes, keeping references from ids to nodes
-        # * `self._adj`: _AdjDict on the first two levels
-        #   holding edge attributes on the last level, using self._node to convert ids to nodes
-        #
-        # It's important to set the attributes before the parent's init so that they shadow the class-attributes.
-        #
-        # For further details, see the *Subclasses* section here: https://networkx.org/documentation/stable/reference/classes/graph.html
-
-        self.node_dict_factory = _NodeDict
-        # The lambda works because self._node is set before self._adj in networkx.Graph.__init__
-        # and because the lambda is evaluated lazily.
-        self.adjlist_outer_dict_factory = lambda: _AdjDict(node_dict=self._node)
-        self.adjlist_inner_dict_factory = lambda: _AdjDict(node_dict=self._node)
-
         super().__init__()
-
+        # Note that id is set up in __new__
         self.name = name
         self.group = group
         self.color = color
 
-        # read-only member, exposed via properties
+        # only used internally
+        self._skeleton = skeleton
+
+    def __new__(
+        cls,
+        name: str,  # pylint: disable=unused-argument
+        group: "Group",  # pylint: disable=unused-argument
+        skeleton: "Skeleton",  # pylint: disable=unused-argument
+        color: Optional[Vector4] = None,  # pylint: disable=unused-argument
+        enforced_id: Optional[int] = None,
+    ) -> "Tree":
+        self = super().__new__(cls)
+
+        # self._id is a read-only member, exposed via properties.
+        # It is set in __new__ instead of __init__ so that pickling/unpickling
+        # works without problems. As long as the deserialization of a tree instance
+        # is not finished, the object is only half-initialized. Since self._id
+        # is needed by __hash__, an error would be raised otherwise.
+        # Also see:
+        # https://stackoverflow.com/questions/46283738/attributeerror-when-using-python-deepcopy
         if enforced_id is not None:
             self._id = enforced_id
         else:
             self._id = skeleton._element_id_generator.__next__()
 
-        # only used internally
-        self._skeleton = skeleton
+        return self
+
+    def __getnewargs__(self) -> Tuple:
+        # pickle.dump will pickle instances of Tree so that the following
+        # tuple is passed as arguments to __new__.
+        return (self.name, self.group, self._skeleton, self.color, self._id)
+
+    # node_dict_factory, adjlist_outer_dict_factory and adjlist_inner_dict_factory are used by networkx
+    # from which we subclass.
+    # To be able to reference nodes by id after adding them for the first time, we use custom dict-like classes
+    # for the networkx-graph structures, that have nodes as keys:
+    #     * `self._node`: _NodeDict
+    #        holding the attributes of nodes, keeping references from ids to nodes
+    #     * `self._adj`: _AdjDict on the first two levels
+    #       holding edge attributes on the last level, using self._node to convert ids to nodes
+    # It's important to set the attributes before the parent's init so that they shadow the class-attributes.
+    # For further details, see the *Subclasses* section here: https://networkx.org/documentation/stable/reference/classes/graph.html
+
+    node_dict_factory = _NodeDict
+
+    def adjlist_outer_dict_factory(self) -> _AdjDict:
+        # self._node will already be available when this method is called, because networkx.Graph.__init__
+        # sets up the nodes first and then the edges (i.e., adjacency list).
+        return _AdjDict(node_dict=self._node)
+
+    def adjlist_inner_dict_factory(self) -> _AdjDict:
+        return _AdjDict(node_dict=self._node)
 
     def __to_tuple_for_comparison(self) -> Tuple:
         return (
