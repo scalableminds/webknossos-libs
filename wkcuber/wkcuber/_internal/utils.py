@@ -84,6 +84,7 @@ class AsciiArgumentParser(ArgumentParser):
         if args is None:
             args = sys.argv[1:]
 
+        # Search for non-ascii codes (ASCII itself spans 0-127 or 0x00 to 0x7F).
         results = re.findall(r"[^\x00-\x7F]", " ".join(args))
         if len(results) > 0:
             if self.IGNORE_FLAG in args:
