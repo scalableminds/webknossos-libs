@@ -1,9 +1,12 @@
+import sys
+import re
+from argparse import ArgumentParser, Namespace
 from collections import namedtuple
 from glob import iglob
 from logging import getLogger
 from math import ceil, floor
 from os import environ
-from typing import Generator, Sequence, Tuple, Union
+from typing import Generator, Sequence, Tuple, Union, Optional
 
 import numpy as np
 import wkw
@@ -63,6 +66,34 @@ def parse_padding(padding_str: str) -> Tuple[int, ...]:
         return padding_tuple
     except Exception as e:
         raise argparse.ArgumentTypeError("The padding could not be parsed") from e
+
+
+class AsciiArgumentParser(ArgumentParser):
+    """
+    This class is a lightweight wrapper around ArgumentParser and checks
+    that the shell command doesn't contain non-ascii characters since these
+    can easily disturb the argument parsing.
+
+    If non-ascii characters are found, an error is raised. This behavior
+    can be disabled by passing --allow-non-ascii on the command line.
+    """
+
+    IGNORE_FLAG = "--allow-non-ascii"
+
+    def parse_args(self, args: Optional[Sequence[str]] = None, namespace: Optional[Namespace] = None) -> Any:  # type: ignore
+        if args is None:
+            args = sys.argv[1:]
+
+        # Search for non-ascii codes (ASCII itself spans 0-127 or 0x00 to 0x7F).
+        results = re.findall(r"[^\x00-\x7F]", " ".join(args))
+        if len(results) > 0:
+            if not self.IGNORE_FLAG in args:
+                raise ValueError(
+                    f"The shell command contains non-ascii characters. Please remove them to avoid unintended effects. If you need them, pass {self.IGNORE_FLAG} to suppress this error. The special characters are: {results}"
+                )
+
+        args = [el for el in args if el != self.IGNORE_FLAG]
+        return super().parse_args(args, namespace)
 
 
 def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:

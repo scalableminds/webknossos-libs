@@ -10,6 +10,7 @@ from webknossos.utils import time_start, time_stop
 
 from ._internal.knossos import CUBE_EDGE_LEN
 from ._internal.utils import (
+    AsciiArgumentParser,
     KnossosDatasetInfo,
     add_data_format_flags,
     add_distribution_flags,
@@ -24,7 +25,7 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path",

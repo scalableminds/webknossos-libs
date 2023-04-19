@@ -5,11 +5,17 @@ from webknossos import Dataset, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
 
-from ._internal.utils import add_verbose_flag, parse_path, setup_logging, setup_warnings
+from ._internal.utils import (
+    add_verbose_flag,
+    parse_path,
+    setup_logging,
+    setup_warnings,
+    AsciiArgumentParser,
+)
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path",

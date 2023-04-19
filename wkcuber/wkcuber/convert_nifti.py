@@ -11,6 +11,7 @@ from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3
 from webknossos.utils import time_start, time_stop
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_data_format_flags,
     add_verbose_flag,
     add_voxel_size_flag,
@@ -23,7 +24,7 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path",

@@ -6,6 +6,7 @@ from webknossos import Dataset, Mag, Vec3Int, SamplingModes
 from webknossos.utils import get_executor_for_args
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_distribution_flags,
     add_interpolation_flag,
     add_isotropic_flag,
@@ -18,7 +19,7 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "path", help="Directory containing the dataset.", type=parse_path
