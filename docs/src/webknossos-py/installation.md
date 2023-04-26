@@ -10,3 +10,9 @@ You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via p
 ```bash
 pip install webknossos
 ```
+
+For some usecases it is necsessary to install the optional dependencies:
+
+```bash
+pip install "webknossos[all]"
+```
