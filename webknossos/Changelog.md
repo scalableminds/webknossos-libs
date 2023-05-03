@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Upgrades `black`, `mypy`, `pylint`, `pytest`. [#873](https://github.com/scalableminds/webknossos-libs/pull/873)
 
 ### Fixed
+- Fixed poetry build backend for new versions of Poetry. [#899](https://github.com/scalableminds/webknossos-libs/pull/899)
 
 
 ## [0.12.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.3) - 2023-02-22
