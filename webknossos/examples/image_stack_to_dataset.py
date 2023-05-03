@@ -4,10 +4,10 @@ from webknossos import Dataset
 from webknossos.dataset import COLOR_CATEGORY
 
 INPUT_FILES = (
-    Path("webknossos/testdata/tiff/test.0000.tiff"),
-    Path("webknossos/testdata/tiff/test.0001.tiff"),
+    Path(__file__).parent.parent / "testdata" / "tiff" / "test.0000.tiff",
+    Path(__file__).parent.parent / "testdata" / "tiff" / "test.0001.tiff",
 )
-OUTPUT_FOLDER = Path("../example_output/tiff_dataset")
+OUTPUT_FOLDER = Path("testoutput/tiff_dataset")
 
 
 def main() -> None:

@@ -3,8 +3,8 @@ from pathlib import Path
 from webknossos import Dataset
 from webknossos.dataset import COLOR_CATEGORY
 
-INPUT_DIR = Path("webknossos/testdata/tiff")
-OUTPUT_DIR = Path("../example_output/my_tiff_dataset")
+INPUT_DIR = Path(__file__).parent.parent / "testdata" / "tiff"
+OUTPUT_DIR = Path("testoutput/my_tiff_dataset")
 
 
 def main() -> None:
@@ -16,7 +16,10 @@ def main() -> None:
         layer_category=COLOR_CATEGORY,
         compress=True,
     )
-    dataset.upload()
+
+    print(f"Saved {dataset.name} at {dataset.path}.")
+
+    # dataset.upload()
 
 
 if __name__ == "__main__":

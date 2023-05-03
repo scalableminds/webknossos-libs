@@ -72,6 +72,40 @@ def test_dataset_usage() -> None:
     assert data_in_mag2_subset.shape == (3, 256, 256, 16)
 
 
+def test_create_dataset_from_images() -> None:
+    with tmp_cwd():
+        import examples.create_dataset_from_images as example
+
+        (dataset,) = exec_main_and_get_vars(example, "dataset")
+        assert dataset.voxel_size == (11, 11, 11)
+        assert len(dataset.layers) == 1
+        assert dataset.get_layer("tiff").get_finest_mag().read().shape == (
+            1,
+            265,
+            265,
+            257,
+        )
+        assert dataset.get_layer("tiff").dtype_per_channel == "uint8"
+
+
+def test_image_stack_to_dataset() -> None:
+    with tmp_cwd():
+        import examples.image_stack_to_dataset as example
+
+        from webknossos.dataset import COLOR_CATEGORY
+
+        (dataset,) = exec_main_and_get_vars(example, "dataset")
+        assert len(dataset.layers) == 1
+        assert dataset.get_layer("test").category == COLOR_CATEGORY
+        assert dataset.get_layer("test").get_finest_mag().read().shape == (
+            1,
+            265,
+            265,
+            2,
+        )
+        assert dataset.get_layer("test").dtype_per_channel == "uint8"
+
+
 @pytest.mark.block_network(allowed_hosts=[".*"])
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_apply_merger_mode() -> None:
