@@ -91,7 +91,6 @@ def test_create_dataset_from_images() -> None:
 def test_image_stack_to_dataset() -> None:
     with tmp_cwd():
         import examples.image_stack_to_dataset as example
-
         from webknossos.dataset import COLOR_CATEGORY
 
         (dataset,) = exec_main_and_get_vars(example, "dataset")
