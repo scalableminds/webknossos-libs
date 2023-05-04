@@ -80,6 +80,8 @@ nav:
         - webknossos-py/examples/dataset_usage.md
         - webknossos-py/examples/upload_tiff_stack.md
         - webknossos-py/examples/upload_image_data.md
+        - webknossos-py/examples/create_dataset_from_images.md
+        - webknossos-py/examples/image_stack_to_dataset.md
         - webknossos-py/examples/download_image_data.md
         - webknossos-py/examples/download_tiff_stack.md
         - webknossos-py/examples/remote_datasets.md
