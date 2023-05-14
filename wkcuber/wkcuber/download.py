@@ -1,13 +1,12 @@
 """This module takes care of downsampling WEBKNOSSOS datasets."""
 
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Optional, Tuple
 
 import typer
 from rich import print as rprint
-from webknossos import BoundingBox, Dataset
 
-from wkcuber.utils.bounding_box import parse_bounding_box
+from webknossos import BoundingBox, Dataset
 
 app = typer.Typer(invoke_without_command=True)
 
@@ -63,11 +62,10 @@ def main(
         ),
     ] = "https://webknossos.org",
     bounding_box: Annotated[
-        Optional[BoundingBox],
+        Optional[Tuple[int, int, int, int, int, int]],
         typer.Option(
             rich_help_panel="Partial download",
-            parser=parse_bounding_box,
-            help="Bounding box that should be downloaded.",
+            help="Bounding box that should be downloaded. First three integers are top-left coordinates and the remaining integers are bottom-right coordinates.",
         ),
     ] = None,
     layers: Annotated[
@@ -80,11 +78,13 @@ def main(
 ):
     """Download a WEBKNOSSOS dataset from a remote location."""
 
+    bbox = None if bounding_box is None else BoundingBox.from_tuple6(bounding_box)
+
     if full_url is not None:
         rprint(f"Downloading from url [blue]{full_url}[/blue] ...")
         Dataset.download(
             dataset_name_or_url=full_url,
-            bbox=bounding_box,
+            bbox=bbox,
             layers=layers,
             path=path,
             exist_ok=exist_ok,
@@ -98,7 +98,7 @@ def main(
             organization_id=organisation_id,
             sharing_token=sharing_token,
             webknossos_url=webknossos_url,
-            bbox=bounding_box,
+            bbox=bbox,
             layers=layers,
             path=path,
             exist_ok=exist_ok,

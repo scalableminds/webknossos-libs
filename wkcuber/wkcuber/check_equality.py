@@ -5,6 +5,7 @@ from typing import Annotated
 
 import typer
 from rich import print as rprint
+
 from webknossos import Dataset
 
 app = typer.Typer(invoke_without_command=True)
