@@ -75,7 +75,7 @@ def main(
             help="Layers that should be downloaded.",
         ),
     ] = None,
-):
+) -> None:
     """Download a WEBKNOSSOS dataset from a remote location."""
 
     bbox = None if bounding_box is None else BoundingBox.from_tuple6(bounding_box)

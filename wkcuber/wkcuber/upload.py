@@ -33,7 +33,7 @@ def main(
             rich_help_panel="Executor options",
         ),
     ] = 5,
-):
+) -> None:
     """Upload the WEBKNOSSOS dataset to a remote location."""
 
     rprint(f"Uploading [blue]{dataset_name}[/blue] ...")

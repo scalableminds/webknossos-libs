@@ -25,7 +25,7 @@ def main(
             help="Path to your second WEBKNOSSOS dataset.", show_default=False
         ),
     ],
-):
+) -> None:
     """[Not supported yet] Check equality of two WEBKNOSSOS datasets."""
 
     rprint(f"Comparing [blue]{source}[/blue] with [blue]{target}[/blue] ...")

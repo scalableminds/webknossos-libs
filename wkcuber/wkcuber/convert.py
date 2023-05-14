@@ -75,7 +75,7 @@ def main(
             rich_help_panel="Executor options",
         ),
     ] = None,
-):
+) -> None:
     """Automatic detection of an image stack and conversion to a WEBKNOSSOS dataset."""
 
     rprint(f"Creating dataset [blue]{target}[/blue] from [blue]{source}[/blue] ...")
