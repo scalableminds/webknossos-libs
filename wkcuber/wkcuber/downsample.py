@@ -19,13 +19,17 @@ app = typer.Typer(
 
 @app.callback()
 def main(
+    *,
     target: Annotated[
         Path,
         typer.Argument(help="Path to your WEBKNOSSOS dataset.", show_default=False),
     ],
+    # sampling_mode: Annotated[
+    #     SamplingModes, typer.Option(help="The sampling mode to use.")
+    # ] = SamplingModes.ANISOTROPIC,
     layer_name: Annotated[
         Union[str, None],
-        typer.Argument(help="Name of the layer that should be downsampled."),
+        typer.Option(help="Name of the layer that should be downsampled."),
     ] = None,
     jobs: Annotated[
         int,
@@ -44,7 +48,8 @@ def main(
     job_ressources: Annotated[
         Optional[str],
         typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string (e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
+                (e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,

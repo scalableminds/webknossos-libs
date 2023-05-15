@@ -16,24 +16,9 @@ from wkcuber.utils import DataFormat, DistributionStrategy
 app = typer.Typer(invoke_without_command=True)
 
 
-# *,
-# map_filepath_to_layer_name: ConversionLayerMapping | ((Path) -> str) = ConversionLayerMapping.INSPECT_SINGLE_FILE,
-# z_slices_sort_key: (Path) -> Any = natsort_keygen(),
-# layer_category: LayerCategoryType | None = None,
-# data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
-# chunk_shape: Vec3IntLike | int | None = None,
-# chunks_per_shard: Vec3IntLike | int | None = None,
-# swap_xy: bool = False,
-# flip_x: bool = False,
-# flip_y: bool = False,
-# flip_z: bool = False,
-# use_bioformats: bool | None = None,
-# max_layers: int = 20,
-# batch_size: int | None = None
-
-
 @app.callback()
 def main(
+    *,
     source: Annotated[Path, typer.Argument(help="Path to your image data.")],
     target: Annotated[
         Path, typer.Argument(help="Target path to save your WEBKNOSSOS dataset.")
@@ -71,7 +56,8 @@ def main(
     job_ressources: Annotated[
         Optional[str],
         typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string (e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
+                (e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
