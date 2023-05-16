@@ -8,9 +8,9 @@ from typing import Annotated, Optional, Union
 import typer
 from rich import print as rprint
 
-from webknossos import Dataset
+from webknossos import Dataset, SamplingModes
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DistributionStrategy
+from wkcuber.utils import DistributionStrategy, SamplingMode
 
 app = typer.Typer(
     invoke_without_command=True,
@@ -24,9 +24,9 @@ def main(
         Path,
         typer.Argument(help="Path to your WEBKNOSSOS dataset.", show_default=False),
     ],
-    # sampling_mode: Annotated[
-    #     SamplingModes, typer.Option(help="The sampling mode to use.")
-    # ] = SamplingModes.ANISOTROPIC,
+    sampling_mode: Annotated[
+        SamplingMode, typer.Option(help="The sampling mode to use.")
+    ] = SamplingMode.ANISOTROPIC,
     layer_name: Annotated[
         Union[str, None],
         typer.Option(help="Name of the layer that should be downsampled."),
@@ -67,7 +67,10 @@ def main(
     dataset = Dataset.open(target)
     with get_executor_for_args(args=executor_args) as executor:
         if layer_name is None:
-            dataset.downsample(executor=executor)
+            dataset.downsample(
+                sampling_mode=SamplingModes.parse(sampling_mode.value),
+                executor=executor,
+            )
         else:
             layer = dataset.get_layer(layer_name)
             layer.downsample(executor=executor)

@@ -3,7 +3,7 @@
 from argparse import Namespace
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import typer
 from rich import print as rprint
@@ -11,7 +11,7 @@ from typing_extensions import Annotated
 
 from webknossos import Dataset
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DataFormat, DistributionStrategy
+from wkcuber.utils import DataFormat, DistributionStrategy, VoxelSize, parse_voxel_size
 
 app = typer.Typer(invoke_without_command=True)
 
@@ -24,8 +24,11 @@ def main(
         Path, typer.Argument(help="Target path to save your WEBKNOSSOS dataset.")
     ],
     voxel_size: Annotated[
-        Tuple[float, float, float],
-        typer.Option(help="The size of one voxel in image data."),
+        VoxelSize,
+        typer.Option(
+            help="The size of one voxel in image data.",
+            parser=parse_voxel_size,
+        ),
     ],
     data_format: Annotated[
         DataFormat,

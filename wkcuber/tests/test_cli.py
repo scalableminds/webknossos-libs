@@ -10,6 +10,7 @@ from typing import Iterator
 import pytest
 from typer.testing import CliRunner
 
+from webknossos import Dataset
 from wkcuber.main import app
 
 runner = CliRunner()
@@ -86,9 +87,7 @@ def test_convert() -> None:
             [
                 "convert",
                 "--voxel-size",
-                "11",
-                "11",
-                "11",
+                "11.0,11.0,11.0",
                 str(origin_path),
                 str(wkw_path),
             ],
@@ -109,16 +108,9 @@ def test_download() -> None:
             app,
             [
                 "download",
-                "--bounding-box",
-                "0",
-                "0",
-                "0",
-                "5",
-                "5",
-                "5",
+                "--bbox",
+                "0,0,0,5,5,5",
                 "--mag",
-                "8",
-                "8",
                 "8",
                 "--full-url",
                 "https://webknossos.org/datasets/scalable_minds/cremi_example/",
@@ -130,7 +122,7 @@ def test_download() -> None:
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
-def test_downsample() -> None:
+def test_downsample_and_upsample() -> None:
     """Tests the functionality of downsample subcommand."""
 
     result_without_args = runner.invoke(app, ["downsample"])
@@ -140,11 +132,23 @@ def test_downsample() -> None:
         wkw_path = Path("testdata") / "simple_wkw_dataset"
         copytree(Path(__file__).parent.parent / wkw_path, wkw_path)
 
-        result = runner.invoke(app, ["downsample", str(wkw_path)])
+        result_downsample = runner.invoke(app, ["downsample", str(wkw_path)])
 
-        assert result.exit_code == 0
+        assert result_downsample.exit_code == 0
+        assert (wkw_path / "color" / "1" / "z0" / "y0" / "x0.wkw").exists()
         assert (wkw_path / "color" / "2" / "z0" / "y0" / "x0.wkw").exists()
         assert (wkw_path / "color" / "4" / "z0" / "y0" / "x0.wkw").exists()
+
+        Dataset.open(wkw_path).get_layer("color").delete_mag(1)
+
+        assert not (wkw_path / "color" / "1" / "z0" / "y0" / "x0.wkw").exists()
+
+        result_upsample = runner.invoke(
+            app, ["upsample", "--from-mag", "2", str(wkw_path)]
+        )
+
+        assert result_upsample.exit_code == 0
+        assert (wkw_path / "color" / "1" / "z0" / "y0" / "x0.wkw").exists()
 
 
 def test_upload() -> None:

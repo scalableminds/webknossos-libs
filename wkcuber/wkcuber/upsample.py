@@ -3,14 +3,14 @@
 from argparse import Namespace
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Annotated, Optional, Tuple
+from typing import Annotated, Optional
 
 import typer
 from rich import print as rprint
 
 from webknossos import Dataset, Mag, Vec3Int
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DistributionStrategy
+from wkcuber.utils import DistributionStrategy, parse_mag
 
 app = typer.Typer(invoke_without_command=True)
 
@@ -23,8 +23,8 @@ def main(
         typer.Argument(help="Path to your WEBKNOSSOS dataset.", show_default=False),
     ],
     from_mag: Annotated[
-        Tuple[int, int, int],
-        typer.Option(help="Mag to start upsampling"),
+        Mag,
+        typer.Option(help="Mag to start upsampling", parser=parse_mag),
     ],
     layer_name: Annotated[
         Optional[str],
