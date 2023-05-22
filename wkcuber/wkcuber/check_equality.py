@@ -10,6 +10,7 @@ import typer
 from rich import print as rprint
 
 from webknossos import Dataset
+from webknossos.dataset.layer import Layer
 from webknossos.utils import get_executor_for_args
 from wkcuber.utils import DistributionStrategy
 
@@ -88,31 +89,11 @@ def main(
 {source_layer_names} != {target_layer_names}"
 
     for name in layer_names:
-        logging.info("Checking layer_name: %s", layer_name)
-
-        source_layer = source_dataset.layers[name]
-        target_layer = target_dataset.layers[name]
-
-        assert (
-            source_layer.bounding_box == target_layer.bounding_box
-        ), f"The bounding boxes of {source}/{name} and {target}/{name} are not equal: \
-{source_layer.bounding_box} != {target_layer.bounding_box}"
-
-        source_mags = set(source_layer.mags.keys())
-        target_mags = set(target_layer.mags.keys())
-
-        assert (
-            source_mags == target_mags
-        ), f"The mags of {source}/{name} and {target}/{name} are not equal: \
-{source_mags} != {target_mags}"
-
-        for mag in source_mags:
-            source_mag = source_layer.mags[mag]
-            target_mag = target_layer.mags[mag]
-
-            logging.info("Start verification of %s in mag %s", name, mag)
-            with get_executor_for_args(args=executor_args) as executor:
-                assert source_mag.content_is_equal(target_mag, executor=executor)
+        compare_layers(
+            source_dataset.get_layer(name),
+            target_dataset.get_layer(name),
+            executor_args,
+        )
 
     rprint(
         f"The datasets [blue]{source}[/blue] and [blue]{target}[/blue] are equal \
@@ -120,3 +101,35 @@ def main(
     )
 
     rprint("[bold green]Done.[/bold green]")
+
+
+def compare_layers(
+    source_layer: Layer,
+    target_layer: Layer,
+    executor_args: Namespace,
+) -> None:
+    """Compares one layer with another layer"""
+
+    layer_name = source_layer.name
+    logging.info("Checking layer_name: %s", layer_name)
+
+    assert (
+        source_layer.bounding_box == target_layer.bounding_box
+    ), f"The bounding boxes of '{layer_name}' layer of source and target \
+are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
+
+    source_mags = set(source_layer.mags.keys())
+    target_mags = set(target_layer.mags.keys())
+
+    assert (
+        source_mags == target_mags
+    ), f"The mags of '{layer_name}' layer of source and target are not equal: \
+{source_mags} != {target_mags}"
+
+    for mag in source_mags:
+        source_mag = source_layer.mags[mag]
+        target_mag = target_layer.mags[mag]
+
+        logging.info("Start verification of %s in mag %s", layer_name, mag)
+        with get_executor_for_args(args=executor_args) as executor:
+            assert source_mag.content_is_equal(target_mag, executor=executor)
