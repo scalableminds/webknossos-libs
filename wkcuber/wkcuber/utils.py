@@ -49,9 +49,14 @@ def parse_voxel_size(voxel_size_str: str) -> VoxelSize:
         result = tuple(float(x) for x in voxel_size_str.split(","))
         if len(result) == 3:
             return VoxelSize(*result)
-        raise ValueError(f"Expected three values but got {len(result)}")
+        raise ValueError(
+            f"Expected three values formated like: 1.0,1.0,2.0 but got: {voxel_size_str}"
+        )
     except Exception as err:
-        raise ValueError("The value could not be parsed to VoxelSize.") from err
+        raise ValueError(
+            "The value could not be parsed to VoxelSize.\
+Please format the voxel size like 1.0,1.0,2.0 ."
+        ) from err
 
 
 def parse_bbox(bbox_str: str) -> BoundingBox:
@@ -63,6 +68,11 @@ def parse_bbox(bbox_str: str) -> BoundingBox:
             return BoundingBox.from_tuple6(
                 (result[0], result[1], result[2], result[3], result[4], result[5])
             )
-        raise ValueError(f"Expected six values but got {len(result)}")
+        raise ValueError(
+            f"Expected six values formated like: 0,0,0,5,5,5 but got: {bbox_str}"
+        )
     except Exception as err:
-        raise ValueError("The value could not be parsed to BoundingBox.") from err
+        raise ValueError(
+            "The value could not be parsed to BoundingBox.\
+Please format the bounding box like 0,0,0,5,5,5 ."
+        ) from err

@@ -9,22 +9,27 @@ import typer
 from rich import print as rprint
 
 from webknossos import Dataset, Mag, Vec3Int
+from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DistributionStrategy, parse_mag
-
-app = typer.Typer(invoke_without_command=True)
+from wkcuber.utils import DistributionStrategy, SamplingMode, parse_mag
 
 
-@app.callback()
 def main(
     *,
     target: Annotated[
         Path,
         typer.Argument(help="Path to your WEBKNOSSOS dataset.", show_default=False),
     ],
+    sampling_mode: Annotated[
+        SamplingMode, typer.Option(help="The sampling mode to use.")
+    ] = SamplingMode.ANISOTROPIC,
     from_mag: Annotated[
         Mag,
-        typer.Option(help="Mag to start upsampling", parser=parse_mag),
+        typer.Option(
+            help="Mag to start upsampling from.\
+Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            parser=parse_mag,
+        ),
     ],
     layer_name: Annotated[
         Optional[str],
@@ -46,41 +51,44 @@ def main(
             rich_help_panel="Executor options",
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
-    job_ressources: Annotated[
+    job_resources: Annotated[
         Optional[str],
         typer.Option(
             help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-                (e.g., --job_resources=\'{"mem": "10M"}\')\'',
+(e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
 ) -> None:
     """Upsample your WEBKNOSSOS dataset."""
 
-    rprint(f"Doing upsampling for [blue]{target}[/blue] ...")
-
     executor_args = Namespace(
         jobs=jobs,
         distribution_strategy=distribution_strategy,
-        job_ressources=job_ressources,
+        job_resources=job_resources,
     )
     dataset = Dataset.open(target)
+    mode = SamplingModes.parse(sampling_mode.value)
     mag = Mag(Vec3Int.from_xyz(*from_mag))
     with get_executor_for_args(args=executor_args) as executor:
         if layer_name is None:
-            upsample_all_layers(dataset, mag, executor_args)
+            upsample_all_layers(dataset, mode, mag, executor_args)
         else:
             layer = dataset.get_layer(layer_name)
-            layer.upsample(from_mag=mag, executor=executor)
+            layer.upsample(from_mag=mag, sampling_mode=mode, executor=executor)
 
     rprint("[bold green]Done.[/bold green]")
 
 
 def upsample_all_layers(
-    dataset: Dataset, from_mag: Mag, executor_args: Namespace
+    dataset: Dataset, mode: SamplingModes, from_mag: Mag, executor_args: Namespace
 ) -> None:
     """Iterates over all layers and upsamples them."""
 
     for layer in dataset.layers.values():
         with get_executor_for_args(args=executor_args) as executor:
-            layer.upsample(from_mag=from_mag, executor=executor)
+            layer.upsample(
+                from_mag=from_mag,
+                sampling_mode=mode,
+                executor=executor,
+            )

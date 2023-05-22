@@ -1,4 +1,4 @@
-"""This module takes care of downsampling WEBKNOSSOS datasets."""
+"""This module takes care of uploading  datasets to a WEBKNOSSOS server."""
 
 from pathlib import Path
 from typing import Annotated, Optional
@@ -10,20 +10,17 @@ from webknossos import Dataset, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
 
-app = typer.Typer(invoke_without_command=True)
 
-
-@app.callback()
 def main(
     *,
-    path: Annotated[
+    source: Annotated[
         Path,
         typer.Argument(
             show_default=False,
             help="Path to your local WEBKNOSSOS dataset.",
         ),
     ],
-    url: Annotated[
+    webknossos_url: Annotated[
         str,
         typer.Option(
             help="URL to WEBKNOSSOS instance.",
@@ -34,7 +31,8 @@ def main(
     token: Annotated[
         Optional[str],
         typer.Option(
-            help="Authentication token for WEBKNOSSOS instance.",
+            help="Authentication token for WEBKNOSSOS instance \
+(https://webknossos.org/auth/token).",
             rich_help_panel="WEBKNOSSOS context",
             envvar="WK_TOKEN",
         ),
@@ -42,23 +40,23 @@ def main(
     dataset_name: Annotated[
         Optional[str],
         typer.Option(
-            help="Name of your dataset on your WEBKNOSSOS.",
-            rich_help_panel="WEBKNOSSOS context",
+            help="Alternative name to rename your dataset on upload to WEBKNOSSOS.\
+(if not provided, current name of dataset is used)",
         ),
     ] = None,
     jobs: Annotated[
         int,
         typer.Option(
-            help="Number of simultaneous chunk uploads.",
+            help="Number of processes to be spawned.",
             rich_help_panel="Executor options",
         ),
     ] = DEFAULT_SIMULTANEOUS_UPLOADS,
 ) -> None:
-    """Upload the WEBKNOSSOS dataset to a remote location."""
+    """Upload a dataset to a WEBKNOSSOS server."""
 
-    rprint(f"Uploading [blue]{dataset_name}[/blue] ...")
-
-    with webknossos_context(url=url, token=token):
-        Dataset.open(dataset_path=path).upload(new_dataset_name=dataset_name, jobs=jobs)
+    with webknossos_context(url=webknossos_url, token=token):
+        Dataset.open(dataset_path=source).upload(
+            new_dataset_name=dataset_name, jobs=jobs
+        )
 
     rprint("[bold green]Done.[/bold green]")

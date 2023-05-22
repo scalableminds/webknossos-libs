@@ -51,7 +51,10 @@ def test_check_equality() -> None:
         ],
     )
     assert result.exit_code == 0
-    assert "The two datasets are equal." in result.stdout
+    assert (
+        "The datasets testdata/simple_wkw_dataset and testdata/simple_wkw_dataset are equal"
+        in result.stdout.replace("\n", "")
+    )
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")

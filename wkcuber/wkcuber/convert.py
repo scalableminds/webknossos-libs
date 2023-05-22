@@ -13,10 +13,7 @@ from webknossos import Dataset
 from webknossos.utils import get_executor_for_args
 from wkcuber.utils import DataFormat, DistributionStrategy, VoxelSize, parse_voxel_size
 
-app = typer.Typer(invoke_without_command=True)
 
-
-@app.callback()
 def main(
     *,
     source: Annotated[Path, typer.Argument(help="Path to your image data.")],
@@ -26,21 +23,26 @@ def main(
     voxel_size: Annotated[
         VoxelSize,
         typer.Option(
-            help="The size of one voxel in image data.",
+            help="The size of one voxel in source data in nanometers.\
+Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
         ),
     ],
     data_format: Annotated[
         DataFormat,
         typer.Option(
-            help="Dataformat to store the output dataset in.",
+            help="Data format to store the target dataset in.",
         ),
     ] = DataFormat.WKW,
-    layer_name: Annotated[
-        Optional[str], typer.Option(help="New name for the layer.")
+    name: Annotated[
+        Optional[str],
+        typer.Option(
+            help="New name for the WEBKNOSSOS dataset\
+(if not provided, final component of target path is used)"
+        ),
     ] = None,
     compress: Annotated[
-        bool, typer.Option(help="Compress the output dataset.")
+        bool, typer.Option(help="Enable compression of the target dataset.")
     ] = False,
     jobs: Annotated[
         int,
@@ -56,11 +58,11 @@ def main(
             rich_help_panel="Executor options",
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
-    job_ressources: Annotated[
+    job_resources: Annotated[
         Optional[str],
         typer.Option(
             help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-                (e.g., --job_resources=\'{"mem": "10M"}\')\'',
+(e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
@@ -72,18 +74,20 @@ def main(
     executor_args = Namespace(
         jobs=jobs,
         distribution_strategy=distribution_strategy,
-        job_ressources=job_ressources,
+        job_resources=job_resources,
     )
 
     with get_executor_for_args(args=executor_args) as executor:
-        Dataset.from_images(
+        dataset = Dataset.from_images(
             source,
             target,
             voxel_size,
-            name=layer_name,
+            name=name,
             data_format=data_format,
-            compress=compress,
             executor=executor,
         )
+        # Include this in the from_images() call as soon as issue #900 is resolved
+        if compress:
+            dataset.compress()
 
     rprint("[bold green]Done.[/bold green]")

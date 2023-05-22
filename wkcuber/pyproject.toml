@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wkcuber"
-version = "0.0.0"
+version = "0.0.0"  # filled by dunamai
 description = "Python package to create, cube, and work with WEBKNOSSOS WKW datasets"
 authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
@@ -12,7 +12,7 @@ homepage = "https://docs.webknossos.org/wkcuber"
 wkcuber = "wkcuber.main:app"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.11"
+python = ">=3.8,<3.11"
 typer = {extras = ["all"], version = "^0.9.0"}
 webknossos = { path = "../webknossos/", develop = true }
 

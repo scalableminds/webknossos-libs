@@ -3,7 +3,7 @@
 from argparse import Namespace
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Annotated, Optional, Union
+from typing import Annotated, Optional
 
 import typer
 from rich import print as rprint
@@ -12,12 +12,7 @@ from webknossos import Dataset, SamplingModes
 from webknossos.utils import get_executor_for_args
 from wkcuber.utils import DistributionStrategy, SamplingMode
 
-app = typer.Typer(
-    invoke_without_command=True,
-)
 
-
-@app.callback()
 def main(
     *,
     target: Annotated[
@@ -28,8 +23,10 @@ def main(
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,
     layer_name: Annotated[
-        Union[str, None],
-        typer.Option(help="Name of the layer that should be downsampled."),
+        Optional[str],
+        typer.Option(
+            help="Name of the layer to downsample (if not provided, all layers are downsampled)."
+        ),
     ] = None,
     jobs: Annotated[
         int,
@@ -45,23 +42,21 @@ def main(
             rich_help_panel="Executor options",
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
-    job_ressources: Annotated[
+    job_resources: Annotated[
         Optional[str],
         typer.Option(
             help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-                (e.g., --job_resources=\'{"mem": "10M"}\')\'',
+(e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
 
-    rprint(f"Doing downsampling for [blue]{target}[/blue] ...")
-
     executor_args = Namespace(
         jobs=jobs,
         distribution_strategy=distribution_strategy,
-        job_ressources=job_ressources,
+        job_resources=job_resources,
     )
 
     dataset = Dataset.open(target)

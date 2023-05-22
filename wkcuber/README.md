@@ -32,6 +32,36 @@ pip install wkcuber
 wkcuber --install-completion
 ```
 
+## Usage
+
+```bash
+# Convert image stacks into wkw datasets
+wkcuber convert \
+  --voxel-size 11.24,11.24,25 \
+  --name great_dataset \
+  data/source data/target
+
+# Convert Knossos cubes to wkw cubes
+python -m wkcuber.convert_knossos --layer_name color data/source/mag1 data/target
+# Convert NIFTI file to wkw file
+python -m wkcuber.convert_nifti --layer_name color --scale 10,10,30 data/source/nifti_file data/target
+# Convert folder with NIFTI files to wkw files
+python -m wkcuber.convert_nifti --color_file one_nifti_file --segmentation_file --scale 10,10,30 another_nifti data/source/ data/target
+# Convert RAW file to wkw file
+python -m wkcuber.convert_raw --layer_name color --scale 10,10,30 --input_dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
+# Create downsampled magnifications
+python -m wkcuber.downsampling --layer_name color data/target
+python -m wkcuber.downsampling --layer_name segmentation --interpolation_mode mode data/target
+# Compress data in-place (mostly useful for segmentation)
+python -m wkcuber.compress --layer_name segmentation data/target
+# Compress data copy (mostly useful for segmentation)
+python -m wkcuber.compress --layer_name segmentation data/target data/target_compress
+# Create metadata
+python -m wkcuber.metadata --name great_dataset --scale 11.24,11.24,25 data/target
+# Refresh metadata so that new layers and/or magnifications are picked up
+python -m wkcuber.metadata --refresh data/target
+```
+
 
 ## Development
 
@@ -51,6 +81,11 @@ Please, format, lint, and unit test your code changes before merging them.
 poetry run black .
 poetry run pylint -j4 wkcuber
 poetry run pytest tests
+```
+
+Please, run the extended test suite:
+```bash
+tests/scripts/all_tests.sh
 ```
 
 ## License

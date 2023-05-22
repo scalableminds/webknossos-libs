@@ -13,10 +13,10 @@ from wkcuber import (
 
 app = typer.Typer(no_args_is_help=True)
 
-app.add_typer(convert.app, name="convert", subcommand_metavar="")
-app.add_typer(downsample.app, name="downsample", subcommand_metavar="")
-app.add_typer(upsample.app, name="upsample", subcommand_metavar="")
-app.add_typer(compress.app, name="compress", subcommand_metavar="")
-app.add_typer(check_equality.app, name="check-equality", subcommand_metavar="")
-app.add_typer(download.app, name="download", subcommand_metavar="")
-app.add_typer(upload.app, name="upload", subcommand_metavar="")
+app.command("check_equality")(check_equality.main)
+app.command("compress")(compress.main)
+app.command("convert")(convert.main)
+app.command("download")(download.main)
+app.command("downsample")(downsample.main)
+app.command("upload")(upload.main)
+app.command("upsample")(upsample.main)
