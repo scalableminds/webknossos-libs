@@ -23,7 +23,7 @@ wkcuber offers some commands to work with WEBKNOSSOS datasets:
 
 ### Python 3 with pip from PyPi
 
-- `wkcuber` requires at least Python 3.10
+- `wkcuber` requires at least Python 3.8
 
 ```bash
 pip install wkcuber
@@ -41,25 +41,15 @@ wkcuber convert \
   --name great_dataset \
   data/source data/target
 
-# Convert Knossos cubes to wkw cubes
-python -m wkcuber.convert_knossos --layer_name color data/source/mag1 data/target
-# Convert NIFTI file to wkw file
-python -m wkcuber.convert_nifti --layer_name color --scale 10,10,30 data/source/nifti_file data/target
-# Convert folder with NIFTI files to wkw files
-python -m wkcuber.convert_nifti --color_file one_nifti_file --segmentation_file --scale 10,10,30 another_nifti data/source/ data/target
-# Convert RAW file to wkw file
-python -m wkcuber.convert_raw --layer_name color --scale 10,10,30 --input_dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
+
 # Create downsampled magnifications
-python -m wkcuber.downsampling --layer_name color data/target
-python -m wkcuber.downsampling --layer_name segmentation --interpolation_mode mode data/target
+wkcuber downsample data/target
+wkcuber downsample --layer_name color data/target
+
 # Compress data in-place (mostly useful for segmentation)
-python -m wkcuber.compress --layer_name segmentation data/target
-# Compress data copy (mostly useful for segmentation)
-python -m wkcuber.compress --layer_name segmentation data/target data/target_compress
-# Create metadata
-python -m wkcuber.metadata --name great_dataset --scale 11.24,11.24,25 data/target
-# Refresh metadata so that new layers and/or magnifications are picked up
-python -m wkcuber.metadata --refresh data/target
+wkcuber compress --layer_name segmentation data/target
+wkcuber compress data/target
+
 ```
 
 
