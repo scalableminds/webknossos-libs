@@ -13,7 +13,7 @@ from wkcuber import (
 
 app = typer.Typer(no_args_is_help=True)
 
-app.command("check_equality")(check_equality.main)
+app.command("check-equality")(check_equality.main)
 app.command("compress")(compress.main)
 app.command("convert")(convert.main)
 app.command("download")(download.main)

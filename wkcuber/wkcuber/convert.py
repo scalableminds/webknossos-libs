@@ -16,9 +16,14 @@ from wkcuber.utils import DataFormat, DistributionStrategy, VoxelSize, parse_vox
 
 def main(
     *,
-    source: Annotated[Path, typer.Argument(help="Path to your image data.")],
+    source: Annotated[
+        Path, typer.Argument(help="Path to your image data.", show_default=False)
+    ],
     target: Annotated[
-        Path, typer.Argument(help="Target path to save your WEBKNOSSOS dataset.")
+        Path,
+        typer.Argument(
+            help="Target path to save your WEBKNOSSOS dataset.", show_default=False
+        ),
     ],
     voxel_size: Annotated[
         VoxelSize,

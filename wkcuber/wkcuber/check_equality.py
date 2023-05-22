@@ -59,8 +59,6 @@ def main(
 ) -> None:
     """Check equality of two WEBKNOSSOS datasets."""
 
-    rprint(f"Comparing [blue]{source}[/blue] with [blue]{target}[/blue] ...")
-
     executor_args = Namespace(
         jobs=jobs,
         distribution_strategy=distribution_strategy,
@@ -89,15 +87,15 @@ def main(
         ), f"The provided input datasets have different layers: \
 {source_layer_names} != {target_layer_names}"
 
-    for layer_name in layer_names:
+    for name in layer_names:
         logging.info("Checking layer_name: %s", layer_name)
 
-        source_layer = source_dataset.layers[layer_name]
-        target_layer = target_dataset.layers[layer_name]
+        source_layer = source_dataset.layers[name]
+        target_layer = target_dataset.layers[name]
 
         assert (
             source_layer.bounding_box == target_layer.bounding_box
-        ), f"The bounding boxes of {source}/{layer_name} and {target}/{layer_name} are not equal: \
+        ), f"The bounding boxes of {source}/{name} and {target}/{name} are not equal: \
 {source_layer.bounding_box} != {target_layer.bounding_box}"
 
         source_mags = set(source_layer.mags.keys())
@@ -105,14 +103,14 @@ def main(
 
         assert (
             source_mags == target_mags
-        ), f"The mags of {source}/{layer_name} and {target}/{layer_name} are not equal: \
+        ), f"The mags of {source}/{name} and {target}/{name} are not equal: \
 {source_mags} != {target_mags}"
 
         for mag in source_mags:
             source_mag = source_layer.mags[mag]
             target_mag = target_layer.mags[mag]
 
-            logging.info("Start verification of %s in mag %s", layer_name, mag)
+            logging.info("Start verification of %s in mag %s", name, mag)
             with get_executor_for_args(args=executor_args) as executor:
                 assert source_mag.content_is_equal(target_mag, executor=executor)
 
