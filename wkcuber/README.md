@@ -7,7 +7,7 @@ Python CLI for creating and working with [WEBKNOSSOS](https://webknossos.org/) [
 wkcuber offers some commands to work with WEBKNOSSOS datasets:
 
 - `wkcuber compress`: Compress a WEBKNOSSOS dataset
-- `wkcuber convert`: Convert a image stack to a WEBKNOSSOS dataset
+- `wkcuber convert`: Convert an image stack (e.g., `tiff`, `jpg`, `png`, `bmp`, `dm3`, `dm4`) to a WEBKNOSSOS dataset
 - `wkcuber download`: Download a WEBKNOSSOS dataset from a remote location
 - `wkcuber downsample`: Downsample a WEBKNOSSOS dataset
 - `wkcuber upload`: Upload a local WEBKNOSSOS dataset to a remote location
