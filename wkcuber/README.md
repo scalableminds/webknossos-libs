@@ -8,7 +8,7 @@ wkcuber offers some commands to work with WEBKNOSSOS datasets:
 
 - `wkcuber compress`: Compress a WEBKNOSSOS dataset
 - `wkcuber convert`: Convert an image stack (e.g., `tiff`, `jpg`, `png`, `bmp`, `dm3`, `dm4`) to a WEBKNOSSOS dataset
-- `wkcuber download`: Download a WEBKNOSSOS dataset from a remote location
+- `wkcuber download`: Download a dataset from a WEBKNOSSOS server as WKW format
 - `wkcuber downsample`: Downsample a WEBKNOSSOS dataset
 - `wkcuber upload`: Upload a local WEBKNOSSOS dataset to a remote location
 - `wkcuber upsample`: Upsample a WEBKNOSSOS dataset
