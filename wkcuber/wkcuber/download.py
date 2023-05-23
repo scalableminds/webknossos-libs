@@ -1,10 +1,11 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import List, Optional
 
 import typer
 from rich import print as rprint
+from typing_extensions import Annotated
 
 from webknossos import BoundingBox, Dataset, Mag, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL

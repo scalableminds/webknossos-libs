@@ -1,10 +1,11 @@
 """This module takes care of uploading  datasets to a WEBKNOSSOS server."""
 
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Optional
 
 import typer
 from rich import print as rprint
+from typing_extensions import Annotated
 
 from webknossos import Dataset, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL

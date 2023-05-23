@@ -4,10 +4,11 @@ import logging
 from argparse import Namespace
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Optional
 
 import typer
 from rich import print as rprint
+from typing_extensions import Annotated
 
 from webknossos import Dataset
 from webknossos.dataset.layer import Layer
