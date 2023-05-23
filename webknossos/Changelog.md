@@ -23,6 +23,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed poetry build backend for new versions of Poetry. [#899](https://github.com/scalableminds/webknossos-libs/pull/899)
+- Added axis_order fields for Zarr data format. [#902](https://github.com/scalableminds/webknossos-libs/issues/902)
 
 
 ## [0.12.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.3) - 2023-02-22
