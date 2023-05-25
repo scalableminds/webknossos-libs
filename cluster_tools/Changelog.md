@@ -7,16 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.4...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Upgrades `black`, `mypy`, `pylint`, `pytest`. [#873](https://github.com/scalableminds/webknossos-libs/pull/873)
 
 ### Fixed
+
+
+## [0.12.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.4) - 2023-05-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.3...v0.12.4)
+
+### Changed
+- Upgrades `black`, `mypy`, `pylint`, `pytest`. [#873](https://github.com/scalableminds/webknossos-libs/pull/873)
 
 
 ## [0.12.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.3) - 2023-02-22
