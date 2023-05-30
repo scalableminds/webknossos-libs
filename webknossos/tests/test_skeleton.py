@@ -51,6 +51,20 @@ def create_dummy_skeleton() -> wk.Skeleton:
     return nml
 
 
+def test_doc_example() -> None:
+    from webknossos import Annotation
+
+    annotation = Annotation(
+        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
+    )
+    group = annotation.skeleton.add_group("a group")
+    tree = group.add_tree("a tree")
+    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
+    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
+
+    tree.add_edge(node_1, node_2)
+
+
 def test_immutability() -> None:
     skeleton = create_dummy_skeleton()
 
@@ -261,3 +275,72 @@ def test_load_nml(tmp_path: Path) -> None:
     skeleton_a = wk.Skeleton.load(input_path)
     skeleton_a.save(output_path)
     assert skeleton_a == wk.Skeleton.load(output_path)
+
+
+def test_remove_tree(tmp_path: Path) -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    output_path = tmp_path / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+
+    # Check that tree exists
+    tree = skeleton_a.get_tree_by_id(1)
+    assert tree is not None
+    assert tree in list(skeleton_a.children)
+
+    # Check that tree doesn't exist anymore
+    skeleton_a.remove_tree_by_id(1)
+    with pytest.raises(ValueError):
+        tree = skeleton_a.get_tree_by_id(1)
+
+    assert tree not in list(skeleton_a.children)
+
+    # Check that serialized skeleton doesn't contain
+    # deleted tree
+    skeleton_a.save(output_path)
+    assert skeleton_a == wk.Skeleton.load(output_path)
+
+    # Load original file and check that tree is still
+    # there (should not have been removed on disk
+    # automatically).
+    skeleton_a = wk.Skeleton.load(input_path)
+    assert tree in list(skeleton_a.children)
+
+
+def test_add_tree_with_obj(tmp_path: Path) -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    output_path = tmp_path / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+
+    # Check that tree exists
+    tree = skeleton_a.get_tree_by_id(1)
+
+    skeleton_b = wk.Skeleton(
+        voxel_size=skeleton_a.voxel_size, dataset_name=skeleton_a.dataset_name
+    )
+    skeleton_b.add_tree(tree)
+
+    assert tree is not skeleton_b.get_tree_by_id(1)
+    assert tree == skeleton_b.get_tree_by_id(1)
+
+    skeleton_b.save(output_path)
+
+
+def test_add_tree_with_obj_and_properties(tmp_path: Path) -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    output_path = tmp_path / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+
+    # Check that tree exists
+    tree = skeleton_a.get_tree_by_id(1)
+
+    skeleton_b = wk.Skeleton(
+        voxel_size=skeleton_a.voxel_size, dataset_name=skeleton_a.dataset_name
+    )
+    new_tree = skeleton_b.add_tree(tree, color=(1, 2, 3), _enforced_id=1337)
+
+    assert new_tree is skeleton_b.get_tree_by_id(1337)
+    assert new_tree is not tree
+    assert new_tree != tree
+    assert new_tree.color == (1, 2, 3, 1)
+
+    skeleton_b.save(output_path)

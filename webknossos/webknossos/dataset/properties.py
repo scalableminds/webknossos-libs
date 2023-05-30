@@ -121,6 +121,7 @@ class LayerViewConfiguration:
 class MagViewProperties:
     mag: Mag
     cube_length: Optional[int] = None
+    axis_order: Optional[Dict[str, int]] = None
 
     @property
     def resolution(self) -> Mag:

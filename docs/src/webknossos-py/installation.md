@@ -10,3 +10,9 @@ You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via p
 ```bash
 pip install webknossos
 ```
+
+For extended file format conversation support it is necessary to install the optional dependencies:
+
+```bash
+pip install "webknossos[all]"
+```

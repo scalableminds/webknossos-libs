@@ -15,7 +15,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   font: false
-  ### pdoc sites don't invert the text color in dark-mode 
+  ### pdoc sites don't invert the text color in dark-mode
   # palette:
   #   - media: "(prefers-color-scheme: light)"
   #     scheme: default
@@ -35,126 +35,136 @@ theme:
     - navigation.top
 
 nav:
-- WEBKNOSSOS:
-  - webknossos/index.md
-  - webknossos/getting_started.md
-  - Guides:
-    - webknossos/dashboard.md
-    - webknossos/skeleton_annotation.md
-    - webknossos/volume_annotation.md
-    - webknossos/tracing_ui.md
-    - webknossos/mesh_visualization.md
-    - webknossos/datasets.md
-    - Managing Users & Permissions: webknossos/users.md
-    - webknossos/tasks.md
-    - webknossos/sharing.md
-    - webknossos/installation.md
-    - webknossos/automated_analysis.md
-    - webknossos/jobs.md
-    - webknossos/tooling.md
-    - webknossos/export.md
-    - webknossos/proof_reading.md
-    - webknossos/connectome_viewer.md
-  - Reference: 
-    - webknossos/terminology.md
-    - webknossos/data_formats.md
-    - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
-    - Backend REST API: webknossos/rest_api.md
-    - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
-    - Changelog: webknossos/CHANGELOG.released.md
-    - Migration Guide: webknossos/MIGRATIONS.released.md
-  - Community:
-    - Publications: webknossos/publications.md
-    - GitHub: https://github.com/scalableminds/webknossos" target="_blank
-    - Blog: https://medium.com/scalableminds" target="_blank
-  - Getting Help:
-    - webknossos/faq.md
-    - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
-    - Email Support: mailto:hello@webknossos.org
-    - Commercial Support: https://scalableminds.com" target="_blank
-- Python Library:
-  - webknossos-py/index.md
-  - webknossos-py/installation.md
-  - Usage Examples:
-      - Dataset Examples:
-        - webknossos-py/examples/dataset_usage.md
-        - webknossos-py/examples/upload_tiff_stack.md
-        - webknossos-py/examples/upload_image_data.md
-        - webknossos-py/examples/download_image_data.md
-        - webknossos-py/examples/download_tiff_stack.md
-        - webknossos-py/examples/remote_datasets.md
-        - webknossos-py/examples/zarr_and_dask.md
-      - Annotation Examples:
-        - webknossos-py/examples/apply_merger_mode.md
-        - webknossos-py/examples/learned_segmenter.md
-        - webknossos-py/examples/skeleton_synapse_candidates.md
-        - webknossos-py/examples/calculate_segment_sizes.md
-        - webknossos-py/examples/download_segments.md
-      - Administration Examples:
-        - webknossos-py/examples/user_times.md
-        - webknossos-py/examples/annotation_project_administration.md
-  - API Reference:
-    - Overview: api/webknossos.md
-    - Geometry:
-      - BoundingBox: api/webknossos/geometry/bounding_box.md
-      - Mag: api/webknossos/geometry/mag.md
-      - Vec3Int: api/webknossos/geometry/vec3_int.md
-    - Dataset:
-      - Dataset: api/webknossos/dataset/dataset.md
-      - Layer: api/webknossos/dataset/layer.md
-      - MagView: api/webknossos/dataset/mag_view.md
-      - View: api/webknossos/dataset/view.md
-    - Annotation: api/webknossos/annotation/annotation.md
-    - Skeleton:
-      - Skeleton: api/webknossos/skeleton/skeleton.md
-      - Group: api/webknossos/skeleton/group.md
-      - Tree: api/webknossos/skeleton/tree.md
-      - Node: api/webknossos/skeleton/node.md
-    - Authentication & Server Context: api/webknossos/client/context.md
-    - Administration:
-      - User: api/webknossos/administration/user.md
-      - Project: api/webknossos/administration/project.md
-      - Task: api/webknossos/administration/task.md
-  - Version Changelog:
-    - webknossos-py/stability_policy.md
-    - webknossos-py/changelog.md
-  - Community:
-    - webknossos-py/CONTRIBUTING.md
-    - webknossos-py/CODE_OF_CONDUCT.md
-    - Getting Help:
-      - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
-      - Email Support: mailto:hello@webknossos.org
-      - Commercial Support: https://scalableminds.com" target="_blank
-    - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
-    - Blog: https://medium.com/scalableminds" target="_blank
-- WEBKNOSSOS Cuber:
-  - wkcuber CLI: wkcuber/index.md
-  - wkcuber/changelog.md
-  - Getting Help:
-    - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
-    - Email Support: mailto:hello@webknossos.org
-    - Commercial Support: https://scalableminds.com" target="_blank
-  - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/wkcuber" target="_blank
+  - WEBKNOSSOS:
+      - webknossos/index.md
+      - webknossos/getting_started.md
+      - Guides:
+          - webknossos/dashboard.md
+          - webknossos/skeleton_annotation.md
+          - webknossos/volume_annotation.md
+          - webknossos/tracing_ui.md
+          - webknossos/mesh_visualization.md
+          - webknossos/datasets.md
+          - Managing Users & Permissions: webknossos/users.md
+          - webknossos/tasks.md
+          - webknossos/sharing.md
+          - webknossos/installation.md
+          - webknossos/automated_analysis.md
+          - webknossos/jobs.md
+          - webknossos/tooling.md
+          - webknossos/export.md
+          - webknossos/proof_reading.md
+          - webknossos/connectome_viewer.md
+      - Tutorials:
+          - Volume Annotation: webknossos/tutorial_volume_annotation.md
+          - Data Sharing: webknossos/tutorial_data_sharing.md
+      - Reference:
+          - webknossos/terminology.md
+          - webknossos/data_formats.md
+          - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
+          - Backend REST API: webknossos/rest_api.md
+          - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
+          - Changelog: webknossos/CHANGELOG.released.md
+          - Migration Guide: webknossos/MIGRATIONS.released.md
+      - Community:
+          - Publications: webknossos/publications.md
+          - GitHub: https://github.com/scalableminds/webknossos" target="_blank
+          - Blog: https://medium.com/scalableminds" target="_blank
+      - Getting Help:
+          - webknossos/faq.md
+          - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+          - Email Support: mailto:hello@webknossos.org
+          - Commercial Support: https://scalableminds.com" target="_blank
+  - Python Library:
+      - webknossos-py/index.md
+      - webknossos-py/installation.md
+      - Usage Examples:
+          - Dataset Examples:
+              - webknossos-py/examples/dataset_usage.md
+              - webknossos-py/examples/upload_tiff_stack.md
+              - webknossos-py/examples/upload_image_data.md
+              - webknossos-py/examples/create_dataset_from_images.md
+              - webknossos-py/examples/image_stack_to_dataset.md
+              - webknossos-py/examples/download_image_data.md
+              - webknossos-py/examples/download_tiff_stack.md
+              - webknossos-py/examples/remote_datasets.md
+              - webknossos-py/examples/zarr_and_dask.md
+          - Annotation Examples:
+              - webknossos-py/examples/apply_merger_mode.md
+              - webknossos-py/examples/learned_segmenter.md
+              - webknossos-py/examples/skeleton_synapse_candidates.md
+              - webknossos-py/examples/calculate_segment_sizes.md
+              - webknossos-py/examples/download_segments.md
+          - Administration Examples:
+              - webknossos-py/examples/user_times.md
+              - webknossos-py/examples/annotation_project_administration.md
+      - API Reference:
+          - Overview: api/webknossos.md
+          - Geometry:
+              - BoundingBox: api/webknossos/geometry/bounding_box.md
+              - Mag: api/webknossos/geometry/mag.md
+              - Vec3Int: api/webknossos/geometry/vec3_int.md
+          - Dataset:
+              - Dataset: api/webknossos/dataset/dataset.md
+              - Layer: api/webknossos/dataset/layer.md
+              - MagView: api/webknossos/dataset/mag_view.md
+              - View: api/webknossos/dataset/view.md
+          - Annotation: api/webknossos/annotation/annotation.md
+          - Skeleton:
+              - Skeleton: api/webknossos/skeleton/skeleton.md
+              - Group: api/webknossos/skeleton/group.md
+              - Tree: api/webknossos/skeleton/tree.md
+              - Node: api/webknossos/skeleton/node.md
+          - Authentication & Server Context: api/webknossos/client/context.md
+          - Administration:
+              - User: api/webknossos/administration/user.md
+              - Project: api/webknossos/administration/project.md
+              - Task: api/webknossos/administration/task.md
+      - Version Changelog:
+          - webknossos-py/stability_policy.md
+          - webknossos-py/changelog.md
+      - Community:
+          - webknossos-py/CONTRIBUTING.md
+          - webknossos-py/CODE_OF_CONDUCT.md
+          - webknossos/terminology.md
+          - Getting Help:
+              - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+              - Email Support: mailto:hello@webknossos.org
+              - Commercial Support: https://scalableminds.com" target="_blank
+          - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
+          - Blog: https://medium.com/scalableminds" target="_blank
+  - WEBKNOSSOS Cuber:
+      - wkcuber CLI: wkcuber/index.md
+      - wkcuber/changelog.md
+      - Getting Help:
+          - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+          - Email Support: mailto:hello@webknossos.org
+          - Commercial Support: https://scalableminds.com" target="_blank
+      - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/wkcuber" target="_blank
 
 plugins:
-- search
-- redirects:
-    redirect_maps:
-        'index.md': 'webknossos/index.md'
+  - search
+  - redirects:
+      redirect_maps:
+        "index.md": "webknossos/index.md"
+  - mkdocs-video:
+      is_video: True
+  - mkdocs-video:
+      is_video: False
+      mark: "youtube-video"
 
 markdown_extensions:
-- admonition
-- attr_list
-- md_in_html
-- md_extensions.pdoc_toc_extension
-- md_extensions.video_embed_extension
-- md_extensions.mdlightbox
-- pymdownx.highlight
-- pymdownx.inlinehilite
-- pymdownx.superfences
-- pymdownx.snippets:
-    base_path: ".."
-    check_paths: true
-- pymdownx.emoji:
-    emoji_index: !!python/name:materialx.emoji.twemoji
-    emoji_generator: !!python/name:materialx.emoji.to_svg
+  - admonition
+  - attr_list
+  - md_in_html
+  - md_extensions.pdoc_toc_extension
+  - md_extensions.mdlightbox
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ".."
+      check_paths: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg

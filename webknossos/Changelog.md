@@ -10,16 +10,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.4...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [0.12.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.4) - 2023-05-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.3...v0.12.4)
+
+### Added
+- `Group.add_tree` now also accepts a tree object as a first parameter (instead of only a string). [#891](https://github.com/scalableminds/webknossos-libs/pull/891)
+- `Group.remove_tree_by_id` was added. [#891](https://github.com/scalableminds/webknossos-libs/pull/891)
+
+### Changed
 - Upgrades `black`, `mypy`, `pylint`, `pytest`. [#873](https://github.com/scalableminds/webknossos-libs/pull/873)
 
 ### Fixed
+- Fixed poetry build backend for new versions of Poetry. [#899](https://github.com/scalableminds/webknossos-libs/pull/899)
+- Added axis_order fields for Zarr data format. [#902](https://github.com/scalableminds/webknossos-libs/issues/902)
+
 
 
 ## [0.12.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.3) - 2023-02-22

@@ -8,6 +8,7 @@ import numpy as np
 from webknossos import SEGMENTATION_CATEGORY, BoundingBox, Dataset, Mag
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_distribution_flags,
     add_verbose_flag,
     parse_bounding_box,
@@ -19,7 +20,7 @@ from ._internal.utils import (
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "--source_path",

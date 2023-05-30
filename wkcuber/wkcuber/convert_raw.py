@@ -15,6 +15,7 @@ from webknossos.utils import (
 )
 
 from ._internal.utils import (
+    AsciiArgumentParser,
     add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,
@@ -47,7 +48,7 @@ def parse_flip_axes(flip_axes: str) -> Tuple[int, ...]:
 
 
 def create_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
+    parser = AsciiArgumentParser()
 
     parser.add_argument(
         "source_path",

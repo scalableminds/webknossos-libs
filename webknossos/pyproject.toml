@@ -140,5 +140,5 @@ markers = ["with_vcr: Runs with VCR recording and optionally blocked network"]
 testpaths = ["tests"]
 
 [build-system]
-requires = ["poetry>=1.1"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.1"]
+build-backend = "poetry.core.masonry.api"
