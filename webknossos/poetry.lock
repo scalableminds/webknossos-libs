@@ -2947,13 +2947,13 @@ files = [
 
 [[package]]
 name = "universal-pathlib"
-version = "0.0.19"
+version = "0.0.23"
 description = "Pathlib API extended to use fsspec backends"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "universal_pathlib-0.0.19-py3-none-any.whl", hash = "sha256:72df949935a12b7e6614481bb406df82383db52c58acba1bb44246762c76b127"},
-    {file = "universal_pathlib-0.0.19.tar.gz", hash = "sha256:382a6de60565faf33c39d9791d8a5c453e39b88ed19e8982de9bbffd5930800c"},
+    {file = "universal_pathlib-0.0.23-py3-none-any.whl", hash = "sha256:76cbc91d66ddb2c0c0c939d147bcd8fa2c79882b5451d2a59009811fc4f80bd3"},
+    {file = "universal_pathlib-0.0.23.tar.gz", hash = "sha256:bd7ed0ad5c6a31b3bf0835b9e7526ed0974ec3a49e4a6a02b1f4058ce63ec79c"},
 ]
 
 [package.dependencies]
@@ -3250,4 +3250,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "535eaccee0086e2565c7d81130cb947fa3c187f9d269a84270bbf56053f64a8e"
+content-hash = "b686c67e383e60faa9de80c319bdc8c7d3bdea2a9c847a06ce449b2366fdb495"
