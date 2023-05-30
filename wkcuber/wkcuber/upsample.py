@@ -2,8 +2,7 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from rich import print as rprint
@@ -12,14 +11,18 @@ from typing_extensions import Annotated
 from webknossos import Dataset, Mag, Vec3Int
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DistributionStrategy, SamplingMode, parse_mag
+from wkcuber._utils import DistributionStrategy, SamplingMode, parse_mag, parse_path
 
 
 def main(
     *,
     target: Annotated[
-        Path,
-        typer.Argument(help="Path to your WEBKNOSSOS dataset.", show_default=False),
+        Any,
+        typer.Argument(
+            help="Path to your WEBKNOSSOS dataset.",
+            show_default=False,
+            parser=parse_path,
+        ),
     ],
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
@@ -27,7 +30,7 @@ def main(
     from_mag: Annotated[
         Mag,
         typer.Option(
-            help="Mag to start upsampling from.\
+            help="Mag to start upsampling from. \
 Should be number or minus seperated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),

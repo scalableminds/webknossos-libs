@@ -1,7 +1,6 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
-from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import typer
 from rich import print as rprint
@@ -9,16 +8,18 @@ from typing_extensions import Annotated
 
 from webknossos import BoundingBox, Dataset, Mag, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
-from wkcuber.utils import parse_bbox, parse_mag
+from wkcuber._utils import parse_bbox, parse_mag, parse_path
 
 
 def main(
     *,
     target: Annotated[
-        Path,
+        Any,
         typer.Argument(
             show_default=False,
             help="Path to save your WEBKNOSSOS dataset.",
+            parser=parse_path,
+            metavar="PATH",
         ),
     ],
     exist_ok: Annotated[
@@ -79,13 +80,14 @@ def main(
             help="Bounding box that should be downloaded. \
 Should be a comma seperated string (e.g. 0,0,0,10,10,10)",
             parser=parse_bbox,
+            metavar="BBOX",
         ),
     ] = None,
     layer: Annotated[
         Optional[List[str]],
         typer.Option(
             rich_help_panel="Partial download",
-            help="Layers that should be downloaded.\
+            help="Layers that should be downloaded. \
 For multiple layers type: --layer color --layer segmentation",
         ),
     ] = None,
@@ -93,30 +95,30 @@ For multiple layers type: --layer color --layer segmentation",
         Optional[List[Mag]],
         typer.Option(
             rich_help_panel="Partial download",
-            help="Mags that should be downloaded.\
-Should be number or minus seperated string (e.g. 2 or 2-2-2).\
+            help="Mags that should be downloaded. \
+Should be number or minus seperated string (e.g. 2 or 2-2-2). \
 For multiple mags type: --mag 1 --mag 2",
             parser=parse_mag,
+            metavar="MAG",
         ),
     ] = None,
 ) -> None:
     """Download a dataset from a WEBKNOSSOS server."""
 
+    layers = layer if layer else None
+    mags = mag if mag else None
+
     if full_url is not None:
-        rprint(f"Downloading from url [blue]{full_url}[/blue] ...")
         with webknossos_context(url=webknossos_url, token=token):
             Dataset.download(
                 dataset_name_or_url=full_url,
-                bbox=bbox,
-                layers=layer,
                 path=target,
                 exist_ok=exist_ok,
-                mags=mag,
+                bbox=bbox,
+                layers=layers,
+                mags=mags,
             )
     elif dataset_name is not None:
-        rprint(
-            f"Downloading [blue]{dataset_name}[/blue] from [blue]{webknossos_url}[/blue] ..."
-        )
         with webknossos_context(url=webknossos_url, token=token):
             Dataset.download(
                 dataset_name_or_url=dataset_name,
@@ -124,10 +126,10 @@ For multiple mags type: --mag 1 --mag 2",
                 sharing_token=sharing_token,
                 webknossos_url=webknossos_url,
                 bbox=bbox,
-                layers=layer,
+                layers=layers,
                 path=target,
                 exist_ok=exist_ok,
-                mags=mag,
+                mags=mags,
             )
     else:
         raise ValueError(

@@ -1,4 +1,7 @@
-# wkcuber
+# WEBKNOSSOS cuber (wkcuber)
+[![PyPI version](https://img.shields.io/pypi/v/wkcuber)](https://pypi.python.org/pypi/wkcuber)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/wkcuber.svg)](https://pypi.python.org/pypi/wkcuber)
+
 
 Python CLI for creating and working with [WEBKNOSSOS](https://webknossos.org/) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy.
 
@@ -50,7 +53,26 @@ wkcuber downsample --layer_name color data/target
 wkcuber compress --layer_name segmentation data/target
 wkcuber compress data/target
 
+# Old modules that are still usable until there is a typer replacement
+
+# Convert Knossos cubes to wkw cubes
+python -m wkcuber.convert_knossos --layer_name color data/source/mag1 data/target
+
+# Convert NIFTI file to wkw file
+python -m wkcuber.convert_nifti --layer_name color --scale 10,10,30 data/source/nifti_file data/target
+
+# Convert folder with NIFTI files to wkw files
+python -m wkcuber.convert_nifti --color_file one_nifti_file --segmentation_file --scale 10,10,30 another_nifti data/source/ data/target
+
+# Convert RAW file to wkw file
+python -m wkcuber.convert_raw --layer_name color --scale 10,10,30 --input_dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
+
+
 ```
+
+### Parallelization
+
+Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
 
 
 ## Development
@@ -77,6 +99,9 @@ Please, run the extended test suite:
 ```bash
 tests/scripts/all_tests.sh
 ```
+
+### Generate the API documentation
+Run `docs/generate.sh` to open a server displaying the API docs. `docs/generate.sh --persist` persists the html to `docs/api`.
 
 ## License
 AGPLv3

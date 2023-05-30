@@ -2,8 +2,8 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
 
 import typer
 from rich import print as rprint
@@ -11,26 +11,41 @@ from typing_extensions import Annotated
 
 from webknossos import Dataset
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DataFormat, DistributionStrategy, VoxelSize, parse_voxel_size
+from wkcuber._utils import (
+    DataFormat,
+    DistributionStrategy,
+    parse_path,
+    parse_voxel_size,
+)
 
 
 def main(
     *,
     source: Annotated[
-        Path, typer.Argument(help="Path to your image data.", show_default=False)
+        Any,
+        typer.Argument(
+            help="Path to your image data.",
+            show_default=False,
+            parser=parse_path,
+            metavar="PATH",
+        ),
     ],
     target: Annotated[
-        Path,
+        Any,
         typer.Argument(
-            help="Target path to save your WEBKNOSSOS dataset.", show_default=False
+            help="Target path to save your WEBKNOSSOS dataset.",
+            show_default=False,
+            metavar="PATH",
+            parser=parse_path,
         ),
     ],
     voxel_size: Annotated[
-        VoxelSize,
+        Any,
         typer.Option(
-            help="The size of one voxel in source data in nanometers.\
+            help="The size of one voxel in source data in nanometers. \
 Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
+            metavar="VOXEL_SIZE",
         ),
     ],
     data_format: Annotated[
@@ -42,7 +57,7 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     name: Annotated[
         Optional[str],
         typer.Option(
-            help="New name for the WEBKNOSSOS dataset\
+            help="New name for the WEBKNOSSOS dataset \
 (if not provided, final component of target path is used)"
         ),
     ] = None,
@@ -73,8 +88,6 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     ] = None,
 ) -> None:
     """Automatic detection of an image stack and conversion to a WEBKNOSSOS dataset."""
-
-    rprint(f"Creating dataset [blue]{target}[/blue] from [blue]{source}[/blue] ...")
 
     executor_args = Namespace(
         jobs=jobs,

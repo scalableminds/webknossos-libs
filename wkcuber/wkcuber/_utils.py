@@ -2,6 +2,9 @@
 
 from collections import namedtuple
 from enum import Enum
+from os import environ
+
+from upath import UPath
 
 from webknossos import BoundingBox, Mag
 
@@ -76,3 +79,39 @@ def parse_bbox(bbox_str: str) -> BoundingBox:
             "The value could not be parsed to BoundingBox.\
 Please format the bounding box like 0,0,0,5,5,5 ."
         ) from err
+
+
+def parse_path(value: str) -> UPath:
+    """Parses a string value to a UPath."""
+
+    if (
+        (value.startswith("http://") or value.startswith("https://"))
+        and "HTTP_BASIC_USER" in environ
+        and "HTTP_BASIC_PASSWORD" in environ
+    ):
+        import aiohttp
+
+        return UPath(
+            value,
+            client_kwargs={
+                "auth": aiohttp.BasicAuth(
+                    environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]
+                )
+            },
+        )
+    if (
+        (value.startswith("webdav+http://") or value.startswith("webdav+https://"))
+        and "HTTP_BASIC_USER" in environ
+        and "HTTP_BASIC_PASSWORD" in environ
+    ):
+        return UPath(
+            value,
+            auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
+        )
+    if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
+        return UPath(
+            value,
+            client_kwargs={"endpoint_url": environ["S3_ENDPOINT_URL"]},
+        )
+
+    return UPath(value)

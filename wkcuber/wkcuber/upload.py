@@ -1,7 +1,6 @@
 """This module takes care of uploading  datasets to a WEBKNOSSOS server."""
 
-from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from rich import print as rprint
@@ -10,15 +9,18 @@ from typing_extensions import Annotated
 from webknossos import Dataset, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
+from wkcuber._utils import parse_path
 
 
 def main(
     *,
     source: Annotated[
-        Path,
+        Any,
         typer.Argument(
             show_default=False,
             help="Path to your local WEBKNOSSOS dataset.",
+            parser=parse_path,
+            metavar="PATH",
         ),
     ],
     webknossos_url: Annotated[
@@ -41,7 +43,7 @@ def main(
     dataset_name: Annotated[
         Optional[str],
         typer.Option(
-            help="Alternative name to rename your dataset on upload to WEBKNOSSOS.\
+            help="Alternative name to rename your dataset on upload to WEBKNOSSOS. \
 (if not provided, current name of dataset is used)",
         ),
     ] = None,

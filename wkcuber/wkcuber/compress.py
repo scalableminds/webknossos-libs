@@ -2,8 +2,7 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from rich import print as rprint
@@ -11,14 +10,19 @@ from typing_extensions import Annotated
 
 from webknossos import Dataset
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DistributionStrategy
+from wkcuber._utils import DistributionStrategy, parse_path
 
 
 def main(
     *,
     target: Annotated[
-        Path,
-        typer.Argument(help="Path to your WEBKNOSSOS dataset.", show_default=False),
+        Any,
+        typer.Argument(
+            help="Path to your WEBKNOSSOS dataset.",
+            show_default=False,
+            parser=parse_path,
+            metavar="PATH",
+        ),
     ],
     jobs: Annotated[
         int,
@@ -44,8 +48,6 @@ def main(
     ] = None,
 ) -> None:
     """Compress a given WEBKNOSSOS dataset."""
-
-    rprint(f"Compressing [blue]{target}[/blue] ...")
 
     executor_args = Namespace(
         jobs=jobs,

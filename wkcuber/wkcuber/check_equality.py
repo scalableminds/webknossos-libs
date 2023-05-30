@@ -3,8 +3,7 @@
 import logging
 from argparse import Namespace
 from multiprocessing import cpu_count
-from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from rich import print as rprint
@@ -13,21 +12,27 @@ from typing_extensions import Annotated
 from webknossos import Dataset
 from webknossos.dataset.layer import Layer
 from webknossos.utils import get_executor_for_args
-from wkcuber.utils import DistributionStrategy
+from wkcuber._utils import DistributionStrategy, parse_path
 
 
 def main(
     *,
     source: Annotated[
-        Path,
+        Any,
         typer.Argument(
-            help="Path to your first WEBKNOSSOS dataset.", show_default=False
+            help="Path to your first WEBKNOSSOS dataset.",
+            show_default=False,
+            parser=parse_path,
+            metavar="PATH",
         ),
     ],
     target: Annotated[
-        Path,
+        Any,
         typer.Argument(
-            help="Path to your second WEBKNOSSOS dataset.", show_default=False
+            help="Path to your second WEBKNOSSOS dataset.",
+            show_default=False,
+            parser=parse_path,
+            metavar="PATH",
         ),
     ],
     layer_name: Annotated[
