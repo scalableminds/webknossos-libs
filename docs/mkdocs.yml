@@ -149,6 +149,9 @@ plugins:
         "index.md": "webknossos/index.md"
   - mkdocs-video:
       is_video: True
+  - mkdocs-video:
+      is_video: False
+      mark: "youtube-video"
 
 markdown_extensions:
   - admonition
