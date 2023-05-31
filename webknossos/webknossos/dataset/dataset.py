@@ -270,7 +270,7 @@ class Dataset:
 
             assert (
                 dataset_path / PROPERTIES_FILE_NAME
-            ).read_bytes(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
+            ).is_file(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
         else:
             if read_only:
                 raise FileNotFoundError(
