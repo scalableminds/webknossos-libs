@@ -11,7 +11,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: https://webknossos.org/api/shortLinks/byKey/93zLg9U9vJ3c_UWp
   response:
@@ -48,7 +48,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: https://webknossos.org/api/datasets/scalable_minds/l4_sample_dev_sharing?sharingToken=ilDXmfQa2G8e719vb1U9YQ
   response:
@@ -237,14 +237,12 @@ interactions:
     url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing
 - request:
     body: null
-    headers:
-      Accept-Encoding:
-      - identity
-    method: HEAD
+    headers: {}
+    method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/datasource-properties.json
   response:
     body:
-      string: ''
+      string: '{"id":{"name":"l4_sample_dev_sharing","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -275,9 +273,7 @@ interactions:
     url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/datasource-properties.json
 - request:
     body: null
-    headers:
-      Range:
-      - bytes=0-862
+    headers: {}
     method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/datasource-properties.json
   response:
