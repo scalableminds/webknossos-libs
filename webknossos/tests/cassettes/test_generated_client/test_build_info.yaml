@@ -15,9 +15,9 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/buildinfo
   response:
-    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"a0b11b39adaac21804c1ca156a0e15fa495ed136","ciBuild":"","scalaVersion":"2.12.15","version":"dev","sbtVersion":"1.6.2","datastoreApiVersion":"2.0","commitDate":"Wed
-      May 31 09:48:21 2023 +0200"},"webknossos-wrap":{"builtAtMillis":"1640035836569","name":"webknossos-wrap","commitHash":"8b842648702f469a3ffd90dc8a68c4310e64b351","scalaVersion":"2.12.7","version":"1.1.15","sbtVersion":"1.4.1","builtAtString":"2021-12-20
-      21:30:36.569"},"schemaVersion":101,"localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
+    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"ce7cc1df41bf47861525013734f70dc114b47377","ciBuild":"","scalaVersion":"2.12.15","version":"dev","sbtVersion":"1.6.2","datastoreApiVersion":"2.0","commitDate":"Wed
+      May 31 10:51:57 2023 +0200"},"webknossos-wrap":{"builtAtMillis":"1640035836569","name":"webknossos-wrap","commitHash":"8b842648702f469a3ffd90dc8a68c4310e64b351","scalaVersion":"2.12.7","version":"1.1.15","sbtVersion":"1.4.1","builtAtString":"2021-12-20
+      21:30:36.569"},"schemaVersion":102,"localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
     headers:
       access-control-allow-origin:
       - '*'
