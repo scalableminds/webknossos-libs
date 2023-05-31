@@ -53,7 +53,7 @@ interactions:
       content-disposition:
       - attachment;filename="l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.zip"
       content-length:
-      - '1054'
+      - '1053'
       content-type:
       - application/zip
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -470,14 +470,12 @@ interactions:
     url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356
 - request:
     body: null
-    headers:
-      Accept-Encoding:
-      - identity
-    method: HEAD
+    headers: {}
+    method: GET
     uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
   response:
     body:
-      string: ''
+      string: '{"id":{"name":"l4dense_motta_et_al_demo_v2","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"elementClass":"uint24","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":3,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"},{"name":"Volume","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504698,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -508,9 +506,7 @@ interactions:
     url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
 - request:
     body: null
-    headers:
-      Range:
-      - bytes=0-3451
+    headers: {}
     method: GET
     uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
   response:
