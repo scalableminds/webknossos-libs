@@ -17,6 +17,8 @@ interactions:
   response:
     content: '[{"name":"connect","url":"http://localhost:8000","isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
+      cache-control:
+      - no-cache
       content-length:
       - '217'
       content-type:

@@ -24,6 +24,8 @@ interactions:
       in *Science* on 24 October 2019. [10.1126/science.aay3134](https://science.sciencemag.org/content/early/2019/10/23/science.aay3134)\n","displayName":"L4
       Mouse Cortex Demo","created":1597232436055,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1597232436055,"details":null,"isUnreported":false,"jobsEnabled":true,"tags":["demo","l4dense"],"folderId":"63889e760100005801712441","publication":null}'
     headers:
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:

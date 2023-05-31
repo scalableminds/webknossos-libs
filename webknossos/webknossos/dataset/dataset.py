@@ -60,6 +60,7 @@ from ..utils import (
     is_fs_path,
     named_partial,
     rmtree,
+    strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
 )
@@ -246,12 +247,12 @@ class Dataset:
 
         self._read_only = read_only
 
-        dataset_path = UPath(dataset_path)
+        dataset_path = strip_trailing_slash(UPath(dataset_path))
 
         dataset_existed_already = (
             dataset_path.exists()
             and dataset_path.is_dir()
-            and next(dataset_path.iterdir(), None) is not None
+            and next(dataset_path.iterdir(), None) is not None  # dir is not empty
         )
 
         if dataset_existed_already:
@@ -266,9 +267,10 @@ class Dataset:
                 raise RuntimeError(
                     f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
                 )
+
             assert (
                 dataset_path / PROPERTIES_FILE_NAME
-            ).is_file(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
+            ).read_bytes(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
         else:
             if read_only:
                 raise FileNotFoundError(
@@ -355,6 +357,8 @@ class Dataset:
         assert (
             dataset_path.is_dir()
         ), f"Cannot open Dataset: {dataset_path} is not a directory"
+
+        dataset_path = strip_trailing_slash(dataset_path)
         assert (
             dataset_path / PROPERTIES_FILE_NAME
         ).is_file(), (

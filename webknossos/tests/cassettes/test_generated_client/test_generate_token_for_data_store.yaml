@@ -19,6 +19,8 @@ interactions:
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
+      cache-control:
+      - no-cache
       content-length:
       - '34'
       content-type:
