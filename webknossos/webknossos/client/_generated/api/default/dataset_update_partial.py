@@ -4,7 +4,7 @@ from typing import Any, Dict
 import httpx
 
 from ...client import Client
-from ...models.dataset_update_json_body import DatasetUpdateJsonBody
+from ...models.dataset_update_partial_json_body import DatasetUpdatePartialJsonBody
 from ...types import Response
 
 
@@ -13,9 +13,9 @@ def _get_kwargs(
     data_set_name: str,
     *,
     client: Client,
-    json_body: DatasetUpdateJsonBody,
+    json_body: DatasetUpdatePartialJsonBody,
 ) -> Dict[str, Any]:
-    url = "{}/api/datasets/{organizationName}/{dataSetName}".format(
+    url = "{}/api/datasets/{organizationName}/{dataSetName}/updatePartial".format(
         client.base_url, organizationName=organization_name, dataSetName=data_set_name
     )
 
@@ -48,17 +48,18 @@ def sync_detailed(
     data_set_name: str,
     *,
     client: Client,
-    json_body: DatasetUpdateJsonBody,
+    json_body: DatasetUpdatePartialJsonBody,
 ) -> Response[Any]:
     """Update information for a dataset.
     Expects:
-     - As JSON object body with keys:
-      - description (optional string)
-      - displayName (optional string)
-      - sortingKey (optional long)
+     - As JSON object body with all optional keys (missing keys will not be updated, keys set to null
+    will be set to null):
+      - description (string, nullable)
+      - displayName (string, nullable)
+      - sortingKey (timestamp)
       - isPublic (boolean)
       - tags (list of string)
-      - folderId (optional string)
+      - folderId (string)
      - As GET parameters:
       - organizationName (string): url-safe name of the organization owning the dataset
       - dataSetName (string): name of the dataset
@@ -66,7 +67,7 @@ def sync_detailed(
     Args:
         organization_name (str):
         data_set_name (str):
-        json_body (DatasetUpdateJsonBody):
+        json_body (DatasetUpdatePartialJsonBody):
 
     Returns:
         Response[Any]
@@ -92,17 +93,18 @@ async def asyncio_detailed(
     data_set_name: str,
     *,
     client: Client,
-    json_body: DatasetUpdateJsonBody,
+    json_body: DatasetUpdatePartialJsonBody,
 ) -> Response[Any]:
     """Update information for a dataset.
     Expects:
-     - As JSON object body with keys:
-      - description (optional string)
-      - displayName (optional string)
-      - sortingKey (optional long)
+     - As JSON object body with all optional keys (missing keys will not be updated, keys set to null
+    will be set to null):
+      - description (string, nullable)
+      - displayName (string, nullable)
+      - sortingKey (timestamp)
       - isPublic (boolean)
       - tags (list of string)
-      - folderId (optional string)
+      - folderId (string)
      - As GET parameters:
       - organizationName (string): url-safe name of the organization owning the dataset
       - dataSetName (string): name of the dataset
@@ -110,7 +112,7 @@ async def asyncio_detailed(
     Args:
         organization_name (str):
         data_set_name (str):
-        json_body (DatasetUpdateJsonBody):
+        json_body (DatasetUpdatePartialJsonBody):
 
     Returns:
         Response[Any]
