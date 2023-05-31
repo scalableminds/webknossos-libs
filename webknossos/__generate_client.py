@@ -37,6 +37,7 @@ def generate_client(openapi_schema: Dict) -> None:
         generator_config = Config(
             project_name_override="webknossos/client/_generated",
             package_name_override=".",
+            package_version_override="0.0.0",
         )
         generator_project = _get_project_for_url_or_path(
             url=None,
