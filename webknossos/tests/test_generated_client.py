@@ -61,7 +61,6 @@ def test_datastore_list(auth_client: Client) -> None:
         name="localhost",
         url="http://localhost:9000",
         is_scratch=False,
-        is_connector=False,
         allows_upload=True,
     )
     assert datastores is not None

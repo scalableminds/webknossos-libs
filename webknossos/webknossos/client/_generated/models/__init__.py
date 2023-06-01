@@ -5,6 +5,7 @@ from .action_annotation_layer_parameters import ActionAnnotationLayerParameters
 from .action_annotation_private_link_params import ActionAnnotationPrivateLinkParams
 from .action_any_content import ActionAnyContent
 from .action_cancel_upload_information import ActionCancelUploadInformation
+from .action_dataset_update_parameters import ActionDatasetUpdateParameters
 from .action_js_value import ActionJsValue
 from .action_list_object_id import ActionListObjectId
 from .action_multipart_form_data_temporary_file import (
@@ -159,6 +160,7 @@ from .dataset_list_response_200_item_data_store import (
 from .dataset_reserve_upload_json_body import DatasetReserveUploadJsonBody
 from .dataset_sharing_token_response_200 import DatasetSharingTokenResponse200
 from .dataset_update_json_body import DatasetUpdateJsonBody
+from .dataset_update_partial_json_body import DatasetUpdatePartialJsonBody
 from .datastore_list_response_200_item import DatastoreListResponse200Item
 from .folder_tree_response_200_item import FolderTreeResponse200Item
 from .generate_token_for_data_store_response_200 import (
@@ -232,6 +234,7 @@ __all__ = (
     "ActionAnnotationPrivateLinkParams",
     "ActionAnyContent",
     "ActionCancelUploadInformation",
+    "ActionDatasetUpdateParameters",
     "ActionJsValue",
     "ActionListObjectId",
     "ActionMultipartFormDataTemporaryFile",
@@ -302,6 +305,7 @@ __all__ = (
     "DatasetReserveUploadJsonBody",
     "DatasetSharingTokenResponse200",
     "DatasetUpdateJsonBody",
+    "DatasetUpdatePartialJsonBody",
     "DatastoreListResponse200Item",
     "FolderTreeResponse200Item",
     "GenerateTokenForDataStoreResponse200",
