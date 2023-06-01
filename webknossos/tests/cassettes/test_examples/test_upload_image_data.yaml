@@ -13,7 +13,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/api/userToken/generate
   response:
@@ -46,7 +46,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: GET
     uri: http://localhost:9000/api/datastores
   response:
@@ -79,11 +79,11 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1685536364050,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1685613015112,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       cache-control:
       - no-cache
@@ -112,7 +112,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/cell_2000-01-01_00-00-00/isValidNewName
   response:
@@ -149,7 +149,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets/reserveUpload
   response:
@@ -227,7 +227,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -353,7 +353,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -402,7 +402,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -528,7 +528,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -577,7 +577,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -618,7 +618,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets/finishUpload
   response:
@@ -653,12 +653,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.18.2
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/cell_2000-01-01_00-00-00
   response:
-    content: '{"name":"cell_2023-05-31_12-38-10","dataSource":{"id":{"name":"cell_2023-05-31_12-38-10","team":"Organization_X"},"dataLayers":[{"name":"cell
-      membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":[260,260,290]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1685536694571,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1685536694571,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"cell_2023-06-01_09-52-11","dataSource":{"id":{"name":"cell_2023-06-01_09-52-11","team":"Organization_X"},"dataLayers":[{"name":"cell
+      membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":[260,260,290]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1685613135415,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1685613135415,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       cache-control:
       - no-cache
@@ -695,7 +695,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-05-31_12-38-10\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-06-01_09-52-11\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -722,7 +722,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11
 - request:
     body: null
     headers: {}
@@ -743,7 +743,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-05-31_12-38-10\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-06-01_09-52-11\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -770,7 +770,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11
 - request:
     body: null
     headers: {}
@@ -791,7 +791,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-05-31_12-38-10\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-06-01_09-52-11\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -818,7 +818,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11
 - request:
     body: null
     headers: {}
@@ -826,7 +826,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2023-05-31_12-38-10","team":"Organization_X"},"dataLayers":[{"name":"cell
+      string: '{"id":{"name":"cell_2023-06-01_09-52-11","team":"Organization_X"},"dataLayers":[{"name":"cell
         membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
@@ -849,7 +849,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -857,7 +857,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2023-05-31_12-38-10","team":"Organization_X"},"dataLayers":[{"name":"cell
+      string: '{"id":{"name":"cell_2023-06-01_09-52-11","team":"Organization_X"},"dataLayers":[{"name":"cell
         membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
@@ -880,7 +880,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/datasource-properties.json
 - request:
     body: null
     headers:
@@ -912,7 +912,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/datasource-properties.json
 - request:
     body: null
     headers:
@@ -922,7 +922,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2023-05-31_12-38-10","team":"Organization_X"},"dataLayers":[{"name":"cell
+      string: '{"id":{"name":"cell_2023-06-01_09-52-11","team":"Organization_X"},"dataLayers":[{"name":"cell
         membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
@@ -945,7 +945,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -966,7 +966,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-05-31_12-38-10/cell
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-06-01_09-52-11/cell
         membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
         folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray\">.zarray</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
@@ -991,7 +991,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1
 - request:
     body: null
     headers: {}
@@ -1021,7 +1021,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1051,7 +1051,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1081,7 +1081,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1111,7 +1111,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1141,7 +1141,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1171,7 +1171,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1192,7 +1192,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-05-31_12-38-10/cell
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-06-01_09-52-11/cell
         membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
         folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray\">.zarray</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
@@ -1217,7 +1217,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/cell%20membranes/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/cell%20membranes/1
 - request:
     body: null
     headers: {}
@@ -1238,7 +1238,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-05-31_12-38-10/nuclei/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-06-01_09-52-11/nuclei/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1263,7 +1263,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1
 - request:
     body: null
     headers: {}
@@ -1293,7 +1293,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1323,7 +1323,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1353,7 +1353,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1383,7 +1383,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1413,7 +1413,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1443,7 +1443,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1464,7 +1464,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-05-31_12-38-10/nuclei/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-06-01_09-52-11/nuclei/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1489,5 +1489,5 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-05-31_12-38-10/nuclei/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2023-06-01_09-52-11/nuclei/1
 version: 1

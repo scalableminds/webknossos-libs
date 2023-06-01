@@ -12,18 +12,18 @@ class ShortLinkByKeyResponse200:
     """
     Attributes:
         long_link (str):
-        field_id (Union[Unset, str]):
+        id (Union[Unset, str]):
         key (Union[Unset, str]):
     """
 
     long_link: str
-    field_id: Union[Unset, str] = UNSET
+    id: Union[Unset, str] = UNSET
     key: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         long_link = self.long_link
-        field_id = self.field_id
+        id = self.id
         key = self.key
 
         field_dict: Dict[str, Any] = {}
@@ -33,8 +33,8 @@ class ShortLinkByKeyResponse200:
                 "longLink": long_link,
             }
         )
-        if field_id is not UNSET:
-            field_dict["_id"] = field_id
+        if id is not UNSET:
+            field_dict["_id"] = id
         if key is not UNSET:
             field_dict["key"] = key
 
@@ -45,13 +45,13 @@ class ShortLinkByKeyResponse200:
         d = src_dict.copy()
         long_link = d.pop("longLink")
 
-        field_id = d.pop("_id", UNSET)
+        id = d.pop("_id", UNSET)
 
         key = d.pop("key", UNSET)
 
         short_link_by_key_response_200 = cls(
             long_link=long_link,
-            field_id=field_id,
+            id=id,
             key=key,
         )
 

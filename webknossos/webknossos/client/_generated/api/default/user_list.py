@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-from ... import errors
 from ...client import Client
 from ...models.user_list_response_200_item import UserListResponse200Item
 from ...types import UNSET, Response, Unset
@@ -36,15 +35,14 @@ def _get_kwargs(
         "headers": headers,
         "cookies": cookies,
         "timeout": client.get_timeout(),
-        "follow_redirects": client.follow_redirects,
         "params": params,
     }
 
 
 def _parse_response(
-    *, client: Client, response: httpx.Response
+    *, response: httpx.Response
 ) -> Optional[List["UserListResponse200Item"]]:
-    if response.status_code == HTTPStatus.OK:
+    if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
@@ -55,20 +53,17 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
-    if client.raise_on_unexpected_status:
-        raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
-    *, client: Client, response: httpx.Response
+    *, response: httpx.Response
 ) -> Response[List["UserListResponse200Item"]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
         headers=response.headers,
-        parsed=_parse_response(client=client, response=response),
+        parsed=_parse_response(response=response),
     )
 
 
@@ -87,10 +82,6 @@ def sync_detailed(
         is_team_manager_or_admin (Union[Unset, None, bool]):
         is_admin (Union[Unset, None, bool]):
 
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
     Returns:
         Response[List['UserListResponse200Item']]
     """
@@ -107,7 +98,7 @@ def sync_detailed(
         **kwargs,
     )
 
-    return _build_response(client=client, response=response)
+    return _build_response(response=response)
 
 
 def sync(
@@ -125,12 +116,8 @@ def sync(
         is_team_manager_or_admin (Union[Unset, None, bool]):
         is_admin (Union[Unset, None, bool]):
 
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
     Returns:
-        List['UserListResponse200Item']
+        Response[List['UserListResponse200Item']]
     """
 
     return sync_detailed(
@@ -156,10 +143,6 @@ async def asyncio_detailed(
         is_team_manager_or_admin (Union[Unset, None, bool]):
         is_admin (Union[Unset, None, bool]):
 
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
     Returns:
         Response[List['UserListResponse200Item']]
     """
@@ -174,7 +157,7 @@ async def asyncio_detailed(
     async with httpx.AsyncClient(verify=client.verify_ssl) as _client:
         response = await _client.request(**kwargs)
 
-    return _build_response(client=client, response=response)
+    return _build_response(response=response)
 
 
 async def asyncio(
@@ -192,12 +175,8 @@ async def asyncio(
         is_team_manager_or_admin (Union[Unset, None, bool]):
         is_admin (Union[Unset, None, bool]):
 
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
     Returns:
-        List['UserListResponse200Item']
+        Response[List['UserListResponse200Item']]
     """
 
     return (
