@@ -3088,20 +3088,15 @@ test = ["websockets"]
 
 [[package]]
 name = "wkw"
-version = "1.1.18"
+version = "1.1.20"
 description = ""
 optional = false
 python-versions = "*"
 files = [
-    {file = "wkw-1.1.18-py3-none-manylinux1_x86_64.whl", hash = "sha256:a7d8022b4f98dc0dee4c3ddc1521f5a7484c805a4341c323817d50ff8b04ea3f"},
-    {file = "wkw-1.1.18-py3-none-manylinux2014_x86_64.whl", hash = "sha256:9f6b9736f060fd74c0dce5cb716fa706c1382d6aa2265c21527e1757d66b2cd9"},
-    {file = "wkw-1.1.18-py3.7-none-macosx_10_15_universal2.whl", hash = "sha256:7d42217cebf1e95e3abf1a312d2b8c7041d40e4e1f0aaeada964b87e2407bc06"},
-    {file = "wkw-1.1.18-py3.7-none-win_amd64.whl", hash = "sha256:1fbabd6d5ded113934a11c427c4f323804c9695d68039f6663aede6cd35ed08b"},
-    {file = "wkw-1.1.18-py3.8-none-macosx_10_15_universal2.whl", hash = "sha256:2dda461dfd94cffc5f7a6fb3b06f2edfdd2a35bdde212b07b87f5184e93c9431"},
-    {file = "wkw-1.1.18-py3.8-none-win_amd64.whl", hash = "sha256:0fa3558357dbf4c715b1f9fca7492d7a57c822fa9d7b45e03c55533e5d119d2e"},
-    {file = "wkw-1.1.18-py3.9-none-macosx_10_15_universal2.whl", hash = "sha256:b8ad6b48e53e98bf2dbcd25beaa9a256baadcefea7c0a5892a39f02127acd5ec"},
-    {file = "wkw-1.1.18-py3.9-none-win_amd64.whl", hash = "sha256:0fef2a0b4817b6fff38555cc9b255bcac50099d6ac97886bdd148061375db667"},
-    {file = "wkw-1.1.18.tar.gz", hash = "sha256:9de9c7947deca175b57014748af4dfc67013242acec8b1528ab69e675d87b6b9"},
+    {file = "wkw-1.1.20-py3-none-macosx_10_9_universal2.whl", hash = "sha256:be59d07cefdc74fee126084b3f9ada1063189ef547c1c4598bde48f3418dae71"},
+    {file = "wkw-1.1.20-py3-none-manylinux2014_x86_64.whl", hash = "sha256:906481d4f86e574527a415d74c0888d25c4dff6dd975549da39568a069cf7c5b"},
+    {file = "wkw-1.1.20-py3-none-win_amd64.whl", hash = "sha256:babd191a00c06c34e2835fafbdf19a70485f3973c6688528a9ba3e3c9f8090e5"},
+    {file = "wkw-1.1.20.tar.gz", hash = "sha256:3ae8fdc402487135ac86d1e91e6a518bfb9e259d45f029e4407bad342961dea6"},
 ]
 
 [package.dependencies]
@@ -3336,4 +3331,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "0b7b5c0eb6ee3c39441048092dab1874857062c23e6f8f458174d0bbbc1e827f"
+content-hash = "9be37290139ae3f300af53e572264fa52b3f34aa20c0adbf7bfc174e241c4736"

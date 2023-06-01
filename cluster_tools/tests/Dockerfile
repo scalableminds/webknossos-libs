@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.11
 
 RUN mkdir /cluster_tools
 COPY poetry.lock /cluster_tools
