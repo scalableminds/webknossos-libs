@@ -415,6 +415,11 @@ class Layer:
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
+                axis_order=(
+                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    if mag_array_info.data_format == DataFormat.Zarr
+                    else None
+                ),
             )
         ]
 
@@ -445,6 +450,11 @@ class Layer:
                 cube_length=(
                     mag_array_info.shard_shape.x
                     if mag_array_info.data_format == DataFormat.WKW
+                    else None
+                ),
+                axis_order=(
+                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    if mag_array_info.data_format == DataFormat.Zarr
                     else None
                 ),
             )

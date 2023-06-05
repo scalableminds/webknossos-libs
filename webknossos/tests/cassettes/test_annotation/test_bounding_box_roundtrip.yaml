@@ -15,7 +15,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1685438952384,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1685967882462,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       content-length:
       - '657'
@@ -46,7 +46,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/e2006_knossos
   response:
-    content: '{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":[1.1,1.1,1.1]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1685438952456,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1685438952456,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":[1.1,1.1,1.1]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1685967882715,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1685967882715,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       content-length:
       - '869'
@@ -141,36 +141,6 @@ interactions:
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
 - request:
     body: null
-    headers:
-      Accept-Encoding:
-      - identity
-    method: HEAD
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
-  response:
-    body:
-      string: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '1426'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
-- request:
-    body: null
     headers: {}
     method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
@@ -261,14 +231,12 @@ interactions:
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
 - request:
     body: null
-    headers:
-      Accept-Encoding:
-      - identity
-    method: HEAD
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
   response:
     body:
-      string: ''
+      string: '{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"elementClass":"uint24","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":3,"dataFormat":"zarr"}],"scale":[1.1,1.1,1.1]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -451,14 +419,12 @@ interactions:
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
 - request:
     body: null
-    headers:
-      Accept-Encoding:
-      - identity
-    method: HEAD
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
   response:
     body:
-      string: ''
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[3,32,32,32],"compressor":null,"filters":null,"shape":[3,24,24,24],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -640,14 +606,14 @@ interactions:
       zip:
         test_bounding_box_roundtrip.nml: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<things>\n
           \ <parameters>\n    <experiment name=\"e2006_knossos\" />\n    <scale x=\"1.1\"
-          y=\"1.1\" z=\"1.1\" />\n    <time ms=\"1685439017000\" />\n    <taskBoundingBox
+          y=\"1.1\" z=\"1.1\" />\n    <time ms=\"1685967934000\" />\n    <taskBoundingBox
           color.a=\"1\" color.b=\"0.2\" color.g=\"0\" color.r=\"0.5\" depth=\"5\"
           height=\"5\" isVisible=\"true\" name=\"task_bbox\" topLeftX=\"10\" topLeftY=\"10\"
           topLeftZ=\"10\" width=\"5\" />\n    <userBoundingBox color.a=\"1\" color.b=\"0.1\"
           color.g=\"0.5\" color.r=\"0.2\" depth=\"64\" height=\"64\" id=\"0\" isVisible=\"true\"
           name=\"Unnamed Bounding Box\" topLeftX=\"1024\" topLeftY=\"512\" topLeftZ=\"128\"
-          width=\"64\" />\n  </parameters>\n  <thing color.a=\"1.0\" color.b=\"0.8469311002385804\"
-          color.g=\"0.7247475098571856\" color.r=\"0.11266010739136711\" groupId=\"1\"
+          width=\"64\" />\n  </parameters>\n  <thing color.a=\"1.0\" color.b=\"0.8177687923053018\"
+          color.g=\"0.8686730210041711\" color.r=\"0.1743063871999837\" groupId=\"1\"
           id=\"2\" name=\"a tree\">\n    <nodes>\n      <node id=\"3\" x=\"0.0\" y=\"0.0\"
           z=\"0.0\" />\n    </nodes>\n    <edges />\n  </thing>\n  <branchpoints />\n
           \ <comments>\n    <comment content=\"node 1\" node=\"3\" />\n  </comments>\n
@@ -660,7 +626,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '959'
+      - '961'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -670,7 +636,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/api/annotations/upload
   response:
-    content: '{"annotation":{"typ":"Explorational","id":"6475c229010000a600517487"},"messages":[{"success":"Successfully
+    content: '{"annotation":{"typ":"Explorational","id":"647dd43e0100009e009e178e"},"messages":[{"success":"Successfully
       uploaded file"}]}'
     headers:
       content-length:
@@ -700,24 +666,24 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/annotations/6475c229010000a600517487/download?skipVolumeData=false
+    uri: http://localhost:9000/api/annotations/647dd43e0100009e009e178e/download?skipVolumeData=false
   response:
     content: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta
       name=\"writerGitCommit\" content=\"668df2db999b92fd17125e05d167090fd9f5fedf\"
-      />\n  <meta name=\"timestamp\" content=\"1685439018261\" />\n  <meta name=\"annotationId\"
-      content=\"6475c229010000a600517487\" />\n  <meta name=\"username\" content=\"user_A
+      />\n  <meta name=\"timestamp\" content=\"1685967935164\" />\n  <meta name=\"annotationId\"
+      content=\"647dd43e0100009e009e178e\" />\n  <meta name=\"username\" content=\"user_A
       BoyA\" />\n  <parameters>\n    <experiment name=\"e2006_knossos\" organization=\"Organization_X\"
       description=\"\" />\n    <scale x=\"1.1\" y=\"1.1\" z=\"1.1\" />\n    <offset
-      x=\"0\" y=\"0\" z=\"0\" />\n    <time ms=\"1685439017852\" />\n    <editPosition
+      x=\"0\" y=\"0\" z=\"0\" />\n    <time ms=\"1685967934721\" />\n    <editPosition
       x=\"0\" y=\"0\" z=\"0\" />\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"
       />\n    <zoomLevel zoom=\"2.0\" />\n    <userBoundingBox id=\"0\" name=\"Unnamed
       Bounding Box\" isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\"
       color.b=\"0.10000000149011612\" color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\"
       topLeftZ=\"128\" width=\"64\" height=\"64\" depth=\"64\" />\n    <userBoundingBox
-      id=\"1\" name=\"task bounding box\" color.r=\"0.9302732870006236\" color.g=\"0.6183813473030283\"
-      color.b=\"0.2680748334533458\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
+      id=\"1\" name=\"task bounding box\" color.r=\"0.5271816803011508\" color.g=\"0.42754610755253764\"
+      color.b=\"0.18166119605665842\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
       topLeftZ=\"10\" width=\"5\" height=\"5\" depth=\"5\" />\n  </parameters>\n  <thing
-      id=\"2\" color.r=\"0.11266010999679565\" color.g=\"0.7247475385665894\" color.b=\"0.8469310998916626\"
+      id=\"2\" color.r=\"0.17430639266967773\" color.g=\"0.8686730265617371\" color.b=\"0.8177688121795654\"
       color.a=\"1.0\" name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\"
       radius=\"1.0\" x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\"
       inVp=\"0\" inMag=\"0\" bitDepth=\"0\" interpolation=\"false\" time=\"0\" />\n
@@ -728,7 +694,7 @@ interactions:
       content-disposition:
       - attachment;filename="test_bounding_box_roundtrip.nml"
       content-length:
-      - '1627'
+      - '1629'
       content-type:
       - application/xml
       date: Mon, 01 Jan 2000 00:00:00 GMT

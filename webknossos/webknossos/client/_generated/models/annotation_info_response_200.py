@@ -60,7 +60,6 @@ class AnnotationInfoResponse200:
         teams (Union[Unset, List[Any]]):
         user (Union[Unset, AnnotationInfoResponse200User]):
         owner (Union[Unset, AnnotationInfoResponse200Owner]):
-        meshes (Union[Unset, List[Any]]):
         contributors (Union[Unset, List[Any]]):
         others_may_edit (Union[Unset, int]):
     """
@@ -90,7 +89,6 @@ class AnnotationInfoResponse200:
     teams: Union[Unset, List[Any]] = UNSET
     user: Union[Unset, "AnnotationInfoResponse200User"] = UNSET
     owner: Union[Unset, "AnnotationInfoResponse200Owner"] = UNSET
-    meshes: Union[Unset, List[Any]] = UNSET
     contributors: Union[Unset, List[Any]] = UNSET
     others_may_edit: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -152,10 +150,6 @@ class AnnotationInfoResponse200:
         if not isinstance(self.owner, Unset):
             owner = self.owner.to_dict()
 
-        meshes: Union[Unset, List[Any]] = UNSET
-        if not isinstance(self.meshes, Unset):
-            meshes = self.meshes
-
         contributors: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.contributors, Unset):
             contributors = self.contributors
@@ -206,8 +200,6 @@ class AnnotationInfoResponse200:
             field_dict["user"] = user
         if owner is not UNSET:
             field_dict["owner"] = owner
-        if meshes is not UNSET:
-            field_dict["meshes"] = meshes
         if contributors is not UNSET:
             field_dict["contributors"] = contributors
         if others_may_edit is not UNSET:
@@ -342,8 +334,6 @@ class AnnotationInfoResponse200:
         else:
             owner = AnnotationInfoResponse200Owner.from_dict(_owner)
 
-        meshes = cast(List[Any], d.pop("meshes", UNSET))
-
         contributors = cast(List[Any], d.pop("contributors", UNSET))
 
         others_may_edit = d.pop("othersMayEdit", UNSET)
@@ -372,7 +362,6 @@ class AnnotationInfoResponse200:
             teams=teams,
             user=user,
             owner=owner,
-            meshes=meshes,
             contributors=contributors,
             others_may_edit=others_may_edit,
         )

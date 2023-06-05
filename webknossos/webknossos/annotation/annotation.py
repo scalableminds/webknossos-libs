@@ -18,7 +18,6 @@ Correcting segmentations using fallback layers is much more efficient, adding vo
 annotation data programmatically is discouraged therefore.
 """
 
-import cgi
 import re
 import warnings
 from contextlib import contextmanager, nullcontext
@@ -320,8 +319,7 @@ class Annotation:
             )
         assert response.status_code == 200, response
         content_disposition_header = response.headers.get("content-disposition", "")
-        _header_value, header_params = cgi.parse_header(content_disposition_header)
-        filename = header_params.get("filename", "")
+        filename = _parse_filename_from_header(content_disposition_header)
         if filename.endswith(".nml"):
             annotation = Annotation._load_from_nml(
                 filename[:-4], BytesIO(response.content)
@@ -890,3 +888,12 @@ def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
         ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
         warn_deprecated("open_annotation", "Annotation.download")
         return Annotation.download(annotation_path)
+
+
+def _parse_filename_from_header(value: str) -> str:
+    # Adapted from https://peps.python.org/pep-0594/#cgi
+    from email.message import Message
+
+    m = Message()
+    m["content-type"] = value
+    return dict(m.get_params()).get("filename", "")

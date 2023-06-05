@@ -64,7 +64,6 @@ class AnnotationInfosByTaskIdResponse200Item:
         teams (Union[Unset, List[Any]]):
         user (Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser]):
         owner (Union[Unset, AnnotationInfosByTaskIdResponse200ItemOwner]):
-        meshes (Union[Unset, List[Any]]):
         contributors (Union[Unset, List[Any]]):
         others_may_edit (Union[Unset, int]):
     """
@@ -98,7 +97,6 @@ class AnnotationInfosByTaskIdResponse200Item:
     teams: Union[Unset, List[Any]] = UNSET
     user: Union[Unset, "AnnotationInfosByTaskIdResponse200ItemUser"] = UNSET
     owner: Union[Unset, "AnnotationInfosByTaskIdResponse200ItemOwner"] = UNSET
-    meshes: Union[Unset, List[Any]] = UNSET
     contributors: Union[Unset, List[Any]] = UNSET
     others_may_edit: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -160,10 +158,6 @@ class AnnotationInfosByTaskIdResponse200Item:
         if not isinstance(self.owner, Unset):
             owner = self.owner.to_dict()
 
-        meshes: Union[Unset, List[Any]] = UNSET
-        if not isinstance(self.meshes, Unset):
-            meshes = self.meshes
-
         contributors: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.contributors, Unset):
             contributors = self.contributors
@@ -214,8 +208,6 @@ class AnnotationInfosByTaskIdResponse200Item:
             field_dict["user"] = user
         if owner is not UNSET:
             field_dict["owner"] = owner
-        if meshes is not UNSET:
-            field_dict["meshes"] = meshes
         if contributors is not UNSET:
             field_dict["contributors"] = contributors
         if others_may_edit is not UNSET:
@@ -356,8 +348,6 @@ class AnnotationInfosByTaskIdResponse200Item:
         else:
             owner = AnnotationInfosByTaskIdResponse200ItemOwner.from_dict(_owner)
 
-        meshes = cast(List[Any], d.pop("meshes", UNSET))
-
         contributors = cast(List[Any], d.pop("contributors", UNSET))
 
         others_may_edit = d.pop("othersMayEdit", UNSET)
@@ -386,7 +376,6 @@ class AnnotationInfosByTaskIdResponse200Item:
             teams=teams,
             user=user,
             owner=owner,
-            meshes=meshes,
             contributors=contributors,
             others_may_edit=others_may_edit,
         )

@@ -15,14 +15,12 @@ class DatasetInfoResponse200DataStore:
         url (str):
         allows_upload (int):
         is_scratch (Union[Unset, int]):
-        is_connector (Union[Unset, int]):
     """
 
     name: str
     url: str
     allows_upload: int
     is_scratch: Union[Unset, int] = UNSET
-    is_connector: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -30,7 +28,6 @@ class DatasetInfoResponse200DataStore:
         url = self.url
         allows_upload = self.allows_upload
         is_scratch = self.is_scratch
-        is_connector = self.is_connector
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -43,8 +40,6 @@ class DatasetInfoResponse200DataStore:
         )
         if is_scratch is not UNSET:
             field_dict["isScratch"] = is_scratch
-        if is_connector is not UNSET:
-            field_dict["isConnector"] = is_connector
 
         return field_dict
 
@@ -59,14 +54,11 @@ class DatasetInfoResponse200DataStore:
 
         is_scratch = d.pop("isScratch", UNSET)
 
-        is_connector = d.pop("isConnector", UNSET)
-
         dataset_info_response_200_data_store = cls(
             name=name,
             url=url,
             allows_upload=allows_upload,
             is_scratch=is_scratch,
-            is_connector=is_connector,
         )
 
         dataset_info_response_200_data_store.additional_properties = d

@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Optional, Text
+from typing import List, NamedTuple, Optional
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -30,7 +30,7 @@ class Parameters(NamedTuple):
         self,
         xf: XmlWriter,
         bounding_box: BoundingBox,
-        tag_name: Text,
+        tag_name: str,
         bbox_id: Optional[int],  # user bounding boxes need an id
     ) -> None:
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR

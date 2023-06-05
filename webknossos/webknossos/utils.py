@@ -237,6 +237,16 @@ def is_fs_path(path: Path) -> bool:
     return not isinstance(path, UPath)
 
 
+def strip_trailing_slash(path: Path) -> Path:
+    if isinstance(path, UPath):
+        return UPath(
+            str(path).rstrip("/"),
+            **path._kwargs.copy(),
+        )
+    else:
+        return Path(str(path).rstrip("/"))
+
+
 def rmtree(path: Path) -> None:
     def _walk(path: Path) -> Iterator[Path]:
         if path.exists():
