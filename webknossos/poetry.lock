@@ -641,6 +641,22 @@ files = [
 test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
 
 [[package]]
+name = "czifile"
+version = "2019.7.2"
+description = "Read Carl Zeiss(r) Image (CZI) files"
+optional = false
+python-versions = ">=2.7"
+files = [
+    {file = "czifile-2019.7.2-py2.py3-none-any.whl", hash = "sha256:561ba0312e5b9c95db784768d7c81803f62bc323eab42bd5812586ce6dc58db8"},
+    {file = "czifile-2019.7.2.tar.gz", hash = "sha256:04c0e6bed3b24d1bf42bc2cf899a5a08986641379305ce88600fd1c710486436"},
+]
+
+[package.dependencies]
+imagecodecs = {version = ">=2019.5.22", markers = "platform_system == \"Windows\""}
+numpy = ">=1.11.3"
+tifffile = ">=2019.7.2"
+
+[[package]]
 name = "dask"
 version = "2022.2.0"
 description = "Parallel PyData with Task Scheduling"
@@ -1063,7 +1079,7 @@ files = [
 name = "imagecodecs"
 version = "2023.3.16"
 description = "Image transformation, compression, and decompression codecs"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "imagecodecs-2023.3.16-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:0c0b67874d766baebb5da9b5f0a33ac5d8dacfbf05f976727b046f48edd943cb"},
@@ -1638,6 +1654,36 @@ developer = ["mypy (>=0.982)", "pre-commit (>=2.20)"]
 doc = ["nb2plots (>=0.6)", "numpydoc (>=1.5)", "pillow (>=9.2)", "pydata-sphinx-theme (>=0.11)", "sphinx (>=5.2)", "sphinx-gallery (>=0.11)", "texext (>=0.6.6)"]
 extra = ["lxml (>=4.6)", "pydot (>=1.4.2)", "pygraphviz (>=1.9)", "sympy (>=1.10)"]
 test = ["codecov (>=2.1)", "pytest (>=7.2)", "pytest-cov (>=4.0)"]
+
+[[package]]
+name = "nibabel"
+version = "5.1.0"
+description = "Access a multitude of neuroimaging data formats"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "nibabel-5.1.0-py3-none-any.whl", hash = "sha256:b3deb8130c835b9d26e80880b0d5e443d9e3f30972b3b0302dd2fafa3ca629f8"},
+    {file = "nibabel-5.1.0.tar.gz", hash = "sha256:ce73ca5e957209e7219a223cb71f77235c9df2acf4d3f27f861ba38e9481ac53"},
+]
+
+[package.dependencies]
+importlib-resources = {version = ">=1.3", markers = "python_version < \"3.9\""}
+numpy = ">=1.19"
+packaging = ">=17"
+
+[package.extras]
+all = ["nibabel[dev,dicomfs,doc,minc2,spm,style,test,zstd]"]
+dev = ["gitpython", "nibabel[style]", "twine"]
+dicom = ["pydicom (>=1.0.0)"]
+dicomfs = ["nibabel[dicom]", "pillow"]
+doc = ["matplotlib (>=1.5.3)", "numpydoc", "sphinx (>=5.3,<6.0)", "texext", "tomli"]
+doctest = ["nibabel[doc,test]"]
+minc2 = ["h5py"]
+spm = ["scipy"]
+style = ["blue", "flake8", "isort"]
+test = ["coverage", "pytest (!=5.3.4)", "pytest-cov", "pytest-doctestplus", "pytest-httpserver", "pytest-xdist"]
+typing = ["importlib-resources", "mypy", "pydicom", "pytest", "pyzstd", "types-pillow", "types-setuptools"]
+zstd = ["pyzstd (>=0.14.3)"]
 
 [[package]]
 name = "numcodecs"
@@ -3277,4 +3323,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "e0dfdba60ebab0591e8cd01e52a2728575a0b567f5fc8b7dc0b84a71daf72570"
+content-hash = "385fb15c587ce0518053fe2185affc7e493b39ea2511f625973ec9df062da2ce"

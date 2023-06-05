@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
-      wkcuber: ${{ steps.filter.outputs.wkcuber || github.ref == 'refs/heads/master' }}
       cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
     steps:
     - uses: actions/checkout@v3
@@ -27,8 +26,6 @@ jobs:
         filters: |
           webknossos:
             - 'webknossos/**'
-          wkcuber:
-            - 'wkcuber/**'
           cluster_tools:
             - 'cluster_tools/**'
 
@@ -180,118 +177,10 @@ jobs:
         git diff --no-ext-diff --quiet --exit-code
         [[ -z $(git status -s) ]]
 
-  wkcuber_linux:
-    needs: [changes]
-    if: |
-      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
-      ${{ needs.changes.outputs.webknossos == 'true' }} ||
-      ${{ needs.changes.outputs.wkcuber == 'true' }}
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
-    defaults:
-      run:
-        working-directory: wkcuber
 
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        pip install -r ../requirements.txt
-        poetry install
-
-    - name: Check formatting
-      run: ./format.sh check
-      if: ${{ needs.changes.outputs.wkcuber == 'true' }}
-
-    - name: Lint code
-      run: ./lint.sh
-      if: ${{ needs.changes.outputs.wkcuber == 'true' }}
-
-    - name: Check typing
-      run: ./typecheck.sh
-
-    - name: Run tests
-      run: ./test.sh
-
-    - name: Check if git is dirty
-      run: |
-        git diff --no-ext-diff --quiet --exit-code
-        [[ -z $(git status -s) ]]
-
-  wkcuber_win:
-    # Caution! The Windows VM seems to be running out of storage rather quickly.
-    runs-on: windows-latest
-    needs: [changes]
-    if: |
-      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
-      ${{ needs.changes.outputs.webknossos == 'true' }} ||
-      ${{ needs.changes.outputs.wkcuber == 'true' }}
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
-    defaults:
-      run:
-        working-directory: wkcuber
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies
-      shell: bash
-      run: |
-        pip install -r ../requirements.txt
-        poetry install
-
-    - name: Run tests
-      continue-on-error: true
-      shell: bash
-      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc ./test.sh
-
-  wkcuber_mac:
-    runs-on: macos-latest
-    needs: [changes]
-    if: |
-      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
-      ${{ needs.changes.outputs.webknossos == 'true' }} ||
-      ${{ needs.changes.outputs.wkcuber == 'true' }}
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
-    defaults:
-      run:
-        working-directory: wkcuber
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies
-      run: |
-        pip install -r ../requirements.txt
-        poetry install
-
-    - name: Run tests
-      run: ./test.sh
-
-  wkcuber_docker:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+  webknossos_cli_docker:
+    needs: [cluster_tools, webknossos_linux]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -309,29 +198,27 @@ jobs:
     - name: Write version file
       run: |
         pip install -r requirements.txt
-        pushd wkcuber
+        pushd webknossos
 
         PKG_VERSION="$(dunamai from git)"
-        echo "__version__ = '$PKG_VERSION'" > ./wkcuber/version.py
+        echo "__version__ = '$PKG_VERSION'" > ./webknossos/version.py
         poetry version "$PKG_VERSION"
 
         popd
 
     - name: Build docker image
-      run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA -f wkcuber/Dockerfile .
+      run: docker build -t scalableminds/webknossos-cli:$GITHUB_SHA -f webknossos/Dockerfile .
 
     - name: Smoke test docker
       run: |
         docker run --rm \
-          -v$(pwd)/wkcuber/testdata:/app/testdata \
           -v$(pwd)/webknossos/testdata:/webknossos/testdata \
-          scalableminds/webknossos-cuber:$GITHUB_SHA \
-          wkcuber.cubing \
+          scalableminds/webknossos-cli:$GITHUB_SHA \
+          webknossos convert \
             --jobs 2 \
-            --batch_size 8 \
-            --layer_name color \
-            --chunks_per_shard 32 \
-            --voxel_size 1,1,1 \
+            --batch-size 8 \
+            --chunks-per-shard 32 \
+            --voxel-size 1,1,1 \
             testdata/tiff testoutput/tiff
 
     - name: Login to docker
@@ -343,20 +230,20 @@ jobs:
 
     - name: Push docker images
       run: |
-        docker push scalableminds/webknossos-cuber:$GITHUB_SHA
+        docker push scalableminds/webknossos-cli:$GITHUB_SHA
 
     - name: Push docker images (for tag)
       if: github.ref_type == 'tag'
       run: |
         CI_TAG=$(git describe --tags)
         docker tag \
-          scalableminds/webknossos-cuber:$GITHUB_SHA \
-          scalableminds/webknossos-cuber:$CI_TAG
-        docker push scalableminds/webknossos-cuber:$CI_TAG
+          scalableminds/webknossos-cli:$GITHUB_SHA \
+          scalableminds/webknossos-cli:$CI_TAG
+        docker push scalableminds/webknossos-cli:$CI_TAG
         docker tag \
-          scalableminds/webknossos-cuber:$GITHUB_SHA \
-          scalableminds/webknossos-cuber:latest
-        docker push scalableminds/webknossos-cuber:latest
+          scalableminds/webknossos-cli:$GITHUB_SHA \
+          scalableminds/webknossos-cli:latest
+        docker push scalableminds/webknossos-cli:latest
 
     - name: Push docker images (for branch)
       if: github.ref_type == 'branch'
@@ -364,12 +251,12 @@ jobs:
         CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
         NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
         docker tag \
-          scalableminds/webknossos-cuber:$GITHUB_SHA \
-          scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
-        docker push scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
+          scalableminds/webknossos-cli:$GITHUB_SHA \
+          scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
+        docker push scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
 
   docs:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, webknossos_linux]
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -430,7 +317,7 @@ jobs:
 
 
   pypi_and_gh_release:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, webknossos_linux]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -470,7 +357,7 @@ jobs:
           prerelease: false
 
   complete:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs, pypi_and_gh_release]
+    needs: [cluster_tools, webknossos_linux, webknossos_cli_docker, docs, pypi_and_gh_release]
     if: always()
     runs-on: ubuntu-latest
     steps:

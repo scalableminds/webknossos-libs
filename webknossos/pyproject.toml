@@ -34,11 +34,14 @@ attrs = "^22.1.0"
 boltons = "~21.0.0"
 cattrs = "^22.2.0"
 cluster_tools = { path = "../cluster_tools/", develop = true }
+czifile = "^2019.7.2"
 fsspec = "^2022.2.0"
+GitPython = "^3.0.5"
 httpx = ">=0.15.4,<0.19.0"
 loxun = "^2.0"
 natsort = "^6.2.0"
 networkx = "^2.6.2"
+nibabel = "^5.0.1"
 numcodecs = "^0.11"
 numpy = "^1.21.0"  # see https://numpy.org/neps/nep-0029-deprecation_policy.html#support-table
 psutil = "^5.6.7"
@@ -46,14 +49,14 @@ python-dateutil = "^2.8.0"
 python-dotenv = "^0.19.0"
 rich = "^10.9.0"
 scikit-image = "^0.19.3"
+scikit-learn = "^1.0.1"
 scipy = "^1.9.0"
+typer = {extras = ["all"], version = "^0.9.0"}
 typing-extensions = "^4.0"
 universal-pathlib = "0.0.23"
 wkw = "1.1.18"
 zarr = "^2.14.0"
 zipp = "^3.5.0"
-typer = {extras = ["all"], version = "^0.9.0"}
-GitPython = "^3.0.5"
 
 # A list of all of the optional dependencies, some of which are included in the
 # below `extras`. They can be opted into by apps.
