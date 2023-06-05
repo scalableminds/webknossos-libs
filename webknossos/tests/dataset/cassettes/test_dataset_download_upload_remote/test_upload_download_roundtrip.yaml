@@ -79,7 +79,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1676476299996,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1685439186479,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       content-length:
       - '657'
@@ -164,217 +164,10 @@ interactions:
     status_code: 200
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n2781\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
-      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2781\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
-      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
-      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
-      \   \"id\": {\n        \"name\": \"l4_sample_dev\",\n        \"team\": \"\"\n
-      \   },\n    \"scale\": [\n        11.239999771118164,\n        11.239999771118164,\n
-      \       28.0\n    ],\n    \"dataLayers\": [\n        {\n            \"name\":
-      \"color\",\n            \"category\": \"color\",\n            \"boundingBox\":
-      {\n                \"topLeft\": [\n                    2807,\n                    4352,\n
-      \                   1794\n                ],\n                \"width\": 10,\n
-      \               \"height\": 10,\n                \"depth\": 10\n            },\n
-      \           \"elementClass\": \"uint8\",\n            \"dataFormat\": \"wkw\",\n
-      \           \"numChannels\": 1,\n            \"defaultViewConfiguration\": {\n
-      \               \"color\": [\n                    255,\n                    219,\n
-      \                   219\n                ],\n                \"intensityRange\":
-      [\n                    70.0,\n                    180.0\n                ]\n
-      \           },\n            \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
-      512,\n                    \"resolution\": [\n                        1,\n                        1,\n
-      \                       1\n                    ]\n                },\n                {\n
-      \                   \"cubeLength\": 512,\n                    \"resolution\":
-      [\n                        2,\n                        2,\n                        1\n
-      \                   ]\n                },\n                {\n                    \"cubeLength\":
-      512,\n                    \"resolution\": [\n                        4,\n                        4,\n
-      \                       2\n                    ]\n                }\n            ]\n
-      \       },\n        {\n            \"name\": \"segmentation\",\n            \"category\":
-      \"segmentation\",\n            \"boundingBox\": {\n                \"topLeft\":
-      [\n                    2807,\n                    4352,\n                    1794\n
-      \               ],\n                \"width\": 10,\n                \"height\":
-      10,\n                \"depth\": 10\n            },\n            \"elementClass\":
-      \"uint32\",\n            \"dataFormat\": \"wkw\",\n            \"numChannels\":
-      1,\n            \"largestSegmentId\": 5238529,\n            \"wkwResolutions\":
-      [\n                {\n                    \"cubeLength\": 512,\n                    \"resolution\":
-      [\n                        1,\n                        1,\n                        1\n
-      \                   ]\n                },\n                {\n                    \"cubeLength\":
-      512,\n                    \"resolution\": [\n                        2,\n                        2,\n
-      \                       1\n                    ]\n                },\n                {\n
-      \                   \"cubeLength\": 512,\n                    \"resolution\":
-      [\n                        4,\n                        4,\n                        2\n
-      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '4379'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.18.2
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: '--
-
-      Content-Disposition: form-data; name="resumableChunkSize"
-
-
-      104857600
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalSize"
-
-
-      603665
-
-      --
-
-      Content-Disposition: form-data; name="resumableType"
-
-
-
-      --
-
-      Content-Disposition: form-data; name="resumableIdentifier"
-
-
-      2000-01-01T00-00-00__0011/color/1/z3/y8/x5.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableFilename"
-
-
-      x5.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableRelativePath"
-
-
-      color/1/z3/y8/x5.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalChunks"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableChunkNumber"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableCurrentChunkSize"
-
-
-      603665
-
-      --
-
-      Content-Disposition: form-data; name="owningOrganization"
-
-
-      Organization_X
-
-      --
-
-      Content-Disposition: form-data; name="name"
-
-
-      test_upload_download_roundtrip_2000-01-01_00-00-00
-
-      --
-
-      Content-Disposition: form-data; name="totalFileCount"
-
-
-      13
-
-      --
-
-      Content-Disposition: form-data; name="file"; filename="upload"
-
-      Content-Type: application/octet-stream<omitted> --'
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '605219'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.18.2
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ncolor/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -389,7 +182,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1562'
+      - '1570'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -543,9 +336,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/4-4-2/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ncolor/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -714,9 +507,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/2-2-1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ncolor/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -731,7 +524,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1570'
+      - '1562'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -771,7 +564,7 @@ interactions:
       Content-Disposition: form-data; name="resumableTotalSize"
 
 
-      2179295
+      603665
 
       --
 
@@ -784,7 +577,7 @@ interactions:
       Content-Disposition: form-data; name="resumableIdentifier"
 
 
-      2000-01-01T00-00-00__0011/segmentation/1/z3/y8/x5.wkw
+      2000-01-01T00-00-00__0011/color/1/z3/y8/x5.wkw
 
       --
 
@@ -798,7 +591,7 @@ interactions:
       Content-Disposition: form-data; name="resumableRelativePath"
 
 
-      segmentation/1/z3/y8/x5.wkw
+      color/1/z3/y8/x5.wkw
 
       --
 
@@ -819,7 +612,7 @@ interactions:
       Content-Disposition: form-data; name="resumableCurrentChunkSize"
 
 
-      2179295
+      603665
 
       --
 
@@ -855,7 +648,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '2180865'
+      - '605219'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -885,9 +678,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -902,7 +695,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1576'
+      - '1584'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -1056,9 +849,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-2/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -1227,9 +1020,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -1244,7 +1037,214 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1584'
+      - '1576'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      2179295
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      2179295
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_upload_download_roundtrip_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2180865'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n2781\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
+      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2781\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
+      \   \"id\": {\n        \"name\": \"l4_sample_dev\",\n        \"team\": \"\"\n
+      \   },\n    \"scale\": [\n        11.239999771118164,\n        11.239999771118164,\n
+      \       28.0\n    ],\n    \"dataLayers\": [\n        {\n            \"name\":
+      \"color\",\n            \"category\": \"color\",\n            \"boundingBox\":
+      {\n                \"topLeft\": [\n                    2807,\n                    4352,\n
+      \                   1794\n                ],\n                \"width\": 10,\n
+      \               \"height\": 10,\n                \"depth\": 10\n            },\n
+      \           \"elementClass\": \"uint8\",\n            \"dataFormat\": \"wkw\",\n
+      \           \"numChannels\": 1,\n            \"defaultViewConfiguration\": {\n
+      \               \"color\": [\n                    255,\n                    219,\n
+      \                   219\n                ],\n                \"intensityRange\":
+      [\n                    70.0,\n                    180.0\n                ]\n
+      \           },\n            \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        1,\n                        1,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        2,\n                        2,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        4,\n                        4,\n
+      \                       2\n                    ]\n                }\n            ]\n
+      \       },\n        {\n            \"name\": \"segmentation\",\n            \"category\":
+      \"segmentation\",\n            \"boundingBox\": {\n                \"topLeft\":
+      [\n                    2807,\n                    4352,\n                    1794\n
+      \               ],\n                \"width\": 10,\n                \"height\":
+      10,\n                \"depth\": 10\n            },\n            \"elementClass\":
+      \"uint32\",\n            \"dataFormat\": \"wkw\",\n            \"numChannels\":
+      1,\n            \"largestSegmentId\": 5238529,\n            \"wkwResolutions\":
+      [\n                {\n                    \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        1,\n                        1,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        2,\n                        2,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        4,\n                        4,\n                        2\n
+      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4379'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -1326,7 +1326,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2023-02-15_15-51-40","dataSource":{"id":{"name":"test_upload_download_roundtrip_2023-02-15_15-51-40","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1676476300323,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1676476300323,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"test_upload_download_roundtrip_2023-05-30_09-33-06","dataSource":{"id":{"name":"test_upload_download_roundtrip_2023-05-30_09-33-06","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1685439187025,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1685439187025,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       content-length:
       - '1244'
@@ -1361,7 +1361,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1386,7 +1386,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06
 - request:
     body: null
     headers:
@@ -1416,7 +1416,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06
 - request:
     body: null
     headers: {}
@@ -1437,7 +1437,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1462,7 +1462,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06
 - request:
     body: null
     headers: {}
@@ -1483,7 +1483,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1508,7 +1508,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06
 - request:
     body: null
     headers:
@@ -1538,7 +1538,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1546,7 +1546,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2023-02-15_15-51-40","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2023-05-30_09-33-06","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1566,7 +1566,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1596,7 +1596,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1606,7 +1606,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2023-02-15_15-51-40","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2023-05-30_09-33-06","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1626,7 +1626,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1647,7 +1647,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1670,7 +1670,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1
 - request:
     body: null
     headers: {}
@@ -1698,7 +1698,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1/.zarray
 - request:
     body: null
     headers:
@@ -1728,7 +1728,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1756,7 +1756,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1784,7 +1784,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1812,7 +1812,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1840,7 +1840,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1861,7 +1861,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1884,7 +1884,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/1
 - request:
     body: null
     headers: {}
@@ -1905,7 +1905,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1928,7 +1928,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -1956,7 +1956,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1/.zarray
 - request:
     body: null
     headers:
@@ -1986,7 +1986,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2014,7 +2014,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2042,7 +2042,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2070,7 +2070,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2098,7 +2098,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2119,7 +2119,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2142,7 +2142,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2163,7 +2163,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2186,7 +2186,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2214,7 +2214,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2/.zarray
 - request:
     body: null
     headers:
@@ -2244,7 +2244,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2272,7 +2272,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2300,7 +2300,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2328,7 +2328,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2356,7 +2356,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2377,7 +2377,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2400,7 +2400,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2421,7 +2421,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2444,7 +2444,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2472,7 +2472,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1/.zarray
 - request:
     body: null
     headers:
@@ -2502,7 +2502,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2530,7 +2530,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2558,7 +2558,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2586,7 +2586,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2614,7 +2614,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2635,7 +2635,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2658,7 +2658,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2679,7 +2679,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2702,7 +2702,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -2730,7 +2730,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers:
@@ -2760,7 +2760,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2788,7 +2788,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2816,7 +2816,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2844,7 +2844,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2872,7 +2872,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2893,7 +2893,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2916,7 +2916,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -2937,7 +2937,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2960,7 +2960,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -2988,7 +2988,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers:
@@ -3018,7 +3018,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3046,7 +3046,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3074,7 +3074,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3102,7 +3102,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3130,7 +3130,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3151,7 +3151,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -3174,7 +3174,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-02-15_15-51-40/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2023-05-30_09-33-06/segmentation/4-4-2
 - request:
     body: ''
     headers:
@@ -3191,7 +3191,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2023-02-15_15-51-40","dataSource":{"id":{"name":"test_upload_download_roundtrip_2023-02-15_15-51-40","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1676476300323,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1676476300323,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"test_upload_download_roundtrip_2023-05-30_09-33-06","dataSource":{"id":{"name":"test_upload_download_roundtrip_2023-05-30_09-33-06","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1685439187025,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1685439187025,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       content-length:
       - '1244'

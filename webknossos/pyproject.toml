@@ -52,6 +52,8 @@ universal-pathlib = "0.0.19"
 wkw = "1.1.18"
 zarr = "^2.14.0"
 zipp = "^3.5.0"
+typer = {extras = ["all"], version = "^0.9.0"}
+GitPython = "^3.0.5"
 
 # A list of all of the optional dependencies, some of which are included in the
 # below `extras`. They can be opted into by apps.
@@ -79,7 +81,7 @@ inducoapi = "^2.0.2"
 isort = "^5.9.3"
 jsonschema = "^4.6.0"
 mypy = "1.0.0"
-openapi-python-client = "0.12.1"
+openapi-python-client = "0.14.1"
 pylint = "^2.16.2"
 pytest = "^7.2.1"
 pytest-custom-exit-code = "^0.3.0"
@@ -129,6 +131,9 @@ disable = ["logging-format-interpolation","logging-fstring-interpolation","broad
 [tool.pytest.ini_options]
 markers = ["with_vcr: Runs with VCR recording and optionally blocked network"]
 testpaths = ["tests"]
+
+[tool.poetry.scripts]
+webknossos = "webknossos.cli.main:app"
 
 [build-system]
 requires = ["poetry-core>=1.1"]

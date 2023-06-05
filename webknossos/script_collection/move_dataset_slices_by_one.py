@@ -2,13 +2,12 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Tuple
 
-from wkcuber._internal.utils import (  # pylint: disable=import-error
+from webknossos.cli._internal.utils import (  # pylint: disable=import-error
     add_distribution_flags,
     add_voxel_size_flag,
     get_executor_for_args,
     named_partial,
 )
-
 from webknossos.dataset import Dataset, MagView, View
 
 

@@ -30,9 +30,10 @@ from typing import (
 )
 
 import rich
-from cluster_tools import Executor, get_executor
 from rich.progress import Progress
 from upath import UPath
+
+from cluster_tools import Executor, get_executor
 
 times = {}
 
@@ -176,7 +177,6 @@ def copy_directory_with_symlinks(
 
 
 def setup_warnings() -> None:
-    warnings.filterwarnings("default", category=DeprecationWarning, module="wkcuber")
     warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
 
 

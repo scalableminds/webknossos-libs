@@ -17,6 +17,8 @@ interactions:
   response:
     content: '{"_id":"638f66890100006501d8ac2c","key":"93zLg9U9vJ3c_UWp","longLink":"https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22position%22:%5B2807,4352,1794%5D,%22mode%22:%22orthogonal%22,%22zoomStep%22:1.3,%22stateByLayer%22:%7B%22color%22:%7B%22isDisabled%22:false%7D,%22segmentation%22:%7B%22isDisabled%22:false%7D%7D%7D"}'
     headers:
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -52,6 +54,8 @@ interactions:
   response:
     content: '{"name":"l4_sample_dev_sharing","dataSource":{"id":{"name":"l4_sample_dev_sharing","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8"},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1647612907522,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1647612907522,"details":null,"isUnreported":false,"jobsEnabled":true,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null}'
     headers:
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -100,6 +104,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -136,6 +142,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -188,6 +196,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -240,6 +250,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -276,6 +288,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -310,6 +324,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -346,6 +362,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -382,6 +400,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -432,6 +452,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -466,6 +488,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -502,6 +526,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -536,6 +562,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -570,6 +598,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -604,6 +634,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -638,6 +670,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -688,6 +722,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -738,6 +774,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -772,6 +810,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -808,6 +848,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -842,6 +884,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -876,6 +920,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -910,6 +956,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -944,6 +992,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -994,6 +1044,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1044,6 +1096,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1078,6 +1132,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1114,6 +1170,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1148,6 +1206,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1182,6 +1242,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1216,6 +1278,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1250,6 +1314,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1300,6 +1366,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1350,6 +1418,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1384,6 +1454,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1420,6 +1492,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1454,6 +1528,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1488,6 +1564,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1522,6 +1600,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1556,6 +1636,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1606,6 +1688,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1656,6 +1740,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1690,6 +1776,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1726,6 +1814,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1760,6 +1850,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1794,6 +1886,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1828,6 +1922,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1862,6 +1958,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1912,6 +2010,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1962,6 +2062,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -1996,6 +2098,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2032,6 +2136,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2066,6 +2172,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2100,6 +2208,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2134,6 +2244,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2168,6 +2280,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2218,6 +2332,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2252,6 +2368,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2286,6 +2404,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2320,6 +2440,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -2929,6 +3051,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
@@ -3538,6 +3662,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      cache-control:
+      - no-cache
       connection:
       - keep-alive
       content-length:
