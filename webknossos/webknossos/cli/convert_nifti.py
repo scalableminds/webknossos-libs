@@ -80,17 +80,17 @@ def convert_nifti(
         # to match the coordinate system of WKW.
         source_nifti = nib.funcs.as_closest_canonical(source_nifti, enforce_diag=False)
 
-    cube_data = np.array(source_nifti.get_fdata())
+    cube_data = np.array(source_nifti.get_fdata())  # type: ignore
 
     category_type: LayerCategoryType = (
         "segmentation" if is_segmentation_layer else "color"
     )
     logging.debug("Assuming %s as layer type for %s", category_type, layer_name)
 
-    if len(source_nifti.shape) == 3:
-        cube_data = cube_data.reshape((1,) + source_nifti.shape)
+    if len(source_nifti.shape) == 3:  # type: ignore
+        cube_data = cube_data.reshape((1,) + source_nifti.shape)  # type: ignore
 
-    elif len(source_nifti.shape) == 4:
+    elif len(source_nifti.shape) == 4:  # type: ignore
         cube_data = np.transpose(cube_data, (3, 0, 1, 2))
 
     else:
@@ -109,7 +109,7 @@ def convert_nifti(
         cube_data = np.flip(cube_data, flip_axes)
 
     if voxel_size is None:
-        voxel_size = tuple(map(float, source_nifti.header["pixdim"][:3]))
+        voxel_size = tuple(map(float, source_nifti.header["pixdim"][:3]))  # type: ignore
 
     logging.info("Using voxel_size: %s", voxel_size)
     cube_data = to_target_datatype(cube_data, dtype, is_segmentation_layer)
