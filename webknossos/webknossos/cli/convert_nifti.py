@@ -72,7 +72,7 @@ def convert_nifti(
     shard_shape = chunk_shape * chunks_per_shard
     time_start(f"Converting of {source_nifti_path}")
 
-    source_nifti = nib.loadsave.load(str(source_nifti_path.resolve()))
+    source_nifti = nib.load(str(source_nifti_path.resolve()))
 
     if use_orientation_header:
         # Get canonical representation of data to incorporate

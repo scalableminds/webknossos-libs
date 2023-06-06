@@ -641,22 +641,6 @@ files = [
 test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
 
 [[package]]
-name = "czifile"
-version = "2019.7.2"
-description = "Read Carl Zeiss(r) Image (CZI) files"
-optional = false
-python-versions = ">=2.7"
-files = [
-    {file = "czifile-2019.7.2-py2.py3-none-any.whl", hash = "sha256:561ba0312e5b9c95db784768d7c81803f62bc323eab42bd5812586ce6dc58db8"},
-    {file = "czifile-2019.7.2.tar.gz", hash = "sha256:04c0e6bed3b24d1bf42bc2cf899a5a08986641379305ce88600fd1c710486436"},
-]
-
-[package.dependencies]
-imagecodecs = {version = ">=2019.5.22", markers = "platform_system == \"Windows\""}
-numpy = ">=1.11.3"
-tifffile = ">=2019.7.2"
-
-[[package]]
 name = "dask"
 version = "2022.2.0"
 description = "Parallel PyData with Task Scheduling"
@@ -1079,7 +1063,7 @@ files = [
 name = "imagecodecs"
 version = "2023.3.16"
 description = "Image transformation, compression, and decompression codecs"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "imagecodecs-2023.3.16-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:0c0b67874d766baebb5da9b5f0a33ac5d8dacfbf05f976727b046f48edd943cb"},
@@ -3323,4 +3307,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "385fb15c587ce0518053fe2185affc7e493b39ea2511f625973ec9df062da2ce"
+content-hash = "9ba745103fca4fa2ee91af7ec9bc7b8c086ebf09e6fbcd34a420514e77b009bc"
