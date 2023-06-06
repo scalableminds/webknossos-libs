@@ -5,7 +5,6 @@ from multiprocessing import cpu_count
 from typing import Any, Optional
 
 import typer
-from rich import print as rprint
 from typing_extensions import Annotated
 
 from webknossos import Dataset, Mag
@@ -85,8 +84,6 @@ Should be number or minus seperated string (e.g. 2 or 2-2-2).",
         else:
             layer = dataset.get_layer(layer_name)
             layer.upsample(from_mag=from_mag, sampling_mode=mode, executor=executor)
-
-    rprint("[bold green]Done.[/bold green]")
 
 
 def upsample_all_layers(

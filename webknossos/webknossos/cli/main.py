@@ -1,4 +1,5 @@
 """This module delivers a CLI to work with WEBKNOSSOS datasets."""
+
 import typer
 
 from webknossos.cli import (

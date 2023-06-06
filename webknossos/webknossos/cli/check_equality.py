@@ -6,13 +6,14 @@ from multiprocessing import cpu_count
 from typing import Any, Optional
 
 import typer
-from rich import print as rprint
 from typing_extensions import Annotated
 
 from webknossos import Dataset
 from webknossos.cli._utils import DistributionStrategy, parse_path
 from webknossos.dataset.layer import Layer
 from webknossos.utils import get_executor_for_args
+
+logger = logging.getLogger(__name__)
 
 
 def main(
@@ -99,12 +100,9 @@ def main(
             executor_args,
         )
 
-    rprint(
-        f"The datasets [blue]{source}[/blue] and [blue]{target}[/blue] are equal \
-(with regard to the layers: {layer_names})"
+    print(
+        f"The datasets {source} and {target} are equal (with regard to the layers: {layer_names})"
     )
-
-    rprint("[bold green]Done.[/bold green]")
 
 
 def compare_layers(

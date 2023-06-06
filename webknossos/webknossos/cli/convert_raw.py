@@ -9,9 +9,9 @@ from typing import Any, Literal, Optional, Tuple, Union
 
 import numpy as np
 import typer
+from cluster_tools import Executor
 from typing_extensions import Annotated
 
-from cluster_tools import Executor
 from webknossos import BoundingBox, DataFormat, Dataset, Mag, MagView, Vec3Int
 from webknossos.cli._utils import (
     DistributionStrategy,

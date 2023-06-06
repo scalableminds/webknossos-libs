@@ -172,7 +172,6 @@ def test_compress() -> None:
         result = runner.invoke(app, ["compress", "testdata/simple_wkw_dataset"])
 
         assert result.exit_code == 0
-        assert "Done." in result.stdout
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")

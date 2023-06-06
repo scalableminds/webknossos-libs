@@ -17,6 +17,8 @@ interactions:
   response:
     content: Ok
     headers:
+      cache-control:
+      - no-cache
       content-length:
       - '2'
       content-type:

@@ -56,7 +56,7 @@ interactions:
       zip:
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"0cc8a7ffd353751ccc34d7f50f5524ed5d87c714\" />\n  <meta name=\"timestamp\"
+          content=\"2e9ffbdcaa718102e63ab2f4179a017efc675d7c\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"

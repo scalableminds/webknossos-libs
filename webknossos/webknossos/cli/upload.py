@@ -3,7 +3,6 @@
 from typing import Any, Optional
 
 import typer
-from rich import print as rprint
 from typing_extensions import Annotated
 
 from webknossos import Dataset, webknossos_context
@@ -60,5 +59,3 @@ def main(
         Dataset.open(dataset_path=source).upload(
             new_dataset_name=dataset_name, jobs=jobs
         )
-
-    rprint("[bold green]Done.[/bold green]")

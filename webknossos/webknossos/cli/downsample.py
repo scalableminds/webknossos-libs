@@ -5,7 +5,6 @@ from multiprocessing import cpu_count
 from typing import Any, Optional
 
 import typer
-from rich import print as rprint
 from typing_extensions import Annotated
 
 from webknossos import Dataset, SamplingModes
@@ -73,5 +72,3 @@ def main(
         else:
             layer = dataset.get_layer(layer_name)
             layer.downsample(executor=executor)
-
-    rprint("[bold green]Done.[/bold green]")

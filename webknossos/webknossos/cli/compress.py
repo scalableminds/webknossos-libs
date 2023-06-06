@@ -5,7 +5,6 @@ from multiprocessing import cpu_count
 from typing import Any, Optional
 
 import typer
-from rich import print as rprint
 from typing_extensions import Annotated
 
 from webknossos import Dataset
@@ -56,5 +55,3 @@ def main(
 
     with get_executor_for_args(args=executor_args) as executor:
         Dataset.open(target).compress(executor=executor)
-
-    rprint("[bold green]Done.[/bold green]")

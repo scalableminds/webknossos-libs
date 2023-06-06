@@ -13,18 +13,18 @@ from typing_extensions import Annotated
 
 from webknossos import COLOR_CATEGORY, BoundingBox, Dataset, Mag, Vec3Int, View
 from webknossos.cli._utils import (
+    CUBE_EDGE_LEN,
     DataFormat,
     DistributionStrategy,
+    KnossosDatasetInfo,
+    open_knossos,
     parse_mag,
     parse_path,
     parse_vec3int,
     parse_voxel_size,
 )
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
-from webknossos.utils import time_start, time_stop
-
-from ._internal.knossos import CUBE_EDGE_LEN
-from ._internal.utils import KnossosDatasetInfo, get_executor_for_args, open_knossos
+from webknossos.utils import get_executor_for_args, time_start, time_stop
 
 
 def convert_cube_job(
@@ -67,6 +67,8 @@ def convert_knossos(
     mag: Mag = Mag(1),
     args: Optional[Namespace] = None,
 ) -> None:
+    """Performs the conversion of a KNOSSOS dataset to a WEBKNOSSOS dataset."""
+
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
 
     target_dataset = Dataset(target_path, voxel_size, exist_ok=True)
@@ -81,7 +83,8 @@ def convert_knossos(
         knossos_cubes = np.array(list(source_knossos.list_cubes()))
         if len(knossos_cubes) == 0:
             logging.error(
-                "No input KNOSSOS cubes found. Make sure to pass the path which points to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
+                "No input KNOSSOS cubes found. Make sure to pass the path which "
+                "points to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
             )
             exit(1)
 
@@ -129,8 +132,8 @@ def main(
     voxel_size: Annotated[
         Any,
         typer.Option(
-            help="The size of one voxel in source data in nanometers. \
-Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            help="The size of one voxel in source data in nanometers. "
+            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VOXEL_SIZE",
         ),
@@ -147,7 +150,8 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     chunk_shape: Annotated[
         Any,
         typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format (e.g. `32` or `32,32,32`).",
+            help="Number of voxels to be stored as a chunk in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -155,7 +159,8 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     chunks_per_shard: Annotated[
         Any,
         typer.Option(
-            help="Number of chunks to be stored as a shard in the output format (e.g. `32` or `32,32,32`).",
+            help="Number of chunks to be stored as a shard in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -163,22 +168,12 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     mag: Annotated[
         Mag,
         typer.Option(
-            help="Mag to start upsampling from. \
-Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            help="Mag to start upsampling from. "
+            "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
             metavar="MAG",
         ),
-    ] = 1,
-    name: Annotated[
-        Optional[str],
-        typer.Option(
-            help="New name for the WEBKNOSSOS dataset \
-(if not provided, final component of target path is used)"
-        ),
-    ] = None,
-    compress: Annotated[
-        bool, typer.Option(help="Enable compression of the target dataset.")
-    ] = False,
+    ] = 1,  # type: ignore
     jobs: Annotated[
         int,
         typer.Option(
@@ -196,13 +191,19 @@ Should be number or minus seperated string (e.g. 2 or 2-2-2).",
     job_resources: Annotated[
         Optional[str],
         typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-(e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
+            '(e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
 ) -> None:
     """Convert your KNOSSOS dataset to a WEBKNOSOOS dataset."""
+
+    executor_args = Namespace(
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
+    )
 
     convert_knossos(
         source,
@@ -214,5 +215,5 @@ Should be number or minus seperated string (e.g. 2 or 2-2-2).",
         chunk_shape,
         chunks_per_shard,
         mag,
-        Namespace(**locals()),
+        executor_args,
     )

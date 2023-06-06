@@ -1,3 +1,5 @@
+"""This module takes care of exporting tiff images."""
+
 import logging
 from argparse import Namespace
 from functools import partial
@@ -24,9 +26,7 @@ from webknossos.cli._utils import (
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
 from webknossos.dataset.view import View
 from webknossos.geometry.vec3_int import Vec3Int
-from webknossos.utils import wait_and_ensure_success
-
-from ._internal.utils import get_executor_for_args
+from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 
 def _make_tiff_name(name: str, slice_index: int) -> str:
@@ -206,8 +206,9 @@ The input format is x,y,z,width,height,depth.",
             help="Max resolution to be downsampled. "
             "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
+            metavar="MAG",
         ),
-    ] = 1,
+    ] = 1,  # type: ignore
     name: Annotated[str, typer.Option(help="Name of the tiffs.")] = "",
     downsample: Annotated[int, typer.Option(help="Downsample each tiff image.")] = 1,
     tiles_per_dimension: Annotated[

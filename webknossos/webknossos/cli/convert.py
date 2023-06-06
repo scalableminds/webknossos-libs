@@ -5,7 +5,6 @@ from multiprocessing import cpu_count
 from typing import Any, Optional
 
 import typer
-from rich import print as rprint
 from typing_extensions import Annotated
 
 from webknossos import Dataset
@@ -104,5 +103,3 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         # Include this in the from_images() call as soon as issue #900 is resolved
         if compress:
             dataset.compress()
-
-    rprint("[bold green]Done.[/bold green]")

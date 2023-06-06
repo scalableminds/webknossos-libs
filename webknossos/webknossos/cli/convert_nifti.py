@@ -12,6 +12,7 @@ from typing_extensions import Annotated
 
 from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3Int
 from webknossos.cli._utils import (
+    pad_or_crop_to_size_and_topleft,
     parse_bbox,
     parse_path,
     parse_vec3int,
@@ -19,8 +20,6 @@ from webknossos.cli._utils import (
 )
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from webknossos.utils import time_start, time_stop
-
-from ._internal.utils import pad_or_crop_to_size_and_topleft, parse_path
 
 
 def to_target_datatype(

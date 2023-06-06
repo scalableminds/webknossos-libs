@@ -11,9 +11,9 @@ from typing import Any, Optional, Tuple, Union, cast
 import numpy as np
 import typer
 import zarr
+from cluster_tools import Executor
 from typing_extensions import Annotated
 
-from cluster_tools import Executor
 from webknossos import BoundingBox, Dataset, Mag, MagView, SegmentationLayer, Vec3Int
 from webknossos.cli._utils import (
     DataFormat,

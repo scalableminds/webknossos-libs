@@ -3,7 +3,6 @@
 from typing import Any, List, Optional
 
 import typer
-from rich import print as rprint
 from typing_extensions import Annotated
 
 from webknossos import BoundingBox, Dataset, Mag, webknossos_context
@@ -135,5 +134,3 @@ For multiple mags type: --mag 1 --mag 2",
         raise ValueError(
             "Either define a full-url for downloading or specify your dataset with a name."
         )
-
-    rprint("[bold green]Done.[/bold green]")

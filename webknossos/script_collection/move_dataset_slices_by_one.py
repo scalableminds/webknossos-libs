@@ -1,14 +1,11 @@
 from argparse import ArgumentParser
+from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Tuple
 
-from webknossos.cli._internal.utils import (  # pylint: disable=import-error
-    add_distribution_flags,
-    add_voxel_size_flag,
-    get_executor_for_args,
-    named_partial,
-)
+from webknossos.cli._utils import parse_voxel_size  # pylint: disable=import-error
 from webknossos.dataset import Dataset, MagView, View
+from webknossos.utils import get_executor_for_args, named_partial
 
 
 def create_parser() -> ArgumentParser:
@@ -31,8 +28,33 @@ def create_parser() -> ArgumentParser:
         default=None,
     )
 
-    add_distribution_flags(parser)
-    add_voxel_size_flag(parser)
+    parser.add_argument(
+        "--jobs",
+        "-j",
+        default=cpu_count(),
+        type=int,
+        help="Number of processes to be spawned.",
+    )
+
+    parser.add_argument(
+        "--distribution_strategy",
+        default="multiprocessing",
+        choices=["slurm", "kubernetes", "multiprocessing", "debug_sequential"],
+        help="Strategy to distribute the task across CPUs or nodes.",
+    )
+
+    parser.add_argument(
+        "--job_resources",
+        default=None,
+        help='Necessary when using slurm as distribution strategy. Should be a JSON string (e.g., --job_resources=\'{"mem": "10M"}\')',
+    )
+    parser.add_argument(
+        "--voxel_size",
+        "-s",
+        help="Voxel size of the dataset in nm (e.g. 11.2,11.2,25). --scale is deprecated",
+        required=True,
+        type=parse_voxel_size,
+    )
 
     return parser
 
