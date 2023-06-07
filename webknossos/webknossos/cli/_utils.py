@@ -12,6 +12,7 @@ import numpy as np
 from upath import UPath
 
 from webknossos import BoundingBox, Mag
+from webknossos.geometry.vec3_int import Vec3Int
 
 # constant for knossos dataset
 CUBE_EDGE_LEN = 128
@@ -22,8 +23,8 @@ KNOSSOS_CUBE_REGEX = re.compile(
 )
 
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
-Vec2 = namedtuple("Vec2", ("x", "y"))
-Vec3 = namedtuple("Vec3", ("x", "y", "z"))
+VoxelSize = namedtuple("VoxelSize", ("x", "y", "z"))
+Vec2Int = namedtuple("Vec2Int", ("x", "y"))
 
 
 class KnossosDataset:
@@ -177,48 +178,50 @@ def parse_voxel_size(voxel_size_str: str) -> Tuple[float, float, float]:
     try:
         result = tuple(float(x) for x in voxel_size_str.split(","))
         if len(result) == 3:
-            return Vec3(*result)
+            return VoxelSize(*result)
         raise ValueError(
             f"Expected three values formated like: 1.0,1.0,2.0 but got: {voxel_size_str}"
         )
     except Exception as err:
         raise ValueError(
-            "The value could not be parsed to VoxelSize.\
-Please format the voxel size like 1.0,1.0,2.0 ."
+            "The value could not be parsed to VoxelSize. "
+            "Please format the voxel size like 1.0,1.0,2.0 ."
         ) from err
 
 
-def parse_vec3int(vec3int_str: str) -> Tuple[int, int, int]:
+def parse_vec3int(vec3int_like: Union[str, Vec3Int]) -> Vec3Int:
     """Parses str input to tuple of three floats."""
     try:
-        result = tuple(int(x) for x in vec3int_str.split(","))
+        if isinstance(vec3int_like, Vec3Int):
+            return vec3int_like
+        result = tuple(int(x) for x in vec3int_like.split(","))
         if len(result) == 1:
-            return Vec3(*result * 3)
+            return Vec3Int(result * 3)
         if len(result) == 3:
-            return Vec3(*result)
+            return Vec3Int(result)
         raise ValueError(
-            f"Expected three values formated like: 1,1,2 but got: {vec3int_str}"
+            f"Expected three values formated like: 1,1,2 but got: {vec3int_like}"
         )
     except Exception as err:
         raise ValueError(
-            "The value could not be parsed to VoxelSize.\
-Please format the voxel size like 1,1,2 ."
+            "The value could not be parsed to VoxelSize. "
+            "Please format the voxel size like 1,1,2 ."
         ) from err
 
 
-def parse_vec2int(vec2int_str: str) -> Tuple[int, int]:
+def parse_vec2int(vec2int_str: str) -> Vec2Int:
     """Parses str input to tuple of three floats."""
     try:
         result = tuple(int(x) for x in vec2int_str.split(","))
         if len(result) == 2:
-            return result[0], result[1]
+            return Vec2Int(*result)
         raise ValueError(
             f"Expected three values formated like: 1,2 but got: {vec2int_str}"
         )
     except Exception as err:
         raise ValueError(
-            "The value could not be parsed to VoxelSize.\
-Please format the voxel size like 1,2 ."
+            "The value could not be parsed to VoxelSize. "
+            "Please format the voxel size like 1,2 ."
         ) from err
 
 

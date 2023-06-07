@@ -57,8 +57,8 @@ def main(
     job_resources: Annotated[
         Optional[str],
         typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-(e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
+            '(e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,

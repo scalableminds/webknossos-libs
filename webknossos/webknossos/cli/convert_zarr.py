@@ -11,12 +11,18 @@ from typing import Any, Optional, Tuple, Union, cast
 import numpy as np
 import typer
 import zarr
-from cluster_tools import Executor
 from typing_extensions import Annotated
 
-from webknossos import BoundingBox, Dataset, Mag, MagView, SegmentationLayer, Vec3Int
-from webknossos.cli._utils import (
+from webknossos import (
+    BoundingBox,
     DataFormat,
+    Dataset,
+    Mag,
+    MagView,
+    SegmentationLayer,
+    Vec3Int,
+)
+from webknossos.cli._utils import (
     DistributionStrategy,
     SamplingMode,
     parse_mag,
@@ -63,7 +69,7 @@ def convert_zarr(
     voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
-    executor: Optional[Executor] = None,
+    executor_args: Optional[Namespace] = None,
 ) -> MagView:
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
@@ -92,7 +98,7 @@ def convert_zarr(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(None, executor) as executor:
+    with get_executor_for_args(args=executor_args) as executor:
         largest_segment_id_per_chunk = wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -151,12 +157,12 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = DataFormat.WKW,
+    ] = "wkw",  # type:ignore
     chunk_shape: Annotated[
         Any,
         typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format \
-(e.g. `32` or `32,32,32`).",
+            help="Number of voxels to be stored as a chunk in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -164,8 +170,8 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     chunks_per_shard: Annotated[
         Any,
         typer.Option(
-            help="Number of chunks to be stored as a shard in the output format \
-(e.g. `32` or `32,32,32`).",
+            help="Number of chunks to be stored as a shard in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -243,21 +249,21 @@ When converting a folder, this option is ignored."
         job_resources=job_resources,
     )
 
-    with get_executor_for_args(executor_args) as executor:
-        mag_view = convert_zarr(
-            source,
-            target,
-            layer_name=layer_name,
-            data_format=data_format,
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-            is_segmentation_layer=is_segmentation_layer,
-            voxel_size=voxel_size,
-            flip_axes=flip_axes,
-            compress=compress,
-            executor=executor,
-        )
+    mag_view = convert_zarr(
+        source,
+        target,
+        layer_name=layer_name,
+        data_format=data_format,
+        chunk_shape=chunk_shape,
+        chunks_per_shard=chunks_per_shard,
+        is_segmentation_layer=is_segmentation_layer,
+        voxel_size=voxel_size,
+        flip_axes=flip_axes,
+        compress=compress,
+        executor_args=executor_args,
+    )
 
+    with get_executor_for_args(executor_args) as executor:
         mag_view.layer.downsample(
             from_mag=mag_view.mag,
             coarsest_mag=max_mag,

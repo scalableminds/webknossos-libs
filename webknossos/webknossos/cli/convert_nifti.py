@@ -80,17 +80,17 @@ def convert_nifti(
         # to match the coordinate system of WKW.
         source_nifti = nib.funcs.as_closest_canonical(source_nifti, enforce_diag=False)
 
-    cube_data = np.array(source_nifti.get_fdata())  # type: ignore
+    cube_data = np.array(source_nifti.get_fdata())  # type:ignore
 
     category_type: LayerCategoryType = (
         "segmentation" if is_segmentation_layer else "color"
     )
     logging.debug("Assuming %s as layer type for %s", category_type, layer_name)
 
-    if len(source_nifti.shape) == 3:  # type: ignore
-        cube_data = cube_data.reshape((1,) + source_nifti.shape)  # type: ignore
+    if len(source_nifti.shape) == 3:  # type:ignore
+        cube_data = cube_data.reshape((1,) + source_nifti.shape)  # type:ignore
 
-    elif len(source_nifti.shape) == 4:  # type: ignore
+    elif len(source_nifti.shape) == 4:  # type:ignore
         cube_data = np.transpose(cube_data, (3, 0, 1, 2))
 
     else:
@@ -109,7 +109,7 @@ def convert_nifti(
         cube_data = np.flip(cube_data, flip_axes)
 
     if voxel_size is None:
-        voxel_size = tuple(map(float, source_nifti.header["pixdim"][:3]))  # type: ignore
+        voxel_size = tuple(map(float, source_nifti.header["pixdim"][:3]))  # type:ignore
 
     logging.info("Using voxel_size: %s", voxel_size)
     cube_data = to_target_datatype(cube_data, dtype, is_segmentation_layer)
@@ -290,21 +290,21 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = DataFormat.WKW,
+    ] = "wkw",  # type:ignore
     chunk_shape: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format \
-(e.g. `32` or `32,32,32`).",
+            help="Number of voxels to be stored as a chunk in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
     ] = DEFAULT_CHUNK_SHAPE,
     chunks_per_shard: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
-            help="Number of chunks to be stored as a shard in the output format \
-(e.g. `32` or `32,32,32`).",
+            help="Number of chunks to be stored as a shard in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -312,9 +312,9 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     enforce_bounding_box: Annotated[
         Optional[BoundingBox],
         typer.Option(
-            help="The BoundingBox to which the input data should be written. \
-If the input data is too small, it will be padded. If it's too large, it will be cropped. \
-The input format is x,y,z,width,height,depth.",
+            help="The BoundingBox to which the input data should be written. "
+            "If the input data is too small, it will be padded. If it's too large, it will be cropped. "
+            "The input format is x,y,z,width,height,depth.",
             parser=parse_bbox,
             metavar="BBOX",
         ),

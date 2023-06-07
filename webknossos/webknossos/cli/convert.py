@@ -7,13 +7,8 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import Dataset
-from webknossos.cli._utils import (
-    DataFormat,
-    DistributionStrategy,
-    parse_path,
-    parse_voxel_size,
-)
+from webknossos import DataFormat, Dataset
+from webknossos.cli._utils import DistributionStrategy, parse_path, parse_voxel_size
 from webknossos.utils import get_executor_for_args
 
 
@@ -38,8 +33,8 @@ def main(
     voxel_size: Annotated[
         Any,
         typer.Option(
-            help="The size of one voxel in source data in nanometers. \
-Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            help="The size of one voxel in source data in nanometers. "
+            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VOXEL_SIZE",
         ),
@@ -49,12 +44,12 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = DataFormat.WKW,
+    ] = "wkw",  # type:ignore
     name: Annotated[
         Optional[str],
         typer.Option(
-            help="New name for the WEBKNOSSOS dataset \
-(if not provided, final component of target path is used)"
+            help="New name for the WEBKNOSSOS dataset "
+            "(if not provided, final component of target path is used)"
         ),
     ] = None,
     compress: Annotated[
@@ -77,8 +72,8 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     job_resources: Annotated[
         Optional[str],
         typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-(e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
+            '(e.g., --job_resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,

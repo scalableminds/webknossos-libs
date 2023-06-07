@@ -32,8 +32,8 @@ def main(
     token: Annotated[
         Optional[str],
         typer.Option(
-            help="Authentication token for WEBKNOSSOS instance \
-(https://webknossos.org/auth/token).",
+            help="Authentication token for WEBKNOSSOS instance "
+            "(https://webknossos.org/auth/token).",
             rich_help_panel="WEBKNOSSOS context",
             envvar="WK_TOKEN",
         ),
@@ -41,8 +41,8 @@ def main(
     dataset_name: Annotated[
         Optional[str],
         typer.Option(
-            help="Alternative name to rename your dataset on upload to WEBKNOSSOS. \
-(if not provided, current name of dataset is used)",
+            help="Alternative name to rename your dataset on upload to WEBKNOSSOS. "
+            "(if not provided, current name of dataset is used)",
         ),
     ] = None,
     jobs: Annotated[

@@ -9,7 +9,6 @@ from typing import Any, Literal, Optional, Tuple, Union
 
 import numpy as np
 import typer
-from cluster_tools import Executor
 from typing_extensions import Annotated
 
 from webknossos import BoundingBox, DataFormat, Dataset, Mag, MagView, Vec3Int
@@ -74,7 +73,7 @@ def convert_raw(
     voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
-    executor: Optional[Executor] = None,
+    executor_args: Optional[Namespace] = None,
 ) -> MagView:
     """Performs the conversion step from RAW file to WEBKNOSSOS"""
     time_start(f"Conversion of {source_raw_path}")
@@ -98,7 +97,7 @@ def convert_raw(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(args=None, executor=executor) as executor:
+    with get_executor_for_args(args=executor_args) as executor:
         wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -160,8 +159,8 @@ def main(
     voxel_size: Annotated[
         Any,
         typer.Option(
-            help="The size of one voxel in source data in nanometers. \
-Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            help="The size of one voxel in source data in nanometers. "
+            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VOXEL_SIZE",
         ),
@@ -174,21 +173,21 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = DataFormat.WKW,
+    ] = "wkw",  # type:ignore
     chunk_shape: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format \
-(e.g. `32` or `32,32,32`).",
+            help="Number of voxels to be stored as a chunk in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
     ] = DEFAULT_CHUNK_SHAPE,
     chunks_per_shard: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
-            help="Number of chunks to be stored as a shard in the output format \
-(e.g. `32` or `32,32,32`).",
+            help="Number of chunks to be stored as a shard in the output format "
+            "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -196,24 +195,24 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     max_mag: Annotated[
         Optional[Mag],
         typer.Option(
-            help="Max resolution to be downsampled. \
-Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            help="Max resolution to be downsampled. "
+            "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ] = None,
     interpolation_mode: Annotated[
         str,
         typer.Option(
-            help="The interpolation mode that should be used \
-(median, mode, nearest, bilinear or bicubic)."
+            help="The interpolation mode that should be used "
+            "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
     flip_axes: Annotated[
-        Any,
+        Optional[Vec3Int],
         typer.Option(
-            help="The axes at which should be flipped. \
-Input format is a comma separated list of axis indices. \
-For example, 1,2,3 will flip the x, y and z axes.",
+            help="The axes at which should be flipped. "
+            "Input format is a comma separated list of axis indices. "
+            "For example, 1,2,3 will flip the x, y and z axes.",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -266,23 +265,23 @@ For example, 1,2,3 will flip the x, y and z axes.",
         job_resources=job_resources,
     )
 
-    with get_executor_for_args(executor_args) as executor:
-        mag_view = convert_raw(
-            source,
-            target,
-            layer_name,
-            dtype,
-            shape,
-            data_format,
-            chunk_shape,
-            chunks_per_shard,
-            order.value,
-            voxel_size,
-            flip_axes,
-            compress,
-            executor=executor,
-        )
+    mag_view = convert_raw(
+        source,
+        target,
+        layer_name,
+        dtype,
+        shape,
+        data_format,
+        chunk_shape,
+        chunks_per_shard,
+        order.value,
+        voxel_size,
+        flip_axes,
+        compress,
+        executor_args,
+    )
 
+    with get_executor_for_args(executor_args) as executor:
         mag_view.layer.downsample(
             from_mag=mag_view.mag,
             coarsest_mag=max_mag,

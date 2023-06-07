@@ -11,10 +11,17 @@ import numpy as np
 import typer
 from typing_extensions import Annotated
 
-from webknossos import COLOR_CATEGORY, BoundingBox, Dataset, Mag, Vec3Int, View
+from webknossos import (
+    COLOR_CATEGORY,
+    BoundingBox,
+    DataFormat,
+    Dataset,
+    Mag,
+    Vec3Int,
+    View,
+)
 from webknossos.cli._utils import (
     CUBE_EDGE_LEN,
-    DataFormat,
     DistributionStrategy,
     KnossosDatasetInfo,
     open_knossos,
@@ -146,7 +153,7 @@ def main(
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = DataFormat.WKW,
+    ] = "wkw",  # type:ignore
     chunk_shape: Annotated[
         Any,
         typer.Option(

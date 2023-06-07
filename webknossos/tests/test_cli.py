@@ -217,7 +217,7 @@ def test_download() -> None:
                 "0,0,0,5,5,5",
                 "--mag",
                 "8",
-                "--full-url",
+                "--url",
                 "https://webknossos.org/datasets/scalable_minds/cremi_example/",
                 "testoutput/",
             ],

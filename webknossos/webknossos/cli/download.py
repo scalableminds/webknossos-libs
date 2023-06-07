@@ -5,9 +5,8 @@ from typing import Any, List, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import BoundingBox, Dataset, Mag, webknossos_context
+from webknossos import Annotation, BoundingBox, Dataset, Mag, webknossos_context
 from webknossos.cli._utils import parse_bbox, parse_mag, parse_path
-from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 
 
 def main(
@@ -20,53 +19,17 @@ def main(
             parser=parse_path,
         ),
     ],
-    exist_ok: Annotated[
-        bool,
+    url: Annotated[
+        str,
         typer.Option(
-            help="Allow overwriting of dataset if it already exists on disk.",
+            help="URL of your dataset or your annotation.",
         ),
-    ] = False,
-    full_url: Annotated[
-        Optional[str],
-        typer.Option(
-            rich_help_panel="Args for full URL download",
-            help="WEBKNOSSOS URL of your dataset.",
-        ),
-    ] = None,
-    dataset_name: Annotated[
-        Optional[str],
-        typer.Option(
-            rich_help_panel="Download with dataset name",
-            help="Name of your dataset on your WEBKNOSSOS instance.",
-        ),
-    ] = None,
-    organisation_id: Annotated[
-        Optional[str],
-        typer.Option(
-            rich_help_panel="Download with dataset name",
-            help="Your organization id.",
-        ),
-    ] = None,
-    sharing_token: Annotated[
-        Optional[str],
-        typer.Option(
-            rich_help_panel="Download with dataset name",
-            help="A sharing token for the dataset.",
-        ),
-    ] = None,
-    webknossos_url: Annotated[
-        Optional[str],
-        typer.Option(
-            rich_help_panel="Download with dataset name",
-            help="URL where your WEBKNOSSOS instance is hosted.",
-            envvar="WK_URL",
-        ),
-    ] = DEFAULT_WEBKNOSSOS_URL,
+    ],
     token: Annotated[
         Optional[str],
         typer.Option(
-            help="Authentication token for WEBKNOSSOS instance \
-(https://webknossos.org/auth/token).",
+            help="Authentication token for WEBKNOSSOS instance "
+            "(https://webknossos.org/auth/token).",
             rich_help_panel="WEBKNOSSOS context",
             envvar="WK_TOKEN",
         ),
@@ -75,9 +38,9 @@ def main(
         Optional[BoundingBox],
         typer.Option(
             rich_help_panel="Partial download",
-            help="Bounding box that should be downloaded. \
-The input format is x,y,z,width,height,depth. \
-Should be a comma seperated string (e.g. 0,0,0,10,10,10).",
+            help="Bounding box that should be downloaded. "
+            "The input format is x,y,z,width,height,depth. "
+            "Should be a comma seperated string (e.g. 0,0,0,10,10,10).",
             parser=parse_bbox,
             metavar="BBOX",
         ),
@@ -86,17 +49,17 @@ Should be a comma seperated string (e.g. 0,0,0,10,10,10).",
         Optional[List[str]],
         typer.Option(
             rich_help_panel="Partial download",
-            help="Layers that should be downloaded. \
-For multiple layers type: --layer color --layer segmentation",
+            help="Layers that should be downloaded. "
+            "For multiple layers type: --layer color --layer segmentation",
         ),
     ] = None,
     mag: Annotated[
         Optional[List[Mag]],
         typer.Option(
             rich_help_panel="Partial download",
-            help="Mags that should be downloaded. \
-Should be number or minus seperated string (e.g. 2 or 2-2-2). \
-For multiple mags type: --mag 1 --mag 2",
+            help="Mags that should be downloaded. "
+            "Should be number or minus seperated string (e.g. 2 or 2-2-2). "
+            "For multiple mags type: --mag 1 --mag 2",
             parser=parse_mag,
             metavar="MAG",
         ),
@@ -107,30 +70,14 @@ For multiple mags type: --mag 1 --mag 2",
     layers = layer if layer else None
     mags = mag if mag else None
 
-    if full_url is not None:
-        with webknossos_context(url=webknossos_url, token=token):
+    with webknossos_context(token=token):
+        try:
             Dataset.download(
-                dataset_name_or_url=full_url,
+                dataset_name_or_url=url,
                 path=target,
-                exist_ok=exist_ok,
                 bbox=bbox,
                 layers=layers,
                 mags=mags,
             )
-    elif dataset_name is not None:
-        with webknossos_context(url=webknossos_url, token=token):
-            Dataset.download(
-                dataset_name_or_url=dataset_name,
-                organization_id=organisation_id,
-                sharing_token=sharing_token,
-                webknossos_url=webknossos_url,
-                bbox=bbox,
-                layers=layers,
-                path=target,
-                exist_ok=exist_ok,
-                mags=mags,
-            )
-    else:
-        raise ValueError(
-            "Either define a full-url for downloading or specify your dataset with a name."
-        )
+        except AssertionError:
+            Annotation.download(annotation_id_or_url=url).save(target)

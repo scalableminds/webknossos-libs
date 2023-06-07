@@ -17,7 +17,7 @@ from typing_extensions import Annotated
 from webknossos import BoundingBox, Dataset, Mag, MagView
 from webknossos.cli._utils import (
     DistributionStrategy,
-    Vec2,
+    Vec2Int,
     parse_bbox,
     parse_mag,
     parse_path,
@@ -193,9 +193,9 @@ def main(
     bbox: Annotated[
         Optional[BoundingBox],
         typer.Option(
-            help="The BoundingBox that should be exported. \
-If the input data is too small, it will be padded. If it's too large, it will be cropped. \
-The input format is x,y,z,width,height,depth.",
+            help="The BoundingBox that should be exported. "
+            "If the input data is too small, it will be padded. If it's too large, it will be "
+            "cropped. The input format is x,y,z,width,height,depth.",
             parser=parse_bbox,
             metavar="BBOX",
         ),
@@ -212,19 +212,21 @@ The input format is x,y,z,width,height,depth.",
     name: Annotated[str, typer.Option(help="Name of the tiffs.")] = "",
     downsample: Annotated[int, typer.Option(help="Downsample each tiff image.")] = 1,
     tiles_per_dimension: Annotated[
-        Optional[Vec2],
+        Optional[Vec2Int],
         typer.Option(
-            help='For very large datasets, it is recommended to enable tiling which will ensure that each slice is exported to multiple images (i.e., tiles). As a parameter you should provide the amount of tiles per dimension in the form of "x,y".'
+            help="For very large datasets, it is recommended to enable tiling which will ensure "
+            "that each slice is exported to multiple images (i.e., tiles). As a parameter you "
+            'should provide the amount of tiles per dimension in the form of "x,y".'
             'Also see at "--tile_size" to specify the absolute size of the tiles.',
             parser=parse_vec2int,
         ),
     ] = None,
     tile_size: Annotated[
-        Optional[Vec2],
+        Optional[Vec2Int],
         typer.Option(
-            help="For very large datasets, it is recommended to enable tiling which will ensure that "
-            "each slice is exported to multiple images (i.e., tiles). As a parameter you should provide "
-            'the the size of each tile per dimension in the form of "x,y".'
+            help="For very large datasets, it is recommended to enable tiling which will ensure "
+            "that each slice is exported to multiple images (i.e., tiles). As a parameter you "
+            'should provide the the size of each tile per dimension in the form of "x,y".'
             'Also see at "--tiles_per_dimension" to specify the number of tiles in the dimensions.',
             parser=parse_vec2int,
         ),
