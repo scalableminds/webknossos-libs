@@ -3013,15 +3013,15 @@ test = ["websockets"]
 
 [[package]]
 name = "wkw"
-version = "1.1.21"
+version = "1.1.22"
 description = ""
 optional = false
 python-versions = "*"
 files = [
-    {file = "wkw-1.1.21-py3-none-macosx_10_9_universal2.whl", hash = "sha256:08bf8be8c48714f4e0307f93b15982900e902d279eca8f230cddb268d18d8fa6"},
-    {file = "wkw-1.1.21-py3-none-manylinux2014_x86_64.whl", hash = "sha256:6800b4a8afe95c4aa617abc2b033c27b5b4b71417694318aeb48ea495f2b6fb8"},
-    {file = "wkw-1.1.21-py3-none-win_amd64.whl", hash = "sha256:0958f3e3f5a239f1347aedd73332584a4a79ece2fa089563641e8f36ddef16e0"},
-    {file = "wkw-1.1.21.tar.gz", hash = "sha256:c8d15c33cc0cb5cd6e6f8465557d6c633d8871c4aaceedff82e917e94a8e6ace"},
+    {file = "wkw-1.1.22-py3-none-macosx_10_9_universal2.whl", hash = "sha256:9ee5554f1294472dedbb449ab93f26579b98096ba529c01a2dbc92d3dbb3cbb2"},
+    {file = "wkw-1.1.22-py3-none-manylinux2014_x86_64.whl", hash = "sha256:161d35d4118a56136328448ccf7ae4f624fb60f4dbb6ddc5387c528ab0aa9cb1"},
+    {file = "wkw-1.1.22-py3-none-win_amd64.whl", hash = "sha256:5fdff4e3837d0dc9d1676c5b7d03bcac92af357ed3dc0e979a94667452345ab4"},
+    {file = "wkw-1.1.22.tar.gz", hash = "sha256:3fd9e1361674267d003aa9d4b24803e0f34f9b4633fb45e9be2e4c5e61fc01fc"},
 ]
 
 [package.dependencies]
@@ -3245,4 +3245,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "55c443948fb57e16a5c7a7f6105429cfe020946e6af509cb856f405d9de8279b"
+content-hash = "a0808329f848de29dcdc02dfaf43fa74a5bde617f303821c350d442e549c0db9"

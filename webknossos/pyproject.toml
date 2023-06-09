@@ -49,7 +49,7 @@ scikit-image = "^0.19.3"
 scipy = "^1.9.0"
 typing-extensions = "^4.0"
 universal-pathlib = "0.0.23"
-wkw = "1.1.21"
+wkw = "1.1.22"
 zarr = "^2.14.0"
 zipp = "^3.5.0"
 

@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Upgrades `wkw`. [#911](https://github.com/scalableminds/webknossos-libs/pull/911)
 
 ### Fixed
 
