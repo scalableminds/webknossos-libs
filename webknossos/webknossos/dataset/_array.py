@@ -7,13 +7,14 @@ from enum import Enum
 from os import environ
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional, Type, Union
+from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
 import numcodecs
 import numpy as np
 import wkw
 import zarr
 import zarrita
+import zarrita.codecs
 from upath import UPath
 from zarr.storage import FSStore
 
@@ -35,15 +36,6 @@ def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
         return FSStore(url=str(path), mode=mode, **storage_options)
 
     return FSStore(url=str(path), mode=mode, **storage_options)
-
-
-def _zarrita_store_from_path(path: Path) -> zarrita.Store:
-    storage_options = {}
-    if isinstance(path, UPath):
-        storage_options = path._kwargs.copy()
-        storage_options.pop("_url", None)
-        return zarrita.RemoteStore(str(path), **storage_options)
-    return zarrita.LocalStore(path)
 
 
 @contextmanager
@@ -143,7 +135,8 @@ class BaseArray(ABC):
 
     @staticmethod
     def get_class(data_format: DataFormat) -> Type["BaseArray"]:
-        for cls in (WKWArray, ZarrArray):
+        classes = (WKWArray, ZarritaArray) if use_zarrita else (WKWArray, ZarrArray)
+        for cls in classes:
             if cls.data_format == data_format:
                 return cls
         raise ValueError(f"Array format `{data_format}` is invalid.")
@@ -479,54 +472,68 @@ class ZarritaArray(BaseArray):
     @classmethod
     def open(cls, path: Path) -> "ZarritaArray":
         try:
-            array = zarrita.open_auto(
-                store=_zarrita_store_from_path(path),
-                path="",
-            )
-            assert isinstance(array, zarrita.Array) or isinstance(
-                array, zarrita.ArrayV2
-            )
-        except:
+            zarrita.Array.open_auto(store=path)  # check that everything exists
+            return cls(path)
+        except Exception as exc:
             raise ArrayException(
                 f"Could not open Zarr array at {path}. `.zarray` not found."
-            )
+            ) from exc
+
+    @staticmethod
+    def _has_compression_codecs(codecs: List[zarrita.codecs.Codec]) -> bool:
+        return any(
+            isinstance(c, zarrita.codecs.BloscCodec)
+            or isinstance(c, zarrita.codecs.GzipCodec)
+            for c in codecs
+        )
 
     @property
     def info(self) -> ArrayInfo:
+        from zarrita.sharding import ShardingCodec
+
         zarray = self._zarray
-        if len(zarray.codecs) == 1 and isinstance(
-            zarray.codecs[0], zarrita.sharding.ShardingCodec
-        ):
-            sharding_codec = zarray.codecs[0]
+        if isinstance(zarray, zarrita.Array):
+            if len(zarray.codecs) == 1 and isinstance(zarray.codecs[0], ShardingCodec):
+                sharding_codec = zarray.codecs[0]
+                return ArrayInfo(
+                    data_format=self.data_format,
+                    num_channels=zarray.metadata.shape[0],
+                    voxel_type=zarray.metadata.dtype,
+                    compression_mode=self._has_compression_codecs(
+                        sharding_codec.codecs
+                    ),
+                    chunk_shape=sharding_codec.configuration.chunk_grid.configuration.chunk_shape,
+                    chunks_per_shard=Vec3Int(
+                        zarray.metadata.chunk_grid.configuration.chunk_shape[1:]
+                    )
+                    // Vec3Int(sharding_codec.configuration.chunk_shape[1:]),
+                )
             return ArrayInfo(
                 data_format=self.data_format,
-                num_channels=zarray.shape[0],
-                voxel_type=zarray.dtype,
-                compression_mode=any(
-                    isinstance(c, zarrita.codecs.BloscCodec)
-                    for c in sharding_codec.codecs
-                ),
-                chunk_shape=sharding_codec.configuration.chunk_shape,
-                chunks_per_shard=Vec3Int(zarray.chunk_shape[1:])
-                // Vec3Int(sharding_codec.configuratin.chunk_shape[1:]),
+                num_channels=zarray.metadata.shape[0],
+                voxel_type=zarray.metadata.dtype,
+                compression_mode=self._has_compression_codecs(zarray.codecs),
+                chunk_shape=Vec3Int(
+                    *zarray.metadata.chunk_grid.configuration.chunk_shape[1:4]
+                )
+                or Vec3Int.full(1),
+                chunks_per_shard=Vec3Int.full(1),
             )
-        return ArrayInfo(
-            data_format=self.data_format,
-            num_channels=zarray.shape[0],
-            voxel_type=zarray.dtype,
-            compression_mode=any(
-                isinstance(c, zarrita.codecs.BloscCodec) for c in sharding_codec.codecs
-            ),
-            chunk_shape=Vec3Int(*zarray.chunks[1:4]) or Vec3Int.full(1),
-            chunks_per_shard=Vec3Int.full(1),
-        )
+        else:
+            return ArrayInfo(
+                data_format=self.data_format,
+                num_channels=zarray.metadata.shape[0],
+                voxel_type=zarray.metadata.dtype,
+                compression_mode=zarray.metadata.compressor is not None,
+                chunk_shape=Vec3Int(*zarray.metadata.chunks[1:4]) or Vec3Int.full(1),
+                chunks_per_shard=Vec3Int.full(1),
+            )
 
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "ZarritaArray":
         assert array_info.data_format == cls.data_format
         zarrita.Array.create(
-            store=_zarrita_store_from_path(path),
-            path="",
+            store=path,
             shape=(array_info.num_channels, 1, 1, 1),
             chunk_shape=(array_info.num_channels,) + array_info.shard_shape.to_tuple(),
             chunk_key_encoding=("default", "/"),
@@ -576,10 +583,10 @@ class ZarritaArray(BaseArray):
         zarray = self._zarray
 
         new_shape_tuple = (
-            zarray.shape[0],
-            max(zarray.shape[1], new_shape.x),
-            max(zarray.shape[2], new_shape.y),
-            max(zarray.shape[3], new_shape.z),
+            zarray.matadata.shape[0],
+            max(zarray.matadata.shape[1], new_shape.x),
+            max(zarray.matadata.shape[2], new_shape.y),
+            max(zarray.matadata.shape[3], new_shape.z),
         )
         if new_shape_tuple != zarray.shape:
             if align_with_shards:
@@ -588,11 +595,8 @@ class ZarritaArray(BaseArray):
                 new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
 
             # Check on-disk for changes to shape
-            current_zarray = zarrita.open_auto(
-                store=_zarrita_store_from_path(self._path),
-                path="",
-            )
-            if zarray.shape != current_zarray.shape:
+            current_zarray = zarrita.Array.open_auto(self._path)
+            if zarray.metadata.shape != current_zarray.metadata.shape:
                 warnings.warn(
                     f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
                     + "This is likely happening because multiple processes changed the metadata of this array."
@@ -639,11 +643,11 @@ class ZarritaArray(BaseArray):
     def _zarray(self) -> Union[zarrita.Array, zarrita.ArrayV2]:
         if self._cached_zarray is None:
             try:
-                self._cached_zarray = zarrita.open_auto(
-                    store=_zarrita_store_from_path(self._path),
-                    path="",
+                zarray = zarrita.Array.open_auto(
+                    store=self._path,
                     runtime_configuration=zarrita.runtime_configuration("F"),
                 )
+                self._cached_zarray = zarray
             except Exception as e:
                 raise ArrayException(
                     f"Exception while opening Zarrita array for {self._path}"

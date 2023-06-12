@@ -11,20 +11,34 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import (TYPE_CHECKING, Any, Callable, ContextManager, Dict,
-                    Iterable, List, Mapping, Optional, Sequence, Tuple, Union,
-                    cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ContextManager,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+)
 
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from cluster_tools import Executor
-from webknossos.dataset.defaults import (DEFAULT_CHUNK_SHAPE,
-                                         DEFAULT_CHUNKS_PER_SHARD_ZARR)
+from webknossos.dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD_ZARR,
+)
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
@@ -39,25 +53,38 @@ if TYPE_CHECKING:
     from ..administration.user import Team
 
 from ..geometry import BoundingBox, Mag
-from ..utils import (copy_directory_with_symlinks, copytree,
-                     get_executor_for_args, is_fs_path, named_partial, rmtree,
-                     strip_trailing_slash, wait_and_ensure_success,
-                     warn_deprecated)
+from ..utils import (
+    copy_directory_with_symlinks,
+    copytree,
+    get_executor_for_args,
+    is_fs_path,
+    named_partial,
+    rmtree,
+    strip_trailing_slash,
+    wait_and_ensure_success,
+    warn_deprecated,
+)
 from ._utils.from_images import guess_if_segmentation_path
-from ._utils.infer_bounding_box_existing_files import \
-    infer_bounding_box_existing_files
-from .layer import (Layer, SegmentationLayer,
-                    _dtype_per_channel_to_element_class,
-                    _dtype_per_layer_to_dtype_per_channel,
-                    _get_sharding_parameters, _normalize_dtype_per_channel,
-                    _normalize_dtype_per_layer)
-from .layer_categories import (COLOR_CATEGORY, SEGMENTATION_CATEGORY,
-                               LayerCategoryType)
-from .properties import (DatasetProperties, DatasetViewConfiguration,
-                         LayerProperties, SegmentationLayerProperties,
-                         _extract_num_channels,
-                         _properties_floating_type_to_python_type,
-                         dataset_converter)
+from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
+from .layer import (
+    Layer,
+    SegmentationLayer,
+    _dtype_per_channel_to_element_class,
+    _dtype_per_layer_to_dtype_per_channel,
+    _get_sharding_parameters,
+    _normalize_dtype_per_channel,
+    _normalize_dtype_per_layer,
+)
+from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
+from .properties import (
+    DatasetProperties,
+    DatasetViewConfiguration,
+    LayerProperties,
+    SegmentationLayerProperties,
+    _extract_num_channels,
+    _properties_floating_type_to_python_type,
+    dataset_converter,
+)
 from .view import _BLOCK_ALIGNMENT_WARNING
 
 logger = logging.getLogger(__name__)
@@ -701,8 +728,7 @@ class Dataset:
         Returns the `RemoteDataset` upon successful upload.
         """
 
-        from webknossos.client._upload_dataset import (LayerToLink,
-                                                       upload_dataset)
+        from webknossos.client._upload_dataset import LayerToLink, upload_dataset
 
         converted_layers_to_link = (
             None
@@ -1148,8 +1174,6 @@ class Dataset:
                 if chunk_shape is None:
                     chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
                 if chunks_per_shard is None:
-                    # TODO: chunks_per_shard is 1 by default for zarr atm, but this
-                    # might change in the future:
                     chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR.with_z(1)
             mag_view = layer.add_mag(
                 mag=mag,
@@ -1829,8 +1853,9 @@ class RemoteDataset(Dataset):
         tags: List[str] = _UNSET,
     ) -> None:
         from webknossos.client._generated.api.default import dataset_update
-        from webknossos.client._generated.models.dataset_update_json_body import \
-            DatasetUpdateJsonBody
+        from webknossos.client._generated.models.dataset_update_json_body import (
+            DatasetUpdateJsonBody,
+        )
         from webknossos.client.context import _get_generated_client
 
         # Atm, the wk backend needs to get previous parameters passed
@@ -1903,8 +1928,7 @@ class RemoteDataset(Dataset):
 
     @property
     def sharing_token(self) -> str:
-        from webknossos.client._generated.api.default import \
-            dataset_sharing_token
+        from webknossos.client._generated.api.default import dataset_sharing_token
         from webknossos.client.context import _get_generated_client
 
         with self._context:
@@ -1932,8 +1956,7 @@ class RemoteDataset(Dataset):
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
         """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
         from webknossos.administration.user import Team
-        from webknossos.client._generated.api.default import \
-            dataset_update_teams
+        from webknossos.client._generated.api.default import dataset_update_teams
         from webknossos.client.context import _get_generated_client
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
