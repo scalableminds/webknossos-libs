@@ -140,7 +140,8 @@ def main(
     shape: Annotated[
         Vec3Int,
         typer.Option(
-            help="Shape of the source dataset.",
+            help="Shape of the source dataset. Should be a comma seperated "
+            "sting (e.g. 1024,1024,512).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -148,7 +149,7 @@ def main(
     order: Annotated[
         Order,
         typer.Option(
-            help="The input data storage layout:"
+            help="The input data storage layout: "
             "either 'F' for Fortran-style/column-major order (the default), "
             "or 'C' for C-style/row-major order. "
             "Note: Axes are expected in  (x, y, z) order."

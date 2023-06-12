@@ -10,7 +10,7 @@ from math import ceil
 from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
-from typing import Iterator, Union
+from typing import Iterator
 
 import numpy as np
 import pytest
@@ -18,7 +18,7 @@ from PIL import Image
 from typer.testing import CliRunner
 from upath import UPath
 
-from webknossos import BoundingBox, DataFormat, Dataset
+from webknossos import BoundingBox, Dataset
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
@@ -74,35 +74,6 @@ def fixture_remote_testoutput_path() -> Iterator[UPath]:
         subprocess.check_output(["docker", "stop", container_name])
 
 
-def check_call(*args: Union[str, int, Path]) -> None:
-    """Executes the given call with a subprocess."""
-    try:
-        subprocess.check_call([str(a) for a in args])
-    except subprocess.CalledProcessError as err:
-        print(f"Process failed with exit code {err.returncode}: `{args}`")
-        raise err
-
-
-def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
-    in_path = TESTDATA_DIR / "tiff"
-
-    check_call(
-        "webknossos",
-        "convert",
-        "--jobs",
-        2,
-        "--voxel-size",
-        "11.24,11.24,25",
-        "--data-format",
-        str(data_format),
-        in_path,
-        out_path,
-    )
-
-    assert (out_path / "tiff").exists()
-    assert (out_path / "tiff" / "1").exists()
-
-
 @pytest.mark.skipif(
     sys.platform != "linux",
     reason="Only run this test on Linux, because it requires a running `minio` docker container.",
@@ -110,11 +81,31 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
 def test_tiff_cubing_zarr_s3(remote_testoutput_path: UPath) -> None:
     """Tests zarr support when performing tiff cubing."""
     out_path = remote_testoutput_path / "tiff_cubing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = MINIO_ROOT_PASSWORD
-    os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
-    os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
-    _tiff_cubing(out_path, DataFormat.Zarr)
+    result = runner.invoke(
+        app,
+        [
+            "convert",
+            "--jobs",
+            "2",
+            "--voxel-size",
+            "11.24,11.24,25",
+            "--data-format",
+            "zarr",
+            str(TESTDATA_DIR / "tiff"),
+            str(out_path),
+        ],
+        env={
+            "AWS_SECRET_ACCESS_KEY": MINIO_ROOT_PASSWORD,
+            "AWS_ACCESS_KEY_ID": MINIO_ROOT_USER,
+            "S3_ENDPOINT_URL": f"http://localhost:{MINIO_PORT}",
+        },
+    )
+
+    assert result.exit_code == 0
+
+    assert (out_path / "tiff").exists()
+    assert (out_path / "tiff" / "1").exists()
 
     assert (out_path / "tiff" / "1" / ".zarray").exists()
     assert (out_path / PROPERTIES_FILE_NAME).exists()
@@ -183,7 +174,7 @@ def test_convert() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff"
-        wkw_path = Path("new_wkw_dataset")
+        wkw_path = Path("wkw_from_tiff_simple")
 
         result = runner.invoke(
             app,
@@ -197,12 +188,48 @@ def test_convert() -> None:
         )
 
         assert result.exit_code == 0
-        assert (wkw_path / "datasource-properties.json").exists()
+        assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_convert_with_all_params() -> None:
+    """Tests the functionality of convert subcommand."""
+
+    with tmp_cwd():
+        origin_path = TESTDATA_DIR / "tiff"
+        wkw_path = Path("wkw_from_tiff_extended")
+
+        result = runner.invoke(
+            app,
+            [
+                "convert",
+                "--voxel-size",
+                "11.0,11.0,11.0",
+                "--data-format",
+                "wkw",
+                "--name",
+                "wkw_from_tiff",
+                "--compress",
+                str(origin_path),
+                str(wkw_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (wkw_path / PROPERTIES_FILE_NAME).exists()
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://webknossos.org/datasets/scalable_minds/cremi_example/",
+        "https://webknossos.org/datasets/scalable_minds/cremi_example/view#512,512,16,0,1.3",
+        "https://webknossos.org/links/upcKUKDe5CatK4JX",
+    ],
+)
 @pytest.mark.block_network(allowed_hosts=[".*"])
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
-def test_download() -> None:
+def test_download_dataset(url: str) -> None:
     """Tests the functionality of download subcommand."""
 
     result = runner.invoke(app, ["download"])
@@ -218,12 +245,12 @@ def test_download() -> None:
                 "--mag",
                 "8",
                 "--url",
-                "https://webknossos.org/datasets/scalable_minds/cremi_example/",
+                url,
                 "testoutput/",
             ],
         )
         assert result.exit_code == 0
-        assert (Path("testoutput") / "datasource-properties.json").exists()
+        assert (Path("testoutput") / PROPERTIES_FILE_NAME).exists()
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
