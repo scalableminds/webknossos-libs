@@ -132,7 +132,7 @@ class DistributionStrategy(str, Enum):
     """Enum of available distribution strategies.
 
     TODO: As soon as supported by typer this enum should be
-        replaced with typing.Literal in type hint.
+    replaced with typing.Literal in type hint.
     """
 
     SLURM = "slurm"
@@ -244,9 +244,11 @@ Please format the bounding box like 0,0,0,5,5,5 ."
         ) from err
 
 
-def parse_path(value: str) -> UPath:
+def parse_path(value: Union[UPath, str]) -> UPath:
     """Parses a string value to a UPath."""
 
+    if isinstance(value, UPath):
+        return value
     if (
         (value.startswith("http://") or value.startswith("https://"))
         and "HTTP_BASIC_USER" in environ

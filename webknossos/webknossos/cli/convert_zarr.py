@@ -12,6 +12,7 @@ import numpy as np
 import typer
 import zarr
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import (
     BoundingBox,
@@ -25,6 +26,7 @@ from webknossos import (
 from webknossos.cli._utils import (
     DistributionStrategy,
     SamplingMode,
+    VoxelSize,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -124,7 +126,7 @@ def convert_zarr(
 def main(
     *,
     source: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your raw image data.",
             show_default=False,
@@ -132,7 +134,7 @@ def main(
         ),
     ],
     target: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,
@@ -144,10 +146,10 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: Annotated[
-        Any,
+        Optional[VoxelSize],
         typer.Option(
-            help="The size of one voxel in source data in nanometers. \
-Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            help="The size of one voxel in source data in nanometers. "
+            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VOXEL_SIZE",
         ),
@@ -159,7 +161,7 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         ),
     ] = "wkw",  # type:ignore
     chunk_shape: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
             help="Number of voxels to be stored as a chunk in the output format "
             "(e.g. `32` or `32,32,32`).",
@@ -168,7 +170,7 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         ),
     ] = DEFAULT_CHUNK_SHAPE,
     chunks_per_shard: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
             help="Number of chunks to be stored as a shard in the output format "
             "(e.g. `32` or `32,32,32`).",
@@ -179,24 +181,24 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
     max_mag: Annotated[
         Optional[Mag],
         typer.Option(
-            help="Max resolution to be downsampled. \
-Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            help="Max resolution to be downsampled. "
+            "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ] = None,
     interpolation_mode: Annotated[
         str,
         typer.Option(
-            help="The interpolation mode that should be used \
-(median, mode, nearest, bilinear or bicubic)."
+            help="The interpolation mode that should be used "
+            "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
     flip_axes: Annotated[
-        Any,
+        Optional[Vec3Int],
         typer.Option(
-            help="The axes at which should be flipped. \
-Input format is a comma separated list of axis indices. \
-For example, 1,2,3 will flip the x, y and z axes.",
+            help="The axes at which should be flipped. "
+            "Input format is a comma separated list of axis indices. "
+            "For example, 1,2,3 will flip the x, y and z axes.",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),

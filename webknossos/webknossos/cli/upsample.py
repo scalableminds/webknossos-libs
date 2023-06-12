@@ -2,10 +2,11 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Optional
 
 import typer
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import Dataset, Mag
 from webknossos.cli._utils import (
@@ -21,7 +22,7 @@ from webknossos.utils import get_executor_for_args
 def main(
     *,
     source: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your WEBKNOSSOS dataset.",
             show_default=False,

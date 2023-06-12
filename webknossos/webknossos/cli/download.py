@@ -1,9 +1,10 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
-from typing import Any, List, Optional
+from typing import List, Optional
 
 import typer
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import Annotation, BoundingBox, Dataset, Mag, webknossos_context
 from webknossos.cli._utils import parse_bbox, parse_mag, parse_path
@@ -12,7 +13,7 @@ from webknossos.cli._utils import parse_bbox, parse_mag, parse_path
 def main(
     *,
     target: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             show_default=False,
             help="Path to save your WEBKNOSSOS dataset.",

@@ -9,9 +9,12 @@ import numpy as np
 import typer
 from sklearn.preprocessing import LabelEncoder
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3Int
 from webknossos.cli._utils import (
+    Vec2Int,
+    VoxelSize,
     pad_or_crop_to_size_and_topleft,
     parse_bbox,
     parse_path,
@@ -58,7 +61,7 @@ def convert_nifti(
     target_path: Path,
     layer_name: str,
     dtype: str,
-    voxel_size: Optional[Tuple[float, ...]],
+    voxel_size: Optional[VoxelSize],
     data_format: DataFormat,
     chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
@@ -170,7 +173,7 @@ def convert_folder_nifti(
     target_path: Path,
     color_subpath: Optional[str],
     segmentation_subpath: Optional[str],
-    voxel_size: Tuple[float, ...],
+    voxel_size: Optional[VoxelSize],
     data_format: DataFormat,
     chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
@@ -254,7 +257,7 @@ def convert_folder_nifti(
 def main(
     *,
     source: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your image data.",
             show_default=False,
@@ -262,7 +265,7 @@ def main(
         ),
     ],
     target: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,
@@ -274,7 +277,7 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: Annotated[
-        Any,
+        Optional[VoxelSize],
         typer.Option(
             help="The size of one voxel in source data in nanometers. \
 Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
@@ -313,8 +316,8 @@ Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
         Optional[BoundingBox],
         typer.Option(
             help="The BoundingBox to which the input data should be written. "
-            "If the input data is too small, it will be padded. If it's too large, it will be cropped. "
-            "The input format is x,y,z,width,height,depth.",
+            "If the input data is too small, it will be padded. If it's too large, "
+            "it will be cropped. The input format is x,y,z,width,height,depth.",
             parser=parse_bbox,
             metavar="BBOX",
         ),
@@ -346,7 +349,7 @@ When converting a folder, this option is ignored."
         ),
     ] = False,
     flip_axes: Annotated[
-        Any,
+        Optional[Vec2Int],
         typer.Option(
             help="The axes at which should be flipped. \
 Input format is a comma separated list of axis indices. \

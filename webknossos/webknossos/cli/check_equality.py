@@ -3,10 +3,11 @@
 import logging
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Optional
 
 import typer
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import Dataset
 from webknossos.cli._utils import DistributionStrategy, parse_path
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def main(
     *,
     source: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your first WEBKNOSSOS dataset.",
             show_default=False,
@@ -27,7 +28,7 @@ def main(
         ),
     ],
     target: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your second WEBKNOSSOS dataset.",
             show_default=False,

@@ -5,17 +5,19 @@ from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Literal, Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 import numpy as np
 import typer
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import BoundingBox, DataFormat, Dataset, Mag, MagView, Vec3Int
 from webknossos.cli._utils import (
     DistributionStrategy,
     Order,
     SamplingMode,
+    VoxelSize,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -65,7 +67,7 @@ def convert_raw(
     target_path: Path,
     layer_name: str,
     input_dtype: str,
-    shape: Tuple[int, int, int],
+    shape: Vec3Int,
     data_format: DataFormat,
     chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
@@ -120,7 +122,7 @@ def convert_raw(
 def main(
     *,
     source: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your raw image data.",
             show_default=False,
@@ -128,7 +130,7 @@ def main(
         ),
     ],
     target: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,
@@ -136,7 +138,7 @@ def main(
         ),
     ],
     shape: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
             help="Shape of the source dataset.",
             parser=parse_vec3int,
@@ -157,7 +159,7 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: Annotated[
-        Any,
+        Optional[VoxelSize],
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
             "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",

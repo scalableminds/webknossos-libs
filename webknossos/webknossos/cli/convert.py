@@ -2,20 +2,26 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Optional
 
 import typer
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import DataFormat, Dataset
-from webknossos.cli._utils import DistributionStrategy, parse_path, parse_voxel_size
+from webknossos.cli._utils import (
+    DistributionStrategy,
+    VoxelSize,
+    parse_path,
+    parse_voxel_size,
+)
 from webknossos.utils import get_executor_for_args
 
 
 def main(
     *,
     source: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your image data.",
             show_default=False,
@@ -23,7 +29,7 @@ def main(
         ),
     ],
     target: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,
@@ -31,7 +37,7 @@ def main(
         ),
     ],
     voxel_size: Annotated[
-        Any,
+        VoxelSize,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
             "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",

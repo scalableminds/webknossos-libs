@@ -5,11 +5,12 @@ from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Optional, Tuple, cast
+from typing import Optional, Tuple, cast
 
 import numpy as np
 import typer
 from typing_extensions import Annotated
+from upath import UPath
 
 from webknossos import (
     COLOR_CATEGORY,
@@ -24,6 +25,7 @@ from webknossos.cli._utils import (
     CUBE_EDGE_LEN,
     DistributionStrategy,
     KnossosDatasetInfo,
+    VoxelSize,
     open_knossos,
     parse_mag,
     parse_path,
@@ -117,7 +119,7 @@ def convert_knossos(
 def main(
     *,
     source: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Path to your image data.",
             show_default=False,
@@ -125,7 +127,7 @@ def main(
         ),
     ],
     target: Annotated[
-        Any,
+        UPath,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,
@@ -137,7 +139,7 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: Annotated[
-        Any,
+        VoxelSize,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
             "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
@@ -155,7 +157,7 @@ def main(
         ),
     ] = "wkw",  # type:ignore
     chunk_shape: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
             help="Number of voxels to be stored as a chunk in the output format "
             "(e.g. `32` or `32,32,32`).",
@@ -164,7 +166,7 @@ def main(
         ),
     ] = DEFAULT_CHUNK_SHAPE,
     chunks_per_shard: Annotated[
-        Any,
+        Vec3Int,
         typer.Option(
             help="Number of chunks to be stored as a shard in the output format "
             "(e.g. `32` or `32,32,32`).",
