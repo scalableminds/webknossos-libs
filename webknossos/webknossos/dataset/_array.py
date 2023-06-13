@@ -647,13 +647,6 @@ class ZarritaArray(BaseArray):
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError
-        # zarray = self._zarray
-        # chunk_shape = Vec3Int(*zarray.chunks[1:4])
-        # for key in zarray.store.keys():
-        #     if not key.startswith("."):
-        #         key_parts = [int(p) for p in key.split(zarray._dimension_separator)]
-        #         chunk_idx = Vec3Int(key_parts[1:4])
-        #         yield BoundingBox(topleft=chunk_idx * chunk_shape, size=chunk_shape)
 
     def close(self) -> None:
         if self._cached_zarray is not None:

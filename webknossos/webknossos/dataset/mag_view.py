@@ -8,8 +8,9 @@ from uuid import uuid4
 
 import numpy as np
 import zarr
-from cluster_tools import Executor
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -259,7 +260,17 @@ class MagView(View):
         This differs from the bounding box in the properties, which is an "overall" bounding box,
         abstracting from the files on disk.
         """
-        for bbox in self._array.list_bounding_boxes():
+        try:
+            bboxes = self._array.list_bounding_boxes()
+        except NotImplementedError:
+            warnings.warn(
+                "The underlying array storage does not support listing the stored bounding boxes. "
+                + "Instead all bounding boxes are iterated, which can be slow."
+            )
+            bboxes = self.bounding_box.in_mag(self.mag).chunk(
+                self._array.info.shard_shape
+            )
+        for bbox in bboxes:
             yield bbox.from_mag_to_mag1(self._mag)
 
     def get_views_on_disk(

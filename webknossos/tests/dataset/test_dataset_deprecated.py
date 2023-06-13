@@ -9,8 +9,8 @@ from typing import Generator, Tuple, cast
 
 import numpy as np
 import pytest
-
 from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
+
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -133,12 +133,13 @@ def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) ->
 
 def get_multichanneled_data(dtype: type) -> np.ndarray:
     data: np.ndarray = np.zeros((3, 250, 200, 10), dtype=dtype)
+    max_value = np.iinfo(dtype).max
     for h in range(10):
         for i in range(250):
             for j in range(200):
-                data[0, i, j, h] = i * 256
-                data[1, i, j, h] = j * 256
-                data[2, i, j, h] = 100 * 256
+                data[0, i, j, h] = (i * 256) % max_value
+                data[1, i, j, h] = (j * 256) % max_value
+                data[2, i, j, h] = (100 * 256) % max_value
     return data
 
 

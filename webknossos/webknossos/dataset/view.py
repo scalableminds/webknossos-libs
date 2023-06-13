@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple
 
 import numpy as np
 import wkw
+
 from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -439,6 +440,7 @@ class View:
         data = self._array.read(
             current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
         )
+        print(data.shape)
         return data
 
     def get_view(

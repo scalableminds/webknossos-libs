@@ -1,5 +1,6 @@
 import itertools
 import json
+import logging
 import os
 import pickle
 import shlex
@@ -13,9 +14,9 @@ from typing import Iterator, Optional, Tuple, cast
 import numpy as np
 import pytest
 from jsonschema import validate
+from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from upath import UPath
 
-from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -61,6 +62,7 @@ def start_minio() -> Iterator[None]:
             },
         )
         sleep(3)
+        assert minio_process.poll() is None
         REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
         try:
             yield
@@ -95,11 +97,14 @@ REMOTE_TESTOUTPUT_DIR = UPath(
     client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
 )
 
-DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
+
+DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr, DataFormat.Zarr3]
 DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
     (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
+    (DataFormat.Zarr3, TESTOUTPUT_DIR),
+    (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
 ]
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
@@ -204,7 +209,7 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
         chunk_data = chunk.read()
         assert np.array_equal(
             np.ones(chunk_data.shape, dtype=np.uint8)
-            * np.uint8(sum(chunk.bounding_box.topleft)),
+            * (sum(chunk.bounding_box.topleft) % 256),
             chunk_data,
         )
 
@@ -262,6 +267,9 @@ def test_create_dataset_with_layer_and_mag(
     elif data_format == DataFormat.Zarr:
         assert (ds_path / "color" / "1" / ".zarray").exists()
         assert (ds_path / "color" / "2-2-1" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color" / "1" / "zarr.json").exists()
+        assert (ds_path / "color" / "2-2-1" / "zarr.json").exists()
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
@@ -329,10 +337,10 @@ def test_create_default_mag(data_format: DataFormat) -> None:
 
     assert layer.data_format == data_format
     assert mag_view.info.chunk_shape == Vec3Int.full(32)
-    if data_format == DataFormat.WKW:
-        assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
-    else:
+    if data_format == DataFormat.Zarr:
         assert mag_view.info.chunks_per_shard == Vec3Int.full(1)
+    else:
+        assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
     assert mag_view.info.num_channels == 1
     assert mag_view.info.compression_mode == False
 
@@ -445,8 +453,9 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_direct_zarr_access(output_path: Path) -> None:
-    ds_path = copy_simple_dataset(DataFormat.Zarr, output_path)
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
     mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
     np.random.seed(1234)
@@ -539,13 +548,15 @@ def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
         .get_or_add_mag("1")
     )
 
+    np.random.seed(1234)
     data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
 
     mag_a.write(data)
     mag_b.write(data)
     assert mag_a.content_is_equal(mag_b)
 
-    mag_b.write(data + 10)
+    data = data + 10
+    mag_b.write(data)
     assert not mag_a.content_is_equal(mag_b)
 
 
@@ -913,9 +924,9 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     assure_exported_properties(ds)
 
 
-# Don't test zarr for performance reasons (lack of sharding)
-def test_chunking_wkw_advanced() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "chunking_advanced")
+@pytest.mark.parametrize("data_format", [DataFormat.WKW, DataFormat.Zarr3])
+def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
+    ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "chunking_advanced")
     ds = Dataset(ds_path, voxel_size=(1, 1, 2))
 
     mag = ds.add_layer(
@@ -1545,10 +1556,11 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assure_exported_properties(original_ds)
 
 
-def test_remote_add_symlink_layer() -> None:
-    src_dataset_path = copy_simple_dataset(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR)
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
+    src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
     dst_dataset_path = prepare_dataset_path(
-        DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+        data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
     )
 
     src_ds = Dataset.open(src_dataset_path)
@@ -1558,10 +1570,11 @@ def test_remote_add_symlink_layer() -> None:
         dst_ds.add_symlink_layer(src_ds.get_layer("color"))
 
 
-def test_remote_add_symlink_mag() -> None:
-    src_dataset_path = copy_simple_dataset(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR)
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
+    src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
     dst_dataset_path = prepare_dataset_path(
-        DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+        data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
     )
 
     src_ds = Dataset.open(src_dataset_path)
@@ -1570,7 +1583,7 @@ def test_remote_add_symlink_mag() -> None:
 
     dst_ds = Dataset(dst_dataset_path, voxel_size=(1, 1, 1))
     dst_layer = dst_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=DataFormat.Zarr
+        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
 
     with pytest.raises(AssertionError):
@@ -1821,23 +1834,27 @@ def test_dataset_conversion_wkw_only() -> None:
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_dataset_conversion_from_wkw_to_zarr(output_path: Path) -> None:
-    converted_path = prepare_dataset_path(DataFormat.Zarr, output_path, "converted")
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_dataset_conversion_from_wkw_to_zarr(
+    output_path: Path, data_format: DataFormat
+) -> None:
+    converted_path = prepare_dataset_path(data_format, output_path, "converted")
 
     input_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
     converted_ds = input_ds.copy_dataset(
-        converted_path, data_format=DataFormat.Zarr, chunks_per_shard=1
+        converted_path, data_format=data_format, chunks_per_shard=1
     )
 
-    assert (converted_path / "color" / "1" / ".zarray").exists()
+    if data_format == DataFormat.Zarr:
+        assert (converted_path / "color" / "1" / ".zarray").exists()
+    else:
+        assert (converted_path / "color" / "1" / "zarr.json").exists()
     assert np.all(
         input_ds.get_layer("color").get_mag("1").read()
         == converted_ds.get_layer("color").get_mag("1").read()
     )
-    assert converted_ds.get_layer("color").data_format == DataFormat.Zarr
-    assert (
-        converted_ds.get_layer("color").get_mag("1").info.data_format == DataFormat.Zarr
-    )
+    assert converted_ds.get_layer("color").data_format == data_format
+    assert converted_ds.get_layer("color").get_mag("1").info.data_format == data_format
 
     assure_exported_properties(converted_ds)
 
@@ -1995,36 +2012,47 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
     for offset in write_positions:
         mag.write(absolute_offset=offset * mag.mag.to_vec3_int(), data=write_data)
 
-    bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
-    file_size = mag._get_file_dimensions()
+    if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+        with pytest.warns(UserWarning, match=".*can be slow.*"):
+            bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
 
-    expected_results = set()
-    for offset in write_positions:
-        range_from = offset // file_size * file_size
-        range_to = offset + data_size
-        # enumerate all bounding boxes of the current write operation
-        x_range = range(
-            range_from[0],
-            range_to[0],
-            file_size[0],
+        assert (
+            len(bounding_boxes_on_disk)
+            == mag.bounding_box.size.ceildiv(mag._array.info.shard_shape)
+            .ceildiv(mag.mag)
+            .prod()
         )
-        y_range = range(
-            range_from[1],
-            range_to[1],
-            file_size[1],
-        )
-        z_range = range(
-            range_from[2],
-            range_to[2],
-            file_size[2],
-        )
+    else:
+        bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
+        file_size = mag._get_file_dimensions()
 
-        for bb_offset in itertools.product(x_range, y_range, z_range):
-            expected_results.add(
-                BoundingBox(bb_offset, file_size).from_mag_to_mag1(mag.mag)
+        expected_results = set()
+        for offset in write_positions:
+            range_from = offset // file_size * file_size
+            range_to = offset + data_size
+            # enumerate all bounding boxes of the current write operation
+            x_range = range(
+                range_from[0],
+                range_to[0],
+                file_size[0],
+            )
+            y_range = range(
+                range_from[1],
+                range_to[1],
+                file_size[1],
+            )
+            z_range = range(
+                range_from[2],
+                range_to[2],
+                file_size[2],
             )
 
-    assert set(bounding_boxes_on_disk) == expected_results
+            for bb_offset in itertools.product(x_range, y_range, z_range):
+                expected_results.add(
+                    BoundingBox(bb_offset, file_size).from_mag_to_mag1(mag.mag)
+                )
+
+        assert set(bounding_boxes_on_disk) == expected_results
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -2044,7 +2072,7 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
             mag1.compress()
 
         compressed_dataset_path = (
-            REMOTE_TESTOUTPUT_DIR / "simple_zarr_dataset_compressed"
+            REMOTE_TESTOUTPUT_DIR / f"simple_{data_format}_dataset_compressed"
         )
         mag1.compress(
             target_path=compressed_dataset_path,
@@ -2537,6 +2565,9 @@ def test_downsampling(data_format: DataFormat, output_path: Path) -> None:
     if data_format == DataFormat.Zarr:
         assert (ds_path / "color" / "2" / ".zarray").exists()
         assert (ds_path / "color" / "4" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color" / "2" / "zarr.json").exists()
+        assert (ds_path / "color" / "4" / "zarr.json").exists()
     else:
         assert (ds_path / "color" / "2" / "header.wkw").exists()
         assert (ds_path / "color" / "4" / "header.wkw").exists()
@@ -2571,6 +2602,9 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
     if data_format == DataFormat.Zarr:
         assert (ds_path / "color_2" / "1" / ".zarray").exists()
         assert (ds_path / "color_2" / "2" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color_2" / "1" / "zarr.json").exists()
+        assert (ds_path / "color_2" / "2" / "zarr.json").exists()
     else:
         assert (ds_path / "color_2" / "1" / "header.wkw").exists()
         assert (ds_path / "color_2" / "2" / "header.wkw").exists()
@@ -2623,6 +2657,10 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
         assert (output_ds_path / "color" / "1" / ".zarray").exists()
         assert (output_ds_path / "color" / "2-2-1" / ".zarray").exists()
         assert (output_ds_path / "color" / "4-4-2" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (output_ds_path / "color" / "1" / "zarr.json").exists()
+        assert (output_ds_path / "color" / "2-2-1" / "zarr.json").exists()
+        assert (output_ds_path / "color" / "4-4-2" / "zarr.json").exists()
     else:
         assert (output_ds_path / "color" / "1" / "header.wkw").exists()
         assert (output_ds_path / "color" / "2-2-1" / "header.wkw").exists()
@@ -2631,14 +2669,18 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     assure_exported_properties(input_dataset)
 
 
-def test_zarr_copy_to_remote_dataset() -> None:
-    ds_path = prepare_dataset_path(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "copied")
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
+    ds_path = prepare_dataset_path(data_format, REMOTE_TESTOUTPUT_DIR, "copied")
     Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
         ds_path,
         chunks_per_shard=1,
-        data_format=DataFormat.Zarr,
+        data_format=data_format,
     )
-    assert (ds_path / "color" / "1" / ".zarray").exists()
+    if data_format == DataFormat.Zarr:
+        assert (ds_path / "color" / "1" / ".zarray").exists()
+    else:
+        assert (ds_path / "color" / "1" / "zarr.json").exists()
 
 
 def test_wkw_copy_to_remote_dataset() -> None:
