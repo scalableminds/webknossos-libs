@@ -140,7 +140,7 @@ class BaseArray(ABC):
             return WKWArray
         elif data_format == DataFormat.Zarr3:
             return ZarritaArray
-        elif data_format == DataFormat.Zarr
+        elif data_format == DataFormat.Zarr:
             return ZarritaArray if use_zarrita else ZarrArray
         raise ValueError(f"Array format `{data_format}` is invalid.")
 
@@ -464,7 +464,7 @@ class ZarrArray(BaseArray):
 
 
 class ZarritaArray(BaseArray):
-    data_format = DataFormat.Zarr
+    data_format = DataFormat.Zarr3
 
     _cached_zarray: Optional[Union[zarrita.Array, zarrita.ArrayV2]]
 
@@ -499,7 +499,7 @@ class ZarritaArray(BaseArray):
             if len(zarray.codecs) == 1 and isinstance(zarray.codecs[0], ShardingCodec):
                 sharding_codec = zarray.codecs[0]
                 return ArrayInfo(
-                    data_format=self.data_format,
+                    data_format=DataFormat.Zarr3,
                     num_channels=zarray.metadata.shape[0],
                     voxel_type=zarray.metadata.dtype,
                     compression_mode=self._has_compression_codecs(
@@ -512,7 +512,7 @@ class ZarritaArray(BaseArray):
                     // Vec3Int(sharding_codec.configuration.chunk_shape[1:]),
                 )
             return ArrayInfo(
-                data_format=self.data_format,
+                data_format=DataFormat.Zarr3,
                 num_channels=zarray.metadata.shape[0],
                 voxel_type=zarray.metadata.dtype,
                 compression_mode=self._has_compression_codecs(zarray.codecs),
@@ -524,7 +524,7 @@ class ZarritaArray(BaseArray):
             )
         else:
             return ArrayInfo(
-                data_format=self.data_format,
+                data_format=DataFormat.Zarr,
                 num_channels=zarray.metadata.shape[0],
                 voxel_type=zarray.metadata.dtype,
                 compression_mode=zarray.metadata.compressor is not None,
@@ -534,7 +534,7 @@ class ZarritaArray(BaseArray):
 
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "ZarritaArray":
-        assert array_info.data_format == cls.data_format
+        assert array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
         zarrita.Array.create(
             store=path,
             shape=(array_info.num_channels, 1, 1, 1),
@@ -598,7 +598,7 @@ class ZarritaArray(BaseArray):
                 new_shape_tuple = (zarray.metadata.shape[0],) + new_shape.to_tuple()
 
             # Check on-disk for changes to shape
-            current_zarray = zarrita.Array.open_auto(self._path)
+            current_zarray = zarray.open(self._path)
             if zarray.metadata.shape != current_zarray.metadata.shape:
                 warnings.warn(
                     f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.metadata.shape} != {current_zarray.metadata.shape}) was found in the currently persisted metadata."

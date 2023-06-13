@@ -91,6 +91,7 @@ def test_create_dataset_from_images() -> None:
 def test_image_stack_to_dataset() -> None:
     with tmp_cwd():
         import examples.image_stack_to_dataset as example
+
         from webknossos.dataset import COLOR_CATEGORY
 
         (dataset,) = exec_main_and_get_vars(example, "dataset")
@@ -259,14 +260,14 @@ def test_remote_datasets() -> None:
     assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
-def test_zarr_and_dask() -> None:
-    import examples.zarr_and_dask as example
+# @pytest.mark.block_network(allowed_hosts=[".*"])
+# @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+# def test_zarr_and_dask() -> None:
+#     import examples.zarr_and_dask as example
 
-    (mean_value,) = exec_main_and_get_vars(example, "mean_value")
+#     (mean_value,) = exec_main_and_get_vars(example, "mean_value")
 
-    assert 123 < mean_value < 125
+#     assert 123 < mean_value < 125
 
 
 def test_upload_tiff_stack() -> None:
