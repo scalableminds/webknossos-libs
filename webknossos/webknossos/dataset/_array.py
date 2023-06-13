@@ -57,6 +57,7 @@ class ArrayException(Exception):
 class DataFormat(Enum):
     WKW = "wkw"
     Zarr = "zarr"
+    Zarr3 = "zarr3"
 
     def __str__(self) -> str:
         return self.value
@@ -135,10 +136,12 @@ class BaseArray(ABC):
 
     @staticmethod
     def get_class(data_format: DataFormat) -> Type["BaseArray"]:
-        classes = (WKWArray, ZarritaArray) if use_zarrita else (WKWArray, ZarrArray)
-        for cls in classes:
-            if cls.data_format == data_format:
-                return cls
+        if data_format == DataFormat.WKW:
+            return WKWArray
+        elif data_format == DataFormat.Zarr3:
+            return ZarritaArray
+        elif data_format == DataFormat.Zarr
+            return ZarritaArray if use_zarrita else ZarrArray
         raise ValueError(f"Array format `{data_format}` is invalid.")
 
 
@@ -583,28 +586,28 @@ class ZarritaArray(BaseArray):
         zarray = self._zarray
 
         new_shape_tuple = (
-            zarray.matadata.shape[0],
-            max(zarray.matadata.shape[1], new_shape.x),
-            max(zarray.matadata.shape[2], new_shape.y),
-            max(zarray.matadata.shape[3], new_shape.z),
+            zarray.metadata.shape[0],
+            max(zarray.metadata.shape[1], new_shape.x),
+            max(zarray.metadata.shape[2], new_shape.y),
+            max(zarray.metadata.shape[3], new_shape.z),
         )
-        if new_shape_tuple != zarray.shape:
+        if new_shape_tuple != zarray.metadata.shape:
             if align_with_shards:
                 shard_shape = self.info.shard_shape
                 new_shape = new_shape.ceildiv(shard_shape) * shard_shape
-                new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
+                new_shape_tuple = (zarray.metadata.shape[0],) + new_shape.to_tuple()
 
             # Check on-disk for changes to shape
             current_zarray = zarrita.Array.open_auto(self._path)
             if zarray.metadata.shape != current_zarray.metadata.shape:
                 warnings.warn(
-                    f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
+                    f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.metadata.shape} != {current_zarray.metadata.shape}) was found in the currently persisted metadata."
                     + "This is likely happening because multiple processes changed the metadata of this array."
                 )
 
             if warn:
                 warnings.warn(
-                    f"[WARNING] Resizing zarr array from `{zarray.shape}` to `{new_shape_tuple}`."
+                    f"[WARNING] Resizing zarr array from `{zarray.metadata.shape}` to `{new_shape_tuple}`."
                 )
             zarray.reshape(new_shape_tuple)
 
