@@ -1,6 +1,5 @@
 import itertools
 import json
-import logging
 import os
 import pickle
 import shlex
@@ -14,9 +13,9 @@ from typing import Iterator, Optional, Tuple, cast
 import numpy as np
 import pytest
 from jsonschema import validate
-from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from upath import UPath
 
+from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -549,7 +548,7 @@ def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
     )
 
     np.random.seed(1234)
-    data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
 
     mag_a.write(data)
     mag_b.write(data)

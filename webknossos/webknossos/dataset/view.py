@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple
 
 import numpy as np
 import wkw
-
 from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -846,6 +845,10 @@ class View:
         source_chunks = self.bounding_box.chunk(source_chunk_shape, source_chunk_shape)
         target_chunks = target_view.bounding_box.chunk(
             target_chunk_shape, target_chunk_shape
+        )
+
+        print(
+            f"source_chunk_shape={source_chunk_shape} target_chunk_shape={target_chunk_shape}"
         )
 
         for i, (source_chunk, target_chunk) in enumerate(

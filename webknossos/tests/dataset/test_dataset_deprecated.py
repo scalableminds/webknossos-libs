@@ -9,8 +9,8 @@ from typing import Generator, Tuple, cast
 
 import numpy as np
 import pytest
-from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
+from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
