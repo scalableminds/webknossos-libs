@@ -543,7 +543,7 @@ class ZarritaArray(BaseArray):
             dtype=array_info.voxel_type,
             codecs=[
                 zarrita.codecs.sharding_codec(
-                    chunk_shape=array_info.chunk_shape,
+                    chunk_shape=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
                     codecs=[
                         zarrita.codecs.transpose_codec("F"),
                         zarrita.codecs.blosc_codec(),
