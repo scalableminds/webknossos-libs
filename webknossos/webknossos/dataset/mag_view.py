@@ -8,8 +8,9 @@ from uuid import uuid4
 
 import numpy as np
 import zarr
-from cluster_tools import Executor
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -19,7 +20,7 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, ZarrArray
+from ._array import ArrayInfo, BaseArray, ZarrArray, ZarritaArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -134,7 +135,9 @@ class MagView(View):
         Directly access the underlying Zarr array. Only available for Zarr-based datasets.
         """
         array_wrapper = self._array
-        if not isinstance(array_wrapper, ZarrArray):
+        if not isinstance(array_wrapper, ZarrArray) and not isinstance(
+            array_wrapper, ZarritaArray
+        ):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
         return array_wrapper._zarray
 
