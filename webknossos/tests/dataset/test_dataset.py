@@ -155,7 +155,9 @@ def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
 
     # write different data for each chunk (depending on the topleft of the chunk)
     data = view.read()
-    data = np.ones(data.shape, dtype=dtype) * dtype(sum(view.bounding_box.topleft))
+    data = np.ones(data.shape, dtype=dtype) * dtype(
+        sum(view.bounding_box.topleft) % np.iinfo(dtype).max
+    )
     view.write(data)
 
 
