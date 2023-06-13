@@ -8,9 +8,8 @@ from uuid import uuid4
 
 import numpy as np
 import zarr
-from upath import UPath
-
 from cluster_tools import Executor
+from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (

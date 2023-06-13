@@ -1,10 +1,13 @@
 import itertools
 import json
+import os
 import pickle
 import shlex
 import subprocess
+import sys
 import warnings
 from pathlib import Path
+from time import sleep
 from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
@@ -44,25 +47,45 @@ MINIO_PORT = "8000"
 
 
 @pytest.fixture(autouse=True, scope="module")
-def docker_minio() -> Iterator[None]:
+def start_minio() -> Iterator[None]:
     """Minio is an S3 clone and is used as local test server"""
-    container_name = "minio"
-    cmd = (
-        "docker run"
-        f" -p {MINIO_PORT}:9000"
-        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-        f" --name {container_name}"
-        " --rm"
-        " -d"
-        " minio/minio server /data"
-    )
-    subprocess.check_output(shlex.split(cmd))
-    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-    try:
-        yield
-    finally:
-        subprocess.check_output(["docker", "stop", container_name])
+    if sys.platform == "darwin":
+        minio_path = Path("testoutput_minio")
+        rmtree(minio_path)
+        minio_process = subprocess.Popen(
+            shlex.split(f"minio server --address :8000 ./{minio_path}"),
+            env={
+                **os.environ,
+                "MINIO_ROOT_USER": MINIO_ROOT_USER,
+                "MINIO_ROOT_PASSWORD": MINIO_ROOT_PASSWORD,
+            },
+        )
+        sleep(3)
+        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+        try:
+            yield
+        finally:
+            minio_process.terminate()
+            rmtree(minio_path)
+    else:
+        container_name = "minio"
+        cmd = (
+            "docker run"
+            f" -p {MINIO_PORT}:9000"
+            f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
+            f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
+            f" --name {container_name}"
+            " --memory 1G"
+            " --rm"
+            " -d"
+            " minio/minio server /data"
+        )
+        subprocess.check_output(shlex.split(cmd))
+        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+        try:
+            yield
+        finally:
+            subprocess.check_output(["docker", "stop", container_name])
 
 
 REMOTE_TESTOUTPUT_DIR = UPath(
@@ -204,12 +227,13 @@ def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) ->
 
 def get_multichanneled_data(dtype: type) -> np.ndarray:
     data: np.ndarray = np.zeros((3, 250, 200, 10), dtype=dtype)
+    max_value = np.iinfo(dtype).max
     for h in range(10):
         for i in range(250):
             for j in range(200):
-                data[0, i, j, h] = i * 256
-                data[1, i, j, h] = j * 256
-                data[2, i, j, h] = 100 * 256
+                data[0, i, j, h] = (i * 256) % max_value
+                data[1, i, j, h] = (j * 256) % max_value
+                data[2, i, j, h] = (100 * 256) % max_value
     return data
 
 

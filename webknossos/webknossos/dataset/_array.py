@@ -535,25 +535,41 @@ class ZarritaArray(BaseArray):
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "ZarritaArray":
         assert array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
-        zarrita.Array.create(
-            store=path,
-            shape=(array_info.num_channels, 1, 1, 1),
-            chunk_shape=(array_info.num_channels,) + array_info.shard_shape.to_tuple(),
-            chunk_key_encoding=("default", "/"),
-            dtype=array_info.voxel_type,
-            codecs=[
-                zarrita.codecs.sharding_codec(
-                    chunk_shape=(array_info.num_channels,)
-                    + array_info.chunk_shape.to_tuple(),
-                    codecs=[
-                        zarrita.codecs.transpose_codec("F"),
-                        zarrita.codecs.blosc_codec(),
-                    ]
+        if array_info.data_format == DataFormat.Zarr3:
+            zarrita.Array.create(
+                store=path,
+                shape=(array_info.num_channels, 1, 1, 1),
+                chunk_shape=(array_info.num_channels,)
+                + array_info.shard_shape.to_tuple(),
+                chunk_key_encoding=("default", "/"),
+                dtype=array_info.voxel_type,
+                codecs=[
+                    zarrita.codecs.sharding_codec(
+                        chunk_shape=(array_info.num_channels,)
+                        + array_info.chunk_shape.to_tuple(),
+                        codecs=[
+                            zarrita.codecs.transpose_codec("F"),
+                            zarrita.codecs.blosc_codec(),
+                        ]
+                        if array_info.compression_mode
+                        else [zarrita.codecs.transpose_codec("F")],
+                    )
+                ],
+            )
+        else:
+            zarrita.ArrayV2.create(
+                store=path,
+                shape=(array_info.num_channels, 1, 1, 1),
+                chunks=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
+                dtype=array_info.voxel_type,
+                compressor=(
+                    {"id": "blosc", "cname": "zstd", "clevel": 5}
                     if array_info.compression_mode
-                    else [zarrita.codecs.transpose_codec("F")],
-                )
-            ],
-        )
+                    else None
+                ),
+                order="F",
+                dimension_separator=".",
+            )
         return ZarritaArray(path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
@@ -610,7 +626,7 @@ class ZarritaArray(BaseArray):
                 warnings.warn(
                     f"[WARNING] Resizing zarr array from `{zarray.metadata.shape}` to `{new_shape_tuple}`."
                 )
-            zarray.reshape(new_shape_tuple)
+            self._cached_zarray = zarray.reshape(new_shape_tuple)
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         offset = Vec3Int(offset)
