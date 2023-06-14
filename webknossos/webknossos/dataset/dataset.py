@@ -407,10 +407,11 @@ class Dataset:
             dataset_name = dataset_name_or_url
 
         current_context = _get_context()
+        print(webknossos_url, current_context.url)
         if webknossos_url is not None and webknossos_url != current_context.url:
             if sharing_token is None:
                 warnings.warn(
-                    f"[WARNING] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
+                    f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
                     + f"Using no token, only public datasets can used with Dataset.{caller}(). "
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
