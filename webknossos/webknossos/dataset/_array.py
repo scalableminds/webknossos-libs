@@ -4,24 +4,25 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
-from os import environ
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Type, Union
 
 import numcodecs
 import numpy as np
 import wkw
 import zarr
-import zarrita
-import zarrita.codecs
 from upath import UPath
 from zarr.storage import FSStore
+
+from webknossos.dataset.defaults import WK_USE_ZARRITA
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 from ..utils import warn_deprecated
 
-use_zarrita = environ.get("WK_USE_ZARRITA") is not None
+if TYPE_CHECKING:
+    import zarrita
+    import zarrita.codecs
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -98,7 +99,11 @@ class BaseArray(ABC):
     @classmethod
     @abstractmethod
     def open(_cls, path: Path) -> "BaseArray":
-        classes = (WKWArray, ZarritaArray) if use_zarrita else (WKWArray, ZarrArray)
+        classes = (
+            (WKWArray, ZarritaArray, ZarrArray)
+            if WK_USE_ZARRITA
+            else (WKWArray, ZarrArray)
+        )
         for cls in classes:
             try:
                 array = cls.open(path)
@@ -138,10 +143,10 @@ class BaseArray(ABC):
     def get_class(data_format: DataFormat) -> Type["BaseArray"]:
         if data_format == DataFormat.WKW:
             return WKWArray
-        elif data_format == DataFormat.Zarr3:
+        elif WK_USE_ZARRITA and data_format in (DataFormat.Zarr, DataFormat.Zarr3):
             return ZarritaArray
         elif data_format == DataFormat.Zarr:
-            return ZarritaArray if use_zarrita else ZarrArray
+            return ZarrArray
         raise ValueError(f"Array format `{data_format}` is invalid.")
 
 
@@ -466,7 +471,7 @@ class ZarrArray(BaseArray):
 class ZarritaArray(BaseArray):
     data_format = DataFormat.Zarr3
 
-    _cached_zarray: Optional[Union[zarrita.Array, zarrita.ArrayV2]]
+    _cached_zarray: Optional[Union["zarrita.Array", "zarrita.ArrayV2"]]
 
     def __init__(self, path: Path):
         super().__init__(path)
@@ -474,8 +479,10 @@ class ZarritaArray(BaseArray):
 
     @classmethod
     def open(cls, path: Path) -> "ZarritaArray":
+        from zarrita import Array
+
         try:
-            zarrita.Array.open_auto(store=path)  # check that everything exists
+            Array.open_auto(store=path)  # check that everything exists
             return cls(path)
         except Exception as exc:
             raise ArrayException(
@@ -483,19 +490,20 @@ class ZarritaArray(BaseArray):
             ) from exc
 
     @staticmethod
-    def _has_compression_codecs(codecs: List[zarrita.codecs.Codec]) -> bool:
+    def _has_compression_codecs(codecs: List["zarrita.codecs.Codec"]) -> bool:
+        from zarrita.codecs import BloscCodec, GzipCodec
+
         return any(
-            isinstance(c, zarrita.codecs.BloscCodec)
-            or isinstance(c, zarrita.codecs.GzipCodec)
-            for c in codecs
+            isinstance(c, BloscCodec) or isinstance(c, GzipCodec) for c in codecs
         )
 
     @property
     def info(self) -> ArrayInfo:
+        from zarrita import Array
         from zarrita.sharding import ShardingCodec
 
         zarray = self._zarray
-        if isinstance(zarray, zarrita.Array):
+        if isinstance(zarray, Array):
             if len(zarray.codecs) == 1 and isinstance(zarray.codecs[0], ShardingCodec):
                 sharding_codec = zarray.codecs[0]
                 return ArrayInfo(
@@ -534,9 +542,12 @@ class ZarritaArray(BaseArray):
 
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "ZarritaArray":
+        import zarrita.codecs
+        from zarrita import Array, ArrayV2
+
         assert array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
         if array_info.data_format == DataFormat.Zarr3:
-            zarrita.Array.create(
+            Array.create(
                 store=path,
                 shape=(array_info.num_channels, 1, 1, 1),
                 chunk_shape=(array_info.num_channels,)
@@ -557,7 +568,7 @@ class ZarritaArray(BaseArray):
                 ],
             )
         else:
-            zarrita.ArrayV2.create(
+            ArrayV2.create(
                 store=path,
                 shape=(array_info.num_channels, 1, 1, 1),
                 chunks=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
@@ -653,12 +664,14 @@ class ZarritaArray(BaseArray):
             self._cached_zarray = None
 
     @property
-    def _zarray(self) -> Union[zarrita.Array, zarrita.ArrayV2]:
+    def _zarray(self) -> Union["zarrita.Array", "zarrita.ArrayV2"]:
+        from zarrita import Array, runtime_configuration
+
         if self._cached_zarray is None:
             try:
-                zarray = zarrita.Array.open_auto(
+                zarray = Array.open_auto(
                     store=self._path,
-                    runtime_configuration=zarrita.runtime_configuration("F"),
+                    runtime_configuration=runtime_configuration("F"),
                 )
                 self._cached_zarray = zarray
             except Exception as e:
