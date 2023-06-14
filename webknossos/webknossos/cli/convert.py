@@ -2,11 +2,10 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from typing_extensions import Annotated
-from upath import UPath
 
 from webknossos import DataFormat, Dataset
 from webknossos.cli._utils import (
@@ -21,7 +20,7 @@ from webknossos.utils import get_executor_for_args
 def main(
     *,
     source: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Path to your image data.",
             show_default=False,
@@ -29,7 +28,7 @@ def main(
         ),
     ],
     target: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,
@@ -101,6 +100,6 @@ def main(
             data_format=data_format,
             executor=executor,
         )
-        # Include this in the from_images() call as soon as issue #900 is resolved
+        # TODO: Include this in the from_images() call as soon as issue #900 is resolved
         if compress:
             dataset.compress()

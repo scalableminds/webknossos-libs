@@ -2,7 +2,6 @@
 
 import json
 import os
-import shlex
 import subprocess
 import sys
 from contextlib import contextmanager
@@ -10,15 +9,21 @@ from math import ceil
 from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
-from typing import Iterator
+from typing import Iterator, Union
 
 import numpy as np
 import pytest
 from PIL import Image
+from tests.constants import (
+    MINIO_PORT,
+    MINIO_ROOT_PASSWORD,
+    MINIO_ROOT_USER,
+    REMOTE_TESTOUTPUT_DIR,
+    start_minio_docker,
+)
 from typer.testing import CliRunner
-from upath import UPath
 
-from webknossos import BoundingBox, Dataset
+from webknossos import BoundingBox, DataFormat, Dataset
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
@@ -39,73 +44,61 @@ def tmp_cwd() -> Iterator[None]:
             os.chdir(prev_cwd)
 
 
-MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-MINIO_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
-MINIO_PORT = "8000"
-
 TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
 
 
-@pytest.fixture(scope="module", name="remote_testoutput_path")
-def fixture_remote_testoutput_path() -> Iterator[UPath]:
-    """Minio is an S3 clone and is used as local test server"""
+@pytest.fixture(autouse=True, scope="module")
+def minio_docker() -> Iterator[None]:
+    """Starts a docker container with minio."""
     container_name = "minio"
-    cmd = (
-        "docker run"
-        f" -p {MINIO_PORT}:9000"
-        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-        f" --name {container_name}"
-        " --rm"
-        " -d"
-        " minio/minio server /data"
-    )
-    subprocess.check_output(shlex.split(cmd))
-    remote_path = UPath(
-        "s3://testoutput",
-        key=MINIO_ROOT_USER,
-        secret=MINIO_ROOT_PASSWORD,
-        client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
-    )
-    remote_path.fs.mkdirs("testoutput", exist_ok=True)
     try:
-        yield remote_path
+        start_minio_docker(container_name)
+        yield
     finally:
         subprocess.check_output(["docker", "stop", container_name])
+
+
+def check_call(*args: Union[str, int, Path]) -> None:
+    try:
+        subprocess.check_call([str(a) for a in args])
+    except subprocess.CalledProcessError as err:
+        print(f"Process failed with exit code {err.returncode}: `{args}`")
+        raise err
+
+
+def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
+    in_path = TESTDATA_DIR / "tiff"
+
+    check_call(
+        "webknossos",
+        "convert",
+        "--jobs",
+        2,
+        "--voxel-size",
+        "11.24,11.24,25",
+        "--data-format",
+        str(data_format),
+        in_path,
+        out_path,
+    )
+
+    assert (out_path / "tiff").exists()
+    assert (out_path / "tiff" / "1").exists()
 
 
 @pytest.mark.skipif(
     sys.platform != "linux",
     reason="Only run this test on Linux, because it requires a running `minio` docker container.",
 )
-def test_tiff_cubing_zarr_s3(remote_testoutput_path: UPath) -> None:
+def test_tiff_cubing_zarr_s3() -> None:
     """Tests zarr support when performing tiff cubing."""
-    out_path = remote_testoutput_path / "tiff_cubing"
 
-    result = runner.invoke(
-        app,
-        [
-            "convert",
-            "--jobs",
-            "2",
-            "--voxel-size",
-            "11.24,11.24,25",
-            "--data-format",
-            "zarr",
-            str(TESTDATA_DIR / "tiff"),
-            str(out_path),
-        ],
-        env={
-            "AWS_SECRET_ACCESS_KEY": MINIO_ROOT_PASSWORD,
-            "AWS_ACCESS_KEY_ID": MINIO_ROOT_USER,
-            "S3_ENDPOINT_URL": f"http://localhost:{MINIO_PORT}",
-        },
-    )
+    out_path = REMOTE_TESTOUTPUT_DIR / "tiff_cubing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = MINIO_ROOT_PASSWORD
+    os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
+    os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
-    assert result.exit_code == 0
-
-    assert (out_path / "tiff").exists()
-    assert (out_path / "tiff" / "1").exists()
+    _tiff_cubing(out_path, DataFormat.Zarr)
 
     assert (out_path / "tiff" / "1" / ".zarray").exists()
     assert (out_path / PROPERTIES_FILE_NAME).exists()
@@ -143,10 +136,38 @@ def test_check_equality() -> None:
     )
     assert result.exit_code == 0
     assert (
-        f"The datasets {str(TESTDATA_DIR / 'simple_wkw_dataset')} and \
-{str(TESTDATA_DIR / 'simple_wkw_dataset')} are equal"
+        f"The datasets {str(TESTDATA_DIR / 'simple_wkw_dataset')} and "
+        f"{str(TESTDATA_DIR / 'simple_wkw_dataset')} are equal"
         in result.stdout.replace("\n", "")
     )
+
+
+def test_check_not_equal() -> None:
+    """Tests that the check_equality subcommand detects differing datasets."""
+
+    with tmp_cwd():
+        tmp_path = Path("testdata") / "simple_wkw_dataset"
+
+        copytree(TESTDATA_DIR / "simple_wkw_dataset", tmp_path)
+        dataset = Dataset.open(tmp_path)
+        finest_mag = dataset.get_layer("color").get_finest_mag().read()
+        finest_mag[1, 5, 7, 4] += 1
+        dataset.get_layer("color").get_finest_mag().write(finest_mag)
+
+        result = runner.invoke(
+            app,
+            [
+                "check-equality",
+                str(TESTDATA_DIR / "simple_wkw_dataset"),
+                str(tmp_path),
+            ],
+        )
+        assert result.exit_code == 0
+        assert (
+            f"The datasets {str(TESTDATA_DIR / 'simple_wkw_dataset')} and "
+            f"{str(TESTDATA_DIR / 'simple_wkw_dataset')} are equal"
+            not in result.stdout.replace("\n", "")
+        )
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -288,13 +309,6 @@ def test_upload() -> None:
 
     result_without_args = runner.invoke(app, ["upload"])
     assert result_without_args.exit_code == 2
-
-
-def test_upsample() -> None:
-    """Tests the functionality of upsample subcommand."""
-
-    result = runner.invoke(app, ["upsample"])
-    assert result.exit_code == 2
 
 
 def test_export_tiff_stack(tmp_path: Path) -> None:

@@ -12,7 +12,6 @@ import numpy as np
 import typer
 import zarr
 from typing_extensions import Annotated
-from upath import UPath
 
 from webknossos import (
     BoundingBox,
@@ -126,7 +125,7 @@ def convert_zarr(
 def main(
     *,
     source: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Path to your raw image data.",
             show_default=False,
@@ -134,7 +133,7 @@ def main(
         ),
     ],
     target: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,

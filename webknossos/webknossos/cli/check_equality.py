@@ -3,11 +3,10 @@
 import logging
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from typing_extensions import Annotated
-from upath import UPath
 
 from webknossos import Dataset
 from webknossos.cli._utils import DistributionStrategy, parse_path
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 def main(
     *,
     source: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Path to your first WEBKNOSSOS dataset.",
             show_default=False,
@@ -28,7 +27,7 @@ def main(
         ),
     ],
     target: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Path to your second WEBKNOSSOS dataset.",
             show_default=False,
@@ -79,31 +78,35 @@ def main(
 
     layer_names = list(source_layer_names)
 
-    if layer_name is not None:
-        assert (
-            layer_name in source_layer_names
-        ), f"Provided layer {layer_name} does not exist in source dataset."
-        assert (
-            layer_name in target_layer_names
-        ), f"Provided layer {layer_name} does not exist in target dataset."
-        layer_names = [layer_name]
+    try:
+        if layer_name is not None:
+            assert (
+                layer_name in source_layer_names
+            ), f"Provided layer {layer_name} does not exist in source dataset."
+            assert (
+                layer_name in target_layer_names
+            ), f"Provided layer {layer_name} does not exist in target dataset."
+            layer_names = [layer_name]
 
-    else:
-        assert (
-            source_layer_names == target_layer_names
-        ), f"The provided input datasets have different layers: \
-{source_layer_names} != {target_layer_names}"
+        else:
+            assert (
+                source_layer_names == target_layer_names
+            ), f"The provided input datasets have different \
+    layers: {source_layer_names} != {target_layer_names}"
 
-    for name in layer_names:
-        compare_layers(
-            source_dataset.get_layer(name),
-            target_dataset.get_layer(name),
-            executor_args,
+        for name in layer_names:
+            compare_layers(
+                source_dataset.get_layer(name),
+                target_dataset.get_layer(name),
+                executor_args,
+            )
+
+        print(
+            f"The datasets {source} and {target} are equal \
+    (with regard to the layers: {layer_names})"
         )
-
-    print(
-        f"The datasets {source} and {target} are equal (with regard to the layers: {layer_names})"
-    )
+    except AssertionError as err:
+        print(f"The datasets are not equal: {err}")
 
 
 def compare_layers(
@@ -135,4 +138,6 @@ are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
 
         logging.info("Start verification of %s in mag %s", layer_name, mag)
         with get_executor_for_args(args=executor_args) as executor:
-            assert source_mag.content_is_equal(target_mag, executor=executor)
+            assert source_mag.content_is_equal(
+                target_mag, executor=executor
+            ), f"The contents of {source_mag} and {target_mag} differ."

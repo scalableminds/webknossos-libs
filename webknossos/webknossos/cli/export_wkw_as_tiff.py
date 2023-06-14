@@ -6,14 +6,13 @@ from functools import partial
 from math import ceil
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 import numpy as np
 import typer
 from PIL import Image
 from scipy.ndimage.interpolation import zoom
 from typing_extensions import Annotated
-from upath import UPath
 
 from webknossos import BoundingBox, Dataset, Mag, MagView
 from webknossos.cli._utils import (
@@ -172,7 +171,7 @@ def export_tiff_stack(
 def main(
     *,
     source: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Path to your raw image data.",
             show_default=False,
@@ -180,7 +179,7 @@ def main(
         ),
     ],
     target: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,

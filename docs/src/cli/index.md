@@ -30,7 +30,7 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 - `webknossos` requires at least Python 3.8
 
 ```bash
-pip install webknossos
+pip install "webknossos[all]"
 
 # to install auto completion as well use:
 webknossos --install-completion

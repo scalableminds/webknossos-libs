@@ -1,10 +1,9 @@
-"""This module takes care of uploading  datasets to a WEBKNOSSOS server."""
+"""This module takes care of uploading datasets to a WEBKNOSSOS server."""
 
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from typing_extensions import Annotated
-from upath import UPath
 
 from webknossos import Dataset, webknossos_context
 from webknossos.cli._utils import parse_path
@@ -15,7 +14,7 @@ from webknossos.client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
 def main(
     *,
     source: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             show_default=False,
             help="Path to your local WEBKNOSSOS dataset.",

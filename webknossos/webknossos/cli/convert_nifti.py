@@ -9,7 +9,6 @@ import numpy as np
 import typer
 from sklearn.preprocessing import LabelEncoder
 from typing_extensions import Annotated
-from upath import UPath
 
 from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3Int
 from webknossos.cli._utils import (
@@ -257,7 +256,7 @@ def convert_folder_nifti(
 def main(
     *,
     source: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Path to your image data.",
             show_default=False,
@@ -265,7 +264,7 @@ def main(
         ),
     ],
     target: Annotated[
-        UPath,
+        Any,
         typer.Argument(
             help="Target path to save your WEBKNOSSOS dataset.",
             show_default=False,
