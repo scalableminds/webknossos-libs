@@ -155,9 +155,7 @@ def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
 
     # write different data for each chunk (depending on the topleft of the chunk)
     data = view.read()
-    data = np.ones(data.shape, dtype=dtype) * dtype(
-        sum(view.bounding_box.topleft) % np.iinfo(dtype).max
-    )
+    data = np.ones(data.shape, dtype=dtype) * sum(view.bounding_box.topleft)
     view.write(data)
 
 
@@ -209,8 +207,7 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
         )
         chunk_data = chunk.read()
         assert np.array_equal(
-            np.ones(chunk_data.shape, dtype=np.uint8)
-            * (sum(chunk.bounding_box.topleft) % 256),
+            np.ones(chunk_data.shape, dtype=np.uint8) * sum(chunk.bounding_box.topleft),
             chunk_data,
         )
 

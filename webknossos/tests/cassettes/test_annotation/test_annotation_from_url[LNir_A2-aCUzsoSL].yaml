@@ -56,7 +56,7 @@ interactions:
       zip:
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"aae1506a420abf132dfaef8990cdd3e3de263efb\" />\n  <meta name=\"timestamp\"
+          content=\"9c2b73958228d5f5ff8385984c81212e6998755b\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"
@@ -90,7 +90,7 @@ interactions:
       content-disposition:
       - attachment;filename="l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.zip"
       content-length:
-      - '1051'
+      - '1054'
       content-type:
       - application/zip
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2364,42 +2364,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,174,265,213],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zattrs
   response:
     body:
@@ -2433,6 +2397,42 @@ interactions:
       code: 404
       message: Not Found
     url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zattrs
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,174,265,213],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -3446,6 +3446,42 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,21,33,26],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '160'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zattrs
   response:
     body:
@@ -3479,42 +3515,6 @@ interactions:
       code: 404
       message: Not Found
     url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,21,33,26],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '160'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -7345,6 +7345,8 @@ interactions:
       - '600'
       cache-control:
       - no-cache
+      connection:
+      - keep-alive
       content-length:
       - '160'
       content-type:
@@ -7557,8 +7559,6 @@ interactions:
       - '600'
       cache-control:
       - no-cache
-      connection:
-      - keep-alive
       content-length:
       - '157'
       content-type:
@@ -7631,8 +7631,6 @@ interactions:
       - '600'
       cache-control:
       - no-cache
-      connection:
-      - keep-alive
       content-length:
       - '101'
       content-type:
@@ -7845,6 +7843,8 @@ interactions:
       - '600'
       cache-control:
       - no-cache
+      connection:
+      - keep-alive
       content-length:
       - '101'
       content-type:
