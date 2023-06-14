@@ -732,7 +732,7 @@ class Layer:
         if self._properties.bounding_box.size.z == 1:
             if sampling_mode != SamplingModes.CONSTANT_Z:
                 warnings.warn(
-                    "The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."
+                    "[INFO] The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."
                 )
                 sampling_mode = SamplingModes.CONSTANT_Z
 
@@ -762,7 +762,7 @@ class Layer:
             mags_to_downsample
         ):
             msg = (
-                f"The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by webknossos. "
+                f"[INFO] The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by WEBKNOSSOS. "
                 f"Consider using a different sampling mode (e.g. {SamplingModes.ISOTROPIC}). "
                 f"The calculated downsampling scheme is: {[m.to_layer_name() for m in mags_to_downsample]}"
             )

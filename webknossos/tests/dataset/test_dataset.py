@@ -5,7 +5,6 @@ import pickle
 import shlex
 import subprocess
 import sys
-import warnings
 from pathlib import Path
 from time import sleep
 from typing import Iterator, Optional, Tuple, cast
@@ -150,12 +149,14 @@ def default_chunk_config(
         return (Vec3Int.full(chunk_shape), Vec3Int.full(8))
 
 
-def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
+def advanced_chunk_job(args: Tuple[View, int]) -> None:
     view, _i = args
 
     # write different data for each chunk (depending on the topleft of the chunk)
     data = view.read()
-    data = np.ones(data.shape, dtype=dtype) * sum(view.bounding_box.topleft)
+    data = np.ones(data.shape, dtype=np.dtype("uint8")) * (
+        sum(view.bounding_box.topleft) % 256
+    )
     view.write(data)
 
 
@@ -183,9 +184,8 @@ def for_each_chunking_with_wrong_chunk_shape(view: View) -> None:
 
 def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
     with get_executor_for_args(None) as executor:
-        func = named_partial(advanced_chunk_job, dtype=np.uint8)
         view.for_each_chunk(
-            func,
+            advanced_chunk_job,
             executor=executor,
         )
 
@@ -207,7 +207,8 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
         )
         chunk_data = chunk.read()
         assert np.array_equal(
-            np.ones(chunk_data.shape, dtype=np.uint8) * sum(chunk.bounding_box.topleft),
+            np.ones(chunk_data.shape, dtype=np.dtype("uint8"))
+            * (sum(chunk.bounding_box.topleft) % 256),
             chunk_data,
         )
 
@@ -416,12 +417,13 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
 def test_view_read(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
 
-    wk_view = (
-        Dataset.open(ds_path)
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
-    )
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
+        wk_view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
 
     # 'read()' checks if it was already opened. If not, it opens it automatically
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
@@ -432,12 +434,13 @@ def test_view_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
-    wk_view = (
-        Dataset.open(ds_path)
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
-    )
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
+        wk_view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
 
     assert wk_view.info.data_format == data_format
 
@@ -477,12 +480,13 @@ def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) ->
         data_format, output_path, "view_dataset_out_of_bounds"
     )
 
-    view = (
-        Dataset.open(ds_path)
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
-    )
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
+        view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
 
     with pytest.raises(AssertionError):
         view.write(
@@ -938,8 +942,9 @@ def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
         chunks_per_shard=8,
     )
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
-    view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
-    for_each_chunking_advanced(ds, view)
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
+        view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
+        for_each_chunking_advanced(ds, view)
 
     assure_exported_properties(ds)
 
@@ -1119,8 +1124,9 @@ def test_get_view() -> None:
 
     assert mag.bounding_box.bottomright == Vec3Int(110, 220, 330)
 
-    # Therefore, creating a view with a size of (16, 16, 16) is now allowed
-    wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
+        # Therefore, creating a view with a size of (16, 16, 16) is now allowed
+        wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
     assert wk_view.bounding_box == BoundingBox((10, 20, 30), (16, 16, 16))
 
     with pytest.raises(AssertionError):
@@ -1131,9 +1137,10 @@ def test_get_view() -> None:
     # But setting "read_only=True" still works
     mag.get_view(size=(26, 36, 46), absolute_offset=(0, 0, 0), read_only=True)
 
-    # Creating this subview works because the subview is completely inside the 'wk_view'.
-    # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
-    sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
+        # Creating this subview works because the subview is completely inside the 'wk_view'.
+        # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
+        sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
     assert sub_view.bounding_box == BoundingBox((18, 28, 38), (8, 8, 8))
 
     with pytest.raises(AssertionError):
@@ -1272,10 +1279,7 @@ def test_writing_subset_of_compressed_data_multi_channel(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
         write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -1317,10 +1321,7 @@ def test_writing_subset_of_compressed_data_single_channel(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
         write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -1361,23 +1362,17 @@ def test_writing_subset_of_compressed_data(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
         compressed_mag.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-    with warnings.catch_warnings():
-        # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
-        warnings.filterwarnings("error")  # This escalates the warning to an error
-        with pytest.raises(RuntimeWarning):
-            compressed_mag.write(
-                relative_offset=(20, 40, 60),
-                data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
-            )
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
+        compressed_mag.write(
+            relative_offset=(20, 40, 60),
+            data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
+        )
 
         assert compressed_mag.bounding_box == BoundingBox(
             topleft=(
@@ -1432,11 +1427,7 @@ def test_writing_subset_of_chunked_compressed_data(
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
     )
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
-
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
         write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
@@ -2072,12 +2063,22 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
         compressed_dataset_path = (
             REMOTE_TESTOUTPUT_DIR / f"simple_{data_format}_dataset_compressed"
         )
-        mag1.compress(
-            target_path=compressed_dataset_path,
-        )
+        if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+            with pytest.warns(UserWarning, match=".*can be slow.*"):
+                mag1.compress(
+                    target_path=compressed_dataset_path,
+                )
+        else:
+            mag1.compress(
+                target_path=compressed_dataset_path,
+            )
         mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
     else:
-        mag1.compress()
+        if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+            with pytest.warns(UserWarning, match=".*can be slow.*"):
+                mag1.compress()
+        else:
+            mag1.compress()
 
     assert mag1._is_compressed()
     assert mag1.info.data_format == data_format
@@ -2086,10 +2087,7 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
     )
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match=".*block alignment.*"):
         # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         mag1.write(
             (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),

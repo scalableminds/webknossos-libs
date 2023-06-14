@@ -263,7 +263,7 @@ class MagView(View):
             bboxes = self._array.list_bounding_boxes()
         except NotImplementedError:
             warnings.warn(
-                "The underlying array storage does not support listing the stored bounding boxes. "
+                "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
                 + "Instead all bounding boxes are iterated, which can be slow."
             )
             bboxes = self.bounding_box.in_mag(self.mag).chunk(
