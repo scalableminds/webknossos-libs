@@ -1,9 +1,19 @@
+import warnings
 from pathlib import Path
+from typing import Iterator
 
 import numpy as np
+import pytest
 from tifffile import TiffFile
 
 import webknossos as wk
+
+
+@pytest.fixture(autouse=True, scope="function")
+def ignore_warnings() -> Iterator:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", module="webknossos", message=r"\[WARNING\]")
+        yield
 
 
 def test_compare_tifffile(tmp_path: Path) -> None:

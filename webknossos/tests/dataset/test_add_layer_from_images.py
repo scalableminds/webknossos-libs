@@ -3,7 +3,7 @@ from pathlib import Path
 from shutil import copy
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 from zipfile import BadZipFile, ZipFile
 
 import httpx
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 
 @pytest.fixture(autouse=True, scope="function")
-def ignore_warnings():
+def ignore_warnings() -> Iterator:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", module="webknossos", message=r"\[WARNING\]")
         yield
