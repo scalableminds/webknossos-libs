@@ -127,7 +127,7 @@ Please format the bounding box like 0,0,0,5,5,5 ."
         ) from err
 
 
-def parse_path(value: Union[UPath, str]) -> UPath:
+def parse_path(value: str) -> UPath:
     """Parses a string value to a UPath."""
 
     if (

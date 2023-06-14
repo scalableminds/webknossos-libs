@@ -14,6 +14,8 @@ from typing import Iterator, Union
 import numpy as np
 import pytest
 from PIL import Image
+from typer.testing import CliRunner
+
 from tests.constants import (
     MINIO_PORT,
     MINIO_ROOT_PASSWORD,
@@ -21,8 +23,6 @@ from tests.constants import (
     REMOTE_TESTOUTPUT_DIR,
     start_minio_docker,
 )
-from typer.testing import CliRunner
-
 from webknossos import BoundingBox, DataFormat, Dataset
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
