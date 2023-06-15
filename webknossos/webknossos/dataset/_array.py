@@ -637,7 +637,7 @@ class ZarritaArray(BaseArray):
                 warnings.warn(
                     f"[WARNING] Resizing zarr array from `{zarray.metadata.shape}` to `{new_shape_tuple}`."
                 )
-            self._cached_zarray = zarray.reshape(new_shape_tuple)
+            self._cached_zarray = zarray.resize(new_shape_tuple)
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         offset = Vec3Int(offset)
