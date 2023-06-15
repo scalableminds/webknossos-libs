@@ -15,6 +15,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added [`zarrita`](https://github.com/scalableminds/zarrita) storage backend for arrays. zarrita supports Zarr v2 and v3 including sharding. To activate zarrita, the environment variable `WK_USE_ZARRITA` must be set. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
+- Added a `Zarr3` data format which supports sharding. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
 
 ### Changed
 
