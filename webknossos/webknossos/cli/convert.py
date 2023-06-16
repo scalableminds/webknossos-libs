@@ -100,6 +100,7 @@ def main(
             data_format=data_format,
             executor=executor,
         )
-        # TODO: Include this in the from_images() call as soon as issue #900 is resolved
+        # TODO  pylint: disable=fixme
+        # Include this in the from_images() call as soon as issue #900 is resolved
         if compress:
             dataset.compress()

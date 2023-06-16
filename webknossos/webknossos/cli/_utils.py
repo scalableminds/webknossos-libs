@@ -16,9 +16,10 @@ Vec2Int = namedtuple("Vec2Int", ("x", "y"))
 
 
 class DistributionStrategy(str, Enum):
-    """Enum of available distribution strategies.
+    """Enum of available distribution strategies."""
 
-    TODO: As soon as supported by typer this enum should be
+    """TODO   pylint: disable=fixme
+    - As soon as supported by typer this enum should be
     replaced with typing.Literal in type hint.
     """
 
