@@ -19,4 +19,4 @@ COPY cluster_tools/README.md /cluster_tools/
 WORKDIR /webknossos
 
 RUN poetry config virtualenvs.create false --local
-RUN poetry install --only main
+RUN poetry install --all-extras
