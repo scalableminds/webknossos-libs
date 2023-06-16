@@ -216,8 +216,6 @@ jobs:
           scalableminds/webknossos-cli:$GITHUB_SHA \
           webknossos convert \
             --jobs 2 \
-            --batch-size 8 \
-            --chunks-per-shard 32 \
             --voxel-size 1,1,1 \
             testdata/tiff testoutput/tiff
 
