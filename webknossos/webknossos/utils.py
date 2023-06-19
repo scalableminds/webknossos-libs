@@ -176,7 +176,6 @@ def copy_directory_with_symlinks(
 
 
 def setup_warnings() -> None:
-    warnings.filterwarnings("default", category=DeprecationWarning, module="wkcuber")
     warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
 
 

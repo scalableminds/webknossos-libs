@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 ## Detailed Description
-- Affected library: e.g. webknossos or wkcuber
+- Affected library: e.g. webknossos
 <!--- Provide a detailed description of the change or new feature you would like to have. -->
 
 ## Use Cases & Context

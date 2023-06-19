@@ -120,6 +120,8 @@ nav:
               - User: api/webknossos/administration/user.md
               - Project: api/webknossos/administration/project.md
               - Task: api/webknossos/administration/task.md
+      - CLI Reference:
+        - Overview: cli/index.md
       - Version Changelog:
           - webknossos-py/stability_policy.md
           - webknossos-py/changelog.md
@@ -133,14 +135,6 @@ nav:
               - Commercial Support: https://scalableminds.com" target="_blank
           - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
           - Blog: https://medium.com/scalableminds" target="_blank
-  - WEBKNOSSOS Cuber:
-      - wkcuber CLI: wkcuber/index.md
-      - wkcuber/changelog.md
-      - Getting Help:
-          - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
-          - Email Support: mailto:hello@webknossos.org
-          - Commercial Support: https://scalableminds.com" target="_blank
-      - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/wkcuber" target="_blank
 
 plugins:
   - search

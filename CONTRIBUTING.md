@@ -98,7 +98,6 @@ The [WEBKNOSSOS-libs repository](https://github.com/scalableminds/webknossos-lib
 
 * `cluster_tools`
 * `webknossos`
-* `wkcuber`
 * (`docs`, see below for **Documentation**)
 
 See below for specifics of the different packages. Let's have a look at the common tooling first:
@@ -157,13 +156,6 @@ To re-generate the code, run
 ./generate_client.sh
 ```
 
-
-#### `wkcuber` package
-
-Simply use the default scripts mentioned above, such as
-`./format.sh`, `./lint.sh`, `./typecheck.sh`, `./test.sh`.
-
-
 #### `cluster_tools` package
 
 For testing the `slurm` setup a docker-compose setup is available. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
@@ -177,7 +169,7 @@ We render a common documentation for WEBKNOSSOS itself and WEBKNOSSOS-libs from 
 
 * `docs/src/webknossos`: Server & Website documentation, linked from the [webknossos repository](https://github.com/scalableminds/webknossos) (must be available under `docs/wk-repo`, see below).
 * `docs/src/api`: Generated using [pdoc](https://pdoc.dev) from Python docstrings.
-* `docs/src/webknossos-py` & `docs/src/wkcuber`: Documentation for the respective Python Packages
+* `docs/src/webknossos-py`: Documentation for the Python Package
 
 The structure of the documentation page is given by `docs/mkdocs.yml`.
 

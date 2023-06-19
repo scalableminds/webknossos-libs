@@ -6,7 +6,7 @@
   "dataLayers": [
     {
       "dataFormat": "zarr",
-      "name": "color",
+      "name": "tiff",
       "category": "color",
       "elementClass": "uint8",
       "mags": [

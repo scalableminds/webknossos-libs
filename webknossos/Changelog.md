@@ -17,6 +17,24 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Integrated the `wkcuber` CLI tool into `webknossos` package. [#903](https://github.com/scalableminds/webknossos-libs/pull/903)
+  - To get an overview of all webknossos subcommands type `webknossos --help`. If the usage of a single subcommand is of interest type `webknossos <subcommand> --help`
+  - These commands were changed:
+    - `python -m wkcuber`, `python -m wkcuber.convert_image_stack_to_wkw` -> `webknossos convert`
+    - `python -m wkcuber.export_wkw_as_tiff` -> `webknossos export-wkw-as-tiff`
+    - `python -m wkcuber.convert_knossos` -> `webknossos convert-knossos`
+    - `python -m wkcuber.convert_nifti` -> `webknossos convert-nifti`
+    - `python -m wkcuber.convert_raw` -> `webknossos convert-raw`
+    - `python -m wkcuber.downsampling` -> `webknossos downsample`
+    - `python -m wkcuber.compress` -> `webknossos compress`
+    - `python -m wkcuber.check_equality` -> `webknossos check-equality`
+  - There is one new command:
+    - `webknossos upload` to upload a dataset to a WEBKNOSSOS server
+  - These commands have been removed:
+    - `python -m wkcuber.cubing`
+    - `python -m wkcuber.tile_cubing`
+    - `python -m wkcuber.metadata`
+    - `python -m wkcuber.recubing`
 
 ### Fixed
 
