@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug where upsampling of a layer would fail, if the layer had a bounding box that doesn't align with the from_mag mag. [#915](https://github.com/scalableminds/webknossos-libs/pull/915)
 
 
 ## [0.12.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.6) - 2023-06-09
