@@ -52,9 +52,7 @@ class AnnotationInfo:
             if response.tracing_time is not None
             and not isinstance(response.tracing_time, Unset)
             else None,
-            modified=response.modified
-            if not isinstance(response.modified, Unset)
-            else None,
+            modified=response.modified,
         )
 
     @property
