@@ -407,7 +407,6 @@ class Dataset:
             dataset_name = dataset_name_or_url
 
         current_context = _get_context()
-        print(webknossos_url, current_context.url)
         if webknossos_url is not None and webknossos_url != current_context.url:
             if sharing_token is None:
                 warnings.warn(

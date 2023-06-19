@@ -438,7 +438,6 @@ class View:
         data = self._array.read(
             current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
         )
-        print(data.shape)
         return data
 
     def get_view(
@@ -844,10 +843,6 @@ class View:
         source_chunks = self.bounding_box.chunk(source_chunk_shape, source_chunk_shape)
         target_chunks = target_view.bounding_box.chunk(
             target_chunk_shape, target_chunk_shape
-        )
-
-        print(
-            f"source_chunk_shape={source_chunk_shape} target_chunk_shape={target_chunk_shape}"
         )
 
         for i, (source_chunk, target_chunk) in enumerate(

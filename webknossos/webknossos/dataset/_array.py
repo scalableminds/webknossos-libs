@@ -143,9 +143,9 @@ class BaseArray(ABC):
     def get_class(data_format: DataFormat) -> Type["BaseArray"]:
         if data_format == DataFormat.WKW:
             return WKWArray
-        elif WK_USE_ZARRITA and data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+        if WK_USE_ZARRITA and data_format in (DataFormat.Zarr, DataFormat.Zarr3):
             return ZarritaArray
-        elif data_format == DataFormat.Zarr:
+        if data_format == DataFormat.Zarr:
             return ZarrArray
         raise ValueError(f"Array format `{data_format}` is invalid.")
 
