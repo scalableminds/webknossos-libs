@@ -134,7 +134,7 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
     assert np.all(target_buffer == joined_buffer)
 
 
-def test_upsampling_non_aligned(tmp_path: Path):
+def test_upsampling_non_aligned(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "test", (50, 50, 50))
     l = ds.add_layer(
         "color", SEGMENTATION_CATEGORY, dtype_per_channel="uint8", largest_segment_id=0
@@ -148,3 +148,5 @@ def test_upsampling_non_aligned(tmp_path: Path):
         sampling_mode=SamplingModes.ISOTROPIC,
         compress=True,
     )
+    # The original bbox should be unchanged
+    assert l.bounding_box == BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))
