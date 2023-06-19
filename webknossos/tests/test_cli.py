@@ -162,7 +162,7 @@ def test_check_not_equal() -> None:
                 str(tmp_path),
             ],
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 1
         assert (
             f"The datasets {str(TESTDATA_DIR / 'simple_wkw_dataset')} and "
             f"{str(TESTDATA_DIR / 'simple_wkw_dataset')} are equal"

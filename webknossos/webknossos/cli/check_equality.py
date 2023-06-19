@@ -107,6 +107,7 @@ def main(
         )
     except AssertionError as err:
         print(f"The datasets are not equal: {err}")
+        exit(1)
 
 
 def compare_layers(
