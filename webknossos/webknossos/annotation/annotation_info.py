@@ -25,6 +25,8 @@ class AnnotationInfo:
     description: str
     type: AnnotationType
     state: AnnotationState
+    duration_in_seconds: Optional[int]
+    modified: Optional[int]
 
     def download_annotation(self) -> Annotation:
         """Downloads and returns the annotation that is discribed by this AnnotationInfo object"""
@@ -46,6 +48,13 @@ class AnnotationInfo:
             description=response.description,
             type=AnnotationType(response.typ),
             state=AnnotationState(response.state),
+            duration_in_seconds=response.tracing_time // 1000
+            if response.tracing_time is not None
+            and not isinstance(response.tracing_time, Unset)
+            else None,
+            modified=response.modified
+            if not isinstance(response.modified, Unset)
+            else None,
         )
 
     @property
