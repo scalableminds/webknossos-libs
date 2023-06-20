@@ -1,41 +1,51 @@
 import itertools
 import json
-import os
 import pickle
-import subprocess
-import sys
 from pathlib import Path
-from time import sleep
 from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
 import pytest
 from jsonschema import validate
-from tests.constants import (REMOTE_TESTOUTPUT_DIR, TESTDATA_DIR,
-                             TESTOUTPUT_DIR, use_minio)
 from upath import UPath
 
-from webknossos.dataset import (COLOR_CATEGORY, SEGMENTATION_CATEGORY, Dataset,
-                                SegmentationLayer, View)
+from tests.constants import (
+    REMOTE_TESTOUTPUT_DIR,
+    TESTDATA_DIR,
+    TESTOUTPUT_DIR,
+    use_minio,
+)
+from webknossos.dataset import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    Dataset,
+    SegmentationLayer,
+    View,
+)
 from webknossos.dataset._array import DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
-from webknossos.dataset.properties import (DatasetProperties,
-                                           DatasetViewConfiguration,
-                                           LayerViewConfiguration,
-                                           SegmentationLayerProperties,
-                                           dataset_converter)
+from webknossos.dataset.properties import (
+    DatasetProperties,
+    DatasetViewConfiguration,
+    LayerViewConfiguration,
+    SegmentationLayerProperties,
+    dataset_converter,
+)
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import (copytree, get_executor_for_args, named_partial,
-                              rmtree, snake_to_camel_case)
+from webknossos.utils import (
+    copytree,
+    get_executor_for_args,
+    named_partial,
+    rmtree,
+    snake_to_camel_case,
+)
 
 
 @pytest.fixture(autouse=True, scope="module")
 def start_minio() -> Iterator[None]:
-    """Minio is an S3 clone and is used as local test server"""
-    container_name = "minio"
     with use_minio():
         yield
-    
+
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
 DATA_FORMATS_AND_OUTPUT_PATHS = [

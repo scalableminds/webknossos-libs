@@ -3,7 +3,6 @@
 import json
 import os
 import subprocess
-import sys
 from contextlib import contextmanager
 from math import ceil
 from pathlib import Path
@@ -14,6 +13,8 @@ from typing import Iterator, Union
 import numpy as np
 import pytest
 from PIL import Image
+from typer.testing import CliRunner
+
 from tests.constants import (
     MINIO_PORT,
     MINIO_ROOT_PASSWORD,
@@ -21,8 +22,6 @@ from tests.constants import (
     REMOTE_TESTOUTPUT_DIR,
     use_minio,
 )
-from typer.testing import CliRunner
-
 from webknossos import BoundingBox, DataFormat, Dataset
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
@@ -81,10 +80,6 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
-@pytest.mark.skipif(
-    sys.platform != "linux",
-    reason="Only run this test on Linux, because it requires a running `minio` docker container.",
-)
 def test_tiff_cubing_zarr_s3() -> None:
     """Tests zarr support when performing tiff cubing."""
 
