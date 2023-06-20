@@ -37,6 +37,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200")
 class AnnotationInfoResponse200:
     """
     Attributes:
+        modified (int):
         state (str):
         id (str):
         name (str):
@@ -45,7 +46,6 @@ class AnnotationInfoResponse200:
         organization (str):
         data_store (AnnotationInfoResponse200DataStore):
         tags (List[str]):
-        modified (Union[Unset, int]):
         view_configuration (Union[Unset, str]):
         task (Union[Unset, None, AnnotationInfoResponse200Task]):
         stats (Union[Unset, AnnotationInfoResponse200Stats]):
@@ -64,6 +64,7 @@ class AnnotationInfoResponse200:
         others_may_edit (Union[Unset, int]):
     """
 
+    modified: int
     state: str
     id: str
     name: str
@@ -72,7 +73,6 @@ class AnnotationInfoResponse200:
     organization: str
     data_store: "AnnotationInfoResponse200DataStore"
     tags: List[str]
-    modified: Union[Unset, int] = UNSET
     view_configuration: Union[Unset, str] = UNSET
     task: Union[Unset, None, "AnnotationInfoResponse200Task"] = UNSET
     stats: Union[Unset, "AnnotationInfoResponse200Stats"] = UNSET
@@ -94,6 +94,7 @@ class AnnotationInfoResponse200:
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        modified = self.modified
         state = self.state
         id = self.id
         name = self.name
@@ -104,7 +105,6 @@ class AnnotationInfoResponse200:
 
         tags = self.tags
 
-        modified = self.modified
         view_configuration = self.view_configuration
         task: Union[Unset, None, Dict[str, Any]] = UNSET
         if not isinstance(self.task, Unset):
@@ -160,6 +160,7 @@ class AnnotationInfoResponse200:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
+                "modified": modified,
                 "state": state,
                 "id": id,
                 "name": name,
@@ -170,8 +171,6 @@ class AnnotationInfoResponse200:
                 "tags": tags,
             }
         )
-        if modified is not UNSET:
-            field_dict["modified"] = modified
         if view_configuration is not UNSET:
             field_dict["viewConfiguration"] = view_configuration
         if task is not UNSET:
@@ -238,6 +237,8 @@ class AnnotationInfoResponse200:
         )
 
         d = src_dict.copy()
+        modified = d.pop("modified")
+
         state = d.pop("state")
 
         id = d.pop("id")
@@ -253,8 +254,6 @@ class AnnotationInfoResponse200:
         data_store = AnnotationInfoResponse200DataStore.from_dict(d.pop("dataStore"))
 
         tags = cast(List[str], d.pop("tags"))
-
-        modified = d.pop("modified", UNSET)
 
         view_configuration = d.pop("viewConfiguration", UNSET)
 
@@ -339,6 +338,7 @@ class AnnotationInfoResponse200:
         others_may_edit = d.pop("othersMayEdit", UNSET)
 
         annotation_info_response_200 = cls(
+            modified=modified,
             state=state,
             id=id,
             name=name,
@@ -347,7 +347,6 @@ class AnnotationInfoResponse200:
             organization=organization,
             data_store=data_store,
             tags=tags,
-            modified=modified,
             view_configuration=view_configuration,
             task=task,
             stats=stats,

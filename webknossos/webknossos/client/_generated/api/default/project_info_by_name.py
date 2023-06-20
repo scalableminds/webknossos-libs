@@ -30,11 +30,11 @@ def _get_kwargs(
 def _parse_response(
     *, response: httpx.Response
 ) -> Optional[Union[Any, ProjectInfoByNameResponse200]]:
-    if response.status_code == 200:
+    if response.status_code == HTTPStatus.OK:
         response_200 = ProjectInfoByNameResponse200.from_dict(response.json())
 
         return response_200
-    if response.status_code == 400:
+    if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = cast(Any, None)
         return response_400
     return None

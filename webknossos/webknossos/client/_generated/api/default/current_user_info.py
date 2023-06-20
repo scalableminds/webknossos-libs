@@ -29,7 +29,7 @@ def _get_kwargs(
 def _parse_response(
     *, response: httpx.Response
 ) -> Optional[CurrentUserInfoResponse200]:
-    if response.status_code == 200:
+    if response.status_code == HTTPStatus.OK:
         response_200 = CurrentUserInfoResponse200.from_dict(response.json())
 
         return response_200
