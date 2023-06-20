@@ -58,8 +58,9 @@ nav:
       - Tutorials:
           - Volume Annotation: webknossos/tutorial_volume_annotation.md
           - Data Sharing: webknossos/tutorial_data_sharing.md
+          - Automation: webknossos/tutorial_automation.md
       - Reference:
-          - webknossos/terminology.md
+          - Terminology: webknossos/terminology.md
           - webknossos/data_formats.md
           - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
           - Backend REST API: webknossos/rest_api.md
