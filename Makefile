@@ -1,6 +1,6 @@
-packages_by_priority := webknossos wkcuber cluster_tools docs
-packages_by_dependency := cluster_tools webknossos wkcuber docs
-code_packages := cluster_tools webknossos wkcuber
+packages_by_priority := webknossos cluster_tools docs
+packages_by_dependency := cluster_tools webknossos docs
+code_packages := cluster_tools webknossos
 
 define in_each_pkg_by_dependency
   for PKG in $(packages_by_dependency); do echo $$PKG; cd $$PKG; $1; cd ..; done

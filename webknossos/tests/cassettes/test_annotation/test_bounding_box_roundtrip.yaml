@@ -48,7 +48,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/e2006_knossos
   response:
-    content: '{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1686684434234,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1686684434234,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1687247419837,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1687247419837,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       cache-control:
       - no-cache
@@ -541,36 +541,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zattrs
   response:
     body:
@@ -598,6 +568,36 @@ interactions:
       code: 404
       message: Not Found
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zattrs
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -725,36 +725,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zattrs
   response:
     body:
@@ -782,6 +752,36 @@ interactions:
       code: 404
       message: Not Found
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zattrs
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -817,6 +817,36 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zattrs
   response:
     body:
@@ -844,36 +874,6 @@ interactions:
       code: 404
       message: Not Found
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -1369,36 +1369,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/8-8-2/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/8-8-2/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/8-8-2/.zattrs
   response:
     body:
@@ -1426,6 +1396,36 @@ interactions:
       code: 404
       message: Not Found
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/8-8-2/.zattrs
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/8-8-2/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/8-8-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2105,6 +2105,36 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/2-2-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/2-2-1/.zattrs
   response:
     body:
@@ -2132,36 +2162,6 @@ interactions:
       code: 404
       message: Not Found
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/2-2-1/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/2-2-1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2657,36 +2657,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/8-8-2/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/8-8-2/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/8-8-2/.zattrs
   response:
     body:
@@ -2714,6 +2684,36 @@ interactions:
       code: 404
       message: Not Found
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/8-8-2/.zattrs
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/8-8-2/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/8-8-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3025,36 +3025,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/16-16-4/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/16-16-4/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/16-16-4/.zattrs
   response:
     body:
@@ -3082,6 +3052,36 @@ interactions:
       code: 404
       message: Not Found
     url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/16-16-4/.zattrs
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/16-16-4/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/segmentation/16-16-4/.zarray
 - request:
     body: null
     headers: {}
@@ -3133,15 +3133,15 @@ interactions:
       zip:
         test_bounding_box_roundtrip.nml: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<things>\n
           \ <parameters>\n    <experiment name=\"e2006_knossos\" />\n    <scale x=\"11.239999771118164\"
-          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1686684487000\" />\n
+          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1687247482000\" />\n
           \   <taskBoundingBox color.a=\"1\" color.b=\"0.2\" color.g=\"0\" color.r=\"0.5\"
           depth=\"5\" height=\"5\" isVisible=\"true\" name=\"task_bbox\" topLeftX=\"10\"
           topLeftY=\"10\" topLeftZ=\"10\" width=\"5\" />\n    <userBoundingBox color.a=\"1\"
           color.b=\"0.1\" color.g=\"0.5\" color.r=\"0.2\" depth=\"64\" height=\"64\"
           id=\"0\" isVisible=\"true\" name=\"Unnamed Bounding Box\" topLeftX=\"1024\"
           topLeftY=\"512\" topLeftZ=\"128\" width=\"64\" />\n  </parameters>\n  <thing
-          color.a=\"1.0\" color.b=\"0.9023212226315103\" color.g=\"0.24979199614628977\"
-          color.r=\"0.540873872258143\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
+          color.a=\"1.0\" color.b=\"0.3703374860745241\" color.g=\"0.8118537609233765\"
+          color.r=\"0.632209894196514\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
           \   <nodes>\n      <node id=\"3\" x=\"0.0\" y=\"0.0\" z=\"0.0\" />\n    </nodes>\n
           \   <edges />\n  </thing>\n  <branchpoints />\n  <comments>\n    <comment
           content=\"node 1\" node=\"3\" />\n  </comments>\n  <groups>\n    <group
@@ -3154,7 +3154,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '972'
+      - '967'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -3164,7 +3164,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/api/annotations/upload
   response:
-    content: '{"annotation":{"typ":"Explorational","id":"6488c348010200d0027101a9"},"messages":[{"success":"Successfully
+    content: '{"annotation":{"typ":"Explorational","id":"64915a7b090200db024cdd41"},"messages":[{"success":"Successfully
       uploaded file"}]}'
     headers:
       cache-control:
@@ -3196,25 +3196,25 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/annotations/6488c348010200d0027101a9/download?skipVolumeData=false
+    uri: http://localhost:9000/api/annotations/64915a7b090200db024cdd41/download?skipVolumeData=false
   response:
     content: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta
-      name=\"writerGitCommit\" content=\"aae1506a420abf132dfaef8990cdd3e3de263efb\"
-      />\n  <meta name=\"timestamp\" content=\"1686684490125\" />\n  <meta name=\"annotationId\"
-      content=\"6488c348010200d0027101a9\" />\n  <meta name=\"username\" content=\"user_A
+      name=\"writerGitCommit\" content=\"5a4efc45509f2ddf0f695701e1a4ba2ec4921a1c\"
+      />\n  <meta name=\"timestamp\" content=\"1687247484105\" />\n  <meta name=\"annotationId\"
+      content=\"64915a7b090200db024cdd41\" />\n  <meta name=\"username\" content=\"user_A
       BoyA\" />\n  <parameters>\n    <experiment name=\"e2006_knossos\" organization=\"Organization_X\"
       description=\"\" wkUrl=\"http://localhost:9000\" />\n    <scale x=\"11.239999771118164\"
       y=\"11.239999771118164\" z=\"28.0\" />\n    <offset x=\"0\" y=\"0\" z=\"0\"
-      />\n    <time ms=\"1686684488306\" />\n    <editPosition x=\"0\" y=\"0\" z=\"0\"
+      />\n    <time ms=\"1687247483270\" />\n    <editPosition x=\"0\" y=\"0\" z=\"0\"
       />\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\" />\n    <zoomLevel
       zoom=\"2.0\" />\n    <userBoundingBox id=\"0\" name=\"Unnamed Bounding Box\"
       isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\" color.b=\"0.10000000149011612\"
       color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\" topLeftZ=\"128\" width=\"64\"
       height=\"64\" depth=\"64\" />\n    <userBoundingBox id=\"1\" name=\"task bounding
-      box\" color.r=\"0.8637063479353503\" color.g=\"0.7884993120093761\" color.b=\"0.4784483633645815\"
+      box\" color.r=\"0.8878767652118668\" color.g=\"0.45399432791738137\" color.b=\"0.5244749494926442\"
       color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\" topLeftZ=\"10\" width=\"5\"
-      height=\"5\" depth=\"5\" />\n  </parameters>\n  <thing id=\"2\" color.r=\"0.5408738851547241\"
-      color.g=\"0.24979199469089508\" color.b=\"0.9023212194442749\" color.a=\"1.0\"
+      height=\"5\" depth=\"5\" />\n  </parameters>\n  <thing id=\"2\" color.r=\"0.6322098970413208\"
+      color.g=\"0.8118537664413452\" color.b=\"0.37033748626708984\" color.a=\"1.0\"
       name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\" radius=\"1.0\"
       x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\" inVp=\"0\" inMag=\"0\"
       bitDepth=\"0\" interpolation=\"false\" time=\"0\" />\n    </nodes>\n    <edges
@@ -3227,7 +3227,7 @@ interactions:
       content-disposition:
       - attachment;filename="test_bounding_box_roundtrip.nml"
       content-length:
-      - '1688'
+      - '1689'
       content-type:
       - application/xml
       date: Mon, 01 Jan 2000 00:00:00 GMT

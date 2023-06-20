@@ -8,6 +8,9 @@
 <img align="right" src="https://static.webknossos.org/logos/webknossos-icon-only.svg" alt="WEBKNOSSOS Logo" width="100" height="100"/>
 
 ## [WEBKNOSSOS Python API](webknossos)
+
+### API
+
 Python API for working with [WEBKNOSSOS](https://webknossos.org) datasets, annotations, and for WEBKNOSSOS server interactions.
 
 Use this for:
@@ -15,11 +18,11 @@ Use this for:
 - handling/manipulation of WEBKNOSSOS datasets
 - reading/writing/manipulating WEBKNOSSOS skeleton annotations (*.nml)
 - up- & downloading annotations and datasets from your WEBKNOSSOS instance
-- executing any of the wkcuber operations from below from your code
 
 [Read more in the docs.](https://docs.webknossos.org/webknossos-py/)
 
-## [WEBKNOSSOS cuber (wkcuber) CLI](wkcuber)
+### CLI
+
 CLI tool for creating and manipulating [WEBKNOSSOS](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large-scale 3D images as found in microscopy data.
 
 Use this for:
@@ -27,7 +30,7 @@ Use this for:
 - up/downsampling of *.wkw files to different magnification levels (image pyramid) from the CLI
 - compressing your *.wkw files to save disk space from the CLI
 
-[Read more in the docs.](https://docs.webknossos.org/wkcuber)
+[Read more in the docs.](https://docs.webknossos.org/webknossos-py/)
 
 ## [Cluster Tools](cluster_tools)
 The `cluster_tools` package provides python `Executor` classes for distributing tasks on a slurm cluster or via multi processing.

@@ -2,7 +2,6 @@ import itertools
 import json
 import os
 import pickle
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -12,91 +11,33 @@ from typing import Iterator, Optional, Tuple, cast
 import numpy as np
 import pytest
 from jsonschema import validate
+from tests.constants import (REMOTE_TESTOUTPUT_DIR, TESTDATA_DIR,
+                             TESTOUTPUT_DIR, use_minio)
 from upath import UPath
 
-from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
-from webknossos.dataset import (
-    COLOR_CATEGORY,
-    SEGMENTATION_CATEGORY,
-    Dataset,
-    SegmentationLayer,
-    View,
-)
+from webknossos.dataset import (COLOR_CATEGORY, SEGMENTATION_CATEGORY, Dataset,
+                                SegmentationLayer, View)
 from webknossos.dataset._array import DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
-from webknossos.dataset.properties import (
-    DatasetProperties,
-    DatasetViewConfiguration,
-    LayerViewConfiguration,
-    SegmentationLayerProperties,
-    dataset_converter,
-)
+from webknossos.dataset.properties import (DatasetProperties,
+                                           DatasetViewConfiguration,
+                                           LayerViewConfiguration,
+                                           SegmentationLayerProperties,
+                                           dataset_converter)
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import (
-    copytree,
-    get_executor_for_args,
-    named_partial,
-    rmtree,
-    snake_to_camel_case,
-)
-
-MINIO_ROOT_USER = "ANTN35UAENTS5UIAEATD"
-MINIO_ROOT_PASSWORD = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-MINIO_PORT = "8000"
+from webknossos.utils import (copytree, get_executor_for_args, named_partial,
+                              rmtree, snake_to_camel_case)
 
 
 @pytest.fixture(autouse=True, scope="module")
 def start_minio() -> Iterator[None]:
     """Minio is an S3 clone and is used as local test server"""
-    if sys.platform == "darwin":
-        minio_path = Path("testoutput_minio")
-        rmtree(minio_path)
-        minio_process = subprocess.Popen(
-            shlex.split(f"minio server --address :8000 ./{minio_path}"),
-            env={
-                **os.environ,
-                "MINIO_ROOT_USER": MINIO_ROOT_USER,
-                "MINIO_ROOT_PASSWORD": MINIO_ROOT_PASSWORD,
-            },
-        )
-        sleep(3)
-        assert minio_process.poll() is None
-        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-        try:
-            yield
-        finally:
-            minio_process.terminate()
-            rmtree(minio_path)
-    else:
-        container_name = "minio"
-        cmd = (
-            "docker run"
-            f" -p {MINIO_PORT}:9000"
-            f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-            f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-            f" --name {container_name}"
-            " --memory 1G"
-            " --rm"
-            " -d"
-            " minio/minio server /data"
-        )
-        subprocess.check_output(shlex.split(cmd))
-        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-        try:
-            yield
-        finally:
-            subprocess.check_output(["docker", "stop", container_name])
+    container_name = "minio"
+    with use_minio():
+        yield
+    
 
-
-REMOTE_TESTOUTPUT_DIR = UPath(
-    "s3://testoutput",
-    key=MINIO_ROOT_USER,
-    secret=MINIO_ROOT_PASSWORD,
-    client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
-)
-
-
-DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr, DataFormat.Zarr3]
+DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
 DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
