@@ -1050,6 +1050,11 @@ class Layer:
                 target_mag, prev_mag_view, compress
             )
 
+            # We need to make sure the layer's bounding box is aligned
+            # with the previous mag. Otherwise, `for_zipped_chunks` will fail.
+            # Saving the original layer bbox for later restore
+            old_layer_bbox = self.bounding_box
+            self.bounding_box = prev_mag_view.bounding_box
             # Get target view
             target_view = target_mag_view.get_view()
 
@@ -1069,6 +1074,8 @@ class Layer:
                     executor=actual_executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
+            # Restoring the original layer bbox
+            self.bounding_box = old_layer_bbox
 
     def _setup_mag(self, mag: Mag) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
