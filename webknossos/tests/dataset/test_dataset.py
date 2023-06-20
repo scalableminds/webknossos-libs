@@ -1,7 +1,6 @@
 import itertools
 import json
 import pickle
-import shlex
 import subprocess
 import warnings
 from pathlib import Path
@@ -12,7 +11,12 @@ import pytest
 from jsonschema import validate
 from upath import UPath
 
-from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
+from tests.constants import (
+    REMOTE_TESTOUTPUT_DIR,
+    TESTDATA_DIR,
+    TESTOUTPUT_DIR,
+    start_minio_docker,
+)
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -38,39 +42,17 @@ from webknossos.utils import (
     snake_to_camel_case,
 )
 
-MINIO_ROOT_USER = "ANTN35UAENTS5UIAEATD"
-MINIO_ROOT_PASSWORD = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-MINIO_PORT = "8000"
-
 
 @pytest.fixture(autouse=True, scope="module")
 def docker_minio() -> Iterator[None]:
     """Minio is an S3 clone and is used as local test server"""
     container_name = "minio"
-    cmd = (
-        "docker run"
-        f" -p {MINIO_PORT}:9000"
-        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-        f" --name {container_name}"
-        " --rm"
-        " -d"
-        " minio/minio server /data"
-    )
-    subprocess.check_output(shlex.split(cmd))
-    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
     try:
+        start_minio_docker(container_name)
         yield
     finally:
         subprocess.check_output(["docker", "stop", container_name])
 
-
-REMOTE_TESTOUTPUT_DIR = UPath(
-    "s3://testoutput",
-    key=MINIO_ROOT_USER,
-    secret=MINIO_ROOT_PASSWORD,
-    client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
-)
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
 DATA_FORMATS_AND_OUTPUT_PATHS = [

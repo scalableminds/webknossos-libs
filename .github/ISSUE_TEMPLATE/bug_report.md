@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 ## Context
-- Affected library: e.g. webknossos or wkcuber
+- Affected library: e.g. webknossos
 <!--- In what context did your bug occur? -->
 <!--- Providing context helps us come up with a solution that is most useful. -->
 
@@ -32,4 +32,4 @@ assignees: ''
 <!--- In what environment did the bug occur? -->
 - Operating System and version: e.g. Windows 10
 - Version of webKnossos-libs (Release or Commit):
-  (can be found e.g. with `pip show webknossos` or `wkcuber --version`)
+  (can be found e.g. with `pip show webknossos --version`)
