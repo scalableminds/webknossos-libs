@@ -11,6 +11,7 @@ export_vars
 # (which is standard python behavior). This is necessary so that the imports
 # refer to the checked out (and potentially modified) code.
 PYTEST="poetry run python -m pytest --suppress-no-test-exit-code"
+export WK_USE_ZARRITA=True
 
 
 if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then

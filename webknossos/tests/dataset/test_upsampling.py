@@ -1,6 +1,9 @@
+import warnings
 from pathlib import Path
+from typing import Iterator
 
 import numpy as np
+import pytest
 
 from webknossos import (
     COLOR_CATEGORY,
@@ -15,6 +18,13 @@ from webknossos.dataset.sampling_modes import SamplingModes
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
+
+
+@pytest.fixture(autouse=True, scope="function")
+def ignore_warnings() -> Iterator:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", module="webknossos", message=r"\[WARNING\]")
+        yield
 
 
 def test_upsampling(tmp_path: Path) -> None:

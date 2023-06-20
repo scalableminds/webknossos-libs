@@ -142,12 +142,15 @@ def export_tiff_stack(
     destination_path.mkdir(parents=True, exist_ok=True)
 
     with get_executor_for_args(args) as executor:
-        view = mag_view.get_view(absolute_offset=bbox.topleft, size=bbox.size)
+        view = mag_view.get_view(
+            absolute_offset=bbox.topleft, size=bbox.size, read_only=True
+        )
 
         view_chunks = [
             view.get_view(
                 relative_offset=(0, 0, z),
                 size=(bbox.size.x, bbox.size.y, min(batch_size, bbox.size.z - z)),
+                read_only=True,
             )
             for z in range(0, bbox.size.z, batch_size)
         ]

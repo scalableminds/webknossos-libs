@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches:
-    - master
-    tags:        
-    - '**'
+      - master
+    tags:
+      - "**"
   pull_request: {}
 
 concurrency:
@@ -19,15 +19,15 @@ jobs:
       webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
       cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
     steps:
-    - uses: actions/checkout@v3
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          webknossos:
-            - 'webknossos/**'
-          cluster_tools:
-            - 'cluster_tools/**'
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            webknossos:
+              - 'webknossos/**'
+            cluster_tools:
+              - 'cluster_tools/**'
 
   cluster_tools:
     needs: changes
@@ -43,87 +43,87 @@ jobs:
       run:
         working-directory: cluster_tools
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: 'x64'
-    - name: Build/pull dockered-slurm image
-      if: ${{ matrix.executors == 'slurm' }}
-      run: |
-        cd ./dockered-slurm
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: "x64"
+      - name: Build/pull dockered-slurm image
+        if: ${{ matrix.executors == 'slurm' }}
+        run: |
+          cd ./dockered-slurm
 
-        echo docker-compose up
-        docker-compose up -d
+          echo docker-compose up
+          docker-compose up -d
 
-        # Register cluster (with retry)
-        for i in {1..5}; do
-          echo register_cluster
-          ./register_cluster.sh && s=0 && break || s=$?
-          sleep 10
-        done
+          # Register cluster (with retry)
+          for i in {1..5}; do
+            echo register_cluster
+            ./register_cluster.sh && s=0 && break || s=$?
+            sleep 10
+          done
 
-        # Run setup.py on all three nodes
-        docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
-        docker exec -w /cluster_tools c1 bash -c "poetry install" &
-        docker exec -w /cluster_tools c2 bash -c "poetry install" &
-        wait
-    
-    - name: Setup Kubernetes-in-Docker
-      if: ${{ matrix.executors == 'kubernetes' }}
-      run: |
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
-        chmod +x ./kind
-        sed -i "s#__PATH__#$(pwd)#g" tests/cluster-config.yaml
-        ./kind create cluster --config=tests/cluster-config.yaml
-        ./kind export kubeconfig
+          # Run setup.py on all three nodes
+          docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
+          docker exec -w /cluster_tools c1 bash -c "poetry install" &
+          docker exec -w /cluster_tools c2 bash -c "poetry install" &
+          wait
 
-        docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
-        ./kind load docker-image scalableminds/cluster-tools:latest
+      - name: Setup Kubernetes-in-Docker
+        if: ${{ matrix.executors == 'kubernetes' }}
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          chmod +x ./kind
+          sed -i "s#__PATH__#$(pwd)#g" tests/cluster-config.yaml
+          ./kind create cluster --config=tests/cluster-config.yaml
+          ./kind export kubeconfig
 
-    - name: Install dependencies (without docker)
-      if: ${{ matrix.executors == 'multiprocessing' || matrix.executors == 'kubernetes' }}
-      run: |
-        pip install -r ../requirements.txt
-        poetry install
+          docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
+          ./kind load docker-image scalableminds/cluster-tools:latest
 
-    - name: Check typing
-      if: ${{ matrix.executors == 'multiprocessing' }}
-      run: ./typecheck.sh
+      - name: Install dependencies (without docker)
+        if: ${{ matrix.executors == 'multiprocessing' || matrix.executors == 'kubernetes' }}
+        run: |
+          pip install -r ../requirements.txt
+          poetry install
 
-    - name: Check formatting
-      if: ${{ matrix.executors == 'multiprocessing' }}
-      run: ./format.sh check
+      - name: Check typing
+        if: ${{ matrix.executors == 'multiprocessing' }}
+        run: ./typecheck.sh
 
-    - name: Lint code
-      if: ${{ matrix.executors == 'multiprocessing' }}
-      run: ./lint.sh
+      - name: Check formatting
+        if: ${{ matrix.executors == 'multiprocessing' }}
+        run: ./format.sh check
 
-    - name: Run multiprocessing tests
-      if: ${{ matrix.executors == 'multiprocessing' }}
-      run: |
-        cd tests
-        PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
-          poetry run python -m pytest -sv test_all.py test_multiprocessing.py
-    
-    - name: Run slurm tests
-      if: ${{ matrix.executors == 'slurm' }}
-      run: |
-        cd ./dockered-slurm
-        docker exec \
-          -w /cluster_tools/tests \
-          -e PYTEST_EXECUTORS=slurm \
-          slurmctld bash -c "poetry run python -m pytest -sv test_all.py test_slurm.py"
-        docker exec \
-          -w /cluster_tools/tests \
-          slurmctld bash -c "poetry run python test_deref_main.py"
-    
-    - name: Run kubernetes tests
-      if: ${{ matrix.executors == 'kubernetes' }}
-      run: |
-        cd tests
-        PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
+      - name: Lint code
+        if: ${{ matrix.executors == 'multiprocessing' }}
+        run: ./lint.sh
+
+      - name: Run multiprocessing tests
+        if: ${{ matrix.executors == 'multiprocessing' }}
+        run: |
+          cd tests
+          PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
+            poetry run python -m pytest -sv test_all.py test_multiprocessing.py
+
+      - name: Run slurm tests
+        if: ${{ matrix.executors == 'slurm' }}
+        run: |
+          cd ./dockered-slurm
+          docker exec \
+            -w /cluster_tools/tests \
+            -e PYTEST_EXECUTORS=slurm \
+            slurmctld bash -c "poetry run python -m pytest -sv test_all.py test_slurm.py"
+          docker exec \
+            -w /cluster_tools/tests \
+            slurmctld bash -c "poetry run python test_deref_main.py"
+
+      - name: Run kubernetes tests
+        if: ${{ matrix.executors == 'kubernetes' }}
+        run: |
+          cd tests
+          PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
 
   webknossos_linux:
     needs: changes
@@ -142,42 +142,40 @@ jobs:
         working-directory: webknossos
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: 'x64'
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: "x64"
 
-    - name: Install dependencies
-      run: |
-        pip install -r ../requirements.txt
-        poetry install --extras all
+      - name: Install dependencies
+        run: |
+          pip install -r ../requirements.txt
+          poetry install --extras all
 
-    - name: Check formatting
-      if: matrix.group == 1
-      run: ./format.sh check
+      - name: Check formatting
+        if: matrix.group == 1
+        run: ./format.sh check
 
-    - name: Lint code
-      if: matrix.group == 1
-      run: ./lint.sh
+      - name: Lint code
+        if: matrix.group == 1
+        run: ./lint.sh
 
-    - name: Check typing
-      if: matrix.group == 1
-      run: ./typecheck.sh
+      - name: Check typing
+        if: matrix.group == 1
+        run: ./typecheck.sh
 
-    - name: Python tests
-      timeout-minutes: 30
-      env:
-        WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+      - name: Python tests
+        timeout-minutes: 30
+        env:
+          WK_TOKEN: ${{ secrets.WK_TOKEN }}
+        run: ./test.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
-    - name: Check if git is dirty
-      run: |
-        git diff --no-ext-diff --quiet --exit-code
-        [[ -z $(git status -s) ]]
-
-
+      - name: Check if git is dirty
+        run: |
+          git diff --no-ext-diff --quiet --exit-code
+          [[ -z $(git status -s) ]]
 
   webknossos_cli_docker:
     needs: [cluster_tools, webknossos_linux]
@@ -187,71 +185,70 @@ jobs:
       !contains(needs.*.result, 'cancelled') &&
       !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: Write version file
-      run: |
-        pip install -r requirements.txt
-        pushd webknossos
+      - name: Write version file
+        run: |
+          pip install -r requirements.txt
+          pushd webknossos
 
-        PKG_VERSION="$(dunamai from git)"
-        echo "__version__ = '$PKG_VERSION'" > ./webknossos/version.py
-        poetry version "$PKG_VERSION"
+          PKG_VERSION="$(dunamai from git)"
+          echo "__version__ = '$PKG_VERSION'" > ./webknossos/version.py
+          poetry version "$PKG_VERSION"
 
-        popd
+            popd
 
-    - name: Build docker image
-      run: docker build -t scalableminds/webknossos-cli:$GITHUB_SHA -f webknossos/Dockerfile .
+      - name: Build docker image
+        run: docker build -t scalableminds/webknossos-cli:$GITHUB_SHA -f webknossos/Dockerfile .
 
-    - name: Smoke test docker
-      run: |
-        docker run --rm \
-          -v$(pwd)/webknossos/testdata:/webknossos/testdata \
-          scalableminds/webknossos-cli:$GITHUB_SHA \
-          webknossos convert \
-            --jobs 2 \
-            --voxel-size 1,1,1 \
-            testdata/tiff testoutput/tiff
+      - name: Smoke test docker
+        run: |
+          docker run --rm \
+            -v$(pwd)/webknossos/testdata:/webknossos/testdata \
+            scalableminds/webknossos-cli:$GITHUB_SHA \
+            webknossos convert \
+              --jobs 2 \
+              --voxel-size 1,1,1 \
+              testdata/tiff testoutput/tiff
 
-    - name: Login to docker
-      env:
-        DOCKER_USER: ${{ secrets.DOCKER_USER }}
-        DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
-      run: |
-        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+      - name: Login to docker
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+        run: |
+          echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
 
-    - name: Push docker images
-      run: |
-        docker push scalableminds/webknossos-cli:$GITHUB_SHA
+      - name: Push docker images
+        run: |
+          docker push scalableminds/webknossos-cli:$GITHUB_SHA
 
-    - name: Push docker images (for tag)
-      if: github.ref_type == 'tag'
-      run: |
-        CI_TAG=$(git describe --tags)
-        docker tag \
-          scalableminds/webknossos-cli:$GITHUB_SHA \
-          scalableminds/webknossos-cli:$CI_TAG
-        docker push scalableminds/webknossos-cli:$CI_TAG
-        docker tag \
-          scalableminds/webknossos-cli:$GITHUB_SHA \
-          scalableminds/webknossos-cli:latest
-        docker push scalableminds/webknossos-cli:latest
+      - name: Push docker images (for tag)
+        if: github.ref_type == 'tag'
+        run: |
+          CI_TAG=$(git describe --tags)
+          docker tag \
+            scalableminds/webknossos-cli:$GITHUB_SHA \
+            scalableminds/webknossos-cli:$CI_TAG
+          docker push scalableminds/webknossos-cli:$CI_TAG
+          docker tag \
+            scalableminds/webknossos-cli:$GITHUB_SHA \
+            scalableminds/webknossos-cli:latest
+          docker push scalableminds/webknossos-cli:latest
 
-    - name: Push docker images (for branch)
-      if: github.ref_type == 'branch'
-      run: |
-        CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
-        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-        docker tag \
-          scalableminds/webknossos-cli:$GITHUB_SHA \
-          scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
-        docker push scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
+      - name: Push docker images (for branch)
+        if: github.ref_type == 'branch'
+        run: |
+          CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
+          NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+          docker tag \
+            scalableminds/webknossos-cli:$GITHUB_SHA \
+            scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
+          docker push scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
 
   docs:
     needs: [cluster_tools, webknossos_linux]
@@ -263,56 +260,55 @@ jobs:
       !github.event.pull_request.head.repo.fork
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/checkout@v3
-      with:
-        repository: scalableminds/webknossos
-        path: docs/wk-repo
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.8
-        architecture: 'x64'
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: scalableminds/webknossos
+          path: docs/wk-repo
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          architecture: "x64"
 
-    - name: Install dependencies
-      run: |
-        pip3 install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          pip3 install -r requirements.txt
 
-    - name: Build Docs
-      run: |
-        docs/generate.sh --persist
+      - name: Build Docs
+        run: |
+          docs/generate.sh --persist
 
-    - name: Push docs (for branch)
-      if: github.ref_type == 'branch'
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "eu-west-1"
-      run: |
-        CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
-        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
+      - name: Push docs (for branch)
+        if: github.ref_type == 'branch'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: "eu-west-1"
+        run: |
+          CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
+          NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+          aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
 
-    - name: Push docs (for tag)
-      if: github.ref_type == 'tag'
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "eu-west-1"
-      run: |
-        CI_TAG=$(git describe --tags)
-        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${CI_TAG}
+      - name: Push docs (for tag)
+        if: github.ref_type == 'tag'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: "eu-west-1"
+        run: |
+          CI_TAG=$(git describe --tags)
+          aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${CI_TAG}
 
-    - name: Check links (on master)
-      if: github.ref == 'refs/heads/master'
-      env: # Or as an environment variable
-        SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
-      run: |
-        cd docs
-        poetry run linkchecker https://docs.webknossos.org > link_status || \
-          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
-            "$SLACK_HOOK"
-
+      - name: Check links (on master)
+        if: github.ref == 'refs/heads/master'
+        env: # Or as an environment variable
+          SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
+        run: |
+          cd docs
+          poetry run linkchecker https://docs.webknossos.org > link_status || \
+            curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
+              "$SLACK_HOOK"
 
   pypi_and_gh_release:
     needs: [cluster_tools, webknossos_linux]
@@ -323,14 +319,13 @@ jobs:
       github.ref_type == 'tag' &&
       !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
-          architecture: 'x64'
+          architecture: "x64"
       - name: Install dependencies
         run: pip3 install -r requirements.txt
       - name: Publish python packages
@@ -355,14 +350,21 @@ jobs:
           prerelease: false
 
   complete:
-    needs: [cluster_tools, webknossos_linux, webknossos_cli_docker, docs, pypi_and_gh_release]
+    needs:
+      [
+        cluster_tools,
+        webknossos_linux,
+        webknossos_cli_docker,
+        docs,
+        pypi_and_gh_release,
+      ]
     if: always()
     runs-on: ubuntu-latest
     steps:
-    - name: Check failure
-      if: |
-        contains(needs.*.result, 'failure') ||
-        contains(needs.*.result, 'cancelled')
-      run: exit 1
-    - name: Success
-      run: echo Success!
+      - name: Check failure
+        if: |
+          contains(needs.*.result, 'failure') ||
+          contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - name: Success
+        run: echo Success!

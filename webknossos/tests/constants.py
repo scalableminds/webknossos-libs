@@ -1,8 +1,15 @@
+import os
 import shlex
 import subprocess
+import sys
+from contextlib import contextmanager
 from pathlib import Path
+from time import sleep
+from typing import Iterator
 
 from upath import UPath
+
+from webknossos.utils import rmtree
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -20,17 +27,43 @@ REMOTE_TESTOUTPUT_DIR = UPath(
 )
 
 
-def start_minio_docker(name: str = "minio") -> None:
+@contextmanager
+def use_minio() -> Iterator[None]:
     """Minio is an S3 clone and is used as local test server"""
-    cmd = (
-        "docker run"
-        f" -p {MINIO_PORT}:9000"
-        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-        f" --name {name}"
-        " --rm"
-        " -d"
-        " minio/minio server /data"
-    )
-    subprocess.check_output(shlex.split(cmd))
-    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+    if sys.platform == "darwin":
+        minio_path = Path("testoutput_minio")
+        rmtree(minio_path)
+        minio_process = subprocess.Popen(
+            shlex.split(f"minio server --address :8000 ./{minio_path}"),
+            env={
+                **os.environ,
+                "MINIO_ROOT_USER": MINIO_ROOT_USER,
+                "MINIO_ROOT_PASSWORD": MINIO_ROOT_PASSWORD,
+            },
+        )
+        sleep(3)
+        assert minio_process.poll() is None
+        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+        try:
+            yield
+        finally:
+            minio_process.terminate()
+            rmtree(minio_path)
+    else:
+        container_name = "minio"
+        cmd = (
+            "docker run"
+            f" -p {MINIO_PORT}:9000"
+            f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
+            f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
+            f" --name {container_name}"
+            " --rm"
+            " -d"
+            " minio/minio server /data"
+        )
+        subprocess.check_output(shlex.split(cmd))
+        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+        try:
+            yield
+        finally:
+            subprocess.check_output(["docker", "stop", container_name])

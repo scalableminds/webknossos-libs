@@ -3,7 +3,6 @@
 import json
 import os
 import subprocess
-import sys
 from contextlib import contextmanager
 from math import ceil
 from pathlib import Path
@@ -21,7 +20,7 @@ from tests.constants import (
     MINIO_ROOT_PASSWORD,
     MINIO_ROOT_USER,
     REMOTE_TESTOUTPUT_DIR,
-    start_minio_docker,
+    use_minio,
 )
 from webknossos import BoundingBox, DataFormat, Dataset
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
@@ -49,13 +48,8 @@ TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
 
 @pytest.fixture(autouse=True, scope="module")
 def minio_docker() -> Iterator[None]:
-    """Starts a docker container with minio."""
-    container_name = "minio"
-    try:
-        start_minio_docker(container_name)
+    with use_minio():
         yield
-    finally:
-        subprocess.check_output(["docker", "stop", container_name])
 
 
 def check_call(*args: Union[str, int, Path]) -> None:
@@ -86,10 +80,6 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
-@pytest.mark.skipif(
-    sys.platform != "linux",
-    reason="Only run this test on Linux, because it requires a running `minio` docker container.",
-)
 def test_tiff_cubing_zarr_s3() -> None:
     """Tests zarr support when performing tiff cubing."""
 

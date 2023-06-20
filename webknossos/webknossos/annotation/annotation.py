@@ -300,7 +300,7 @@ class Annotation:
 
         if webknossos_url is not None and webknossos_url != _get_context().url:
             warnings.warn(
-                f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
+                f"[INFO] The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
                 + "Using no token, only public annotations can be downloaded. "
                 + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
             )
@@ -440,13 +440,13 @@ class Annotation:
         ), "Some volume layers have the same id, this is not allowed."
         if len(layers_without_location) > 0:
             warnings.warn(
-                "Omitting the volume layer annotation data for layers "
+                "[INFO] Omitting the volume layer annotation data for layers "
                 + f"{[v.name or v.id for v in layers_without_location]}, "
                 + "as their location is not referenced in the NML."
             )
         if len(layers_with_not_found_location) > 0:
             warnings.warn(
-                "Omitting the volume layer annotation data for layers "
+                "[INFO] Omitting the volume layer annotation data for layers "
                 + f"{[v.name or v.id for v in layers_without_location]}, "
                 + f"as their referenced files {[v.location for v in layers_without_location]} "
                 + "cannot be found."
@@ -568,10 +568,10 @@ class Annotation:
             if token is not None:
                 if organization_id != context.organization_id:
                     warnings.warn(
-                        "The annotation used with get_remote_annotation_dataset "
+                        "[WARNING] The annotation used with `get_remote_annotation_dataset` "
                         + "specifies a different organization id than the current context. "
                         + f"The annotation uses {organization_id}, the context {context.organization_id}.",
-                        RuntimeWarning,
+                        UserWarning,
                     )
 
         dataset_info_response = dataset_info.sync_detailed(
@@ -657,7 +657,7 @@ class Annotation:
             volume_layer = self._volume_layers[0]
             if volume_layer_id is not None and volume_layer_id != volume_layer.id:
                 warnings.warn(
-                    f"Only a single volume annotation is present and its id {volume_layer.id} does not fit the given id {volume_layer_id}."
+                    f"[INFO] Only a single volume annotation is present and its id {volume_layer.id} does not fit the given id {volume_layer_id}."
                 )
             if (
                 volume_layer_name is not None
@@ -665,7 +665,7 @@ class Annotation:
                 and volume_layer_name != volume_layer.name
             ):
                 warnings.warn(
-                    f"Only a single volume annotation is present and its name {volume_layer.name} "
+                    f"[INFO] Only a single volume annotation is present and its name {volume_layer.name} "
                     + f"does not fit the given name {volume_layer_name}."
                 )
             return volume_layer
@@ -679,7 +679,7 @@ class Annotation:
                         and volume_layer_name != volume_layer.name
                     ):
                         warnings.warn(
-                            f"The volume annotation was matched by id {volume_layer_id}, "
+                            f"[WARNING] The volume annotation was matched by id {volume_layer_id}, "
                             + f"but its name {volume_layer.name} does not fit the given name {volume_layer_name}."
                         )
                     return volume_layer

@@ -1,8 +1,6 @@
 import itertools
 import json
 import pickle
-import subprocess
-import warnings
 from pathlib import Path
 from typing import Iterator, Optional, Tuple, cast
 
@@ -15,7 +13,7 @@ from tests.constants import (
     REMOTE_TESTOUTPUT_DIR,
     TESTDATA_DIR,
     TESTOUTPUT_DIR,
-    start_minio_docker,
+    use_minio,
 )
 from webknossos.dataset import (
     COLOR_CATEGORY,
@@ -44,14 +42,9 @@ from webknossos.utils import (
 
 
 @pytest.fixture(autouse=True, scope="module")
-def docker_minio() -> Iterator[None]:
-    """Minio is an S3 clone and is used as local test server"""
-    container_name = "minio"
-    try:
-        start_minio_docker(container_name)
+def start_minio() -> Iterator[None]:
+    with use_minio():
         yield
-    finally:
-        subprocess.check_output(["docker", "stop", container_name])
 
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
@@ -59,6 +52,8 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
     (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
+    (DataFormat.Zarr3, TESTOUTPUT_DIR),
+    (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
 ]
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
@@ -105,12 +100,14 @@ def default_chunk_config(
         return (Vec3Int.full(chunk_shape), Vec3Int.full(8))
 
 
-def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
+def advanced_chunk_job(args: Tuple[View, int]) -> None:
     view, _i = args
 
     # write different data for each chunk (depending on the topleft of the chunk)
     data = view.read()
-    data = np.ones(data.shape, dtype=dtype) * dtype(sum(view.bounding_box.topleft))
+    data = np.ones(data.shape, dtype=np.dtype("uint8")) * (
+        sum(view.bounding_box.topleft) % 256
+    )
     view.write(data)
 
 
@@ -138,9 +135,8 @@ def for_each_chunking_with_wrong_chunk_shape(view: View) -> None:
 
 def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
     with get_executor_for_args(None) as executor:
-        func = named_partial(advanced_chunk_job, dtype=np.uint8)
         view.for_each_chunk(
-            func,
+            advanced_chunk_job,
             executor=executor,
         )
 
@@ -162,8 +158,8 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
         )
         chunk_data = chunk.read()
         assert np.array_equal(
-            np.ones(chunk_data.shape, dtype=np.uint8)
-            * np.uint8(sum(chunk.bounding_box.topleft)),
+            np.ones(chunk_data.shape, dtype=np.dtype("uint8"))
+            * (sum(chunk.bounding_box.topleft) % 256),
             chunk_data,
         )
 
@@ -186,12 +182,13 @@ def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) ->
 
 def get_multichanneled_data(dtype: type) -> np.ndarray:
     data: np.ndarray = np.zeros((3, 250, 200, 10), dtype=dtype)
+    max_value = np.iinfo(dtype).max
     for h in range(10):
         for i in range(250):
             for j in range(200):
-                data[0, i, j, h] = i * 256
-                data[1, i, j, h] = j * 256
-                data[2, i, j, h] = 100 * 256
+                data[0, i, j, h] = (i * 256) % max_value
+                data[1, i, j, h] = (j * 256) % max_value
+                data[2, i, j, h] = (100 * 256) % max_value
     return data
 
 
@@ -220,6 +217,9 @@ def test_create_dataset_with_layer_and_mag(
     elif data_format == DataFormat.Zarr:
         assert (ds_path / "color" / "1" / ".zarray").exists()
         assert (ds_path / "color" / "2-2-1" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color" / "1" / "zarr.json").exists()
+        assert (ds_path / "color" / "2-2-1" / "zarr.json").exists()
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
@@ -287,10 +287,10 @@ def test_create_default_mag(data_format: DataFormat) -> None:
 
     assert layer.data_format == data_format
     assert mag_view.info.chunk_shape == Vec3Int.full(32)
-    if data_format == DataFormat.WKW:
-        assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
-    else:
+    if data_format == DataFormat.Zarr:
         assert mag_view.info.chunks_per_shard == Vec3Int.full(1)
+    else:
+        assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
     assert mag_view.info.num_channels == 1
     assert mag_view.info.compression_mode == False
 
@@ -368,12 +368,13 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
 def test_view_read(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
 
-    wk_view = (
-        Dataset.open(ds_path)
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
-    )
+    with pytest.warns(UserWarning, match="block alignment"):
+        wk_view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
 
     # 'read()' checks if it was already opened. If not, it opens it automatically
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
@@ -384,12 +385,13 @@ def test_view_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
-    wk_view = (
-        Dataset.open(ds_path)
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
-    )
+    with pytest.warns(UserWarning, match="block alignment"):
+        wk_view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
 
     assert wk_view.info.data_format == data_format
 
@@ -403,8 +405,9 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_direct_zarr_access(output_path: Path) -> None:
-    ds_path = copy_simple_dataset(DataFormat.Zarr, output_path)
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
     mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
     np.random.seed(1234)
@@ -428,12 +431,13 @@ def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) ->
         data_format, output_path, "view_dataset_out_of_bounds"
     )
 
-    view = (
-        Dataset.open(ds_path)
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
-    )
+    with pytest.warns(UserWarning, match="block alignment"):
+        view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
 
     with pytest.raises(AssertionError):
         view.write(
@@ -497,13 +501,15 @@ def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
         .get_or_add_mag("1")
     )
 
-    data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
 
     mag_a.write(data)
     mag_b.write(data)
     assert mag_a.content_is_equal(mag_b)
 
-    mag_b.write(data + 10)
+    data = data + 10
+    mag_b.write(data)
     assert not mag_a.content_is_equal(mag_b)
 
 
@@ -871,9 +877,9 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     assure_exported_properties(ds)
 
 
-# Don't test zarr for performance reasons (lack of sharding)
-def test_chunking_wkw_advanced() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "chunking_advanced")
+@pytest.mark.parametrize("data_format", [DataFormat.WKW, DataFormat.Zarr3])
+def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
+    ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "chunking_advanced")
     ds = Dataset(ds_path, voxel_size=(1, 1, 2))
 
     mag = ds.add_layer(
@@ -887,8 +893,9 @@ def test_chunking_wkw_advanced() -> None:
         chunks_per_shard=8,
     )
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
-    view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
-    for_each_chunking_advanced(ds, view)
+    with pytest.warns(UserWarning, match="block alignment"):
+        view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
+        for_each_chunking_advanced(ds, view)
 
     assure_exported_properties(ds)
 
@@ -1068,8 +1075,9 @@ def test_get_view() -> None:
 
     assert mag.bounding_box.bottomright == Vec3Int(110, 220, 330)
 
-    # Therefore, creating a view with a size of (16, 16, 16) is now allowed
-    wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
+    with pytest.warns(UserWarning, match="block alignment"):
+        # Therefore, creating a view with a size of (16, 16, 16) is now allowed
+        wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
     assert wk_view.bounding_box == BoundingBox((10, 20, 30), (16, 16, 16))
 
     with pytest.raises(AssertionError):
@@ -1080,9 +1088,10 @@ def test_get_view() -> None:
     # But setting "read_only=True" still works
     mag.get_view(size=(26, 36, 46), absolute_offset=(0, 0, 0), read_only=True)
 
-    # Creating this subview works because the subview is completely inside the 'wk_view'.
-    # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
-    sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
+    with pytest.warns(UserWarning, match="block alignment"):
+        # Creating this subview works because the subview is completely inside the 'wk_view'.
+        # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
+        sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
     assert sub_view.bounding_box == BoundingBox((18, 28, 38), (8, 8, 8))
 
     with pytest.raises(AssertionError):
@@ -1221,10 +1230,7 @@ def test_writing_subset_of_compressed_data_multi_channel(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match="block alignment"):
         write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -1266,10 +1272,7 @@ def test_writing_subset_of_compressed_data_single_channel(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match="block alignment"):
         write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -1310,23 +1313,17 @@ def test_writing_subset_of_compressed_data(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match="block alignment"):
         compressed_mag.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-    with warnings.catch_warnings():
-        # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
-        warnings.filterwarnings("error")  # This escalates the warning to an error
-        with pytest.raises(RuntimeWarning):
-            compressed_mag.write(
-                relative_offset=(20, 40, 60),
-                data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
-            )
+    with pytest.warns(UserWarning, match="block alignment"):
+        compressed_mag.write(
+            relative_offset=(20, 40, 60),
+            data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
+        )
 
         assert compressed_mag.bounding_box == BoundingBox(
             topleft=(
@@ -1381,11 +1378,7 @@ def test_writing_subset_of_chunked_compressed_data(
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
     )
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
-
+    with pytest.warns(UserWarning, match="block alignment"):
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
         write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
@@ -1503,10 +1496,11 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assure_exported_properties(original_ds)
 
 
-def test_remote_add_symlink_layer() -> None:
-    src_dataset_path = copy_simple_dataset(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR)
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
+    src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
     dst_dataset_path = prepare_dataset_path(
-        DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+        data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
     )
 
     src_ds = Dataset.open(src_dataset_path)
@@ -1516,10 +1510,11 @@ def test_remote_add_symlink_layer() -> None:
         dst_ds.add_symlink_layer(src_ds.get_layer("color"))
 
 
-def test_remote_add_symlink_mag() -> None:
-    src_dataset_path = copy_simple_dataset(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR)
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
+    src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
     dst_dataset_path = prepare_dataset_path(
-        DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+        data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
     )
 
     src_ds = Dataset.open(src_dataset_path)
@@ -1528,7 +1523,7 @@ def test_remote_add_symlink_mag() -> None:
 
     dst_ds = Dataset(dst_dataset_path, voxel_size=(1, 1, 1))
     dst_layer = dst_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=DataFormat.Zarr
+        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
 
     with pytest.raises(AssertionError):
@@ -1779,23 +1774,27 @@ def test_dataset_conversion_wkw_only() -> None:
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_dataset_conversion_from_wkw_to_zarr(output_path: Path) -> None:
-    converted_path = prepare_dataset_path(DataFormat.Zarr, output_path, "converted")
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_dataset_conversion_from_wkw_to_zarr(
+    output_path: Path, data_format: DataFormat
+) -> None:
+    converted_path = prepare_dataset_path(data_format, output_path, "converted")
 
     input_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
     converted_ds = input_ds.copy_dataset(
-        converted_path, data_format=DataFormat.Zarr, chunks_per_shard=1
+        converted_path, data_format=data_format, chunks_per_shard=1
     )
 
-    assert (converted_path / "color" / "1" / ".zarray").exists()
+    if data_format == DataFormat.Zarr:
+        assert (converted_path / "color" / "1" / ".zarray").exists()
+    else:
+        assert (converted_path / "color" / "1" / "zarr.json").exists()
     assert np.all(
         input_ds.get_layer("color").get_mag("1").read()
         == converted_ds.get_layer("color").get_mag("1").read()
     )
-    assert converted_ds.get_layer("color").data_format == DataFormat.Zarr
-    assert (
-        converted_ds.get_layer("color").get_mag("1").info.data_format == DataFormat.Zarr
-    )
+    assert converted_ds.get_layer("color").data_format == data_format
+    assert converted_ds.get_layer("color").get_mag("1").info.data_format == data_format
 
     assure_exported_properties(converted_ds)
 
@@ -1953,36 +1952,47 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
     for offset in write_positions:
         mag.write(absolute_offset=offset * mag.mag.to_vec3_int(), data=write_data)
 
-    bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
-    file_size = mag._get_file_dimensions()
+    if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+        with pytest.warns(UserWarning, match=".*can be slow.*"):
+            bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
 
-    expected_results = set()
-    for offset in write_positions:
-        range_from = offset // file_size * file_size
-        range_to = offset + data_size
-        # enumerate all bounding boxes of the current write operation
-        x_range = range(
-            range_from[0],
-            range_to[0],
-            file_size[0],
+        assert (
+            len(bounding_boxes_on_disk)
+            == mag.bounding_box.size.ceildiv(mag._array.info.shard_shape)
+            .ceildiv(mag.mag)
+            .prod()
         )
-        y_range = range(
-            range_from[1],
-            range_to[1],
-            file_size[1],
-        )
-        z_range = range(
-            range_from[2],
-            range_to[2],
-            file_size[2],
-        )
+    else:
+        bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
+        file_size = mag._get_file_dimensions()
 
-        for bb_offset in itertools.product(x_range, y_range, z_range):
-            expected_results.add(
-                BoundingBox(bb_offset, file_size).from_mag_to_mag1(mag.mag)
+        expected_results = set()
+        for offset in write_positions:
+            range_from = offset // file_size * file_size
+            range_to = offset + data_size
+            # enumerate all bounding boxes of the current write operation
+            x_range = range(
+                range_from[0],
+                range_to[0],
+                file_size[0],
+            )
+            y_range = range(
+                range_from[1],
+                range_to[1],
+                file_size[1],
+            )
+            z_range = range(
+                range_from[2],
+                range_to[2],
+                file_size[2],
             )
 
-    assert set(bounding_boxes_on_disk) == expected_results
+            for bb_offset in itertools.product(x_range, y_range, z_range):
+                expected_results.add(
+                    BoundingBox(bb_offset, file_size).from_mag_to_mag1(mag.mag)
+                )
+
+        assert set(bounding_boxes_on_disk) == expected_results
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -2002,14 +2012,24 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
             mag1.compress()
 
         compressed_dataset_path = (
-            REMOTE_TESTOUTPUT_DIR / "simple_zarr_dataset_compressed"
+            REMOTE_TESTOUTPUT_DIR / f"simple_{data_format}_dataset_compressed"
         )
-        mag1.compress(
-            target_path=compressed_dataset_path,
-        )
+        if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+            with pytest.warns(UserWarning, match=".*can be slow.*"):
+                mag1.compress(
+                    target_path=compressed_dataset_path,
+                )
+        else:
+            mag1.compress(
+                target_path=compressed_dataset_path,
+            )
         mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
     else:
-        mag1.compress()
+        if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+            with pytest.warns(UserWarning, match=".*can be slow.*"):
+                mag1.compress()
+        else:
+            mag1.compress()
 
     assert mag1._is_compressed()
     assert mag1.info.data_format == data_format
@@ -2018,10 +2038,7 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
     )
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="webknossos"
-        )  # This line is not necessary. It simply keeps the output of the tests clean.
+    with pytest.warns(UserWarning, match="block alignment"):
         # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         mag1.write(
             (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
@@ -2495,6 +2512,9 @@ def test_downsampling(data_format: DataFormat, output_path: Path) -> None:
     if data_format == DataFormat.Zarr:
         assert (ds_path / "color" / "2" / ".zarray").exists()
         assert (ds_path / "color" / "4" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color" / "2" / "zarr.json").exists()
+        assert (ds_path / "color" / "4" / "zarr.json").exists()
     else:
         assert (ds_path / "color" / "2" / "header.wkw").exists()
         assert (ds_path / "color" / "4" / "header.wkw").exists()
@@ -2529,6 +2549,9 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
     if data_format == DataFormat.Zarr:
         assert (ds_path / "color_2" / "1" / ".zarray").exists()
         assert (ds_path / "color_2" / "2" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color_2" / "1" / "zarr.json").exists()
+        assert (ds_path / "color_2" / "2" / "zarr.json").exists()
     else:
         assert (ds_path / "color_2" / "1" / "header.wkw").exists()
         assert (ds_path / "color_2" / "2" / "header.wkw").exists()
@@ -2581,6 +2604,10 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
         assert (output_ds_path / "color" / "1" / ".zarray").exists()
         assert (output_ds_path / "color" / "2-2-1" / ".zarray").exists()
         assert (output_ds_path / "color" / "4-4-2" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (output_ds_path / "color" / "1" / "zarr.json").exists()
+        assert (output_ds_path / "color" / "2-2-1" / "zarr.json").exists()
+        assert (output_ds_path / "color" / "4-4-2" / "zarr.json").exists()
     else:
         assert (output_ds_path / "color" / "1" / "header.wkw").exists()
         assert (output_ds_path / "color" / "2-2-1" / "header.wkw").exists()
@@ -2589,14 +2616,18 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     assure_exported_properties(input_dataset)
 
 
-def test_zarr_copy_to_remote_dataset() -> None:
-    ds_path = prepare_dataset_path(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "copied")
+@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
+    ds_path = prepare_dataset_path(data_format, REMOTE_TESTOUTPUT_DIR, "copied")
     Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
         ds_path,
         chunks_per_shard=1,
-        data_format=DataFormat.Zarr,
+        data_format=data_format,
     )
-    assert (ds_path / "color" / "1" / ".zarray").exists()
+    if data_format == DataFormat.Zarr:
+        assert (ds_path / "color" / "1" / ".zarray").exists()
+    else:
+        assert (ds_path / "color" / "1" / "zarr.json").exists()
 
 
 def test_wkw_copy_to_remote_dataset() -> None:

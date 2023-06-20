@@ -7,19 +7,19 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-import zarr
 from cluster_tools import Executor
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
+    NDArrayLike,
     get_executor_for_args,
     is_fs_path,
     rmtree,
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, ZarrArray
+from ._array import ArrayInfo, BaseArray, WKWArray, ZarrArray, ZarritaArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -129,13 +129,16 @@ class MagView(View):
     def name(self) -> str:
         return self._mag.to_layer_name()
 
-    def get_zarr_array(self) -> zarr.Array:
+    def get_zarr_array(self) -> NDArrayLike:
         """
         Directly access the underlying Zarr array. Only available for Zarr-based datasets.
         """
         array_wrapper = self._array
-        if not isinstance(array_wrapper, ZarrArray):
+        if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
+        assert isinstance(array_wrapper, ZarrArray) or isinstance(
+            array_wrapper, ZarritaArray
+        )  # for typechecking
         return array_wrapper._zarray
 
     def write(
@@ -257,7 +260,17 @@ class MagView(View):
         This differs from the bounding box in the properties, which is an "overall" bounding box,
         abstracting from the files on disk.
         """
-        for bbox in self._array.list_bounding_boxes():
+        try:
+            bboxes = self._array.list_bounding_boxes()
+        except NotImplementedError:
+            warnings.warn(
+                "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
+                + "Instead all bounding boxes are iterated, which can be slow."
+            )
+            bboxes = self.bounding_box.in_mag(self.mag).chunk(
+                self._array.info.shard_shape
+            )
+        for bbox in bboxes:
             yield bbox.from_mag_to_mag1(self._mag)
 
     def get_views_on_disk(

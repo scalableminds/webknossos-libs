@@ -1,5 +1,6 @@
 import inspect
 import os
+import warnings
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -27,7 +28,10 @@ def tmp_cwd() -> Iterator[None]:
 
 
 def exec_main_and_get_vars(
-    module: ModuleType, *var_names: str, raises: Optional[Type[Exception]] = None
+    module: ModuleType,
+    *var_names: str,
+    raises: Optional[Type[Exception]] = None,
+    warns: Optional[str] = None,
 ) -> Tuple[Any, ...]:
     source = inspect.getsource(module)
     global_statements = "\n".join(f"    global {var_name}" for var_name in var_names)
@@ -39,13 +43,19 @@ def exec_main_and_get_vars(
         def_main_needle, "def main() -> None:\n" + global_statements + "\n"
     )
     exec(new_source, module.__dict__)  # pylint: disable=exec-used
-    cm: ContextManager[Any]
+    cm_raises: ContextManager[Any]
+    cm_warns: ContextManager[Any]
     if raises is None:
-        cm = nullcontext()
+        cm_raises = nullcontext()
     else:
-        cm = pytest.raises(raises)
-    with cm:
-        module.main()  # type: ignore[attr-defined]
+        cm_raises = pytest.raises(raises)
+    if warns is None:
+        cm_warns = nullcontext()
+    else:
+        cm_warns = pytest.warns(UserWarning, match=warns)
+    with cm_warns:
+        with cm_raises:
+            module.main()  # type: ignore[attr-defined]
 
     return tuple(module.__dict__[var_name] for var_name in var_names)
 
@@ -76,7 +86,9 @@ def test_create_dataset_from_images() -> None:
     with tmp_cwd():
         import examples.create_dataset_from_images as example
 
-        (dataset,) = exec_main_and_get_vars(example, "dataset")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", module="webknossos")
+            (dataset,) = exec_main_and_get_vars(example, "dataset")
         assert dataset.voxel_size == (11, 11, 11)
         assert len(dataset.layers) == 1
         assert dataset.get_layer("tiff").get_finest_mag().read().shape == (
@@ -250,7 +262,9 @@ def test_remote_datasets() -> None:
     import examples.remote_datasets as example
 
     (own_remote_datasets,) = exec_main_and_get_vars(
-        example, "own_remote_datasets", raises=AssertionError
+        example,
+        "own_remote_datasets",
+        raises=AssertionError,
     )
 
     ds = own_remote_datasets["e2006_knossos"]
