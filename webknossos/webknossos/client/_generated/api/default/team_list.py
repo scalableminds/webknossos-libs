@@ -36,7 +36,7 @@ def _get_kwargs(
 def _parse_response(
     *, response: httpx.Response
 ) -> Optional[Union[Any, List["TeamListResponse200Item"]]]:
-    if response.status_code == 200:
+    if response.status_code == HTTPStatus.OK:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
@@ -47,7 +47,7 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
-    if response.status_code == 400:
+    if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = cast(Any, None)
         return response_400
     return None

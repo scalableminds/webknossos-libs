@@ -25,10 +25,12 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Protocol,
     Tuple,
     TypeVar,
 )
 
+import numpy as np
 import rich
 from cluster_tools import Executor, get_executor
 from rich.progress import Progress
@@ -176,7 +178,6 @@ def copy_directory_with_symlinks(
 
 
 def setup_warnings() -> None:
-    warnings.filterwarnings("default", category=DeprecationWarning, module="wkcuber")
     warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
 
 
@@ -304,3 +305,23 @@ class LazyReadOnlyDict(Mapping[K, V]):
 
     def __len__(self) -> int:
         return len(self.entries)
+
+
+class NDArrayLike(Protocol):
+    def __getitem__(self, selection: Tuple[slice, ...]) -> np.ndarray:
+        pass
+
+    def __setitem__(self, selection: Tuple[slice, ...], value: np.ndarray) -> None:
+        pass
+
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        pass
+
+    @property
+    def ndim(self) -> int:
+        pass
+
+    @property
+    def dtype(self) -> np.dtype:
+        pass

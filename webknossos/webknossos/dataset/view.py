@@ -28,7 +28,7 @@ def _assert_check_equality(args: Tuple["View", "View", int]) -> None:
 
 
 _BLOCK_ALIGNMENT_WARNING = (
-    "Warning: write() was called on a compressed mag without block alignment. "
+    "[WARNING] write() was called on a compressed mag without block alignment. "
     + "Performance will be degraded as the data has to be padded first."
 )
 
@@ -260,7 +260,6 @@ class View:
             if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
                 warnings.warn(
                     _BLOCK_ALIGNMENT_WARNING,
-                    RuntimeWarning,
                 )
 
             aligned_data = self._read_without_checks(aligned_bbox)
@@ -575,9 +574,9 @@ class View:
                 current_mag_aligned_bbox, dont_assert=True
             ):
                 warnings.warn(
-                    "Warning: get_view() was called without block alignment. "
+                    "[WARNING] get_view() was called without block alignment. "
                     + "Please only use sequentially, parallel access across such views is error-prone.",
-                    RuntimeWarning,
+                    UserWarning,
                 )
 
         return View(

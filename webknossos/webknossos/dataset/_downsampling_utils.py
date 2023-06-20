@@ -62,7 +62,7 @@ def calculate_mags_to_downsample(
             current_mag = mags_to_align_with_by_max_dim[current_mag.max_dim * 2]
             if current_mag > coarsest_mag:
                 warnings.warn(
-                    "The mag taken from another layer is larger in some dimensions than coarsest_mag."
+                    "[INFO] The mag taken from another layer is larger in some dimensions than `coarsest_mag`."
                 )
         elif voxel_size is None:
             # In case the sampling mode is CONSTANT_Z or ISOTROPIC:

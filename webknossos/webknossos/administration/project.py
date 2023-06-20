@@ -97,7 +97,7 @@ class Project:
 
             else:
                 warnings.warn(
-                    f"Fetched only {PAGINATION_LIMIT} of {total_count} tasks. Pass fetch_all=True to fetch all tasks iteratively (may be slow!)"
+                    f"[INFO] Fetched only {PAGINATION_LIMIT} of {total_count} tasks. Pass fetch_all=True to fetch all tasks iteratively (may be slow!)"
                 )
 
         return all_tasks

@@ -10,16 +10,51 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added support for Python 3.11. [#843](https://github.com/scalableminds/webknossos-libs/pull/843)
+- Added `duration_in_seconds` and `modified` to `AnnotationInfo`. [#914](https://github.com/scalableminds/webknossos-libs/pull/914)
+- Added [`zarrita`](https://github.com/scalableminds/zarrita) storage backend for arrays. zarrita supports Zarr v2 and v3 including sharding. To activate zarrita, the environment variable `WK_USE_ZARRITA` must be set. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
+- Added a `Zarr3` data format which supports sharding. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
 
 ### Changed
+- Integrated the `wkcuber` CLI tool into `webknossos` package. [#903](https://github.com/scalableminds/webknossos-libs/pull/903)
+  - To get an overview of all webknossos subcommands type `webknossos --help`. If the usage of a single subcommand is of interest type `webknossos <subcommand> --help`
+  - These commands were changed:
+    - `python -m wkcuber`, `python -m wkcuber.convert_image_stack_to_wkw` -> `webknossos convert`
+    - `python -m wkcuber.export_wkw_as_tiff` -> `webknossos export-wkw-as-tiff`
+    - `python -m wkcuber.convert_knossos` -> `webknossos convert-knossos`
+    - `python -m wkcuber.convert_nifti` -> `webknossos convert-nifti`
+    - `python -m wkcuber.convert_raw` -> `webknossos convert-raw`
+    - `python -m wkcuber.downsampling` -> `webknossos downsample`
+    - `python -m wkcuber.compress` -> `webknossos compress`
+    - `python -m wkcuber.check_equality` -> `webknossos check-equality`
+  - There is one new command:
+    - `webknossos upload` to upload a dataset to a WEBKNOSSOS server
+  - These commands have been removed:
+    - `python -m wkcuber.cubing`
+    - `python -m wkcuber.tile_cubing`
+    - `python -m wkcuber.metadata`
+    - `python -m wkcuber.recubing`
 
 ### Fixed
+- Fixed a bug where upsampling of a layer would fail, if the layer had a bounding box that doesn't align with the from_mag mag. [#915](https://github.com/scalableminds/webknossos-libs/pull/915)
+
+
+## [0.12.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.6) - 2023-06-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.5...v0.12.6)
+
+### Changed
+- Upgrades `wkw`. [#911](https://github.com/scalableminds/webknossos-libs/pull/911)
+
+
+## [0.12.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.5) - 2023-06-01
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.4...v0.12.5)
+
+### Added
+- Added support for Python 3.11. [#843](https://github.com/scalableminds/webknossos-libs/pull/843)
 
 
 ## [0.12.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.4) - 2023-05-25

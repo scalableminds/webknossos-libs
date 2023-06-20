@@ -101,7 +101,7 @@ def upload_dataset(
     layer_names_to_link = set(i.new_layer_name or i.layer_name for i in layers_to_link)
     if len(layer_names_to_link.intersection(dataset.layers.keys())) > 0:
         warnings.warn(
-            "Excluding the following layers from upload, since they will be linked: "
+            "[INFO] Excluding the following layers from upload, since they will be linked: "
             + f"{layer_names_to_link.intersection(dataset.layers.keys())}"
         )
         with TemporaryDirectory() as tmpdir:

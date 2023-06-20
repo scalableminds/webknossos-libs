@@ -1,13 +1,30 @@
+import warnings
 from pathlib import Path
+from typing import Iterator
 
 import numpy as np
+import pytest
 
-from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
+from webknossos import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    BoundingBox,
+    Dataset,
+    Mag,
+    Vec3Int,
+)
 from webknossos.dataset._upsampling_utils import upsample_cube, upsample_cube_job
 from webknossos.dataset.sampling_modes import SamplingModes
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
+
+
+@pytest.fixture(autouse=True, scope="function")
+def ignore_warnings() -> Iterator:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", module="webknossos", message=r"\[WARNING\]")
+        yield
 
 
 def test_upsampling(tmp_path: Path) -> None:
@@ -125,3 +142,21 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
     target_buffer = l.get_mag("1").read()
     assert np.any(target_buffer != 0)
     assert np.all(target_buffer == joined_buffer)
+
+
+def test_upsampling_non_aligned(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "test", (50, 50, 50))
+    l = ds.add_layer(
+        "color", SEGMENTATION_CATEGORY, dtype_per_channel="uint8", largest_segment_id=0
+    )
+    l.bounding_box = BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))
+    l.add_mag(32)
+
+    l.upsample(
+        from_mag=Mag(32),
+        finest_mag=Mag(8),
+        sampling_mode=SamplingModes.ISOTROPIC,
+        compress=True,
+    )
+    # The original bbox should be unchanged
+    assert l.bounding_box == BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))

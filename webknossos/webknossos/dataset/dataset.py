@@ -410,7 +410,7 @@ class Dataset:
         if webknossos_url is not None and webknossos_url != current_context.url:
             if sharing_token is None:
                 warnings.warn(
-                    f"The supplied url {webknossos_url} does not match your current context {current_context.url}. "
+                    f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
                     + f"Using no token, only public datasets can used with Dataset.{caller}(). "
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
@@ -1113,11 +1113,10 @@ class Dataset:
                 # initialize PimsImages as above, with normal layer name
                 suffix_with_pims_open_kwargs_per_layer = {"": {}}
                 warnings.warn(
-                    f"There are dimensions beyond channels and xyz which cannot be read: {possible_layers}. "
+                    f"[INFO] There are dimensions beyond channels and xyz which cannot be read: {possible_layers}. "
                     "Defaulting to the first one. "
                     "Please set allow_multiple_layers=True if all of them should be written to different layers, "
                     "or set specific values as arguments.",
-                    RuntimeWarning,
                 )
         else:
             # initialize PimsImages as above, with normal layer name
@@ -1128,9 +1127,8 @@ class Dataset:
             add_layer_kwargs["largest_segment_id"] = 0
         if len(suffix_with_pims_open_kwargs_per_layer) > max_layers:
             warnings.warn(
-                f"Limiting the number of added layers to {max_layers} out of {len(suffix_with_pims_open_kwargs_per_layer)}. "
-                + "Please increase max_layers if you want more layers to be added.",
-                RuntimeWarning,
+                f"[INFO] Limiting the number of added layers to {max_layers} out of {len(suffix_with_pims_open_kwargs_per_layer)}. "
+                + "Please increase `max_layers` if you want more layers to be added.",
             )
         for _, (
             layer_name_suffix,
@@ -1174,8 +1172,6 @@ class Dataset:
                 if chunk_shape is None:
                     chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
                 if chunks_per_shard is None:
-                    # chunks_per_shard is 1 by default for zarr atm, but this
-                    # might change in the future:
                     chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR.with_z(1)
             mag_view = layer.add_mag(
                 mag=mag,
@@ -1223,7 +1219,7 @@ class Dataset:
                 warnings.filterwarnings(
                     "ignore",
                     message=_BLOCK_ALIGNMENT_WARNING,
-                    category=RuntimeWarning,
+                    category=UserWarning,
                     module="webknossos",
                 )
                 # There are race-conditions about setting the bbox of the layer.
@@ -1253,9 +1249,8 @@ class Dataset:
                 )
             if pims_images.expected_shape != actual_size:
                 warnings.warn(
-                    "Some images are larger than expected, smaller slices are padded with zeros now. "
+                    "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
                     + f"New size is {actual_size}, expected {pims_images.expected_shape}.",
-                    RuntimeWarning,
                 )
             if first_layer is None:
                 first_layer = layer
@@ -1801,9 +1796,8 @@ class RemoteDataset(Dataset):
         except FileNotFoundError as e:
             if hasattr(self, "_properties"):
                 warnings.warn(
-                    f"Cannot open remote webknossos dataset {dataset_path} as zarr. "
+                    f"[WARNING] Cannot open remote webknossos dataset {dataset_path} as zarr. "
                     + "Returning a stub dataset instead, accessing metadata properties might still work.",
-                    RuntimeWarning,
                 )
                 self.path = None  # type: ignore[assignment]
             else:

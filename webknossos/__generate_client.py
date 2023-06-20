@@ -295,6 +295,7 @@ REQUIRED_KEYS = {
     "firstName",
     "lastName",
     "created",
+    "modified",
     "lastActivity",
     # "teams", added 2022-07, optional for backwards-compatibility
     "experiences",

@@ -732,7 +732,7 @@ class Layer:
         if self._properties.bounding_box.size.z == 1:
             if sampling_mode != SamplingModes.CONSTANT_Z:
                 warnings.warn(
-                    "The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."
+                    "[INFO] The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."
                 )
                 sampling_mode = SamplingModes.CONSTANT_Z
 
@@ -762,7 +762,7 @@ class Layer:
             mags_to_downsample
         ):
             msg = (
-                f"The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by webknossos. "
+                f"[INFO] The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by WEBKNOSSOS. "
                 f"Consider using a different sampling mode (e.g. {SamplingModes.ISOTROPIC}). "
                 f"The calculated downsampling scheme is: {[m.to_layer_name() for m in mags_to_downsample]}"
             )
@@ -1050,6 +1050,11 @@ class Layer:
                 target_mag, prev_mag_view, compress
             )
 
+            # We need to make sure the layer's bounding box is aligned
+            # with the previous mag. Otherwise, `for_zipped_chunks` will fail.
+            # Saving the original layer bbox for later restore
+            old_layer_bbox = self.bounding_box
+            self.bounding_box = prev_mag_view.bounding_box
             # Get target view
             target_view = target_mag_view.get_view()
 
@@ -1069,6 +1074,8 @@ class Layer:
                     executor=actual_executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
+            # Restoring the original layer bbox
+            self.bounding_box = old_layer_bbox
 
     def _setup_mag(self, mag: Mag) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
