@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `duration_in_seconds` and `modified` to `AnnotationInfo`. [#914](https://github.com/scalableminds/webknossos-libs/pull/914)
 - Added [`zarrita`](https://github.com/scalableminds/zarrita) storage backend for arrays. zarrita supports Zarr v2 and v3 including sharding. To activate zarrita, the environment variable `WK_USE_ZARRITA` must be set. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
 - Added a `Zarr3` data format which supports sharding. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
 
@@ -39,6 +40,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `python -m wkcuber.recubing`
 
 ### Fixed
+- Fixed a bug where upsampling of a layer would fail, if the layer had a bounding box that doesn't align with the from_mag mag. [#915](https://github.com/scalableminds/webknossos-libs/pull/915)
 
 
 ## [0.12.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.6) - 2023-06-09
