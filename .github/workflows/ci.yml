@@ -330,8 +330,7 @@ jobs:
         run: pip3 install -r requirements.txt
       - name: Publish python packages
         env:
-          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_PASSWORD }}
         run: _tooling/publish.sh
       - name: Prepare github release
         run: |

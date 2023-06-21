@@ -14,12 +14,8 @@ if ! python _tooling/check_version.py ${PKG_VERSION}; then
     exit 1
 fi
 
-for PKG in */pyproject.toml; do
+for PKG in {cluster_tools,webknossos}/pyproject.toml; do
     PKG="$(dirname "$PKG")"
-    if [[ "$PKG" == "docs" || "$PKG" == "wkcuber" ]]; then
-        echo Skipping "$PKG"
-        continue
-    fi
     echo "Creating release for $PKG"
 
     pushd "$PKG" > /dev/null

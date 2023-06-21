@@ -2,12 +2,8 @@
 set -eEuo pipefail
 set +x
 
-for PKG in */pyproject.toml; do
+for PKG in {cluster_tools,webknossos}/pyproject.toml; do
     PKG="$(dirname "$PKG")"
-    if [[ "$PKG" == "docs" || "$PKG" == "wkcuber" ]]; then
-        echo Skipping "$PKG"
-        continue
-    fi
     echo Publishing "$PKG"
 
     pushd "$PKG" > /dev/null
@@ -20,7 +16,7 @@ for PKG in */pyproject.toml; do
     poetry version "$PKG_VERSION"
     # replace all relative path dependencies with the current version:
     sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
-    poetry publish --build -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD"
+    poetry publish --build
 
     # Restore files
     mv pyproject.toml.bak pyproject.toml
