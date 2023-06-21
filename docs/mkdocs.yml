@@ -122,7 +122,7 @@ nav:
               - Project: api/webknossos/administration/project.md
               - Task: api/webknossos/administration/task.md
       - CLI Reference:
-        - Overview: cli/index.md
+          - Overview: cli/index.md
       - Version Changelog:
           - webknossos-py/stability_policy.md
           - webknossos-py/changelog.md
@@ -147,13 +147,13 @@ plugins:
   - mkdocs-video:
       is_video: False
       mark: "youtube-video"
+  - glightbox
 
 markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
   - md_extensions.pdoc_toc_extension
-  - md_extensions.mdlightbox
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.superfences
