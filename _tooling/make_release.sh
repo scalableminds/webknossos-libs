@@ -16,11 +16,8 @@ fi
 
 for PKG in */pyproject.toml; do
     PKG="$(dirname "$PKG")"
-    if [[ "$PKG" == "docs" ]]; then
+    if [[ "$PKG" == "docs" || "$PKG" == "wkcuber" ]]; then
         echo Skipping "$PKG"
-        continue
-    fi
-    if [ ! -f "$PKG/Changelog.md" ]; then
         continue
     fi
     echo "Creating release for $PKG"
