@@ -20,6 +20,9 @@ for PKG in */pyproject.toml; do
         echo Skipping "$PKG"
         continue
     fi
+    if [ ! -f "$PKG/Changelog.md" ]; then
+        continue
+    fi
     echo "Creating release for $PKG"
 
     pushd "$PKG" > /dev/null
