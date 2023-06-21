@@ -1430,13 +1430,13 @@ files = [
 
 [[package]]
 name = "pdoc"
-version = "11.2.0"
+version = "14.0.0"
 description = "API Documentation for Python Projects"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pdoc-11.2.0-py3-none-any.whl", hash = "sha256:f10f564e4fef89e21524f517a4b24ff949b91dc7b64dabd31c3543280a2637ea"},
-    {file = "pdoc-11.2.0.tar.gz", hash = "sha256:ab2e731efa6efe871be2e687b40db178301f0f57a71e3866b11487c6cb072f4c"},
+    {file = "pdoc-14.0.0-py3-none-any.whl", hash = "sha256:4514041ff5da33f1adbc700002a661600fc13a9adadef317bc6ae8be9e61154b"},
+    {file = "pdoc-14.0.0.tar.gz", hash = "sha256:ad6c16c949e5dd8b30effc5398aedb5779ffe8ab94be91ce2cddc320e8127900"},
 ]
 
 [package.dependencies]
@@ -1446,7 +1446,7 @@ MarkupSafe = "*"
 pygments = ">=2.12.0"
 
 [package.extras]
-dev = ["flake8", "hypothesis", "mypy", "pytest", "pytest-cov", "pytest-timeout", "tox"]
+dev = ["black", "hypothesis", "mypy", "pygments (>=2.14.0)", "pytest", "pytest-cov", "pytest-timeout", "ruff", "tox", "types-pygments"]
 
 [[package]]
 name = "pillow"
@@ -2451,4 +2451,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "eba8d2cb9748c70476396b2f557b8e08904bf146046911ebab7abd6a63480030"
+content-hash = "1890f1bf66cb4dc6464f2a2636e5163bb5ac31d468028645f6f3c535bab3cd5f"
