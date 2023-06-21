@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.13.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.0) - 2023-06-21
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.6...v0.13.0)
 
 ### Added
 - Added `duration_in_seconds` and `modified` to `AnnotationInfo`. [#914](https://github.com/scalableminds/webknossos-libs/pull/914)
@@ -41,6 +51,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug where upsampling of a layer would fail, if the layer had a bounding box that doesn't align with the from_mag mag. [#915](https://github.com/scalableminds/webknossos-libs/pull/915)
+
 
 
 ## [0.12.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.6) - 2023-06-09
