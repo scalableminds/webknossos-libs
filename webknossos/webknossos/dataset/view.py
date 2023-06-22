@@ -2,10 +2,21 @@ import warnings
 from argparse import Namespace
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple, Type
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    Optional,
+    Tuple,
+    Type,
+)
 
 import numpy as np
 import wkw
+
 from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -243,13 +254,34 @@ class View:
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
         if self._is_compressed():
-            current_mag_bbox, data = self._handle_compressed_write(
+            for current_mag_bbox, chunked_data in self._handle_compressed_write(
                 current_mag_bbox, data
-            )
-
-        self._array.write(current_mag_bbox.topleft, data)
+            ):
+                self._array.write(current_mag_bbox.topleft, chunked_data)
+        else:
+            self._array.write(current_mag_bbox.topleft, data)
 
     def _handle_compressed_write(
+        self, current_mag_bbox: BoundingBox, data: np.ndarray
+    ) -> Iterator[Tuple[BoundingBox, np.ndarray]]:
+        chunked_bboxes = current_mag_bbox.chunk(
+            self.info.shard_shape,
+            chunk_border_alignments=self.info.shard_shape,
+        )
+        for chunked_bbox in chunked_bboxes:
+            source_slice: Any
+            if len(data.shape) == 3:
+                source_slice = chunked_bbox.offset(
+                    -current_mag_bbox.topleft
+                ).to_slices()
+            else:
+                source_slice = (slice(None, None),) + chunked_bbox.offset(
+                    -current_mag_bbox.topleft
+                ).to_slices()
+
+            yield self._handle_compressed_write_chunk(chunked_bbox, data[source_slice])
+
+    def _handle_compressed_write_chunk(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
     ) -> Tuple[BoundingBox, np.ndarray]:
         aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_shape, ceil=True)

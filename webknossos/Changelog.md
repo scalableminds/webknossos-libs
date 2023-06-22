@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug where compression in add_layer_from_images uses too much memory [#900](https://github.com/scalableminds/webknossos-libs/issues/900)
 
 
 ## [0.13.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.0) - 2023-06-21
