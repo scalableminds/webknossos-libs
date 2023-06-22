@@ -7,16 +7,17 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
+mkdocs-glightbox = "^0.3.4"
 
 [tool.poetry.dev-dependencies]
 LinkChecker = "^10.0.1"
-mkdocs = "^1.3.0"
+mkdocs = "^1.4.3"
 mkdocs-video = "^1.5.0"
-mkdocs-material = "^8.2.13"
-mkdocs-redirects = "^1.0.3"
-pdoc = "^11.1.0"
+mkdocs-material = "^9.1.16"
+mkdocs-redirects = "^1.2.0"
+pdoc = "^14.0.0"
 webknossos = { path = "../webknossos/", develop = true }
 
 [build-system]
-requires = ["poetry>=1.0"]
+requires = ["poetry-core>=1.1"]
 build-backend = "poetry.masonry.api"
