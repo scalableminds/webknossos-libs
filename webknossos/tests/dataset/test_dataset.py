@@ -7,14 +7,14 @@ from typing import Iterator, Optional, Tuple, cast
 import numpy as np
 import pytest
 from jsonschema import validate
-from upath import UPath
-
 from tests.constants import (
     REMOTE_TESTOUTPUT_DIR,
     TESTDATA_DIR,
     TESTOUTPUT_DIR,
     use_minio,
 )
+from upath import UPath
+
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -539,6 +539,29 @@ def test_update_new_bounding_box_offset(
     assert color_layer.bounding_box.size == Vec3Int(15, 15, 20)
 
     assure_exported_properties(ds)
+
+
+def test_chunked_compressed_write() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    mag = (
+        Dataset(ds_path, voxel_size=(1, 1, 1))
+        .get_or_add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
+        .get_or_add_mag("1", compress=True)
+    )
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
+    # write data in the bottom-right cornor of a shard so that other shards have to be written too
+    mag.write(data, absolute_offset=mag.info.shard_shape - Vec3Int(5, 5, 5))
+
+    assert (
+        mag.get_view(
+            absolute_offset=mag.info.shard_shape - Vec3Int(5, 5, 5),
+            size=Vec3Int(10, 10, 10),
+        ).read()
+        == data
+    ).all()
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
