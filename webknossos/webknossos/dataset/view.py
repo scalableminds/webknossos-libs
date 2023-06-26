@@ -253,16 +253,20 @@ class View:
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
         if self._is_compressed():
-            for current_mag_bbox, chunked_data in self._handle_compressed_write(
+            for current_mag_bbox, chunked_data in self._prepare_compressed_write(
                 current_mag_bbox, data
             ):
                 self._array.write(current_mag_bbox.topleft, chunked_data)
         else:
             self._array.write(current_mag_bbox.topleft, data)
 
-    def _handle_compressed_write(
+    def _prepare_compressed_write(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
     ) -> Iterator[Tuple[BoundingBox, np.ndarray]]:
+        """This method takes an arbitrary sized chunk of data with an accompanying bbox,
+        divides these into chunks of shard_shape size and delegates
+        the preparation to _prepare_compressed_write_chunk."""
+
         chunked_bboxes = current_mag_bbox.chunk(
             self.info.shard_shape,
             chunk_border_alignments=self.info.shard_shape,
@@ -278,11 +282,17 @@ class View:
                     -current_mag_bbox.topleft
                 ).to_slices()
 
-            yield self._handle_compressed_write_chunk(chunked_bbox, data[source_slice])
+            yield self._prepare_compressed_write_chunk(chunked_bbox, data[source_slice])
 
-    def _handle_compressed_write_chunk(
+    def _prepare_compressed_write_chunk(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
     ) -> Tuple[BoundingBox, np.ndarray]:
+        """This method takes an arbitrary sized chunk of data with an accompanying bbox
+        (ideally not larger than a shard) and enlarges that chunk to fit the shard it
+        resides in (by reading the entire shard data and writing the passed data ndarray
+        into the specified volume). That way, the returned data can be written as a whole
+        shard which is a requirement for compressed writes."""
+
         aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_shape, ceil=True)
 
         if current_mag_bbox != aligned_bbox:
