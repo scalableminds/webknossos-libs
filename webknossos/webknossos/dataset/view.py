@@ -16,7 +16,6 @@ from typing import (
 
 import numpy as np
 import wkw
-
 from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike

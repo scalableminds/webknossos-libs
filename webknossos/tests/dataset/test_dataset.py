@@ -7,14 +7,14 @@ from typing import Iterator, Optional, Tuple, cast
 import numpy as np
 import pytest
 from jsonschema import validate
+from upath import UPath
+
 from tests.constants import (
     REMOTE_TESTOUTPUT_DIR,
     TESTDATA_DIR,
     TESTOUTPUT_DIR,
     use_minio,
 )
-from upath import UPath
-
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
