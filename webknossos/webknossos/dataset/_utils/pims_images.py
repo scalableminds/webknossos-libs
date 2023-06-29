@@ -76,6 +76,7 @@ class PimsImages:
         flip_x: bool,
         flip_y: bool,
         flip_z: bool,
+        pad: bool,
         use_bioformats: Optional[bool],
         is_segmentation: bool,
     ) -> None:
@@ -255,7 +256,15 @@ class PimsImages:
         #############################
 
         with self._open_images() as images:
-            if isinstance(images, list):
+            if pad:
+                images_shape = (len(images),) + tuple(
+                    # Search in all dimensions for the highest value to get max shape
+                    max(values)
+                    for values in zip(
+                        *[cast(pims.FramesSequence, image).shape for image in images]
+                    )
+                )
+            elif isinstance(images, list):
                 images_shape = (len(images),) + cast(
                     pims.FramesSequence, images[0]
                 ).shape
@@ -594,6 +603,7 @@ def has_image_z_dimension(
         flip_x=False,
         flip_y=False,
         flip_z=False,
+        pad=False,
     )
 
     return pims_images.expected_shape.z > 1

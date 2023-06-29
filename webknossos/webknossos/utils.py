@@ -5,7 +5,6 @@ import json
 import logging
 import sys
 import time
-import traceback
 import warnings
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
@@ -135,12 +134,6 @@ def wait_and_ensure_success(
         with get_rich_progress() as progress:
             task = progress.add_task(progress_desc, total=len(futures))
             for fut in as_completed(futures):
-                if (exc := fut.exception()) is not None:
-                    raise Exception(
-                        "".join(
-                            [element for element in traceback.format_exception(exc)]
-                        )
-                    ) from exc
                 results.append(fut.result())
                 progress.update(task, advance=1)
     return results
