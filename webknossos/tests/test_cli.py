@@ -202,29 +202,28 @@ def test_convert() -> None:
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_convert_with_all_params() -> None:
     """Tests the functionality of convert subcommand."""
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff"
         wkw_path = Path("wkw_from_tiff_extended")
-
-        result = runner.invoke(
-            app,
-            [
-                "convert",
-                "--voxel-size",
-                "11.0,11.0,11.0",
-                "--data-format",
-                "wkw",
-                "--name",
-                "wkw_from_tiff",
-                "--compress",
-                str(origin_path),
-                str(wkw_path),
-            ],
-        )
+        with pytest.warns(UserWarning):
+            result = runner.invoke(
+                app,
+                [
+                    "convert",
+                    "--voxel-size",
+                    "11.0,11.0,11.0",
+                    "--data-format",
+                    "wkw",
+                    "--name",
+                    "wkw_from_tiff",
+                    "--compress",
+                    str(origin_path),
+                    str(wkw_path),
+                ],
+            )
 
         assert result.exit_code == 0
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()

@@ -92,15 +92,12 @@ def main(
     )
 
     with get_executor_for_args(args=executor_args) as executor:
-        dataset = Dataset.from_images(
+        Dataset.from_images(
             source,
             target,
             voxel_size,
             name=name,
             data_format=data_format,
             executor=executor,
+            compress=compress,
         )
-        # TODO  pylint: disable=fixme
-        # Include this in the from_images() call as soon as issue #900 is resolved
-        if compress:
-            dataset.compress()
