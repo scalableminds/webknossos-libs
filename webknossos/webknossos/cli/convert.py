@@ -57,14 +57,6 @@ def main(
             "(if not provided, final component of target path is used)"
         ),
     ] = None,
-    pad: Annotated[
-        bool,
-        typer.Option(
-            help="Automatically pad image files at the bottom and right borders. "
-            "Use this, when the input images don't have a common size, but have "
-            "their origin at (0, 0)."
-        ),
-    ] = False,
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
     ] = False,
@@ -107,7 +99,6 @@ def main(
             name,
             data_format=data_format,
             executor=executor,
-            pad=pad,
         )
         # TODO  pylint: disable=fixme
         # Include this in the from_images() call as soon as issue #900 is resolved

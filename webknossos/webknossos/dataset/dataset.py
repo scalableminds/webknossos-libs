@@ -567,7 +567,6 @@ class Dataset:
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        pad: bool = False,
         use_bioformats: Optional[bool] = None,
         max_layers: int = 20,
         batch_size: Optional[int] = None,
@@ -650,7 +649,6 @@ class Dataset:
                 flip_x=flip_x,
                 flip_y=flip_y,
                 flip_z=flip_z,
-                pad=pad,
                 use_bioformats=use_bioformats,
                 batch_size=batch_size,
                 allow_multiple_layers=True,
@@ -1005,7 +1003,6 @@ class Dataset:
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        pad: bool = False,
         dtype: Optional[DTypeLike] = None,
         use_bioformats: Optional[bool] = None,
         channel: Optional[int] = None,
@@ -1070,7 +1067,6 @@ class Dataset:
             flip_x=flip_x,
             flip_y=flip_y,
             flip_z=flip_z,
-            pad=pad,
             use_bioformats=use_bioformats,
             is_segmentation=category == "segmentation",
         )
@@ -1151,7 +1147,6 @@ class Dataset:
                     flip_x=flip_x,
                     flip_y=flip_y,
                     flip_z=flip_z,
-                    pad=pad,
                     use_bioformats=use_bioformats,
                     is_segmentation=category == "segmentation",
                     **pims_open_kwargs,
@@ -1186,7 +1181,9 @@ class Dataset:
             )
             mag = mag_view.mag
             layer.bounding_box = (
-                BoundingBox((0, 0, 0), pims_images.expected_shape)
+                BoundingBox(
+                    (0, 0, 0), Vec3Int(2**32, 2**32, pims_images.expected_shape.z)
+                )
                 .from_mag_to_mag1(mag)
                 .offset(topleft)
             )
