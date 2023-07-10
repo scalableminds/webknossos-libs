@@ -541,6 +541,29 @@ def test_update_new_bounding_box_offset(
     assure_exported_properties(ds)
 
 
+def test_chunked_compressed_write() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    mag = (
+        Dataset(ds_path, voxel_size=(1, 1, 1))
+        .get_or_add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
+        .get_or_add_mag("1", compress=True)
+    )
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
+    # write data in the bottom-right cornor of a shard so that other shards have to be written too
+    mag.write(data, absolute_offset=mag.info.shard_shape - Vec3Int(5, 5, 5))
+
+    assert (
+        mag.get_view(
+            absolute_offset=mag.info.shard_shape - Vec3Int(5, 5, 5),
+            size=Vec3Int(10, 10, 10),
+        ).read()
+        == data
+    ).all()
+
+
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_write_multi_channel_uint8(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "multichannel")
