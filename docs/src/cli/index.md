@@ -61,7 +61,7 @@ webknossos convert-knossos --layer-name color data/source/mag1 data/target
 webknossos convert-nifti --layer-name color --voxel-size 10,10,30 data/source/nifti_file data/target
 
 # Convert folder with NIFTI files to wkw files
-webknossos convert-nifti --color-file one_nifti_file --segmentation_file --voxel-size 10,10,30 another_nifti data/source/ data/target
+webknossos convert-nifti --color-file one_nifti_file --segmentation-file --voxel-size 10,10,30 another_nifti data/source/ data/target
 
 # Convert RAW file to wkw file
 webknossos convert-raw --layer-name color --voxel-size 10,10,30 --dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
