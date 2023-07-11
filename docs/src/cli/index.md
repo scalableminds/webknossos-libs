@@ -48,23 +48,23 @@ webknossos convert \
 
 # Create downsampled magnifications
 webknossos downsample data/target
-webknossos downsample --layer_name color data/target
+webknossos downsample --layer-name color data/target
 
 # Compress data in-place (mostly useful for segmentation)
-webknossos compress --layer_name segmentation data/target
+webknossos compress --layer-name segmentation data/target
 webknossos compress data/target
 
 # Convert Knossos cubes to wkw cubes
-webknossos convert-knossos --layer_name color data/source/mag1 data/target
+webknossos convert-knossos --layer-name color data/source/mag1 data/target
 
 # Convert NIFTI file to wkw file
-webknossos convert-nifti --layer-name color --scale 10,10,30 data/source/nifti_file data/target
+webknossos convert-nifti --layer-name color --voxel-size 10,10,30 data/source/nifti_file data/target
 
 # Convert folder with NIFTI files to wkw files
-webknossos convert-nifti --color-file one_nifti_file --segmentation_file --scale 10,10,30 another_nifti data/source/ data/target
+webknossos convert-nifti --color-file one_nifti_file --segmentation_file --voxel-size 10,10,30 another_nifti data/source/ data/target
 
 # Convert RAW file to wkw file
-webknossos convert-raw --layer-name color --scale 10,10,30 --input-dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
+webknossos convert-raw --layer-name color --voxel-size 10,10,30 --input-dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
 
 
 ```
