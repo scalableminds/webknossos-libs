@@ -55,7 +55,7 @@ webknossos compress data/target
 webknossos compress data/target
 
 # Convert Knossos cubes to wkw cubes
-webknossos convert-knossos --layer-name color data/source/mag1 data/target
+webknossos convert-knossos --layer-name color --voxel-size 11.24,11.24,25 data/source/mag1 data/target
 
 # Convert NIFTI file to wkw file
 webknossos convert-nifti --layer-name color --voxel-size 10,10,30 data/source/nifti_file data/target
