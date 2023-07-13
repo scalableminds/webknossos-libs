@@ -51,7 +51,7 @@ webknossos downsample data/target
 webknossos downsample --layer-name color data/target
 
 # Compress data in-place (mostly useful for segmentation)
-webknossos compress --layer-name segmentation data/target
+webknossos compress data/target
 webknossos compress data/target
 
 # Convert Knossos cubes to wkw cubes
