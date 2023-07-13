@@ -769,8 +769,6 @@ class Dataset:
         Creates a new layer called `layer_name` and adds it to the dataset.
         The dtype can either be specified per layer or per channel.
         If neither of them are specified, `uint8` per channel is used as default.
-        When creating a "Segmentation Layer" (`category="segmentation"`),
-        the parameter `largest_segment_id` also has to be specified.
 
         Creates the folder `layer_name` in the directory of `self.path`.
 
@@ -837,10 +835,6 @@ class Dataset:
             self._properties.data_layers += [layer_properties]
             self._layers[layer_name] = Layer(self, layer_properties)
         elif category == SEGMENTATION_CATEGORY:
-            assert (
-                "largest_segment_id" in kwargs
-            ), f"Failed to create segmentation layer {layer_name}: the parameter 'largest_segment_id' was not specified, which is necessary for segmentation layers."
-
             segmentation_layer_properties: SegmentationLayerProperties = (
                 SegmentationLayerProperties(
                     **(

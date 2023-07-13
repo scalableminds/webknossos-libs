@@ -1134,8 +1134,11 @@ class SegmentationLayer(Layer):
     _properties: SegmentationLayerProperties
 
     @property
-    def largest_segment_id(self) -> Optional[int]:
-        return self._properties.largest_segment_id
+    def largest_segment_id(self) -> int:
+        if max_id := self._properties.largest_segment_id:
+            return max_id
+
+        return self._calc_largest_segment_id()
 
     @largest_segment_id.setter
     def largest_segment_id(self, largest_segment_id: Optional[int]) -> None:
@@ -1155,3 +1158,8 @@ class SegmentationLayer(Layer):
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return self.largest_segment_id
+
+    def _calc_largest_segment_id(self) -> int:
+        if data := self.get_finest_mag().read().flatten():
+            return data.max()
+        return 0
