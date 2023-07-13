@@ -185,7 +185,9 @@ class Dataset:
                 return lambda p: input_path.name
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
                 return (
-                    lambda p: input_path.name if p.parent == Path() else str(p.parent)
+                    lambda p: input_path.name
+                    if p.parent == Path()
+                    else p.parent.as_posix().replace("/", "_")
                 )
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_TOPLEVEL_FOLDER:
                 return lambda p: input_path.name if p.parent == Path() else p.parts[0]
@@ -201,7 +203,7 @@ class Dataset:
                     )
                     else input_path.name
                     if p.parent == Path()
-                    else str(p.parent)
+                    else p.parent.as_posix().replace("/", "_")
                 )
             elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
                 # As before, but only a single image is inspected to determine 2D vs 3D.
@@ -213,9 +215,7 @@ class Dataset:
                     return str
                 else:
                     return (
-                        lambda p: input_path.name
-                        if p.parent == Path()
-                        else str(p.parent)
+                        lambda p: input_path.name if p.parent == Path() else p.parts[-2]
                     )
             else:
                 raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
