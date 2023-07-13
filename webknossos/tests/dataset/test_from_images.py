@@ -1,5 +1,6 @@
 import warnings
 from pathlib import Path
+from shutil import copytree
 from typing import Iterator
 
 import numpy as np
@@ -55,3 +56,14 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == channels
         assert layer.bounding_box.size == size
+
+
+def test_no_slashes_in_layername(tmp_path: Path) -> None:
+    path_with_subfolders = tmp_path / "subfolder" / "tifffiles"
+    path_with_subfolders.mkdir()
+    copytree(Path("testdata") / "tiff", path_with_subfolders)
+
+    ds = wk.Dataset.from_images(tmp_path, tmp_path / "tiff", voxel_size=(10, 10, 10))
+
+    for layer in ds.layers:
+        assert "/" not in layer
