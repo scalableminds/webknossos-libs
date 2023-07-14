@@ -8,6 +8,8 @@ import pytest
 from tifffile import TiffFile
 
 import webknossos as wk
+from tests.constants import TESTDATA_DIR
+from webknossos.dataset import Dataset
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -19,7 +21,7 @@ def ignore_warnings() -> Iterator:
 
 def test_compare_tifffile(tmp_path: Path) -> None:
     ds = wk.Dataset.from_images(
-        "testdata/tiff",
+        TESTDATA_DIR / "tiff",
         tmp_path,
         (1, 1, 1),
         compress=True,
@@ -31,14 +33,14 @@ def test_compare_tifffile(tmp_path: Path) -> None:
     assert "tiff" in ds.layers
     data = ds.layers["tiff"].get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
-        with TiffFile("testdata/tiff/test.0000.tiff") as tif_file:
+        with TiffFile(TESTDATA_DIR / "tiff" / "test.0000.tiff") as tif_file:
             comparison_slice = tif_file.asarray().T
         assert np.array_equal(data[:, :, z_index], comparison_slice)
 
 
 def test_multiple_multitiffs(tmp_path: Path) -> None:
     ds = wk.Dataset.from_images(
-        "testdata/various_tiff_formats",
+        TESTDATA_DIR / "various_tiff_formats",
         tmp_path,
         (1, 1, 1),
     )
@@ -59,11 +61,19 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
 
 
 def test_no_slashes_in_layername(tmp_path: Path) -> None:
-    path_with_subfolders = tmp_path / "subfolder" / "tifffiles"
-    path_with_subfolders.mkdir()
-    copytree(Path("testdata") / "tiff", path_with_subfolders)
+    (input_path := tmp_path / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
+    copytree(
+        TESTDATA_DIR / "tiff_with_different_dimensions",
+        input_path,
+        dirs_exist_ok=True,
+    )
 
-    ds = wk.Dataset.from_images(tmp_path, tmp_path / "tiff", voxel_size=(10, 10, 10))
+    for strategy in Dataset.ConversionLayerMapping:
+        dataset = wk.Dataset.from_images(
+            tmp_path / "tiff",
+            tmp_path / str(strategy),
+            voxel_size=(10, 10, 10),
+            map_filepath_to_layer_name=strategy,
+        )
 
-    for layer in ds.layers:
-        assert "/" not in layer
+        assert all("/" not in layername for layername in dataset.layers)

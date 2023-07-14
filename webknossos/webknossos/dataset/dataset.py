@@ -180,7 +180,7 @@ class Dataset:
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
-                return str
+                return lambda p: p.as_posix().replace("/", "_")
             elif self == ConversionLayerMapping.ENFORCE_SINGLE_LAYER:
                 return lambda p: input_path.name
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
