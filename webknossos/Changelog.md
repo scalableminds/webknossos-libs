@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - As webknossos does not require the largest segment id. It is also not mandatory in the webknossos libs anymore. [#917](https://github.com/scalableminds/webknossos-libs/issues/917)
+- The conversion folder structures to layer names does not allow slashes in the layer name anymore. [#918](https://github.com/scalableminds/webknossos-libs/issues/918)
 
 ### Fixed
 - Fixed a bug where compression in add_layer_from_images uses too much memory [#900](https://github.com/scalableminds/webknossos-libs/issues/900)
