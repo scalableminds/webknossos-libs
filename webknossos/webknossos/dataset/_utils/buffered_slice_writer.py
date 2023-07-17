@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Generator, List, Optional, Type
 import numpy as np
 import psutil
 
+from webknossos.dataset.mag_view import MagView
 from webknossos.geometry import Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
@@ -34,7 +35,9 @@ class BufferedSliceWriter:
         self,
         view: "View",
         offset: Optional[Vec3IntLike] = None,
-        update_bbox: bool = False,
+        # update_bbox enables the update of the bounding box and rewriting of the properties json.
+        # It should be False when parallel access is intended.
+        update_bbox: bool = True,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
@@ -126,13 +129,22 @@ class BufferedSliceWriter:
             buffer_start_list[self.dimension] = self.buffer_start_slice
             buffer_start = Vec3Int(buffer_start_list)
             buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
-            self.view.write(
-                data,
-                offset=buffer_start.add_or_none(self.offset),
-                relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
-                absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
-                update_bbox=self.update_bbox,
-            )
+            if isinstance(self.view, MagView):
+                self.view.write(
+                    data,
+                    offset=buffer_start.add_or_none(self.offset),
+                    relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
+                    absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
+                    update_bbox=self.update_bbox,
+                )
+            else:
+                self.view.write(
+                    data,
+                    offset=buffer_start.add_or_none(self.offset),
+                    relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
+                    absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
+                    allow_write_outside_bbox=not self.update_bbox,
+                )
 
         except Exception as exc:
             error(

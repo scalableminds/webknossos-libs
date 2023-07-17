@@ -192,7 +192,7 @@ class View:
         self,
         data: np.ndarray,
         offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
-        update_bbox: bool = True,
+        allow_write_outside_bbox: bool = False,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -244,7 +244,7 @@ class View:
             abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
-        if update_bbox:
+        if not allow_write_outside_bbox:
             assert self.bounding_box.contains_bbox(
                 mag1_bbox
             ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"

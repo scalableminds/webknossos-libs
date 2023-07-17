@@ -181,7 +181,11 @@ class MagView(View):
         if update_bbox and not self.bounding_box.contains_bbox(mag1_bbox):
             self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
-        super().write(data, absolute_offset=mag1_bbox.topleft, update_bbox=update_bbox)
+        super().write(
+            data,
+            absolute_offset=mag1_bbox.topleft,
+            allow_write_outside_bbox=not update_bbox,
+        )
 
     def read(
         self,
