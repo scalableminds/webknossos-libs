@@ -34,6 +34,7 @@ class BufferedSliceWriter:
         self,
         view: "View",
         offset: Optional[Vec3IntLike] = None,
+        update_bbox: bool = False,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
@@ -48,6 +49,7 @@ class BufferedSliceWriter:
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
         self.use_logging = use_logging
+        self.update_bbox = update_bbox
         if offset is None and relative_offset is None and absolute_offset is None:
             relative_offset = Vec3Int.zeros()
         if offset is not None:
@@ -129,6 +131,7 @@ class BufferedSliceWriter:
                 offset=buffer_start.add_or_none(self.offset),
                 relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
                 absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
+                update_bbox=self.update_bbox,
             )
 
         except Exception as exc:

@@ -1181,9 +1181,7 @@ class Dataset:
             )
             mag = mag_view.mag
             layer.bounding_box = (
-                BoundingBox(
-                    (0, 0, 0), Vec3Int(2**32, 2**32, pims_images.expected_shape.z)
-                )
+                BoundingBox((0, 0, 0), Vec3Int(pims_images.expected_shape))
                 .from_mag_to_mag1(mag)
                 .offset(topleft)
             )
@@ -1207,6 +1205,7 @@ class Dataset:
                 mag_view=mag_view,
                 is_segmentation=category == "segmentation",
                 dtype=current_dtype,
+                update_bbox=False,
             )
 
             args = []
@@ -1250,9 +1249,11 @@ class Dataset:
                     .offset(topleft)
                 )
             if pims_images.expected_shape != actual_size:
-                warnings.warn(
+                logger.info(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
-                    + f"New size is {actual_size}, expected {pims_images.expected_shape}.",
+                    + "New size is %s, expected %s.",
+                    actual_size,
+                    pims_images.expected_shape,
                 )
             if first_layer is None:
                 first_layer = layer
