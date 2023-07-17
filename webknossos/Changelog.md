@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
 ### Fixed
 
