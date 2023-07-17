@@ -231,6 +231,9 @@ class Layer:
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
         assert is_fs_path(self.path), f"Cannot rename remote layer {self.path}"
+        assert (
+            "/" not in layer_name
+        ), f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
         self.path.rename(self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self

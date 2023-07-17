@@ -11,8 +11,8 @@ from upath import UPath
 
 from webknossos.utils import rmtree
 
-TESTDATA_DIR = Path("testdata")
-TESTOUTPUT_DIR = Path("testoutput")
+TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
+TESTOUTPUT_DIR = Path(__file__).parent.parent / "testoutput"
 
 
 MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"

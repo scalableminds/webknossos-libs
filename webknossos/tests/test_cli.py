@@ -20,6 +20,7 @@ from tests.constants import (
     MINIO_ROOT_PASSWORD,
     MINIO_ROOT_USER,
     REMOTE_TESTOUTPUT_DIR,
+    TESTDATA_DIR,
     use_minio,
 )
 from webknossos import BoundingBox, DataFormat, Dataset
@@ -41,9 +42,6 @@ def tmp_cwd() -> Iterator[None]:
             yield
         finally:
             os.chdir(prev_cwd)
-
-
-TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
 
 
 @pytest.fixture(autouse=True, scope="module")

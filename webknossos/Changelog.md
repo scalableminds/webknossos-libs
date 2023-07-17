@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- The conversion folder structures to layer names does not allow slashes in the layer name anymore. [#918](https://github.com/scalableminds/webknossos-libs/issues/918)
 
 ### Fixed
 - Fixed a bug where compression in add_layer_from_images uses too much memory [#900](https://github.com/scalableminds/webknossos-libs/issues/900)
