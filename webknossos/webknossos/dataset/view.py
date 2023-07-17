@@ -16,6 +16,7 @@ from typing import (
 
 import numpy as np
 import wkw
+
 from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -635,7 +636,9 @@ class View:
         offset: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
-        update_bbox: bool = False,
+        # update_bbox enables the update of the bounding box and rewriting of the properties json.
+        # It should be False when parallel access is intended.
+        update_bbox: bool = True,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
