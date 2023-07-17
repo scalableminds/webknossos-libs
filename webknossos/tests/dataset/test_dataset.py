@@ -787,24 +787,16 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
     assure_exported_properties(ds)
 
 
-def test_largest_segment_id_requirement() -> None:
+def test_no_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(10, 10, 10))
 
-    with pytest.raises(AssertionError):
-        ds.add_layer("segmentation", SEGMENTATION_CATEGORY)
-
-    largest_segment_id = 10
-    ds.add_layer(
-        "segmentation",
-        SEGMENTATION_CATEGORY,
-        largest_segment_id=largest_segment_id,
-    ).add_mag(Mag(1))
+    ds.add_layer("segmentation", SEGMENTATION_CATEGORY).add_mag(Mag(1))
 
     ds = Dataset.open(ds_path)
+
     assert (
-        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id
-        == largest_segment_id
+        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id is None
     )
 
     assure_exported_properties(ds)
