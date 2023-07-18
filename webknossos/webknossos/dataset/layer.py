@@ -14,7 +14,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.dataset.view import _copy_job
+from webknossos.dataset.view import View, _copy_job
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
@@ -46,6 +46,7 @@ from ..utils import (
     is_fs_path,
     named_partial,
     rmtree,
+    wait_and_ensure_success,
     warn_deprecated,
 )
 from .defaults import (
@@ -1158,3 +1159,41 @@ class SegmentationLayer(Layer):
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return self.largest_segment_id
+
+    def _max_chunk_id(self, view: View) -> int:
+        return view.read().flatten().max()
+
+    def _find_largest_segment_id(
+        self, chunk_shape: Optional[Vec3Int] = None, executor: Optional[Executor] = None
+    ) -> Optional[int]:
+        try:
+            view = self.get_finest_mag()
+            if chunk_shape is None:
+                chunk_shape = view._get_file_dimensions_mag1()
+            func_per_chunk = named_partial(self._max_chunk_id)
+            args = []
+            for chunk in self.bounding_box.chunk(chunk_shape, chunk_shape):
+                chunk_view = view.get_view(
+                    absolute_offset=chunk.topleft,
+                    size=chunk.size,
+                )
+                args.append(chunk_view)
+
+            with get_executor_for_args(None, executor) as executor:
+                max_ids = wait_and_ensure_success(
+                    executor.map_to_futures(func_per_chunk, args),
+                    progress_desc="Searching largest segment id",
+                )
+            return max(max_ids)
+        except ValueError:
+            return None
+
+    def update_largest_segment_id(
+        self, chunk_shape: Optional[Vec3Int] = None, executor: Optional[Executor] = None
+    ) -> None:
+        """Sets the largest segment id to the highest value in the data.
+        largest_segment_id is set to `None` if data is undefined."""
+
+        self.largest_segment_id = self._find_largest_segment_id(
+            chunk_shape=chunk_shape, executor=executor
+        )
