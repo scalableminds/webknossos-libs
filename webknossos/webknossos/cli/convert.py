@@ -10,6 +10,7 @@ from typing_extensions import Annotated
 from webknossos import DataFormat, Dataset
 from webknossos.cli._utils import (
     DistributionStrategy,
+    LayerCategory,
     VoxelSize,
     parse_path,
     parse_voxel_size,
@@ -44,6 +45,12 @@ def main(
             metavar="VOXEL_SIZE",
         ),
     ],
+    category: Annotated[
+        Optional[LayerCategory],
+        typer.Option(
+            help="The category of the layer that should be created.",
+        ),
+    ] = None,
     data_format: Annotated[
         DataFormat,
         typer.Option(
@@ -100,4 +107,5 @@ def main(
             data_format=data_format,
             executor=executor,
             compress=compress,
+            layer_category=category.value if category else None,
         )

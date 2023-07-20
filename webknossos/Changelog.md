@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
 ### Fixed
 - Fixed a bug where parallel access to the properties json leads to an JsonDecodeError in the webknossos CLI [#919](https://github.com/scalableminds/webknossos-libs/issues/919)
