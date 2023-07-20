@@ -29,6 +29,18 @@ class DistributionStrategy(str, Enum):
     DEBUGS_SEQUENTIAL = "debug_sequential"
 
 
+class LayerCategory(str, Enum):
+    """Enum of available layer categories.
+
+    TODO  pylint: disable=fixme
+    - As soon as supported by typer this enum should be
+    replaced with typing.Literal in type hint.
+    """
+
+    COLOR = "color"
+    SEGMENTATION = "segmentation"
+
+
 class DataFormat(str, Enum):
     """Enum of available data formats."""
 
