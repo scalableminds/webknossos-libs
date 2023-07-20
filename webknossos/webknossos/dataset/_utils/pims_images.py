@@ -477,7 +477,6 @@ class PimsImages:
         args: Tuple[int, int],
         mag_view: MagView,
         is_segmentation: bool,
-        update_bbox: bool = False,
         dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
@@ -497,7 +496,6 @@ class PimsImages:
             with mag_view.get_buffered_slice_writer(
                 relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
-                update_bbox=update_bbox,
             ) as writer:
                 for image_slice in images[z_start:z_end]:
                     image_slice = np.array(image_slice)

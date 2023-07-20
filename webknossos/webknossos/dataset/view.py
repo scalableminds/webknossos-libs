@@ -192,7 +192,6 @@ class View:
         self,
         data: np.ndarray,
         offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
-        allow_write_outside_bbox: bool = False,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -244,10 +243,9 @@ class View:
             abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
-        if not allow_write_outside_bbox:
-            assert self.bounding_box.contains_bbox(
-                mag1_bbox
-            ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
+        assert self.bounding_box.contains_bbox(
+            mag1_bbox
+        ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
 
         if len(data.shape) == 4 and data.shape[0] == 1:
             data = data[0]  # remove channel dimension for single-channel data
@@ -635,9 +633,6 @@ class View:
         offset: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
-        # update_bbox enables the update of the bounding box and rewriting of the properties json.
-        # It should be False when parallel access is intended.
-        update_bbox: bool = True,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -679,7 +674,6 @@ class View:
         return BufferedSliceWriter(
             view=self,
             offset=offset,
-            update_bbox=update_bbox,
             buffer_size=buffer_size,
             dimension=dimension,
             relative_offset=relative_offset,
