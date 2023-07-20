@@ -1162,11 +1162,11 @@ class SegmentationLayer(Layer):
     def _get_largest_segment_id(self, view: View) -> int:
         return np.max(view.read(), initial=0)
 
-    def update_largest_segment_id(
+    def refresh_largest_segment_id(
         self, chunk_shape: Optional[Vec3Int] = None, executor: Optional[Executor] = None
     ) -> None:
         """Sets the largest segment id to the highest value in the data.
-        largest_segment_id is set to `None` if data is undefined."""
+        largest_segment_id is set to `None` if the data is empty."""
 
         try:
             chunk_results = self.get_finest_mag().map_chunk(

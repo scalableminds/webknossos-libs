@@ -2203,7 +2203,7 @@ def test_get_largest_segment_id() -> None:
     assure_exported_properties(ds)
 
 
-def test_update_largest_segment_id() -> None:
+def test_refresh_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
@@ -2218,7 +2218,7 @@ def test_update_largest_segment_id() -> None:
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     mag.write(data=write_data)
 
-    segmentation_layer.update_largest_segment_id()
+    segmentation_layer.refresh_largest_segment_id()
 
     assert segmentation_layer.largest_segment_id == np.max(write_data, initial=0)
 
