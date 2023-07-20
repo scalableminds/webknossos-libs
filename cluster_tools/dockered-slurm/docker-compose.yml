@@ -15,7 +15,7 @@ services:
       - ..:/cluster_tools
 
   slurmdbd:
-    image: scalableminds/slurm-docker-cluster:master__3840662994
+    image: scalableminds/slurm-docker-cluster:master__5614367471
     command: ["slurmdbd"]
     container_name: slurmdbd
     hostname: slurmdbd
@@ -30,7 +30,7 @@ services:
       - mysql
 
   slurmctld:
-    image: scalableminds/slurm-docker-cluster:master__3840662994
+    image: scalableminds/slurm-docker-cluster:master__5614367471
     command: ["slurmctld"]
     container_name: slurmctld
     environment:
@@ -50,7 +50,7 @@ services:
       - "slurmdbd"
 
   c1:
-    image: scalableminds/slurm-docker-cluster:master__3840662994
+    image: scalableminds/slurm-docker-cluster:master__5614367471
     command: ["slurmd"]
     hostname: c1
     container_name: c1
@@ -67,7 +67,7 @@ services:
       - "slurmctld"
 
   c2:
-    image: scalableminds/slurm-docker-cluster:master__3840662994
+    image: scalableminds/slurm-docker-cluster:master__5614367471
     command: ["slurmd"]
     hostname: c2
     container_name: c2

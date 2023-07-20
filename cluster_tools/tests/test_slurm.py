@@ -31,7 +31,6 @@ def sleep(duration: float) -> float:
 
 
 def allocate(duration: float, num_bytes: int) -> int:
-    time.sleep(duration)
     data = b"\x00" * num_bytes
     time.sleep(duration)
     return sys.getsizeof(data)
