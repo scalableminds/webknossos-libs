@@ -1673,8 +1673,8 @@ class Dataset:
                 + "newer than the ones that were seen last time. The properties will be overwritten. This is "
                 + "likely happening because multiple processes changed the metadata of this dataset."
             )
-        with SoftFileLock(self.path / PROPERTIES_FILE_NAME, timeout=3):
-            with (self.path / PROPERTIES_FILE_NAME).open(
+        with SoftFileLock(self.path / f"{PROPERTIES_FILE_NAME}.lock", timeout=3):
+            with (self.path.absolute() / PROPERTIES_FILE_NAME).open(
                 "w", encoding="utf-8"
             ) as outfile:
                 json.dump(
