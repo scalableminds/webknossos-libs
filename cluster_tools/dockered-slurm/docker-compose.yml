@@ -22,6 +22,7 @@ services:
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
+      - ${PWD}/slurm.conf:/etc/slurm/slurm.conf
       - var_log_slurm:/var/log/slurm
     expose:
       - "6819"
@@ -38,6 +39,7 @@ services:
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
+      - ${PWD}/slurm.conf:/etc/slurm/slurm.conf
       - ./slurm_jobdir:/data
       - ..:/cluster_tools
       - var_log_slurm:/var/log/slurm
@@ -55,6 +57,7 @@ services:
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
+      - ${PWD}/slurm.conf:/etc/slurm/slurm.conf
       - ./slurm_jobdir:/data
       - ..:/cluster_tools
       - var_log_slurm:/var/log/slurm
@@ -71,6 +74,7 @@ services:
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
+      - ${PWD}/slurm.conf:/etc/slurm/slurm.conf
       - ./slurm_jobdir:/data
       - ..:/cluster_tools
       - var_log_slurm:/var/log/slurm

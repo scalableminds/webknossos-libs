@@ -57,7 +57,7 @@ class RemoteException(Exception):
         return self.error.strip() + f" (job_id={self.job_id})"
 
 
-class RemoteOutOfMemoryException(RemoteException):
+class RemoteResourceLimitException(RemoteException):
     def __str__(self) -> str:
         return str(self.job_id) + "\n" + self.error.strip()
 
