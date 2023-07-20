@@ -300,7 +300,7 @@ def test_slurm_max_array_size() -> None:
 
 # TODO: Comment back in after the test ran through in the CI
 # @pytest.mark.skip(
-#     reason="This test takes more than a minute and is disabled by default. Execute it when modifying the RemoteResourceLimitException code."
+#     reason="This test takes more than a minute and is disabled by default. Execute it when modifying the RemoteTimeLimitException code."
 # )
 def test_slurm_time_limit() -> None:
     # Time limit resolution is 1 minute, so request 1 minute
@@ -313,9 +313,9 @@ def test_slurm_time_limit() -> None:
         futures = executor.map_to_futures(sleep, [80])
         concurrent.futures.wait(futures)
 
-        # Job should have been killed with a RemoteResourceLimitException
+        # Job should have been killed with a RemoteTimeLimitException
         assert all(
-            isinstance(fut.exception(), cluster_tools.RemoteResourceLimitException)
+            isinstance(fut.exception(), cluster_tools.RemoteTimeLimitException)
             for fut in futures
         )
 
@@ -344,9 +344,9 @@ def test_slurm_memory_limit() -> None:
             )
             concurrent.futures.wait(futures)
 
-            # Job should have been killed with a RemoteResourceLimitException
+            # Job should have been killed with a RemoteOutOfMemoryException
             assert all(
-                isinstance(fut.exception(), cluster_tools.RemoteResourceLimitException)
+                isinstance(fut.exception(), cluster_tools.RemoteOutOfMemoryException)
                 for fut in futures
             )
     finally:

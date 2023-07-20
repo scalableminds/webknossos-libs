@@ -29,7 +29,9 @@ from cluster_tools.schedulers.cluster_executor import (
     NOT_YET_SUBMITTED_STATE,
     ClusterExecutor,
     RemoteException,
+    RemoteOutOfMemoryException,
     RemoteResourceLimitException,
+    RemoteTimeLimitException,
 )
 
 SLURM_STATES = {
@@ -457,7 +459,7 @@ class SlurmExecutor(ClusterExecutor):
 
     def _investigate_time_limit(
         self, properties: Dict[str, str]
-    ) -> Optional[Tuple[str, Type[RemoteResourceLimitException]]]:
+    ) -> Optional[Tuple[str, Type[RemoteTimeLimitException]]]:
         reason = properties.get("Reason", None)
         if not reason:
             return None
@@ -470,11 +472,11 @@ class SlurmExecutor(ClusterExecutor):
         time_limit_note = f"Time Limit: {time_limit} Run Time: {run_time}"
 
         reason = f"The job was probably terminated because it ran for too long ({time_limit_note})."
-        return (reason, RemoteResourceLimitException)
+        return (reason, RemoteTimeLimitException)
 
     def _investigate_memory_consumption(
         self, properties: Dict[str, str]
-    ) -> Optional[Tuple[str, Type[RemoteResourceLimitException]]]:
+    ) -> Optional[Tuple[str, Type[RemoteOutOfMemoryException]]]:
         if not properties.get("Memory Efficiency", None):
             return None
 
@@ -497,7 +499,7 @@ class SlurmExecutor(ClusterExecutor):
             return None
 
         reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
-        return (reason, RemoteResourceLimitException)
+        return (reason, RemoteOutOfMemoryException)
 
     def _investigate_exit_code(
         self, properties: Dict[str, str]

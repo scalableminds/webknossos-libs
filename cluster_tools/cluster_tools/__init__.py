@@ -18,7 +18,9 @@ from cluster_tools.executors.pickle import PickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
 from cluster_tools.schedulers.cluster_executor import (
     ClusterExecutor,
+    RemoteOutOfMemoryException,
     RemoteResourceLimitException,
+    RemoteTimeLimitException,
 )
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor

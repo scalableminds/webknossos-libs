@@ -62,6 +62,14 @@ class RemoteResourceLimitException(RemoteException):
         return str(self.job_id) + "\n" + self.error.strip()
 
 
+class RemoteOutOfMemoryException(RemoteResourceLimitException):
+    pass
+
+
+class RemoteTimeLimitException(RemoteResourceLimitException):
+    pass
+
+
 class ClusterExecutor(futures.Executor):
     """Futures executor for executing jobs on a cluster."""
 
