@@ -31,7 +31,7 @@ from cluster_tools._utils.reflection import (
     file_path_to_absolute_module,
     get_function_name,
 )
-from cluster_tools._utils.string import random_string, with_preliminary_postfix
+from cluster_tools._utils.string_ import random_string, with_preliminary_postfix
 from cluster_tools._utils.tailf import Tail
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.executors.multiprocessing_ import CFutDict

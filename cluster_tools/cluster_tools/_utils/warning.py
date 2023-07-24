@@ -1,6 +1,4 @@
 import logging
-import os
-import string
 import threading
 import time
 from concurrent.futures import Future

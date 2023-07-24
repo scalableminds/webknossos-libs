@@ -24,7 +24,7 @@ from typing import (
 from typing_extensions import Literal
 
 from cluster_tools._utils.call import call, chcall
-from cluster_tools._utils.string import random_string
+from cluster_tools._utils.string_ import random_string
 from cluster_tools.schedulers.cluster_executor import (
     NOT_YET_SUBMITTED_STATE,
     ClusterExecutor,

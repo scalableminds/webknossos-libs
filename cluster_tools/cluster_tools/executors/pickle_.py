@@ -4,6 +4,8 @@ from typing import Any, Callable, TypeVar
 from cluster_tools._utils import pickling
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 
+# The module name includes a _-suffix to avoid name clashes with the standard library pickle module.
+
 _T = TypeVar("_T")
 
 
