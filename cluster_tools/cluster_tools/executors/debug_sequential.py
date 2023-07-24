@@ -1,5 +1,4 @@
 from concurrent.futures import Future
-
 from typing import Callable, TypeVar, cast
 
 from typing_extensions import ParamSpec
