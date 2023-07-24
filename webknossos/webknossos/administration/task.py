@@ -175,7 +175,9 @@ class Task:
             response.project_id,
             response.data_set,
             TaskStatus(
-                response.status.open_, response.status.active, response.status.finished
+                response.status.pending,
+                response.status.active,
+                response.status.finished,
             ),
         )
 
