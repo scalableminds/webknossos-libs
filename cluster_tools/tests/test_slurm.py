@@ -44,6 +44,12 @@ def expect_fork() -> bool:
     return True
 
 
+def search_and_replace_in_slurm_config(search_string: str, replace_string: str) -> None:
+    chcall(
+        f"sed -ci 's/{search_string}/{replace_string}/g' /etc/slurm/slurm.conf && scontrol reconfigure"
+    )
+
+
 def test_map_with_spawn() -> None:
     with cluster_tools.get_executor(
         "slurm", max_workers=5, start_method="spawn"
@@ -291,9 +297,7 @@ def test_slurm_max_array_size() -> None:
 
             assert all(array_size <= max_array_size for array_size in occurences)
     finally:
-        chcall(
-            f"sed -ci 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure"
-        )
+        search_and_replace_in_slurm_config(command, "")
         reset_max_array_size = executor.get_max_array_size()
         assert reset_max_array_size == original_max_array_size
 
@@ -331,8 +335,8 @@ def test_slurm_memory_limit() -> None:
 
     try:
         # Increase the frequency at which slurm checks whether a job uses too much memory
-        chcall(
-            f"sed -ci 's/{original_gather_frequency_config}/{new_gather_frequency_config}/g' /etc/slurm/slurm.conf && scontrol reconfigure"
+        search_and_replace_in_slurm_config(
+            original_gather_frequency_config, new_gather_frequency_config
         )
 
         with executor:
@@ -350,8 +354,8 @@ def test_slurm_memory_limit() -> None:
                 for fut in futures
             )
     finally:
-        chcall(
-            f"sed -ci 's/{new_gather_frequency_config}/{original_gather_frequency_config}/g' /etc/slurm/slurm.conf && scontrol reconfigure"
+        search_and_replace_in_slurm_config(
+            new_gather_frequency_config, original_gather_frequency_config
         )
 
 

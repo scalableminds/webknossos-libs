@@ -420,10 +420,10 @@ class SlurmExecutor(ClusterExecutor):
         # resource limit.
 
         def parse_key_value_pairs(
-            pair_delimiter: str, key_value_delimiter: str
+            text: str, pair_delimiter: str, key_value_delimiter: str
         ) -> Dict[str, str]:
             properties = {}
-            for key_value_pair in stdout.split(pair_delimiter):
+            for key_value_pair in text.split(pair_delimiter):
                 if key_value_delimiter not in key_value_pair:
                     continue
                 key, value = key_value_pair.split(key_value_delimiter, 1)
@@ -436,11 +436,11 @@ class SlurmExecutor(ClusterExecutor):
 
         if exit_code == 0:
             # Parse stdout into a key-value object
-            properties = parse_key_value_pairs(" ", "=")
+            properties = parse_key_value_pairs(stdout, " ", "=")
 
-            investigation = self._investigate_time_limit(properties)
-            if investigation:
-                return investigation
+            time_limit_investigation = self._investigate_time_limit(properties)
+            if time_limit_investigation:
+                return time_limit_investigation
 
         # Call `seff job_id` which should return some output including a line,
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
@@ -449,11 +449,11 @@ class SlurmExecutor(ClusterExecutor):
             return None
 
         # Parse stdout into a key-value object
-        properties = parse_key_value_pairs("\n", ":")
+        properties = parse_key_value_pairs(stdout, "\n", ":")
 
-        investigation = self._investigate_memory_consumption(properties)
-        if investigation:
-            return investigation
+        memory_limit_investigation = self._investigate_memory_consumption(properties)
+        if memory_limit_investigation:
+            return memory_limit_investigation
 
         return self._investigate_exit_code(properties)
 
