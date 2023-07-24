@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 @attr.frozen
 class TaskStatus:
-    open_instance_count: int
+    pending_instance_count: int
     active_instance_count: int
     finished_instance_count: int
 
@@ -78,7 +78,7 @@ class Task:
                 "domain": needed_experience_domain,
                 "value": needed_experience_value,
             },
-            "openInstances": instances,
+            "pendingInstances": instances,
             "projectName": project_name,
             "scriptId": script_id,
             "boundingBox": bounding_box.to_wkw_dict()
@@ -131,7 +131,7 @@ class Task:
                 "domain": needed_experience_domain,
                 "value": needed_experience_value,
             },
-            "openInstances": instances,
+            "pendingInstances": instances,
             "projectName": project_name,
             "scriptId": script_id,
             "dataSet": dataset_name,
