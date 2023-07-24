@@ -13,7 +13,7 @@ from typing_extensions import Literal
 
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.executors.debug_sequential import DebugSequentialExecutor
-from cluster_tools.executors.multiprocessing import MultiprocessingExecutor
+from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 from cluster_tools.executors.pickle import PickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
 from cluster_tools.schedulers.cluster_executor import (

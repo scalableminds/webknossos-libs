@@ -2,7 +2,7 @@ from concurrent.futures import Future
 from typing import Any, Callable, TypeVar
 
 from cluster_tools._utils import pickling
-from cluster_tools.executors.multiprocessing import MultiprocessingExecutor
+from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 
 _T = TypeVar("_T")
 

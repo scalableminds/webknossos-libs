@@ -34,7 +34,7 @@ from cluster_tools._utils.reflection import (
 from cluster_tools._utils.string import random_string, with_preliminary_postfix
 from cluster_tools._utils.tailf import Tail
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing import CFutDict
+from cluster_tools.executors.multiprocessing_ import CFutDict
 
 NOT_YET_SUBMITTED_STATE_TYPE = Literal["NOT_YET_SUBMITTED"]
 NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
