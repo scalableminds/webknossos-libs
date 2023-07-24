@@ -431,7 +431,7 @@ class SlurmExecutor(ClusterExecutor):
             return properties
 
         # Call `scontrol show jobid=<job_id>` which should return some output including
-        # a key=value pairs such as: "Reason=...", "TimeLimit=...", and "RunTime=..."
+        # key=value pairs, such as: "Reason=...", "TimeLimit=...", and "RunTime=..."
         stdout, _, exit_code = call(f"scontrol show jobid={job_id_with_index}")
 
         if exit_code == 0:
