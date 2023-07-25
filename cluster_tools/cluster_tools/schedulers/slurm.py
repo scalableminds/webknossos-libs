@@ -24,12 +24,14 @@ from typing import (
 from typing_extensions import Literal
 
 from cluster_tools._utils.call import call, chcall
-from cluster_tools._utils.string import random_string
+from cluster_tools._utils.string_ import random_string
 from cluster_tools.schedulers.cluster_executor import (
     NOT_YET_SUBMITTED_STATE,
     ClusterExecutor,
     RemoteException,
     RemoteOutOfMemoryException,
+    RemoteResourceLimitException,
+    RemoteTimeLimitException,
 )
 
 SLURM_STATES = {
@@ -411,69 +413,110 @@ class SlurmExecutor(ClusterExecutor):
     def investigate_failed_job(
         self, job_id_with_index: str
     ) -> Optional[Tuple[str, Type[RemoteException]]]:
-        # We call `seff job_id` which should return some output including a line,
-        # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
+        # This function tries to find the reason for a failed job by first checking whether
+        # the job run time exceeded the specified time limit. If that is not the case, it
+        # checks whether the job used too much RAM. As a last resort, it checks the exit code
+        # of the job: If the job was killed with signal 9, it's very likely due to some
+        # resource limit.
 
+        def parse_key_value_pairs(
+            text: str, pair_delimiter: str, key_value_delimiter: str
+        ) -> Dict[str, str]:
+            properties = {}
+            for key_value_pair in text.split(pair_delimiter):
+                if key_value_delimiter not in key_value_pair:
+                    continue
+                key, value = key_value_pair.split(key_value_delimiter, 1)
+                properties[key.strip()] = value.strip()
+            return properties
+
+        # Call `scontrol show jobid=<job_id>` which should return some output including
+        # key=value pairs, such as: "Reason=...", "TimeLimit=...", and "RunTime=..."
+        stdout, _, exit_code = call(f"scontrol show jobid={job_id_with_index}")
+
+        if exit_code == 0:
+            # Parse stdout into a key-value object
+            properties = parse_key_value_pairs(stdout, " ", "=")
+
+            time_limit_investigation = self._investigate_time_limit(properties)
+            if time_limit_investigation:
+                return time_limit_investigation
+
+        # Call `seff job_id` which should return some output including a line,
+        # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
         stdout, _, exit_code = call(f"seff {job_id_with_index}")
         if exit_code != 0:
             return None
 
         # Parse stdout into a key-value object
-        properties = {}
-        for line in stdout.split("\n"):
-            if ":" not in line:
-                continue
-            key, value = line.split(":", 1)
-            properties[key.strip()] = value.strip()
+        properties = parse_key_value_pairs(stdout, "\n", ":")
 
-        def investigate_memory_consumption() -> (
-            Optional[Tuple[str, Type[RemoteOutOfMemoryException]]]
-        ):
-            if not properties.get("Memory Efficiency", None):
-                return None
+        memory_limit_investigation = self._investigate_memory_consumption(properties)
+        if memory_limit_investigation:
+            return memory_limit_investigation
 
-            # Extract the "25019.18% of 1.00 GB" part of the line
-            efficiency_note = properties["Memory Efficiency"]
-            PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
+        return self._investigate_exit_code(properties)
 
-            # Extract the percentage to see whether it exceeds 100%.
-            match = re.search(PERCENTAGE_REGEX, efficiency_note)
-            percentage = None
-            if match is None:
-                return None
+    def _investigate_time_limit(
+        self, properties: Dict[str, str]
+    ) -> Optional[Tuple[str, Type[RemoteTimeLimitException]]]:
+        reason = properties.get("Reason", None)
+        if not reason:
+            return None
 
-            try:
-                percentage = float(match.group(1))
-            except ValueError:
-                return None
+        if reason != "TimeLimit":
+            return None
 
-            if percentage < 100:
-                return None
+        time_limit = properties.get("TimeLimit", None)
+        run_time = properties.get("RunTime", None)
+        time_limit_note = f"Time Limit: {time_limit} Run Time: {run_time}"
 
-            reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
-            return (reason, RemoteOutOfMemoryException)
+        reason = f"The job was probably terminated because it ran for too long ({time_limit_note})."
+        return (reason, RemoteTimeLimitException)
 
-        def investigate_exit_code() -> (
-            Optional[Tuple[str, Type[RemoteOutOfMemoryException]]]
-        ):
-            if not properties.get("State", None):
-                return None
-            if "exit code 137" not in properties["State"]:
-                return None
-            reason = (
-                "The job was probably terminated because it consumed too "
-                "much memory (at least, the exit code 137 suggests this). Please "
-                "use the `seff` utility to inspect the failed job and its potential "
-                "job siblings (in case of an array job) to doublecheck the memory "
-                "consumption."
-            )
-            return (reason, RemoteOutOfMemoryException)
+    def _investigate_memory_consumption(
+        self, properties: Dict[str, str]
+    ) -> Optional[Tuple[str, Type[RemoteOutOfMemoryException]]]:
+        if not properties.get("Memory Efficiency", None):
+            return None
 
-        investigation = investigate_memory_consumption()
-        if investigation:
-            return investigation
+        # Extract the "25019.18% of 1.00 GB" part of the line
+        efficiency_note = properties["Memory Efficiency"]
+        PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
 
-        return investigate_exit_code()
+        # Extract the percentage to see whether it exceeds 100%.
+        match = re.search(PERCENTAGE_REGEX, efficiency_note)
+        percentage = None
+        if match is None:
+            return None
+
+        try:
+            percentage = float(match.group(1))
+        except ValueError:
+            return None
+
+        if percentage < 100:
+            return None
+
+        reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
+        return (reason, RemoteOutOfMemoryException)
+
+    def _investigate_exit_code(
+        self, properties: Dict[str, str]
+    ) -> Optional[Tuple[str, Type[RemoteResourceLimitException]]]:
+        if not properties.get("State", None):
+            return None
+        # For exit codes >128, subtract 128 to obtain the linux signal number which is SIGKILL (9) in this case
+        if "exit code 137" not in properties["State"]:
+            return None
+        reason = (
+            "The job was probably terminated because it consumed too much memory "
+            "or ran for too long (at least, the exit code 137 suggests this). Please "
+            "use the `seff` utility to inspect the failed job and its potential "
+            "job siblings (in case of an array job) to doublecheck the memory "
+            "consumption and run time."
+        )
+        return (reason, RemoteResourceLimitException)
 
     def get_pending_tasks(self) -> Iterable[str]:
         try:

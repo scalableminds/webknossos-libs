@@ -9,7 +9,7 @@ from logging import getLogger
 from logging.handlers import QueueHandler
 from queue import Empty as QueueEmpty
 from queue import Queue
-from typing import Any, Callable, List, Tuple
+from typing import Any, Callable, List
 
 # Inspired by https://stackoverflow.com/a/894284
 

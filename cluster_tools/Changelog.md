@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- From now on the cluster tools will detect if slurm jobs were killed, because they exceeded the configured time limit, and throw a `RemoteTimeLimitException` indicating the issue instead of a generic `RemoteException`. If it is unclear whether a job was killed because of the time or memory limit, a `RemoteResourceLimitException` is thrown. [#929](https://github.com/scalableminds/webknossos-libs/pull/929)
 
 ### Changed
 
