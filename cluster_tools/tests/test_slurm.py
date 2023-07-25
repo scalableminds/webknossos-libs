@@ -302,10 +302,9 @@ def test_slurm_max_array_size() -> None:
         assert reset_max_array_size == original_max_array_size
 
 
-# TODO: Comment back in after the test ran through in the CI
-# @pytest.mark.skip(
-#     reason="This test takes more than a minute and is disabled by default. Execute it when modifying the RemoteTimeLimitException code."
-# )
+@pytest.mark.skip(
+    reason="This test takes more than a minute and is disabled by default. Execute it when modifying the RemoteTimeLimitException code."
+)
 def test_slurm_time_limit() -> None:
     # Time limit resolution is 1 minute, so request 1 minute
     executor = cluster_tools.get_executor(
