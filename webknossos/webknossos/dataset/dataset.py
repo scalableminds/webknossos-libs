@@ -30,16 +30,15 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from cluster_tools import Executor
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
-from webknossos.utils import SoftFileLock
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
@@ -1206,6 +1205,7 @@ class Dataset:
                 mag_view=mag_view,
                 is_segmentation=category == "segmentation",
                 dtype=current_dtype,
+                update_bbox=False,
             )
 
             args = []
@@ -1673,17 +1673,15 @@ class Dataset:
                 + "newer than the ones that were seen last time. The properties will be overwritten. This is "
                 + "likely happening because multiple processes changed the metadata of this dataset."
             )
-        with SoftFileLock(self.path / f"{PROPERTIES_FILE_NAME}.lock", timeout=3):
-            with (self.path.absolute() / PROPERTIES_FILE_NAME).open(
-                "w", encoding="utf-8"
-            ) as outfile:
-                json.dump(
-                    dataset_converter.unstructure(self._properties),
-                    outfile,
-                    indent=4,
-                )
 
-                self._last_read_properties = copy.deepcopy(self._properties)
+        with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:
+            json.dump(
+                dataset_converter.unstructure(self._properties),
+                outfile,
+                indent=4,
+            )
+
+            self._last_read_properties = copy.deepcopy(self._properties)
 
         # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
         if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):

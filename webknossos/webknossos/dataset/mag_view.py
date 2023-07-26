@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from cluster_tools import Executor
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -145,6 +146,7 @@ class MagView(View):
         self,
         data: np.ndarray,
         offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        update_bbox: bool = True,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -177,13 +179,17 @@ class MagView(View):
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
-        if not self.bounding_box.contains_bbox(mag1_bbox):
+        if update_bbox and not self.bounding_box.contains_bbox(mag1_bbox):
             self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
         super().write(
             data,
             absolute_offset=mag1_bbox.topleft,
+            allow_write_outside_bbox=not update_bbox,
         )
+
+    def parallel_write() -> Tuple[BoundingBox, int]:
+        ...
 
     def read(
         self,
