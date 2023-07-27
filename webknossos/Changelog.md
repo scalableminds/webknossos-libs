@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.2...HEAD)
 
 ### Breaking Changes
 - Task/Project management: `open` tasks have been renamed to `pending`. Use `Task.status.pending_instance_count` instead of `Task.status.open_instance_count`. [#930](https://github.com/scalableminds/webknossos-libs/pull/930)
@@ -18,9 +18,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
-- The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
 ### Fixed
+
+
+## [0.13.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.2) - 2023-07-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.1...v0.13.2)
+
+### Changed
+- The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
 
 ## [0.13.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.1) - 2023-07-17

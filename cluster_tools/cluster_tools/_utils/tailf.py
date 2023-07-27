@@ -33,7 +33,7 @@ class Tail:
         """
 
         self.check_file_validity(self.tailed_file)
-        with open(self.tailed_file, errors="replace") as file_:
+        with open(self.tailed_file, encoding="utf-8", errors="replace") as file_:
             # Don't seek, since we want to print the entire file here.
             while True:
                 line = file_.readline()

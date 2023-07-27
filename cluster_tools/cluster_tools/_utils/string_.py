@@ -2,6 +2,8 @@ import os
 import random
 import string
 
+# The module name includes a _-suffix to avoid name clashes with the standard library string module.
+
 
 def local_filename(filename: str = "") -> str:
     return os.path.join(os.getenv("CFUT_DIR", ".cfut"), filename)

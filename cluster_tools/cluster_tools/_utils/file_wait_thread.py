@@ -2,7 +2,7 @@ import logging
 import os
 import threading
 import time
-from typing import TYPE_CHECKING, Callable, Dict, Tuple
+from typing import TYPE_CHECKING, Callable, Dict
 
 if TYPE_CHECKING:
     from cluster_tools.schedulers.cluster_executor import ClusterExecutor

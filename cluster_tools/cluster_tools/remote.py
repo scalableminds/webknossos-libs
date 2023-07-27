@@ -6,7 +6,7 @@ import traceback
 from typing import Any, Dict, Optional, Type
 
 from cluster_tools._utils import pickling
-from cluster_tools._utils.string import with_preliminary_postfix
+from cluster_tools._utils.string_ import with_preliminary_postfix
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor

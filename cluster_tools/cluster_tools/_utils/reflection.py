@@ -1,6 +1,4 @@
 import os
-import pickle
-import sys
 from typing import Callable
 
 WARNING_TIMEOUT = 10 * 60  # seconds
