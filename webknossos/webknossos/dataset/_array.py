@@ -504,14 +504,16 @@ class ZarritaArray(BaseArray):
 
         zarray = self._zarray
         if isinstance(zarray, Array):
-            if len(zarray.codecs) == 1 and isinstance(zarray.codecs[0], ShardingCodec):
-                sharding_codec = zarray.codecs[0]
+            if len(zarray.codec_pipeline.codecs) == 1 and isinstance(
+                zarray.codec_pipeline.codecs[0], ShardingCodec
+            ):
+                sharding_codec = zarray.codec_pipeline.codecs[0]
                 return ArrayInfo(
                     data_format=DataFormat.Zarr3,
                     num_channels=zarray.metadata.shape[0],
                     voxel_type=zarray.metadata.dtype,
                     compression_mode=self._has_compression_codecs(
-                        sharding_codec.codecs
+                        sharding_codec.codec_pipeline.codecs
                     ),
                     chunk_shape=Vec3Int(sharding_codec.configuration.chunk_shape[1:4]),
                     chunks_per_shard=Vec3Int(
@@ -523,7 +525,9 @@ class ZarritaArray(BaseArray):
                 data_format=DataFormat.Zarr3,
                 num_channels=zarray.metadata.shape[0],
                 voxel_type=zarray.metadata.dtype,
-                compression_mode=self._has_compression_codecs(zarray.codecs),
+                compression_mode=self._has_compression_codecs(
+                    zarray.codec_pipeline.codecs
+                ),
                 chunk_shape=Vec3Int(
                     zarray.metadata.chunk_grid.configuration.chunk_shape[1:4]
                 )
