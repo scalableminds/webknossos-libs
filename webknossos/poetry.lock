@@ -3322,13 +3322,13 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 
 [[package]]
 name = "zarrita"
-version = "0.1.0a12"
+version = "0.1.0a16"
 description = ""
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "zarrita-0.1.0a12-py3-none-any.whl", hash = "sha256:e72e3c8e7a5d3cda169274ec8d69805580d2a82b7018c1c60d5a4cfc9e41f452"},
-    {file = "zarrita-0.1.0a12.tar.gz", hash = "sha256:89f6499c93c7f5c617e54573522a622b56e7b7f81ec7fbe216396392d8631e15"},
+    {file = "zarrita-0.1.0a16-py3-none-any.whl", hash = "sha256:5ae189cfbf284c885c7c90f98894b828d64b0b36a8528e59b9a00070a6e501bf"},
+    {file = "zarrita-0.1.0a16.tar.gz", hash = "sha256:1c86ad45f8ef4ccccf3dec05266513202c91da26d9980e40ac47305bf3a288a9"},
 ]
 
 [package.dependencies]
@@ -3337,7 +3337,7 @@ cattrs = ">=22.2.0"
 crc32c = ">=2.3"
 fsspec = ">=2022.0.0"
 numcodecs = ">=0.11.0,<0.12.0"
-numpy = ">=1.24.2,<2.0.0"
+numpy = ">=1.22,<2.0"
 
 [[package]]
 name = "zipp"
@@ -3365,4 +3365,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "74647410aeb5f42f69d7861f7d63a66e1ba7d9eb34d1301f92ffd9aae56fbbad"
+content-hash = "893b4c8d3777f4b688727d59ab0f10703487f2327cc9bcb2c33b23006c1a0e55"

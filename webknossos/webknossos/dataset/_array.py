@@ -560,10 +560,16 @@ class ZarritaArray(BaseArray):
                         + array_info.chunk_shape.to_tuple(),
                         codecs=[
                             zarrita.codecs.transpose_codec("F"),
-                            zarrita.codecs.blosc_codec(),
+                            zarrita.codecs.endian_codec(),
+                            zarrita.codecs.blosc_codec(
+                                typesize=array_info.voxel_type.itemsize
+                            ),
                         ]
                         if array_info.compression_mode
-                        else [zarrita.codecs.transpose_codec("F")],
+                        else [
+                            zarrita.codecs.transpose_codec("F"),
+                            zarrita.codecs.endian(),
+                        ],
                     )
                 ],
             )
