@@ -568,7 +568,7 @@ class ZarritaArray(BaseArray):
                         if array_info.compression_mode
                         else [
                             zarrita.codecs.transpose_codec("F"),
-                            zarrita.codecs.endian(),
+                            zarrita.codecs.endian_codec(),
                         ],
                     )
                 ],
