@@ -485,9 +485,7 @@ class ZarritaArray(BaseArray):
             Array.open_auto(store=path)  # check that everything exists
             return cls(path)
         except Exception as exc:
-            raise ArrayException(
-                f"Could not open Zarr array at {path}. `.zarray` not found."
-            ) from exc
+            raise ArrayException(f"Could not open Zarr array at {path}.") from exc
 
     @staticmethod
     def _has_compression_codecs(codecs: List["zarrita.codecs.Codec"]) -> bool:
