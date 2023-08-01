@@ -37,6 +37,7 @@ from upath import UPath
 
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
 
@@ -1173,6 +1174,10 @@ class Dataset:
                     chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
                 if chunks_per_shard is None:
                     chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR.with_z(1)
+
+            if chunks_per_shard is None and layer.data_format == DataFormat.Zarr3:
+                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
