@@ -1,7 +1,6 @@
 import logging
 import multiprocessing
 import os
-import sys
 import tempfile
 from concurrent import futures
 from concurrent.futures import Future, ProcessPoolExecutor
@@ -12,7 +11,6 @@ from shutil import rmtree
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     Iterator,
     List,
@@ -22,13 +20,15 @@ from typing import (
     cast,
 )
 
-from typing_extensions import Literal, ParamSpec, TypedDict
+from typing_extensions import ParamSpec, TypedDict
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.multiprocessing_logging_handler import (
     _MultiprocessingLoggingHandlerPool,
 )
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
+
+# The module name includes a _-suffix to avoid name clashes with the standard library multiprocessing module.
 
 
 class CFutDict(TypedDict):

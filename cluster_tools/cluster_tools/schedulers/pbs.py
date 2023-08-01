@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Literal
 
 from cluster_tools._utils.call import call, chcall
-from cluster_tools._utils.string import random_string
+from cluster_tools._utils.string_ import random_string
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 # qstat vs. checkjob

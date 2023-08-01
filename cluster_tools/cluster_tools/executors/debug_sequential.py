@@ -1,11 +1,10 @@
 from concurrent.futures import Future
-from multiprocessing.context import BaseContext
-from typing import Any, Callable, Optional, Tuple, TypeVar, cast
+from typing import Callable, TypeVar, cast
 
 from typing_extensions import ParamSpec
 
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing import CFutDict, MultiprocessingExecutor
+from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
 
 _T = TypeVar("_T")

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.2...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.13.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.2) - 2023-07-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.1...v0.13.2)
+
+### Added
+- From now on the cluster tools will detect if slurm jobs were killed, because they exceeded the configured time limit, and throw a `RemoteTimeLimitException` indicating the issue instead of a generic `RemoteException`. If it is unclear whether a job was killed because of the time or memory limit, a `RemoteResourceLimitException` is thrown. [#929](https://github.com/scalableminds/webknossos-libs/pull/929)
 
 
 ## [0.13.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.1) - 2023-07-17
