@@ -489,10 +489,13 @@ class ZarritaArray(BaseArray):
 
     @staticmethod
     def _has_compression_codecs(codecs: List["zarrita.codecs.Codec"]) -> bool:
-        from zarrita.codecs import BloscCodec, GzipCodec
+        from zarrita.codecs import BloscCodec, GzipCodec, ZstdCodec
 
         return any(
-            isinstance(c, BloscCodec) or isinstance(c, GzipCodec) for c in codecs
+            isinstance(c, BloscCodec)
+            or isinstance(c, GzipCodec)
+            or isinstance(c, ZstdCodec)
+            for c in codecs
         )
 
     @property
@@ -506,6 +509,8 @@ class ZarritaArray(BaseArray):
                 zarray.codec_pipeline.codecs[0], ShardingCodec
             ):
                 sharding_codec = zarray.codec_pipeline.codecs[0]
+                shard_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
+                chunk_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
                 return ArrayInfo(
                     data_format=DataFormat.Zarr3,
                     num_channels=zarray.metadata.shape[0],
@@ -513,11 +518,9 @@ class ZarritaArray(BaseArray):
                     compression_mode=self._has_compression_codecs(
                         sharding_codec.codec_pipeline.codecs
                     ),
-                    chunk_shape=Vec3Int(sharding_codec.configuration.chunk_shape[1:4]),
-                    chunks_per_shard=Vec3Int(
-                        zarray.metadata.chunk_grid.configuration.chunk_shape[1:4]
-                    )
-                    // Vec3Int(sharding_codec.configuration.chunk_shape[1:4]),
+                    chunk_shape=Vec3Int(chunk_shape[1:4]),
+                    chunks_per_shard=Vec3Int(shard_shape[1:4])
+                    // Vec3Int(chunk_shape[1:4]),
                 )
             return ArrayInfo(
                 data_format=DataFormat.Zarr3,

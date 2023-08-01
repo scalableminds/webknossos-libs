@@ -3322,13 +3322,13 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 
 [[package]]
 name = "zarrita"
-version = "0.1.0a17"
+version = "0.1.0a18"
 description = ""
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "zarrita-0.1.0a17-py3-none-any.whl", hash = "sha256:0e55ebfaa93164f252569c6e9c25ad63d401a9ac39a5a56dc7f54501cbe432f7"},
-    {file = "zarrita-0.1.0a17.tar.gz", hash = "sha256:f8020ce19d736697f1939b73c8c74ea30c139230fca1451f20b143e37e5698c0"},
+    {file = "zarrita-0.1.0a18-py3-none-any.whl", hash = "sha256:0a12a7f64680d0fbb05e79c5f94a0f80a2f48fa714ebcbb275b977ee30afccc9"},
+    {file = "zarrita-0.1.0a18.tar.gz", hash = "sha256:083e0e197fe51bee4477867452d2781f376249ca8423b1f9c01edfc49b46f101"},
 ]
 
 [package.dependencies]
@@ -3424,4 +3424,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "4e99b00b1f90684977024935afa0062ad3cffb2f16d3ad9f34ccebf837de587f"
+content-hash = "a90645bdcf6b31f32a430e1df0692a97b1290aa976b272b6ab9cc9c282c2126e"
