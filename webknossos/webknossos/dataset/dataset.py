@@ -1205,7 +1205,6 @@ class Dataset:
                 mag_view=mag_view,
                 is_segmentation=category == "segmentation",
                 dtype=current_dtype,
-                update_bbox=False,
             )
 
             args = []
