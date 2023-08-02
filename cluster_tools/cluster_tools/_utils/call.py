@@ -13,6 +13,8 @@ def call(command: str, stdin: Optional[str] = None) -> Tuple[str, str, int]:
         stdin_flag = None
     p = subprocess.run(
         command,
+        stdin=stdin_flag,
+        check=False,
         shell=True,
         capture_output=True,
         text=True,

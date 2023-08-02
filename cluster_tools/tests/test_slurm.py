@@ -6,6 +6,7 @@ import multiprocessing as mp
 import os
 import shutil
 import signal
+import sys
 import tempfile
 import time
 from collections import Counter
@@ -29,12 +30,24 @@ def sleep(duration: float) -> float:
     return duration
 
 
+def allocate(duration: float, num_bytes: int) -> int:
+    data = b"\x00" * num_bytes
+    time.sleep(duration)
+    return sys.getsizeof(data)
+
+
 logging.basicConfig()
 
 
 def expect_fork() -> bool:
     assert mp.get_start_method() == "fork"
     return True
+
+
+def search_and_replace_in_slurm_config(search_string: str, replace_string: str) -> None:
+    chcall(
+        f"sed -ci 's/{search_string}/{replace_string}/g' /etc/slurm/slurm.conf && scontrol reconfigure"
+    )
 
 
 def test_map_with_spawn() -> None:
@@ -284,9 +297,65 @@ def test_slurm_max_array_size() -> None:
 
             assert all(array_size <= max_array_size for array_size in occurences)
     finally:
-        chcall(f"sed -i 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure")
+        search_and_replace_in_slurm_config(command, "")
         reset_max_array_size = executor.get_max_array_size()
         assert reset_max_array_size == original_max_array_size
+
+
+@pytest.mark.skip(
+    reason="This test takes more than a minute and is disabled by default. Execute it when modifying the RemoteTimeLimitException code."
+)
+def test_slurm_time_limit() -> None:
+    # Time limit resolution is 1 minute, so request 1 minute
+    executor = cluster_tools.get_executor(
+        "slurm", debug=True, job_resources={"time": "0-00:01:00"}
+    )
+
+    with executor:
+        # Schedule a job that runs for more than 1 minute
+        futures = executor.map_to_futures(sleep, [80])
+        concurrent.futures.wait(futures)
+
+        # Job should have been killed with a RemoteTimeLimitException
+        assert all(
+            isinstance(fut.exception(), cluster_tools.RemoteTimeLimitException)
+            for fut in futures
+        )
+
+
+def test_slurm_memory_limit() -> None:
+    # Request 1 MB
+    executor = cluster_tools.get_executor(
+        "slurm", debug=True, job_resources={"mem": "1M"}
+    )
+
+    original_gather_frequency_config = "JobAcctGatherFrequency=30"  # from slurm.conf
+    new_gather_frequency_config = "JobAcctGatherFrequency=1"
+
+    try:
+        # Increase the frequency at which slurm checks whether a job uses too much memory
+        search_and_replace_in_slurm_config(
+            original_gather_frequency_config, new_gather_frequency_config
+        )
+
+        with executor:
+            # Schedule a job that allocates more than 1 MB and let it run for more than 1 second
+            # because the frequency of the memory polling is 1 second
+            duration = 3
+            futures = executor.map_to_futures(
+                partial(allocate, duration), [1024 * 1024 * 2]
+            )
+            concurrent.futures.wait(futures)
+
+            # Job should have been killed with a RemoteOutOfMemoryException
+            assert all(
+                isinstance(fut.exception(), cluster_tools.RemoteOutOfMemoryException)
+                for fut in futures
+            )
+    finally:
+        search_and_replace_in_slurm_config(
+            new_gather_frequency_config, original_gather_frequency_config
+        )
 
 
 def test_slurm_max_array_size_env() -> None:
