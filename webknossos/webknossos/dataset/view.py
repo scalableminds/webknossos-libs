@@ -204,6 +204,25 @@ class View:
         This parameter used to be relative for `View` and absolute for `MagView`,
         and specified in the mag of the respective view.
 
+        Writing data to a segmentation layer manually does not automatically update the largest_segment_id. To set
+        the largest segment id properly run the `refresh_largest_segment_id` method on your layer.
+
+        Example:
+
+        ```python
+        ds = Dataset(DS_PATH, voxel_size=(1, 1, 1))
+
+        segmentation_layer = cast(
+            SegmentationLayer,
+            ds.add_layer("segmentation", SEGMENTATION_CATEGORY),
+        )
+        mag = segmentation_layer.add_mag(Mag(1))
+
+        mag.write(data=MY_NP_ARRAY)
+
+        segmentation_layer.refresh_largest_segment_id()
+        ```
+
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
         """
