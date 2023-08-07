@@ -205,7 +205,8 @@ class View:
         and specified in the mag of the respective view.
 
         Writing data to a segmentation layer manually does not automatically update the largest_segment_id. To set
-        the largest segment id properly run the `refresh_largest_segment_id` method on your layer.
+        the largest segment id properly run the `refresh_largest_segment_id` method on your layer or set the
+        `largest_segment_id` property manually..
 
         Example:
 
