@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an infinite loop in the mag calculation during anisotropic downsampling in situations where the target mag cannot possibly be reached while adhering to the anisotropic downsampling scheme. [#934](https://github.com/scalableminds/webknossos-libs/pull/934) 
 
 
 ## [0.13.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.3) - 2023-08-08
