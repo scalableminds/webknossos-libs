@@ -15,8 +15,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- `View` has a `map_chunk` method now to run a function on each chunk and collect the results in a list.
 
 ### Changed
+- As WEBKNOSSOS does not require the largest segment id. It is also not mandatory in the WEBKNOSSOS libs anymore. [#917](https://github.com/scalableminds/webknossos-libs/issues/917) The method `SegmentationLayer.refresh_largest_segment_id` was added to lookup the highest value in segmentation data and set `largest_segment_id` accordingly.
+- The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
 ### Fixed
 
