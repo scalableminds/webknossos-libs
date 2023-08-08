@@ -1,5 +1,6 @@
 import warnings
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pytest
@@ -257,7 +258,12 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
         (None, (2, 2, 1), (8, 8, 8), [(2, 2, 1), (4, 4, 2), (8, 8, 4)]),
     ],
 )
-def test_mag_calculation(voxel_size, from_mag_name, max_mag_name, scheme) -> None:
+def test_mag_calculation(
+    voxel_size: Optional[Tuple[float, float, float]],
+    from_mag_name: Tuple[float, float, float],
+    max_mag_name: Tuple[float, float, float],
+    scheme: List[Tuple[float, float, float]],
+) -> None:
     # This test does not test the exact input of the user:
     # If a user does not specify a max_mag, then a default is calculated.
     # Therefore, max_mag=None is not covered in this test case.
@@ -302,8 +308,12 @@ def test_mag_calculation(voxel_size, from_mag_name, max_mag_name, scheme) -> Non
         ),
     ],
 )
-@pytest.mark.timeout(5)
-def test_invalid_mag_calculation(voxel_size, from_mag_name, max_mag_name) -> None:
+@pytest.mark.timeout(1)
+def test_invalid_mag_calculation(
+    voxel_size: Optional[Tuple[float, float, float]],
+    from_mag_name: Tuple[float, float, float],
+    max_mag_name: Tuple[float, float, float],
+) -> None:
     # This test does not test the exact input of the user:
     # If a user does not specify a max_mag, then a default is calculated.
     # Therefore, max_mag=None is not covered in this test case.
