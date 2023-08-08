@@ -485,16 +485,17 @@ class ZarritaArray(BaseArray):
             Array.open_auto(store=path)  # check that everything exists
             return cls(path)
         except Exception as exc:
-            raise ArrayException(
-                f"Could not open Zarr array at {path}. `.zarray` not found."
-            ) from exc
+            raise ArrayException(f"Could not open Zarr array at {path}.") from exc
 
     @staticmethod
     def _has_compression_codecs(codecs: List["zarrita.codecs.Codec"]) -> bool:
-        from zarrita.codecs import BloscCodec, GzipCodec
+        from zarrita.codecs import BloscCodec, GzipCodec, ZstdCodec
 
         return any(
-            isinstance(c, BloscCodec) or isinstance(c, GzipCodec) for c in codecs
+            isinstance(c, BloscCodec)
+            or isinstance(c, GzipCodec)
+            or isinstance(c, ZstdCodec)
+            for c in codecs
         )
 
     @property
@@ -504,26 +505,30 @@ class ZarritaArray(BaseArray):
 
         zarray = self._zarray
         if isinstance(zarray, Array):
-            if len(zarray.codecs) == 1 and isinstance(zarray.codecs[0], ShardingCodec):
-                sharding_codec = zarray.codecs[0]
+            if len(zarray.codec_pipeline.codecs) == 1 and isinstance(
+                zarray.codec_pipeline.codecs[0], ShardingCodec
+            ):
+                sharding_codec = zarray.codec_pipeline.codecs[0]
+                shard_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
+                chunk_shape = sharding_codec.configuration.chunk_shape
                 return ArrayInfo(
                     data_format=DataFormat.Zarr3,
                     num_channels=zarray.metadata.shape[0],
                     voxel_type=zarray.metadata.dtype,
                     compression_mode=self._has_compression_codecs(
-                        sharding_codec.codecs
+                        sharding_codec.codec_pipeline.codecs
                     ),
-                    chunk_shape=Vec3Int(sharding_codec.configuration.chunk_shape[1:4]),
-                    chunks_per_shard=Vec3Int(
-                        zarray.metadata.chunk_grid.configuration.chunk_shape[1:4]
-                    )
-                    // Vec3Int(sharding_codec.configuration.chunk_shape[1:4]),
+                    chunk_shape=Vec3Int(chunk_shape[1:4]),
+                    chunks_per_shard=Vec3Int(shard_shape[1:4])
+                    // Vec3Int(chunk_shape[1:4]),
                 )
             return ArrayInfo(
                 data_format=DataFormat.Zarr3,
                 num_channels=zarray.metadata.shape[0],
                 voxel_type=zarray.metadata.dtype,
-                compression_mode=self._has_compression_codecs(zarray.codecs),
+                compression_mode=self._has_compression_codecs(
+                    zarray.codec_pipeline.codecs
+                ),
                 chunk_shape=Vec3Int(
                     zarray.metadata.chunk_grid.configuration.chunk_shape[1:4]
                 )
@@ -560,10 +565,16 @@ class ZarritaArray(BaseArray):
                         + array_info.chunk_shape.to_tuple(),
                         codecs=[
                             zarrita.codecs.transpose_codec("F"),
-                            zarrita.codecs.blosc_codec(),
+                            zarrita.codecs.endian_codec(),
+                            zarrita.codecs.blosc_codec(
+                                typesize=array_info.voxel_type.itemsize
+                            ),
                         ]
                         if array_info.compression_mode
-                        else [zarrita.codecs.transpose_codec("F")],
+                        else [
+                            zarrita.codecs.transpose_codec("F"),
+                            zarrita.codecs.endian_codec(),
+                        ],
                     )
                 ],
             )

@@ -859,6 +859,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
     chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    shard_shape = chunk_shape * chunks_per_shard
 
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(
@@ -874,7 +875,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     with get_executor_for_args(None) as executor:
         mag.for_each_chunk(
             chunk_job,
-            chunk_shape=(64, 64, 64),
+            chunk_shape=shard_shape,
             executor=executor,
         )
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
@@ -885,7 +886,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     # Test without executor
     mag.for_each_chunk(
         chunk_job,
-        chunk_shape=(64, 64, 64),
+        chunk_shape=shard_shape,
     )
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 

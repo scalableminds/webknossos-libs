@@ -1,1 +1,32 @@
-{"shape": [3, 24, 24, 24], "data_type": "uint8", "chunk_grid": {"configuration": {"chunk_shape": [3, 32, 32, 32]}, "name": "regular"}, "chunk_key_encoding": {"configuration": {"separator": "/"}, "name": "default"}, "fill_value": 0, "attributes": {}, "codecs": [{"configuration": {"chunk_shape": [3, 16, 16, 16], "codecs": []}, "name": "sharding_indexed"}], "dimension_names": null, "zarr_format": 3, "node_type": "array"}
+{
+  "shape": [3, 24, 24, 24],
+  "data_type": "uint8",
+  "chunk_grid": {
+    "configuration": { "chunk_shape": [3, 32, 32, 32] },
+    "name": "regular"
+  },
+  "chunk_key_encoding": {
+    "configuration": { "separator": "/" },
+    "name": "default"
+  },
+  "fill_value": 0,
+  "attributes": {},
+  "codecs": [
+    {
+      "configuration": {
+        "chunk_shape": [3, 16, 16, 16],
+        "codecs": [
+          { "name": "endian", "configuration": { "endian": "little" } }
+        ],
+        "index_codecs": [
+          { "name": "endian", "configuration": { "endian": "little" } },
+          { "name": "crc32c" }
+        ]
+      },
+      "name": "sharding_indexed"
+    }
+  ],
+  "dimension_names": null,
+  "zarr_format": 3,
+  "node_type": "array"
+}
