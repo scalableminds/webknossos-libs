@@ -95,7 +95,7 @@ def calculate_mags_to_downsample(
                 )
                 # In case of isotropic resolution but anisotropic mag we need to ensure unique max dims.
                 # current mag: 4-4-2, voxel_size: 1,1,1 -> new_mag: 4-4-4, therefore we skip this entry.
-                if new_mag.max_dim == current_mag.max_dim:
+                if new_mag.max_dim == current_mag.max_dim and new_mag != current_mag:
                     current_mag = new_mag
                     continue
             if new_mag == current_mag:

@@ -174,14 +174,9 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
     assert np.all(target_buffer == joined_buffer)
 
 
-def test_anisotropic_mag_calculation() -> None:
-    # This test does not test the exact input of the user:
-    # If a user does not specify a max_mag, then a default is calculated.
-    # Therefore, max_mag=None is not covered in this test case.
-    # The same applies for `voxel_size`:
-    # This is either extracted from the properties or set to comply with a specific sampling mode.
-
-    mag_tests = [
+@pytest.mark.parametrize(
+    "voxel_size, from_mag_name, max_mag_name, scheme",
+    [
         # Anisotropic
         (
             (10.5, 10.5, 24),  # voxel_size
@@ -260,27 +255,66 @@ def test_anisotropic_mag_calculation() -> None:
         ),
         (None, (2, 2, 1), (8, 8, 4), [(2, 2, 1), (4, 4, 2), (8, 8, 4)]),
         (None, (2, 2, 1), (8, 8, 8), [(2, 2, 1), (4, 4, 2), (8, 8, 4)]),
-    ]
+    ],
+)
+def test_mag_calculation(voxel_size, from_mag_name, max_mag_name, scheme) -> None:
+    # This test does not test the exact input of the user:
+    # If a user does not specify a max_mag, then a default is calculated.
+    # Therefore, max_mag=None is not covered in this test case.
+    # The same applies for `voxel_size`:
+    # This is either extracted from the properties or set to comply with a specific sampling mode.
 
-    for i in range(len(mag_tests)):
-        voxel_size, from_max_name, max_mag_name, scheme = mag_tests[i]
-        sampling_scheme = [Mag(m) for m in scheme]
-        from_mag = Mag(from_max_name)
-        max_mag = Mag(max_mag_name)
+    sampling_scheme = [Mag(m) for m in scheme]
+    from_mag = Mag(from_mag_name)
+    max_mag = Mag(max_mag_name)
 
-        assert sampling_scheme[1:] == calculate_mags_to_downsample(
-            from_mag, max_mag, None, voxel_size
-        ), f"The calculated downsampling scheme of the {i+1}-th test case is wrong."
+    assert sampling_scheme[1:] == calculate_mags_to_downsample(
+        from_mag, max_mag, None, voxel_size
+    ), "The calculated downsampling scheme is wrong."
 
-    for i in range(len(mag_tests)):
-        voxel_size, finest_mag_name, from_mag_name, scheme = mag_tests[i]
-        sampling_scheme = [Mag(m) for m in scheme]
-        from_mag = Mag(from_mag_name)
-        finest_mag = Mag(finest_mag_name)
+    sampling_scheme = [Mag(m) for m in scheme]
+    from_mag = Mag(max_mag_name)
+    finest_mag = Mag(from_mag_name)
 
-        assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
-            from_mag, finest_mag, None, voxel_size
-        ), f"The calculated upsampling scheme of the {i+1}-th test case is wrong."
+    assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
+        from_mag, finest_mag, None, voxel_size
+    ), "The calculated upsampling scheme is wrong."
+
+
+@pytest.mark.parametrize(
+    "voxel_size, from_mag_name, max_mag_name",
+    [
+        # Anisotropic
+        (
+            (10.5, 10.5, 24),
+            (2, 2, 2),
+            (16, 16, 2),
+        ),
+        (
+            (10.5, 10.5, 24),  # voxel_size
+            (1, 1, 1),  # from_mag
+            (1, 1, 2),  # max_mag
+        ),
+        (
+            (10.5, 10.5, 24),
+            (1, 1, 1),
+            (4, 4, 16),
+        ),
+    ],
+)
+@pytest.mark.timeout(5)
+def test_invalid_mag_calculation(voxel_size, from_mag_name, max_mag_name) -> None:
+    # This test does not test the exact input of the user:
+    # If a user does not specify a max_mag, then a default is calculated.
+    # Therefore, max_mag=None is not covered in this test case.
+    # The same applies for `voxel_size`:
+    # This is either extracted from the properties or set to comply with a specific sampling mode.
+
+    from_mag = Mag(from_mag_name)
+    max_mag = Mag(max_mag_name)
+
+    with pytest.raises(RuntimeError):
+        calculate_mags_to_downsample(from_mag, max_mag, None, voxel_size)
 
 
 def test_default_max_mag() -> None:
