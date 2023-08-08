@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from cluster_tools import Executor
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset.view import View, _copy_job
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -420,7 +420,7 @@ class Layer:
                 ),
                 axis_order=(
                     {"x": 1, "y": 2, "z": 3, "c": 0}
-                    if mag_array_info.data_format == DataFormat.Zarr
+                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
             )
@@ -457,7 +457,7 @@ class Layer:
                 ),
                 axis_order=(
                     {"x": 1, "y": 2, "z": 3, "c": 0}
-                    if mag_array_info.data_format == DataFormat.Zarr
+                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
             )
