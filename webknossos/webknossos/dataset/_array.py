@@ -510,7 +510,7 @@ class ZarritaArray(BaseArray):
             ):
                 sharding_codec = zarray.codec_pipeline.codecs[0]
                 shard_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
-                chunk_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
+                chunk_shape = sharding_codec.configuration.chunk_shape
                 return ArrayInfo(
                     data_format=DataFormat.Zarr3,
                     num_channels=zarray.metadata.shape[0],
