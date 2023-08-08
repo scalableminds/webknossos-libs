@@ -72,16 +72,16 @@ Should be number or minus seperated string (e.g. 2 or 2-2-2).",
 
     executor_args = Namespace(
         jobs=jobs,
-        distribution_strategy=distribution_strategy,
+        distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
     dataset = Dataset.open(source)
     mode = SamplingModes.parse(sampling_mode.value)
 
-    with get_executor_for_args(args=executor_args) as executor:
-        if layer_name is None:
-            upsample_all_layers(dataset, mode, from_mag, executor_args)
-        else:
+    if layer_name is None:
+        upsample_all_layers(dataset, mode, from_mag, executor_args)
+    else:
+        with get_executor_for_args(args=executor_args) as executor:
             layer = dataset.get_layer(layer_name)
             layer.upsample(from_mag=from_mag, sampling_mode=mode, executor=executor)
 
