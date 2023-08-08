@@ -420,7 +420,7 @@ class Layer:
                 ),
                 axis_order=(
                     {"x": 1, "y": 2, "z": 3, "c": 0}
-                    if mag_array_info.data_format == DataFormat.Zarr
+                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
             )
@@ -457,7 +457,7 @@ class Layer:
                 ),
                 axis_order=(
                     {"x": 1, "y": 2, "z": 3, "c": 0}
-                    if mag_array_info.data_format == DataFormat.Zarr
+                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
             )
