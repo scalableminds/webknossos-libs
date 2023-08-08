@@ -41,13 +41,6 @@ class LayerCategory(str, Enum):
     SEGMENTATION = "segmentation"
 
 
-class DataFormat(str, Enum):
-    """Enum of available data formats."""
-
-    WKW = "wkw"
-    ZARR = "zarr"
-
-
 class SamplingMode(str, Enum):
     """Enum of available sampling modes."""
 
