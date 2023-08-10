@@ -1,15 +1,7 @@
-import difflib
-from os import PathLike
-from pathlib import Path
-from typing import List, Optional
-
 import numpy as np
-import pytest
 
 import webknossos as wk
 from webknossos.utils import time_start, time_stop
-
-from .constants import TESTDATA_DIR
 
 
 def test_basic_buffered_slice_writer() -> None:

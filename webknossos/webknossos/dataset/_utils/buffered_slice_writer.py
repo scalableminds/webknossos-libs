@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Generator, List, Optional, Type
 import numpy as np
 import psutil
 
-from webknossos.geometry import Vec3Int, Vec3IntLike
+from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
     from webknossos.dataset import View
@@ -104,8 +104,6 @@ class BufferedSliceWriter:
             max_width = max(section.shape[-2] for section in self.slices_to_write)
             max_height = max(section.shape[-1] for section in self.slices_to_write)
             channel_count = self.slices_to_write[0].shape[0]
-
-            from webknossos.geometry import BoundingBox, Mag
 
             whole_bbox = BoundingBox(
                 (0, 0, 0), (max_width, max_height, self.buffer_size)
