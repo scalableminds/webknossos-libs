@@ -14,6 +14,7 @@ from webknossos.geometry import Vec3Int, Vec3IntLike
 if TYPE_CHECKING:
     from webknossos.dataset import View
 
+
 def log_memory_consumption(additional_output: str = "") -> None:
     pid = os.getpid()
     process = psutil.Process(pid)
@@ -106,18 +107,23 @@ class BufferedSliceWriter:
 
             from webknossos.geometry import BoundingBox, Mag
 
-            whole_bbox = BoundingBox((0, 0, 0), (max_width, max_height, self.buffer_size))
+            whole_bbox = BoundingBox(
+                (0, 0, 0), (max_width, max_height, self.buffer_size)
+            )
 
             shard_dimensions = self.view._get_file_dimensions()
             chunk_size = (
                 min(shard_dimensions[0], max_width),
                 min(shard_dimensions[1], max_height),
-                self.buffer_size
+                self.buffer_size,
             )
             for chunk_bbox in whole_bbox.chunk(chunk_size):
                 info(f"Writing chunk {chunk_bbox}")
                 width, height, _ = chunk_bbox.size
-                data = np.zeros((channel_count, width, height, self.buffer_size), dtype=self.slices_to_write[0].dtype)
+                data = np.zeros(
+                    (channel_count, width, height, self.buffer_size),
+                    dtype=self.slices_to_write[0].dtype,
+                )
 
                 z = 0
                 for section in self.slices_to_write:
@@ -126,7 +132,9 @@ class BufferedSliceWriter:
                         chunk_bbox.topleft.x : chunk_bbox.bottomright.x,
                         chunk_bbox.topleft.y : chunk_bbox.bottomright.y,
                     ]
-                    data[:, 0:section_chunk.shape[-2], 0:section_chunk.shape[-1], z] = section_chunk
+                    data[
+                        :, 0 : section_chunk.shape[-2], 0 : section_chunk.shape[-1], z
+                    ] = section_chunk
 
                     z += 1
 
@@ -142,7 +150,6 @@ class BufferedSliceWriter:
                     absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
                 )
                 del data
-
 
         except Exception as exc:
             error(
@@ -162,7 +169,6 @@ class BufferedSliceWriter:
         finally:
             self.slices_to_write = []
 
-    # @profile(stream=fp)
     def _get_slice_generator(self) -> Generator[None, np.ndarray, None]:
         current_slice = 0
         while True:
