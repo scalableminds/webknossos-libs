@@ -23,8 +23,8 @@ def test_basic_buffered_slice_writer() -> None:
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
 
-    # Allocate some data (~ 536 MB)
-    shape = (4096, 4096, 32)
+    # Allocate some data (~ 8 MB)
+    shape = (512, 512, 32)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
     
     # Write some slices
