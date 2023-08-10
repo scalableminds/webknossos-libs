@@ -176,7 +176,7 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "voxel_size, from_mag_name, max_mag_name, scheme",
+    "voxel_size, finest_mag, coarsest_mag, scheme",
     [
         # Anisotropic
         (
@@ -260,9 +260,9 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
 )
 def test_mag_calculation(
     voxel_size: Optional[Tuple[float, float, float]],
-    from_mag_name: Tuple[float, float, float],
-    max_mag_name: Tuple[float, float, float],
-    scheme: List[Tuple[float, float, float]],
+    finest_mag: Tuple[int, int, int],
+    coarsest_mag: Tuple[int, int, int],
+    scheme: List[Tuple[int, int, int]],
 ) -> None:
     # This test does not test the exact input of the user:
     # If a user does not specify a max_mag, then a default is calculated.
@@ -271,24 +271,18 @@ def test_mag_calculation(
     # This is either extracted from the properties or set to comply with a specific sampling mode.
 
     sampling_scheme = [Mag(m) for m in scheme]
-    from_mag = Mag(from_mag_name)
-    max_mag = Mag(max_mag_name)
 
     assert sampling_scheme[1:] == calculate_mags_to_downsample(
-        from_mag, max_mag, None, voxel_size
+        Mag(finest_mag), Mag(coarsest_mag), None, voxel_size
     ), "The calculated downsampling scheme is wrong."
 
-    sampling_scheme = [Mag(m) for m in scheme]
-    from_mag = Mag(max_mag_name)
-    finest_mag = Mag(from_mag_name)
-
     assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
-        from_mag, finest_mag, None, voxel_size
+        Mag(coarsest_mag), Mag(finest_mag), None, voxel_size
     ), "The calculated upsampling scheme is wrong."
 
 
 @pytest.mark.parametrize(
-    "voxel_size, from_mag_name, max_mag_name",
+    "voxel_size, finest_mag, coarsest_mag",
     [
         # Anisotropic
         (
@@ -311,8 +305,8 @@ def test_mag_calculation(
 @pytest.mark.timeout(1)
 def test_invalid_mag_calculation(
     voxel_size: Optional[Tuple[float, float, float]],
-    from_mag_name: Tuple[float, float, float],
-    max_mag_name: Tuple[float, float, float],
+    finest_mag: Tuple[int, int, int],
+    coarsest_mag: Tuple[int, int, int],
 ) -> None:
     # This test does not test the exact input of the user:
     # If a user does not specify a max_mag, then a default is calculated.
@@ -320,11 +314,10 @@ def test_invalid_mag_calculation(
     # The same applies for `voxel_size`:
     # This is either extracted from the properties or set to comply with a specific sampling mode.
 
-    from_mag = Mag(from_mag_name)
-    max_mag = Mag(max_mag_name)
-
     with pytest.raises(RuntimeError):
-        calculate_mags_to_downsample(from_mag, max_mag, None, voxel_size)
+        calculate_mags_to_downsample(
+            Mag(finest_mag), Mag(coarsest_mag), None, voxel_size
+        )
 
 
 def test_default_max_mag() -> None:
