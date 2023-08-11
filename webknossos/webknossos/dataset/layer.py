@@ -14,7 +14,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.dataset.view import _copy_job
+from webknossos.dataset.view import View, _copy_job
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
@@ -420,7 +420,7 @@ class Layer:
                 ),
                 axis_order=(
                     {"x": 1, "y": 2, "z": 3, "c": 0}
-                    if mag_array_info.data_format == DataFormat.Zarr
+                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
             )
@@ -457,7 +457,7 @@ class Layer:
                 ),
                 axis_order=(
                     {"x": 1, "y": 2, "z": 3, "c": 0}
-                    if mag_array_info.data_format == DataFormat.Zarr
+                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
             )
@@ -1158,3 +1158,23 @@ class SegmentationLayer(Layer):
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return self.largest_segment_id
+
+    def _get_largest_segment_id(self, view: View) -> int:
+        return np.max(view.read(), initial=0)
+
+    def refresh_largest_segment_id(
+        self, chunk_shape: Optional[Vec3Int] = None, executor: Optional[Executor] = None
+    ) -> None:
+        """Sets the largest segment id to the highest value in the data.
+        largest_segment_id is set to `None` if the data is empty."""
+
+        try:
+            chunk_results = self.get_finest_mag().map_chunk(
+                self._get_largest_segment_id,
+                chunk_shape=chunk_shape,
+                executor=executor,
+                progress_desc="Searching largest segment id",
+            )
+            self.largest_segment_id = max(chunk_results)
+        except ValueError:
+            self.largest_segment_id = None

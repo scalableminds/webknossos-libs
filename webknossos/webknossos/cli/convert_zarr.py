@@ -246,7 +246,7 @@ When converting a folder, this option is ignored."
 
     executor_args = Namespace(
         jobs=jobs,
-        distribution_strategy=distribution_strategy,
+        distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
 

@@ -26,7 +26,7 @@ class DistributionStrategy(str, Enum):
     SLURM = "slurm"
     KUBERNETES = "kubernetes"
     MULTIPROCESSING = "multiprocessing"
-    DEBUGS_SEQUENTIAL = "debug_sequential"
+    DEBUG_SEQUENTIAL = "debug_sequential"
 
 
 class LayerCategory(str, Enum):
@@ -39,13 +39,6 @@ class LayerCategory(str, Enum):
 
     COLOR = "color"
     SEGMENTATION = "segmentation"
-
-
-class DataFormat(str, Enum):
-    """Enum of available data formats."""
-
-    WKW = "wkw"
-    ZARR = "zarr"
 
 
 class SamplingMode(str, Enum):

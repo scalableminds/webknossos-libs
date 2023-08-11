@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.3...HEAD)
 
 ### Breaking Changes
 - Task/Project management: `open` tasks have been renamed to `pending`. Use `Task.status.pending_instance_count` instead of `Task.status.open_instance_count`. [#930](https://github.com/scalableminds/webknossos-libs/pull/930)
@@ -20,6 +20,17 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.13.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.3) - 2023-08-08
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.2...v0.13.3)
+
+### Added
+- `View` has a `map_chunk` method now to run a function on each chunk and collect the results in a list.
+
+### Changed
+- As WEBKNOSSOS does not require the largest segment id. It is also not mandatory in the WEBKNOSSOS libs anymore. [#917](https://github.com/scalableminds/webknossos-libs/issues/917) The method `SegmentationLayer.refresh_largest_segment_id` was added to lookup the highest value in segmentation data and set `largest_segment_id` accordingly.
+- The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
 
 ## [0.13.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.2) - 2023-07-26
