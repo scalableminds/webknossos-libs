@@ -65,7 +65,7 @@ class BufferedSliceWriter:
         )
         self.dimension = dimension
 
-        effective_offset = 0
+        effective_offset = Vec3Int.full(0)
         if self.relative_offset is not None:
             effective_offset = self.view.bounding_box.topleft + self.relative_offset
 
