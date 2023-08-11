@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `task_type` property to `Task` class. [#938](https://github.com/scalableminds/webknossos-libs/pull/938)
 
 ### Changed
 
