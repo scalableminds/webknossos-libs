@@ -166,6 +166,21 @@ class Vec3Int(tuple):
     def add_or_none(self, other: Optional["Vec3Int"]) -> Optional["Vec3Int"]:
         return None if other is None else self + other
 
+    def moveaxis(
+        self, source: Union[int, List[int]], target: Union[int, List[int]]
+    ) -> "Vec3Int":
+        """
+        Allows to move one element at index `source` to another index `target`. Similar to
+        np.moveaxis, this is *not* a swap operation but instead it moves the specified
+        source so that the other elements move when necessary.
+        """
+
+        # Piggy-back on np.moveaxis by creating an auxiliary array where the indices 0, 1 and
+        # 2 appear in the shape.
+        indices = np.moveaxis(np.zeros((0, 1, 2)), source, target).shape
+        arr = self.to_np()[np.array(indices)]
+        return Vec3Int(arr)
+
     @classmethod
     def zeros(cls) -> "Vec3Int":
         return cls(0, 0, 0)

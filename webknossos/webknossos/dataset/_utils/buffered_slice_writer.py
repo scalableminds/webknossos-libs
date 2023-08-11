@@ -105,17 +105,19 @@ class BufferedSliceWriter:
             max_height = max(section.shape[-1] for section in self.slices_to_write)
             channel_count = self.slices_to_write[0].shape[0]
 
-            whole_bbox = BoundingBox(
+            buffer_bbox = BoundingBox(
                 (0, 0, 0), (max_width, max_height, self.buffer_size)
             )
 
-            shard_dimensions = self.view._get_file_dimensions()
-            chunk_size = (
+            shard_dimensions = self.view._get_file_dimensions().moveaxis(
+                -1, self.dimension
+            )
+            chunk_size = Vec3Int(
                 min(shard_dimensions[0], max_width),
                 min(shard_dimensions[1], max_height),
                 self.buffer_size,
             )
-            for chunk_bbox in whole_bbox.chunk(chunk_size):
+            for chunk_bbox in buffer_bbox.chunk(chunk_size):
                 info(f"Writing chunk {chunk_bbox}")
                 width, height, _ = chunk_bbox.size
                 data = np.zeros(
@@ -136,10 +138,12 @@ class BufferedSliceWriter:
 
                     z += 1
 
-                buffer_start_list = [chunk_bbox.topleft.x, chunk_bbox.topleft.y, 0]
-                buffer_start_list[self.dimension] = self.buffer_start_slice
-                buffer_start = Vec3Int(buffer_start_list)
+                buffer_start = Vec3Int(
+                    chunk_bbox.topleft.x, chunk_bbox.topleft.y, self.buffer_start_slice
+                ).moveaxis(-1, self.dimension)
                 buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
+
+                data = np.moveaxis(data, -1, self.dimension + 1)
 
                 self.view.write(
                     data,

@@ -8,6 +8,12 @@ from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import rmtree
 
+"""
+This module effectively tests BufferedSliceWriter and
+BufferedSliceReader (by calling get_buffered_slice_writer
+and get_buffered_slice_reader).
+"""
+
 
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
@@ -81,7 +87,9 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
 
     for dim in [0, 1, 2]:
         ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
-        mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
+        mag_view = ds.add_layer(
+            "color", COLOR_CATEGORY, num_channels=test_cube.shape[0]
+        ).add_mag(1)
 
         with mag_view.get_buffered_slice_writer(
             absolute_offset=offset, buffer_size=5, dimension=dim
@@ -129,3 +137,99 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
 
                 assert np.array_equal(slice_data_a, original_slice)
                 assert np.array_equal(slice_data_b, original_slice)
+
+
+def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+
+    # Allocate some data (~ 8 MB)
+    shape = (512, 512, 32)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    # Write some slices
+    with mag1.get_buffered_slice_writer() as writer:
+        for z in range(0, shape[2]):
+            section = data[:, :, z]
+            writer.send(section)
+
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
+
+    assert np.all(data == written_data)
+
+
+def test_buffered_slice_writer_should_warn_about_unaligned_usage(
+    tmp_path: Path,
+) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+
+    offset = (1, 1, 1)
+
+    # Allocate some data (~ 8 MB)
+    shape = (512, 512, 32)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    # Write some slices
+    with mag1.get_buffered_slice_writer(absolute_offset=offset) as writer:
+        for z in range(0, shape[2]):
+            section = data[:, :, z]
+            writer.send(section)
+
+    written_data = mag1.read(absolute_offset=offset, size=shape)
+
+    assert np.all(data == written_data)
+
+
+def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
+
+    # Allocate some data (~ 3 MB) that covers multiple shards (also in z)
+    shape = (160, 150, 140)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    # Write some slices
+    with mag1.get_buffered_slice_writer() as writer:
+        for z in range(0, shape[2]):
+            section = data[:, :, z]
+            writer.send(section)
+
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
+
+    assert np.all(data == written_data)
+
+
+def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=3
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
+
+    # Allocate some data (~ 3 MB) that covers multiple shards (also in z)
+    shape = (3, 160, 150, 140)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    # Write some slices
+    with mag1.get_buffered_slice_writer() as writer:
+        for z in range(0, shape[-1]):
+            section = data[:, :, :, z]
+            writer.send(section)
+
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape[1:])
+
+    assert np.all(data == written_data)
