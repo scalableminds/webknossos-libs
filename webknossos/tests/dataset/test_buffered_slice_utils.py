@@ -2,7 +2,6 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-import pytest
 import wkw
 
 from tests.constants import TESTOUTPUT_DIR
@@ -10,12 +9,9 @@ from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import rmtree
 
-"""
-This module effectively tests BufferedSliceWriter and
-BufferedSliceReader (by calling get_buffered_slice_writer
-and get_buffered_slice_reader).
-"""
-
+# This module effectively tests BufferedSliceWriter and
+# BufferedSliceReader (by calling get_buffered_slice_writer
+# and get_buffered_slice_reader).
 
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
