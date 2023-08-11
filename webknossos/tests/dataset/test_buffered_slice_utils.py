@@ -1,6 +1,8 @@
+import warnings
 from pathlib import Path
 
 import numpy as np
+import pytest
 import wkw
 
 from tests.constants import TESTOUTPUT_DIR
@@ -83,7 +85,7 @@ def test_buffered_slice_writer() -> None:
 def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
     cube_size_without_channel = test_cube.shape[1:]
-    offset = Vec3Int(5, 10, 20)
+    offset = Vec3Int(64, 96, 32)
 
     for dim in [0, 1, 2]:
         ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
@@ -151,11 +153,14 @@ def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
     shape = (512, 512, 32)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
-    # Write some slices
-    with mag1.get_buffered_slice_writer() as writer:
-        for z in range(0, shape[2]):
-            section = data[:, :, z]
-            writer.send(section)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+
+        # Write some slices
+        with mag1.get_buffered_slice_writer() as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
 
     written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
 
@@ -178,11 +183,23 @@ def test_buffered_slice_writer_should_warn_about_unaligned_usage(
     shape = (512, 512, 32)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
-    # Write some slices
-    with mag1.get_buffered_slice_writer(absolute_offset=offset) as writer:
-        for z in range(0, shape[2]):
-            section = data[:, :, z]
-            writer.send(section)
+    with warnings.catch_warnings(record=True) as recorded_warnings:
+        warnings.filterwarnings("default", module="webknossos", message=r"\[WARNING\]")
+        # Write some slices
+        with mag1.get_buffered_slice_writer(
+            absolute_offset=offset, buffer_size=35
+        ) as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
+
+        warning1, warning2 = recorded_warnings
+        assert issubclass(warning1.category, UserWarning) and "Using an offset" in str(
+            warning1.message
+        )
+        assert issubclass(
+            warning2.category, UserWarning
+        ) and "Using a buffer size" in str(warning2.message)
 
     written_data = mag1.read(absolute_offset=offset, size=shape)
 
@@ -201,11 +218,14 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
     shape = (160, 150, 140)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
-    # Write some slices
-    with mag1.get_buffered_slice_writer() as writer:
-        for z in range(0, shape[2]):
-            section = data[:, :, z]
-            writer.send(section)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+
+        # Write some slices
+        with mag1.get_buffered_slice_writer() as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
 
     written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
 

@@ -65,6 +65,28 @@ class BufferedSliceWriter:
         )
         self.dimension = dimension
 
+        effective_offset = 0
+        if self.relative_offset is not None:
+            effective_offset = self.view.bounding_box.topleft + self.relative_offset
+
+        if self.absolute_offset is not None:
+            effective_offset = self.absolute_offset
+
+        view_chunk_depth = self.view.info.chunk_shape[self.dimension]
+        if (
+            effective_offset is not None
+            and effective_offset[self.dimension] % view_chunk_depth != 0
+        ):
+            warnings.warn(
+                "[WARNING] Using an offset that doesn't align with the datataset's chunk size, "
+                + "will slow down the buffered slice writer, because twice as many chunks will be written.",
+            )
+        if buffer_size >= view_chunk_depth and buffer_size % view_chunk_depth > 0:
+            warnings.warn(
+                "[WARNING] Using a buffer size that doesn't align with the datataset's chunk size, "
+                + "will slow down the buffered slice writer.",
+            )
+
         assert 0 <= dimension <= 2
 
         self.slices_to_write: List[np.ndarray] = []
