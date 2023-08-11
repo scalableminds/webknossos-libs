@@ -21,7 +21,7 @@ assert WK_URL == "http://localhost:9000", (
     + "Are you running this script via ./generate_client.sh?"
 )
 WK_TOKEN = os.environ["WK_TOKEN"]
-SCHEMA_URL = f"{WK_URL}/swagger.json"
+SCHEMA_URL = f"{WK_URL}/.well-known/swagger.json"
 CONVERTER_URL = "https://converter.swagger.io/api/convert"
 
 
@@ -320,6 +320,10 @@ REQUIRED_KEYS = {
     "open",
     "active",
     "finished",
+    "type",
+    ##### TaskType ####
+    "summary",
+    "teamId",
     ##### Annotation #####
     # "owner", optional
     "description",

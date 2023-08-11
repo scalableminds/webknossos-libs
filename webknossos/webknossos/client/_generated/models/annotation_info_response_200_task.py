@@ -26,13 +26,13 @@ class AnnotationInfoResponse200Task:
         id (str):
         project_id (str):
         team (str):
+        type (AnnotationInfoResponse200TaskType):
         data_set (str):
         created (int):
         status (AnnotationInfoResponse200TaskStatus):
         bounding_box (str):
         formatted_hash (Union[Unset, str]):
         project_name (Union[Unset, str]):
-        type (Union[Unset, AnnotationInfoResponse200TaskType]):
         needed_experience (Union[Unset, AnnotationInfoResponse200TaskNeededExperience]):
         script (Union[Unset, str]):
         tracing_time (Union[Unset, None, int]):
@@ -44,13 +44,13 @@ class AnnotationInfoResponse200Task:
     id: str
     project_id: str
     team: str
+    type: "AnnotationInfoResponse200TaskType"
     data_set: str
     created: int
     status: "AnnotationInfoResponse200TaskStatus"
     bounding_box: str
     formatted_hash: Union[Unset, str] = UNSET
     project_name: Union[Unset, str] = UNSET
-    type: Union[Unset, "AnnotationInfoResponse200TaskType"] = UNSET
     needed_experience: Union[
         Unset, "AnnotationInfoResponse200TaskNeededExperience"
     ] = UNSET
@@ -65,6 +65,8 @@ class AnnotationInfoResponse200Task:
         id = self.id
         project_id = self.project_id
         team = self.team
+        type = self.type.to_dict()
+
         data_set = self.data_set
         created = self.created
         status = self.status.to_dict()
@@ -72,10 +74,6 @@ class AnnotationInfoResponse200Task:
         bounding_box = self.bounding_box
         formatted_hash = self.formatted_hash
         project_name = self.project_name
-        type: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.type, Unset):
-            type = self.type.to_dict()
-
         needed_experience: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.needed_experience, Unset):
             needed_experience = self.needed_experience.to_dict()
@@ -98,6 +96,7 @@ class AnnotationInfoResponse200Task:
                 "id": id,
                 "projectId": project_id,
                 "team": team,
+                "type": type,
                 "dataSet": data_set,
                 "created": created,
                 "status": status,
@@ -108,8 +107,6 @@ class AnnotationInfoResponse200Task:
             field_dict["formattedHash"] = formatted_hash
         if project_name is not UNSET:
             field_dict["projectName"] = project_name
-        if type is not UNSET:
-            field_dict["type"] = type
         if needed_experience is not UNSET:
             field_dict["neededExperience"] = needed_experience
         if script is not UNSET:
@@ -144,6 +141,8 @@ class AnnotationInfoResponse200Task:
 
         team = d.pop("team")
 
+        type = AnnotationInfoResponse200TaskType.from_dict(d.pop("type"))
+
         data_set = d.pop("dataSet")
 
         created = d.pop("created")
@@ -155,13 +154,6 @@ class AnnotationInfoResponse200Task:
         formatted_hash = d.pop("formattedHash", UNSET)
 
         project_name = d.pop("projectName", UNSET)
-
-        _type = d.pop("type", UNSET)
-        type: Union[Unset, AnnotationInfoResponse200TaskType]
-        if isinstance(_type, Unset):
-            type = UNSET
-        else:
-            type = AnnotationInfoResponse200TaskType.from_dict(_type)
 
         _needed_experience = d.pop("neededExperience", UNSET)
         needed_experience: Union[Unset, AnnotationInfoResponse200TaskNeededExperience]
@@ -186,13 +178,13 @@ class AnnotationInfoResponse200Task:
             id=id,
             project_id=project_id,
             team=team,
+            type=type,
             data_set=data_set,
             created=created,
             status=status,
             bounding_box=bounding_box,
             formatted_hash=formatted_hash,
             project_name=project_name,
-            type=type,
             needed_experience=needed_experience,
             script=script,
             tracing_time=tracing_time,
