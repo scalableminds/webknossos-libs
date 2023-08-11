@@ -13,6 +13,7 @@ from webknossos.utils import rmtree
 # BufferedSliceReader (by calling get_buffered_slice_writer
 # and get_buffered_slice_reader).
 
+
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
     dtype = test_img.dtype
