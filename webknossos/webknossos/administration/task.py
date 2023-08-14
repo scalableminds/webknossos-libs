@@ -14,6 +14,7 @@ from webknossos.client._generated.api.default import (
 from webknossos.client.context import _get_generated_client
 from webknossos.dataset.dataset import RemoteDataset
 from webknossos.geometry import BoundingBox, Vec3Int
+from webknossos.utils import warn_deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,14 @@ if TYPE_CHECKING:
 
 @attr.frozen
 class TaskStatus:
-    open_instance_count: int
+    pending_instance_count: int
     active_instance_count: int
     finished_instance_count: int
+
+    @property
+    def open_instance_count(self) -> int:
+        warn_deprecated("open_instance_count", "pending_instance_count")
+        return self.pending_instance_count
 
 
 @attr.frozen
@@ -78,7 +84,7 @@ class Task:
                 "domain": needed_experience_domain,
                 "value": needed_experience_value,
             },
-            "openInstances": instances,
+            "pendingInstances": instances,
             "projectName": project_name,
             "scriptId": script_id,
             "boundingBox": bounding_box.to_wkw_dict()
@@ -131,7 +137,7 @@ class Task:
                 "domain": needed_experience_domain,
                 "value": needed_experience_value,
             },
-            "openInstances": instances,
+            "pendingInstances": instances,
             "projectName": project_name,
             "scriptId": script_id,
             "dataSet": dataset_name,
@@ -175,7 +181,9 @@ class Task:
             response.project_id,
             response.data_set,
             TaskStatus(
-                response.status.open_, response.status.active, response.status.finished
+                response.status.pending,
+                response.status.active,
+                response.status.finished,
             ),
         )
 

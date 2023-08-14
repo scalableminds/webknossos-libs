@@ -94,7 +94,7 @@ def main(
 
     executor_args = Namespace(
         jobs=jobs,
-        distribution_strategy=distribution_strategy,
+        distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
 

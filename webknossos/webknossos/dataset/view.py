@@ -9,6 +9,7 @@ from typing import (
     Dict,
     Iterable,
     Iterator,
+    List,
     Optional,
     Tuple,
     Type,
@@ -203,6 +204,26 @@ class View:
         ⚠️ The `offset` parameter is deprecated.
         This parameter used to be relative for `View` and absolute for `MagView`,
         and specified in the mag of the respective view.
+
+        Writing data to a segmentation layer manually does not automatically update the largest_segment_id. To set
+        the largest segment id properly run the `refresh_largest_segment_id` method on your layer or set the
+        `largest_segment_id` property manually..
+
+        Example:
+
+        ```python
+        ds = Dataset(DS_PATH, voxel_size=(1, 1, 1))
+
+        segmentation_layer = cast(
+            SegmentationLayer,
+            ds.add_layer("segmentation", SEGMENTATION_CATEGORY),
+        )
+        mag = segmentation_layer.add_mag(Mag(1))
+
+        mag.write(data=MY_NP_ARRAY)
+
+        segmentation_layer.refresh_largest_segment_id()
+        ```
 
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
@@ -814,6 +835,64 @@ class View:
             wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args), progress_desc
             )
+
+    def map_chunk(
+        self,
+        func_per_chunk: Callable[["View"], Any],
+        chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
+        executor: Optional[Executor] = None,
+        progress_desc: Optional[str] = None,
+    ) -> List[Any]:
+        """
+        The view is chunked into multiple sub-views of size `chunk_shape` (in Mag(1)),
+        by default one chunk per file.
+        Then, `func_per_chunk` is performed on each sub-view and the results are collected
+        in a list.
+        Additional parameters for `func_per_chunk` can be specified using `functools.partial`.
+        The computation of each chunk has to be independent of each other.
+        Therefore, the work can be parallelized with `executor`.
+
+        If the `View` is of type `MagView` only the bounding box from the properties is chunked.
+
+        Example:
+        ```python
+        from webknossos.utils import named_partial
+
+        def some_work(view: View, some_parameter: int) -> None:
+            # perform operations on the view
+            ...
+
+        # ...
+        # let 'mag1' be a `MagView`
+        func = named_partial(some_work, some_parameter=42)
+        results = mag1.map_chunk(
+            func,
+        )
+        ```
+        """
+
+        if chunk_shape is None:
+            chunk_shape = self._get_file_dimensions_mag1()
+        else:
+            chunk_shape = Vec3Int(chunk_shape)
+            self._check_chunk_shape(chunk_shape, read_only=self.read_only)
+
+        job_args = []
+        for chunk in self.bounding_box.chunk(chunk_shape, chunk_shape):
+            chunk_view = self.get_view(
+                absolute_offset=chunk.topleft,
+                size=chunk.size,
+            )
+            job_args.append(chunk_view)
+
+        # execute the work for each chunk
+        with get_executor_for_args(None, executor) as executor:
+            results = wait_and_ensure_success(
+                executor.map_to_futures(func_per_chunk, job_args),
+                progress_desc=progress_desc,
+            )
+
+        return results
 
     def for_zipped_chunks(
         self,
