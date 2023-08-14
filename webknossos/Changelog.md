@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.3...HEAD)
 
 ### Breaking Changes
+- Task/Project management: `open` tasks have been renamed to `pending`. Use `Task.status.pending_instance_count` instead of `Task.status.open_instance_count`. [#930](https://github.com/scalableminds/webknossos-libs/pull/930)
 
 ### Added
 
