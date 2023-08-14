@@ -103,7 +103,7 @@ def main(
             source,
             target,
             voxel_size,
-            name=name,
+            name,
             data_format=data_format,
             executor=executor,
             compress=compress,
