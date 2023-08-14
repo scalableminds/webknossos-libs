@@ -9,9 +9,11 @@ def main() -> None:
     sample_project = Project.get_by_name("sampleProject")
     tasks = sample_project.get_tasks()
     total_active_instances = sum([task.status.active_instance_count for task in tasks])
-    total_open_instances = sum([task.status.open_instance_count for task in tasks])
+    total_pending_instances = sum(
+        [task.status.pending_instance_count for task in tasks]
+    )
     print(
-        f"There are {total_active_instances} active and {total_open_instances} open task instances."
+        f"There are {total_active_instances} active and {total_pending_instances} pending task instances."
     )
 
     # Find and download all of the project’s annotations that are already finished by annotators

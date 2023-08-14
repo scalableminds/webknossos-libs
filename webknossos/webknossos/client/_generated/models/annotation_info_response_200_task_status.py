@@ -9,18 +9,18 @@ T = TypeVar("T", bound="AnnotationInfoResponse200TaskStatus")
 class AnnotationInfoResponse200TaskStatus:
     """
     Attributes:
-        open_ (int):
+        pending (int):
         active (int):
         finished (int):
     """
 
-    open_: int
+    pending: int
     active: int
     finished: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        open_ = self.open_
+        pending = self.pending
         active = self.active
         finished = self.finished
 
@@ -28,7 +28,7 @@ class AnnotationInfoResponse200TaskStatus:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "open": open_,
+                "pending": pending,
                 "active": active,
                 "finished": finished,
             }
@@ -39,14 +39,14 @@ class AnnotationInfoResponse200TaskStatus:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        open_ = d.pop("open")
+        pending = d.pop("pending")
 
         active = d.pop("active")
 
         finished = d.pop("finished")
 
         annotation_info_response_200_task_status = cls(
-            open_=open_,
+            pending=pending,
             active=active,
             finished=finished,
         )
