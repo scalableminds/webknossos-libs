@@ -78,6 +78,8 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_tiff_cubing_zarr_s3() -> None:
     """Tests zarr support when performing tiff cubing."""
 
