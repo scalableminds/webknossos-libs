@@ -498,6 +498,8 @@ class PimsImages:
             with mag_view.get_buffered_slice_writer(
                 relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
+                # copy_to_view is typically used in a multiprocessing-context. Therefore the
+                # buffered slice writer should not update the json file to avoid race conditions.
                 json_update_allowed=False,
             ) as writer:
                 for image_slice in images[z_start:z_end]:
