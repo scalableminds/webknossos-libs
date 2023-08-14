@@ -42,6 +42,7 @@ class UserInfoByIdResponse200:
         selected_theme (Union[Unset, str]):
         last_task_type_id (Union[Unset, str]):
         is_super_user (Union[Unset, int]):
+        is_email_verified (Union[Unset, int]):
     """
 
     id: str
@@ -65,6 +66,7 @@ class UserInfoByIdResponse200:
     selected_theme: Union[Unset, str] = UNSET
     last_task_type_id: Union[Unset, str] = UNSET
     is_super_user: Union[Unset, int] = UNSET
+    is_email_verified: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -98,6 +100,7 @@ class UserInfoByIdResponse200:
         selected_theme = self.selected_theme
         last_task_type_id = self.last_task_type_id
         is_super_user = self.is_super_user
+        is_email_verified = self.is_email_verified
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -132,6 +135,8 @@ class UserInfoByIdResponse200:
             field_dict["lastTaskTypeId"] = last_task_type_id
         if is_super_user is not UNSET:
             field_dict["isSuperUser"] = is_super_user
+        if is_email_verified is not UNSET:
+            field_dict["isEmailVerified"] = is_email_verified
 
         return field_dict
 
@@ -202,6 +207,8 @@ class UserInfoByIdResponse200:
 
         is_super_user = d.pop("isSuperUser", UNSET)
 
+        is_email_verified = d.pop("isEmailVerified", UNSET)
+
         user_info_by_id_response_200 = cls(
             id=id,
             email=email,
@@ -222,6 +229,7 @@ class UserInfoByIdResponse200:
             selected_theme=selected_theme,
             last_task_type_id=last_task_type_id,
             is_super_user=is_super_user,
+            is_email_verified=is_email_verified,
         )
 
         user_info_by_id_response_200.additional_properties = d

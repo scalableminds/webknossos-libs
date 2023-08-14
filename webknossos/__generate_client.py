@@ -320,6 +320,10 @@ REQUIRED_KEYS = {
     "pending",
     "active",
     "finished",
+    "type",
+    ##### TaskType ####
+    "summary",
+    "teamId",
     ##### Annotation #####
     # "owner", optional
     "description",
