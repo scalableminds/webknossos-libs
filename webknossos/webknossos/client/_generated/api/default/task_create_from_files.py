@@ -59,8 +59,8 @@ def sync_detailed(
        - taskTypeId (string) id of the task type to be used for the new tasks
        - neededExperience (Experience) experience domain and level that selects which users can get the
     new tasks
-       - openInstances (int) if greater than one, multiple instances of the task will be given to users
-    to annotate
+       - pendingInstances (int) if greater than one, multiple instances of the task will be given to
+    users to annotate
        - projectName (string) name of the project the task should be part of
        - scriptId (string, optional) id of a user script that should be loaded for the annotators of the
     new tasks
@@ -105,8 +105,8 @@ async def asyncio_detailed(
        - taskTypeId (string) id of the task type to be used for the new tasks
        - neededExperience (Experience) experience domain and level that selects which users can get the
     new tasks
-       - openInstances (int) if greater than one, multiple instances of the task will be given to users
-    to annotate
+       - pendingInstances (int) if greater than one, multiple instances of the task will be given to
+    users to annotate
        - projectName (string) name of the project the task should be part of
        - scriptId (string, optional) id of a user script that should be loaded for the annotators of the
     new tasks

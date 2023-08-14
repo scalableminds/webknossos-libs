@@ -151,7 +151,7 @@ def download_and_unpack(
         filename = [filename]
     for url_i, filename_i in zip(url, filename):
         with NamedTemporaryFile() as download_file:
-            with httpx.stream("GET", url_i) as response:
+            with httpx.stream("GET", url_i, follow_redirects=True) as response:
                 total = int(response.headers["Content-Length"])
 
                 with wk.utils.get_rich_progress() as progress:

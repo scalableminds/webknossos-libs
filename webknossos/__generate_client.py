@@ -317,7 +317,7 @@ REQUIRED_KEYS = {
     "projectId",
     "dataSet",
     "status",
-    "open",
+    "pending",
     "active",
     "finished",
     "type",

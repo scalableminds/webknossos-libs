@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.3...HEAD)
 
 ### Breaking Changes
+- Task/Project management: `open` tasks have been renamed to `pending`. Use `Task.status.pending_instance_count` instead of `Task.status.open_instance_count`. [#930](https://github.com/scalableminds/webknossos-libs/pull/930)
 
 ### Added
 - Added `task_type` property to `Task` class. [#938](https://github.com/scalableminds/webknossos-libs/pull/938)
@@ -20,6 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an infinite loop in the mag calculation during anisotropic downsampling in situations where the target mag cannot possibly be reached while adhering to the anisotropic downsampling scheme. [#934](https://github.com/scalableminds/webknossos-libs/pull/934) 
 
 
 ## [0.13.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.3) - 2023-08-08
