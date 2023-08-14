@@ -14,6 +14,7 @@ from webknossos.client._generated.api.default import (
 from webknossos.client.context import _get_generated_client
 from webknossos.dataset.dataset import RemoteDataset
 from webknossos.geometry import BoundingBox, Vec3Int
+from webknossos.utils import warn_deprecated
 
 logger = logging.getLogger(__name__)
 
