@@ -309,19 +309,19 @@ class LazyReadOnlyDict(Mapping[K, V]):
 
 class NDArrayLike(Protocol):
     def __getitem__(self, selection: Tuple[slice, ...]) -> np.ndarray:
-        pass
+        ...
 
     def __setitem__(self, selection: Tuple[slice, ...], value: np.ndarray) -> None:
-        pass
+        ...
 
     @property
     def shape(self) -> Tuple[int, ...]:
-        pass
+        ...
 
     @property
     def ndim(self) -> int:
-        pass
+        ...
 
     @property
     def dtype(self) -> np.dtype:
-        pass
+        ...

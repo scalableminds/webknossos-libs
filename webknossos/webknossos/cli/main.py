@@ -17,7 +17,7 @@ from webknossos.cli import (
     upsample,
 )
 
-app = typer.Typer(no_args_is_help=True)
+app = typer.Typer(no_args_is_help=True, pretty_exceptions_short=False)
 
 app.command("check-equality")(check_equality.main)
 app.command("compress")(compress.main)
