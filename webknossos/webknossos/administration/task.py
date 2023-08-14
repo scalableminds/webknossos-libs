@@ -31,7 +31,7 @@ class TaskStatus:
     pending_instance_count: int
     active_instance_count: int
     finished_instance_count: int
-    
+
     @property
     def open_instance_count(self) -> int:
         warn_deprecated("open_instance_count", "pending_instance_count")
