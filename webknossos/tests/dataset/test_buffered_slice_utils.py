@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -7,6 +8,10 @@ from tests.constants import TESTOUTPUT_DIR
 from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import rmtree
+
+# This module effectively tests BufferedSliceWriter and
+# BufferedSliceReader (by calling get_buffered_slice_writer
+# and get_buffered_slice_reader).
 
 
 def test_buffered_slice_writer() -> None:
@@ -77,11 +82,13 @@ def test_buffered_slice_writer() -> None:
 def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
     cube_size_without_channel = test_cube.shape[1:]
-    offset = Vec3Int(5, 10, 20)
+    offset = Vec3Int(64, 96, 32)
 
     for dim in [0, 1, 2]:
         ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
-        mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
+        mag_view = ds.add_layer(
+            "color", COLOR_CATEGORY, num_channels=test_cube.shape[0]
+        ).add_mag(1)
 
         with mag_view.get_buffered_slice_writer(
             absolute_offset=offset, buffer_size=5, dimension=dim
@@ -129,3 +136,117 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
 
                 assert np.array_equal(slice_data_a, original_slice)
                 assert np.array_equal(slice_data_b, original_slice)
+
+
+def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+
+    # Allocate some data (~ 8 MB)
+    shape = (512, 512, 32)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+
+        # Write some slices
+        with mag1.get_buffered_slice_writer() as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
+
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
+
+    assert np.all(data == written_data)
+
+
+def test_buffered_slice_writer_should_warn_about_unaligned_usage(
+    tmp_path: Path,
+) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+
+    offset = (1, 1, 1)
+
+    # Allocate some data (~ 8 MB)
+    shape = (512, 512, 32)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    with warnings.catch_warnings(record=True) as recorded_warnings:
+        warnings.filterwarnings("default", module="webknossos", message=r"\[WARNING\]")
+        # Write some slices
+        with mag1.get_buffered_slice_writer(
+            absolute_offset=offset, buffer_size=35
+        ) as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
+
+        warning1, warning2 = recorded_warnings
+        assert issubclass(warning1.category, UserWarning) and "Using an offset" in str(
+            warning1.message
+        )
+        assert issubclass(
+            warning2.category, UserWarning
+        ) and "Using a buffer size" in str(warning2.message)
+
+    written_data = mag1.read(absolute_offset=offset, size=shape)
+
+    assert np.all(data == written_data)
+
+
+def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
+
+    # Allocate some data (~ 3 MB) that covers multiple shards (also in z)
+    shape = (160, 150, 140)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+
+        # Write some slices
+        with mag1.get_buffered_slice_writer() as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
+
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
+
+    assert np.all(data == written_data)
+
+
+def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=3
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
+
+    # Allocate some data (~ 3 MB) that covers multiple shards (also in z)
+    shape = (3, 160, 150, 140)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    # Write some slices
+    with mag1.get_buffered_slice_writer() as writer:
+        for z in range(0, shape[-1]):
+            section = data[:, :, :, z]
+            writer.send(section)
+
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape[1:])
+
+    assert np.all(data == written_data)

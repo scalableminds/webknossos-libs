@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Generator, List, Optional, Type
 import numpy as np
 import psutil
 
-from webknossos.geometry import Vec3Int, Vec3IntLike
+from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
     from webknossos.dataset import View
@@ -69,21 +69,43 @@ class BufferedSliceWriter:
         )
         self.dimension = dimension
 
+        effective_offset = Vec3Int.full(0)
+        if self.relative_offset is not None:
+            effective_offset = self.view.bounding_box.topleft + self.relative_offset
+
+        if self.absolute_offset is not None:
+            effective_offset = self.absolute_offset
+
+        view_chunk_depth = self.view.info.chunk_shape[self.dimension]
+        if (
+            effective_offset is not None
+            and effective_offset[self.dimension] % view_chunk_depth != 0
+        ):
+            warnings.warn(
+                "[WARNING] Using an offset that doesn't align with the datataset's chunk size, "
+                + "will slow down the buffered slice writer, because twice as many chunks will be written.",
+            )
+        if buffer_size >= view_chunk_depth and buffer_size % view_chunk_depth > 0:
+            warnings.warn(
+                "[WARNING] Using a buffer size that doesn't align with the datataset's chunk size, "
+                + "will slow down the buffered slice writer.",
+            )
+
         assert 0 <= dimension <= 2
 
-        self.buffer: List[np.ndarray] = []
+        self.slices_to_write: List[np.ndarray] = []
         self.current_slice: Optional[int] = None
         self.buffer_start_slice: Optional[int] = None
 
-    def _write_buffer(self) -> None:
-        if len(self.buffer) == 0:
+    def _flush_buffer(self) -> None:
+        if len(self.slices_to_write) == 0:
             return
 
         assert (
-            len(self.buffer) <= self.buffer_size
+            len(self.slices_to_write) <= self.buffer_size
         ), "The WKW buffer is larger than the defined batch_size. The buffer should have been flushed earlier. This is probably a bug in the BufferedSliceWriter."
 
-        uniq_dtypes = set(map(lambda _slice: _slice.dtype, self.buffer))
+        uniq_dtypes = set(map(lambda _slice: _slice.dtype, self.slices_to_write))
         assert (
             len(uniq_dtypes) == 1
         ), "The buffer of BufferedSliceWriter contains slices with differing dtype."
@@ -95,7 +117,7 @@ class BufferedSliceWriter:
         if self.use_logging:
             info(
                 "({}) Writing {} slices at position {}.".format(
-                    getpid(), len(self.buffer), self.buffer_start_slice
+                    getpid(), len(self.slices_to_write), self.buffer_start_slice
                 )
             )
             log_memory_consumption()
@@ -104,44 +126,65 @@ class BufferedSliceWriter:
             assert (
                 self.buffer_start_slice is not None
             ), "Failed to write buffer: The buffer_start_slice is not set."
-            max_width = max(slice.shape[-2] for slice in self.buffer)
-            max_height = max(slice.shape[-1] for slice in self.buffer)
+            max_width = max(section.shape[-2] for section in self.slices_to_write)
+            max_height = max(section.shape[-1] for section in self.slices_to_write)
+            channel_count = self.slices_to_write[0].shape[0]
 
-            self.buffer = [
-                np.pad(
-                    slice,
-                    mode="constant",
-                    pad_width=[
-                        (0, 0),
-                        (0, max_width - slice.shape[-2]),
-                        (0, max_height - slice.shape[-1]),
-                    ],
+            buffer_bbox = BoundingBox(
+                (0, 0, 0), (max_width, max_height, self.buffer_size)
+            )
+
+            shard_dimensions = self.view._get_file_dimensions().moveaxis(
+                -1, self.dimension
+            )
+            chunk_size = Vec3Int(
+                min(shard_dimensions[0], max_width),
+                min(shard_dimensions[1], max_height),
+                self.buffer_size,
+            )
+            for chunk_bbox in buffer_bbox.chunk(chunk_size):
+                info(f"Writing chunk {chunk_bbox}")
+                width, height, _ = chunk_bbox.size
+                data = np.zeros(
+                    (channel_count, width, height, self.buffer_size),
+                    dtype=self.slices_to_write[0].dtype,
                 )
-                for slice in self.buffer
-            ]
 
-            data = np.concatenate(
-                [np.expand_dims(slice, self.dimension + 1) for slice in self.buffer],
-                axis=self.dimension + 1,
-            )
-            buffer_start_list = [0, 0, 0]
-            buffer_start_list[self.dimension] = self.buffer_start_slice
-            buffer_start = Vec3Int(buffer_start_list)
-            buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
-            self.view.write(
-                data,
-                offset=buffer_start.add_or_none(self.offset),
-                relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
-                absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
-                json_update_allowed=self.json_update_allowed,
-            )
+                z = 0
+                for section in self.slices_to_write:
+                    section_chunk = section[
+                        :,
+                        chunk_bbox.topleft.x : chunk_bbox.bottomright.x,
+                        chunk_bbox.topleft.y : chunk_bbox.bottomright.y,
+                    ]
+                    data[
+                        :, 0 : section_chunk.shape[-2], 0 : section_chunk.shape[-1], z
+                    ] = section_chunk
+
+                    z += 1
+
+                buffer_start = Vec3Int(
+                    chunk_bbox.topleft.x, chunk_bbox.topleft.y, self.buffer_start_slice
+                ).moveaxis(-1, self.dimension)
+                buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
+
+                data = np.moveaxis(data, -1, self.dimension + 1)
+
+                self.view.write(
+                    data,
+                    offset=buffer_start.add_or_none(self.offset),
+                    relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
+                    absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
+                    json_update_allowed=self.json_update_allowed,
+                )
+                del data
 
         except Exception as exc:
             error(
-                "({}) An exception occurred in BufferedSliceWriter._write_buffer with {} "
+                "({}) An exception occurred in BufferedSliceWriter._flush_buffer with {} "
                 "slices at position {}. Original error is:\n{}:{}\n\nTraceback:".format(
                     getpid(),
-                    len(self.buffer),
+                    len(self.slices_to_write),
                     self.buffer_start_slice,
                     type(exc).__name__,
                     exc,
@@ -152,23 +195,23 @@ class BufferedSliceWriter:
 
             raise exc
         finally:
-            self.buffer = []
+            self.slices_to_write = []
 
     def _get_slice_generator(self) -> Generator[None, np.ndarray, None]:
         current_slice = 0
         while True:
             data = yield  # Data gets send from the user
-            if len(self.buffer) == 0:
+            if len(self.slices_to_write) == 0:
                 self.buffer_start_slice = current_slice
             if len(data.shape) == 2:
                 # The input data might contain channel data or not.
                 # Bringing it into the same shape simplifies the code
                 data = np.expand_dims(data, axis=0)
-            self.buffer.append(data)
+            self.slices_to_write.append(data)
             current_slice += 1
 
             if current_slice % self.buffer_size == 0:
-                self._write_buffer()
+                self._flush_buffer()
 
     def __enter__(self) -> Generator[None, np.ndarray, None]:
         gen = self._get_slice_generator()
@@ -182,4 +225,4 @@ class BufferedSliceWriter:
         _value: Optional[BaseException],
         _tb: Optional[TracebackType],
     ) -> None:
-        self._write_buffer()
+        self._flush_buffer()
