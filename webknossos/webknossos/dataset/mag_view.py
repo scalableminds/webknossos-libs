@@ -145,6 +145,7 @@ class MagView(View):
         self,
         data: np.ndarray,
         offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        json_update_allowed: bool = True,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -177,10 +178,14 @@ class MagView(View):
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
-        if not self.bounding_box.contains_bbox(mag1_bbox):
+        if json_update_allowed and not self.bounding_box.contains_bbox(mag1_bbox):
             self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
-        super().write(data, absolute_offset=mag1_bbox.topleft)
+        super().write(
+            data,
+            absolute_offset=mag1_bbox.topleft,
+            json_update_allowed=json_update_allowed,
+        )
 
     def read(
         self,

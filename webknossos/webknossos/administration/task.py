@@ -22,8 +22,14 @@ if TYPE_CHECKING:
     from webknossos.client._generated.models.task_info_response_200 import (
         TaskInfoResponse200,
     )
+    from webknossos.client._generated.models.task_info_response_200_type import (
+        TaskInfoResponse200Type,
+    )
     from webknossos.client._generated.models.task_infos_by_project_id_response_200_item import (
         TaskInfosByProjectIdResponse200Item,
+    )
+    from webknossos.client._generated.models.task_infos_by_project_id_response_200_item_type import (
+        TaskInfosByProjectIdResponse200ItemType,
     )
 
 
@@ -40,6 +46,30 @@ class TaskStatus:
 
 
 @attr.frozen
+class TaskType:
+    task_type_id: str
+    name: str
+    description: str
+    team_id: str
+    team_name: str
+
+    @classmethod
+    def _from_generated_response(
+        cls,
+        response: Union[
+            "TaskInfoResponse200Type", "TaskInfosByProjectIdResponse200ItemType"
+        ],
+    ) -> "TaskType":
+        return cls(
+            response.id,
+            response.summary,
+            response.description,
+            response.team_id,
+            response.team_name,
+        )
+
+
+@attr.frozen
 class Task:
     """Data class containing information about a WEBKNOSSOS task"""
 
@@ -47,6 +77,7 @@ class Task:
     project_id: str
     dataset_name: str
     status: TaskStatus
+    task_type: TaskType
 
     @classmethod
     def get_by_id(cls, task_id: str) -> "Task":
@@ -185,6 +216,7 @@ class Task:
                 response.status.active,
                 response.status.finished,
             ),
+            TaskType._from_generated_response(response.type),
         )
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:

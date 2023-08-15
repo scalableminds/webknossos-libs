@@ -481,6 +481,8 @@ class PimsImages:
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
         args is expected to be the start and end of the z-range, meant for usage with an executor.
+        copy_to_view returns an iterable of image shapes and largest segment ids. When using this
+        method a manual update of the bounding box and the largest segment id might be necessary.
         """
         z_start, z_end = args
         shapes = []
@@ -496,6 +498,9 @@ class PimsImages:
             with mag_view.get_buffered_slice_writer(
                 relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
+                # copy_to_view is typically used in a multiprocessing-context. Therefore the
+                # buffered slice writer should not update the json file to avoid race conditions.
+                json_update_allowed=False,
             ) as writer:
                 for image_slice in images[z_start:z_end]:
                     image_slice = np.array(image_slice)

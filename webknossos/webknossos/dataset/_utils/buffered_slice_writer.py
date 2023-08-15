@@ -34,6 +34,9 @@ class BufferedSliceWriter:
         self,
         view: "View",
         offset: Optional[Vec3IntLike] = None,
+        # json_update_allowed enables the update of the bounding box and rewriting of the properties json.
+        # It should be False when parallel access is intended.
+        json_update_allowed: bool = True,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
@@ -48,6 +51,7 @@ class BufferedSliceWriter:
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
         self.use_logging = use_logging
+        self.json_update_allowed = json_update_allowed
         if offset is None and relative_offset is None and absolute_offset is None:
             relative_offset = Vec3Int.zeros()
         if offset is not None:
@@ -93,7 +97,6 @@ class BufferedSliceWriter:
         self.current_slice: Optional[int] = None
         self.buffer_start_slice: Optional[int] = None
 
-    # @profile(stream=fp)
     def _flush_buffer(self) -> None:
         if len(self.slices_to_write) == 0:
             return
@@ -172,6 +175,7 @@ class BufferedSliceWriter:
                     offset=buffer_start.add_or_none(self.offset),
                     relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
                     absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
+                    json_update_allowed=self.json_update_allowed,
                 )
                 del data
 

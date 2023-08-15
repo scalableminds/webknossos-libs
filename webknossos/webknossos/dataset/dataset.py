@@ -1249,7 +1249,7 @@ class Dataset:
             if pims_images.expected_shape != actual_size:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
-                    + f"New size is {actual_size}, expected {pims_images.expected_shape}.",
+                    + f"New size is {actual_size}, expected {pims_images.expected_shape}."
                 )
             if first_layer is None:
                 first_layer = layer
