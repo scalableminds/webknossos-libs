@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.5...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `task_type` property to `Task` class. [#938](https://github.com/scalableminds/webknossos-libs/pull/938)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.13.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.5) - 2023-08-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.4...v0.13.5)
+
+### Added
+- Added `task_type` property to `Task` class. [#938](https://github.com/scalableminds/webknossos-libs/pull/938)
+
+### Fixed
 - Fixed a bug where parallel access to the properties json leads to an JsonDecodeError in the webknossos CLI [#919](https://github.com/scalableminds/webknossos-libs/issues/919)
+
 
 
 ## [0.13.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.4) - 2023-08-14
