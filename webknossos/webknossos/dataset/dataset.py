@@ -35,14 +35,20 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset.defaults import (
+from ..geometry.vec3_int import Vec3Int, Vec3IntLike
+from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
+from .defaults import (
+    DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
+    DEFAULT_DATA_FORMAT,
+    PROPERTIES_FILE_NAME,
+    ZARR_JSON_FILE_NAME,
+    ZATTRS_FILE_NAME,
+    ZGROUP_FILE_NAME,
 )
-
-from ..geometry.vec3_int import Vec3Int, Vec3IntLike
-from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
+from .ome_metadata import write_ome_0_4_metadata, write_ome_zarr3_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
@@ -90,11 +96,6 @@ from .view import _BLOCK_ALIGNMENT_WARNING
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_BIT_DEPTH = 8
-DEFAULT_DATA_FORMAT = DataFormat.WKW
-PROPERTIES_FILE_NAME = "datasource-properties.json"
-ZGROUP_FILE_NAME = ".zgroup"
-ZATTRS_FILE_NAME = ".zattrs"
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
@@ -1564,7 +1565,12 @@ class Dataset:
                 layer.path,
                 new_layer.path,
                 ignore=[str(mag) for mag in layer.mags]
-                + [PROPERTIES_FILE_NAME, ZGROUP_FILE_NAME, ZATTRS_FILE_NAME],
+                + [
+                    PROPERTIES_FILE_NAME,
+                    ZGROUP_FILE_NAME,
+                    ZATTRS_FILE_NAME,
+                    ZARR_JSON_FILE_NAME,
+                ],
                 make_relative=make_relative,
             )
 
@@ -1681,63 +1687,9 @@ class Dataset:
 
         # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
         if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
-            zgroup_content = {"zarr_format": "2"}
-            with (self.path / ZGROUP_FILE_NAME).open("w", encoding="utf-8") as outfile:
-                json.dump(zgroup_content, outfile, indent=4)
-            for layer in self.layers.values():
-                if layer.data_format == DataFormat.Zarr:
-                    with (layer.path / ZGROUP_FILE_NAME).open(
-                        "w", encoding="utf-8"
-                    ) as outfile:
-                        json.dump(zgroup_content, outfile, indent=4)
-                    with (layer.path / ZATTRS_FILE_NAME).open(
-                        "w", encoding="utf-8"
-                    ) as outfile:
-                        json.dump(
-                            {
-                                "multiscales": [
-                                    {
-                                        "version": "0.4",
-                                        "axes": [
-                                            {"name": "c", "type": "channel"},
-                                            {
-                                                "name": "x",
-                                                "type": "space",
-                                                "unit": "nanometer",
-                                            },
-                                            {
-                                                "name": "y",
-                                                "type": "space",
-                                                "unit": "nanometer",
-                                            },
-                                            {
-                                                "name": "z",
-                                                "type": "space",
-                                                "unit": "nanometer",
-                                            },
-                                        ],
-                                        "datasets": [
-                                            {
-                                                "path": mag.path.name,
-                                                "coordinateTransformations": [
-                                                    {
-                                                        "type": "scale",
-                                                        "scale": [1.0]
-                                                        + (
-                                                            np.array(self.voxel_size)
-                                                            * mag.mag.to_np()
-                                                        ).tolist(),
-                                                    }
-                                                ],
-                                            }
-                                            for mag in layer.mags.values()
-                                        ],
-                                    }
-                                ]
-                            },
-                            outfile,
-                            indent=4,
-                        )
+            write_ome_0_4_metadata(self)
+        if any(layer.data_format == DataFormat.Zarr3 for layer in self.layers.values()):
+            write_ome_zarr3_metadata(self)
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
         if properties.category == COLOR_CATEGORY:
