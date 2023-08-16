@@ -9,7 +9,8 @@ from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import snake_to_camel_case, warn_deprecated
 
-from ._array import ArrayException, BaseArray, DataFormat
+from ._array import ArrayException, BaseArray
+from .data_format import DataFormat
 from .layer_categories import LayerCategoryType
 
 

@@ -17,7 +17,7 @@ from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset.view import View, _copy_job
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
-from ._array import ArrayException, BaseArray, DataFormat
+from ._array import ArrayException, BaseArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -27,6 +27,7 @@ from ._downsampling_utils import (
     parse_interpolation_mode,
 )
 from ._upsampling_utils import upsample_cube_job
+from .data_format import DataFormat
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     LayerProperties,

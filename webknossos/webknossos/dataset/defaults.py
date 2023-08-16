@@ -1,7 +1,7 @@
 from os import environ
 
 from ..geometry import Vec3Int
-from ._array import DataFormat
+from .data_format import DataFormat
 
 WK_USE_ZARRITA = environ.get("WK_USE_ZARRITA") is not None
 DEFAULT_WKW_FILE_LEN = 32

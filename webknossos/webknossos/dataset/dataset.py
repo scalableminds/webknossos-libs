@@ -36,7 +36,8 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
-from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
+from ._array import ArrayException, ArrayInfo, BaseArray
+from .data_format import DataFormat
 from .defaults import (
     DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,

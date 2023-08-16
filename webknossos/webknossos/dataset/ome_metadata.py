@@ -1,15 +1,19 @@
 import json
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 import numpy as np
 
-from ._array import DataFormat
-from .dataset import Dataset
+from .data_format import DataFormat
 from .defaults import ZARR_JSON_FILE_NAME, ZATTRS_FILE_NAME, ZGROUP_FILE_NAME
-from .layer import Layer
+
+if TYPE_CHECKING:
+    from .dataset import Dataset
+    from .layer import Layer
 
 
-def get_ome_0_4_multiscale_metadata(dataset: Dataset, layer: Layer) -> Dict[str, Any]:
+def get_ome_0_4_multiscale_metadata(
+    dataset: "Dataset", layer: "Layer"
+) -> Dict[str, Any]:
     return {
         "version": "0.4",
         "axes": [
@@ -46,7 +50,9 @@ def get_ome_0_4_multiscale_metadata(dataset: Dataset, layer: Layer) -> Dict[str,
     }
 
 
-def get_ome_zarr3_multiscale_metadata(dataset: Dataset, layer: Layer) -> Dict[str, Any]:
+def get_ome_zarr3_multiscale_metadata(
+    dataset: "Dataset", layer: "Layer"
+) -> Dict[str, Any]:
     return {
         "coordinateSystems": [
             {
@@ -79,8 +85,8 @@ def get_ome_zarr3_multiscale_metadata(dataset: Dataset, layer: Layer) -> Dict[st
                         "type": "scale",
                         "scale": [1.0]
                         + (np.array(dataset.voxel_size) * mag.mag.to_np()).tolist(),
-                        "input": mag.path.name,
-                        "output": "example",
+                        "input": f"/{mag.path.name}",
+                        "output": f"/{layer.name}",
                     }
                 ],
             }
@@ -89,7 +95,7 @@ def get_ome_zarr3_multiscale_metadata(dataset: Dataset, layer: Layer) -> Dict[st
     }
 
 
-def write_ome_0_4_metadata(dataset: Dataset) -> None:
+def write_ome_0_4_metadata(dataset: "Dataset") -> None:
     zgroup_content = {"zarr_format": "2"}
     with (dataset.path / ZGROUP_FILE_NAME).open("w", encoding="utf-8") as outfile:
         json.dump(zgroup_content, outfile, indent=4)
@@ -105,7 +111,7 @@ def write_ome_0_4_metadata(dataset: Dataset) -> None:
                 )
 
 
-def write_ome_zarr3_metadata(dataset: Dataset) -> None:
+def write_ome_zarr3_metadata(dataset: "Dataset") -> None:
     with (dataset.path / ZARR_JSON_FILE_NAME).open("w", encoding="utf-8") as outfile:
         json.dump({"zarr_format": 3, "node_type": "group"}, outfile, indent=4)
     for layer in dataset.layers.values():
