@@ -56,7 +56,7 @@ def get_ome_zarr3_multiscale_metadata(
     return {
         "coordinateSystems": [
             {
-                "name": layer.name,
+                "name": f"{layer.name}-cs",
                 "axes": [
                     {"name": "c", "type": "channel"},
                     {
@@ -86,7 +86,7 @@ def get_ome_zarr3_multiscale_metadata(
                         "scale": [1.0]
                         + (np.array(dataset.voxel_size) * mag.mag.to_np()).tolist(),
                         "input": f"/{mag.path.name}",
-                        "output": f"/{layer.name}",
+                        "output": f"{layer.name}-cs",
                     }
                 ],
             }
