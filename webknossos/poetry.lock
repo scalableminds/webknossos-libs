@@ -2274,23 +2274,23 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pylibczirw"
-version = "3.4.0"
+version = "3.5.1"
 description = "A python wrapper around the libCZI C++ library with reading and writing functionality."
 optional = true
-python-versions = ">=3.7,<4"
+python-versions = ">=3.7,<3.12"
 files = [
-    {file = "pylibCZIrw-3.4.0-cp310-cp310-macosx_12_0_universal2.whl", hash = "sha256:8b357608c36223ebfe7e253ef4ff1eb4ad9f17bde9e187e99f05cb3c9777d174"},
-    {file = "pylibCZIrw-3.4.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d9a35c62745d0d1abad9127a1edcb9123ba6b8f7798c7b7668cc4d2b773ae737"},
-    {file = "pylibCZIrw-3.4.0-cp310-cp310-win_amd64.whl", hash = "sha256:9efea6339c2b70bbb481463a8d2b9ca3f5febd4f7809e0c4fc5305050d46cf4a"},
-    {file = "pylibCZIrw-3.4.0-cp311-cp311-macosx_12_0_universal2.whl", hash = "sha256:a7997c10b89881aa79ba68fe8a1fa4cfce0941fb013c887a728b440a9acf6092"},
-    {file = "pylibCZIrw-3.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bf0d2ce0f3e2fdd8ce20ad9efc4e276e93b2a664d34d6dbdad54efff09de271f"},
-    {file = "pylibCZIrw-3.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:e87659cb436b441042eb5ff10536b88abe2039fcd1facdc5b468f4f2d74885d1"},
-    {file = "pylibCZIrw-3.4.0-cp38-cp38-macosx_12_0_universal2.whl", hash = "sha256:bc23a82075e1fb69045decb9a72593032e0ad98a6b6a10121312bbccbbf2c07c"},
-    {file = "pylibCZIrw-3.4.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c892ff6cc9e231e8de5947d8c0696fa870b70b549beae8177722cba78f89c70e"},
-    {file = "pylibCZIrw-3.4.0-cp38-cp38-win_amd64.whl", hash = "sha256:40c43a7a6fc921df855d71c8c7ec40d4c89ad839edd3f952abc8bf0cd0e69888"},
-    {file = "pylibCZIrw-3.4.0-cp39-cp39-macosx_12_0_universal2.whl", hash = "sha256:bd507067df0c1bc7c5be2cf96144f767f2414cce071fb1a2c84dab282a615e0d"},
-    {file = "pylibCZIrw-3.4.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1aeb94aec2f2919786ef4053c0229b8bb26a901f1af2b5f6c40db93853702fa5"},
-    {file = "pylibCZIrw-3.4.0-cp39-cp39-win_amd64.whl", hash = "sha256:121624144a30af7ecfd7c8fbe49baf713713c532744ddfe1f9b891c464cefea0"},
+    {file = "pylibCZIrw-3.5.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:9eb427f96cf4ae855deda50164e723e4685ad69adaf04b2831e856bd2c2144d6"},
+    {file = "pylibCZIrw-3.5.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c8d19d3534617dd4f824b6b6df81fe46218a9c8fe0109edc149db1712010e642"},
+    {file = "pylibCZIrw-3.5.1-cp310-cp310-win_amd64.whl", hash = "sha256:fe251a562b6ee9ece0687239ec94e6fccadf54aa67c4f603fcab9e98fde77c85"},
+    {file = "pylibCZIrw-3.5.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:981b50fae594285a8b683cd6955bd2d699958eb7e221340f58773ceaed95edc7"},
+    {file = "pylibCZIrw-3.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c0155cc41ed2053c48f773f7d32f1449bce40737aacb2862508821cd2172449b"},
+    {file = "pylibCZIrw-3.5.1-cp311-cp311-win_amd64.whl", hash = "sha256:e14cd79e192783ff7d921bb962dd6ba4d3dec425cb0ee7ab7a6fb4ef83020de8"},
+    {file = "pylibCZIrw-3.5.1-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:d8b242d3b7b68aa0162d6d29fd925c8b00cdb772bc9a4872e6867233874af962"},
+    {file = "pylibCZIrw-3.5.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:79381744c5f95f80d2006952f659ba55329261da32346fd5f790486c5742b4e0"},
+    {file = "pylibCZIrw-3.5.1-cp38-cp38-win_amd64.whl", hash = "sha256:9c6e6e34e155216a0f54c2fce2db87ea123816534ffcdc1a8164ac0d4dce2ebc"},
+    {file = "pylibCZIrw-3.5.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:18f81450732d95c1eaf2d2853f0a75de8d5260716894200c5392165a6e31e639"},
+    {file = "pylibCZIrw-3.5.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6d82d7ba9638346ebe1133e0174a1fc23f2db74a62b77e5e94d0e6509448710b"},
+    {file = "pylibCZIrw-3.5.1-cp39-cp39-win_amd64.whl", hash = "sha256:2195c36099fa545fabc3b37adc7cb3963ef23f37dfd66a8bde35615f876ffeda"},
 ]
 
 [package.dependencies]
@@ -3425,4 +3425,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "52d98e4613f06f6db920fb6edc065db80cd7a843d7cc6883dde6b014a92cc71c"
+content-hash = "ba688a2cbb67f84d8455b56deeb90426e1107aa8b1d9546623ea8322ce3821df"
