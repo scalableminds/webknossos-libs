@@ -6,6 +6,7 @@ authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
+# mkdocs-video is not ready for Py3.11 because of bugs in lxml lib https://github.com/getnikola/nikola/issues/3679
 python = ">=3.8,<3.11"
 mkdocs-glightbox = "^0.3.4"
 
