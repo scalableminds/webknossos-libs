@@ -9,10 +9,10 @@ from zipfile import BadZipFile, ZipFile
 import httpx
 import numpy as np
 import pytest
+from tests.constants import TESTDATA_DIR
 from tifffile import TiffFile
 
 import webknossos as wk
-from tests.constants import TESTDATA_DIR
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
@@ -100,7 +100,7 @@ REPO_IMAGES_ARGS: List[
         {"flip_y": True},
         "uint8",
         1,
-        (2970, 2521, 3),
+        (2970, 2521, 4),
     ),
     ("testdata/various_tiff_formats/test_CS.tif", {}, "uint8", 3, (128, 128, 320)),
     ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
