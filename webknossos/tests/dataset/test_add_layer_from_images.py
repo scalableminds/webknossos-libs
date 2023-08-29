@@ -9,10 +9,10 @@ from zipfile import BadZipFile, ZipFile
 import httpx
 import numpy as np
 import pytest
-from tests.constants import TESTDATA_DIR
 from tifffile import TiffFile
 
 import webknossos as wk
+from tests.constants import TESTDATA_DIR
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
