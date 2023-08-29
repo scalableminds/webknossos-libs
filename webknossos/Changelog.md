@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug where the avoidance of bbox updates leads to an AssertionError in `View._prepare_compressed_write`.
 
 
 ## [0.13.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.6) - 2023-08-17
