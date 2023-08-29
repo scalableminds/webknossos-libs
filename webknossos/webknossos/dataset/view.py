@@ -319,12 +319,8 @@ class View:
         aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_shape, ceil=True)
 
         if current_mag_bbox != aligned_bbox:
-            # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
-            if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
-                warnings.warn(
-                    _BLOCK_ALIGNMENT_WARNING,
-                )
+            # If data bbox is not aligned, an aligned bbox and
+            # aligned data are returned.
 
             aligned_data = self._read_without_checks(aligned_bbox)
 
@@ -334,8 +330,8 @@ class View:
             # overwrite the specified data
             aligned_data[index_slice] = data
             return aligned_bbox, aligned_data
-        else:
-            return current_mag_bbox, data
+
+        return current_mag_bbox, data
 
     def read(
         self,
