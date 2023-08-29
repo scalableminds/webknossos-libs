@@ -38,12 +38,6 @@ def _assert_check_equality(args: Tuple["View", "View", int]) -> None:
     assert np.all(view_a.read() == view_b.read())
 
 
-_BLOCK_ALIGNMENT_WARNING = (
-    "[WARNING] write() was called on a compressed mag without block alignment. "
-    + "Performance will be degraded as the data has to be padded first."
-)
-
-
 class View:
     """
     A `View` is essentially a bounding box to a region of a specific `StorageBackend` that also provides functionality.

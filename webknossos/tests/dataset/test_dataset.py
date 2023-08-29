@@ -1246,13 +1246,12 @@ def test_writing_subset_of_compressed_data_multi_channel(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-        compressed_mag.get_view(relative_offset=(50, 60, 70), size=(50, 60, 70)).write(
-            relative_offset=(10, 20, 30), data=write_data2
-        )
+    write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+    # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
+    compressed_mag.get_view(relative_offset=(50, 60, 70), size=(50, 60, 70)).write(
+        relative_offset=(10, 20, 30), data=write_data2
+    )
 
     assert np.array_equal(
         write_data2,
@@ -1329,40 +1328,38 @@ def test_writing_subset_of_compressed_data(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        compressed_mag.write(
-            absolute_offset=(10, 20, 30),
-            data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
-        )
+    compressed_mag.write(
+        absolute_offset=(10, 20, 30),
+        data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
+    )
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        compressed_mag.write(
-            relative_offset=(20, 40, 60),
-            data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
-        )
+    compressed_mag.write(
+        relative_offset=(20, 40, 60),
+        data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
+    )
 
-        assert compressed_mag.bounding_box == BoundingBox(
-            topleft=(
-                0,
-                0,
-                0,
-            ),
-            size=(120 * 2, 140 * 2, 160 * 2),
-        )
-        # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
-        # This write operation writes unaligned data into the bottom-right corner of the MagView.
-        compressed_mag.write(
-            absolute_offset=(128, 128, 128),
-            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
-        )
-        # This also works for normal Views but they only use the bounding box at the time of creation as reference.
-        compressed_mag.get_view().write(
-            absolute_offset=(128, 128, 128),
-            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
-        )
+    assert compressed_mag.bounding_box == BoundingBox(
+        topleft=(
+            0,
+            0,
+            0,
+        ),
+        size=(120 * 2, 140 * 2, 160 * 2),
+    )
+    # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
+    # This write operation writes unaligned data into the bottom-right corner of the MagView.
+    compressed_mag.write(
+        absolute_offset=(128, 128, 128),
+        data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+    )
+    # This also works for normal Views but they only use the bounding box at the time of creation as reference.
+    compressed_mag.get_view().write(
+        absolute_offset=(128, 128, 128),
+        data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+    )
 
-        # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
-        compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
+    # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
+    compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1394,18 +1391,17 @@ def test_writing_subset_of_chunked_compressed_data(
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        # Easy case:
-        # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
-        write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
-        compressed_view.write(absolute_offset=(10, 20, 30), data=write_data2)
+    # Easy case:
+    # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
+    write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
+    compressed_view.write(absolute_offset=(10, 20, 30), data=write_data2)
 
-        # Advanced case:
-        # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
-        compressed_view.write(
-            absolute_offset=(10, 20, 30),
-            data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
-        )
+    # Advanced case:
+    # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
+    compressed_view.write(
+        absolute_offset=(10, 20, 30),
+        data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
+    )
 
     np.array_equal(
         write_data2,
@@ -2054,11 +2050,10 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        mag1.write(
-            (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
-        )
+    # writing unaligned data to a compressed dataset works because the data gets padded
+    mag1.write(
+        (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
+    )
 
     assure_exported_properties(mag1.layer.dataset)
 
