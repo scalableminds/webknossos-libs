@@ -204,7 +204,7 @@ def test_convert() -> None:
 
 @pytest.mark.parametrize(
     "origin_path",
-    [TESTDATA_DIR / "tiff", TESTDATA_DIR / "tiff_with_different_dimensions"],
+    [TESTDATA_DIR / "tiff", TESTDATA_DIR / "tiff_with_different_shapes"],
 )
 def test_convert_with_all_params(origin_path: Path) -> None:
     """Tests the functionality of convert subcommand."""

@@ -96,7 +96,7 @@ REPO_IMAGES_ARGS: List[
         (1024, 1024, 13),
     ),
     (
-        "testdata/tiff_with_different_dimensions/*",
+        "testdata/tiff_with_different_shapes/*",
         {"flip_y": True},
         "uint8",
         1,
