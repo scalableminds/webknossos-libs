@@ -86,6 +86,7 @@ from .properties import (
     _properties_floating_type_to_python_type,
     dataset_converter,
 )
+from .view import _BLOCK_ALIGNMENT_WARNING
 
 logger = logging.getLogger(__name__)
 
@@ -1211,6 +1212,15 @@ class Dataset:
                 # return shapes and set to union when using --pad
                 args.append((z_start, z_end))
             with warnings.catch_warnings():
+                # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
+                # However, dataset borders might change between different parallelized writes, when sizes differ.
+                # For differing sizes, a separate warning is thrown, so block alignment warnings can be ignored:
+                warnings.filterwarnings(
+                    "ignore",
+                    message=_BLOCK_ALIGNMENT_WARNING,
+                    category=UserWarning,
+                    module="webknossos",
+                )
                 # There are race-conditions about setting the bbox of the layer.
                 # The bbox is set correctly afterwards, ignore errors here:
                 warnings.filterwarnings(
