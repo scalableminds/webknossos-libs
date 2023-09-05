@@ -32,9 +32,10 @@ from typing import (
 
 import numpy as np
 import rich
-from cluster_tools import Executor, get_executor
 from rich.progress import Progress
 from upath import UPath
+
+from cluster_tools import Executor, get_executor
 
 times = {}
 
@@ -242,7 +243,7 @@ def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath):
         return UPath(
             str(path).rstrip("/"),
-            **path._kwargs.copy(),
+            **getattr(path, "_kwargs", {}).copy(),
         )
     else:
         return Path(str(path).rstrip("/"))

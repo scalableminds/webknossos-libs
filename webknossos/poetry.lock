@@ -2,24 +2,24 @@
 
 [[package]]
 name = "aiobotocore"
-version = "2.4.2"
+version = "2.5.4"
 description = "Async client for aws services using botocore and aiohttp"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "aiobotocore-2.4.2-py3-none-any.whl", hash = "sha256:4acd1ebe2e44be4b100aa553910bda899f6dc090b3da2bc1cf3d5de2146ed208"},
-    {file = "aiobotocore-2.4.2.tar.gz", hash = "sha256:0603b74a582dffa7511ce7548d07dc9b10ec87bc5fb657eb0b34f9bd490958bf"},
+    {file = "aiobotocore-2.5.4-py3-none-any.whl", hash = "sha256:4b32218728ca3d0be83835b604603a0cd6c329066e884bb78149334267f92440"},
+    {file = "aiobotocore-2.5.4.tar.gz", hash = "sha256:60341f19eda77e41e1ab11eef171b5a98b5dbdb90804f5334b6f90e560e31fae"},
 ]
 
 [package.dependencies]
-aiohttp = ">=3.3.1"
-aioitertools = ">=0.5.1"
-botocore = ">=1.27.59,<1.27.60"
-wrapt = ">=1.10.10"
+aiohttp = ">=3.3.1,<4.0.0"
+aioitertools = ">=0.5.1,<1.0.0"
+botocore = ">=1.31.17,<1.31.18"
+wrapt = ">=1.10.10,<2.0.0"
 
 [package.extras]
-awscli = ["awscli (>=1.25.60,<1.25.61)"]
-boto3 = ["boto3 (>=1.24.59,<1.24.60)"]
+awscli = ["awscli (>=1.29.17,<1.29.18)"]
+boto3 = ["boto3 (>=1.28.17,<1.28.18)"]
 
 [[package]]
 name = "aiohttp"
@@ -330,13 +330,13 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.27.59"
+version = "1.31.17"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.27.59-py3-none-any.whl", hash = "sha256:69d756791fc024bda54f6c53f71ae34e695ee41bbbc1743d9179c4837a4929da"},
-    {file = "botocore-1.27.59.tar.gz", hash = "sha256:eda4aed6ee719a745d1288eaf1beb12f6f6448ad1fa12f159405db14ba9c92cf"},
+    {file = "botocore-1.31.17-py3-none-any.whl", hash = "sha256:6ac34a1d34aa3750e78b77b8596617e2bab938964694d651939dba2cbde2c12b"},
+    {file = "botocore-1.31.17.tar.gz", hash = "sha256:396459065dba4339eb4da4ec8b4e6599728eb89b7caaceea199e26f7d824a41c"},
 ]
 
 [package.dependencies]
@@ -345,7 +345,7 @@ python-dateutil = ">=2.1,<3.0.0"
 urllib3 = ">=1.25.4,<1.27"
 
 [package.extras]
-crt = ["awscrt (==0.14.0)"]
+crt = ["awscrt (==0.16.26)"]
 
 [[package]]
 name = "cachetools"
@@ -950,13 +950,13 @@ files = [
 
 [[package]]
 name = "fsspec"
-version = "2022.11.0"
+version = "2023.9.0"
 description = "File-system specification"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "fsspec-2022.11.0-py3-none-any.whl", hash = "sha256:d6e462003e3dcdcb8c7aa84c73a228f8227e72453cd22570e2363e8844edfe7b"},
-    {file = "fsspec-2022.11.0.tar.gz", hash = "sha256:259d5fd5c8e756ff2ea72f42e7613c32667dc2049a4ac3d84364a7ca034acb8b"},
+    {file = "fsspec-2023.9.0-py3-none-any.whl", hash = "sha256:d55b9ab2a4c1f2b759888ae9f93e40c2aa72c0808132e87e282b549f9e6c4254"},
+    {file = "fsspec-2023.9.0.tar.gz", hash = "sha256:4dbf0fefee035b7c6d3bbbe6bc99b2f201f40d4dca95b67c2b719be77bcd917f"},
 ]
 
 [package.extras]
@@ -964,8 +964,9 @@ abfs = ["adlfs"]
 adl = ["adlfs"]
 arrow = ["pyarrow (>=1)"]
 dask = ["dask", "distributed"]
+devel = ["pytest", "pytest-cov"]
 dropbox = ["dropbox", "dropboxdrivefs", "requests"]
-entrypoints = ["importlib-metadata"]
+full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs", "smbprotocol", "tqdm"]
 fuse = ["fusepy"]
 gcs = ["gcsfs"]
 git = ["pygit2"]
@@ -2680,23 +2681,23 @@ pyasn1 = ">=0.1.3"
 
 [[package]]
 name = "s3fs"
-version = "2022.11.0"
+version = "2023.9.0"
 description = "Convenient Filesystem interface over S3"
 optional = false
-python-versions = ">= 3.7"
+python-versions = ">= 3.8"
 files = [
-    {file = "s3fs-2022.11.0-py3-none-any.whl", hash = "sha256:42d57a3ceedb478b18ee53e34bbe3305a3f07f6381ca1ab76135efe076c6a07d"},
-    {file = "s3fs-2022.11.0.tar.gz", hash = "sha256:10c5ac283a4f5b67ffad6d1f25ff7ee026142750c5c5dc868746cd904f617c33"},
+    {file = "s3fs-2023.9.0-py3-none-any.whl", hash = "sha256:98ad2b221514490f0fe49b730ccf4f0362031ee8ede6d5392cdd3977ca313b1a"},
+    {file = "s3fs-2023.9.0.tar.gz", hash = "sha256:35057d4d59722cab9fe91c9a30147e3e5bddfc55ec14fde8776c512179c823dd"},
 ]
 
 [package.dependencies]
-aiobotocore = ">=2.4.0,<2.5.0"
+aiobotocore = ">=2.5.4,<2.6.0"
 aiohttp = "<4.0.0a0 || >4.0.0a0,<4.0.0a1 || >4.0.0a1"
-fsspec = "2022.11.0"
+fsspec = "2023.9.0"
 
 [package.extras]
-awscli = ["aiobotocore[awscli] (>=2.4.0,<2.5.0)"]
-boto3 = ["aiobotocore[boto3] (>=2.4.0,<2.5.0)"]
+awscli = ["aiobotocore[awscli] (>=2.5.4,<2.6.0)"]
+boto3 = ["aiobotocore[boto3] (>=2.5.4,<2.6.0)"]
 
 [[package]]
 name = "scikit-image"
@@ -3037,20 +3038,21 @@ files = [
 
 [[package]]
 name = "universal-pathlib"
-version = "0.0.23"
-description = "Pathlib API extended to use fsspec backends"
+version = "0.1.3"
+description = "pathlib api extended to use fsspec backends"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "universal_pathlib-0.0.23-py3-none-any.whl", hash = "sha256:76cbc91d66ddb2c0c0c939d147bcd8fa2c79882b5451d2a59009811fc4f80bd3"},
-    {file = "universal_pathlib-0.0.23.tar.gz", hash = "sha256:bd7ed0ad5c6a31b3bf0835b9e7526ed0974ec3a49e4a6a02b1f4058ce63ec79c"},
+    {file = "universal_pathlib-0.1.3-py3-none-any.whl", hash = "sha256:9c6a78cd75dad2988eb1d5db52f4e85a8a3092cbe5eb2cf18882c1ef06470d43"},
+    {file = "universal_pathlib-0.1.3.tar.gz", hash = "sha256:1a052ab5e0517301df66be6517e9fe63cd9fc00813e5ce71a73701441ac2b5c8"},
 ]
 
 [package.dependencies]
 fsspec = "*"
 
 [package.extras]
-test = ["adlfs", "aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs", "webdav4[fsspec]"]
+dev = ["adlfs", "aiohttp", "cheroot", "gcsfs", "hadoop-test-cluster", "moto[s3,server]", "mypy (==1.3.0)", "pyarrow", "pydantic", "pydantic-settings", "pylint (==2.17.4)", "pytest (==7.3.2)", "pytest-cov (==4.1.0)", "pytest-mock (==3.11.1)", "pytest-sugar (==0.9.6)", "requests", "s3fs", "webdav4[fsspec]", "wsgidav"]
+tests = ["mypy (==1.3.0)", "pylint (==2.17.4)", "pytest (==7.3.2)", "pytest-cov (==4.1.0)", "pytest-mock (==3.11.1)", "pytest-sugar (==0.9.6)"]
 
 [[package]]
 name = "urllib3"
@@ -3323,13 +3325,13 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 
 [[package]]
 name = "zarrita"
-version = "0.1.0a18"
+version = "0.1.0a19"
 description = ""
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "zarrita-0.1.0a18-py3-none-any.whl", hash = "sha256:0a12a7f64680d0fbb05e79c5f94a0f80a2f48fa714ebcbb275b977ee30afccc9"},
-    {file = "zarrita-0.1.0a18.tar.gz", hash = "sha256:083e0e197fe51bee4477867452d2781f376249ca8423b1f9c01edfc49b46f101"},
+    {file = "zarrita-0.1.0a19-py3-none-any.whl", hash = "sha256:7ed4e8c7e0174edd79a070872acb4ece2ccc3780ae244d57bec9a99d9cd4b1ca"},
+    {file = "zarrita-0.1.0a19.tar.gz", hash = "sha256:e4f5f82d0e1b3d27321a2f9d60f871948be549f38a1bbb7555f9df654e3b73f1"},
 ]
 
 [package.dependencies]
@@ -3425,4 +3427,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "ba688a2cbb67f84d8455b56deeb90426e1107aa8b1d9546623ea8322ce3821df"
+content-hash = "95723ca6284a39d37a3f7da153971349edaea02abd1f6c899436d1eebcc2aa04"
