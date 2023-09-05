@@ -29,7 +29,7 @@ def _is_power_of_two(num: int) -> bool:
 
 
 def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
-    storage_options = {}
+    storage_options: Dict[str, Any] = {}
     if isinstance(path, UPath):
         storage_options = getattr(path, "_kwargs", {}).copy()
         storage_options.pop("_url", None)
