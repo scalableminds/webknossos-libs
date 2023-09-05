@@ -32,10 +32,9 @@ from typing import (
 
 import numpy as np
 import rich
+from cluster_tools import Executor, get_executor
 from rich.progress import Progress
 from upath import UPath
-
-from cluster_tools import Executor, get_executor
 
 times = {}
 
