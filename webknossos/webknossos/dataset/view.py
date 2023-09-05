@@ -277,14 +277,17 @@ class View:
 
         if self._is_compressed():
             for current_mag_bbox, chunked_data in self._prepare_compressed_write(
-                current_mag_bbox, data
+                current_mag_bbox, data, json_update_allowed
             ):
                 self._array.write(current_mag_bbox.topleft, chunked_data)
         else:
             self._array.write(current_mag_bbox.topleft, data)
 
     def _prepare_compressed_write(
-        self, current_mag_bbox: BoundingBox, data: np.ndarray
+        self,
+        current_mag_bbox: BoundingBox,
+        data: np.ndarray,
+        json_update_allowed: bool = True,
     ) -> Iterator[Tuple[BoundingBox, np.ndarray]]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox,
         divides these into chunks of shard_shape size and delegates
@@ -305,10 +308,15 @@ class View:
                     -current_mag_bbox.topleft
                 ).to_slices()
 
-            yield self._prepare_compressed_write_chunk(chunked_bbox, data[source_slice])
+            yield self._prepare_compressed_write_chunk(
+                chunked_bbox, data[source_slice], json_update_allowed
+            )
 
     def _prepare_compressed_write_chunk(
-        self, current_mag_bbox: BoundingBox, data: np.ndarray
+        self,
+        current_mag_bbox: BoundingBox,
+        data: np.ndarray,
+        json_update_allowed: bool = True,
     ) -> Tuple[BoundingBox, np.ndarray]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox
         (ideally not larger than a shard) and enlarges that chunk to fit the shard it
@@ -321,7 +329,11 @@ class View:
         if current_mag_bbox != aligned_bbox:
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
-            if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
+            if (
+                json_update_allowed
+                and current_mag_bbox
+                != current_mag_view_bbox.intersected_with(aligned_bbox)
+            ):
                 warnings.warn(
                     _BLOCK_ALIGNMENT_WARNING,
                 )
@@ -334,8 +346,8 @@ class View:
             # overwrite the specified data
             aligned_data[index_slice] = data
             return aligned_bbox, aligned_data
-        else:
-            return current_mag_bbox, data
+
+        return current_mag_bbox, data
 
     def read(
         self,

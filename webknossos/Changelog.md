@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.6...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug in writing compressed data. [#942](https://github.com/scalableminds/webknossos-libs/pull/942)
+
+
+## [0.13.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.6) - 2023-08-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.5...v0.13.6)
 
 
 ## [0.13.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.5) - 2023-08-15

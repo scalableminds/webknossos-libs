@@ -63,7 +63,7 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
 def test_no_slashes_in_layername(tmp_path: Path) -> None:
     (input_path := tmp_path / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
-        TESTDATA_DIR / "tiff_with_different_dimensions",
+        TESTDATA_DIR / "tiff_with_different_shapes",
         input_path,
         dirs_exist_ok=True,
     )

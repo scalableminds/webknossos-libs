@@ -202,12 +202,15 @@ def test_convert() -> None:
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
-def test_convert_with_all_params() -> None:
+@pytest.mark.parametrize(
+    "origin_path",
+    [TESTDATA_DIR / "tiff", TESTDATA_DIR / "tiff_with_different_shapes"],
+)
+def test_convert_with_all_params(origin_path: Path) -> None:
     """Tests the functionality of convert subcommand."""
 
     with tmp_cwd():
-        origin_path = TESTDATA_DIR / "tiff"
-        wkw_path = Path("wkw_from_tiff_extended")
+        wkw_path = Path(f"wkw_from_{origin_path.name}")
         with pytest.warns(UserWarning):
             result = runner.invoke(
                 app,
