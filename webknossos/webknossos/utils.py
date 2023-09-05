@@ -13,7 +13,7 @@ from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
-from pathlib import Path
+from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj
 from typing import (
     Any,
@@ -35,6 +35,7 @@ import rich
 from cluster_tools import Executor, get_executor
 from rich.progress import Progress
 from upath import UPath
+from upath.implementations.local import PosixUPath, WindowsUPath
 
 times = {}
 
@@ -235,11 +236,11 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
 
 
 def is_fs_path(path: Path) -> bool:
-    return not isinstance(path, UPath)
+    return isinstance(path, (PosixPath, WindowsPath, PosixUPath, WindowsUPath))
 
 
 def strip_trailing_slash(path: Path) -> Path:
-    if isinstance(path, UPath):
+    if isinstance(path, UPath) and not is_fs_path(path):
         return UPath(
             str(path).rstrip("/"),
             **getattr(path, "_kwargs", {}).copy(),
