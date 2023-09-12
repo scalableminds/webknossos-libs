@@ -6,11 +6,13 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import pytest
+from dask.distributed import LocalCluster
 
 import cluster_tools
+from cluster_tools.executors.dask import DaskExecutor
 
 
 # "Worker" functions.
@@ -25,6 +27,8 @@ def sleep(duration: float) -> float:
 
 logging.basicConfig()
 
+_dask_cluster: Optional[LocalCluster] = None
+
 
 def raise_if(msg: str, _bool: bool) -> None:
     if _bool:
@@ -32,9 +36,11 @@ def raise_if(msg: str, _bool: bool) -> None:
 
 
 def get_executors(with_debug_sequential: bool = False) -> List[cluster_tools.Executor]:
+    global _dask_cluster
     executor_keys = {
         "slurm",
         "kubernetes",
+        "dask",
         "multiprocessing",
         "sequential",
         "test_pickling",
@@ -69,6 +75,10 @@ def get_executors(with_debug_sequential: bool = False) -> List[cluster_tools.Exe
         executors.append(cluster_tools.get_executor("multiprocessing", max_workers=5))
     if "sequential" in executor_keys:
         executors.append(cluster_tools.get_executor("sequential"))
+    if "dask" in executor_keys:
+        if not _dask_cluster:
+            _dask_cluster = LocalCluster()
+        executors.append(cluster_tools.get_executor("dask", address=_dask_cluster))
     if "test_pickling" in executor_keys:
         executors.append(cluster_tools.get_executor("test_pickling"))
     if "pbs" in executor_keys:
@@ -199,9 +209,7 @@ def test_unordered_sleep() -> None:
             futures = [exc.submit(sleep, n) for n in durations]
             if not isinstance(exc, cluster_tools.SequentialExecutor):
                 durations.sort()
-            for duration, future in zip(
-                durations, concurrent.futures.as_completed(futures)
-            ):
+            for duration, future in zip(durations, exc.as_completed(futures)):
                 assert future.result() == duration
 
 
@@ -226,7 +234,7 @@ def test_map_to_futures() -> None:
             futures = exc.map_to_futures(sleep, durations)
             results = []
 
-            for i, duration in enumerate(concurrent.futures.as_completed(futures)):
+            for i, duration in enumerate(exc.as_completed(futures)):
                 results.append(duration.result())
 
             if not isinstance(exc, cluster_tools.SequentialExecutor):
@@ -262,7 +270,7 @@ def test_map_to_futures_with_pickle_paths() -> None:
                 )
                 results = []
 
-                for i, duration in enumerate(concurrent.futures.as_completed(futures)):
+                for i, duration in enumerate(exc.as_completed(futures)):
                     results.append(duration.result())
 
                 assert 2 in results
