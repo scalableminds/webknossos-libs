@@ -2916,6 +2916,35 @@ files = [
 widechars = ["wcwidth"]
 
 [[package]]
+name = "tensorstore"
+version = "0.1.42"
+description = "Read and write large, multi-dimensional arrays"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "tensorstore-0.1.42-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:99ce763c6328040bd4b787a9e3469d17300fd84dd04dc059ec7a3e14efedf927"},
+    {file = "tensorstore-0.1.42-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:7590dd8e0cc066609da24ea95ada555ec8d2c3bb1cb91d5414ff5637afc83782"},
+    {file = "tensorstore-0.1.42-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:41f2e053cb9ce1e0f776b42a2e91a02b2d1465e43092f6bfda51c816e58a45e1"},
+    {file = "tensorstore-0.1.42-cp310-cp310-win_amd64.whl", hash = "sha256:d54ef49defa543beff1ce50e9fe497f515a6fbe95d788246c806d87a91447e6f"},
+    {file = "tensorstore-0.1.42-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:19ef63adce6aaad042833779f25544de0161bbe5bb77c9abf1be3d0eaf4549c9"},
+    {file = "tensorstore-0.1.42-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:1c07b4bb90f4c3151e1808a7f3384bf80eab6ca020d62c781aec61c88de632cf"},
+    {file = "tensorstore-0.1.42-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4ccb04e39463007634539344be68fc44d2f94839a9eaa8a22ac277db46c44f84"},
+    {file = "tensorstore-0.1.42-cp311-cp311-win_amd64.whl", hash = "sha256:d39740842ccd207aa2f4be7ae2409a33a4dec69aa6b5f57dcc81ed803e23ce29"},
+    {file = "tensorstore-0.1.42-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:b5e4a4e3b4088ad42596ebc88e9b59223dc1da30475e1ff18ef038dec3f0485c"},
+    {file = "tensorstore-0.1.42-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:f11fa73e31c0c029e6ca191d7930aba4dc8939c71648e434a26ac6f416732fe6"},
+    {file = "tensorstore-0.1.42-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6ea4fb88849d4a6453ca36475cf666a2f8976184fc65abc119ccd602516ec502"},
+    {file = "tensorstore-0.1.42-cp38-cp38-win_amd64.whl", hash = "sha256:3c2d1737d5c82993c33d4db23ce9b2260f623716dc7a9ec658ccfe69c69f2975"},
+    {file = "tensorstore-0.1.42-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:51841c75ef4b8853b7e61a3d3f8c46ffe22d480b2c46a2b42a0fdf46d310261a"},
+    {file = "tensorstore-0.1.42-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:2b42583883b63db19532fdd513f7c4258eefd4f5c6e13755a89f1223d4cba9ed"},
+    {file = "tensorstore-0.1.42-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9944bba17254ae4a3a1341b13f4b8aedb8bcafb591c5f12150a142224eeedf35"},
+    {file = "tensorstore-0.1.42-cp39-cp39-win_amd64.whl", hash = "sha256:7c8be0422a44c46aa0aee1e4ea9d38a61ca1fb87de8482cd3030ba655f092586"},
+    {file = "tensorstore-0.1.42.tar.gz", hash = "sha256:1526bc2d437edf52cf5bcfcbd4af10163478e7512897b1c86395245e46eca62a"},
+]
+
+[package.dependencies]
+numpy = ">=1.16.0"
+
+[[package]]
 name = "termcolor"
 version = "2.3.0"
 description = "ANSI color formatting for output in terminal"
@@ -3427,4 +3456,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "95723ca6284a39d37a3f7da153971349edaea02abd1f6c899436d1eebcc2aa04"
+content-hash = "cb350d67502988040accc82d8e0a411d3baa2acb6182e4bd99aa9ff37a292bdc"
