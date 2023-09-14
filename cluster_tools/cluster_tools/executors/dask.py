@@ -87,11 +87,13 @@ class DaskExecutor(futures.Executor):
     def map(
         self,
         fn: Callable[[_S], _T],
-        args: Iterable[_S],  # TODO change: allow more than one arg per call,
-        timeout=None,
-        chunksize=1,
-    ):
-        return list(super().map(fn, args, timeout=timeout, chunksize=chunksize))
+        *iterables: Iterable[Any],
+        timeout: Optional[float] = None,
+        chunksize: int = 1,
+    ) -> Iterator[_T]:
+        return iter(
+            list(super().map(fn, *iterables, timeout=timeout, chunksize=chunksize))
+        )
 
     def forward_log(self, fut: "Future[_T]") -> _T:
         return fut.result()

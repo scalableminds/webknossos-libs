@@ -46,7 +46,7 @@ psutil = "^5.6.7"
 python-dateutil = "^2.8.0"
 python-dotenv = "^0.19.0"
 rich = "^10.9.0"
-scikit-image = "^0.19.3"
+scikit-image = "^0.21.0"
 scikit-learn = "^1.0.1"
 scipy = "^1.9.0"
 typer = {extras = ["all"], version = "^0.9.0"}
@@ -76,7 +76,7 @@ all = ["pims","tifffile","imagecodecs","JPype1","pylibCZIrw","zarrita"]
 [tool.poetry.dev-dependencies]
 # autoflake
 black = "^23.1.0"
-dask = "2022.02.0"
+dask = { version = "^2023.9.1", python = ">=3.9", extras = ["distributed"] }
 hypothesis = "^6.35.0"
 icecream = "^2.1.1"
 inducoapi = "^2.0.2"

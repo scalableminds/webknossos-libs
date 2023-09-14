@@ -86,8 +86,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             self._mp_logging_handler_pool = _MultiprocessingLoggingHandlerPool()
 
     @classmethod
-    def as_completed(cls, futures: List[Future[_T]]) -> Iterator[Future[_T]]:
-        return futures.as_completed(futures)
+    def as_completed(cls, futs: List[Future[_T]]) -> Iterator[Future[_T]]:
+        return futures.as_completed(futs)
 
     def submit(  # type: ignore[override]
         self,
