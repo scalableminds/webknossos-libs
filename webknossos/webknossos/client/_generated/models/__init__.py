@@ -138,6 +138,9 @@ from .dataset_info_response_200_data_source_data_layers_item import (
 from .dataset_info_response_200_data_source_data_layers_item_bounding_box import (
     DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
 )
+from .dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
+    DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
+)
 from .dataset_info_response_200_data_source_id import DatasetInfoResponse200DataSourceId
 from .dataset_info_response_200_data_store import DatasetInfoResponse200DataStore
 from .dataset_list_response_200_item import DatasetListResponse200Item
@@ -307,6 +310,7 @@ __all__ = (
     "DatasetInfoResponse200DataSource",
     "DatasetInfoResponse200DataSourceDataLayersItem",
     "DatasetInfoResponse200DataSourceDataLayersItemBoundingBox",
+    "DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration",
     "DatasetInfoResponse200DataSourceId",
     "DatasetInfoResponse200DataStore",
     "DatasetListResponse200Item",

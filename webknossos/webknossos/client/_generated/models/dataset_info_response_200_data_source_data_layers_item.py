@@ -1,10 +1,15 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
+
+from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.dataset_info_response_200_data_source_data_layers_item_bounding_box import (
         DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
+    )
+    from ..models.dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
+        DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
     )
 
 
@@ -20,6 +25,8 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
         bounding_box (DatasetInfoResponse200DataSourceDataLayersItemBoundingBox):
         resolutions (List[List[int]]):
         element_class (str):
+        default_view_configuration (Union[Unset,
+            DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration]):
     """
 
     name: str
@@ -27,6 +34,9 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
     bounding_box: "DatasetInfoResponse200DataSourceDataLayersItemBoundingBox"
     resolutions: List[List[int]]
     element_class: str
+    default_view_configuration: Union[
+        Unset, "DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration"
+    ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -41,6 +51,9 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
             resolutions.append(resolutions_item)
 
         element_class = self.element_class
+        default_view_configuration: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.default_view_configuration, Unset):
+            default_view_configuration = self.default_view_configuration.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -53,6 +66,8 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
                 "elementClass": element_class,
             }
         )
+        if default_view_configuration is not UNSET:
+            field_dict["defaultViewConfiguration"] = default_view_configuration
 
         return field_dict
 
@@ -60,6 +75,9 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.dataset_info_response_200_data_source_data_layers_item_bounding_box import (
             DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
+        )
+        from ..models.dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
+            DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
         )
 
         d = src_dict.copy()
@@ -82,12 +100,25 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
 
         element_class = d.pop("elementClass")
 
+        _default_view_configuration = d.pop("defaultViewConfiguration", UNSET)
+        default_view_configuration: Union[
+            Unset,
+            DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
+        ]
+        if isinstance(_default_view_configuration, Unset):
+            default_view_configuration = UNSET
+        else:
+            default_view_configuration = DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration.from_dict(
+                _default_view_configuration
+            )
+
         dataset_info_response_200_data_source_data_layers_item = cls(
             name=name,
             category=category,
             bounding_box=bounding_box,
             resolutions=resolutions,
             element_class=element_class,
+            default_view_configuration=default_view_configuration,
         )
 
         dataset_info_response_200_data_source_data_layers_item.additional_properties = d
