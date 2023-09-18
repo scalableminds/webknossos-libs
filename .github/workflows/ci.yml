@@ -94,15 +94,15 @@ jobs:
           poetry install
 
       - name: Check typing
-        if: ${{ matrix.executors == 'multiprocessing' }}
+        if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version != '3.8' }}
         run: ./typecheck.sh
 
       - name: Check formatting
-        if: ${{ matrix.executors == 'multiprocessing' }}
+        if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version != '3.8' }}
         run: ./format.sh check
 
       - name: Lint code
-        if: ${{ matrix.executors == 'multiprocessing' }}
+        if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version != '3.8' }}
         run: ./lint.sh
 
       - name: Run multiprocessing tests
