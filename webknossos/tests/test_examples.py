@@ -334,7 +334,7 @@ def test_skeleton_path_length() -> None:
     from examples.skeleton_path_length import calculate_path_length
 
     # Public skeleton annotation by MH Lab
-    annotation_id = "https://webknossos.org/annotations/62b191b5010000930133e7bc#195293,183313,1188,0,593.395,64634"
+    annotation_id = "https://webknossos.org/annotations/62b191ef010000e80033e7c0"
     token = "123"
     calculate_path_length(annotation_id, token)
 
