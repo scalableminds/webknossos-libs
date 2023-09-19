@@ -9,10 +9,9 @@ import webknossos as wk
 BOUNDING_BOX = wk.BoundingBox((0, 0, 0), (500, 500, 50))
 
 
-def load_annotation():
+def load_annotation(annotation_file: Path) -> None:
     # Read the WEBKNOSSOS annotation file (a zipped WKW)
-    path_to_annotation_file = Path("my_annotation_file.zip")
-    annotation = wk.Annotation.load(path_to_annotation_file)
+    annotation = wk.Annotation.load(annotation_file)
 
     # Treat it as a regular WK volume layer
     with annotation.temporary_volume_layer_copy() as segmentation_layer:
@@ -32,4 +31,7 @@ def load_annotation():
 
 
 if __name__ == "__main__":
-    load_annotation()
+    # Path to annotation file on your computer
+    ANNOTATION_FILE = Path("my_annotation_file.zip")
+
+    load_annotation(ANNOTATION_FILE)

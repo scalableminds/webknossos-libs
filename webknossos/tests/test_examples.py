@@ -326,3 +326,24 @@ def test_download_tiff_stack() -> None:
             len(list(output_path.iterdir()))
             == mag_view.bounding_box.size.z / mag_view.mag.z
         )
+
+
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+def test_skeleton_path_length() -> None:
+    from examples.skeleton_path_length import calculate_path_length
+
+    # Public skeleton annotation by MH Lab
+    annotation_id = "https://webknossos.org/annotations/62b191b5010000930133e7bc#195293,183313,1188,0,593.395,64634"
+    token = "123"
+    calculate_path_length(annotation_id, token)
+
+
+def test_load_annotation_file() -> None:
+    with tmp_cwd():
+        from examples.load_annotation_from_file import load_annotation
+
+        annotation_file = Path(
+            "example_files/l4dense_motta_et_al_demo_v2__explorational.zip"
+        )
+        load_annotation(annotation_file)
