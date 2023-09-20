@@ -343,7 +343,7 @@ def test_load_annotation_file() -> None:
     from examples.load_annotation_from_file import load_annotation
 
     annotation_file = Path(
-        "./webknossos/tests/example_files/l4dense_motta_et_al_demo_v2__explorational.zip"
+        "./tests/example_files/l4dense_motta_et_al_demo_v2__explorational.zip"
     ).resolve()
 
     with tmp_cwd():
