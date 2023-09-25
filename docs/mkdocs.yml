@@ -96,6 +96,8 @@ nav:
               - webknossos-py/examples/skeleton_synapse_candidates.md
               - webknossos-py/examples/calculate_segment_sizes.md
               - webknossos-py/examples/download_segments.md
+              - webknossos-py/examples/load_annotation_from_file.md
+              - webknossos-py/examples/skeleton_path_length.md
           - Administration Examples:
               - webknossos-py/examples/user_times.md
               - webknossos-py/examples/annotation_project_administration.md
