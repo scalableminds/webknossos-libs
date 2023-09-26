@@ -110,7 +110,10 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
     elif environment == "kubernetes":
         return KubernetesExecutor(**kwargs)
     elif environment == "dask":
-        return DaskExecutor(**kwargs)
+        if "client" in kwargs:
+            return DaskExecutor(kwargs["client"])
+        else:
+            return DaskExecutor.from_kwargs(**kwargs)
     elif environment == "multiprocessing":
         global did_start_test_multiprocessing
         if not did_start_test_multiprocessing:

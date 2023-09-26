@@ -10,8 +10,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.6...HEAD)
 
 ### Breaking Changes
+- Dropped support for Python 3.7. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Added
+- Added `DaskScheduler` (only Python >= 3.9). [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Changed
 

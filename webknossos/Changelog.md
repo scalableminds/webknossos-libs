@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Updates various dependencies. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Fixed
 - Fixed a bug in writing compressed data. [#942](https://github.com/scalableminds/webknossos-libs/pull/942)
