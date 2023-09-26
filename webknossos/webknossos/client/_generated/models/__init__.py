@@ -105,9 +105,11 @@ from .annotation_infos_by_task_id_response_200_item_user import (
 from .annotation_infos_by_task_id_response_200_item_user_teams_item import (
     AnnotationInfosByTaskIdResponse200ItemUserTeamsItem,
 )
+from .annotation_private_link_params import AnnotationPrivateLinkParams
 from .build_info_response_200 import BuildInfoResponse200
 from .build_info_response_200_webknossos import BuildInfoResponse200Webknossos
 from .build_info_response_200_webknossos_wrap import BuildInfoResponse200WebknossosWrap
+from .cancel_upload_information import CancelUploadInformation
 from .create_private_link_json_body import CreatePrivateLinkJsonBody
 from .create_project_json_body import CreateProjectJsonBody
 from .current_user_info_response_200 import CurrentUserInfoResponse200
@@ -166,6 +168,12 @@ from .folder_tree_response_200_item import FolderTreeResponse200Item
 from .generate_token_for_data_store_response_200 import (
     GenerateTokenForDataStoreResponse200,
 )
+from .instant import Instant
+from .js_object import JsObject
+from .js_object_underlying import JsObjectUnderlying
+from .js_object_value import JsObjectValue
+from .js_value import JsValue
+from .linked_layer_identifier import LinkedLayerIdentifier
 from .project_info_by_id_response_200 import ProjectInfoByIdResponse200
 from .project_info_by_id_response_200_owner import ProjectInfoByIdResponse200Owner
 from .project_info_by_id_response_200_owner_teams_item import (
@@ -176,6 +184,7 @@ from .project_info_by_name_response_200_owner import ProjectInfoByNameResponse20
 from .project_info_by_name_response_200_owner_teams_item import (
     ProjectInfoByNameResponse200OwnerTeamsItem,
 )
+from .reserve_upload_information import ReserveUploadInformation
 from .short_link_by_key_response_200 import ShortLinkByKeyResponse200
 from .task_create_from_files_json_body import TaskCreateFromFilesJsonBody
 from .task_info_response_200 import TaskInfoResponse200
@@ -207,7 +216,13 @@ from .task_infos_by_project_id_response_200_item_type_settings_resolution_restri
     TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions,
 )
 from .team_list_response_200_item import TeamListResponse200Item
+from .tuple_2 import Tuple2
+from .tuple_2_string_js_value import Tuple2StringJsValue
+from .tuple_21 import Tuple21
+from .tuple_22 import Tuple22
 from .update_private_link_json_body import UpdatePrivateLinkJsonBody
+from .upload_information import UploadInformation
+from .upload_information_needs_conversion import UploadInformationNeedsConversion
 from .user_info_by_id_response_200 import UserInfoByIdResponse200
 from .user_info_by_id_response_200_experiences import UserInfoByIdResponse200Experiences
 from .user_info_by_id_response_200_novel_user_experience_infos import (
@@ -276,9 +291,11 @@ __all__ = (
     "AnnotationInfosByTaskIdResponse200ItemTracingStore",
     "AnnotationInfosByTaskIdResponse200ItemUser",
     "AnnotationInfosByTaskIdResponse200ItemUserTeamsItem",
+    "AnnotationPrivateLinkParams",
     "BuildInfoResponse200",
     "BuildInfoResponse200Webknossos",
     "BuildInfoResponse200WebknossosWrap",
+    "CancelUploadInformation",
     "CreatePrivateLinkJsonBody",
     "CreateProjectJsonBody",
     "CurrentUserInfoResponse200",
@@ -309,12 +326,19 @@ __all__ = (
     "DatastoreListResponse200Item",
     "FolderTreeResponse200Item",
     "GenerateTokenForDataStoreResponse200",
+    "Instant",
+    "JsObject",
+    "JsObjectUnderlying",
+    "JsObjectValue",
+    "JsValue",
+    "LinkedLayerIdentifier",
     "ProjectInfoByIdResponse200",
     "ProjectInfoByIdResponse200Owner",
     "ProjectInfoByIdResponse200OwnerTeamsItem",
     "ProjectInfoByNameResponse200",
     "ProjectInfoByNameResponse200Owner",
     "ProjectInfoByNameResponse200OwnerTeamsItem",
+    "ReserveUploadInformation",
     "ShortLinkByKeyResponse200",
     "TaskCreateFromFilesJsonBody",
     "TaskInfoResponse200",
@@ -330,7 +354,13 @@ __all__ = (
     "TaskInfosByProjectIdResponse200ItemTypeSettings",
     "TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions",
     "TeamListResponse200Item",
+    "Tuple2",
+    "Tuple21",
+    "Tuple22",
+    "Tuple2StringJsValue",
     "UpdatePrivateLinkJsonBody",
+    "UploadInformation",
+    "UploadInformationNeedsConversion",
     "UserInfoByIdResponse200",
     "UserInfoByIdResponse200Experiences",
     "UserInfoByIdResponse200NovelUserExperienceInfos",
