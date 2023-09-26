@@ -15,6 +15,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Tuple,
     Type,
@@ -23,7 +24,7 @@ from typing import (
     cast,
 )
 
-from typing_extensions import Literal, ParamSpec
+from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.file_wait_thread import FileWaitThread

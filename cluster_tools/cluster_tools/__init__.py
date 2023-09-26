@@ -1,6 +1,4 @@
-from typing import Any, Union, overload
-
-from typing_extensions import Literal
+from typing import Any, Literal, Union, overload
 
 from cluster_tools.executors.dask import DaskExecutor
 from cluster_tools.executors.debug_sequential import DebugSequentialExecutor

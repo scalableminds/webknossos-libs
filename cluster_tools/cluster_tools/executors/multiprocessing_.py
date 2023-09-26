@@ -16,11 +16,12 @@ from typing import (
     List,
     Optional,
     Tuple,
+    TypedDict,
     TypeVar,
     cast,
 )
 
-from typing_extensions import ParamSpec, TypedDict
+from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.multiprocessing_logging_handler import (
