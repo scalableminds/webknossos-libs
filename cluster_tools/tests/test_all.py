@@ -6,10 +6,12 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import pytest
-from dask.distributed import LocalCluster
+
+if TYPE_CHECKING:
+    from distributed import LocalCluster
 
 import cluster_tools
 from cluster_tools.executors.dask import DaskExecutor
@@ -27,7 +29,7 @@ def sleep(duration: float) -> float:
 
 logging.basicConfig()
 
-_dask_cluster: Optional[LocalCluster] = None
+_dask_cluster: Optional["LocalCluster"] = None
 
 
 def raise_if(msg: str, _bool: bool) -> None:
@@ -77,6 +79,8 @@ def get_executors(with_debug_sequential: bool = False) -> List[cluster_tools.Exe
         executors.append(cluster_tools.get_executor("sequential"))
     if "dask" in executor_keys:
         if not _dask_cluster:
+            from distributed import LocalCluster
+
             _dask_cluster = LocalCluster()
         executors.append(cluster_tools.get_executor("dask", address=_dask_cluster))
     if "test_pickling" in executor_keys:
