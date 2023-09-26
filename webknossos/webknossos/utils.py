@@ -235,7 +235,9 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
 
 
 def is_fs_path(path: Path) -> bool:
-    return not isinstance(path, UPath)
+    from upath.implementations.local import PosixUPath, WindowsUPath
+
+    return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
 
 
 def strip_trailing_slash(path: Path) -> Path:
