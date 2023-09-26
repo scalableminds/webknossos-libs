@@ -39,7 +39,7 @@ class DaskExecutor(futures.Executor):
         self.client = Client(**kwargs)
 
     @classmethod
-    def as_completed(cls, futures: List[Future[_T]]) -> Iterator[Future[_T]]:
+    def as_completed(cls, futures: List["Future[_T]"]) -> Iterator["Future[_T]"]:
         from dask.distributed import as_completed
 
         return as_completed(futures)
