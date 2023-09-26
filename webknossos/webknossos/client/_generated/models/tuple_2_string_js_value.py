@@ -1,0 +1,70 @@
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
+
+import attr
+
+if TYPE_CHECKING:
+    from ..models.js_value import JsValue
+
+
+T = TypeVar("T", bound="Tuple2StringJsValue")
+
+
+@attr.s(auto_attribs=True)
+class Tuple2StringJsValue:
+    """
+    Attributes:
+        field_1 (str):
+        field_2 (JsValue):
+    """
+
+    field_1: str
+    field_2: "JsValue"
+    additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        field_1 = self.field_1
+        field_2 = self.field_2.to_dict()
+
+        field_dict: Dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "_1": field_1,
+                "_2": field_2,
+            }
+        )
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.js_value import JsValue
+
+        d = src_dict.copy()
+        field_1 = d.pop("_1")
+
+        field_2 = JsValue.from_dict(d.pop("_2"))
+
+        tuple_2_string_js_value = cls(
+            field_1=field_1,
+            field_2=field_2,
+        )
+
+        tuple_2_string_js_value.additional_properties = d
+        return tuple_2_string_js_value
+
+    @property
+    def additional_keys(self) -> List[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties
