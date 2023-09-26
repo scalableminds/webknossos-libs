@@ -151,10 +151,12 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     def map(  # type: ignore[override]
         self,
         fn: Callable[[_S], _T],
-        iterables: Iterable[Any],
+        iterables: Iterable[_S],
         timeout: Optional[float] = None,
-        chunksize: int = 1,
+        chunksize: Optional[int] = None,
     ) -> Iterator[_T]:
+        if chunksize is None:
+            chunksize = 1
         return super().map(fn, [iterables], timeout=timeout, chunksize=chunksize)
 
     def _submit_via_io(

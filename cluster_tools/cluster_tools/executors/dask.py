@@ -73,7 +73,7 @@ class DaskExecutor(futures.Executor):
         enrich_future_with_uncaught_warning(fut)
         return fut
 
-    def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
+    def map_unordered(self, fn: Callable[[_S], _T], args: Iterable[_S]) -> Iterator[_T]:
         futs: List["Future[_T]"] = self.map_to_futures(fn, args)
 
         # Return a separate generator to avoid that map_unordered
@@ -110,10 +110,12 @@ class DaskExecutor(futures.Executor):
     def map(  # type: ignore[override]
         self,
         fn: Callable[[_S], _T],
-        iterables: Iterable[Any],
+        iterables: Iterable[_S],
         timeout: Optional[float] = None,
-        chunksize: int = 1,
+        chunksize: Optional[int] = None,
     ) -> Iterator[_T]:
+        if chunksize is None:
+            chunksize = 1
         return iter(
             list(super().map(fn, [iterables], timeout=timeout, chunksize=chunksize))
         )
