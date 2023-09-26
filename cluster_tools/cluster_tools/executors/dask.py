@@ -2,13 +2,25 @@ import os
 from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
-from typing import Any, Callable, Iterable, Iterator, List, Optional, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    TypeVar,
+    cast,
+)
 
-from dask.distributed import Client, as_completed
 from typing_extensions import ParamSpec
 
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingExecutor
+
+if TYPE_CHECKING:
+    from dask.distributed import Client
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
@@ -16,16 +28,20 @@ _S = TypeVar("_S")
 
 
 class DaskExecutor(futures.Executor):
-    client: Client
+    client: "Client"
 
     def __init__(
         self,
         **kwargs: Any,
     ) -> None:
+        from dask.distributed import Client
+
         self.client = Client(**kwargs)
 
     @classmethod
     def as_completed(cls, futures: List[Future[_T]]) -> Iterator[Future[_T]]:
+        from dask.distributed import as_completed
+
         return as_completed(futures)
 
     def submit(  # type: ignore[override]
@@ -57,7 +73,7 @@ class DaskExecutor(futures.Executor):
         # is executed lazily (otherwise, jobs would be submitted
         # lazily, as well).
         def result_generator() -> Iterator:
-            for fut in as_completed(futs):
+            for fut in self.as_completed(futs):
                 yield fut.result()
 
         return result_generator()
