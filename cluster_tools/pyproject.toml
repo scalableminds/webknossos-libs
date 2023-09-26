@@ -9,7 +9,7 @@ repository = "https://github.com/scalableminds/webknossos-libs"
 
 [tool.poetry.dependencies]
 python = ">=3.8"
-dask = { version = "^2023.9.1", python = ">=3.9", extras = ["distributed"] }
+distributed = { version = "^2023.9.1", python = ">=3.9" }
 kubernetes = "^27.2.0"
 typing-extensions = "^4.4.0"
 

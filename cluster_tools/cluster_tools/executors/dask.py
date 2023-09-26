@@ -20,7 +20,7 @@ from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingExecutor
 
 if TYPE_CHECKING:
-    from dask.distributed import Client
+    from distributed import Client
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
@@ -34,13 +34,13 @@ class DaskExecutor(futures.Executor):
         self,
         **kwargs: Any,
     ) -> None:
-        from dask.distributed import Client
+        from distributed import Client
 
         self.client = Client(**kwargs)
 
     @classmethod
     def as_completed(cls, futures: List["Future[_T]"]) -> Iterator["Future[_T]"]:
-        from dask.distributed import as_completed
+        from distributed import as_completed
 
         return as_completed(futures)
 
