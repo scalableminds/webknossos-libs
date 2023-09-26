@@ -19,7 +19,7 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, WKWArray, ZarrArray, ZarritaArray
+from ._array import ArrayInfo, BaseArray, WKWArray, ZarrArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -136,9 +136,7 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(array_wrapper, ZarrArray) or isinstance(
-            array_wrapper, ZarritaArray
-        )  # for typechecking
+        assert isinstance(array_wrapper, ZarrArray)  # for typechecking
         return array_wrapper._zarray
 
     def write(
