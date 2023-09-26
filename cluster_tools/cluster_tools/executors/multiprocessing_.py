@@ -148,6 +148,15 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         enrich_future_with_uncaught_warning(fut)
         return fut
 
+    def map(  # type: ignore[override]
+        self,
+        fn: Callable[[_S], _T],
+        iterables: Iterable[Any],
+        timeout: Optional[float] = None,
+        chunksize: int = 1,
+    ) -> Iterator[_T]:
+        return super().map(fn, [iterables], timeout=timeout, chunksize=chunksize)
+
     def _submit_via_io(
         self,
         __fn: Callable[_P, _T],

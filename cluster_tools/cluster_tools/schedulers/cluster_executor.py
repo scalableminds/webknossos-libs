@@ -598,10 +598,9 @@ class ClusterExecutor(futures.Executor):
                 pass
         self.files_to_clean_up = []
 
-    # TODO: args should be *iterables, this would be a breaking change!
     def map(  # type: ignore[override]
         self,
-        fn: Callable[_P, _T],
+        fn: Callable[[_S], _T],
         args: Iterable[Any],
         timeout: Optional[float] = None,
         chunksize: Optional[int] = None,

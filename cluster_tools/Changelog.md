@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Added `DaskScheduler` (only Python >= 3.9). [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Changed
+- The exported `Executor` type is now implemented as a protocol.  [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Fixed
 

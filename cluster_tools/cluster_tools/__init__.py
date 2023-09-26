@@ -1,5 +1,6 @@
-from typing import Any, Literal, Union, overload
+from typing import Any, Literal, overload
 
+from cluster_tools.executor_protocol import Executor
 from cluster_tools.executors.dask import DaskExecutor
 from cluster_tools.executors.debug_sequential import DebugSequentialExecutor
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
@@ -128,6 +129,3 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
     elif environment == "test_pickling":
         return PickleExecutor(**kwargs)
     raise Exception("Unknown executor: {}".format(environment))
-
-
-Executor = Union[ClusterExecutor, MultiprocessingExecutor, DaskExecutor]

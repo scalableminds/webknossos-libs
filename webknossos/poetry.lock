@@ -586,7 +586,7 @@ files = []
 develop = true
 
 [package.dependencies]
-dask = {version = "^2023.9.1", extras = ["distributed"], markers = "python_version >= \"3.9\""}
+distributed = {version = "^2023.9.1", markers = "python_version >= \"3.9\""}
 kubernetes = "^27.2.0"
 typing-extensions = "^4.4.0"
 
