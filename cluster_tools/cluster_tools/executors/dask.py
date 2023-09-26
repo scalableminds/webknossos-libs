@@ -116,9 +116,7 @@ class DaskExecutor(futures.Executor):
     ) -> Iterator[_T]:
         if chunksize is None:
             chunksize = 1
-        return iter(
-            list(super().map(fn, [iterables], timeout=timeout, chunksize=chunksize))
-        )
+        return super().map(fn, iterables, timeout=timeout, chunksize=chunksize)
 
     def forward_log(self, fut: "Future[_T]") -> _T:
         return fut.result()

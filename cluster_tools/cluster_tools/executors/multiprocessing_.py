@@ -157,7 +157,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     ) -> Iterator[_T]:
         if chunksize is None:
             chunksize = 1
-        return super().map(fn, [iterables], timeout=timeout, chunksize=chunksize)
+        return super().map(fn, iterables, timeout=timeout, chunksize=chunksize)
 
     def _submit_via_io(
         self,
