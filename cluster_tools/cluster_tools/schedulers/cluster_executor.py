@@ -142,7 +142,7 @@ class ClusterExecutor(futures.Executor):
             self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
     @classmethod
-    def as_completed(cls, futs: List[Future[_T]]) -> Iterator[Future[_T]]:
+    def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
         return futures.as_completed(futs)
 
     @classmethod
