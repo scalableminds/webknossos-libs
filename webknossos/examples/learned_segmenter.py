@@ -5,7 +5,7 @@ from time import gmtime, strftime
 
 import numpy as np
 from skimage import feature
-from skimage.future import TrainableSegmenter
+from skimage.future import TrainableSegmenter  # pylint: disable=no-name-in-module
 
 import webknossos as wk
 
