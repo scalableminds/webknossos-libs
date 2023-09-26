@@ -276,7 +276,9 @@ def test_remote_datasets() -> None:
 
 @pytest.mark.block_network(allowed_hosts=[".*"])
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
-@pytest.mark.skipif(sys.version_info <= (3, 9))
+@pytest.mark.skipif(
+    sys.version_info <= (3, 9), reason="Dask only supports Python >= 3.9"
+)
 def test_zarr_and_dask() -> None:
     import examples.zarr_and_dask as example
 

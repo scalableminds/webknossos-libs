@@ -37,7 +37,7 @@ def main() -> None:
 
     # Step 2: Initialize a machine learning model to segment our dataset
     features_func = partial(
-        feature.multiscale_basic_features, multichannel=True, edges=False
+        feature.multiscale_basic_features, channel_axis=2, edges=False
     )
     segmenter = TrainableSegmenter(features_func=features_func)
 
