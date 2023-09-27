@@ -54,6 +54,7 @@ typer = {extras = ["all"], version = "^0.9.0"}
 typing-extensions = "^4.0"
 universal-pathlib = "0.1.3"
 wkw = "1.1.22"
+zarr = "^2.16.1"
 zipp = "^3.5.0"
 
 # A list of all of the optional dependencies, some of which are included in the

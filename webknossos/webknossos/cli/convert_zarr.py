@@ -6,12 +6,14 @@ from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Optional, Tuple, Union, cast
+from typing import Any, Dict, Optional, Tuple, Union, cast
 
 import numpy as np
 import typer
 import zarr
 from typing_extensions import Annotated
+from upath import UPath
+from zarr.storage import FSStore
 
 from webknossos import (
     BoundingBox,
@@ -31,11 +33,20 @@ from webknossos.cli._utils import (
     parse_vec3int,
     parse_voxel_size,
 )
-from webknossos.dataset._array import _fsstore_from_path
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 logger = logging.getLogger(__name__)
+
+
+def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
+    storage_options: Dict[str, Any] = {}
+    if isinstance(path, UPath):
+        storage_options = getattr(path, "_kwargs", {}).copy()
+        storage_options.pop("_url", None)
+        return FSStore(url=str(path), mode=mode, **storage_options)
+
+    return FSStore(url=str(path), mode=mode, **storage_options)
 
 
 def _zarr_chunk_converter(

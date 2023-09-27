@@ -9,8 +9,6 @@ from typing import Any, Dict, Iterator, List, Optional, Type, Union
 import numpy as np
 import tensorstore
 import wkw
-from upath import UPath
-from zarr.storage import FSStore
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 from ..utils import is_fs_path, warn_deprecated
@@ -19,16 +17,6 @@ from .data_format import DataFormat
 
 def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
-
-
-def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
-    storage_options: Dict[str, Any] = {}
-    if isinstance(path, UPath):
-        storage_options = getattr(path, "_kwargs", {}).copy()
-        storage_options.pop("_url", None)
-        return FSStore(url=str(path), mode=mode, **storage_options)
-
-    return FSStore(url=str(path), mode=mode, **storage_options)
 
 
 class ArrayException(Exception):
