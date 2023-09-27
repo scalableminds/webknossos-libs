@@ -270,9 +270,7 @@ class Layer:
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
-            )
+            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property
     def category(self) -> LayerCategoryType:
@@ -405,9 +403,7 @@ class Layer:
             create=True,
         )
 
-        mag_view._array.ensure_size(
-            self.bounding_box.align_with_mag(mag).in_mag(mag).bottomright
-        )
+        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
