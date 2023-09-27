@@ -9,11 +9,9 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union, cast
 
 import numpy as np
+import tensorstore
 import typer
-import zarr
 from typing_extensions import Annotated
-from upath import UPath
-from zarr.storage import FSStore
 
 from webknossos import (
     BoundingBox,
@@ -34,19 +32,16 @@ from webknossos.cli._utils import (
     parse_voxel_size,
 )
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
-from webknossos.utils import get_executor_for_args, wait_and_ensure_success
+from webknossos.utils import get_executor_for_args, is_fs_path, wait_and_ensure_success
 
 logger = logging.getLogger(__name__)
 
 
-def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
-    storage_options: Dict[str, Any] = {}
-    if isinstance(path, UPath):
-        storage_options = getattr(path, "_kwargs", {}).copy()
-        storage_options.pop("_url", None)
-        return FSStore(url=str(path), mode=mode, **storage_options)
-
-    return FSStore(url=str(path), mode=mode, **storage_options)
+def _make_kvstore(path: Path) -> Union[str, Dict[str, str]]:
+    if is_fs_path(path):
+        return {"driver": "file", "path": str(path)}
+    else:
+        return str(path)
 
 
 def _zarr_chunk_converter(
@@ -58,8 +53,13 @@ def _zarr_chunk_converter(
     logging.info("Conversion of %s", bounding_box.topleft)
 
     slices = bounding_box.to_slices()
-    zarr_file = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
-    source_data: Any = zarr_file[slices][None, ...]
+    zarr_file = tensorstore.open(
+        {
+            "driver": "zarr",
+            "kvstore": _make_kvstore(source_zarr_path),
+        }
+    ).result()
+    source_data: Any = zarr_file[slices].read().result()[None, ...]
 
     if flip_axes:
         source_data = np.flip(source_data, flip_axes)
@@ -86,8 +86,13 @@ def convert_zarr(
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
 
-    file = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
-    input_dtype: Any = file.dtype
+    file = tensorstore.open(
+        {
+            "driver": "zarr",
+            "kvstore": _make_kvstore(source_zarr_path),
+        }
+    ).result()
+    input_dtype: Any = file.dtype.numpy_dtype
     shape: Any = file.shape
 
     if voxel_size is None:
