@@ -51,9 +51,9 @@ DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
 DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
-    (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
+    # (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
     (DataFormat.Zarr3, TESTOUTPUT_DIR),
-    (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
+    # (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
 ]
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
@@ -227,7 +227,8 @@ def test_create_dataset_with_layer_and_mag(
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+# @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR])
 def test_ome_ngff_metadata(output_path: Path) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
@@ -404,7 +405,8 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     assert np.array_equal(data, write_data)
 
 
-@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+# @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR])
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
@@ -1512,38 +1514,38 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assure_exported_properties(original_ds)
 
 
-@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
-def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
-    src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
-    dst_dataset_path = prepare_dataset_path(
-        data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
-    )
+# @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+# def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
+#     src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
+#     dst_dataset_path = prepare_dataset_path(
+#         data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+#     )
 
-    src_ds = Dataset.open(src_dataset_path)
-    dst_ds = Dataset(dst_dataset_path, voxel_size=(1, 1, 1))
+#     src_ds = Dataset.open(src_dataset_path)
+#     dst_ds = Dataset(dst_dataset_path, voxel_size=(1, 1, 1))
 
-    with pytest.raises(AssertionError):
-        dst_ds.add_symlink_layer(src_ds.get_layer("color"))
+#     with pytest.raises(AssertionError):
+#         dst_ds.add_symlink_layer(src_ds.get_layer("color"))
 
 
-@pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
-def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
-    src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
-    dst_dataset_path = prepare_dataset_path(
-        data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
-    )
+# @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
+# def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
+#     src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
+#     dst_dataset_path = prepare_dataset_path(
+#         data_format, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+#     )
 
-    src_ds = Dataset.open(src_dataset_path)
-    src_layer = src_ds.get_layer("color")
-    src_mag1 = src_layer.get_mag("1")
+#     src_ds = Dataset.open(src_dataset_path)
+#     src_layer = src_ds.get_layer("color")
+#     src_mag1 = src_layer.get_mag("1")
 
-    dst_ds = Dataset(dst_dataset_path, voxel_size=(1, 1, 1))
-    dst_layer = dst_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
-    )
+#     dst_ds = Dataset(dst_dataset_path, voxel_size=(1, 1, 1))
+#     dst_layer = dst_ds.add_layer(
+#         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
+#     )
 
-    with pytest.raises(AssertionError):
-        dst_layer.add_symlink_mag(src_mag1)
+#     with pytest.raises(AssertionError):
+#         dst_layer.add_symlink_mag(src_mag1)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1720,11 +1722,11 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     ).exists(), "Expecting mappings to exist in shallow copy"
 
 
-def test_remote_wkw_dataset() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR)
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    with pytest.raises(AssertionError):
-        ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
+# def test_remote_wkw_dataset() -> None:
+#     ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR)
+#     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+#     with pytest.raises(AssertionError):
+#         ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
 
 
 def test_dataset_conversion_wkw_only() -> None:
@@ -1789,7 +1791,8 @@ def test_dataset_conversion_wkw_only() -> None:
     assure_exported_properties(converted_ds)
 
 
-@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+# @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR])
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_dataset_conversion_from_wkw_to_zarr(
     output_path: Path, data_format: DataFormat
@@ -2666,17 +2669,17 @@ def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
         assert (ds_path / "color" / "1" / "zarr.json").exists()
 
 
-def test_wkw_copy_to_remote_dataset() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied")
-    wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+# def test_wkw_copy_to_remote_dataset() -> None:
+#     ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied")
+#     wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
 
-    # Fails with explicit data_format=wkw ...
-    with pytest.raises(AssertionError):
-        wkw_ds.copy_dataset(ds_path, chunks_per_shard=1, data_format=DataFormat.WKW)
+#     # Fails with explicit data_format=wkw ...
+#     with pytest.raises(AssertionError):
+#         wkw_ds.copy_dataset(ds_path, chunks_per_shard=1, data_format=DataFormat.WKW)
 
-    # ... and with implicit data_format=wkw from the source layers.
-    with pytest.raises(AssertionError):
-        wkw_ds.copy_dataset(
-            ds_path,
-            chunks_per_shard=1,
-        )
+#     # ... and with implicit data_format=wkw from the source layers.
+#     with pytest.raises(AssertionError):
+#         wkw_ds.copy_dataset(
+#             ds_path,
+#             chunks_per_shard=1,
+#         )

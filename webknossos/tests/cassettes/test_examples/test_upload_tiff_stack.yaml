@@ -13,7 +13,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/api/userToken/generate
   response:
@@ -30,8 +30,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -46,7 +44,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: http://localhost:9000/api/datastores
   response:
@@ -63,8 +61,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -79,16 +75,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1687247593863,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1695847066277,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '657'
+      - '680'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -96,8 +92,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -112,7 +106,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/tiff_dataset_2000-01-01_00-00-00/isValidNewName
   response:
@@ -127,8 +121,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -149,7 +141,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets/reserveUpload
   response:
@@ -168,8 +160,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -215,7 +205,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -234,8 +224,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -341,7 +329,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -360,8 +348,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -390,7 +376,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -409,8 +395,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -516,7 +500,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -535,8 +519,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -565,7 +547,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -584,8 +566,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -691,7 +671,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -710,8 +690,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -740,7 +718,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -759,8 +737,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -781,7 +757,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: POST
     uri: http://localhost:9000/data/datasets/finishUpload
   response:
@@ -800,8 +776,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -816,11 +790,11 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/tiff_dataset_2000-01-01_00-00-00
   response:
-    content: '{"name":"tiff_dataset_2023-06-20_07-53-28","dataSource":{"id":{"name":"tiff_dataset_2023-06-20_07-53-28","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"resolutions":[[1,1,1],[2,2,2],[4,4,4]],"elementClass":"uint8"}],"scale":[12,12,12]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1687247618907,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1687247618907,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"tiff_dataset_2023-09-28_07-38-11","dataSource":{"id":{"name":"tiff_dataset_2023-09-28_07-38-11","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"resolutions":[[1,1,1],[2,2,2],[4,4,4]],"elementClass":"uint8"}],"scale":[12,12,12]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1695886702809,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1695886702808,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       cache-control:
       - no-cache
@@ -833,8 +807,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -857,7 +829,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -878,12 +850,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11
 - request:
     body: null
     headers: {}
@@ -904,7 +874,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -925,12 +895,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11
 - request:
     body: null
     headers: {}
@@ -951,7 +919,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -972,12 +940,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11
 - request:
     body: null
     headers: {}
@@ -985,7 +951,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2023-06-20_07-53-28","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2023-09-28_07-38-11","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1002,12 +968,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1015,7 +979,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2023-06-20_07-53-28","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2023-09-28_07-38-11","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1032,12 +996,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1064,12 +1026,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1079,7 +1039,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2023-06-20_07-53-28","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2023-09-28_07-38-11","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1096,12 +1056,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1122,7 +1080,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11/tiff/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1142,196 +1100,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/1/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1/zarr.json
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,265,265,257],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/1/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1/zarr.json
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,265,265,257],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/tiff/1
 - request:
     body: null
     headers: {}
@@ -1352,7 +1124,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11/tiff/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1372,12 +1144,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/1
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/tiff/1
 - request:
     body: null
     headers: {}
@@ -1398,7 +1168,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11/tiff/2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1418,196 +1188,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/2/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2/zarr.json
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/2/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/2/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,132,132,128],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/2/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2/zarr.json
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/2/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,132,132,128],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/2/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2/.zattrs
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/tiff/2
 - request:
     body: null
     headers: {}
@@ -1628,7 +1212,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11/tiff/2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1648,12 +1232,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/2
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/tiff/2
 - request:
     body: null
     headers: {}
@@ -1674,7 +1256,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11/tiff/4\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1694,196 +1276,10 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/4/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4/zarr.json
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/4/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/4/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,66,66,64],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '160'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/4/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4/zarr.json
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/4/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/tiff/4/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,66,66,64],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '160'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/tiff/4
 - request:
     body: null
     headers: {}
@@ -1904,7 +1300,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-09-28_07-38-11/tiff/4\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1924,10 +1320,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-06-20_07-53-28/tiff/4
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-09-28_07-38-11/tiff/4
 version: 1

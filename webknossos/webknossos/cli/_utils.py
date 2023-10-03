@@ -1,5 +1,6 @@
 """Utilities to work with the CLI of webknossos."""
 
+from base64 import b64encode
 from collections import namedtuple
 from enum import Enum
 from os import environ
@@ -141,25 +142,10 @@ def parse_path(value: str) -> UPath:
         and "HTTP_BASIC_USER" in environ
         and "HTTP_BASIC_PASSWORD" in environ
     ):
-        import aiohttp
-
-        return UPath(
-            value,
-            client_kwargs={
-                "auth": aiohttp.BasicAuth(
-                    environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]
-                )
-            },
+        basic_auth = b64encode(
+            f'{environ["HTTP_BASIC_USER"]}:{environ["HTTP_BASIC_PASSWORD"]}'.encode()
         )
-    if (
-        (value.startswith("webdav+http://") or value.startswith("webdav+https://"))
-        and "HTTP_BASIC_USER" in environ
-        and "HTTP_BASIC_PASSWORD" in environ
-    ):
-        return UPath(
-            value,
-            auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
-        )
+        return UPath(value, headers={"Authentication": f"Basic {basic_auth.decode()}"})
     if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
         return UPath(
             value,

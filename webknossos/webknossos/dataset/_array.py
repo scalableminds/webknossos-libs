@@ -9,6 +9,7 @@ from typing import Any, Dict, Iterator, List, Optional, Type, Union
 import numpy as np
 import tensorstore
 import wkw
+from upath import UPath
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 from ..utils import is_fs_path, warn_deprecated
@@ -257,9 +258,18 @@ class TensorStoreArray(BaseArray):
         self._cached_array = _cached_array
 
     @staticmethod
-    def _make_kvstore(path: Path) -> Union[str, Dict[str, str]]:
+    def _make_kvstore(path: Path) -> Union[str, Dict[str, Union[str, List[str]]]]:
         if is_fs_path(path):
             return {"driver": "file", "path": str(path)}
+        elif isinstance(path, UPath) and path.protocol in ("http", "https"):
+            return {
+                "driver": "http",
+                "base_url": str(path),
+                "headers": [
+                    f"{key}: {value}"
+                    for key, value in path.storage_options.get("headers", {}).items()
+                ],
+            }
         else:
             return str(path)
 
@@ -473,7 +483,7 @@ class Zarr3Array(TensorStoreArray):
                                 "codecs": [
                                     {
                                         "name": "transpose",
-                                        "configuration": {"order": [3, 2, 1, 0]},
+                                        "configuration": {"order": "F"},
                                     },
                                     {
                                         "name": "bytes",
@@ -493,7 +503,7 @@ class Zarr3Array(TensorStoreArray):
                                 else [
                                     {
                                         "name": "transpose",
-                                        "configuration": {"order": [3, 2, 1, 0]},
+                                        "configuration": {"order": "F"},
                                     },
                                     {
                                         "name": "bytes",

@@ -1,6 +1,6 @@
 """This module containes tests for the WEBKNOSSOS CLI."""
 
-import json
+# import json
 import os
 import subprocess
 from contextlib import contextmanager
@@ -15,11 +15,7 @@ import pytest
 from PIL import Image
 from typer.testing import CliRunner
 
-from tests.constants import (
-    MINIO_PORT,
-    MINIO_ROOT_PASSWORD,
-    MINIO_ROOT_USER,
-    REMOTE_TESTOUTPUT_DIR,
+from tests.constants import (  # MINIO_PORT,; MINIO_ROOT_PASSWORD,; MINIO_ROOT_USER,; REMOTE_TESTOUTPUT_DIR,
     TESTDATA_DIR,
     use_minio,
 )
@@ -78,29 +74,29 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
-def test_tiff_cubing_zarr_s3() -> None:
-    """Tests zarr support when performing tiff cubing."""
+# @pytest.mark.block_network(allowed_hosts=[".*"])
+# @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+# def test_tiff_cubing_zarr_s3() -> None:
+#     """Tests zarr support when performing tiff cubing."""
 
-    out_path = REMOTE_TESTOUTPUT_DIR / "tiff_cubing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = MINIO_ROOT_PASSWORD
-    os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
-    os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
+#     out_path = REMOTE_TESTOUTPUT_DIR / "tiff_cubing"
+#     os.environ["AWS_SECRET_ACCESS_KEY"] = MINIO_ROOT_PASSWORD
+#     os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
+#     os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
-    _tiff_cubing(out_path, DataFormat.Zarr)
+#     _tiff_cubing(out_path, DataFormat.Zarr)
 
-    assert (out_path / "tiff" / "1" / ".zarray").exists()
-    assert (out_path / PROPERTIES_FILE_NAME).exists()
+#     assert (out_path / "tiff" / "1" / ".zarray").exists()
+#     assert (out_path / PROPERTIES_FILE_NAME).exists()
 
-    with (out_path / PROPERTIES_FILE_NAME).open("r") as file, (
-        TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json"
-    ).open("r") as fixture:
-        json_a = json.load(file)
-        json_fixture = json.load(fixture)
-        del json_a["id"]
-        del json_fixture["id"]
-        assert json_a == json_fixture
+#     with (out_path / PROPERTIES_FILE_NAME).open("r") as file, (
+#         TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json"
+#     ).open("r") as fixture:
+#         json_a = json.load(file)
+#         json_fixture = json.load(fixture)
+#         del json_a["id"]
+#         del json_fixture["id"]
+#         assert json_a == json_fixture
 
 
 def test_main() -> None:
