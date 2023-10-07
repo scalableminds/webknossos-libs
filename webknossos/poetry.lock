@@ -3037,20 +3037,21 @@ files = [
 
 [[package]]
 name = "universal-pathlib"
-version = "0.0.23"
-description = "Pathlib API extended to use fsspec backends"
+version = "0.1.3"
+description = "pathlib api extended to use fsspec backends"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "universal_pathlib-0.0.23-py3-none-any.whl", hash = "sha256:76cbc91d66ddb2c0c0c939d147bcd8fa2c79882b5451d2a59009811fc4f80bd3"},
-    {file = "universal_pathlib-0.0.23.tar.gz", hash = "sha256:bd7ed0ad5c6a31b3bf0835b9e7526ed0974ec3a49e4a6a02b1f4058ce63ec79c"},
+    {file = "universal_pathlib-0.1.3-py3-none-any.whl", hash = "sha256:9c6a78cd75dad2988eb1d5db52f4e85a8a3092cbe5eb2cf18882c1ef06470d43"},
+    {file = "universal_pathlib-0.1.3.tar.gz", hash = "sha256:1a052ab5e0517301df66be6517e9fe63cd9fc00813e5ce71a73701441ac2b5c8"},
 ]
 
 [package.dependencies]
 fsspec = "*"
 
 [package.extras]
-test = ["adlfs", "aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs", "webdav4[fsspec]"]
+dev = ["adlfs", "aiohttp", "cheroot", "gcsfs", "hadoop-test-cluster", "moto[s3,server]", "mypy (==1.3.0)", "pyarrow", "pydantic", "pydantic-settings", "pylint (==2.17.4)", "pytest (==7.3.2)", "pytest-cov (==4.1.0)", "pytest-mock (==3.11.1)", "pytest-sugar (==0.9.6)", "requests", "s3fs", "webdav4[fsspec]", "wsgidav"]
+tests = ["mypy (==1.3.0)", "pylint (==2.17.4)", "pytest (==7.3.2)", "pytest-cov (==4.1.0)", "pytest-mock (==3.11.1)", "pytest-sugar (==0.9.6)"]
 
 [[package]]
 name = "urllib3"
@@ -3323,13 +3324,13 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 
 [[package]]
 name = "zarrita"
-version = "0.1.0a18"
+version = "0.1.0a21"
 description = ""
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "zarrita-0.1.0a18-py3-none-any.whl", hash = "sha256:0a12a7f64680d0fbb05e79c5f94a0f80a2f48fa714ebcbb275b977ee30afccc9"},
-    {file = "zarrita-0.1.0a18.tar.gz", hash = "sha256:083e0e197fe51bee4477867452d2781f376249ca8423b1f9c01edfc49b46f101"},
+    {file = "zarrita-0.1.0a21-py3-none-any.whl", hash = "sha256:2802c5053aa7bc4dd7a2dd8cabbc97ef329174c45ceb5705cdd73a43735ee52b"},
+    {file = "zarrita-0.1.0a21.tar.gz", hash = "sha256:f3916ba46677bf0eb11b2012f0854ee9fe3ad9e0cbbb1514fe60183410171e2e"},
 ]
 
 [package.dependencies]
@@ -3425,4 +3426,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "ba688a2cbb67f84d8455b56deeb90426e1107aa8b1d9546623ea8322ce3821df"
+content-hash = "62cf8f57c12898c1fb91e23fafc022426e6f7040c9c7bf1fd9ffbf57ba4694cd"
