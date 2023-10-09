@@ -3324,13 +3324,13 @@ jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 
 [[package]]
 name = "zarrita"
-version = "0.1.0a21"
+version = "0.2.0"
 description = ""
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "zarrita-0.1.0a21-py3-none-any.whl", hash = "sha256:2802c5053aa7bc4dd7a2dd8cabbc97ef329174c45ceb5705cdd73a43735ee52b"},
-    {file = "zarrita-0.1.0a21.tar.gz", hash = "sha256:f3916ba46677bf0eb11b2012f0854ee9fe3ad9e0cbbb1514fe60183410171e2e"},
+    {file = "zarrita-0.2.0-py3-none-any.whl", hash = "sha256:befe5e24b3ffbf70079d708701e4b68fee55b0bb794cc8cf671cebb3d016fecf"},
+    {file = "zarrita-0.2.0.tar.gz", hash = "sha256:76de7bead9f30c3d2b19dea716e93ca50d961e02d4d6c1a8235466d877b40df4"},
 ]
 
 [package.dependencies]
@@ -3416,7 +3416,7 @@ cffi = {version = ">=1.11", markers = "platform_python_implementation == \"PyPy\
 cffi = ["cffi (>=1.11)"]
 
 [extras]
-all = ["JPype1", "imagecodecs", "pims", "pylibCZIrw", "tifffile", "zarrita"]
+all = ["JPype1", "imagecodecs", "pims", "pylibCZIrw", "tifffile"]
 bioformats = ["JPype1", "pims"]
 czi = ["pims", "pylibCZIrw"]
 imagecodecs = ["imagecodecs", "pims"]
@@ -3426,4 +3426,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "62cf8f57c12898c1fb91e23fafc022426e6f7040c9c7bf1fd9ffbf57ba4694cd"
+content-hash = "a65f4fe0c5bda5017bd4f82d7d5f4f61aeb9e54880be3430eb3845e288245d1e"
