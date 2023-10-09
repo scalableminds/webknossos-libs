@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- The `WK_USE_ZARRITA` env variable is no longer required. [`zarrita`](https://github.com/scalableminds/zarrita) is always installed and now the default for Zarr and Zarr3 datasets. [#950](https://github.com/scalableminds/webknossos-libs/issues/950)
 
 ### Fixed
 
