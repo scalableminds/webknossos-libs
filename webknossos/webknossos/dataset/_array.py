@@ -140,7 +140,7 @@ class BaseArray(ABC):
         if data_format == DataFormat.Zarr3:
             return ZarritaArray
         if data_format == DataFormat.Zarr:
-            return ZarrArray
+            return ZarritaArray
         raise ValueError(f"Array format `{data_format}` is invalid.")
 
 
