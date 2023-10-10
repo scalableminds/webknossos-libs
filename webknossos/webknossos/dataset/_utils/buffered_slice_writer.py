@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING, Generator, List, Optional, Type
 import numpy as np
 import psutil
 
-from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ...geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
-    from webknossos.dataset import View
+    from ..view import View
 
 
 def log_memory_consumption(additional_output: str = "") -> None:

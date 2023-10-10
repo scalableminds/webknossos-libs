@@ -3,7 +3,6 @@ import warnings
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
-from enum import Enum
 from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Type, Union
@@ -17,6 +16,7 @@ from zarr.storage import FSStore
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 from ..utils import warn_deprecated
+from .data_format import DataFormat
 
 if TYPE_CHECKING:
     import zarrita
@@ -51,15 +51,6 @@ def _blosc_disable_threading() -> Iterator[None]:
 
 class ArrayException(Exception):
     pass
-
-
-class DataFormat(Enum):
-    WKW = "wkw"
-    Zarr = "zarr"
-    Zarr3 = "zarr3"
-
-    def __str__(self) -> str:
-        return self.value
 
 
 @dataclass

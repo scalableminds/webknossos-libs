@@ -35,14 +35,20 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset.defaults import (
+from ..geometry.vec3_int import Vec3Int, Vec3IntLike
+from ._array import ArrayException, ArrayInfo, BaseArray
+from .defaults import (
+    DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
+    DEFAULT_DATA_FORMAT,
+    PROPERTIES_FILE_NAME,
+    ZARR_JSON_FILE_NAME,
+    ZATTRS_FILE_NAME,
+    ZGROUP_FILE_NAME,
 )
-
-from ..geometry.vec3_int import Vec3Int, Vec3IntLike
-from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
+from .ome_metadata import write_ome_0_4_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
@@ -67,6 +73,7 @@ from ..utils import (
 )
 from ._utils.from_images import guess_if_segmentation_path
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
+from .data_format import DataFormat
 from .layer import (
     Layer,
     SegmentationLayer,
@@ -90,11 +97,6 @@ from .view import _BLOCK_ALIGNMENT_WARNING
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_BIT_DEPTH = 8
-DEFAULT_DATA_FORMAT = DataFormat.WKW
-PROPERTIES_FILE_NAME = "datasource-properties.json"
-ZGROUP_FILE_NAME = ".zgroup"
-ZATTRS_FILE_NAME = ".zattrs"
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
@@ -382,8 +384,8 @@ class Dataset:
         * organization_id,
         * sharing_token.
         """
-        from webknossos.client._resolve_short_link import resolve_short_link
-        from webknossos.client.context import _get_context, webknossos_context
+        from ..client._resolve_short_link import resolve_short_link
+        from ..client.context import _get_context, webknossos_context
 
         caller = inspect.stack()[1].function
 
@@ -454,8 +456,8 @@ class Dataset:
           and allows to specifiy in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         """
-        from webknossos.client._generated.api.default import dataset_info
-        from webknossos.client.context import _get_context
+        from ..client._generated.api.default import dataset_info
+        from ..client.context import _get_context
 
         (
             context_manager,
@@ -521,7 +523,7 @@ class Dataset:
           if the `path` exists.
         """
 
-        from webknossos.client._download_dataset import download_dataset
+        from ..client._download_dataset import download_dataset
 
         (
             context_manager,
@@ -729,7 +731,7 @@ class Dataset:
         Returns the `RemoteDataset` upon successful upload.
         """
 
-        from webknossos.client._upload_dataset import LayerToLink, upload_dataset
+        from ..client._upload_dataset import LayerToLink, upload_dataset
 
         converted_layers_to_link = (
             None
@@ -1564,7 +1566,12 @@ class Dataset:
                 layer.path,
                 new_layer.path,
                 ignore=[str(mag) for mag in layer.mags]
-                + [PROPERTIES_FILE_NAME, ZGROUP_FILE_NAME, ZATTRS_FILE_NAME],
+                + [
+                    PROPERTIES_FILE_NAME,
+                    ZGROUP_FILE_NAME,
+                    ZATTRS_FILE_NAME,
+                    ZARR_JSON_FILE_NAME,
+                ],
                 make_relative=make_relative,
             )
 
@@ -1681,63 +1688,16 @@ class Dataset:
 
         # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
         if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
-            zgroup_content = {"zarr_format": "2"}
             with (self.path / ZGROUP_FILE_NAME).open("w", encoding="utf-8") as outfile:
-                json.dump(zgroup_content, outfile, indent=4)
-            for layer in self.layers.values():
-                if layer.data_format == DataFormat.Zarr:
-                    with (layer.path / ZGROUP_FILE_NAME).open(
-                        "w", encoding="utf-8"
-                    ) as outfile:
-                        json.dump(zgroup_content, outfile, indent=4)
-                    with (layer.path / ZATTRS_FILE_NAME).open(
-                        "w", encoding="utf-8"
-                    ) as outfile:
-                        json.dump(
-                            {
-                                "multiscales": [
-                                    {
-                                        "version": "0.4",
-                                        "axes": [
-                                            {"name": "c", "type": "channel"},
-                                            {
-                                                "name": "x",
-                                                "type": "space",
-                                                "unit": "nanometer",
-                                            },
-                                            {
-                                                "name": "y",
-                                                "type": "space",
-                                                "unit": "nanometer",
-                                            },
-                                            {
-                                                "name": "z",
-                                                "type": "space",
-                                                "unit": "nanometer",
-                                            },
-                                        ],
-                                        "datasets": [
-                                            {
-                                                "path": mag.path.name,
-                                                "coordinateTransformations": [
-                                                    {
-                                                        "type": "scale",
-                                                        "scale": [1.0]
-                                                        + (
-                                                            np.array(self.voxel_size)
-                                                            * mag.mag.to_np()
-                                                        ).tolist(),
-                                                    }
-                                                ],
-                                            }
-                                            for mag in layer.mags.values()
-                                        ],
-                                    }
-                                ]
-                            },
-                            outfile,
-                            indent=4,
-                        )
+                json.dump({"zarr_format": "2"}, outfile, indent=4)
+        if any(layer.data_format == DataFormat.Zarr3 for layer in self.layers.values()):
+            with (self.path / ZARR_JSON_FILE_NAME).open(
+                "w", encoding="utf-8"
+            ) as outfile:
+                json.dump({"zarr_format": 3, "node_type": "group"}, outfile, indent=4)
+
+        for layer in self.layers.values():
+            write_ome_0_4_metadata(self, layer)
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
         if properties.category == COLOR_CATEGORY:
@@ -1816,15 +1776,15 @@ class RemoteDataset(Dataset):
 
     @property
     def url(self) -> str:
-        from webknossos.client.context import _get_context
+        from ..client.context import _get_context
 
         with self._context:
             wk_url = _get_context().url
         return f"{wk_url}/datasets/{self._organization_id}/{self._dataset_name}"
 
     def _get_dataset_info(self) -> "DatasetInfoResponse200":
-        from webknossos.client._generated.api.default import dataset_info
-        from webknossos.client.context import _get_generated_client
+        from ..client._generated.api.default import dataset_info
+        from ..client.context import _get_generated_client
 
         with self._context:
             dataset_info_response = dataset_info.sync_detailed(
@@ -1847,11 +1807,11 @@ class RemoteDataset(Dataset):
         folder_id: str = _UNSET,
         tags: List[str] = _UNSET,
     ) -> None:
-        from webknossos.client._generated.api.default import dataset_update
-        from webknossos.client._generated.models.dataset_update_json_body import (
+        from ..client._generated.api.default import dataset_update
+        from ..client._generated.models.dataset_update_json_body import (
             DatasetUpdateJsonBody,
         )
-        from webknossos.client.context import _get_generated_client
+        from ..client.context import _get_generated_client
 
         # Atm, the wk backend needs to get previous parameters passed
         # (this is a race-condition with parallel updates).
@@ -1923,8 +1883,8 @@ class RemoteDataset(Dataset):
 
     @property
     def sharing_token(self) -> str:
-        from webknossos.client._generated.api.default import dataset_sharing_token
-        from webknossos.client.context import _get_generated_client
+        from ..client._generated.api.default import dataset_sharing_token
+        from ..client.context import _get_generated_client
 
         with self._context:
             dataset_sharing_token_response = dataset_sharing_token.sync_detailed(
@@ -1940,7 +1900,7 @@ class RemoteDataset(Dataset):
 
     @property
     def allowed_teams(self) -> Tuple["Team", ...]:
-        from webknossos.administration.user import Team
+        from ..administration.user import Team
 
         return tuple(
             Team(id=i.id, name=i.name, organization_id=i.organization)
@@ -1950,9 +1910,9 @@ class RemoteDataset(Dataset):
     @allowed_teams.setter
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
         """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
-        from webknossos.administration.user import Team
-        from webknossos.client._generated.api.default import dataset_update_teams
-        from webknossos.client.context import _get_generated_client
+        from ..administration.user import Team
+        from ..client._generated.api.default import dataset_update_teams
+        from ..client.context import _get_generated_client
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
 

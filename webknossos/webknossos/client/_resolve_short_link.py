@@ -2,8 +2,8 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from webknossos.client._generated.api.default import short_link_by_key
-from webknossos.client.context import _get_generated_client, webknossos_context
+from ._generated.api.default import short_link_by_key
+from .context import _get_generated_client, webknossos_context
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from webknossos.geometry import BoundingBox, Vec3Int
-
+from ..geometry import BoundingBox, Vec3Int
 from .view import View
 
 

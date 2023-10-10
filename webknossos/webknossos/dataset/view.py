@@ -703,7 +703,7 @@ class View:
                 writer.send(data_slice)
         ```
         """
-        from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+        from ._utils.buffered_slice_writer import BufferedSliceWriter
 
         assert (
             not self._read_only
@@ -756,7 +756,7 @@ class View:
                 ...
         ```
         """
-        from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
+        from ._utils.buffered_slice_reader import BufferedSliceReader
 
         return BufferedSliceReader(
             view=self,

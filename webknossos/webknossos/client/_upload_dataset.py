@@ -9,19 +9,12 @@ from uuid import uuid4
 
 import httpx
 
-from webknossos.client._generated.api.datastore import (
-    dataset_finish_upload,
-    dataset_reserve_upload,
-)
-from webknossos.client._generated.api.default import (
-    datastore_list,
-    new_dataset_name_is_valid,
-)
-from webknossos.client._resumable import Resumable
-from webknossos.client.context import _get_context, _WebknossosContext
-from webknossos.dataset import Dataset, Layer
-from webknossos.dataset.dataset import RemoteDataset
-from webknossos.utils import get_rich_progress
+from ..dataset import Dataset, Layer, RemoteDataset
+from ..utils import get_rich_progress
+from ._generated.api.datastore import dataset_finish_upload, dataset_reserve_upload
+from ._generated.api.default import datastore_list, new_dataset_name_is_valid
+from ._resumable import Resumable
+from .context import _get_context, _WebknossosContext
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 5
@@ -88,7 +81,7 @@ def upload_dataset(
     layers_to_link: Optional[List[LayerToLink]] = None,
     jobs: Optional[int] = None,
 ) -> str:
-    from webknossos.client._generated.models import (
+    from ._generated.models import (
         DatasetFinishUploadJsonBody,
         DatasetReserveUploadJsonBody,
     )

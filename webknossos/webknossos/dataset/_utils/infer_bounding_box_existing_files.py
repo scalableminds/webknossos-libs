@@ -1,7 +1,7 @@
 from functools import reduce
 
-from webknossos.dataset.mag_view import MagView
-from webknossos.geometry import BoundingBox
+from ...geometry import BoundingBox
+from ..mag_view import MagView
 
 
 def infer_bounding_box_existing_files(mag_view: MagView) -> BoundingBox:

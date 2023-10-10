@@ -26,7 +26,7 @@ from numpy.typing import DTypeLike
 
 # pylint: disable=unused-import
 try:
-    from webknossos.dataset._utils.pims_czi_reader import PimsCziReader
+    from .pims_czi_reader import PimsCziReader
 except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
 
@@ -41,8 +41,8 @@ except ImportError:
     pass
 # pylint: enable=unused-import
 
-from webknossos.dataset.mag_view import MagView
-from webknossos.geometry.vec3_int import Vec3Int
+from ...geometry.vec3_int import Vec3Int
+from ..mag_view import MagView
 
 try:
     import pims

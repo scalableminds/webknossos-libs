@@ -1,3 +1,3 @@
-from webknossos.administration.project import Project
-from webknossos.administration.task import Task, TaskType
-from webknossos.administration.user import Team, User
+from .project import Project
+from .task import Task, TaskType
+from .user import Team, User
