@@ -48,13 +48,14 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
-from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
-from webknossos.client._generated.api.default import dataset_info
-from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
-from webknossos.dataset.dataset import RemoteDataset
-from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.skeleton import Skeleton
-from webknossos.utils import time_since_epoch_in_ms, warn_deprecated
+
+from ..client._generated.api.default import dataset_info
+from ..dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
+from ..dataset.dataset import RemoteDataset
+from ..geometry import BoundingBox, Vec3Int
+from ..skeleton import Skeleton
+from ..utils import time_since_epoch_in_ms, warn_deprecated
+from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
@@ -270,9 +271,9 @@ class Annotation:
           They can still be streamed from WEBKNOSSOS using `annotation.get_remote_annotation_dataset()`.
         * `_return_context` should not be set.
         """
-        from webknossos.client._generated.api.default import annotation_download
-        from webknossos.client._resolve_short_link import resolve_short_link
-        from webknossos.client.context import (
+        from ..client._generated.api.default import annotation_download
+        from ..client._resolve_short_link import resolve_short_link
+        from ..client.context import (
             _get_context,
             _get_generated_client,
             webknossos_context,
@@ -491,7 +492,7 @@ class Annotation:
 
     def upload(self) -> str:
         """Uploads the annotation to your current `webknossos_context`."""
-        from webknossos.client.context import _get_generated_client
+        from ..client.context import _get_generated_client
 
         client = _get_generated_client(enforce_auth=True)
         url = f"{client.base_url}/api/annotations/upload"
@@ -549,7 +550,7 @@ class Annotation:
         as the first volume editing action is done. Note that this behavior might change
         in the future.
         """
-        from webknossos.client.context import _get_context
+        from ..client.context import _get_context
 
         if self.annotation_id is None:
             raise ValueError(

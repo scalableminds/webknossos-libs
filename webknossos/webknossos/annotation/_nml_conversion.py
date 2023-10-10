@@ -7,15 +7,16 @@ import networkx as nx
 import numpy as np
 
 import webknossos._nml as wknml
-from webknossos.geometry import Vec3Int
+
+from ..geometry import Vec3Int
 
 if TYPE_CHECKING:
-    from webknossos.annotation import Annotation
-    from webknossos.skeleton import Group, Skeleton, Tree
+    from ..annotation import Annotation
+    from ..skeleton import Group, Skeleton, Tree
 
 
 def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
-    from webknossos.skeleton import Skeleton
+    from ..skeleton import Skeleton
 
     skeleton = Skeleton(
         dataset_name=nml.parameters.name,

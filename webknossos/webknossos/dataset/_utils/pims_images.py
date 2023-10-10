@@ -31,12 +31,17 @@ except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
 
 try:
-    import webknossos.dataset._utils.pims_dm_readers
+    from .pims_dm_readers import (  # pylint: disable=unused-import
+        PimsDm3Reader,
+        PimsDm4Reader,
+    )
 except ImportError:
     pass
 
 try:
-    import webknossos.dataset._utils.pims_imagej_tiff_reader
+    from .pims_imagej_tiff_reader import (  # pylint: disable=unused-import
+        PimsImagejTiffReader,
+    )
 except ImportError:
     pass
 # pylint: enable=unused-import

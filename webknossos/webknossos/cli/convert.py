@@ -7,15 +7,15 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import DataFormat, Dataset
-from webknossos.cli._utils import (
+from ..dataset import DataFormat, Dataset
+from ..utils import get_executor_for_args
+from ._utils import (
     DistributionStrategy,
     LayerCategory,
     VoxelSize,
     parse_path,
     parse_voxel_size,
 )
-from webknossos.utils import get_executor_for_args
 
 
 def main(

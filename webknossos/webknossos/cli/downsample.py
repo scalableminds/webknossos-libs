@@ -7,9 +7,9 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import Dataset, SamplingModes
-from webknossos.cli._utils import DistributionStrategy, SamplingMode, parse_path
-from webknossos.utils import get_executor_for_args
+from ..dataset import Dataset, SamplingModes
+from ..utils import get_executor_for_args
+from ._utils import DistributionStrategy, SamplingMode, parse_path
 
 
 def main(

@@ -10,8 +10,11 @@ import typer
 from sklearn.preprocessing import LabelEncoder
 from typing_extensions import Annotated
 
-from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3Int
-from webknossos.cli._utils import (
+from ..dataset import DataFormat, Dataset, LayerCategoryType
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..geometry import BoundingBox, Vec3Int
+from ..utils import time_start, time_stop
+from ._utils import (
     Vec2Int,
     VoxelSize,
     pad_or_crop_to_size_and_topleft,
@@ -20,8 +23,6 @@ from webknossos.cli._utils import (
     parse_vec3int,
     parse_voxel_size,
 )
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
-from webknossos.utils import time_start, time_stop
 
 
 def to_target_datatype(

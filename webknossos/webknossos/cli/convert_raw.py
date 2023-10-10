@@ -11,8 +11,16 @@ import numpy as np
 import typer
 from typing_extensions import Annotated
 
-from webknossos import BoundingBox, DataFormat, Dataset, Mag, MagView, Vec3Int
-from webknossos.cli._utils import (
+from ..dataset import DataFormat, Dataset, MagView, SamplingModes
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..geometry import BoundingBox, Mag, Vec3Int
+from ..utils import (
+    get_executor_for_args,
+    time_start,
+    time_stop,
+    wait_and_ensure_success,
+)
+from ._utils import (
     DistributionStrategy,
     Order,
     SamplingMode,
@@ -21,14 +29,6 @@ from webknossos.cli._utils import (
     parse_path,
     parse_vec3int,
     parse_voxel_size,
-)
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
-from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.utils import (
-    get_executor_for_args,
-    time_start,
-    time_stop,
-    wait_and_ensure_success,
 )
 
 logger = logging.getLogger(__name__)

@@ -5,8 +5,11 @@ from typing import Any, List, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import Annotation, BoundingBox, Dataset, Mag, webknossos_context
-from webknossos.cli._utils import parse_bbox, parse_mag, parse_path
+from ..annotation import Annotation
+from ..client import webknossos_context
+from ..dataset import Dataset
+from ..geometry import BoundingBox, Mag
+from ._utils import parse_bbox, parse_mag, parse_path
 
 
 def main(
