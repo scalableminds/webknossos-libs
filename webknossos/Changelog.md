@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Adds support for Zarr3-based volume annotations as introduced in [webknossos#7288](https://github.com/scalableminds/webknossos/pull/7288). [#952](https://github.com/scalableminds/webknossos-libs/pull/952)
 
 ### Changed
 - The `WK_USE_ZARRITA` env variable is no longer required. [`zarrita`](https://github.com/scalableminds/zarrita) is always installed and now the default for Zarr and Zarr3 datasets. [#950](https://github.com/scalableminds/webknossos-libs/issues/950)
