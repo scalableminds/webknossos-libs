@@ -1,4 +1,4 @@
-from typing import List, Literal, NamedTuple, Optional
+from typing import List, NamedTuple, Optional
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter

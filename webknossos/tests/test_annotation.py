@@ -1,9 +1,11 @@
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import webknossos as wk
+from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -11,7 +13,7 @@ from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 pytestmark = [pytest.mark.with_vcr]
 
 
-def test_annotation_from_zip_file() -> None:
+def test_annotation_from_wkw_zip_file() -> None:
     annotation = wk.Annotation.load(
         TESTDATA_DIR
         / "annotations"
@@ -55,6 +57,24 @@ def test_annotation_from_zip_file() -> None:
         )
 
         assert voxel_id == 2504698
+
+
+def test_annotation_from_zarr3_zip_file() -> None:
+    annotation = wk.Annotation.load(
+        TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    )
+
+    with annotation.temporary_volume_layer_copy() as volume_layer:
+        assert volume_layer.data_format == DataFormat.Zarr3
+        assert volume_layer.bounding_box == BoundingBox(
+            (3072, 3072, 512), (1024, 1024, 1024)
+        )
+        input_annotation_mag = volume_layer.get_mag("2-2-1")
+        voxel_id = input_annotation_mag.read(
+            absolute_offset=Vec3Int(3584, 3584, 1024), size=Vec3Int.full(1)
+        )
+
+        assert np.array_equiv(voxel_id, 2504698)
 
 
 def test_annotation_from_nml_file() -> None:
