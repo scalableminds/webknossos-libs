@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.0...HEAD)
 
 ### Breaking Changes
-- `wait_and_ensure_success` from `webknossos.utils` now requires an `executor` argument. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Added
 
 ### Changed
-- Updates various dependencies. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Fixed
+
+
+## [0.14.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.0) - 2023-10-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.7...v0.14.0)
+
+### Breaking Changes
+- `wait_and_ensure_success` from `webknossos.utils` now requires an `executor` argument. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
+
+### Changed
+- Updates various dependencies. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 
 ## [0.13.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.7) - 2023-10-07
