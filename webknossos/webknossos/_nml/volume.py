@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Optional
+from typing import List, Literal, NamedTuple, Optional
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -17,6 +17,8 @@ class Volume(NamedTuple):
     # older wk versions did not serialize the name which is why the name is optional:
     name: Optional[str]
     segments: List[Segment]
+    format: Optional[str]
+    largest_segment_id: Optional[int]
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag(
@@ -27,6 +29,10 @@ class Volume(NamedTuple):
                     "location": self.location,
                     "fallbackLayer": self.fallback_layer,
                     "name": self.name,
+                    "format": self.format,
+                    "largestSegmentId": str(self.largest_segment_id)
+                    if self.largest_segment_id
+                    else None,
                 }
             ),
         )
@@ -39,10 +45,15 @@ class Volume(NamedTuple):
 
     @classmethod
     def _parse(cls, nml_volume: Element) -> "Volume":
+        largest_segment_id_str = nml_volume.get("largestSegmentId", default=None)
         return cls(
             id=int(enforce_not_null(nml_volume.get("id"))),
             location=nml_volume.get("location"),
             fallback_layer=nml_volume.get("fallbackLayer", default=None),
             name=nml_volume.get("name", default=None),
+            format=nml_volume.get("format", default=None),
             segments=[],
+            largest_segment_id=None
+            if largest_segment_id_str is None
+            else int(largest_segment_id_str),
         )

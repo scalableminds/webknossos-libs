@@ -766,6 +766,7 @@ class Dataset:
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
+        bounding_box: Optional[BoundingBox] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -825,7 +826,7 @@ class Dataset:
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=BoundingBox((0, 0, 0), (0, 0, 0)),
+            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
             element_class=_dtype_per_channel_to_element_class(
                 dtype_per_channel, num_channels
             ),
@@ -954,6 +955,18 @@ class Dataset:
         self._export_as_json()
         return self._layers[layer_name]
 
+    def _add_existing_layer(self, layer_properties: LayerProperties) -> Layer:
+        self._ensure_writable()
+
+        assert layer_properties.name not in self.layers
+
+        self._properties.data_layers.append(layer_properties)
+        layer = self._initialize_layer_from_properties(layer_properties)
+        self.layers[layer.name] = layer
+
+        self._export_as_json()
+        return self.layers[layer.name]
+
     def add_layer_for_existing_files(
         self,
         layer_name: str,
@@ -967,18 +980,30 @@ class Dataset:
         assert (
             array_info is not None
         ), f"Could not find any valid mags in {self.path /layer_name}. Cannot add layer."
+
+        num_channels = kwargs.pop("num_channels", array_info.num_channels)
+        dtype_per_channel = kwargs.pop("dtype_per_channel", array_info.voxel_type)
+        data_format = kwargs.pop("data_format", array_info.data_format)
+
         layer = self.add_layer(
             layer_name,
             category=category,
-            num_channels=array_info.num_channels,
-            dtype_per_channel=array_info.voxel_type,
-            data_format=array_info.data_format,
+            num_channels=num_channels,
+            dtype_per_channel=dtype_per_channel,
+            data_format=data_format,
             **kwargs,
         )
         for mag_dir in layer.path.iterdir():
+            try:
+                Mag(mag_dir.name)  # test if folder name is a valid mag
+            except ValueError:
+                continue
             layer.add_mag_for_existing_files(mag_dir.name)
         finest_mag_view = layer.mags[min(layer.mags)]
-        layer.bounding_box = infer_bounding_box_existing_files(finest_mag_view)
+        if "bounding_box" not in kwargs:
+            layer.bounding_box = infer_bounding_box_existing_files(finest_mag_view)
+        else:
+            layer.bounding_box = kwargs["bounding_box"]
         return layer
 
     def add_layer_from_images(
