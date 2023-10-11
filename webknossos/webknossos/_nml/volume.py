@@ -17,8 +17,8 @@ class Volume(NamedTuple):
     # older wk versions did not serialize the name which is why the name is optional:
     name: Optional[str]
     segments: List[Segment]
-    format: Optional[str]
-    largest_segment_id: Optional[int]
+    format: Optional[str] = None
+    largest_segment_id: Optional[int] = None
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag(
