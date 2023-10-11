@@ -4,12 +4,11 @@ import re
 import sys
 from concurrent.futures import Future
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 from uuid import uuid4
 
 import kubernetes
 import kubernetes.client.models as kubernetes_models
-from typing_extensions import Literal
 
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 

@@ -370,7 +370,9 @@ class MagView(View):
                     job_args.append((source_view, target_view))
 
             wait_and_ensure_success(
-                executor.map_to_futures(_compress_cube_job, job_args), "Compressing"
+                executor.map_to_futures(_compress_cube_job, job_args),
+                executor=executor,
+                progress_desc="Compressing",
             )
 
         if target_path is None:

@@ -1259,6 +1259,7 @@ class Dataset:
                 with get_executor_for_args(None, executor) as executor:
                     shapes_and_max_ids = wait_and_ensure_success(
                         executor.map_to_futures(func_per_chunk, args),
+                        executor=executor,
                         progress_desc="Creating layer from images",
                     )
                 shapes, max_ids = zip(*shapes_and_max_ids)

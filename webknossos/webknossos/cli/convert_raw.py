@@ -111,7 +111,8 @@ def convert_raw(
                     flip_axes=flip_axes,
                 ),
                 wk_layer.bounding_box.chunk(chunk_shape=chunk_shape * chunks_per_shard),
-            )
+            ),
+            executor=executor,
         )
 
     time_stop(f"Conversion of {source_raw_path}")
