@@ -4,9 +4,7 @@ import logging
 import os
 import re
 from concurrent.futures import Future
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-from typing_extensions import Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from cluster_tools._utils.call import call, chcall
 from cluster_tools._utils.string_ import random_string

@@ -16,7 +16,7 @@ def main() -> None:
 
     zarr_array = mag_view.get_zarr_array()
     dask_array = da.from_array(zarr_array, chunks=(1, 256, 256, 256))[
-        (0,) + mag_view.bounding_box.in_mag(MAG).to_slices()
+        (slice(0, 1),) + mag_view.bounding_box.in_mag(MAG).to_slices()
     ]
 
     mean_value = dask_array.mean().compute()

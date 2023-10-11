@@ -1,6 +1,4 @@
-from typing import Tuple, Type
-
-from typing_extensions import Literal
+from typing import Literal, Tuple, Type
 
 import cluster_tools
 
