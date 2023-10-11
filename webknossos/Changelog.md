@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Breaking Changes
 - `wait_and_ensure_success` from `webknossos.utils` now requires an `executor` argument. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
+- Please use `Executor.as_completed` instead of `concurrent.futures.as_completed` because the latter will not work for `DaskExecutor` futures. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Added
 
