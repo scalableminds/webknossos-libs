@@ -13,7 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.6...HEAD)
 
 ### Breaking Changes
-- `wait_and_ensure_success` from `webknossos.utils` now requires a `executor` argument. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
+- `wait_and_ensure_success` from `webknossos.utils` now requires an `executor` argument. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Added
 
