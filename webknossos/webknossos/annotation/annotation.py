@@ -801,7 +801,7 @@ class Annotation:
                 datasource_properties = dataset_converter.structure(
                     json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
                 )
-                assert len(datasource_properties.data_layers) == 1
+                assert len(datasource_properties.data_layers) == 1, f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
                 layer_properties = datasource_properties.data_layers[0]
                 internal_layer_name = layer_properties.name
                 layer_properties.name = layer_name
