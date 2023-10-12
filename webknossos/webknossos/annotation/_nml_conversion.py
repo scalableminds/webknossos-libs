@@ -184,6 +184,8 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
                     )
                     for segment_id, segment_info in volume.segments.items()
                 ],
+                format=str(volume.data_format),
+                largest_segment_id=volume.largest_segment_id,
             )
         )
 
