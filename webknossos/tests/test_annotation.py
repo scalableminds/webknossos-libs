@@ -71,10 +71,10 @@ def test_annotation_from_zarr3_zip_file() -> None:
         )
         input_annotation_mag = volume_layer.get_mag("2-2-1")
         voxel_id = input_annotation_mag.read(
-            absolute_offset=Vec3Int(3584, 3584, 1024), size=Vec3Int.full(1)
+            absolute_offset=Vec3Int(3630, 3502, 1024), size=Vec3Int(2, 2, 1)
         )
 
-        assert np.array_equiv(voxel_id, 2504698)
+        assert np.array_equiv(voxel_id, 1)
 
 
 def test_annotation_from_nml_file() -> None:
