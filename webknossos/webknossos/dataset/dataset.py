@@ -958,7 +958,7 @@ class Dataset:
     def _add_existing_layer(self, layer_properties: LayerProperties) -> Layer:
         self._ensure_writable()
 
-        assert layer_properties.name not in self.layers
+        assert layer_properties.name not in self.layers, f"Cannot import layer “{layer-properties.name}” into datasource, as a layer with this name is already present."
 
         self._properties.data_layers.append(layer_properties)
         layer = self._initialize_layer_from_properties(layer_properties)
