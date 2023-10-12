@@ -958,7 +958,10 @@ class Dataset:
     def _add_existing_layer(self, layer_properties: LayerProperties) -> Layer:
         self._ensure_writable()
 
-        assert layer_properties.name not in self.layers, f"Cannot import layer “{layer-properties.name}” into datasource, as a layer with this name is already present."
+        assert layer_properties.name not in self.layers, (
+            f"Cannot import layer `{layer_properties.name}` into dataset, "
+            + "as a layer with this name is already present."
+        )
 
         self._properties.data_layers.append(layer_properties)
         layer = self._initialize_layer_from_properties(layer_properties)
@@ -995,7 +998,9 @@ class Dataset:
         )
         for mag_dir in layer.path.iterdir():
             try:
-                Mag(mag_dir.name)  # test if folder name is a valid mag
+                # Tests if directory entry is a valid mag.
+                # Metadata files such as zarr.json are filtered out by this.
+                Mag(mag_dir.name)
             except ValueError:
                 continue
             layer.add_mag_for_existing_files(mag_dir.name)
