@@ -15,6 +15,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Tuple,
     Type,
@@ -23,7 +24,7 @@ from typing import (
     cast,
 )
 
-from typing_extensions import Literal, ParamSpec
+from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.file_wait_thread import FileWaitThread
@@ -139,6 +140,10 @@ class ClusterExecutor(futures.Executor):
             self.meta_data["logging_config"] = kwargs["logging_config"]
         if "logging_setup_fn" in kwargs:
             self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
+
+    @classmethod
+    def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
+        return futures.as_completed(futs)
 
     @classmethod
     @abstractmethod
@@ -593,10 +598,9 @@ class ClusterExecutor(futures.Executor):
                 pass
         self.files_to_clean_up = []
 
-    # TODO: args should be *iterables, this would be a breaking change!
     def map(  # type: ignore[override]
         self,
-        fn: Callable[_P, _T],
+        fn: Callable[[_S], _T],
         args: Iterable[Any],
         timeout: Optional[float] = None,
         chunksize: Optional[int] = None,

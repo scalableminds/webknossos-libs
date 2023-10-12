@@ -11,7 +11,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: https://webknossos.org/api/datasets/scalable_minds/l4_sample_dev
   response:
@@ -32,8 +32,6 @@ interactions:
       - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -89,7 +87,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev
 - request:
     body: null
     headers: {}
@@ -143,7 +140,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev
 - request:
     body: null
     headers: {}
@@ -197,7 +193,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev
 - request:
     body: null
     headers: {}
@@ -233,7 +228,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -269,7 +263,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/datasource-properties.json
 - request:
     body: null
     headers:
@@ -307,7 +300,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/datasource-properties.json
 - request:
     body: null
     headers:
@@ -345,7 +337,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -397,7 +388,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
 - request:
     body: null
     headers: {}
@@ -434,7 +424,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -470,7 +459,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -507,7 +495,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -544,7 +531,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -580,7 +566,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -617,7 +602,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -669,7 +653,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1
 - request:
     body: null
     headers: {}
@@ -721,7 +704,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -758,7 +740,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -794,7 +775,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -831,7 +811,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -868,7 +847,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -904,7 +882,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -941,7 +918,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -993,7 +969,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -1045,7 +1020,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -1082,7 +1056,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -1118,7 +1091,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -1155,7 +1127,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -1192,7 +1163,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -1228,7 +1198,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -1265,7 +1234,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -1317,7 +1285,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -1369,7 +1336,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1
 - request:
     body: null
     headers: {}
@@ -1406,7 +1372,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -1442,7 +1407,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1479,7 +1443,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -1516,7 +1479,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -1552,7 +1514,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1589,7 +1550,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -1621,6 +1581,8 @@ interactions:
       - '600'
       cache-control:
       - no-cache
+      connection:
+      - keep-alive
       content-length:
       - '1299'
       content-type:
@@ -1639,7 +1601,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1
 - request:
     body: null
     headers: {}
@@ -1691,7 +1652,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -1728,7 +1688,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -1764,7 +1723,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -1801,7 +1759,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -1838,7 +1795,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -1874,7 +1830,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -1911,7 +1866,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -1963,7 +1917,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -2015,7 +1968,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -2052,7 +2004,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -2088,7 +2039,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2125,7 +2075,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -2162,7 +2111,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -2198,7 +2146,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2235,7 +2182,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -2287,7 +2233,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -2324,7 +2269,41 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/zarr.json
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
 - request:
     body: null
     headers: {}
@@ -2361,43 +2340,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zattrs
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -3008,7 +2950,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/0.87.136.56
 - request:
     body: null
     headers: {}
@@ -3619,5 +3560,4 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/0.88.136.56
 version: 1

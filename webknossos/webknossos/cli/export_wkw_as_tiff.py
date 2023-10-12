@@ -166,6 +166,7 @@ def export_tiff_stack(
                 ),
                 view_chunks,
             ),
+            executor=executor,
             progress_desc="Exporting tiff files",
         )
 

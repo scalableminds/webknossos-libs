@@ -1,5 +1,8 @@
 from concurrent.futures import Future
-from typing import Any, Callable, TypeVar
+from functools import partial
+from typing import Callable, TypeVar
+
+from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
@@ -7,13 +10,19 @@ from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 # The module name includes a _-suffix to avoid name clashes with the standard library pickle module.
 
 _T = TypeVar("_T")
+_P = ParamSpec("_P")
+_S = TypeVar("_S")
 
 
-def _pickle_identity(obj: _T) -> _T:
+def _pickle_identity(obj: _S) -> _S:
     return pickling.loads(pickling.dumps(obj))
 
 
-def _pickle_identity_executor(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
+def _pickle_identity_executor(
+    fn: Callable[_P, _T],
+    *args: _P.args,
+    **kwargs: _P.kwargs,
+) -> _T:
     result = fn(*args, **kwargs)
     return _pickle_identity(result)
 
@@ -27,13 +36,16 @@ class PickleExecutor(MultiprocessingExecutor):
 
     def submit(  # type: ignore[override]
         self,
-        fn: Callable[..., _T],
-        *args: Any,
-        **kwargs: Any,
+        fn: Callable[_P, _T],
+        /,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
     ) -> "Future[_T]":
         (fn_pickled, args_pickled, kwargs_pickled) = _pickle_identity(
             (fn, args, kwargs)
         )
         return super().submit(
-            _pickle_identity_executor, fn_pickled, *args_pickled, **kwargs_pickled
+            partial(_pickle_identity_executor, fn_pickled),
+            *args_pickled,
+            **kwargs_pickled,
         )

@@ -897,4 +897,4 @@ def _parse_filename_from_header(value: str) -> str:
 
     m = Message()
     m["content-type"] = value
-    return dict(m.get_params()).get("filename", "")
+    return dict(m.get_params() or []).get("filename", "")

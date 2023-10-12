@@ -16,11 +16,12 @@ from typing import (
     List,
     Optional,
     Tuple,
+    TypedDict,
     TypeVar,
     cast,
 )
 
-from typing_extensions import ParamSpec, TypedDict
+from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.multiprocessing_logging_handler import (
@@ -85,6 +86,10 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         else:
             self._mp_logging_handler_pool = _MultiprocessingLoggingHandlerPool()
 
+    @classmethod
+    def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
+        return futures.as_completed(futs)
+
     def submit(  # type: ignore[override]
         self,
         __fn: Callable[_P, _T],
@@ -142,6 +147,17 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
         enrich_future_with_uncaught_warning(fut)
         return fut
+
+    def map(  # type: ignore[override]
+        self,
+        fn: Callable[[_S], _T],
+        iterables: Iterable[_S],
+        timeout: Optional[float] = None,
+        chunksize: Optional[int] = None,
+    ) -> Iterator[_T]:
+        if chunksize is None:
+            chunksize = 1
+        return super().map(fn, iterables, timeout=timeout, chunksize=chunksize)
 
     def _submit_via_io(
         self,
