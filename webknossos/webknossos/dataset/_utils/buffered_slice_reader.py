@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Generator, Optional, Type
 import numpy as np
 
 if TYPE_CHECKING:
-    from webknossos.dataset import View
+    from ..view import View
 
-from webknossos.geometry import BoundingBox, Vec3IntLike
-from webknossos.utils import get_chunks
+from ...geometry import BoundingBox, Vec3IntLike
+from ...utils import get_chunks
 
 
 class BufferedSliceReader:

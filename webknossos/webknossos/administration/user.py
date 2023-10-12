@@ -2,27 +2,27 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, cast
 
 import attr
 
-from webknossos.client._generated.api.default import (
+from ..client._generated.api.default import (
     current_user_info,
     team_list,
     user_info_by_id,
     user_list,
     user_logged_time,
 )
-from webknossos.client._generated.types import Unset
+from ..client._generated.types import Unset
 
 if TYPE_CHECKING:
-    from webknossos.client._generated.models.current_user_info_response_200 import (
+    from ..client._generated.models.current_user_info_response_200 import (
         CurrentUserInfoResponse200,
     )
-    from webknossos.client._generated.models.user_list_response_200_item import (
+    from ..client._generated.models.user_list_response_200_item import (
         UserListResponse200Item,
     )
-    from webknossos.client._generated.models.user_info_by_id_response_200 import (
+    from ..client._generated.models.user_info_by_id_response_200 import (
         UserInfoByIdResponse200,
     )
 
-from webknossos.client.context import _get_generated_client
+from ..client.context import _get_generated_client
 
 
 @attr.frozen

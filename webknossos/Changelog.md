@@ -10,99 +10,115 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
+- Adds support for Zarr3-based volume annotations as introduced in [webknossos#7288](https://github.com/scalableminds/webknossos/pull/7288). [#952](https://github.com/scalableminds/webknossos-libs/pull/952)
+
 ### Changed
+
+- The `WK_USE_ZARRITA` env variable is no longer required. [`zarrita`](https://github.com/scalableminds/zarrita) is always installed and now the default for Zarr and Zarr3 datasets. [#950](https://github.com/scalableminds/webknossos-libs/issues/950)
+- Updates various dependencies. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Fixed
 
-
 ## [0.14.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.0) - 2023-10-11
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.7...v0.14.0)
 
 ### Breaking Changes
+
 - `wait_and_ensure_success` from `webknossos.utils` now requires an `executor` argument. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
 ### Changed
+
 - Updates various dependencies. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
-
 ## [0.13.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.7) - 2023-10-07
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.6...v0.13.7)
 
 ### Fixed
+
 - Fixed a bug in writing compressed data. [#942](https://github.com/scalableminds/webknossos-libs/pull/942)
 
-
-
 ## [0.13.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.6) - 2023-08-17
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.5...v0.13.6)
 
-
 ## [0.13.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.5) - 2023-08-15
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.4...v0.13.5)
 
 ### Added
+
 - Added `task_type` property to `Task` class. [#938](https://github.com/scalableminds/webknossos-libs/pull/938)
 
 ### Fixed
+
 - Fixed a bug where parallel access to the properties json leads to an JsonDecodeError in the webknossos CLI [#919](https://github.com/scalableminds/webknossos-libs/issues/919)
 
-
-
 ## [0.13.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.4) - 2023-08-14
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.3...v0.13.4)
 
 ### Breaking Changes
+
 - Task/Project management: `open` tasks have been renamed to `pending`. Use `Task.status.pending_instance_count` instead of `Task.status.open_instance_count`. [#930](https://github.com/scalableminds/webknossos-libs/pull/930)
 
 ### Fixed
+
 - Fixed an infinite loop in the mag calculation during anisotropic downsampling in situations where the target mag cannot possibly be reached while adhering to the anisotropic downsampling scheme. [#934](https://github.com/scalableminds/webknossos-libs/pull/934)
 
-
-
 ## [0.13.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.3) - 2023-08-08
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.2...v0.13.3)
 
 ### Added
+
 - `View` has a `map_chunk` method now to run a function on each chunk and collect the results in a list.
 
 ### Changed
+
 - As WEBKNOSSOS does not require the largest segment id. It is also not mandatory in the WEBKNOSSOS libs anymore. [#917](https://github.com/scalableminds/webknossos-libs/issues/917) The method `SegmentationLayer.refresh_largest_segment_id` was added to lookup the highest value in segmentation data and set `largest_segment_id` accordingly.
 - The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
-
 ## [0.13.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.2) - 2023-07-26
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.1...v0.13.2)
 
 ### Changed
+
 - The `convert` command of the cli now has a `--category` flag, to select the LayerCategoryType.
 
-
 ## [0.13.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.1) - 2023-07-17
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.0...v0.13.1)
 
 ### Changed
+
 - The conversion folder structures to layer names does not allow slashes in the layer name anymore. [#918](https://github.com/scalableminds/webknossos-libs/issues/918)
 
 ### Fixed
+
 - Fixed a bug where compression in add_layer_from_images uses too much memory [#900](https://github.com/scalableminds/webknossos-libs/issues/900)
 
-
-
 ## [0.13.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.0) - 2023-06-21
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.6...v0.13.0)
 
 ### Added
+
 - Added `duration_in_seconds` and `modified` to `AnnotationInfo`. [#914](https://github.com/scalableminds/webknossos-libs/pull/914)
 - Added [`zarrita`](https://github.com/scalableminds/zarrita) storage backend for arrays. zarrita supports Zarr v2 and v3 including sharding. To activate zarrita, the environment variable `WK_USE_ZARRITA` must be set. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
 - Added a `Zarr3` data format which supports sharding. [#912](https://github.com/scalableminds/webknossos-libs/pull/912)
 
 ### Changed
+
 - Integrated the `wkcuber` CLI tool into `webknossos` package. [#903](https://github.com/scalableminds/webknossos-libs/pull/903)
   - To get an overview of all webknossos subcommands type `webknossos --help`. If the usage of a single subcommand is of interest type `webknossos <subcommand> --help`
   - These commands were changed:
@@ -123,62 +139,67 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `python -m wkcuber.recubing`
 
 ### Fixed
+
 - Fixed a bug where upsampling of a layer would fail, if the layer had a bounding box that doesn't align with the from_mag mag. [#915](https://github.com/scalableminds/webknossos-libs/pull/915)
 
-
-
 ## [0.12.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.6) - 2023-06-09
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.5...v0.12.6)
 
 ### Changed
+
 - Upgrades `wkw`. [#911](https://github.com/scalableminds/webknossos-libs/pull/911)
 
-
 ## [0.12.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.5) - 2023-06-01
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.4...v0.12.5)
 
 ### Added
+
 - Added support for Python 3.11. [#843](https://github.com/scalableminds/webknossos-libs/pull/843)
 
-
 ## [0.12.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.4) - 2023-05-25
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.3...v0.12.4)
 
 ### Added
+
 - `Group.add_tree` now also accepts a tree object as a first parameter (instead of only a string). [#891](https://github.com/scalableminds/webknossos-libs/pull/891)
 - `Group.remove_tree_by_id` was added. [#891](https://github.com/scalableminds/webknossos-libs/pull/891)
 
 ### Changed
+
 - Upgrades `black`, `mypy`, `pylint`, `pytest`. [#873](https://github.com/scalableminds/webknossos-libs/pull/873)
 
 ### Fixed
+
 - Fixed poetry build backend for new versions of Poetry. [#899](https://github.com/scalableminds/webknossos-libs/pull/899)
 - Added axis_order fields for Zarr data format. [#902](https://github.com/scalableminds/webknossos-libs/issues/902)
 
-
-
 ## [0.12.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.3) - 2023-02-22
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.2...v0.12.3)
 
 ### Added
+
 - Added support to import ImageJ Hyperstack tiff files via `Dataset.from_images` and `dataset.add_layer_from_images`. [#877](https://github.com/scalableminds/webknossos-libs/pull/877)
 
 ### Changed
+
 - `Dataset.from_images` and `dataset.add_layer_from_images` now automatically convert big endian dtypes to their little endian counterparts by default. [#877](https://github.com/scalableminds/webknossos-libs/pull/877)
 
 ### Fixed
+
 - Fixed reading czi files with non-zero axis offsets. [#876](https://github.com/scalableminds/webknossos-libs/pull/876)
 
-
-
 ## [0.12.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.2) - 2023-02-20
+
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.1...v0.12.2)
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.1...HEAD)
 
 ### Added
 
 - Added `RemoteFolder` for assigning remote datasets to a WEBKNOSSOS folder. [#868](https://github.com/scalableminds/webknossos-libs/pull/868)
-
 
 ## [0.12.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.1) - 2023-02-16
 

@@ -24,9 +24,9 @@ Server interactions may require [authentication](webknossos/client/context.html)
 
 # The table above contains zero-width spaces in the code examples after each dot to enforce correct line-breaks.
 
-from webknossos.administration import *
-from webknossos.annotation import *
-from webknossos.client import *
-from webknossos.dataset import *
-from webknossos.geometry import *
-from webknossos.skeleton import *
+from .administration import *
+from .annotation import *
+from .client import *
+from .dataset import *
+from .geometry import *
+from .skeleton import *

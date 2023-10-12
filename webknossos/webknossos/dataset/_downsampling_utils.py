@@ -11,9 +11,7 @@ from scipy.ndimage import zoom
 if TYPE_CHECKING:
     from .dataset import Dataset, Layer
 
-from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
-from webknossos.geometry.bounding_box import BoundingBox
-
+from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayInfo
 from .layer_categories import LayerCategoryType
 from .view import View

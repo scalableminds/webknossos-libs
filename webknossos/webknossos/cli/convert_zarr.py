@@ -13,16 +13,12 @@ import typer
 import zarr
 from typing_extensions import Annotated
 
-from webknossos import (
-    BoundingBox,
-    DataFormat,
-    Dataset,
-    Mag,
-    MagView,
-    SegmentationLayer,
-    Vec3Int,
-)
-from webknossos.cli._utils import (
+from ..dataset import DataFormat, Dataset, MagView, SegmentationLayer
+from ..dataset._array import _fsstore_from_path
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..geometry import BoundingBox, Mag, Vec3Int
+from ..utils import get_executor_for_args, wait_and_ensure_success
+from ._utils import (
     DistributionStrategy,
     SamplingMode,
     VoxelSize,
@@ -31,9 +27,6 @@ from webknossos.cli._utils import (
     parse_vec3int,
     parse_voxel_size,
 )
-from webknossos.dataset._array import _fsstore_from_path
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
-from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 logger = logging.getLogger(__name__)
 

@@ -5,10 +5,11 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import Dataset, webknossos_context
-from webknossos.cli._utils import parse_path
-from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
-from webknossos.client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
+from ..client import webknossos_context
+from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
+from ..client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
+from ..dataset import Dataset
+from ._utils import parse_path
 
 
 def main(

@@ -2,7 +2,7 @@
 
 import typer
 
-from webknossos.cli import (
+from . import (
     check_equality,
     compress,
     convert,

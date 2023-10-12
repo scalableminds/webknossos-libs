@@ -8,10 +8,9 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import Dataset
-from webknossos.cli._utils import DistributionStrategy, parse_path
-from webknossos.dataset.layer import Layer
-from webknossos.utils import get_executor_for_args
+from ..dataset import Dataset, Layer
+from ..utils import get_executor_for_args
+from ._utils import DistributionStrategy, parse_path
 
 logger = logging.getLogger(__name__)
 

@@ -305,7 +305,7 @@ class MagView(View):
         Compressing mags on remote file systems requires a `target_path`.
         """
 
-        from webknossos.dataset.dataset import Dataset
+        from .dataset import Dataset
 
         if args is not None:
             warn_deprecated(

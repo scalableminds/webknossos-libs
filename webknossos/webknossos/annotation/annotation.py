@@ -18,6 +18,7 @@ Correcting segmentations using fallback layers is much more efficient, adding vo
 annotation data programmatically is discouraged therefore.
 """
 
+import json
 import re
 import warnings
 from contextlib import contextmanager, nullcontext
@@ -25,6 +26,7 @@ from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
+from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import (
     BinaryIO,
@@ -48,13 +50,22 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
-from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
-from webknossos.client._generated.api.default import dataset_info
-from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
-from webknossos.dataset.dataset import RemoteDataset
-from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.skeleton import Skeleton
-from webknossos.utils import time_since_epoch_in_ms, warn_deprecated
+
+from ..client._generated.api.default import dataset_info
+from ..dataset import (
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    Dataset,
+    Layer,
+    RemoteDataset,
+    SegmentationLayer,
+)
+from ..dataset.defaults import PROPERTIES_FILE_NAME
+from ..dataset.properties import DatasetProperties, dataset_converter
+from ..geometry import BoundingBox, Vec3Int
+from ..skeleton import Skeleton
+from ..utils import time_since_epoch_in_ms, warn_deprecated
+from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
@@ -78,11 +89,24 @@ class _VolumeLayer:
     id: int
     name: str
     fallback_layer_name: Optional[str]
+    data_format: DataFormat
     zip: Optional[ZipPath]
     segments: Dict[int, SegmentInformation]
+    largest_segment_id: Optional[int]
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
+
+
+def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
+    for zip_entry in zip_file.filelist:
+        if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
+            out_file_path = out_path / (zip_entry.filename[len(prefix) :])
+            out_file_path.parent.mkdir(parents=True, exist_ok=True)
+            with zip_file.open(zip_entry, "r") as zip_f, out_file_path.open(
+                "wb"
+            ) as out_f:
+                copyfileobj(zip_f, out_f)
 
 
 @attr.define
@@ -270,9 +294,9 @@ class Annotation:
           They can still be streamed from WEBKNOSSOS using `annotation.get_remote_annotation_dataset()`.
         * `_return_context` should not be set.
         """
-        from webknossos.client._generated.api.default import annotation_download
-        from webknossos.client._resolve_short_link import resolve_short_link
-        from webknossos.client.context import (
+        from ..client._generated.api.default import annotation_download
+        from ..client._resolve_short_link import resolve_short_link
+        from ..client.context import (
             _get_context,
             _get_generated_client,
             webknossos_context,
@@ -431,8 +455,12 @@ class Annotation:
                     id=volume.id,
                     name="Volume" if volume.name is None else volume.name,
                     fallback_layer_name=volume.fallback_layer,
+                    data_format=DataFormat(volume.format)
+                    if volume.format is not None
+                    else DataFormat.WKW,
                     zip=volume_path,
                     segments=segments,
+                    largest_segment_id=volume.largest_segment_id,
                 )
             )
         assert len(set(i.id for i in volume_layers)) == len(
@@ -491,7 +519,7 @@ class Annotation:
 
     def upload(self) -> str:
         """Uploads the annotation to your current `webknossos_context`."""
-        from webknossos.client.context import _get_generated_client
+        from ..client.context import _get_generated_client
 
         client = _get_generated_client(enforce_auth=True)
         url = f"{client.base_url}/api/annotations/upload"
@@ -549,7 +577,7 @@ class Annotation:
         as the first volume editing action is done. Note that this behavior might change
         in the future.
         """
-        from webknossos.client.context import _get_context
+        from ..client.context import _get_context
 
         if self.annotation_id is None:
             raise ValueError(
@@ -641,8 +669,10 @@ class Annotation:
                 id=volume_layer_id,
                 name=name,
                 fallback_layer_name=fallback_layer_name,
+                data_format=DataFormat.Zarr3,
                 zip=None,
                 segments={},
+                largest_segment_id=None,
             )
         )
 
@@ -721,7 +751,6 @@ class Annotation:
         self,
         dataset: Dataset,
         layer_name: str = "volume_layer",
-        largest_segment_id: Optional[int] = None,
         volume_layer_name: Optional[str] = None,
         volume_layer_id: Optional[int] = None,
     ) -> SegmentationLayer:
@@ -736,10 +765,13 @@ class Annotation:
         if the annotation contains multiple volume layers.
         Use `get_volume_layer_names()` to look up available layers.
         """
-        volume_zip_path = self._get_volume_layer(
+        volume_layer = self._get_volume_layer(
             volume_layer_name=volume_layer_name,
             volume_layer_id=volume_layer_id,
-        ).zip
+        )
+        volume_zip_path = volume_layer.zip
+
+        largest_segment_id = volume_layer.largest_segment_id
 
         assert (
             volume_zip_path is not None
@@ -747,21 +779,44 @@ class Annotation:
 
         with volume_zip_path.open(mode="rb") as f:
             data_zip = ZipFile(f)
-            wrong_files = [
-                i.filename
-                for i in data_zip.filelist
-                if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
-            ]
-            assert (
-                len(wrong_files) == 0
-            ), f"The annotation contains unexpected files: {wrong_files}"
-            data_zip.extractall(dataset.path / layer_name)
-        layer = cast(
-            SegmentationLayer,
-            dataset.add_layer_for_existing_files(
-                layer_name, category="segmentation", largest_segment_id=0
-            ),
-        )
+            if volume_layer.data_format == DataFormat.WKW:
+                wrong_files = [
+                    i.filename
+                    for i in data_zip.filelist
+                    if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
+                ]
+                assert (
+                    len(wrong_files) == 0
+                ), f"The annotation contains unexpected files: {wrong_files}"
+                data_zip.extractall(dataset.path / layer_name)
+                layer = cast(
+                    SegmentationLayer,
+                    dataset.add_layer_for_existing_files(
+                        layer_name,
+                        category=SEGMENTATION_CATEGORY,
+                        largest_segment_id=largest_segment_id,
+                    ),
+                )
+            elif volume_layer.data_format == DataFormat.Zarr3:
+                datasource_properties = dataset_converter.structure(
+                    json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
+                )
+                assert (
+                    len(datasource_properties.data_layers) == 1
+                ), f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
+                layer_properties = datasource_properties.data_layers[0]
+                internal_layer_name = layer_properties.name
+                layer_properties.name = layer_name
+
+                _extract_zip_folder(
+                    data_zip, dataset.path / layer_name, f"{internal_layer_name}/"
+                )
+
+                layer = cast(
+                    SegmentationLayer,
+                    dataset._add_existing_layer(layer_properties),
+                )
+
         best_mag_view = layer.get_finest_mag()
 
         if largest_segment_id is None:

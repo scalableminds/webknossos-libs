@@ -3657,7 +3657,7 @@ cffi = {version = ">=1.11", markers = "platform_python_implementation == \"PyPy\
 cffi = ["cffi (>=1.11)"]
 
 [extras]
-all = ["JPype1", "imagecodecs", "pims", "pylibCZIrw", "tifffile", "zarrita"]
+all = ["JPype1", "imagecodecs", "pims", "pylibCZIrw", "tifffile"]
 bioformats = ["JPype1", "pims"]
 czi = ["pims", "pylibCZIrw"]
 imagecodecs = ["imagecodecs", "pims"]
@@ -3667,4 +3667,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "a59ed18ce55c4fe7970fea028c54557540687cd1c6aee565d4fa2e779e43f9fc"
+content-hash = "fe01697d45931df23b05355d7d9b06a73853cb2381160a5d414b170f1a1ab452"

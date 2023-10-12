@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union
 import networkx as nx
 import numpy as np
 
-from webknossos.geometry import Vec3Int, Vec3IntLike
-from webknossos.utils import warn_deprecated
-
+from ..geometry import Vec3Int, Vec3IntLike
+from ..utils import warn_deprecated
 from .node import Node
 
 if TYPE_CHECKING:
-    from webknossos.skeleton import Group, Skeleton
+    from .group import Group
+    from .skeleton import Skeleton
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]

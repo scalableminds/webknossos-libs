@@ -13,10 +13,7 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.dataset.view import View, _copy_job
-from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-
+from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
@@ -36,6 +33,8 @@ from .properties import (
     _properties_floating_type_to_python_type,
     _python_floating_type_to_properties_type,
 )
+from .sampling_modes import SamplingModes
+from .view import View, _copy_job
 
 if TYPE_CHECKING:
     from .dataset import Dataset

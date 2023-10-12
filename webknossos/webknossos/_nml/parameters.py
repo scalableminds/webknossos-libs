@@ -3,9 +3,8 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
-from webknossos.geometry import BoundingBox
-from webknossos.geometry.bounding_box import _DEFAULT_BBOX_NAME
-
+from ..geometry import BoundingBox
+from ..geometry.bounding_box import _DEFAULT_BBOX_NAME
 from .utils import Vector3, enforce_not_null, filter_none_values
 
 DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]

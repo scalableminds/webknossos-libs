@@ -5,30 +5,25 @@ from typing import TYPE_CHECKING, BinaryIO, Dict, List, Mapping, Optional, Tuple
 import attr
 import httpx
 
-from webknossos.administration import Project
-from webknossos.annotation import Annotation, AnnotationInfo
-from webknossos.client._generated.api.default import (
-    annotation_infos_by_task_id,
-    task_info,
-)
-from webknossos.client.context import _get_generated_client
-from webknossos.dataset.dataset import RemoteDataset
-from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.utils import warn_deprecated
+from ..annotation import Annotation, AnnotationInfo
+from ..client._generated.api.default import annotation_infos_by_task_id, task_info
+from ..client.context import _get_generated_client
+from ..dataset.dataset import RemoteDataset
+from ..geometry import BoundingBox, Vec3Int
+from ..utils import warn_deprecated
+from .project import Project
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from webknossos.client._generated.models.task_info_response_200 import (
-        TaskInfoResponse200,
-    )
-    from webknossos.client._generated.models.task_info_response_200_type import (
+    from ..client._generated.models.task_info_response_200 import TaskInfoResponse200
+    from ..client._generated.models.task_info_response_200_type import (
         TaskInfoResponse200Type,
     )
-    from webknossos.client._generated.models.task_infos_by_project_id_response_200_item import (
+    from ..client._generated.models.task_infos_by_project_id_response_200_item import (
         TaskInfosByProjectIdResponse200Item,
     )
-    from webknossos.client._generated.models.task_infos_by_project_id_response_200_item_type import (
+    from ..client._generated.models.task_infos_by_project_id_response_200_item_type import (
         TaskInfosByProjectIdResponse200ItemType,
     )
 
@@ -194,7 +189,7 @@ class Task:
 
     @classmethod
     def _from_dict(cls, response_dict: Dict) -> "Task":
-        from webknossos.client._generated.models.task_info_response_200 import (
+        from ..client._generated.models.task_info_response_200 import (
             TaskInfoResponse200,
         )
 

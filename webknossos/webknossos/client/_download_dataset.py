@@ -6,13 +6,13 @@ from typing import List, Optional, Tuple, TypeVar, Union, cast
 import numpy as np
 from rich.progress import track
 
-from webknossos.client._generated.api.datastore import dataset_download
-from webknossos.client._generated.api.default import dataset_info
-from webknossos.client._generated.types import Unset
-from webknossos.client.context import _get_context
-from webknossos.dataset import Dataset, LayerCategoryType
-from webknossos.dataset.properties import LayerViewConfiguration, dataset_converter
-from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from ..dataset import Dataset, LayerCategoryType
+from ..dataset.properties import LayerViewConfiguration, dataset_converter
+from ..geometry import BoundingBox, Mag, Vec3Int
+from ._generated.api.datastore import dataset_download
+from ._generated.api.default import dataset_info
+from ._generated.types import Unset
+from .context import _get_context
 
 logger = logging.getLogger(__name__)
 

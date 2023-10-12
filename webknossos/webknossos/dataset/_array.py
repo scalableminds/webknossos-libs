@@ -3,7 +3,6 @@ import warnings
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
-from enum import Enum
 from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Type, Union
@@ -15,10 +14,9 @@ import zarr
 from upath import UPath
 from zarr.storage import FSStore
 
-from webknossos.dataset.defaults import WK_USE_ZARRITA
-
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 from ..utils import warn_deprecated
+from .data_format import DataFormat
 
 if TYPE_CHECKING:
     import zarrita
@@ -53,15 +51,6 @@ def _blosc_disable_threading() -> Iterator[None]:
 
 class ArrayException(Exception):
     pass
-
-
-class DataFormat(Enum):
-    WKW = "wkw"
-    Zarr = "zarr"
-    Zarr3 = "zarr3"
-
-    def __str__(self) -> str:
-        return self.value
 
 
 @dataclass
@@ -99,11 +88,7 @@ class BaseArray(ABC):
     @classmethod
     @abstractmethod
     def open(_cls, path: Path) -> "BaseArray":
-        classes = (
-            (WKWArray, ZarritaArray, ZarrArray)
-            if WK_USE_ZARRITA
-            else (WKWArray, ZarrArray)
-        )
+        classes = (WKWArray, ZarritaArray, ZarrArray)
         for cls in classes:
             try:
                 array = cls.open(path)
@@ -143,10 +128,10 @@ class BaseArray(ABC):
     def get_class(data_format: DataFormat) -> Type["BaseArray"]:
         if data_format == DataFormat.WKW:
             return WKWArray
-        if WK_USE_ZARRITA and data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+        if data_format == DataFormat.Zarr3:
             return ZarritaArray
         if data_format == DataFormat.Zarr:
-            return ZarrArray
+            return ZarritaArray
         raise ValueError(f"Array format `{data_format}` is invalid.")
 
 
@@ -559,12 +544,13 @@ class ZarritaArray(BaseArray):
                 + array_info.shard_shape.to_tuple(),
                 chunk_key_encoding=("default", "/"),
                 dtype=array_info.voxel_type,
+                dimension_names=["c", "x", "y", "z"],
                 codecs=[
                     zarrita.codecs.sharding_codec(
                         chunk_shape=(array_info.num_channels,)
                         + array_info.chunk_shape.to_tuple(),
                         codecs=[
-                            zarrita.codecs.transpose_codec("F"),
+                            zarrita.codecs.transpose_codec([3, 2, 1, 0]),
                             zarrita.codecs.bytes_codec(),
                             zarrita.codecs.blosc_codec(
                                 typesize=array_info.voxel_type.itemsize
@@ -572,7 +558,7 @@ class ZarritaArray(BaseArray):
                         ]
                         if array_info.compression_mode
                         else [
-                            zarrita.codecs.transpose_codec("F"),
+                            zarrita.codecs.transpose_codec([3, 2, 1, 0]),
                             zarrita.codecs.bytes_codec(),
                         ],
                     )

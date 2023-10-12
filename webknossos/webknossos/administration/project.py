@@ -3,23 +3,23 @@ from typing import TYPE_CHECKING, List, Union
 
 import attr
 
-from webknossos.administration.user import User
-from webknossos.client._generated.api.default import (
+from ..client._generated.api.default import (
     project_info_by_id,
     project_info_by_name,
     task_infos_by_project_id,
 )
-from webknossos.client._generated.types import Unset
-from webknossos.client.context import _get_generated_client
+from ..client._generated.types import Unset
+from ..client.context import _get_generated_client
+from .user import User
 
 if TYPE_CHECKING:
-    from webknossos.administration import Task
-    from webknossos.client._generated.models.project_info_by_id_response_200 import (
+    from ..client._generated.models.project_info_by_id_response_200 import (
         ProjectInfoByIdResponse200,
     )
-    from webknossos.client._generated.models.project_info_by_name_response_200 import (
+    from ..client._generated.models.project_info_by_name_response_200 import (
         ProjectInfoByNameResponse200,
     )
+    from .task import Task
 
 
 @attr.frozen
@@ -59,7 +59,7 @@ class Project:
         set parameter pass fetch_all=True to use pagination to fetch all tasks iteratively with pagination.
         """
 
-        from webknossos.administration import Task
+        from .task import Task
 
         PAGINATION_LIMIT = 1000
         pagination_page = 0
