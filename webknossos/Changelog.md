@@ -10,10 +10,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.1...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.14.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.1) - 2023-10-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.0...v0.14.1)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.0...HEAD)
 
 ### Added
 
@@ -24,7 +34,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The `WK_USE_ZARRITA` env variable is no longer required. [`zarrita`](https://github.com/scalableminds/zarrita) is always installed and now the default for Zarr and Zarr3 datasets. [#950](https://github.com/scalableminds/webknossos-libs/issues/950)
 - Updates various dependencies. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
 
-### Fixed
 
 ## [0.14.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.0) - 2023-10-11
 
