@@ -468,19 +468,10 @@ class Dataset:
 
         with context_manager:
             wk_context = _get_context()
-            dataset_info_response = dataset_info.sync_detailed(
-                organization_name=organization_id,
-                data_set_name=dataset_name,
-                client=wk_context.generated_client,
-                sharing_token=sharing_token,
-            )
-            assert dataset_info_response.status_code == 200, dataset_info_response
-            parsed = dataset_info_response.parsed
-            assert parsed is not None
-
+            dataset_info = wk_context.api_client.dataset_info(organization_id, dataset_name, sharing_token)
             token = sharing_token or wk_context.datastore_token
 
-        datastore_url = parsed.data_store.url
+        datastore_url = dataset_info.dataStore.url
 
         zarr_path = UPath(
             f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",

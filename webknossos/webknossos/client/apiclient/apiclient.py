@@ -1,7 +1,7 @@
 import attr
 
-from typing import Dict, TypeVar, Type
-from webknossos.client.apiclient.models import ApiShortLink
+from typing import Dict, TypeVar, Type, Optional, List
+from webknossos.client.apiclient.models import ApiShortLink, ApiDataset
 import httpx
 import cattrs
 import logging
@@ -9,6 +9,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+Query = Dict[str, Optional[str]]
 
 
 @attr.s(auto_attribs=True)
@@ -32,23 +34,43 @@ class ApiClient:
         uri = f"{self._api_uri}/shortLinks/byKey/{key}"
         return self._get_json(uri, ApiShortLink)
 
+    def dataset_info(self, organization_name, dataset_name, sharing_token: Optional[str]) -> ApiDataset:
+        uri = f"{self._api_uri}/datasets/{organization_name}/{dataset_name}"
+        return self._get_json(uri, ApiDataset, query={"sharing_token": sharing_token})
+
+    def dataset_list(self, is_active: Optional[bool], organization_name: Optional[str]) -> List[ApiDataset]:
+        uri = f"{self._api_uri}/datasets"
+        return self._get_json(uri, List[ApiDataset], query={"isActive": is_active, "organizationName": organization_name})
+
     # Private properties and methods
 
     @property
     def _api_uri(self) -> str:
         return f"{self.base_url}/api/v{self.webknossos_api_version}"
 
-    def _get_json(self, uri: str, response_type: Type[T]) -> T:
-        response = self._get(uri)
+    def _get_json(self, uri: str, response_type: Type[T], query: Optional[Query] = None) -> T:
+        response = self._get(uri, query)
         return self._parse_json(response.json(), response_type)
 
-    def _get(self, uri) -> httpx.Response:
-        response = httpx.get(uri, headers=self.headers)
+    def _get(self, uri, query: Optional[Query] = None) -> httpx.Response:
+        return self._request("GET", uri, query)
+
+    def _request(self, method: str, uri: str, query: Optional[Query]) -> httpx.Response:
+        response = httpx.request(method, uri, params=self._filter_query(query), headers=self.headers)
         self._assert_good_response(uri, response)
         return response
 
+    # Omit all entries where the value is None
+    def _filter_query(self, query: Optional[Query]) -> Optional[Query]:
+        if query is None:
+            return None
+        return {k:v for (k,v) in query.items() if v is not None}
+
+    def url_encode(self, value: str) -> str:
+        raise NotImplemented
+
     def _parse_json(self, response: httpx.Response, response_type: Type[T]) -> T:
-        return cattrs.structure(response, response_type)
+        return cattrs.structure(response, response_type) # TODO error handling?
 
     def _assert_good_response(self, uri: str, response: httpx.Response) -> None:
         try:
