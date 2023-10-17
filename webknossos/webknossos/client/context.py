@@ -58,6 +58,7 @@ from rich.prompt import Prompt
 
 from webknossos.client._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._generated import Client as GeneratedClient
+from webknossos.client.apiclient import ApiClient
 
 load_dotenv()
 
@@ -114,6 +115,20 @@ def _cached__get_generated_client(
         )
 
 
+@lru_cache(maxsize=None)
+def _cached__get_api_client(
+    webknossos_url: str,
+    token: Optional[str],
+    timeout: int,
+    ) -> ApiClient:
+    """Generates a client which might contain an x-auth-token header."""
+    if token is None:
+        return ApiClient(base_url=webknossos_url, timeout=timeout)
+    return ApiClient(
+        base_url=webknossos_url, headers={"X-Auth-Token": token}, timeout=timeout
+    )
+
+
 def _clear_all_context_caches() -> None:
     _cached_ask_for_token.cache_clear()
     _cached_get_org.cache_clear()
@@ -161,6 +176,14 @@ class _WebknossosContext:
     @property
     def generated_client(self) -> GeneratedClient:
         return _cached__get_generated_client(self.url, self.token, self.timeout)
+
+    @property
+    def api_client(self) -> ApiClient:
+        return _cached__get_api_client(self.url, self.token, self.timeout)
+
+    @property
+    def api_client_with_auth(self) -> ApiClient:
+        return _cached__get_api_client(self.url, self.required_token, self.timeout)
 
     @property
     def generated_auth_client(self) -> GeneratedClient:
@@ -231,3 +254,10 @@ def _get_generated_client(enforce_auth: bool = False) -> GeneratedClient:
         return _get_context().generated_auth_client
     else:
         return _get_context().generated_client
+
+
+def _get_api_client(enforce_auth: bool = False) -> ApiClient:
+    if enforce_auth:
+        return _get_context().api_client_with_auth
+    else:
+        return _get_context().api_client
