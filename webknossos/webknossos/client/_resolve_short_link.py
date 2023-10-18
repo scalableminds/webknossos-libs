@@ -27,7 +27,8 @@ def resolve_short_link(url: str) -> str:
         with webknossos_context(url=webknossos_url):
             client = _get_api_client()
             response = client.short_link_by_key(key=short_link_key)
-        return response.longLink
+            print(response)
+        return response.long_link
     except Exception as e:
         logger.warning(f"Got an error during short link resolution of link {url}: {e}")
         return url

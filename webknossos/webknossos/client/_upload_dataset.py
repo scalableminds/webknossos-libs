@@ -9,15 +9,13 @@ from uuid import uuid4
 
 import httpx
 
-from webknossos.client._generated.api.datastore import (
-    dataset_finish_upload,
-    dataset_reserve_upload,
-)
+from webknossos.client._generated.api.datastore import dataset_reserve_upload
 from webknossos.client._generated.api.default import (
     datastore_list,
     new_dataset_name_is_valid,
 )
 from webknossos.client._resumable import Resumable
+from webknossos.client.apiclient.models import ApiUploadInformation
 from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset, Layer
 from webknossos.dataset.dataset import RemoteDataset
@@ -88,10 +86,7 @@ def upload_dataset(
     layers_to_link: Optional[List[LayerToLink]] = None,
     jobs: Optional[int] = None,
 ) -> str:
-    from webknossos.client._generated.models import (
-        DatasetFinishUploadJsonBody,
-        DatasetReserveUploadJsonBody,
-    )
+    from webknossos.client._generated.models import DatasetReserveUploadJsonBody
 
     if new_dataset_name is None:
         new_dataset_name = dataset.name
@@ -123,6 +118,7 @@ def upload_dataset(
     datastore_token = context.datastore_required_token
     datastore_url = _cached_get_upload_datastore(context)
     datastore_client = _get_context().get_generated_datastore_client(datastore_url)
+    datastore_api_client = _get_context().get_datastore_api_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
@@ -175,21 +171,10 @@ def upload_dataset(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
     for _ in range(MAXIMUM_RETRY_COUNT):
-        response = dataset_finish_upload.sync_detailed(
-            client=datastore_client.with_timeout(None),  # type: ignore[arg-type]
-            token=datastore_token,
-            json_body=DatasetFinishUploadJsonBody.from_dict(
-                {
-                    "uploadId": upload_id,
-                    "organization": context.organization_id,
-                    "name": new_dataset_name,
-                    "needsConversion": False,
-                    "layersToLink": [layer.as_json() for layer in layers_to_link],
-                }
-            ),
+        datastore_api_client.dataset_finish_upload(
+            ApiUploadInformation(upload_id),
+            datastore_token,
+            retry_count=MAXIMUM_RETRY_COUNT,
         )
-        if response.status_code == 200 or response.status_code == 400:
-            break
-    assert response.status_code == 200, response
 
     return new_dataset_name

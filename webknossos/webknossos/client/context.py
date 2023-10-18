@@ -194,6 +194,10 @@ class _WebknossosContext:
     def get_generated_datastore_client(self, datastore_url: str) -> GeneratedClient:
         return GeneratedClient(base_url=datastore_url, timeout=self.timeout)
 
+    def get_datastore_api_client(self, datastore_url: str) -> ApiClient:
+        # TODO cache?
+        return ApiClient(base_url=datastore_url, timeout=self.timeout)
+
 
 _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
     "_webknossos_context_var", default=_WebknossosContext()

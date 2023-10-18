@@ -5,7 +5,7 @@ import attr
 
 @attr.s(auto_attribs=True)
 class ApiShortLink:
-    longLink: str
+    long_link: str
 
 
 @attr.s(auto_attribs=True)
@@ -23,10 +23,20 @@ class ApiTeam:
 @attr.s(auto_attribs=True)
 class ApiDataset:
     name: str
-    displayName: Optional[str]
+    display_name: Optional[str]
     description: Optional[str]
-    isPublic: bool
-    folderId: str
-    allowedTeams: List[ApiTeam]
+    is_public: bool
+    folder_id: str
+    allowed_teams: List[ApiTeam]
     tags: List[str]
-    dataStore: ApiDataStore
+    data_store: ApiDataStore
+
+
+@attr.s(auto_attribs=True)
+class ApiSharingToken:
+    sharing_token: str
+
+
+@attr.s(auto_attribs=True)
+class ApiUploadInformation:
+    upload_id: str

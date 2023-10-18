@@ -472,7 +472,7 @@ class Dataset:
             )
             token = sharing_token or wk_context.datastore_token
 
-        datastore_url = dataset_info.dataStore.url
+        datastore_url = dataset_info.data_store.url
 
         zarr_path = UPath(
             f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",
@@ -1838,17 +1838,17 @@ class RemoteDataset(Dataset):
 
         info = self._get_dataset_info()
         if display_name is not _UNSET:
-            info.displayName = display_name
+            info.display_name = display_name
         if description is not _UNSET:
             info.description = description
         if tags is not _UNSET:
             info.tags = tags
         if is_public is not _UNSET:
-            info.isPublic = is_public
+            info.is_public = is_public
         if folder_id is not _UNSET:
-            info.folderId = folder_id
+            info.folder_id = folder_id
         if display_name is not _UNSET:
-            info.displayName = display_name
+            info.display_name = display_name
 
         with self._context:
             _get_api_client().dataset_update(
@@ -1857,7 +1857,7 @@ class RemoteDataset(Dataset):
 
     @property
     def display_name(self) -> Optional[str]:
-        return self._get_dataset_info().displayName
+        return self._get_dataset_info().display_name
 
     @display_name.setter
     def display_name(self, display_name: Optional[str]) -> None:
@@ -1889,7 +1889,7 @@ class RemoteDataset(Dataset):
 
     @property
     def is_public(self) -> bool:
-        return bool(self._get_dataset_info().isPublic)
+        return bool(self._get_dataset_info().is_public)
 
     @is_public.setter
     def is_public(self, is_public: bool) -> None:
@@ -1897,20 +1897,13 @@ class RemoteDataset(Dataset):
 
     @property
     def sharing_token(self) -> str:
-        from webknossos.client._generated.api.default import dataset_sharing_token
-        from webknossos.client.context import _get_generated_client
+        from webknossos.client.context import _get_api_client
 
         with self._context:
-            dataset_sharing_token_response = dataset_sharing_token.sync_detailed(
-                organization_name=self._organization_id,
-                data_set_name=self._dataset_name,
-                client=_get_generated_client(),
+            sharing_token = _get_api_client().dataset_sharing_token(
+                self._organization_id, self._dataset_name
             )
-            assert (
-                dataset_sharing_token_response.status_code == 200
-            ), dataset_sharing_token_response
-            assert dataset_sharing_token_response.parsed is not None
-            return dataset_sharing_token_response.parsed.sharing_token
+            return sharing_token.sharing_token
 
     @property
     def allowed_teams(self) -> Tuple["Team", ...]:
@@ -1918,7 +1911,7 @@ class RemoteDataset(Dataset):
 
         return tuple(
             Team(id=i.id, name=i.name, organization_id=i.organization)
-            for i in self._get_dataset_info().allowedTeams
+            for i in self._get_dataset_info().allowed_teams
         )
 
     @allowed_teams.setter
@@ -1937,7 +1930,7 @@ class RemoteDataset(Dataset):
 
     @property
     def folder(self) -> RemoteFolder:
-        return RemoteFolder.get_by_id(self._get_dataset_info().folderId)
+        return RemoteFolder.get_by_id(self._get_dataset_info().folder_id)
 
     @folder.setter
     def folder(self, folder: RemoteFolder) -> None:
