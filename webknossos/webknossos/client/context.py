@@ -120,7 +120,7 @@ def _cached__get_api_client(
     webknossos_url: str,
     token: Optional[str],
     timeout: int,
-    ) -> ApiClient:
+) -> ApiClient:
     """Generates a client which might contain an x-auth-token header."""
     if token is None:
         return ApiClient(base_url=webknossos_url, timeout=timeout)

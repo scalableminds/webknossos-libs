@@ -20,7 +20,6 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         tags: Optional[Union[str, Sequence[str]]],
     ) -> None:
         from webknossos.administration.user import User
-        from webknossos.client._generated.api.default import dataset_list
         from webknossos.client.context import _get_api_client
         from webknossos.dataset.dataset import Dataset
 
@@ -32,7 +31,9 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         if isinstance(tags, str):
             tags = [tags]
 
-        dataset_infos = client.dataset_list(is_active=True, organization_name=organization_id)
+        dataset_infos = client.dataset_list(
+            is_active=True, organization_name=organization_id
+        )
 
         datasets_names = []
 

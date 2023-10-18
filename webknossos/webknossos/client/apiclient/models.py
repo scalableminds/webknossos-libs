@@ -1,5 +1,7 @@
+from typing import List, Optional
+
 import attr
-from typing import List
+
 
 @attr.s(auto_attribs=True)
 class ApiShortLink:
@@ -12,7 +14,19 @@ class ApiDataStore:
 
 
 @attr.s(auto_attribs=True)
+class ApiTeam:
+    id: str
+    name: str
+    organization: str
+
+
+@attr.s(auto_attribs=True)
 class ApiDataset:
     name: str
+    displayName: Optional[str]
+    description: Optional[str]
+    isPublic: bool
+    folderId: str
+    allowedTeams: List[ApiTeam]
     tags: List[str]
     dataStore: ApiDataStore
