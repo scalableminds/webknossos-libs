@@ -6,6 +6,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
     Iterable,
     Iterator,
     List,
@@ -37,13 +38,13 @@ class DaskExecutor(futures.Executor):
         self.client = client
 
     @classmethod
-    def from_kwargs(
+    def from_config(
         cls,
-        **kwargs: Any,
+        job_resources: Dict[str, Any],
     ) -> "DaskExecutor":
         from distributed import Client
 
-        return cls(Client(**kwargs))
+        return cls(Client(**job_resources))
 
     @classmethod
     def as_completed(cls, futures: List["Future[_T]"]) -> Iterator["Future[_T]"]:
