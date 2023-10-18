@@ -114,7 +114,7 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         if "client" in kwargs:
             return DaskExecutor(kwargs["client"])
         else:
-            return DaskExecutor.from_kwargs(**kwargs)
+            return DaskExecutor.from_config(**kwargs)
     elif environment == "multiprocessing":
         global did_start_test_multiprocessing
         if not did_start_test_multiprocessing:
