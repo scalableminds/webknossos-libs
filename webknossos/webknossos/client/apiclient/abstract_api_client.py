@@ -1,27 +1,18 @@
 import logging
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, Union, Optional, Type, TypeVar
 
-import attr
 import cattrs
 import httpx
 import humps
-
-from webknossos.client.apiclient.models import (
-    ApiDataset,
-    ApiSharingToken,
-    ApiShortLink,
-    ApiUploadInformation,
-)
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-Query = Dict[str, Optional[str]]
+Query = Dict[str, Optional[Union[str, int, float, bool]]]
 
 
-@attr.s(auto_attribs=True)
-class AbstractApiClient():
+class AbstractApiClient:
     """A class for keeping track of data related to the API
 
     Attributes:
@@ -32,32 +23,12 @@ class AbstractApiClient():
         webknossos_api_version: The webknossos REST Api version to use
     """
 
-    base_url: str
-    headers: Dict[str, str] = attr.ib(factory=dict, kw_only=True)
-    timeout: float = attr.ib(5.0, kw_only=True)
-    webknossos_api_version: int = attr.ib(5, kw_only=True)
-
-
-    def dataset_finish_upload(
-        self,
-        upload_information: ApiUploadInformation,
-        token: Optional[str],
-        retry_count: int,
-    ) -> None:
-        uri = f"{self._datastore_uri}/datasets/finishUpload"
-        return self._post_json(
-            uri, upload_information, query={"token": token}, retry_count=retry_count
-        )
-
-    # Private properties and methods
-
-    @property
-    def _api_uri(self) -> str:
-        return f"{self.base_url}/api/v{self.webknossos_api_version}"
-
-    @property
-    def _datastore_uri(self) -> str:
-        return f"{self.base_url}/data"
+    def __init__(
+        self, base_url: str, timeout: float, headers: Optional[Dict[str, str]] = None
+    ):
+        self.base_url = base_url
+        self.headers = headers
+        self.timeout = timeout
 
     def _get_json(
         self, uri: str, response_type: Type[T], query: Optional[Query] = None
@@ -65,13 +36,13 @@ class AbstractApiClient():
         response = self._get(uri, query)
         return self._parse_json(response, response_type)
 
-    def _patch_json(self, uri, body_structured: Any) -> None:
+    def _patch_json(self, uri: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
         self._patch(uri, body_json)
 
     def _post_json(
         self,
-        uri,
+        uri: str,
         body_structured: Any,
         query: Optional[Query] = None,
         retry_count: int = 1,
@@ -79,7 +50,7 @@ class AbstractApiClient():
         body_json = self._prepare_for_json(body_structured)
         self._post(uri, body_json, query, retry_count)
 
-    def _get(self, uri, query: Optional[Query] = None) -> httpx.Response:
+    def _get(self, uri: str, query: Optional[Query] = None) -> httpx.Response:
         return self._request("GET", uri, query)
 
     def _patch(
@@ -121,6 +92,9 @@ class AbstractApiClient():
             if response.status_code == 200 or response.status_code == 400:
                 # Stop retrying in case of success or bad request
                 break
+        assert (
+                response is not None
+        ), "Got no http response. Was retry_count less than one?"
         self._assert_good_response(uri, response)
         return response
 
@@ -139,11 +113,8 @@ class AbstractApiClient():
         return cattrs.unstructure(humps.camelize(body_structured))
 
     def _assert_good_response(
-        self, uri: str, response: Optional[httpx.Response]
+        self, uri: str, response: httpx.Response
     ) -> None:
-        assert (
-            response is not None
-        ), "Got no http response. Was retry_count less than one?"
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as e:

@@ -58,7 +58,7 @@ from rich.prompt import Prompt
 
 from webknossos.client._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._generated import Client as GeneratedClient
-from webknossos.client.apiclient import ApiClient
+from webknossos.client.apiclient import DatastoreApiClient, WkApiClient
 
 load_dotenv()
 
@@ -120,11 +120,11 @@ def _cached__get_api_client(
     webknossos_url: str,
     token: Optional[str],
     timeout: int,
-) -> ApiClient:
+) -> WkApiClient:
     """Generates a client which might contain an x-auth-token header."""
     if token is None:
-        return ApiClient(base_url=webknossos_url, timeout=timeout)
-    return ApiClient(
+        return WkApiClient(base_url=webknossos_url, timeout=timeout)
+    return WkApiClient(
         base_url=webknossos_url, headers={"X-Auth-Token": token}, timeout=timeout
     )
 
@@ -178,11 +178,11 @@ class _WebknossosContext:
         return _cached__get_generated_client(self.url, self.token, self.timeout)
 
     @property
-    def api_client(self) -> ApiClient:
+    def api_client(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.token, self.timeout)
 
     @property
-    def api_client_with_auth(self) -> ApiClient:
+    def api_client_with_auth(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.required_token, self.timeout)
 
     @property
@@ -194,9 +194,9 @@ class _WebknossosContext:
     def get_generated_datastore_client(self, datastore_url: str) -> GeneratedClient:
         return GeneratedClient(base_url=datastore_url, timeout=self.timeout)
 
-    def get_datastore_api_client(self, datastore_url: str) -> ApiClient:
+    def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
         # TODO cache?
-        return ApiClient(base_url=datastore_url, timeout=self.timeout)
+        return DatastoreApiClient(base_url=datastore_url, timeout=self.timeout)
 
 
 _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
@@ -260,7 +260,7 @@ def _get_generated_client(enforce_auth: bool = False) -> GeneratedClient:
         return _get_context().generated_client
 
 
-def _get_api_client(enforce_auth: bool = False) -> ApiClient:
+def _get_api_client(enforce_auth: bool = False) -> WkApiClient:
     if enforce_auth:
         return _get_context().api_client_with_auth
     else:
