@@ -5,6 +5,8 @@ from webknossos.client.apiclient.models import (
     ApiDatastore,
     ApiSharingToken,
     ApiShortLink,
+    ApiProject,
+    ApiTask
 )
 
 from .abstract_api_client import AbstractApiClient
@@ -73,3 +75,15 @@ class WkApiClient(AbstractApiClient):
     def datastore_list(self) -> List[ApiDatastore]:
         route = f"/datastores"
         return self._get_json(route, List[ApiDatastore])
+
+    def project_info_by_name(self, project_name) -> ApiProject:
+        route = f"/projects/byName/{project_name}"
+        return self._get_json(route, ApiProject)
+
+    def project_info_by_id(self, project_id) -> ApiProject:
+        route = f"/projects/{project_id}"
+        return self._get_json(route, ApiProject)
+
+    def task_infos_by_project_id(self, project_id) -> List[ApiTask]:
+        route = f"/projects/{project_id}/tasks"
+        return self._get_json(route, List[ApiTask])

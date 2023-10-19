@@ -4,23 +4,14 @@ from typing import TYPE_CHECKING, List, Union
 import attr
 
 from webknossos.administration.user import User
+from webknossos.client.apiclient.models import ApiProject
 from webknossos.client._generated.api.default import (
-    project_info_by_id,
-    project_info_by_name,
     task_infos_by_project_id,
 )
-from webknossos.client._generated.types import Unset
-from webknossos.client.context import _get_generated_client
+from webknossos.client.context import _get_api_client
 
 if TYPE_CHECKING:
     from webknossos.administration import Task
-    from webknossos.client._generated.models.project_info_by_id_response_200 import (
-        ProjectInfoByIdResponse200,
-    )
-    from webknossos.client._generated.models.project_info_by_name_response_200 import (
-        ProjectInfoByNameResponse200,
-    )
-
 
 @attr.frozen
 class Project:
@@ -40,18 +31,14 @@ class Project:
         cls, project_id: str
     ) -> "Project":  # pylint: disable=redefined-builtin
         """Returns the project specified by the passed id if your token authorizes you to see it."""
-        client = _get_generated_client(enforce_auth=True)
-        response = project_info_by_id.sync(project_id, client=client)
-        assert response is not None, "Could not fetch project by id."
-        return cls._from_generated_response(response)
+        api_project = _get_api_client(enforce_auth=True).project_info_by_id(project_id)
+        return cls._from_api_project(api_project)
 
     @classmethod
     def get_by_name(cls, name: str) -> "Project":
         """Returns the user specified by the passed name if your token authorizes you to see it."""
-        client = _get_generated_client(enforce_auth=True)
-        response = project_info_by_name.sync(name, client=client)
-        assert response is not None, "Could not fetch project by name."
-        return cls._from_generated_response(response)
+        api_project = _get_api_client(enforce_auth=True).project_info_by_name(name)
+        return cls._from_api_project(api_project)
 
     def get_tasks(self, fetch_all: bool = False) -> List["Task"]:
         """Returns the tasks of this project.
@@ -64,7 +51,7 @@ class Project:
         PAGINATION_LIMIT = 1000
         pagination_page = 0
 
-        client = _get_generated_client(enforce_auth=True)
+        client = _get_api_client(enforce_auth=True)
         response_raw = task_infos_by_project_id.sync_detailed(
             self.project_id,
             limit=PAGINATION_LIMIT,
@@ -72,6 +59,7 @@ class Project:
             include_total_count=True,
             client=client,
         )
+        # TODO
         total_count_raw = response_raw.headers.get("X-Total-Count")
         assert total_count_raw is not None, "X-Total-Count header missing from response"
         total_count = int(total_count_raw)
@@ -107,18 +95,17 @@ class Project:
         return User.get_by_id(self.owner_id)
 
     @classmethod
-    def _from_generated_response(
-        cls,
-        response: Union["ProjectInfoByIdResponse200", "ProjectInfoByNameResponse200"],
+    def _from_api_project(
+            cls,
+            api_project: ApiProject
     ) -> "Project":
-        assert not isinstance(response.owner, Unset)
         return cls(
-            response.id,
-            response.name,
-            response.team,
-            response.team_name,
-            response.owner.id,
-            response.priority,
-            bool(response.paused),
-            response.expected_time,
+            api_project.id,
+            api_project.name,
+            api_project.team,
+            api_project.team_name,
+            api_project.owner.id,
+            api_project.priority,
+            api_project.paused,
+            api_project.expected_time,
         )

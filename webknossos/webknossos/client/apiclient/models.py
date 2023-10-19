@@ -66,3 +66,25 @@ class ApiReserveUploadInformation:
     layers_to_link: Optional[List[ApiLinkedLayerIdentifier]]
     initial_teams: List[str]
     folder_id: Optional[str]
+
+
+@attr.s(auto_attribs=True)
+class ApiTask:
+    id: str
+
+
+@attr.s(auto_attribs=True)
+class ApiUser:
+    id: str
+
+
+@attr.s(auto_attribs=True)
+class ApiProject:
+    id: str
+    name: str
+    team: str
+    team_name: str
+    owner: ApiUser
+    priority: int
+    paused: bool
+    expected_time: Optional[int]
