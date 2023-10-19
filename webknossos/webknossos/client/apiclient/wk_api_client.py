@@ -84,6 +84,6 @@ class WkApiClient(AbstractApiClient):
         route = f"/projects/{project_id}"
         return self._get_json(route, ApiProject)
 
-    def task_infos_by_project_id(self, project_id) -> List[ApiTask]:
+    def task_infos_by_project_id(self, project_id: str, limit: Optional[int], page_number: Optional[int]) -> List[ApiTask]:
         route = f"/projects/{project_id}/tasks"
-        return self._get_json(route, List[ApiTask])
+        return self._get_json(route, List[ApiTask], query={"limit": limit, "pageNumber": page_number, "includeTotalCount": True})
