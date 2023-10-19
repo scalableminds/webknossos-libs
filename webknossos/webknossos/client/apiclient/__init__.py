@@ -1,3 +1,3 @@
-from .apiclient import ApiClient
+from .abstract_api_client import WkApiClient, DatasetoreApiClient
 
-__all__ = ["ApiClient"]
+__all__ = ["WkApiClient", "DatasetoreApiClient"]

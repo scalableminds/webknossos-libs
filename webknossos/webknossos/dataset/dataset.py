@@ -1922,6 +1922,8 @@ class RemoteDataset(Dataset):
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
 
+        logger.info(f"setting to {team_ids}")
+
         with self._context:
             client = _get_api_client()
             client.dataset_update_teams(
