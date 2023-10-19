@@ -15,7 +15,7 @@ from upath import UPath
 from zarr.storage import FSStore
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
-from ..utils import warn_deprecated
+from ..utils import is_fs_path, warn_deprecated
 from .data_format import DataFormat
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ def _is_power_of_two(num: int) -> bool:
 
 def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
     storage_options = {}
-    if isinstance(path, UPath):
+    if isinstance(path, UPath) and not is_fs_path(path):
         storage_options = path._kwargs.copy()
         storage_options.pop("_url", None)
         return FSStore(url=str(path), mode=mode, **storage_options)
