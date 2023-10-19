@@ -109,9 +109,7 @@ class AbstractApiClient(ABC):
                 params=self._filter_query(query),
                 json=body_json,
                 headers=self.headers,
-                timeout=timeout_seconds
-                if timeout_seconds is not None
-                else self.timeout_seconds,
+                timeout=timeout_seconds or self.timeout_seconds,
             )
             if response.status_code == 200 or response.status_code == 400:
                 # Stop retrying in case of success or bad request

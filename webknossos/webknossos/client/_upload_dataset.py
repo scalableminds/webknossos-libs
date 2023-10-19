@@ -9,13 +9,12 @@ from uuid import uuid4
 
 import httpx
 
-from webknossos.client._generated.api.datastore import dataset_reserve_upload
-from webknossos.client._generated.api.default import (
-    datastore_list,
-    new_dataset_name_is_valid,
-)
 from webknossos.client._resumable import Resumable
-from webknossos.client.apiclient.models import ApiUploadInformation
+from webknossos.client.apiclient.models import (
+    ApiLinkedLayerIdentifier,
+    ApiReserveUploadInformation,
+    ApiUploadInformation,
+)
 from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset, Layer
 from webknossos.dataset.dataset import RemoteDataset
@@ -46,23 +45,21 @@ class LayerToLink(NamedTuple):
         ), f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
         return cls(ds._dataset_name, layer.name, new_layer_name, organization_id)
 
-    def as_json(self) -> Dict[str, Optional[str]]:
+    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
         context = _get_context()
-        return {
-            "dataSetName": self.dataset_name,
-            "layerName": self.layer_name,
-            "newLayerName": self.new_layer_name,
-            "organizationName": self.organization_id or context.organization_id,
-        }
+        return ApiLinkedLayerIdentifier(
+            self.organization_id or context.organization_id,
+            self.dataset_name,
+            self.layer_name,
+            self.new_layer_name,
+        )
 
 
 @lru_cache(maxsize=None)
 def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
-    datastores = datastore_list.sync(client=context.generated_auth_client)
-    assert datastores is not None
+    datastores = context.api_client_with_auth.datastore_list()
     for datastore in datastores:
         if datastore.allows_upload:
-            assert isinstance(datastore.url, str)
             return datastore.url
     raise ValueError("No datastore found where datasets can be uploaded.")
 
@@ -86,8 +83,6 @@ def upload_dataset(
     layers_to_link: Optional[List[LayerToLink]] = None,
     jobs: Optional[int] = None,
 ) -> str:
-    from webknossos.client._generated.models import DatasetReserveUploadJsonBody
-
     if new_dataset_name is None:
         new_dataset_name = dataset.name
     if layers_to_link is None:
@@ -117,38 +112,34 @@ def upload_dataset(
     upload_id = f"{time_str}__{uuid4()}"
     datastore_token = context.datastore_required_token
     datastore_url = _cached_get_upload_datastore(context)
-    datastore_client = _get_context().get_generated_datastore_client(datastore_url)
-    datastore_api_client = _get_context().get_datastore_api_client(datastore_url)
+    datastore_api_client = context.get_datastore_api_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
-    response = new_dataset_name_is_valid.sync_detailed(
-        organization_name=context.organization_id,
-        data_set_name=new_dataset_name,
-        client=context.generated_auth_client,
-    )
-    assert (
-        response.status_code == 200
-    ), f"Dataset name {context.organization_id}/{new_dataset_name} does not seem to be valid: {response}"
-    for _ in range(MAXIMUM_RETRY_COUNT):
-        response = dataset_reserve_upload.sync_detailed(
-            client=datastore_client,
-            token=datastore_token,
-            json_body=DatasetReserveUploadJsonBody.from_dict(
-                {
-                    "uploadId": upload_id,
-                    "organization": context.organization_id,
-                    "name": new_dataset_name,
-                    "totalFileCount": len(file_infos),
-                    "initialTeams": [],
-                    "layersToLink": [layer.as_json() for layer in layers_to_link],
-                }
-            ),
+    try:
+        context.api_client_with_auth.assert_new_dataset_name_is_valid(
+            context.organization_id, new_dataset_name
         )
-        if response.status_code == 200:
-            break
-    else:
-        assert response.status_code == 200, response
+    except httpx.HTTPStatusError as e:
+        raise Exception(
+            f"Dataset name {context.organization_id}/{new_dataset_name} does not seem to be valid."
+        ) from e
+
+    datastore_api_client.dataset_reserve_upload(
+        ApiReserveUploadInformation(
+            upload_id,
+            new_dataset_name,
+            context.organization_id,
+            total_file_count=len(file_infos),
+            layers_to_link=[
+                layer.as_api_linked_layer_identifier() for layer in layers_to_link
+            ],
+            folder_id=None,
+            initial_teams=[],
+        ),
+        token=datastore_token,
+        retry_count=MAXIMUM_RETRY_COUNT,
+    )
     with get_rich_progress() as progress:
         with Resumable(
             f"{datastore_url}/data/datasets?token={datastore_token}",
@@ -170,11 +161,11 @@ def upload_dataset(
                 resumable_file.chunk_completed.register(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
-    for _ in range(MAXIMUM_RETRY_COUNT):
-        datastore_api_client.dataset_finish_upload(
-            ApiUploadInformation(upload_id),
-            datastore_token,
-            retry_count=MAXIMUM_RETRY_COUNT,
-        )
+
+    datastore_api_client.dataset_finish_upload(
+        ApiUploadInformation(upload_id),
+        datastore_token,
+        retry_count=MAXIMUM_RETRY_COUNT,
+    )
 
     return new_dataset_name

@@ -1,6 +1,9 @@
 from typing import Dict, Optional
 
-from webknossos.client.apiclient.models import ApiUploadInformation
+from webknossos.client.apiclient.models import (
+    ApiReserveUploadInformation,
+    ApiUploadInformation,
+)
 
 from .abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient
 
@@ -26,11 +29,24 @@ class DatastoreApiClient(AbstractApiClient):
         retry_count: int,
     ) -> None:
         route = f"/datasets/finishUpload"
-        # TODO override timeout
         return self._post_json(
             route,
             upload_information,
             query={"token": token},
             retry_count=retry_count,
             timeout_seconds=LONG_TIMEOUT_SECONDS,
+        )
+
+    def dataset_reserve_upload(
+        self,
+        reserve_upload_information: ApiReserveUploadInformation,
+        token: Optional[str],
+        retry_count: int,
+    ) -> None:
+        route = f"/datasets/reserveUpload"
+        return self._post_json(
+            route,
+            reserve_upload_information,
+            query={"token": token},
+            retry_count=retry_count,
         )

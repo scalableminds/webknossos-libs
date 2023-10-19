@@ -38,5 +38,31 @@ class ApiSharingToken:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatastore:
+    name: str
+    allows_upload: bool
+    url: str
+
+
+@attr.s(auto_attribs=True)
 class ApiUploadInformation:
     upload_id: str
+
+
+@attr.s(auto_attribs=True)
+class ApiLinkedLayerIdentifier:
+    organization_name: str
+    data_set_name: str
+    layer_name: str
+    new_layer_name: Optional[str]
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveUploadInformation:
+    upload_id: str
+    name: str
+    organization: str
+    total_file_count: int
+    layers_to_link: Optional[List[ApiLinkedLayerIdentifier]]
+    initial_teams: List[str]
+    folder_id: Optional[str]

@@ -1,6 +1,11 @@
 from typing import Dict, List, Optional
 
-from webknossos.client.apiclient.models import ApiDataset, ApiSharingToken, ApiShortLink
+from webknossos.client.apiclient.models import (
+    ApiDataset,
+    ApiDatastore,
+    ApiSharingToken,
+    ApiShortLink,
+)
 
 from .abstract_api_client import AbstractApiClient
 
@@ -58,3 +63,13 @@ class WkApiClient(AbstractApiClient):
     ) -> ApiSharingToken:
         route = f"/datasets/{organization_name}/{dataset_name}/sharingToken"
         return self._get_json(route, ApiSharingToken)
+
+    def assert_new_dataset_name_is_valid(
+        self, organization_name: str, dataset_name: str
+    ) -> None:
+        route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
+        self._get(route)
+
+    def datastore_list(self) -> List[ApiDatastore]:
+        route = f"/datastores"
+        return self._get_json(route, List[ApiDatastore])
