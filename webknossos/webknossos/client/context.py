@@ -123,9 +123,11 @@ def _cached__get_api_client(
 ) -> WkApiClient:
     """Generates a client which might contain an x-auth-token header."""
     if token is None:
-        return WkApiClient(base_url=webknossos_url, timeout=timeout)
+        return WkApiClient(base_wk_url=webknossos_url, timeout_seconds=timeout)
     return WkApiClient(
-        base_url=webknossos_url, headers={"X-Auth-Token": token}, timeout=timeout
+        base_wk_url=webknossos_url,
+        headers={"X-Auth-Token": token},
+        timeout_seconds=timeout,
     )
 
 
@@ -196,7 +198,9 @@ class _WebknossosContext:
 
     def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
         # TODO cache?
-        return DatastoreApiClient(base_url=datastore_url, timeout=self.timeout)
+        return DatastoreApiClient(
+            datastore_base_url=datastore_url, timeout_seconds=self.timeout
+        )
 
 
 _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(

@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Dict, Union, Optional, Type, TypeVar
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional, Type, TypeVar, Union
 
 import cattrs
 import httpx
@@ -11,91 +12,114 @@ T = TypeVar("T")
 
 Query = Dict[str, Optional[Union[str, int, float, bool]]]
 
+LONG_TIMEOUT_SECONDS = 7200.0
 
-class AbstractApiClient:
-    """A class for keeping track of data related to the API
 
-    Attributes:
-        base_url: The base URL for the API, all requests are made to a relative path to this URL
-        headers: A dictionary of headers to be sent with every request
-        timeout: The maximum amount of a time in seconds a request can take. API functions will raise
-            httpx.TimeoutException if this is exceeded.
-        webknossos_api_version: The webknossos REST Api version to use
-    """
-
+class AbstractApiClient(ABC):
     def __init__(
-        self, base_url: str, timeout: float, headers: Optional[Dict[str, str]] = None
+        self, timeout_seconds: float, headers: Optional[Dict[str, str]] = None
     ):
-        self.base_url = base_url
         self.headers = headers
-        self.timeout = timeout
+        self.timeout_seconds = timeout_seconds
+
+    @property
+    @abstractmethod
+    def url_prefix(self) -> str:
+        ...
 
     def _get_json(
-        self, uri: str, response_type: Type[T], query: Optional[Query] = None
+        self, route: str, response_type: Type[T], query: Optional[Query] = None
     ) -> T:
-        response = self._get(uri, query)
+        response = self._get(route, query)
         return self._parse_json(response, response_type)
 
-    def _patch_json(self, uri: str, body_structured: Any) -> None:
+    def _patch_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
-        self._patch(uri, body_json)
+        self._patch(route, body_json)
 
     def _post_json(
         self,
-        uri: str,
+        route: str,
         body_structured: Any,
         query: Optional[Query] = None,
         retry_count: int = 1,
+        timeout_seconds: Optional[float] = None,
     ) -> None:
         body_json = self._prepare_for_json(body_structured)
-        self._post(uri, body_json, query, retry_count)
+        self._post(route, body_json, query, retry_count, timeout_seconds)
 
-    def _get(self, uri: str, query: Optional[Query] = None) -> httpx.Response:
-        return self._request("GET", uri, query)
+    def _get(
+        self,
+        route: str,
+        query: Optional[Query] = None,
+        timeout_seconds: Optional[float] = None,
+    ) -> httpx.Response:
+        return self._request("GET", route, query, timeout_seconds=timeout_seconds)
 
     def _patch(
-        self, uri: str, body_json: Optional[Any], query: Optional[Query] = None
+        self,
+        route: str,
+        body_json: Optional[Any],
+        query: Optional[Query] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
-        return self._request("PATCH", uri, body_json=body_json, query=query)
+        return self._request(
+            "PATCH",
+            route,
+            body_json=body_json,
+            query=query,
+            timeout_seconds=timeout_seconds,
+        )
 
     def _post(
         self,
-        uri: str,
+        route: str,
         body_json: Optional[Any],
         query: Optional[Query] = None,
         retry_count: int = 1,
+        timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
         return self._request(
-            "POST", uri, body_json=body_json, query=query, retry_count=retry_count
+            "POST",
+            route,
+            body_json=body_json,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
         )
 
     def _request(
         self,
         method: str,
-        uri: str,
+        route: str,
         query: Optional[Query] = None,
         body_json: Optional[Any] = None,
         retry_count: int = 1,
+        timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
         assert (
             retry_count > 0
         ), f"Cannot perform request with retry_count < 1, got {retry_count}"
+        url = f"{self.url_prefix}{route}"
         response = None
         for _ in range(retry_count):
             response = httpx.request(
                 method,
-                uri,
+                url,
                 params=self._filter_query(query),
                 json=body_json,
                 headers=self.headers,
+                timeout=timeout_seconds
+                if timeout_seconds is not None
+                else self.timeout_seconds,
             )
             if response.status_code == 200 or response.status_code == 400:
                 # Stop retrying in case of success or bad request
                 break
         assert (
-                response is not None
+            response is not None
         ), "Got no http response. Was retry_count less than one?"
-        self._assert_good_response(uri, response)
+        self._assert_good_response(url, response)
         return response
 
     # Omit all entries where the value is None
@@ -112,15 +136,13 @@ class AbstractApiClient:
     def _prepare_for_json(self, body_structured: Any) -> Any:
         return cattrs.unstructure(humps.camelize(body_structured))
 
-    def _assert_good_response(
-        self, uri: str, response: httpx.Response
-    ) -> None:
+    def _assert_good_response(self, url: str, response: httpx.Response) -> None:
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
             logger.error(
-                f"""An error occurred while performing a request to the uri {uri}.
-If this is unexpected, please double-check your webknossos uri and credentials.
+                f"""An error occurred while performing a request to the URL {url}.
+If this is unexpected, please double-check your webknossos URL and credentials.
 If the error persists, it might be caused by a version mismatch of the python client and the WEBKNOSSOS server API version.
 See https://github.com/scalableminds/webknossos-libs/releases for current releases.
 
