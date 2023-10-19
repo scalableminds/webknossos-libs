@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixes bug in FSStore creation when using local paths for zarr data format. [#955](https://github.com/scalableminds/webknossos-libs/pull/955)
 
 
 ## [0.14.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.2) - 2023-10-18
