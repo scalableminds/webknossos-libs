@@ -17,6 +17,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
+
 
 ### Fixed
 
