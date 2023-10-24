@@ -69,6 +69,20 @@ class AbstractApiClient(ABC):
         body_json = self._prepare_for_json(body_structured)
         self._post(route, body_json, query, retry_count, timeout_seconds)
 
+    def _get_file(self, route: str, query: Optional[Query] = None) -> Tuple[bytes, str]:
+        response = self._get(route, query)
+        return response.content, _parse_filename_from_header(response)
+
+    def post_multipart_with_json_response(
+        self,
+        route: str,
+        response_type: Type[T],
+        multipart_data: Optional[httpx.RequestData] = None,
+        files: Optional[httpx.RequestFiles] = None,
+    ) -> T:
+        response = self._post(route, multipart_data=multipart_data, files=files)
+        return self._parse_json(response, response_type)
+
     def _get(
         self,
         route: str,
@@ -97,6 +111,8 @@ class AbstractApiClient(ABC):
         route: str,
         body_json: Optional[Any],
         query: Optional[Query] = None,
+        multipart_data: Optional[httpx.RequestData] = None,
+        files: Optional[httpx.RequestFiles] = None,
         retry_count: int = 1,
         timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
@@ -104,6 +120,8 @@ class AbstractApiClient(ABC):
             "POST",
             route,
             body_json=body_json,
+            multipart_data=multipart_data,
+            files=files,
             query=query,
             retry_count=retry_count,
             timeout_seconds=timeout_seconds,
@@ -115,6 +133,8 @@ class AbstractApiClient(ABC):
         route: str,
         query: Optional[Query] = None,
         body_json: Optional[Any] = None,
+        multipart_data: Optional[httpx.RequestData] = None,
+        files: Optional[httpx.RequestFiles] = None,
         retry_count: int = 1,
         timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
@@ -129,6 +149,8 @@ class AbstractApiClient(ABC):
                 url,
                 params=self._filter_query(query),
                 json=body_json,
+                data=multipart_data,
+                files=files,
                 headers=self.headers,
                 timeout=timeout_seconds or self.timeout_seconds,
             )
@@ -157,6 +179,16 @@ class AbstractApiClient(ABC):
         assert total_count_str is not None, "X-Total-Count header missing from response"
         return int(total_count_str)
 
+    def _parse_filename_from_header(self, response: httpx.Response) -> str:
+        # Adapted from https://peps.python.org/pep-0594/#cgi
+        from email.message import Message
+
+        content_disposition_str = response.headers.get("content-disposition", "")
+
+        m = Message()
+        m["content-type"] = content_disposition_str
+        return dict(m.get_params() or []).get("filename", "")
+
     def _prepare_for_json(self, body_structured: Any) -> Any:
         return cattrs.unstructure(humps.camelize(body_structured))
 
@@ -164,6 +196,7 @@ class AbstractApiClient(ABC):
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
+            # todo move this from logging to exception body
             logger.error(
                 f"""An error occurred while performing a request to the URL {url}.
 If this is unexpected, please double-check your webknossos URL and credentials.

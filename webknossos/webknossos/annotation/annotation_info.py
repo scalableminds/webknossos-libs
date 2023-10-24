@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional, Union
 import attr
 
 from ..client._generated.types import Unset
+from ..client.apiclient.models import ApiAnnotation
 from ..utils import warn_deprecated
 from .annotation import Annotation, AnnotationState, AnnotationType
 
@@ -31,6 +32,21 @@ class AnnotationInfo:
     def download_annotation(self) -> Annotation:
         """Downloads and returns the annotation that is discribed by this AnnotationInfo object"""
         return Annotation.download(self.id)
+
+    @classmethod
+    def _from_api_annotation(cls, api_annotation: ApiAnnotation) -> "AnnotationInfo":
+        owner_id = api_annotation.owner.id if api_annotation.owner is not None else None
+        return AnnotationInfo(
+            id=api_annotation.id,
+            owner_id=owner_id,
+            name=api_annotation.name,
+            description=api_annotation.description,
+            type=AnnotationType(api_annotation.typ),
+            state=AnnotationState(api_annotation.state),
+            duration_in_seconds=api_annotation.tracing_time / 1000
+            if api_annotation.tracing_time is not None
+            else None,
+        )
 
     @classmethod
     def _from_generated_response(

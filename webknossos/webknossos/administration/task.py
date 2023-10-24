@@ -6,27 +6,14 @@ import attr
 import httpx
 
 from ..annotation import Annotation, AnnotationInfo
-from ..client._generated.api.default import annotation_infos_by_task_id, task_info
 from ..client.apiclient.models import ApiTask, ApiTaskType
-from ..client.context import _get_generated_client
+from ..client.context import _get_api_client
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
 from ..utils import warn_deprecated
 from .project import Project
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from ..client._generated.models.task_info_response_200 import TaskInfoResponse200
-    from ..client._generated.models.task_info_response_200_type import (
-        TaskInfoResponse200Type,
-    )
-    from ..client._generated.models.task_infos_by_project_id_response_200_item import (
-        TaskInfosByProjectIdResponse200Item,
-    )
-    from ..client._generated.models.task_infos_by_project_id_response_200_item_type import (
-        TaskInfosByProjectIdResponse200ItemType,
-    )
 
 
 @attr.frozen
@@ -59,21 +46,6 @@ class TaskType:
             api_task_type.team_name,
         )
 
-    @classmethod
-    def _from_generated_response(
-        cls,
-        response: Union[
-            "TaskInfoResponse200Type", "TaskInfosByProjectIdResponse200ItemType"
-        ],
-    ) -> "TaskType":
-        return cls(
-            response.id,
-            response.summary,
-            response.description,
-            response.team_id,
-            response.team_name,
-        )
-
 
 @attr.frozen
 class Task:
@@ -88,12 +60,9 @@ class Task:
     @classmethod
     def get_by_id(cls, task_id: str) -> "Task":
         """Returns the task specified by the passed id (if your token authorizes you to see it)"""
-        client = _get_generated_client(enforce_auth=True)
-        response = task_info.sync(id=task_id, client=client)
-        assert (
-            response is not None
-        ), f"Requesting task infos from {client.base_url} failed."
-        return cls._from_generated_response(response)
+        client = _get_api_client(enforce_auth=True)
+        api_task = client.task_info(task_id)
+        return cls._from_api_task(api_task)
 
     @classmethod
     def create_from_annotations(
@@ -241,12 +210,9 @@ class Task:
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
-        client = _get_generated_client(enforce_auth=True)
-        response = annotation_infos_by_task_id.sync(id=self.task_id, client=client)
-        assert (
-            response is not None
-        ), f"Requesting annotation infos for task from {client.base_url} failed."
-        return [AnnotationInfo._from_generated_response(a) for a in response]
+        client = _get_api_client(enforce_auth=True)
+        api_annotations = client.annotation_infos_by_task(self, task.id)
+        return [AnnotationInfo._from_api_annotation(a) for a in api_annotations]
 
     def get_project(self) -> Project:
         """Returns the project this task belongs to"""

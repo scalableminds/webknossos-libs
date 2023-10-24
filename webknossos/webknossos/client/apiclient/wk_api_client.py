@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Tuple
 
 from webknossos.client.apiclient.models import (
+    ApiAnnotation,
     ApiDataset,
     ApiDatastore,
     ApiProject,
@@ -89,3 +90,27 @@ class WkApiClient(AbstractApiClient):
     ) -> Tuple[List[ApiTask], int]:
         route = f"/projects/{project_id}/tasks"
         return self._get_json_paginated(route, List[ApiTask], limit, page_number)
+
+    def annotation_download(
+        self, annotation_id: str, skip_volume_data: bool
+    ) -> (bytes, str):
+        route = f"/annotations/{annotation_id}/download"
+        return self._get_file(route)
+
+    def annotation_upload(
+        self, file_body: bytes, filename: str, createGroupForEachFile: bool
+    ) -> ApiAnnotation:
+        route = "/annotations/upload"
+        data = ({"createGroupForEachFile": createGroupForEachFile},)
+        files = {
+            filename: (filename, file_body),
+        }
+        return self.post_multipart_with_json_response(route, ApiAnnotation, data, files)
+
+    def annotation_infos_by_task(self, task_id: str) -> List[ApiAnnotation]:
+        route = f"/tasks/{task_id}/annotations"
+        return self._get_json(self, List[ApiAnnotation])
+
+    def task_info(self, task_id: str) -> ApiTask:
+        route = f"/tasks/{task_id}"
+        return self_get_json(self, ApiTask)

@@ -51,7 +51,6 @@ from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
 
-from ..client._generated.api.default import dataset_info
 from ..dataset import (
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -294,13 +293,8 @@ class Annotation:
           They can still be streamed from WEBKNOSSOS using `annotation.get_remote_annotation_dataset()`.
         * `_return_context` should not be set.
         """
-        from ..client._generated.api.default import annotation_download
         from ..client._resolve_short_link import resolve_short_link
-        from ..client.context import (
-            _get_context,
-            _get_generated_client,
-            webknossos_context,
-        )
+        from ..client.context import _get_api_client, _get_context, webknossos_context
 
         annotation_id_or_url = resolve_short_link(annotation_id_or_url)
 
@@ -335,24 +329,18 @@ class Annotation:
             context = nullcontext()
 
         with context:
-            client = _get_generated_client()
-            response = annotation_download.sync_detailed(
-                id=annotation_id,
-                client=client,
-                skip_volume_data=skip_volume_data,
+            client = _get_api_client()
+            file_body, filename = client.annotation_download(
+                annotation_id, skip_volume_data=skip_volume_data
             )
-        assert response.status_code == 200, response
-        content_disposition_header = response.headers.get("content-disposition", "")
-        filename = _parse_filename_from_header(content_disposition_header)
+
         if filename.endswith(".nml"):
-            annotation = Annotation._load_from_nml(
-                filename[:-4], BytesIO(response.content)
-            )
+            annotation = Annotation._load_from_nml(filename[:-4], BytesIO(file_body))
         else:
             assert filename.endswith(
                 ".zip"
             ), f"Downloaded annoation should have the suffix .zip or .nml, but has filename {filename}"
-            annotation = Annotation._load_from_zip(BytesIO(response.content))
+            annotation = Annotation._load_from_zip(BytesIO(file_body))
 
         if _return_context:
             return annotation, context
@@ -519,26 +507,14 @@ class Annotation:
 
     def upload(self) -> str:
         """Uploads the annotation to your current `webknossos_context`."""
-        from ..client.context import _get_generated_client
+        from ..client.context import _get_api_client
 
-        client = _get_generated_client(enforce_auth=True)
-        url = f"{client.base_url}/api/annotations/upload"
-
-        response = httpx.post(
-            url=url,
-            headers=client.get_headers(),
-            cookies=client.get_cookies(),
-            timeout=client.get_timeout(),
-            data={"createGroupForEachFile": False},
-            files={
-                f"{self.name}.zip": (f"{self.name}.zip", self._binary_zip()),
-            },
+        client = _get_api_client(enforce_auth=True)
+        response_annotation_info = client.annotation_upload(
+            self._binary_zip(), f"{self.name}.zip", createGroupForEachFile=False
         )
-        assert (
-            response.status_code == 200
-        ), f"Failed to upload annotation {self.name}: {response.status_code}: {response.text}"
-        response_annotation_info = response.json()["annotation"]
-        return f"{client.base_url}/annotations/{response_annotation_info['typ']}/{response_annotation_info['id']}"
+
+        return f"{client.base_url}/annotations/{response_annotation_info.typ}/{response_annotation_info.id}"
 
     def _binary_zip(self) -> bytes:
         with BytesIO() as buffer:
@@ -602,16 +578,9 @@ class Annotation:
                         UserWarning,
                     )
 
-        dataset_info_response = dataset_info.sync_detailed(
-            organization_name=organization_id,
-            data_set_name=self.dataset_name,
-            client=context.generated_client,
-        )
-        assert dataset_info_response.status_code == 200, dataset_info_response
-        parsed = dataset_info_response.parsed
-        assert parsed is not None
+        dataset_info = context.api_client(organization_id, self.dataset_name)
 
-        datastore_url = parsed.data_store.url
+        datastore_url = dataset_info.data_store.url
 
         zarr_path = UPath(
             f"{datastore_url}/data/annotations/zarr/{self.annotation_id}/",

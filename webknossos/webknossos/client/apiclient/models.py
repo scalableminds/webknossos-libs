@@ -108,3 +108,15 @@ class ApiProject:
     priority: int
     paused: bool
     expected_time: Optional[int]
+
+
+@attr.s(auto_attribs=True)
+class ApiAnnotation:
+    id: str
+    typ: str
+    owner: ApiUser
+    name: str
+    description: str
+    state: str
+    tracing_time: Optional[int]  # millis
+    modified: int
