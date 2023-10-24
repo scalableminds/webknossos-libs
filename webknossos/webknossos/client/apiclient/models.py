@@ -11,6 +11,8 @@ class ApiShortLink:
 @attr.s(auto_attribs=True)
 class ApiDataStore:
     url: str
+    name: str
+    allows_upload: True
 
 
 @attr.s(auto_attribs=True)
@@ -94,6 +96,16 @@ class ApiTask:
 
 
 @attr.s(auto_attribs=True)
+class ApiTaskParameters:
+    taks_type_id: str
+    needed_experience: ApiExperience
+    pending_nstances: int
+    project_name: str
+    script_id: str
+    bounding_box: dict
+
+
+@attr.s(auto_attribs=True)
 class ApiTeamMembership:
     id: str
     name: str
@@ -121,6 +133,23 @@ class ApiUser:
 
 
 @attr.s(auto_attribs=True)
+class ApiMonth:
+    month: int
+    year: int
+
+
+@attr.s(auto_attribs=True)
+class ApiLoggedTimeForMonth:
+    payment_interval: ApiMonth
+    duration_in_seconds: int
+
+
+@attr.s(auto_attribs=True)
+class ApiLoggedTimeGroupedByMonth:
+    logged_time: List[ApiLoggedTimeForMonth]
+
+
+@attr.s(auto_attribs=True)
 class ApiProject:
     id: str
     name: str
@@ -142,6 +171,7 @@ class ApiAnnotation:
     state: str
     tracing_time: Optional[int]  # millis
     modified: int
+    data_store: ApiDataStore
 
 
 @attr.s(auto_attribs=True)

@@ -9,9 +9,13 @@ from webknossos.client.apiclient.models import (
     ApiShortLink,
     ApiTask,
     APiFolderWithParent,
+    ApiUser,
+    ApiTeam,
+    ApiLoggedTimeByMonth,
 )
 
 from .abstract_api_client import AbstractApiClient
+from ...utils import time_since_epoch_in_ms
 
 
 class WkApiClient(AbstractApiClient):
@@ -29,6 +33,10 @@ class WkApiClient(AbstractApiClient):
     @property
     def url_prefix(self) -> str:
         return f"{self.base_wk_url}/api/v{self.webknossos_api_version}"
+
+    def health(self) -> str:
+        route = "/health"
+        return self._get(route)
 
     def short_link_by_key(self, key: str) -> ApiShortLink:
         route = f"/shortLinks/byKey/{key}"
@@ -92,6 +100,10 @@ class WkApiClient(AbstractApiClient):
         route = f"/projects/{project_id}/tasks"
         return self._get_json_paginated(route, List[ApiTask], limit, page_number)
 
+    def annotation_info(self, annotation_id: str) -> ApiAnnotation:
+        route = f"/annotations/{annotation_id}"
+        return self._get_json(route, ApiAnnotation, query={"timestamp": time_since_epoch_in_ms()})
+
     def annotation_download(
         self, annotation_id: str, skip_volume_data: bool
     ) -> (bytes, str):
@@ -118,4 +130,24 @@ class WkApiClient(AbstractApiClient):
 
     def folder_tree(self) -> List[ApiFolderWithParent]:
         route = "/folders/tree"
-        return self.get_json(self, List[APiFolderWithParent])
+        return self._get_json(route, List[APiFolderWithParent])
+
+    def user_by_id(self, user_id: str) -> ApiUser:
+        route = f"/api/users/{user_id}"
+        return self._get_json(route, ApiUser)
+
+    def current_user(self) -> ApiUser:
+        route = "/user"
+        return self._get_json(route, ApiUser)
+
+    def user_list(self) -> List[ApiUser]:
+        route = "/users"
+        return self._get_json(route, List[ApiUser])
+
+    def team_list(self) -> List[ApiTeam]:
+        route = "/teams"
+        return self._get_json(route, List[ApiTeam])
+
+    def user_logged_time(self, user_id: str) -> ApiLoggedTimeGroupedByMonth:
+        route = f"/users/{user_id}/loggedTime"
+        return self._get_json(route, ApiLoggedTimeGroupedByMonth)
