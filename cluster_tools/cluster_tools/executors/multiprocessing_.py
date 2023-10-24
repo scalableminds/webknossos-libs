@@ -113,6 +113,22 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         else:
             submit_fn = super().submit  # type: ignore[assignment]
 
+        # Depending on the start_method and output_pickle_path, setup functions may need to be
+        # executed in the new process context, before the actual code is ran.
+        # These wrapper functions consume their arguments from *args, **kwargs and assume
+        # that the next and last argument will be another function that is then called.
+        # Eventually, the actually submitted function will be called.
+
+        if output_pickle_path is not None:
+            __fn = cast(
+                Callable[_P, _T],
+                partial(
+                    MultiprocessingExecutor._execute_and_persist_function,
+                    Path(output_pickle_path),
+                    __fn,
+                ),
+            )
+
         if self._mp_logging_handler_pool is not None:
             # If a start_method other than the default "fork" is used, logging needs to be re-setup,
             # because the programming context is not inherited in those cases.
@@ -124,16 +140,6 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
                 partial(
                     MultiprocessingExecutor._setup_logging_and_execute,
                     multiprocessing_logging_setup_fn,
-                    __fn,
-                ),
-            )
-
-        if output_pickle_path is not None:
-            __fn = cast(
-                Callable[_P, _T],
-                partial(
-                    MultiprocessingExecutor._execute_and_persist_function,
-                    Path(output_pickle_path),
                     __fn,
                 ),
             )
