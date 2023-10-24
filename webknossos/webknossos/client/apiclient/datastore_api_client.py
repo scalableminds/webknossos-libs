@@ -28,7 +28,7 @@ class DatastoreApiClient(AbstractApiClient):
         token: Optional[str],
         retry_count: int,
     ) -> None:
-        route = f"/datasets/finishUpload"
+        route = "/datasets/finishUpload"
         return self._post_json(
             route,
             upload_information,
@@ -43,7 +43,7 @@ class DatastoreApiClient(AbstractApiClient):
         token: Optional[str],
         retry_count: int,
     ) -> None:
-        route = f"/datasets/reserveUpload"
+        route = "/datasets/reserveUpload"
         return self._post_json(
             route,
             reserve_upload_information,

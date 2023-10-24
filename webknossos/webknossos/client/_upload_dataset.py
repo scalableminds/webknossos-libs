@@ -4,11 +4,13 @@ from functools import lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
-from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
+from typing import Iterator, List, NamedTuple, Optional, Tuple
 from uuid import uuid4
 
 import httpx
 
+from ..dataset import Dataset, Layer, RemoteDataset
+from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .apiclient.models import (
     ApiLinkedLayerIdentifier,
@@ -16,8 +18,6 @@ from .apiclient.models import (
     ApiUploadInformation,
 )
 from .context import _get_context, _WebknossosContext
-from ..dataset import Dataset, Layer, RemoteDataset
-from ..utils import get_rich_progress
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 5

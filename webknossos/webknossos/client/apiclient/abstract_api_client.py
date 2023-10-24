@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
 
 import cattrs
 import httpx
@@ -32,6 +32,27 @@ class AbstractApiClient(ABC):
     ) -> T:
         response = self._get(route, query)
         return self._parse_json(response, response_type)
+
+    def _get_json_paginated(
+        self,
+        route: str,
+        response_type: Type[T],
+        limit: Optional[int],
+        page_number: Optional[int],
+        query: Optional[Query] = None,
+    ) -> Tuple[T, int]:
+        pagination_query: Query = {
+            "limit": limit,
+            "pageNumber": page_number,
+            "includeTotalCount": True,
+        }
+        query_adapted = pagination_query.copy()
+        if query is not None:
+            query_adapted.update(query)
+        response = self._get(route, query_adapted)
+        return self._parse_json(
+            response, response_type
+        ), self._extract_total_count_header(response)
 
     def _patch_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
@@ -130,6 +151,11 @@ class AbstractApiClient(ABC):
         return cattrs.structure(
             humps.decamelize(response.json()), response_type
         )  # TODO error handling? urlencode needed?
+
+    def _extract_total_count_header(self, response: httpx.Response) -> int:
+        total_count_str = response.headers.get("X-Total-Count")
+        assert total_count_str is not None, "X-Total-Count header missing from response"
+        return int(total_count_str)
 
     def _prepare_for_json(self, body_structured: Any) -> Any:
         return cattrs.unstructure(humps.camelize(body_structured))

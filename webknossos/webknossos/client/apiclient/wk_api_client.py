@@ -1,12 +1,12 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from webknossos.client.apiclient.models import (
     ApiDataset,
     ApiDatastore,
+    ApiProject,
     ApiSharingToken,
     ApiShortLink,
-    ApiProject,
-    ApiTask
+    ApiTask,
 )
 
 from .abstract_api_client import AbstractApiClient
@@ -41,7 +41,7 @@ class WkApiClient(AbstractApiClient):
     def dataset_list(
         self, is_active: Optional[bool], organization_name: Optional[str]
     ) -> List[ApiDataset]:
-        route = f"/datasets"
+        route = "/datasets"
         return self._get_json(
             route,
             List[ApiDataset],
@@ -73,17 +73,19 @@ class WkApiClient(AbstractApiClient):
         self._get(route)
 
     def datastore_list(self) -> List[ApiDatastore]:
-        route = f"/datastores"
+        route = "/datastores"
         return self._get_json(route, List[ApiDatastore])
 
-    def project_info_by_name(self, project_name) -> ApiProject:
+    def project_info_by_name(self, project_name: str) -> ApiProject:
         route = f"/projects/byName/{project_name}"
         return self._get_json(route, ApiProject)
 
-    def project_info_by_id(self, project_id) -> ApiProject:
+    def project_info_by_id(self, project_id: str) -> ApiProject:
         route = f"/projects/{project_id}"
         return self._get_json(route, ApiProject)
 
-    def task_infos_by_project_id(self, project_id: str, limit: Optional[int], page_number: Optional[int]) -> List[ApiTask]:
+    def task_infos_by_project_id_paginated(
+        self, project_id: str, limit: Optional[int], page_number: Optional[int]
+    ) -> Tuple[List[ApiTask], int]:
         route = f"/projects/{project_id}/tasks"
-        return self._get_json(route, List[ApiTask], query={"limit": limit, "pageNumber": page_number, "includeTotalCount": True})
+        return self._get_json_paginated(route, List[ApiTask], limit, page_number)

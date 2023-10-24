@@ -7,6 +7,7 @@ import httpx
 
 from ..annotation import Annotation, AnnotationInfo
 from ..client._generated.api.default import annotation_infos_by_task_id, task_info
+from ..client.apiclient.models import ApiTask, ApiTaskType
 from ..client.context import _get_generated_client
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
@@ -47,6 +48,16 @@ class TaskType:
     description: str
     team_id: str
     team_name: str
+
+    @classmethod
+    def _from_api_task_type(cls, api_task_type: ApiTaskType) -> "TaskType":
+        return cls(
+            api_task_type.id,
+            api_task_type.summary,
+            api_task_type.description,
+            api_task_type.team_id,
+            api_task_type.team_name,
+        )
 
     @classmethod
     def _from_generated_response(
@@ -195,6 +206,20 @@ class Task:
 
         return cls._from_generated_response(
             TaskInfoResponse200.from_dict(response_dict)
+        )
+
+    @classmethod
+    def _from_api_task(cls, api_task: ApiTask) -> "Task":
+        return cls(
+            api_task.id,
+            api_task.project_id,
+            api_task.data_set,
+            TaskStatus(
+                api_task.status.pending,
+                api_task.status.active,
+                api_task.status.finished,
+            ),
+            TaskType._from_api_task_type(api_task.type),
         )
 
     @classmethod

@@ -35,6 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ..client.apiclient.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
 from .defaults import (
@@ -48,9 +49,6 @@ from .defaults import (
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
-
-from ..client.apiclient.models import ApiDataset
-from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from .ome_metadata import write_ome_0_4_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder

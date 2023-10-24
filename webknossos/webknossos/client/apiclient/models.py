@@ -69,8 +69,28 @@ class ApiReserveUploadInformation:
 
 
 @attr.s(auto_attribs=True)
+class ApiTaskStatus:
+    pending: int
+    active: int
+    finished: int
+
+
+@attr.s(auto_attribs=True)
+class ApiTaskType:
+    id: str
+    summary: str
+    description: str
+    team_id: str
+    team_name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiTask:
     id: str
+    project_id: str
+    data_set: str
+    status: ApiTaskStatus
+    type: ApiTaskType
 
 
 @attr.s(auto_attribs=True)

@@ -1,17 +1,15 @@
 import warnings
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List, Optional
 
 import attr
 
-from .user import User
 from ..client.apiclient.models import ApiProject
-from ..client._generated.api.default import (
-    task_infos_by_project_id,
-)
 from ..client.context import _get_api_client
+from .user import User
 
 if TYPE_CHECKING:
     from .task import Task
+
 
 @attr.frozen
 class Project:
@@ -24,7 +22,7 @@ class Project:
     owner_id: str
     priority: int
     paused: bool
-    expected_time: int
+    expected_time: Optional[int]
 
     @classmethod
     def get_by_id(
@@ -48,39 +46,24 @@ class Project:
 
         from .task import Task
 
-        PAGINATION_LIMIT = 1000
+        PAGINATION_LIMIT = 10
         pagination_page = 0
 
         client = _get_api_client(enforce_auth=True)
-        response_raw = task_infos_by_project_id.sync_detailed(
-            self.project_id,
-            limit=PAGINATION_LIMIT,
-            page_number=pagination_page,
-            include_total_count=True,
-            client=client,
+        api_tasks_batch, total_count = client.task_infos_by_project_id_paginated(
+            self.project_id, limit=PAGINATION_LIMIT, page_number=pagination_page
         )
-        # TODO
-        total_count_raw = response_raw.headers.get("X-Total-Count")
-        assert total_count_raw is not None, "X-Total-Count header missing from response"
-        total_count = int(total_count_raw)
-        response = response_raw.parsed
-        assert response is not None, "Could not fetch task infos by project id."
-        all_tasks = [Task._from_generated_response(t) for t in response]
+        all_tasks = [Task._from_api_task(t) for t in api_tasks_batch]
         if total_count > PAGINATION_LIMIT:
             if fetch_all:
                 while total_count > len(all_tasks):
                     pagination_page += 1
-                    response = task_infos_by_project_id.sync(
+                    api_tasks_batch, _ = client.task_infos_by_project_id_paginated(
                         self.project_id,
                         limit=PAGINATION_LIMIT,
                         page_number=pagination_page,
-                        include_total_count=False,
-                        client=client,
                     )
-                    assert (
-                        response is not None
-                    ), "Could not fetch task infos by project id."
-                    new_tasks = [Task._from_generated_response(t) for t in response]
+                    new_tasks = [Task._from_api_task(t) for t in api_tasks_batch]
                     all_tasks.extend(new_tasks)
 
             else:
@@ -95,10 +78,7 @@ class Project:
         return User.get_by_id(self.owner_id)
 
     @classmethod
-    def _from_api_project(
-            cls,
-            api_project: ApiProject
-    ) -> "Project":
+    def _from_api_project(cls, api_project: ApiProject) -> "Project":
         return cls(
             api_project.id,
             api_project.name,
