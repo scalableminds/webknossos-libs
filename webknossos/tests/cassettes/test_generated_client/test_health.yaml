@@ -11,7 +11,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: http://localhost:9000/api/health
   response:
@@ -28,8 +28,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 version: 1

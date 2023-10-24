@@ -3,15 +3,15 @@ from typing import TYPE_CHECKING, List, Union
 
 import attr
 
-from webknossos.administration.user import User
-from webknossos.client.apiclient.models import ApiProject
-from webknossos.client._generated.api.default import (
+from .user import User
+from ..client.apiclient.models import ApiProject
+from ..client._generated.api.default import (
     task_infos_by_project_id,
 )
-from webknossos.client.context import _get_api_client
+from ..client.context import _get_api_client
 
 if TYPE_CHECKING:
-    from webknossos.administration import Task
+    from .task import Task
 
 @attr.frozen
 class Project:
@@ -46,7 +46,7 @@ class Project:
         set parameter pass fetch_all=True to use pagination to fetch all tasks iteratively with pagination.
         """
 
-        from webknossos.administration import Task
+        from .task import Task
 
         PAGINATION_LIMIT = 1000
         pagination_page = 0

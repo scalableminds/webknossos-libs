@@ -56,9 +56,9 @@ import attr
 from dotenv import load_dotenv
 from rich.prompt import Prompt
 
-from webknossos.client._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
-from webknossos.client._generated import Client as GeneratedClient
-from webknossos.client.apiclient import DatastoreApiClient, WkApiClient
+from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
+from ._generated import Client as GeneratedClient
+from .apiclient import DatastoreApiClient, WkApiClient
 
 load_dotenv()
 
@@ -79,7 +79,7 @@ def _cached_ask_for_token(webknossos_url: str) -> str:
 
 @lru_cache(maxsize=None)
 def _cached_get_org(context: "_WebknossosContext") -> str:
-    from webknossos.client._generated.api.default import current_user_info
+    from ._generated.api.default import current_user_info
 
     current_user_info_response = current_user_info.sync(
         client=context.generated_auth_client
@@ -91,7 +91,7 @@ def _cached_get_org(context: "_WebknossosContext") -> str:
 # TODO reset invalid tokens e.g. using cachetools  pylint: disable=fixme
 @lru_cache(maxsize=None)
 def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
-    from webknossos.client._generated.api.default import generate_token_for_data_store
+    from ._generated.api.default import generate_token_for_data_store
 
     generate_token_for_data_store_response = generate_token_for_data_store.sync(
         client=context.generated_auth_client

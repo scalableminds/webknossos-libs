@@ -14,8 +14,11 @@ from PIL import Image
 from scipy.ndimage.interpolation import zoom
 from typing_extensions import Annotated
 
-from webknossos import BoundingBox, Dataset, Mag, MagView
-from webknossos.cli._utils import (
+from ..dataset import Dataset, MagView, View
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..geometry import BoundingBox, Mag, Vec3Int
+from ..utils import get_executor_for_args, wait_and_ensure_success
+from ._utils import (
     DistributionStrategy,
     Vec2Int,
     parse_bbox,
@@ -23,10 +26,6 @@ from webknossos.cli._utils import (
     parse_path,
     parse_vec2int,
 )
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
-from webknossos.dataset.view import View
-from webknossos.geometry.vec3_int import Vec3Int
-from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 
 def _make_tiff_name(name: str, slice_index: int) -> str:
@@ -167,6 +166,7 @@ def export_tiff_stack(
                 ),
                 view_chunks,
             ),
+            executor=executor,
             progress_desc="Exporting tiff files",
         )
 

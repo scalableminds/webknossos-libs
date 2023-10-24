@@ -11,7 +11,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: https://webknossos.org/api/shortLinks/byKey/LNir_A2-aCUzsoSL
   response:
@@ -32,8 +32,6 @@ interactions:
       - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -48,7 +46,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: https://webknossos.org/api/annotations/61c20205010000cc004a6356/download?skipVolumeData=true
   response:
@@ -56,7 +54,7 @@ interactions:
       zip:
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"e974c5b694e37df3be7b397f01d5fee64282b2ea\" />\n  <meta name=\"timestamp\"
+          content=\"43d88dd943673e54ff7daf43da86a86c8eec6530\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"
@@ -100,8 +98,6 @@ interactions:
       - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -116,7 +112,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.18.2
+      - python-httpx/0.24.1
     method: GET
     uri: https://webknossos.org/api/datasets/scalable_minds/l4dense_motta_et_al_demo_v2
   response:
@@ -127,14 +123,14 @@ interactions:
       reconstruction in layer 4 of the somatosensory cortex by A Motta, M Berning,
       KM Boergens, B Staffler, M Beining, S Loomba, P Hennig, H Wissler, M Helmstaedter
       in Science on 24 October 2019. [10.1126/science.aay3134](https://science.sciencemag.org/content/early/2019/10/23/science.aay3134)","displayName":"L4
-      Mouse Cortex Segmentation","created":1627390556195,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1627390556195,"details":null,"isUnreported":false,"jobsEnabled":true,"tags":[],"folderId":"63889e760100005801712441","publication":null}'
+      Mouse Cortex Segmentation","created":1627390556195,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1627390556195,"details":null,"isUnreported":false,"jobsEnabled":true,"tags":["demo"],"folderId":"63889e760100005801712441","publication":null}'
     headers:
       cache-control:
       - no-cache
       connection:
       - keep-alive
       content-length:
-      - '2272'
+      - '2278'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -144,8 +140,6 @@ interactions:
       - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -202,7 +196,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/
 - request:
     body: null
     headers: {}
@@ -259,7 +252,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/
 - request:
     body: null
     headers: {}
@@ -295,7 +287,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -331,7 +322,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -388,7 +378,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356
 - request:
     body: null
     headers: {}
@@ -445,7 +434,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356
 - request:
     body: null
     headers: {}
@@ -502,7 +490,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356
 - request:
     body: null
     headers: {}
@@ -538,7 +525,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -574,7 +560,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
 - request:
     body: null
     headers:
@@ -612,7 +597,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
 - request:
     body: null
     headers:
@@ -650,7 +634,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -702,7 +685,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1
 - request:
     body: null
     headers: {}
@@ -739,7 +721,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -775,7 +756,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -812,7 +792,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -849,7 +828,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -885,7 +863,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -922,7 +899,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -974,7 +950,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1
 - request:
     body: null
     headers: {}
@@ -1026,7 +1001,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -1063,7 +1037,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -1099,7 +1072,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -1136,7 +1108,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -1173,7 +1144,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -1209,7 +1179,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -1246,7 +1215,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -1298,7 +1266,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -1350,7 +1317,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -1387,7 +1353,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -1423,7 +1388,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -1460,7 +1424,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -1497,7 +1460,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -1533,7 +1495,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -1570,7 +1531,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -1622,7 +1582,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -1674,7 +1633,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4
 - request:
     body: null
     headers: {}
@@ -1711,7 +1669,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -1747,7 +1704,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -1784,7 +1740,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -1821,7 +1776,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -1857,7 +1811,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -1894,7 +1847,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -1946,7 +1898,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/8-8-4
 - request:
     body: null
     headers: {}
@@ -1998,7 +1949,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8
 - request:
     body: null
     headers: {}
@@ -2035,7 +1985,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -2071,7 +2020,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -2108,7 +2056,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -2145,7 +2092,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -2181,7 +2127,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -2218,7 +2163,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -2270,7 +2214,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/16-16-8
 - request:
     body: null
     headers: {}
@@ -2322,7 +2265,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16
 - request:
     body: null
     headers: {}
@@ -2359,7 +2301,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -2395,7 +2336,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -2432,7 +2372,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -2469,7 +2408,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -2505,7 +2443,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -2542,7 +2479,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -2594,7 +2530,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16
 - request:
     body: null
     headers: {}
@@ -2646,7 +2581,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32
 - request:
     body: null
     headers: {}
@@ -2683,7 +2617,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -2719,7 +2652,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -2756,7 +2688,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -2793,7 +2724,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -2829,7 +2759,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -2866,7 +2795,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -2918,7 +2846,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/64-64-32
 - request:
     body: null
     headers: {}
@@ -2970,7 +2897,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64
 - request:
     body: null
     headers: {}
@@ -3007,7 +2933,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -3043,7 +2968,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -3080,7 +3004,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -3117,7 +3040,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -3153,7 +3075,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -3190,7 +3111,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -3242,7 +3162,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/128-128-64
 - request:
     body: null
     headers: {}
@@ -3294,7 +3213,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128
 - request:
     body: null
     headers: {}
@@ -3331,7 +3249,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -3367,7 +3284,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -3404,7 +3320,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -3441,7 +3356,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -3477,7 +3391,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -3514,7 +3427,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -3566,7 +3478,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/256-256-128
 - request:
     body: null
     headers: {}
@@ -3618,7 +3529,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256
 - request:
     body: null
     headers: {}
@@ -3655,7 +3565,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -3691,7 +3600,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -3728,7 +3636,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -3765,7 +3672,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -3801,7 +3707,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -3838,7 +3743,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -3890,7 +3794,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/512-512-256
 - request:
     body: null
     headers: {}
@@ -3942,7 +3845,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -3979,7 +3881,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -4015,7 +3916,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -4052,7 +3952,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -4089,7 +3988,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -4125,7 +4023,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -4162,7 +4059,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -4214,7 +4110,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -4266,7 +4161,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1
 - request:
     body: null
     headers: {}
@@ -4303,7 +4197,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -4339,7 +4232,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1/.zarray
 - request:
     body: null
     headers: {}
@@ -4376,7 +4268,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -4413,7 +4304,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -4449,7 +4339,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1/.zarray
 - request:
     body: null
     headers: {}
@@ -4486,7 +4375,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -4538,7 +4426,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1
 - request:
     body: null
     headers: {}
@@ -4590,7 +4477,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1
 - request:
     body: null
     headers: {}
@@ -4627,7 +4513,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -4663,7 +4548,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -4700,7 +4584,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -4737,7 +4620,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -4773,7 +4655,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -4810,7 +4691,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -4862,7 +4742,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/2-2-1
 - request:
     body: null
     headers: {}
@@ -4914,7 +4793,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2
 - request:
     body: null
     headers: {}
@@ -4951,7 +4829,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -4987,7 +4864,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -5024,7 +4900,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -5061,7 +4936,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -5097,7 +4971,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -5134,7 +5007,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -5186,7 +5058,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/4-4-2
 - request:
     body: null
     headers: {}
@@ -5238,7 +5109,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4
 - request:
     body: null
     headers: {}
@@ -5275,7 +5145,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -5311,7 +5180,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -5348,7 +5216,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -5385,7 +5252,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -5421,7 +5287,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -5458,7 +5323,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -5510,7 +5374,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/8-8-4
 - request:
     body: null
     headers: {}
@@ -5562,7 +5425,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8
 - request:
     body: null
     headers: {}
@@ -5599,7 +5461,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -5635,7 +5496,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -5672,7 +5532,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -5709,7 +5568,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -5745,7 +5603,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -5782,7 +5639,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -5834,7 +5690,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/16-16-8
 - request:
     body: null
     headers: {}
@@ -5886,7 +5741,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16
 - request:
     body: null
     headers: {}
@@ -5923,7 +5777,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -5959,7 +5812,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -5996,7 +5848,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -6033,7 +5884,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -6069,7 +5919,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -6106,7 +5955,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -6158,7 +6006,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/32-32-16
 - request:
     body: null
     headers: {}
@@ -6210,7 +6057,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32
 - request:
     body: null
     headers: {}
@@ -6247,7 +6093,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -6283,7 +6128,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -6320,7 +6164,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -6357,7 +6200,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -6393,7 +6235,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -6430,7 +6271,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -6482,7 +6322,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/64-64-32
 - request:
     body: null
     headers: {}
@@ -6534,7 +6373,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64
 - request:
     body: null
     headers: {}
@@ -6571,7 +6409,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -6607,7 +6444,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -6644,7 +6480,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -6681,7 +6516,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -6717,7 +6551,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -6754,7 +6587,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -6806,7 +6638,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/128-128-64
 - request:
     body: null
     headers: {}
@@ -6858,7 +6689,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128
 - request:
     body: null
     headers: {}
@@ -6895,7 +6725,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -6931,7 +6760,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -6968,7 +6796,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -7005,7 +6832,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -7041,7 +6867,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -7078,7 +6903,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -7130,7 +6954,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/256-256-128
 - request:
     body: null
     headers: {}
@@ -7182,7 +7005,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256
 - request:
     body: null
     headers: {}
@@ -7219,7 +7041,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -7255,7 +7076,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -7292,7 +7112,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -7329,7 +7148,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -7365,7 +7183,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -7400,7 +7217,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -7452,7 +7268,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/512-512-256
 - request:
     body: null
     headers: {}
@@ -7504,7 +7319,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -7541,7 +7355,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -7577,7 +7390,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -7614,7 +7426,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -7651,7 +7462,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -7687,7 +7497,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -7724,7 +7533,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -7776,7 +7584,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/predictions/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -7828,7 +7635,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1
 - request:
     body: null
     headers: {}
@@ -7863,7 +7669,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -7899,7 +7704,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -7936,7 +7740,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -7973,7 +7776,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -8009,7 +7811,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -8046,7 +7847,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -8098,7 +7898,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1
 - request:
     body: null
     headers: {}
@@ -8150,7 +7949,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -8187,7 +7985,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -8223,7 +8020,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -8260,7 +8056,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -8297,7 +8092,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -8333,7 +8127,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -8370,7 +8163,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -8422,7 +8214,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -8474,7 +8265,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -8511,7 +8301,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -8547,7 +8336,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -8584,7 +8372,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -8621,7 +8408,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -8657,7 +8443,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -8694,7 +8479,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -8746,7 +8530,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -8798,7 +8581,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4
 - request:
     body: null
     headers: {}
@@ -8835,7 +8617,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -8871,7 +8652,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -8908,7 +8688,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -8945,7 +8724,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -8981,7 +8759,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -9018,7 +8795,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -9070,7 +8846,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/8-8-4
 - request:
     body: null
     headers: {}
@@ -9122,7 +8897,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8
 - request:
     body: null
     headers: {}
@@ -9159,7 +8933,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -9195,7 +8968,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -9232,7 +9004,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -9269,7 +9040,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -9305,7 +9075,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -9342,7 +9111,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -9394,7 +9162,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/16-16-8
 - request:
     body: null
     headers: {}
@@ -9446,7 +9213,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16
 - request:
     body: null
     headers: {}
@@ -9483,7 +9249,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -9519,7 +9284,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -9556,7 +9320,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -9593,7 +9356,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -9629,7 +9391,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -9666,7 +9427,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -9718,7 +9478,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/32-32-16
 - request:
     body: null
     headers: {}
@@ -9770,7 +9529,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32
 - request:
     body: null
     headers: {}
@@ -9807,7 +9565,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -9843,7 +9600,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -9880,7 +9636,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -9917,7 +9672,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -9953,7 +9707,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -9990,7 +9743,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -10042,7 +9794,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/64-64-32
 - request:
     body: null
     headers: {}
@@ -10094,7 +9845,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64
 - request:
     body: null
     headers: {}
@@ -10131,7 +9881,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -10167,7 +9916,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -10204,7 +9952,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -10241,7 +9988,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -10277,7 +10023,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -10314,7 +10059,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -10366,7 +10110,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/128-128-64
 - request:
     body: null
     headers: {}
@@ -10418,7 +10161,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128
 - request:
     body: null
     headers: {}
@@ -10455,7 +10197,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -10491,7 +10232,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -10528,7 +10268,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -10565,7 +10304,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -10601,7 +10339,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -10638,7 +10375,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -10690,7 +10426,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/256-256-128
 - request:
     body: null
     headers: {}
@@ -10742,7 +10477,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256
 - request:
     body: null
     headers: {}
@@ -10779,7 +10513,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -10815,7 +10548,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -10852,7 +10584,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -10889,7 +10620,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -10925,7 +10655,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -10962,7 +10691,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -11014,7 +10742,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/512-512-256
 - request:
     body: null
     headers: {}
@@ -11066,7 +10793,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -11103,7 +10829,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -11139,7 +10864,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -11176,7 +10900,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -11213,7 +10936,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -11249,7 +10971,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -11286,7 +11007,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -11338,7 +11058,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/segmentation/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -11390,7 +11109,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1
 - request:
     body: null
     headers: {}
@@ -11428,7 +11146,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -11464,7 +11181,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1/.zarray
 - request:
     body: null
     headers: {}
@@ -11502,7 +11218,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -11540,7 +11255,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1/zarr.json
 - request:
     body: null
     headers: {}
@@ -11576,7 +11290,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1/.zarray
 - request:
     body: null
     headers: {}
@@ -11614,7 +11327,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1/.zattrs
 - request:
     body: null
     headers: {}
@@ -11666,7 +11378,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1
 - request:
     body: null
     headers: {}
@@ -11718,7 +11429,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1
 - request:
     body: null
     headers: {}
@@ -11756,7 +11466,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -11792,7 +11501,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -11830,7 +11538,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -11868,7 +11575,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1/zarr.json
 - request:
     body: null
     headers: {}
@@ -11904,7 +11610,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -11942,7 +11647,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1/.zattrs
 - request:
     body: null
     headers: {}
@@ -11994,7 +11698,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/2-2-1
 - request:
     body: null
     headers: {}
@@ -12046,7 +11749,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2
 - request:
     body: null
     headers: {}
@@ -12084,7 +11786,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -12120,7 +11821,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -12158,7 +11858,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -12196,7 +11895,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2/zarr.json
 - request:
     body: null
     headers: {}
@@ -12232,7 +11930,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -12270,7 +11967,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2/.zattrs
 - request:
     body: null
     headers: {}
@@ -12322,7 +12018,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/4-4-2
 - request:
     body: null
     headers: {}
@@ -12374,7 +12069,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4
 - request:
     body: null
     headers: {}
@@ -12412,7 +12106,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -12448,7 +12141,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -12486,7 +12178,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -12524,7 +12215,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4/zarr.json
 - request:
     body: null
     headers: {}
@@ -12560,7 +12250,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4/.zarray
 - request:
     body: null
     headers: {}
@@ -12598,7 +12287,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4/.zattrs
 - request:
     body: null
     headers: {}
@@ -12650,7 +12338,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/8-8-4
 - request:
     body: null
     headers: {}
@@ -12702,7 +12389,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8
 - request:
     body: null
     headers: {}
@@ -12740,7 +12426,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -12776,7 +12461,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -12814,7 +12498,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -12852,7 +12535,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -12888,7 +12570,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -12926,7 +12607,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -12978,7 +12658,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8
 - request:
     body: null
     headers: {}
@@ -13030,7 +12709,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16
 - request:
     body: null
     headers: {}
@@ -13068,7 +12746,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -13104,7 +12781,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -13142,7 +12818,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -13180,7 +12855,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16/zarr.json
 - request:
     body: null
     headers: {}
@@ -13216,7 +12890,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16/.zarray
 - request:
     body: null
     headers: {}
@@ -13254,7 +12927,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16/.zattrs
 - request:
     body: null
     headers: {}
@@ -13306,7 +12978,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/32-32-16
 - request:
     body: null
     headers: {}
@@ -13358,7 +13029,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32
 - request:
     body: null
     headers: {}
@@ -13396,7 +13066,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -13432,7 +13101,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -13470,7 +13138,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -13508,7 +13175,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32/zarr.json
 - request:
     body: null
     headers: {}
@@ -13544,7 +13210,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32/.zarray
 - request:
     body: null
     headers: {}
@@ -13582,7 +13247,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32/.zattrs
 - request:
     body: null
     headers: {}
@@ -13634,7 +13298,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/64-64-32
 - request:
     body: null
     headers: {}
@@ -13686,7 +13349,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64
 - request:
     body: null
     headers: {}
@@ -13724,7 +13386,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -13760,7 +13421,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -13798,7 +13458,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -13836,7 +13495,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64/zarr.json
 - request:
     body: null
     headers: {}
@@ -13872,7 +13530,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64/.zarray
 - request:
     body: null
     headers: {}
@@ -13910,7 +13567,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64/.zattrs
 - request:
     body: null
     headers: {}
@@ -13962,7 +13618,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/128-128-64
 - request:
     body: null
     headers: {}
@@ -14014,7 +13669,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128
 - request:
     body: null
     headers: {}
@@ -14052,7 +13706,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -14088,7 +13741,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -14126,7 +13778,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -14164,7 +13815,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128/zarr.json
 - request:
     body: null
     headers: {}
@@ -14200,7 +13850,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128/.zarray
 - request:
     body: null
     headers: {}
@@ -14238,7 +13887,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128/.zattrs
 - request:
     body: null
     headers: {}
@@ -14290,7 +13938,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/256-256-128
 - request:
     body: null
     headers: {}
@@ -14342,7 +13989,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256
 - request:
     body: null
     headers: {}
@@ -14380,7 +14026,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -14416,7 +14061,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -14454,7 +14098,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -14492,7 +14135,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256/zarr.json
 - request:
     body: null
     headers: {}
@@ -14528,7 +14170,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256/.zarray
 - request:
     body: null
     headers: {}
@@ -14566,7 +14207,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256/.zattrs
 - request:
     body: null
     headers: {}
@@ -14618,7 +14258,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/512-512-256
 - request:
     body: null
     headers: {}
@@ -14670,7 +14309,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -14708,7 +14346,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -14744,7 +14381,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -14782,7 +14418,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -14820,7 +14455,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512/zarr.json
 - request:
     body: null
     headers: {}
@@ -14856,7 +14490,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512/.zarray
 - request:
     body: null
     headers: {}
@@ -14894,7 +14527,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512/.zattrs
 - request:
     body: null
     headers: {}
@@ -14946,7 +14578,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/1024-1024-512
 - request:
     body: null
     headers: {}
@@ -14984,7 +14615,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/zarr.json
 - request:
     body: null
     headers: {}
@@ -15020,7 +14650,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/.zarray
 - request:
     body: null
     headers: {}
@@ -15058,7 +14687,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/.zattrs
 - request:
     body: null
     headers: {}
@@ -17394,7 +17022,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/0.5.8.7
 - request:
     body: null
     headers: {}
@@ -19730,7 +19357,6 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/0.0.0.0
 - request:
     body: null
     headers: {}
@@ -22066,5 +21692,4 @@ interactions:
     status:
       code: 200
       message: OK
-    url: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/Volume/16-16-8/0.0.0.0
 version: 1

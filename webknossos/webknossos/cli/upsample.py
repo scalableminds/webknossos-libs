@@ -7,15 +7,10 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos import Dataset, Mag
-from webknossos.cli._utils import (
-    DistributionStrategy,
-    SamplingMode,
-    parse_mag,
-    parse_path,
-)
-from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.utils import get_executor_for_args
+from ..dataset import Dataset, SamplingModes
+from ..geometry import Mag
+from ..utils import get_executor_for_args
+from ._utils import DistributionStrategy, SamplingMode, parse_mag, parse_path
 
 
 def main(

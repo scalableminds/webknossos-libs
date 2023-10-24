@@ -5,8 +5,7 @@ from typing import Iterator, Optional, Tuple, Union
 
 import attr
 
-from webknossos.utils import warn_deprecated
-
+from ..utils import warn_deprecated
 from .group import Group
 
 Vector3 = Tuple[float, float, float]
@@ -86,7 +85,7 @@ class Skeleton(Group):
         layers). Returns the `Skeleton` object. Also see `Annotation.load` if you want to
         have the annotation which wraps the skeleton."""
 
-        from webknossos import Annotation
+        from ..annotation import Annotation
 
         return Annotation.load(file_path).skeleton
 
@@ -95,7 +94,7 @@ class Skeleton(Group):
         Stores the skeleton as a zip or nml at the given path.
         """
 
-        from webknossos import Annotation
+        from ..annotation import Annotation
 
         out_path = Path(out_path)
         assert out_path.suffix in [

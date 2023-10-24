@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 import attr
 
-from webknossos.geometry import Vec3Int
+from ..geometry import Vec3Int
 
 if TYPE_CHECKING:
-    from webknossos.skeleton import Skeleton
+    from .skeleton import Skeleton
 
 Vec3Float = Tuple[float, float, float]
 

@@ -8,8 +8,9 @@ license = "MIT"
 repository = "https://github.com/scalableminds/webknossos-libs"
 
 [tool.poetry.dependencies]
-python = ">=3.7.2"
-kubernetes = "^23.3.0"
+python = ">=3.8"
+distributed = { version = "^2023.9.1", python = ">=3.9" }
+kubernetes = "^27.2.0"
 typing-extensions = "^4.4.0"
 
 [tool.poetry.dev-dependencies]

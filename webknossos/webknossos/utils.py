@@ -6,8 +6,7 @@ import logging
 import sys
 import time
 import warnings
-from concurrent.futures import as_completed
-from concurrent.futures._base import Future
+from concurrent.futures import Future
 from contextlib import nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
@@ -121,19 +120,21 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
 
 
 def wait_and_ensure_success(
-    futures: List[Future], progress_desc: Optional[str] = None
+    futures: List[Future],
+    executor: Executor,
+    progress_desc: Optional[str] = None,
 ) -> List[Any]:
     """Waits for all futures to complete and raises an exception
     as soon as a future resolves with an error."""
 
     results = []
     if progress_desc is None:
-        for fut in as_completed(futures):
+        for fut in executor.as_completed(futures):
             results.append(fut.result())
     else:
         with get_rich_progress() as progress:
             task = progress.add_task(progress_desc, total=len(futures))
-            for fut in as_completed(futures):
+            for fut in executor.as_completed(futures):
                 results.append(fut.result())
                 progress.update(task, advance=1)
     return results
@@ -235,7 +236,9 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
 
 
 def is_fs_path(path: Path) -> bool:
-    return not isinstance(path, UPath)
+    from upath.implementations.local import PosixUPath, WindowsUPath
+
+    return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
 
 
 def strip_trailing_slash(path: Path) -> Path:

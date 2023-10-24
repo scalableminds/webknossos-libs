@@ -9,16 +9,15 @@ from uuid import uuid4
 
 import httpx
 
-from webknossos.client._resumable import Resumable
-from webknossos.client.apiclient.models import (
+from ._resumable import Resumable
+from .apiclient.models import (
     ApiLinkedLayerIdentifier,
     ApiReserveUploadInformation,
     ApiUploadInformation,
 )
-from webknossos.client.context import _get_context, _WebknossosContext
-from webknossos.dataset import Dataset, Layer
-from webknossos.dataset.dataset import RemoteDataset
-from webknossos.utils import get_rich_progress
+from .context import _get_context, _WebknossosContext
+from ..dataset import Dataset, Layer, RemoteDataset
+from ..utils import get_rich_progress
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 5

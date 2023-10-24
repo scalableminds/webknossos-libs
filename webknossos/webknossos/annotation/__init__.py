@@ -1,8 +1,8 @@
-from webknossos.annotation.annotation import (
+from .annotation import (
     Annotation,
     AnnotationState,
     AnnotationType,
     SegmentInformation,
     open_annotation,
 )
-from webknossos.annotation.annotation_info import AnnotationInfo
+from .annotation_info import AnnotationInfo

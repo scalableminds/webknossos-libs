@@ -3,8 +3,7 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
-from webknossos.geometry import Vec3Int
-
+from ..geometry import Vec3Int
 from .utils import Vector4, enforce_not_null, filter_none_values
 
 

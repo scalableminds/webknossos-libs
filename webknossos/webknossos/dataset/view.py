@@ -703,7 +703,7 @@ class View:
                 writer.send(data_slice)
         ```
         """
-        from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+        from ._utils.buffered_slice_writer import BufferedSliceWriter
 
         assert (
             not self._read_only
@@ -756,7 +756,7 @@ class View:
                 ...
         ```
         """
-        from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
+        from ._utils.buffered_slice_reader import BufferedSliceReader
 
         return BufferedSliceReader(
             view=self,
@@ -845,7 +845,9 @@ class View:
                         )
         else:
             wait_and_ensure_success(
-                executor.map_to_futures(func_per_chunk, job_args), progress_desc
+                executor.map_to_futures(func_per_chunk, job_args),
+                executor=executor,
+                progress_desc=progress_desc,
             )
 
     def map_chunk(
@@ -901,6 +903,7 @@ class View:
         with get_executor_for_args(None, executor) as executor:
             results = wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args),
+                executor=executor,
                 progress_desc=progress_desc,
             )
 
@@ -1013,7 +1016,9 @@ class View:
                         progress.update(task, advance=args[0].bounding_box.volume())
         else:
             wait_and_ensure_success(
-                executor.map_to_futures(func_per_chunk, job_args), progress_desc
+                executor.map_to_futures(func_per_chunk, job_args),
+                executor=executor,
+                progress_desc=progress_desc,
             )
 
     def content_is_equal(

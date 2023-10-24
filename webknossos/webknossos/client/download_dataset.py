@@ -1,10 +1,9 @@
 from os import PathLike
 from typing import List, Optional, Union
 
-from webknossos.dataset import Dataset
-from webknossos.geometry import BoundingBox, Mag
-from webknossos.utils import warn_deprecated
-
+from ..dataset import Dataset
+from ..geometry import BoundingBox, Mag
+from ..utils import warn_deprecated
 from ._download_dataset import download_dataset as actual_download_dataset
 
 

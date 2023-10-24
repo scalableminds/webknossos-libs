@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.3...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,36 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.3) - 2023-10-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.2...v0.14.3)
+
+
+## [0.14.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.2) - 2023-10-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.1...v0.14.2)
+
+
+## [0.14.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.1) - 2023-10-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.0...v0.14.1)
+
+
+## [0.14.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.0) - 2023-10-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.7...v0.14.0)
+
+### Breaking Changes
+- Dropped support for Python 3.7. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
+- Please use `Executor.as_completed` instead of `concurrent.futures.as_completed` because the latter will not work for `DaskExecutor` futures. [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
+
+### Added
+- Added `DaskScheduler` (only Python >= 3.9). [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
+
+### Changed
+- The exported `Executor` type is now implemented as a protocol.  [#943](https://github.com/scalableminds/webknossos-libs/pull/943)
+
+
+## [0.13.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.7) - 2023-10-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.13.6...v0.13.7)
 
 
 ## [0.13.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.13.6) - 2023-08-17

@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Optional, Sequence, TypeVar, Union
 
-from webknossos.utils import LazyReadOnlyDict
+from ..utils import LazyReadOnlyDict
 
 if TYPE_CHECKING:
-    from webknossos.dataset.dataset import RemoteDataset
+    from .dataset import RemoteDataset
 
 
 K = TypeVar("K")  # key
@@ -19,9 +19,9 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         organization_id: Optional[str],
         tags: Optional[Union[str, Sequence[str]]],
     ) -> None:
-        from webknossos.administration.user import User
-        from webknossos.client.context import _get_api_client
-        from webknossos.dataset.dataset import Dataset
+        from ..administration.user import User
+        from ..client.context import _get_api_client
+        from .dataset import Dataset
 
         client = _get_api_client(enforce_auth=True)
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Iterable
 import attr
 
 if TYPE_CHECKING:
-    from webknossos.client._generated.models.folder_tree_response_200_item import (
+    from ..client._generated.models.folder_tree_response_200_item import (
         FolderTreeResponse200Item,
     )
 
@@ -25,8 +25,8 @@ class RemoteFolder:
 
     @classmethod
     def get_by_id(cls, folder_id: str) -> "RemoteFolder":
-        from webknossos.client._generated.api.default import folder_tree
-        from webknossos.client.context import _get_generated_client
+        from ..client._generated.api.default import folder_tree
+        from ..client.context import _get_generated_client
 
         client = _get_generated_client(enforce_auth=True)
 
@@ -41,8 +41,8 @@ class RemoteFolder:
 
     @classmethod
     def get_by_path(cls, path: str) -> "RemoteFolder":
-        from webknossos.client._generated.api.default import folder_tree
-        from webknossos.client.context import _get_generated_client
+        from ..client._generated.api.default import folder_tree
+        from ..client.context import _get_generated_client
 
         client = _get_generated_client(enforce_auth=True)
 

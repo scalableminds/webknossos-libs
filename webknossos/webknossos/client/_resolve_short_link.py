@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from webknossos.client.context import _get_api_client, webknossos_context
+from .context import _get_api_client, webknossos_context
 
 logger = logging.getLogger(__name__)
 

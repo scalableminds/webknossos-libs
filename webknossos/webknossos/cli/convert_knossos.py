@@ -15,16 +15,11 @@ import numpy as np
 import typer
 from typing_extensions import Annotated
 
-from webknossos import (
-    COLOR_CATEGORY,
-    BoundingBox,
-    DataFormat,
-    Dataset,
-    Mag,
-    Vec3Int,
-    View,
-)
-from webknossos.cli._utils import (
+from ..dataset import COLOR_CATEGORY, DataFormat, Dataset, View
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..geometry import BoundingBox, Mag, Vec3Int
+from ..utils import get_executor_for_args, time_start, time_stop
+from ._utils import (
     DistributionStrategy,
     VoxelSize,
     parse_mag,
@@ -32,8 +27,6 @@ from webknossos.cli._utils import (
     parse_vec3int,
     parse_voxel_size,
 )
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
-from webknossos.utils import get_executor_for_args, time_start, time_stop
 
 KNOSSOS_CUBE_EDGE_LEN = 128
 KNOSSOS_CUBE_SIZE = KNOSSOS_CUBE_EDGE_LEN**3

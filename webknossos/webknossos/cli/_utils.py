@@ -8,8 +8,7 @@ from typing import Tuple, Union
 import numpy as np
 from upath import UPath
 
-from webknossos import BoundingBox, Mag
-from webknossos.geometry.vec3_int import Vec3Int
+from ..geometry import BoundingBox, Mag, Vec3Int
 
 VoxelSize = namedtuple("VoxelSize", ("x", "y", "z"))
 Vec2Int = namedtuple("Vec2Int", ("x", "y"))

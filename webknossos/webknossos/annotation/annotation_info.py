@@ -2,15 +2,15 @@ from typing import TYPE_CHECKING, Optional, Union
 
 import attr
 
-from webknossos.annotation.annotation import Annotation, AnnotationState, AnnotationType
-from webknossos.client._generated.types import Unset
-from webknossos.utils import warn_deprecated
+from ..client._generated.types import Unset
+from ..utils import warn_deprecated
+from .annotation import Annotation, AnnotationState, AnnotationType
 
 if TYPE_CHECKING:
-    from webknossos.client._generated.models.annotation_info_response_200 import (
+    from ..client._generated.models.annotation_info_response_200 import (
         AnnotationInfoResponse200,
     )
-    from webknossos.client._generated.models.annotation_infos_by_task_id_response_200_item import (
+    from ..client._generated.models.annotation_infos_by_task_id_response_200_item import (
         AnnotationInfosByTaskIdResponse200Item,
     )
 

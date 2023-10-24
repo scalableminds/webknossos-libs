@@ -5,12 +5,13 @@ import attr
 from boltons.strutils import unit_len
 
 import webknossos._nml as wknml
-from webknossos.utils import warn_deprecated
 
+from ..utils import warn_deprecated
 from .tree import Tree
 
 if TYPE_CHECKING:
-    from webknossos.skeleton import Node, Skeleton
+    from .node import Node
+    from .skeleton import Skeleton
 
 
 Vector3 = Tuple[float, float, float]
