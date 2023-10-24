@@ -1,16 +1,13 @@
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, List
 
 import attr
 
-if TYPE_CHECKING:
-    from ..client._generated.models.folder_tree_response_200_item import (
-        FolderTreeResponse200Item,
-    )
+from ..client.apiclient.models import ApiFolderWithParent
 
 
 def _get_folder_path(
-    folder: "FolderTreeResponse200Item",
-    all_folders: Iterable["FolderTreeResponse200Item"],
+    folder: ApiFolderWithParent,
+    all_folders: Iterable[ApiFolderWithParent],
 ) -> str:
     if folder.parent is None:
         return folder.name
@@ -25,15 +22,12 @@ class RemoteFolder:
 
     @classmethod
     def get_by_id(cls, folder_id: str) -> "RemoteFolder":
-        from ..client._generated.api.default import folder_tree
-        from ..client.context import _get_generated_client
+        from ..client.context import _get_api_client
 
-        client = _get_generated_client(enforce_auth=True)
+        client = _get_api_client(enforce_auth=True)
+        folder_tree_response: List[ApiFolderWithParent] = client.folder_tree()
 
-        response = folder_tree.sync(client=client)
-        assert response is not None
-
-        for folder_info in response:
+        for folder_info in folder_tree_response:
             if folder_info.id == folder_id:
                 return cls(name=folder_info.name, id=folder_info.id)
 
@@ -41,16 +35,13 @@ class RemoteFolder:
 
     @classmethod
     def get_by_path(cls, path: str) -> "RemoteFolder":
-        from ..client._generated.api.default import folder_tree
-        from ..client.context import _get_generated_client
+        from ..client.context import _get_api_client
 
-        client = _get_generated_client(enforce_auth=True)
+        client = _get_api_client(enforce_auth=True)
+        folder_tree_response: List[ApiFolderWithParent] = client.folder_tree()
 
-        response = folder_tree.sync(client=client)
-        assert response is not None
-
-        for folder_info in response:
-            folder_path = _get_folder_path(folder_info, response)
+        for folder_info in folder_tree_response:
+            folder_path = _get_folder_path(folder_info, folder_tree_response)
             if folder_path == path:
                 return cls(name=folder_info.name, id=folder_info.id)
 

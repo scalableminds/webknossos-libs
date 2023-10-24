@@ -8,6 +8,7 @@ from webknossos.client.apiclient.models import (
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
+    APiFolderWithParent,
 )
 
 from .abstract_api_client import AbstractApiClient
@@ -113,4 +114,8 @@ class WkApiClient(AbstractApiClient):
 
     def task_info(self, task_id: str) -> ApiTask:
         route = f"/tasks/{task_id}"
-        return self_get_json(self, ApiTask)
+        return self._get_json(self, ApiTask)
+
+    def folder_tree(self) -> List[ApiFolderWithParent]:
+        route = "/folders/tree"
+        return self.get_json(self, List[APiFolderWithParent])

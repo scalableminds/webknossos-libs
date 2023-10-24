@@ -94,8 +94,30 @@ class ApiTask:
 
 
 @attr.s(auto_attribs=True)
+class ApiTeamMembership:
+    id: str
+    name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiExperience:
+    domain: str
+    value: int
+    # TODO adapt API to this?
+
+
+@attr.s(auto_attribs=True)
 class ApiUser:
     id: str
+    email: str
+    organization: str
+    first_name: str
+    last_name: str
+    created: int
+    last_activity: int
+    is_active: bool
+    is_admin: bool
+    is_dataset_manager: bool
 
 
 @attr.s(auto_attribs=True)
@@ -120,3 +142,10 @@ class ApiAnnotation:
     state: str
     tracing_time: Optional[int]  # millis
     modified: int
+
+
+@attr.s(auto_attribs=True)
+class ApiFolderWithParent:
+    id: str
+    name: str
+    parent: Optional[str]
