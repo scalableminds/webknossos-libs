@@ -64,10 +64,13 @@ class DaskExecutor(futures.Executor):
             ]
             del kwargs["__cfut_options"]
 
-            __fn = partial(
-                MultiprocessingExecutor._execute_and_persist_function,
-                output_pickle_path,
-                __fn,
+            __fn = cast(
+                Callable[_P, _T],
+                partial(
+                    MultiprocessingExecutor._execute_and_persist_function,
+                    output_pickle_path,
+                    __fn,
+                ),
             )
         fut = self.client.submit(partial(__fn, *args, **kwargs))
 

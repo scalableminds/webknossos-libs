@@ -19,6 +19,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - A `Vec3Int` can now be initialized with a string containing an int or a tuple.
 
 ### Changed
+- Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
+
 
 ### Fixed
 
