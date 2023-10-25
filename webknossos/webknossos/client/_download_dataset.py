@@ -34,19 +34,12 @@ def download_dataset(
     exist_ok: bool = False,
 ) -> Dataset:
     context = _get_context()
-    client = context.generated_client
-
-    dataset_info_response = dataset_info.sync_detailed(
-        organization_name=organization_id,
-        data_set_name=dataset_name,
-        client=client,
-        sharing_token=sharing_token,
+    api_client = context.api_client
+    api_dataset = api_client.dataset_info(
+        organization_id, dataset_name, sharing_token=sharing_token
     )
-    assert dataset_info_response.status_code == 200, dataset_info_response
-    parsed = dataset_info_response.parsed
-    assert parsed is not None
 
-    datastore_client = context.get_generated_datastore_client(parsed.data_store.url)
+    datastore_client = context.get_datastore_api_client(api_dataset.data_store.url)
     optional_datastore_token = sharing_token or context.datastore_token
 
     actual_path = Path(dataset_name) if path is None else Path(path)
@@ -54,15 +47,14 @@ def download_dataset(
         logger.warning(f"{actual_path} already exists, skipping download.")
         return Dataset.open(actual_path)
 
-    data_layers = parsed.data_source.data_layers
-    scale = parsed.data_source.scale
-    if isinstance(data_layers, Unset) or isinstance(scale, Unset):
+    data_layers = api_dataset.data_source.data_layers
+    voxel_size = api_dataset.data_source.scale
+    if data_layers is None or len(data_layers) == 0 or voxel_size is None:
         raise RuntimeError(
-            f"Could not download dataset {dataset_name}: {parsed.data_source.additional_properties.get('status', 'Unknown error.')}"
+            f"Could not download dataset {dataset_name}: {api_dataset.data_source.status or 'Unknown error.'}"
         )
-    voxel_size = cast(Tuple[float, float, float], tuple(scale))
     dataset = Dataset(
-        actual_path, name=parsed.name, voxel_size=voxel_size, exist_ok=exist_ok
+        actual_path, name=api_dataset.name, voxel_size=voxel_size, exist_ok=exist_ok
     )
     for layer_name in layers or [i.name for i in data_layers]:
         response_layers = [i for i in data_layers if i.name == layer_name]
@@ -79,11 +71,10 @@ def download_dataset(
             category=category,
             dtype_per_layer=response_layer.element_class,
             num_channels=3 if response_layer.element_class == "uint24" else 1,
-            largest_segment_id=response_layer.additional_properties.get(
-                "largestSegmentId", None
-            ),
+            largest_segment_id=response_layer.largest_segment_id,
         )
 
+        # TODO view configuration
         default_view_configuration_dict = None
         if not isinstance(response_layer.default_view_configuration, Unset):
             default_view_configuration_dict = (
@@ -100,7 +91,7 @@ def download_dataset(
             response_bbox = response_layer.bounding_box
             layer.bounding_box = BoundingBox(
                 response_bbox.top_left,
-                (response_bbox.width, response_bbox.height, response_bbox.depth),
+                Vec3Int(response_bbox.width, response_bbox.height, response_bbox.depth),
             )
         else:
             assert isinstance(
@@ -127,6 +118,7 @@ def download_dataset(
                 description=f"Downloading layer={layer.name} mag={mag}",
             ):
                 chunk_in_mag = chunk.in_mag(mag)
+                # TODO actual download
                 response = dataset_download.sync_detailed(
                     organization_name=organization_id,
                     data_set_name=dataset_name,

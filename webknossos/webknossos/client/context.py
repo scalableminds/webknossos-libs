@@ -79,25 +79,15 @@ def _cached_ask_for_token(webknossos_url: str) -> str:
 
 @lru_cache(maxsize=None)
 def _cached_get_org(context: "_WebknossosContext") -> str:
-    from ._generated.api.default import current_user_info
-
-    current_user_info_response = current_user_info.sync(
-        client=context.generated_auth_client
-    )
-    assert current_user_info_response is not None
-    return current_user_info_response.organization
+    current_api_user = context.api_client_with_auth.current_user()
+    return current_api_user.organization
 
 
 # TODO reset invalid tokens e.g. using cachetools  pylint: disable=fixme
 @lru_cache(maxsize=None)
 def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
-    from ._generated.api.default import generate_token_for_data_store
-
-    generate_token_for_data_store_response = generate_token_for_data_store.sync(
-        client=context.generated_auth_client
-    )
-    assert generate_token_for_data_store_response is not None
-    return generate_token_for_data_store_response.token
+    api_datastore_token = context.api_client_with_auth.generate_token_for_data_store()
+    return api_datastore_token.token
 
 
 @lru_cache(maxsize=None)

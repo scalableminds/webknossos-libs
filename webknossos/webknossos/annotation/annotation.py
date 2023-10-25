@@ -507,14 +507,15 @@ class Annotation:
 
     def upload(self) -> str:
         """Uploads the annotation to your current `webknossos_context`."""
-        from ..client.context import _get_api_client
+        from ..client.context import _get_api_client, _get_context
+        context = _get_context()
 
         client = _get_api_client(enforce_auth=True)
         response_annotation_info = client.annotation_upload(
             self._binary_zip(), f"{self.name}.zip", createGroupForEachFile=False
         )
 
-        return f"{client.base_url}/annotations/{response_annotation_info.typ}/{response_annotation_info.id}"
+        return f"{context.url}/annotations/{response_annotation_info.typ}/{response_annotation_info.id}"
 
     def _binary_zip(self) -> bytes:
         with BytesIO() as buffer:
@@ -578,7 +579,7 @@ class Annotation:
                         UserWarning,
                     )
 
-        dataset_info = context.api_client(organization_id, self.dataset_name)
+        dataset_info = context.api_client.dataset_info(organization_id, self.dataset_name)
 
         datastore_url = dataset_info.data_store.url
 

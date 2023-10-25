@@ -1,21 +1,25 @@
 from typing import Dict, List, Optional, Tuple
 
+import httpx
+
 from webknossos.client.apiclient.models import (
     ApiAnnotation,
     ApiDataset,
     ApiDatastore,
+    ApiDatastoreToken,
+    ApiFolderWithParent,
+    ApiLoggedTimeGroupedByMonth,
     ApiProject,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
-    APiFolderWithParent,
-    ApiUser,
     ApiTeam,
-    ApiLoggedTimeByMonth,
+    ApiUser,
+    ApiWkBuildInfo,
 )
 
-from .abstract_api_client import AbstractApiClient
 from ...utils import time_since_epoch_in_ms
+from .abstract_api_client import AbstractApiClient
 
 
 class WkApiClient(AbstractApiClient):
@@ -34,16 +38,23 @@ class WkApiClient(AbstractApiClient):
     def url_prefix(self) -> str:
         return f"{self.base_wk_url}/api/v{self.webknossos_api_version}"
 
-    def health(self) -> str:
+    def health(self) -> None:
         route = "/health"
-        return self._get(route)
+        self._get(route)
+
+    def build_info(self) -> ApiWkBuildInfo:
+        route = "/buildinfo"
+        return self._get_json(route, ApiWkBuildInfo)
 
     def short_link_by_key(self, key: str) -> ApiShortLink:
         route = f"/shortLinks/byKey/{key}"
         return self._get_json(route, ApiShortLink)
 
     def dataset_info(
-        self, organization_name: str, dataset_name: str, sharing_token: Optional[str]
+        self,
+        organization_name: str,
+        dataset_name: str,
+        sharing_token: Optional[str] = None,
     ) -> ApiDataset:
         route = f"/datasets/{organization_name}/{dataset_name}"
         return self._get_json(route, ApiDataset, query={"sharing_token": sharing_token})
@@ -102,11 +113,13 @@ class WkApiClient(AbstractApiClient):
 
     def annotation_info(self, annotation_id: str) -> ApiAnnotation:
         route = f"/annotations/{annotation_id}"
-        return self._get_json(route, ApiAnnotation, query={"timestamp": time_since_epoch_in_ms()})
+        return self._get_json(
+            route, ApiAnnotation, query={"timestamp": time_since_epoch_in_ms()}
+        )
 
     def annotation_download(
         self, annotation_id: str, skip_volume_data: bool
-    ) -> (bytes, str):
+    ) -> Tuple[bytes, str]:
         route = f"/annotations/{annotation_id}/download"
         return self._get_file(route)
 
@@ -114,23 +127,23 @@ class WkApiClient(AbstractApiClient):
         self, file_body: bytes, filename: str, createGroupForEachFile: bool
     ) -> ApiAnnotation:
         route = "/annotations/upload"
-        data = ({"createGroupForEachFile": createGroupForEachFile},)
-        files = {
+        data: httpx._types.RequestData = ({"createGroupForEachFile": createGroupForEachFile})
+        files: httpx._types.RequestFiles = {
             filename: (filename, file_body),
         }
         return self.post_multipart_with_json_response(route, ApiAnnotation, data, files)
 
     def annotation_infos_by_task(self, task_id: str) -> List[ApiAnnotation]:
         route = f"/tasks/{task_id}/annotations"
-        return self._get_json(self, List[ApiAnnotation])
+        return self._get_json(route, List[ApiAnnotation])
 
     def task_info(self, task_id: str) -> ApiTask:
         route = f"/tasks/{task_id}"
-        return self._get_json(self, ApiTask)
+        return self._get_json(route, ApiTask)
 
     def folder_tree(self) -> List[ApiFolderWithParent]:
         route = "/folders/tree"
-        return self._get_json(route, List[APiFolderWithParent])
+        return self._get_json(route, List[ApiFolderWithParent])
 
     def user_by_id(self, user_id: str) -> ApiUser:
         route = f"/api/users/{user_id}"
@@ -151,3 +164,7 @@ class WkApiClient(AbstractApiClient):
     def user_logged_time(self, user_id: str) -> ApiLoggedTimeGroupedByMonth:
         route = f"/users/{user_id}/loggedTime"
         return self._get_json(route, ApiLoggedTimeGroupedByMonth)
+
+    def generate_token_for_data_store(self) -> ApiDatastoreToken:
+        route = f"/userToken/generate"
+        return self._get_json(route, ApiDatastoreToken)

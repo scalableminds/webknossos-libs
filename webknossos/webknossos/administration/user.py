@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple, Union
 
 import attr
 
-from ..client.apiclient.models import ApiUser, ApiLoggedTimeGroupedByMonth
+from ..client.apiclient.models import ApiLoggedTimeGroupedByMonth, ApiUser
 from ..client.context import _get_api_client
 
 
@@ -28,7 +28,9 @@ class User:
         """Get the logged times of this user.
         Returns a list of `LoggedTime` objects where one represents one month."""
         client = _get_api_client(enforce_auth=True)
-        api_logged_times: ApiLoggedTimeGroupedByMonth = client.user_logged_time(self.user_id)
+        api_logged_times: ApiLoggedTimeGroupedByMonth = client.user_logged_time(
+            self.user_id
+        )
         return [
             LoggedTime(
                 duration_in_seconds=i.duration_in_seconds,
@@ -38,19 +40,14 @@ class User:
             for i in api_logged_times.logged_time
         ]
 
-
     @classmethod
     def _from_api_user(cls, api_user: ApiUser) -> "User":
-        return # TODOs
+        return  # TODOs
 
     @classmethod
     def _from_generated_response(
         cls,
-        response: Union[
-            "UserListResponse200Item",
-            "CurrentUserInfoResponse200",
-            "UserInfoByIdResponse200",
-        ],
+        response,
     ) -> "User":
         return cls(
             user_id=response.id,

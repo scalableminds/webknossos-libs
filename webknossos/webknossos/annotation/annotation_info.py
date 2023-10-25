@@ -17,7 +17,7 @@ class AnnotationInfo:
     description: str
     type: AnnotationType
     state: AnnotationState
-    duration_in_seconds: Optional[int]
+    duration_in_seconds: Optional[float]
     modified: Optional[int]
 
     def download_annotation(self) -> Annotation:
@@ -34,10 +34,10 @@ class AnnotationInfo:
             description=api_annotation.description,
             type=AnnotationType(api_annotation.typ),
             state=AnnotationState(api_annotation.state),
-            duration_in_seconds=api_annotation.tracing_time / 1000
+            duration_in_seconds=(api_annotation.tracing_time / 1000)
             if api_annotation.tracing_time is not None
             else None,
-            modified=api_annotation.modified
+            modified=api_annotation.modified,
         )
 
     @property

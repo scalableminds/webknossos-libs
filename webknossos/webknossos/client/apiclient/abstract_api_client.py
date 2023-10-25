@@ -67,18 +67,18 @@ class AbstractApiClient(ABC):
         timeout_seconds: Optional[float] = None,
     ) -> None:
         body_json = self._prepare_for_json(body_structured)
-        self._post(route, body_json, query, retry_count, timeout_seconds)
+        self._post(route, body_json=body_json, query=query, retry_count=retry_count, timeout_seconds=timeout_seconds)
 
     def _get_file(self, route: str, query: Optional[Query] = None) -> Tuple[bytes, str]:
         response = self._get(route, query)
-        return response.content, _parse_filename_from_header(response)
+        return response.content, self._parse_filename_from_header(response)
 
     def post_multipart_with_json_response(
         self,
         route: str,
         response_type: Type[T],
-        multipart_data: Optional[httpx.RequestData] = None,
-        files: Optional[httpx.RequestFiles] = None,
+        multipart_data: Optional[httpx._types.RequestData] = None,
+        files: Optional[httpx._types.RequestFiles] = None,
     ) -> T:
         response = self._post(route, multipart_data=multipart_data, files=files)
         return self._parse_json(response, response_type)
@@ -109,10 +109,10 @@ class AbstractApiClient(ABC):
     def _post(
         self,
         route: str,
-        body_json: Optional[Any],
+        body_json: Optional[Any] = None,
         query: Optional[Query] = None,
-        multipart_data: Optional[httpx.RequestData] = None,
-        files: Optional[httpx.RequestFiles] = None,
+        multipart_data: Optional[httpx._types.RequestData] = None,
+        files: Optional[httpx._types.RequestFiles] = None,
         retry_count: int = 1,
         timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
@@ -133,8 +133,8 @@ class AbstractApiClient(ABC):
         route: str,
         query: Optional[Query] = None,
         body_json: Optional[Any] = None,
-        multipart_data: Optional[httpx.RequestData] = None,
-        files: Optional[httpx.RequestFiles] = None,
+        multipart_data: Optional[httpx._types.RequestData] = None,
+        files: Optional[httpx._types.RequestFiles] = None,
         retry_count: int = 1,
         timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:

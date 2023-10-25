@@ -1,6 +1,19 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import attr
+
+
+@attr.s(auto_attribs=True)
+class ApiWkBuildInfoWebknossos:
+    name: str
+    version: str
+
+
+@attr.s(auto_attribs=True)
+class ApiWkBuildInfo:
+    webknossos: ApiWkBuildInfoWebknossos
+    local_data_store_enabled: bool
+    local_tracing_store_enabled: bool
 
 
 @attr.s(auto_attribs=True)
@@ -12,7 +25,7 @@ class ApiShortLink:
 class ApiDataStore:
     url: str
     name: str
-    allows_upload: True
+    allows_upload: bool
 
 
 @attr.s(auto_attribs=True)
@@ -20,6 +33,30 @@ class ApiTeam:
     id: str
     name: str
     organization: str
+
+
+@attr.s(auto_attribs=True)
+class ApiBoundingBox:
+    top_left: Tuple[int, int, int]
+    width: int
+    height: int
+    depth: int
+
+
+@attr.s(auto_attribs=True)
+class ApiDataLayer:
+    name: str
+    category: str
+    element_class: str
+    largest_segment_id: Optional[int]
+    bounding_box: ApiBoundingBox
+
+
+@attr.s(auto_attribs=True)
+class ApiDataSource:
+    data_layers: Optional[List[ApiDataLayer]]
+    status: Optional[str]
+    scale: Optional[Tuple[float, float, float]]
 
 
 @attr.s(auto_attribs=True)
@@ -32,6 +69,7 @@ class ApiDataset:
     allowed_teams: List[ApiTeam]
     tags: List[str]
     data_store: ApiDataStore
+    data_source: ApiDataSource
 
 
 @attr.s(auto_attribs=True)
@@ -102,7 +140,7 @@ class ApiTaskParameters:
     pending_nstances: int
     project_name: str
     script_id: str
-    bounding_box: dict
+    bounding_box: ApiBoundingBox
 
 
 @attr.s(auto_attribs=True)
@@ -130,6 +168,7 @@ class ApiUser:
     is_active: bool
     is_admin: bool
     is_dataset_manager: bool
+    teams: List[ApiTeamMembership]
 
 
 @attr.s(auto_attribs=True)
@@ -142,6 +181,11 @@ class ApiMonth:
 class ApiLoggedTimeForMonth:
     payment_interval: ApiMonth
     duration_in_seconds: int
+
+
+@attr.s(auto_attribs=True)
+class ApiDatastoreToken:
+    token: str
 
 
 @attr.s(auto_attribs=True)
