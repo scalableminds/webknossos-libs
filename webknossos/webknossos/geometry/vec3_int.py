@@ -74,7 +74,7 @@ class Vec3Int(tuple):
             return Vec3Int(vec_or_int)
 
     @staticmethod
-    def from_str(string: str):
+    def from_str(string: str) -> "Vec3Int":
         if re.match(r"\(\d+,\d+,\d+\)", string):
             s = tuple(map(int, re.findall(r"\d+", string)))
         else:
