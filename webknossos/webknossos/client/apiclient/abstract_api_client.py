@@ -1,12 +1,14 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union, Callable, Mapping, cast
 
 import cattrs
 import httpx
-from ...utils import snake_to_camel_case
+from attrs import fields as attr_fields
+from attrs import has as is_attr_class
+from attrs import AttrsInstance
 
-from attrs import has as attr_has, fields as attr_fields
+from ...utils import snake_to_camel_case
 
 logger = logging.getLogger(__name__)
 
@@ -18,28 +20,36 @@ LONG_TIMEOUT_SECONDS = 7200.0
 
 converter = cattrs.Converter()
 
-def to_camel_case_structure(cls):
+
+def attr_to_camel_case_structure(cl: Type[T]) -> Callable[[Mapping[str, Any], Any], T]:
     return cattrs.gen.make_dict_structure_fn(
-        cls,
+        cl,
         converter,
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
-            for a in attr_fields(cls)
-        }
+            for a in attr_fields(cast(type[AttrsInstance], cl))
+        },
     )
 
-def to_camel_case_unstructure(cls):
+
+def attr_to_camel_case_unstructure(cl: Type[T]) -> Callable[[T], Dict[str, Any]]:
     return cattrs.gen.make_dict_unstructure_fn(
-        cls,
+        cl,
         converter,
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
-            for a in attr_fields(cls)
-        }
+            for a in attr_fields(cast(type[AttrsInstance], cl))
+        },
     )
 
-converter.register_structure_hook_factory(lambda cl: attr_has(cl), to_camel_case_structure)
-converter.register_unstructure_hook_factory(lambda cl: attr_has(cl), to_camel_case_unstructure)
+
+converter.register_structure_hook_factory(
+    lambda cl: is_attr_class(cl), attr_to_camel_case_structure
+)
+converter.register_unstructure_hook_factory(
+    lambda cl: is_attr_class(cl), attr_to_camel_case_unstructure
+)
+
 
 class AbstractApiClient(ABC):
     def __init__(
@@ -93,7 +103,13 @@ class AbstractApiClient(ABC):
         timeout_seconds: Optional[float] = None,
     ) -> None:
         body_json = self._prepare_for_json(body_structured)
-        self._post(route, body_json=body_json, query=query, retry_count=retry_count, timeout_seconds=timeout_seconds)
+        self._post(
+            route,
+            body_json=body_json,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+        )
 
     def _get_file(self, route: str, query: Optional[Query] = None) -> Tuple[bytes, str]:
         response = self._get(route, query)
@@ -235,5 +251,3 @@ Response body: {str(response.content)[0:2000]}
 """
             )
             raise e
-
-

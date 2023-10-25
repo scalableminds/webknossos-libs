@@ -127,7 +127,9 @@ class WkApiClient(AbstractApiClient):
         self, file_body: bytes, filename: str, createGroupForEachFile: bool
     ) -> ApiAnnotation:
         route = "/annotations/upload"
-        data: httpx._types.RequestData = ({"createGroupForEachFile": createGroupForEachFile})
+        data: httpx._types.RequestData = {
+            "createGroupForEachFile": createGroupForEachFile
+        }
         files: httpx._types.RequestFiles = {
             filename: (filename, file_body),
         }

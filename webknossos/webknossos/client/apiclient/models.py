@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple, Any
 
 import attr
 
@@ -50,11 +50,12 @@ class ApiDataLayer:
     element_class: str
     bounding_box: ApiBoundingBox
     largest_segment_id: Optional[int] = None
+    default_view_configuration: Optional[Dict[str, Any]] = None
 
 
 @attr.s(auto_attribs=True)
 class ApiDataSource:
-    data_layers: Optional[List[ApiDataLayer]]
+    data_layers: Optional[List[ApiDataLayer]] = None
     status: Optional[str] = None
     scale: Optional[Tuple[float, float, float]] = None
 
@@ -62,14 +63,14 @@ class ApiDataSource:
 @attr.s(auto_attribs=True)
 class ApiDataset:
     name: str
-    display_name: Optional[str]
-    description: Optional[str]
     is_public: bool
     folder_id: str
     allowed_teams: List[ApiTeam]
     tags: List[str]
     data_store: ApiDataStore
     data_source: ApiDataSource
+    display_name: Optional[str] = None
+    description: Optional[str] = None
 
 
 @attr.s(auto_attribs=True)
@@ -94,7 +95,7 @@ class ApiLinkedLayerIdentifier:
     organization_name: str
     data_set_name: str
     layer_name: str
-    new_layer_name: Optional[str]
+    new_layer_name: Optional[str] = None
 
 
 @attr.s(auto_attribs=True)
@@ -103,9 +104,9 @@ class ApiReserveUploadInformation:
     name: str
     organization: str
     total_file_count: int
-    layers_to_link: Optional[List[ApiLinkedLayerIdentifier]]
     initial_teams: List[str]
-    folder_id: Optional[str]
+    layers_to_link: Optional[List[ApiLinkedLayerIdentifier]] = None
+    folder_id: Optional[str] = None
 
 
 @attr.s(auto_attribs=True)
@@ -137,7 +138,6 @@ class ApiTask:
 class ApiExperience:
     domain: str
     value: int
-    # TODO adapt API to this?
 
 
 @attr.s(auto_attribs=True)
@@ -203,7 +203,7 @@ class ApiProject:
     owner: ApiUser
     priority: int
     paused: bool
-    expected_time: Optional[int]
+    expected_time: Optional[int] = None
 
 
 @attr.s(auto_attribs=True)
@@ -214,13 +214,13 @@ class ApiAnnotation:
     name: str
     description: str
     state: str
-    tracing_time: Optional[int]  # millis
     modified: int
     data_store: ApiDataStore
+    tracing_time: Optional[int] = None # millis
 
 
 @attr.s(auto_attribs=True)
 class ApiFolderWithParent:
     id: str
     name: str
-    parent: Optional[str]
+    parent: Optional[str] = None

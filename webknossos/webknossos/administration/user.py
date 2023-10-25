@@ -42,29 +42,22 @@ class User:
 
     @classmethod
     def _from_api_user(cls, api_user: ApiUser) -> "User":
-        return  # TODOs
-
-    @classmethod
-    def _from_generated_response(
-        cls,
-        response,
-    ) -> "User":
         return cls(
-            user_id=response.id,
-            email=response.email,
-            organization_id=response.organization,
-            first_name=response.first_name,
-            last_name=response.last_name,
-            created=response.created,
-            last_activity=response.last_activity,
+            user_id=api_user.id,
+            email=api_user.email,
+            organization_id=api_user.organization,
+            first_name=api_user.first_name,
+            last_name=api_user.last_name,
+            created=api_user.created,
+            last_activity=api_user.last_activity,
             teams=tuple(
-                Team(id=team.id, name=team.name, organization_id=response.organization)
-                for team in response.teams
+                Team(id=team.id, name=team.name, organization_id=api_user.organization)
+                for team in api_user.teams
             ),
-            experiences=response.experiences.additional_properties,
-            is_active=bool(response.is_active),
-            is_admin=bool(response.is_admin),
-            is_dataset_manager=bool(response.is_dataset_manager),
+            experiences=api_user.experiences,
+            is_active=api_user.is_active,
+            is_admin=api_user.is_admin,
+            is_dataset_manager=api_user.is_dataset_manager,
         )
 
     @classmethod

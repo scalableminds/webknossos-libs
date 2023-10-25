@@ -508,6 +508,7 @@ class Annotation:
     def upload(self) -> str:
         """Uploads the annotation to your current `webknossos_context`."""
         from ..client.context import _get_api_client, _get_context
+
         context = _get_context()
 
         client = _get_api_client(enforce_auth=True)
@@ -579,7 +580,9 @@ class Annotation:
                         UserWarning,
                     )
 
-        dataset_info = context.api_client.dataset_info(organization_id, self.dataset_name)
+        dataset_info = context.api_client.dataset_info(
+            organization_id, self.dataset_name
+        )
 
         datastore_url = dataset_info.data_store.url
 
