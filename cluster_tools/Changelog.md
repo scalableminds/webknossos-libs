@@ -12,10 +12,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added SIGINT handling to `DaskExecutor`. [#959](https://github.com/scalableminds/webknossos-libs/pull/959)
+- Added support for resources (e.g. mem, cpus) to `DaskExecutor`. [#959](https://github.com/scalableminds/webknossos-libs/pull/959)
+- The cluster address for the `DaskExecutor` can be configured via the `DASK_ADDRESS` env var. [#959](https://github.com/scalableminds/webknossos-libs/pull/959)
 
 ### Changed
 - Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
-
+- Tasks using the `DaskExecutor` are run in their own process. This is required to not block the GIL for the dask worker to communicate with the scheduler. Env variables are propagated to the task processes. [#959](https://github.com/scalableminds/webknossos-libs/pull/959)
 
 ### Fixed
 
