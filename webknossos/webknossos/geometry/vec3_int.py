@@ -72,6 +72,12 @@ class Vec3Int(tuple):
         else:
             return Vec3Int(vec_or_int)
 
+    @staticmethod
+    def from_str(string: str):
+        s = eval(string)
+        if type(s) == tuple or type(s) == int:
+            return Vec3Int.from_vec_or_int(s)
+
     @property
     def x(self) -> int:
         return self[0]
