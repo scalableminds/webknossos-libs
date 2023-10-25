@@ -4,7 +4,9 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
 
 import cattrs
 import httpx
-import humps
+from ...utils import snake_to_camel_case
+
+from attrs import has as attr_has, fields as attr_fields
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,30 @@ Query = Dict[str, Optional[Union[str, int, float, bool]]]
 
 LONG_TIMEOUT_SECONDS = 7200.0
 
+converter = cattrs.Converter()
+
+def to_camel_case_structure(cls):
+    return cattrs.gen.make_dict_structure_fn(
+        cls,
+        converter,
+        **{
+            a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
+            for a in attr_fields(cls)
+        }
+    )
+
+def to_camel_case_unstructure(cls):
+    return cattrs.gen.make_dict_unstructure_fn(
+        cls,
+        converter,
+        **{
+            a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
+            for a in attr_fields(cls)
+        }
+    )
+
+converter.register_structure_hook_factory(lambda cl: attr_has(cl), to_camel_case_structure)
+converter.register_unstructure_hook_factory(lambda cl: attr_has(cl), to_camel_case_unstructure)
 
 class AbstractApiClient(ABC):
     def __init__(
@@ -170,8 +196,9 @@ class AbstractApiClient(ABC):
         return {k: v for (k, v) in query.items() if v is not None}
 
     def _parse_json(self, response: httpx.Response, response_type: Type[T]) -> T:
-        return cattrs.structure(
-            humps.decamelize(response.json()), response_type
+        print(f"structuring {response.json()}")
+        return converter.structure(
+            response.json(), response_type
         )  # TODO error handling? urlencode needed?
 
     def _extract_total_count_header(self, response: httpx.Response) -> int:
@@ -190,7 +217,7 @@ class AbstractApiClient(ABC):
         return dict(m.get_params() or []).get("filename", "")
 
     def _prepare_for_json(self, body_structured: Any) -> Any:
-        return cattrs.unstructure(humps.camelize(body_structured))
+        return converter.unstructure(body_structured)
 
     def _assert_good_response(self, url: str, response: httpx.Response) -> None:
         try:
@@ -208,3 +235,5 @@ Response body: {str(response.content)[0:2000]}
 """
             )
             raise e
+
+

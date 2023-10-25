@@ -146,7 +146,7 @@ class WkApiClient(AbstractApiClient):
         return self._get_json(route, List[ApiFolderWithParent])
 
     def user_by_id(self, user_id: str) -> ApiUser:
-        route = f"/api/users/{user_id}"
+        route = f"/users/{user_id}"
         return self._get_json(route, ApiUser)
 
     def current_user(self) -> ApiUser:

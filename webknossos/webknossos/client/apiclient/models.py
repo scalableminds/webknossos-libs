@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import attr
 
@@ -48,15 +48,15 @@ class ApiDataLayer:
     name: str
     category: str
     element_class: str
-    largest_segment_id: Optional[int]
     bounding_box: ApiBoundingBox
+    largest_segment_id: Optional[int] = None
 
 
 @attr.s(auto_attribs=True)
 class ApiDataSource:
     data_layers: Optional[List[ApiDataLayer]]
-    status: Optional[str]
-    scale: Optional[Tuple[float, float, float]]
+    status: Optional[str] = None
+    scale: Optional[Tuple[float, float, float]] = None
 
 
 @attr.s(auto_attribs=True)
@@ -134,6 +134,13 @@ class ApiTask:
 
 
 @attr.s(auto_attribs=True)
+class ApiExperience:
+    domain: str
+    value: int
+    # TODO adapt API to this?
+
+
+@attr.s(auto_attribs=True)
 class ApiTaskParameters:
     taks_type_id: str
     needed_experience: ApiExperience
@@ -150,13 +157,6 @@ class ApiTeamMembership:
 
 
 @attr.s(auto_attribs=True)
-class ApiExperience:
-    domain: str
-    value: int
-    # TODO adapt API to this?
-
-
-@attr.s(auto_attribs=True)
 class ApiUser:
     id: str
     email: str
@@ -169,6 +169,7 @@ class ApiUser:
     is_admin: bool
     is_dataset_manager: bool
     teams: List[ApiTeamMembership]
+    experiences: Dict[str, int]
 
 
 @attr.s(auto_attribs=True)

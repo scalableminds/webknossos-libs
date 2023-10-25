@@ -472,6 +472,7 @@ class Dataset:
             dataset_info = wk_context.api_client.dataset_info(
                 organization_id, dataset_name, sharing_token
             )
+            print(f" got dataset_info, name is {dataset_info.name}")
             token = sharing_token or wk_context.datastore_token
 
         datastore_url = dataset_info.data_store.url
