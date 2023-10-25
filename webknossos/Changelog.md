@@ -15,6 +15,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- The `DEFAULT_DATA_FORMAT` and `DEFAULT_CHUNKS_PER_SHARD` can now be set with the env variables `WK_DEFAULT_DATA_FORMAT` and `WK_DEFAULT_CHUNKS_PER_SHARD`
+- A `Vec3Int` can now be initialized with a string containing an int or a tuple.
 
 ### Changed
 
