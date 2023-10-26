@@ -35,7 +35,7 @@ class AbstractApiClient(ABC):
         self, route: str, response_type: Type[T], query: Optional[Query] = None
     ) -> T:
         response = self._get(route, query)
-        return self._parse_json(route, response, response_type)
+        return self._parse_json(response, response_type)
 
     def _get_json_paginated(
         self,
@@ -55,7 +55,7 @@ class AbstractApiClient(ABC):
             query_adapted.update(query)
         response = self._get(route, query_adapted)
         return self._parse_json(
-            route, response, response_type
+            response, response_type
         ), self._extract_total_count_header(response)
 
     def _patch_json(self, route: str, body_structured: Any) -> None:
@@ -85,14 +85,14 @@ class AbstractApiClient(ABC):
 
     def _post_with_json_response(self, route: str, response_type: Type[T]) -> T:
         response = self._post(route)
-        return self._parse_json(route, response, response_type)
+        return self._parse_json(response, response_type)
 
     def _post_json_with_json_response(
         self, route: str, body_structured: Any, response_type: Type[T]
     ) -> T:
         body_json = self._prepare_for_json(body_structured)
         response = self._post(route, body_json=body_json)
-        return self._parse_json(route, response, response_type)
+        return self._parse_json(response, response_type)
 
     def post_multipart_with_json_response(
         self,
@@ -102,7 +102,7 @@ class AbstractApiClient(ABC):
         files: Optional[httpx._types.RequestFiles] = None,
     ) -> T:
         response = self._post(route, multipart_data=multipart_data, files=files)
-        return self._parse_json(route, response, response_type)
+        return self._parse_json(response, response_type)
 
     def _get(
         self,
@@ -191,12 +191,12 @@ class AbstractApiClient(ABC):
         return {k: v for (k, v) in query.items() if v is not None}
 
     def _parse_json(
-        self, route: str, response: httpx.Response, response_type: Type[T]
+        self, response: httpx.Response, response_type: Type[T]
     ) -> T:
         try:
             return custom_converter.structure(response.json(), response_type)
         except Exception as e:
-            raise CannotHandleResponseError(self.url_from_route(route), response) from e
+            raise CannotHandleResponseError(response) from e
 
     def _extract_total_count_header(self, response: httpx.Response) -> int:
         total_count_str = response.headers.get("X-Total-Count")
@@ -220,4 +220,4 @@ class AbstractApiClient(ABC):
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
-            raise UnexpectedStatusError(url, response) from e
+            raise UnexpectedStatusError(response) from e

@@ -268,8 +268,8 @@ def test_remote_datasets() -> None:
         raises=AssertionError,
     )
 
-    ds = own_remote_datasets["e2006_knossos"]
-    assert ds.url == "http://localhost:9000/datasets/Organization_X/e2006_knossos"
+    ds = own_remote_datasets["l4_sample"]
+    assert ds.url == "http://localhost:9000/datasets/Organization_X/l4_sample"
     ds.tags = ["test"]
     assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()
 
