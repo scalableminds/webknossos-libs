@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, List
+from typing import Iterable, List
 
 import attr
 

@@ -45,7 +45,6 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
 import attr
-import httpx
 from upath import UPath
 from zipp import Path as ZipPath
 

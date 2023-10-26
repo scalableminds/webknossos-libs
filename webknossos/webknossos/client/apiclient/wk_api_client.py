@@ -16,10 +16,12 @@ from webknossos.client.apiclient.models import (
     ApiTeam,
     ApiUser,
     ApiWkBuildInfo,
+    ApiTaskParameters,
+    ApiTaskCreationResult,
 )
 
 from ...utils import time_since_epoch_in_ms
-from .abstract_api_client import AbstractApiClient
+from ._abstract_api_client import AbstractApiClient
 
 
 class WkApiClient(AbstractApiClient):
@@ -121,7 +123,7 @@ class WkApiClient(AbstractApiClient):
         self, annotation_id: str, skip_volume_data: bool
     ) -> Tuple[bytes, str]:
         route = f"/annotations/{annotation_id}/download"
-        return self._get_file(route)
+        return self._get_file(route, query={"skipVolumeData": skip_volume_data})
 
     def annotation_upload(
         self, file_body: bytes, filename: str, createGroupForEachFile: bool
@@ -169,4 +171,13 @@ class WkApiClient(AbstractApiClient):
 
     def generate_token_for_data_store(self) -> ApiDatastoreToken:
         route = f"/userToken/generate"
-        return self._get_json(route, ApiDatastoreToken)
+        return self._post_with_json_response(route, ApiDatastoreToken)
+
+    def tasks_create(self, task_parameters: List[ApiTaskParameters]) -> ApiTaskCreationResult:
+        route = f"/tasks"
+        return self._post_json_with_json_response(route, task_parameters, ApiTaskCreationResult)
+
+    def tasks_create_from_files(self, nml_task_parameters: List[ApiNmlTaskParameters]) -> ApiTaskCreationResult:
+        route = f"/tasks/createFromFiles"
+        # TODO
+        return self.post_multipart_with_json_response(route, task_parameters, ApiTaskCreationResult)

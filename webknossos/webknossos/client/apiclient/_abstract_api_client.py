@@ -1,14 +1,10 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union, Callable, Mapping, cast
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
 
-import cattrs
 import httpx
-from attrs import fields as attr_fields
-from attrs import has as is_attr_class
-from attrs import AttrsInstance
 
-from ...utils import snake_to_camel_case
+from ._serialization import custom_converter
 
 logger = logging.getLogger(__name__)
 
@@ -17,38 +13,6 @@ T = TypeVar("T")
 Query = Dict[str, Optional[Union[str, int, float, bool]]]
 
 LONG_TIMEOUT_SECONDS = 7200.0
-
-converter = cattrs.Converter()
-
-
-def attr_to_camel_case_structure(cl: Type[T]) -> Callable[[Mapping[str, Any], Any], T]:
-    return cattrs.gen.make_dict_structure_fn(
-        cl,
-        converter,
-        **{
-            a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
-            for a in attr_fields(cast(type[AttrsInstance], cl))
-        },
-    )
-
-
-def attr_to_camel_case_unstructure(cl: Type[T]) -> Callable[[T], Dict[str, Any]]:
-    return cattrs.gen.make_dict_unstructure_fn(
-        cl,
-        converter,
-        **{
-            a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
-            for a in attr_fields(cast(type[AttrsInstance], cl))
-        },
-    )
-
-
-converter.register_structure_hook_factory(
-    lambda cl: is_attr_class(cl), attr_to_camel_case_structure
-)
-converter.register_unstructure_hook_factory(
-    lambda cl: is_attr_class(cl), attr_to_camel_case_unstructure
-)
 
 
 class AbstractApiClient(ABC):
@@ -114,6 +78,20 @@ class AbstractApiClient(ABC):
     def _get_file(self, route: str, query: Optional[Query] = None) -> Tuple[bytes, str]:
         response = self._get(route, query)
         return response.content, self._parse_filename_from_header(response)
+
+    def _post_with_json_response(self, route, response_type: Type[T]):
+        response = self._post(route)
+        return self._parse_json(response, response_type)
+
+    def _post_json_with_json_response(self, route: str,
+                                      body_structured: Any,
+                                      response_type: Type[T]):
+        body_json = self._prepare_for_json(body_structured)
+        response = self._post(
+            route,
+            body_json=body_json
+        )
+        return self._parse_json(response, response_type)
 
     def post_multipart_with_json_response(
         self,
@@ -212,10 +190,10 @@ class AbstractApiClient(ABC):
         return {k: v for (k, v) in query.items() if v is not None}
 
     def _parse_json(self, response: httpx.Response, response_type: Type[T]) -> T:
-        print(f"structuring {response.json()}")
-        return converter.structure(
+        # todo wrap exceptions thrown here
+        return custom_converter.structure(
             response.json(), response_type
-        )  # TODO error handling? urlencode needed?
+        )
 
     def _extract_total_count_header(self, response: httpx.Response) -> int:
         total_count_str = response.headers.get("X-Total-Count")
@@ -233,7 +211,7 @@ class AbstractApiClient(ABC):
         return dict(m.get_params() or []).get("filename", "")
 
     def _prepare_for_json(self, body_structured: Any) -> Any:
-        return converter.unstructure(body_structured)
+        return custom_converter.unstructure(body_structured)
 
     def _assert_good_response(self, url: str, response: httpx.Response) -> None:
         try:

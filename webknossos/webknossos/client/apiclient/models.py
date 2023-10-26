@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Union
 
 import attr
 
@@ -49,6 +49,7 @@ class ApiDataLayer:
     category: str
     element_class: str
     bounding_box: ApiBoundingBox
+    resolutions: List[Tuple[int, int, int]]
     largest_segment_id: Optional[int] = None
     default_view_configuration: Optional[Dict[str, Any]] = None
 
@@ -140,14 +141,41 @@ class ApiExperience:
     value: int
 
 
+
+@attr.s(auto_attribs=True)
+class ApiNmlTaskParameters:
+    taks_type_id: str
+    needed_experience: ApiExperience
+    pending_instances: int
+    project_name: str
+    script_id: Optional[str]
+    bounding_box: ApiBoundingBox
+
+
 @attr.s(auto_attribs=True)
 class ApiTaskParameters:
     taks_type_id: str
     needed_experience: ApiExperience
-    pending_nstances: int
+    pending_instances: int
     project_name: str
-    script_id: str
+    script_id: Optional[str]
     bounding_box: ApiBoundingBox
+    data_set: str
+    edit_position: Tuple[int, int, int]
+    edit_rotation: Tuple[float, float, float]
+    bounding_box: Optional[ApiBoundingBox]
+
+
+@attr.s(auto_attribs=True)
+class ApiSingleTaskCreationResult:
+    error: Optional[str]
+    success: Optional[ApiTask]
+
+
+@attr.s(auto_attribs=True)
+class ApiTaskCreationResult:
+    tasks: List[ApiSingleTaskCreationResult]
+    warnings: List[str]
 
 
 @attr.s(auto_attribs=True)

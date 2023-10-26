@@ -6,7 +6,7 @@ import attr
 import httpx
 
 from ..annotation import Annotation, AnnotationInfo
-from ..client.apiclient.models import ApiTask, ApiTaskType
+from ..client.apiclient.models import ApiTask, ApiTaskType, ApiTaskParameters, ApiNmlTaskParameters, ApiExperience, ApiBoundingBox, ApiTaskCreationResult
 from ..client.context import _get_api_client
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
@@ -111,11 +111,8 @@ class Task:
             data=form_data,
             files=files,
         )
-        assert (
-            response.status_code == 200
-        ), f"Failed to create tasks from files: {response.status_code}: {response.text}"
 
-        return cls._handle_task_creation_response(response)
+        return cls._handle_task_creation_result(response)
 
     @classmethod
     def create(
@@ -133,39 +130,29 @@ class Task:
     ) -> List["Task"]:
         """Submits tasks in WEBKNOSSOS based on a dataset, starting position + rotation, and returns the Task objects"""
 
-        client = _get_generated_client(enforce_auth=True)
-        url = f"{client.base_url}/api/tasks"
+        client = _get_api_client(enforce_auth=True)
         if isinstance(dataset_name, RemoteDataset):
             dataset_name = dataset_name._dataset_name
-        task_parameters = {
-            "taskTypeId": task_type_id,
-            "neededExperience": {
-                "domain": needed_experience_domain,
-                "value": needed_experience_value,
-            },
-            "pendingInstances": instances,
-            "projectName": project_name,
-            "scriptId": script_id,
-            "dataSet": dataset_name,
-            "editPosition": starting_position,
-            "editRotation": starting_rotation,
-            "boundingBox": bounding_box.to_wkw_dict()
+        task_parameters = ApiTaskParameters(
+            task_type_id = task_type_id,
+            needed_experience= ApiExperience(
+                domain= needed_experience_domain,
+                value= needed_experience_value,
+            ),
+            pending_instances= instances,
+            project_name=project_name,
+            script_id=script_id,
+            dataset_name= dataset_name,
+            edit_position= starting_position,
+            edit_rotation= starting_rotation,
+            bounding_box= ApiBoundingBox(bounding_box.topleft.to_tuple(), bounding_box.size.x, bounding_box.size.y, bounding_box.size.z)
             if bounding_box is not None
             else None,
-        }
-
-        response = httpx.post(
-            url=url,
-            headers=client.get_headers(),
-            cookies=client.get_cookies(),
-            timeout=client.get_timeout(),
-            json=[task_parameters],
         )
-        assert (
-            response.status_code == 200
-        ), f"Failed to create tasks: {response.status_code}: {response.text}"
 
-        return cls._handle_task_creation_response(response)
+        response = client.tasks_create(task_parameters)
+
+        return cls._handle_task_creation_result(response)
 
     @classmethod
     def _from_dict(cls, response_dict: Dict) -> "Task":
@@ -218,31 +205,27 @@ class Task:
         """Returns the project this task belongs to"""
         return Project.get_by_id(self.project_id)
 
+
     @classmethod
-    def _handle_task_creation_response(cls, response: httpx.Response) -> List["Task"]:
-        result = response.json()
-        if "warnings" in result:
-            warnings = result["warnings"]
-            if len(warnings) > 0:
-                logger.warning(
-                    f"There were {len(warnings)} warnings during task creation:"
-                )
-            for warning in warnings:
-                logger.warning(warning)
-        assert "tasks" in result, "Invalid result of task creation"
+    def _handle_task_creation_result(cls, result: ApiTaskCreationResult) -> List["Task"]:
+        if len(result.warnings) > 0:
+            logger.warning(
+                f"There were {len(result.warnings)} warnings during task creation:"
+            )
+        for warning in result.warnings:
+            logger.warning(warning)
 
         successes = []
         errors = []
-        for t in result["tasks"]:
-            print(t)
-            if "success" in t:
-                successes.append(t["success"])
-            if "error" in t:
-                errors.append(t["error"])
+        for t in result.tasks:
+            if t.success is not None:
+                successes.append(t.success)
+            if t.error is not None:
+                errors.append(t.error)
         if len(errors) > 0:
             logger.error(f"{len(errors)} tasks could not be created:")
             for error in errors:
                 logger.error(error)
         if len(successes) > 0:
             logger.info(f"{len(successes)} tasks were successfully created.")
-        return [cls._from_dict(t) for t in successes]
+        return [cls._from_api_task(t) for t in successes]

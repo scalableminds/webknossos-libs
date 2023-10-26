@@ -9,7 +9,6 @@ from rich.progress import track
 from ..dataset import Dataset, LayerCategoryType
 from ..dataset.properties import LayerViewConfiguration, dataset_converter
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ._generated.api.datastore import dataset_download
 from .context import _get_context
 
 logger = logging.getLogger(__name__)
@@ -109,13 +108,11 @@ def download_dataset(
                 description=f"Downloading layer={layer.name} mag={mag}",
             ):
                 chunk_in_mag = chunk.in_mag(mag)
-                # TODO actual download
-                response = dataset_download.sync_detailed(
+                chunk_bytes, missing_buckets = datastore_client.dataset_get_raw_data(
                     organization_name=organization_id,
-                    data_set_name=dataset_name,
+                    dataset_name=dataset_name,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),
-                    client=datastore_client,
                     token=optional_datastore_token,
                     x=chunk.topleft.x,
                     y=chunk.topleft.y,
@@ -124,12 +121,11 @@ def download_dataset(
                     height=chunk_in_mag.size.y,
                     depth=chunk_in_mag.size.z,
                 )
-                assert response.status_code == 200, response
                 assert (
-                    response.headers["missing-buckets"] == "[]"
-                ), f"Download contained missing buckets {response.headers['missing-buckets']}."
+                    missing_buckets == "[]"
+                ), f"Download contained missing buckets {missing_buckets}."
                 data = np.frombuffer(
-                    response.content, dtype=layer.dtype_per_channel
+                    chunk_bytes, dtype=layer.dtype_per_channel
                 ).reshape(layer.num_channels, *chunk_in_mag.size, order="F")
                 mag_view.write(data, absolute_offset=chunk.topleft)
     return dataset
