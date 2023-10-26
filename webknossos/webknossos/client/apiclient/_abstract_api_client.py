@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
 import httpx
 
 from ._serialization import custom_converter
+from .errors import UnexpectedStatusError, CannotHandleResponseError
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +28,14 @@ class AbstractApiClient(ABC):
     def url_prefix(self) -> str:
         ...
 
+    def url_from_route(self, route: str) -> str:
+        return f"{self.url_prefix}{route}"
+
     def _get_json(
         self, route: str, response_type: Type[T], query: Optional[Query] = None
     ) -> T:
         response = self._get(route, query)
-        return self._parse_json(response, response_type)
+        return self._parse_json(route, response, response_type)
 
     def _get_json_paginated(
         self,
@@ -51,7 +55,7 @@ class AbstractApiClient(ABC):
             query_adapted.update(query)
         response = self._get(route, query_adapted)
         return self._parse_json(
-            response, response_type
+            route, response, response_type
         ), self._extract_total_count_header(response)
 
     def _patch_json(self, route: str, body_structured: Any) -> None:
@@ -81,14 +85,14 @@ class AbstractApiClient(ABC):
 
     def _post_with_json_response(self, route: str, response_type: Type[T]) -> T:
         response = self._post(route)
-        return self._parse_json(response, response_type)
+        return self._parse_json(route, response, response_type)
 
     def _post_json_with_json_response(
         self, route: str, body_structured: Any, response_type: Type[T]
     ) -> T:
         body_json = self._prepare_for_json(body_structured)
         response = self._post(route, body_json=body_json)
-        return self._parse_json(response, response_type)
+        return self._parse_json(route, response, response_type)
 
     def post_multipart_with_json_response(
         self,
@@ -98,7 +102,7 @@ class AbstractApiClient(ABC):
         files: Optional[httpx._types.RequestFiles] = None,
     ) -> T:
         response = self._post(route, multipart_data=multipart_data, files=files)
-        return self._parse_json(response, response_type)
+        return self._parse_json(route, response, response_type)
 
     def _get(
         self,
@@ -158,7 +162,7 @@ class AbstractApiClient(ABC):
         assert (
             retry_count > 0
         ), f"Cannot perform request with retry_count < 1, got {retry_count}"
-        url = f"{self.url_prefix}{route}"
+        url = self.url_from_route(route)
         response = None
         for _ in range(retry_count):
             response = httpx.request(
@@ -186,9 +190,11 @@ class AbstractApiClient(ABC):
             return None
         return {k: v for (k, v) in query.items() if v is not None}
 
-    def _parse_json(self, response: httpx.Response, response_type: Type[T]) -> T:
-        # todo wrap exceptions thrown here
-        return custom_converter.structure(response.json(), response_type)
+    def _parse_json(self, route: str, response: httpx.Response, response_type: Type[T]) -> T:
+        try:
+            return custom_converter.structure(response.json(), response_type)
+        except Exception as e:
+            raise CannotHandleResponseError(self.url_from_route(route), response) from e
 
     def _extract_total_count_header(self, response: httpx.Response) -> int:
         total_count_str = response.headers.get("X-Total-Count")
@@ -212,15 +218,4 @@ class AbstractApiClient(ABC):
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
-            # todo move this from logging to exception body
-            logger.error(
-                f"""An error occurred while performing a request to the URL {url}.
-If this is unexpected, please double-check your webknossos URL and credentials.
-If the error persists, it might be caused by a version mismatch of the python client and the WEBKNOSSOS server API version.
-See https://github.com/scalableminds/webknossos-libs/releases for current releases.
-
-Response body: {str(response.content)[0:2000]}
-
-"""
-            )
-            raise e
+            raise UnexpectedStatusError(url, response) from e
