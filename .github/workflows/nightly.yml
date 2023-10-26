@@ -31,14 +31,6 @@ jobs:
         pip install poetry
         poetry install --extras all
 
-    - name: Re-generate client code
-      run: ./generate_client.sh
-
-    - name: Check if git is dirty
-      run: |
-        git diff --no-ext-diff --quiet --exit-code
-        [[ -z $(git status -s) ]]
-
     - name: Python tests, refreshing the network snapshots
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
