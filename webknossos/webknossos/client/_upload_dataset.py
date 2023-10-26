@@ -12,6 +12,7 @@ import httpx
 from ..dataset import Dataset, Layer, RemoteDataset
 from ..utils import get_rich_progress
 from ._resumable import Resumable
+from .apiclient import ApiClientError
 from .apiclient.models import (
     ApiLinkedLayerIdentifier,
     ApiReserveUploadInformation,
@@ -119,7 +120,7 @@ def upload_dataset(
         context.api_client_with_auth.assert_new_dataset_name_is_valid(
             context.organization_id, new_dataset_name
         )
-    except httpx.HTTPStatusError as e:
+    except ApiClientError as e:
         raise Exception(
             f"Dataset name {context.organization_id}/{new_dataset_name} does not seem to be valid."
         ) from e

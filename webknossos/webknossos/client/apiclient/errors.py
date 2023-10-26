@@ -2,12 +2,15 @@ import httpx
 
 
 class ApiClientError(Exception):
-
-    def message_for_response_body(self, response: httpx.Response)-> str:
+    def message_for_response_body(self, response: httpx.Response) -> str:
         response_limit_chars = 2000
 
         response_str = response.content.decode("utf-8")
-        shortened_label = f" (showing first {response_limit_chars} of {len(response_str)} characters)" if (len(response_str) > response_limit_chars) else ""
+        shortened_label = (
+            f" (showing first {response_limit_chars} of {len(response_str)} characters)"
+            if (len(response_str) > response_limit_chars)
+            else ""
+        )
         return f"Got response status {response.status_code} with body{shortened_label}: {response_str[0:response_limit_chars]}"
 
     check_version_hint = """If this is unexpected, please double-check your WEBKNOSSOS URL and credentials.
@@ -16,7 +19,6 @@ See https://github.com/scalableminds/webknossos-libs/releases for current releas
 
 
 class UnexpectedStatusError(ApiClientError):
-
     def __init__(self, url: str, response: httpx.Response):
         msg = f"""An error occurred while performing a request to the URL {url}.
 {self.check_version_hint}
@@ -26,7 +28,6 @@ class UnexpectedStatusError(ApiClientError):
 
 
 class CannotHandleResponseError(ApiClientError):
-
     def __init__(self, url: str, response: httpx.Response):
         msg = f"""An error occurred while processing the response to a request to the URL {url}.
 {self.check_version_hint}

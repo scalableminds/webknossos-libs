@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
 import httpx
 
 from ._serialization import custom_converter
-from .errors import UnexpectedStatusError, CannotHandleResponseError
+from .errors import CannotHandleResponseError, UnexpectedStatusError
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +190,9 @@ class AbstractApiClient(ABC):
             return None
         return {k: v for (k, v) in query.items() if v is not None}
 
-    def _parse_json(self, route: str, response: httpx.Response, response_type: Type[T]) -> T:
+    def _parse_json(
+        self, route: str, response: httpx.Response, response_type: Type[T]
+    ) -> T:
         try:
             return custom_converter.structure(response.json(), response_type)
         except Exception as e:
