@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List, Optional, Tuple
 
 import httpx
@@ -5,19 +6,20 @@ import httpx
 from webknossos.client.apiclient.models import (
     ApiAnnotation,
     ApiDataset,
-    ApiDatastore,
-    ApiDatastoreToken,
+    ApiDataStore,
+    ApiDataStoreToken,
     ApiFolderWithParent,
     ApiLoggedTimeGroupedByMonth,
+    ApiNmlTaskParameters,
     ApiProject,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
+    ApiTaskCreationResult,
+    ApiTaskParameters,
     ApiTeam,
     ApiUser,
     ApiWkBuildInfo,
-    ApiTaskParameters,
-    ApiTaskCreationResult,
 )
 
 from ...utils import time_since_epoch_in_ms
@@ -95,9 +97,9 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
         self._get(route)
 
-    def datastore_list(self) -> List[ApiDatastore]:
+    def datastore_list(self) -> List[ApiDataStore]:
         route = "/datastores"
-        return self._get_json(route, List[ApiDatastore])
+        return self._get_json(route, List[ApiDataStore])
 
     def project_info_by_name(self, project_name: str) -> ApiProject:
         route = f"/projects/byName/{project_name}"
@@ -169,15 +171,30 @@ class WkApiClient(AbstractApiClient):
         route = f"/users/{user_id}/loggedTime"
         return self._get_json(route, ApiLoggedTimeGroupedByMonth)
 
-    def generate_token_for_data_store(self) -> ApiDatastoreToken:
-        route = f"/userToken/generate"
-        return self._post_with_json_response(route, ApiDatastoreToken)
+    def generate_token_for_data_store(self) -> ApiDataStoreToken:
+        route = "/userToken/generate"
+        return self._post_with_json_response(route, ApiDataStoreToken)
 
-    def tasks_create(self, task_parameters: List[ApiTaskParameters]) -> ApiTaskCreationResult:
-        route = f"/tasks"
-        return self._post_json_with_json_response(route, task_parameters, ApiTaskCreationResult)
+    def tasks_create(
+        self, task_parameters: List[ApiTaskParameters]
+    ) -> ApiTaskCreationResult:
+        route = "/tasks"
+        return self._post_json_with_json_response(
+            route, task_parameters, ApiTaskCreationResult
+        )
 
-    def tasks_create_from_files(self, nml_task_parameters: List[ApiNmlTaskParameters]) -> ApiTaskCreationResult:
-        route = f"/tasks/createFromFiles"
-        # TODO
-        return self.post_multipart_with_json_response(route, task_parameters, ApiTaskCreationResult)
+    def tasks_create_from_files(
+        self,
+        nml_task_parameters: ApiNmlTaskParameters,
+        annotation_files: List[Tuple[str, bytes]],
+    ) -> ApiTaskCreationResult:
+        route = "/tasks/createFromFiles"
+        data: httpx._types.RequestData = {
+            "formJSON": json.dumps(self._prepare_for_json(nml_task_parameters))
+        }
+        files: httpx._types.RequestFiles = {
+            filename: (filename, file_body) for filename, file_body in annotation_files
+        }
+        return self.post_multipart_with_json_response(
+            route, ApiTaskCreationResult, multipart_data=data, files=files
+        )

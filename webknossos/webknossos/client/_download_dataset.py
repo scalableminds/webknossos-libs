@@ -1,7 +1,7 @@
 import logging
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Tuple, TypeVar, Union, cast
+from typing import List, Optional, TypeVar, Union, cast
 
 import numpy as np
 from rich.progress import track

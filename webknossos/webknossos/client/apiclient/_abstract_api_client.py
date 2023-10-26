@@ -79,18 +79,15 @@ class AbstractApiClient(ABC):
         response = self._get(route, query)
         return response.content, self._parse_filename_from_header(response)
 
-    def _post_with_json_response(self, route, response_type: Type[T]):
+    def _post_with_json_response(self, route: str, response_type: Type[T]) -> T:
         response = self._post(route)
         return self._parse_json(response, response_type)
 
-    def _post_json_with_json_response(self, route: str,
-                                      body_structured: Any,
-                                      response_type: Type[T]):
+    def _post_json_with_json_response(
+        self, route: str, body_structured: Any, response_type: Type[T]
+    ) -> T:
         body_json = self._prepare_for_json(body_structured)
-        response = self._post(
-            route,
-            body_json=body_json
-        )
+        response = self._post(route, body_json=body_json)
         return self._parse_json(response, response_type)
 
     def post_multipart_with_json_response(
@@ -191,9 +188,7 @@ class AbstractApiClient(ABC):
 
     def _parse_json(self, response: httpx.Response, response_type: Type[T]) -> T:
         # todo wrap exceptions thrown here
-        return custom_converter.structure(
-            response.json(), response_type
-        )
+        return custom_converter.structure(response.json(), response_type)
 
     def _extract_total_count_header(self, response: httpx.Response) -> int:
         total_count_str = response.headers.get("X-Total-Count")

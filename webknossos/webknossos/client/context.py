@@ -57,7 +57,6 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
-from ._generated import Client as GeneratedClient
 from .apiclient import DatastoreApiClient, WkApiClient
 
 load_dotenv()
@@ -91,21 +90,6 @@ def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
 
 
 @lru_cache(maxsize=None)
-def _cached__get_generated_client(
-    webknossos_url: str,
-    token: Optional[str],
-    timeout: int,
-) -> GeneratedClient:
-    """Generates a client which might contain an x-auth-token header."""
-    if token is None:
-        return GeneratedClient(base_url=webknossos_url, timeout=timeout)
-    else:
-        return GeneratedClient(
-            base_url=webknossos_url, headers={"X-Auth-Token": token}, timeout=timeout
-        )
-
-
-@lru_cache(maxsize=None)
 def _cached__get_api_client(
     webknossos_url: str,
     token: Optional[str],
@@ -125,7 +109,7 @@ def _clear_all_context_caches() -> None:
     _cached_ask_for_token.cache_clear()
     _cached_get_org.cache_clear()
     _cached_get_datastore_token.cache_clear()
-    _cached__get_generated_client.cache_clear()
+    _cached__get_api_client.cache_clear()
 
 
 @attr.frozen
@@ -166,10 +150,6 @@ class _WebknossosContext:
         return _cached_get_datastore_token(self)
 
     @property
-    def generated_client(self) -> GeneratedClient:
-        return _cached__get_generated_client(self.url, self.token, self.timeout)
-
-    @property
     def api_client(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.token, self.timeout)
 
@@ -177,17 +157,7 @@ class _WebknossosContext:
     def api_client_with_auth(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.required_token, self.timeout)
 
-    @property
-    def generated_auth_client(self) -> GeneratedClient:
-        return _cached__get_generated_client(
-            self.url, self.required_token, self.timeout
-        )
-
-    def get_generated_datastore_client(self, datastore_url: str) -> GeneratedClient:
-        return GeneratedClient(base_url=datastore_url, timeout=self.timeout)
-
     def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
-        # TODO cache?
         return DatastoreApiClient(
             datastore_base_url=datastore_url, timeout_seconds=self.timeout
         )
@@ -245,13 +215,6 @@ class webknossos_context(ContextDecorator):
 
     def __exit__(self, *exc: Any) -> None:
         _webknossos_context_var.reset(self._context_var_token_stack.pop())
-
-
-def _get_generated_client(enforce_auth: bool = False) -> GeneratedClient:
-    if enforce_auth:
-        return _get_context().generated_auth_client
-    else:
-        return _get_context().generated_client
 
 
 def _get_api_client(enforce_auth: bool = False) -> WkApiClient:

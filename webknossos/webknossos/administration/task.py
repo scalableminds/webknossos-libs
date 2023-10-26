@@ -1,12 +1,18 @@
-import json
 import logging
-from typing import TYPE_CHECKING, BinaryIO, Dict, List, Mapping, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import attr
-import httpx
 
 from ..annotation import Annotation, AnnotationInfo
-from ..client.apiclient.models import ApiTask, ApiTaskType, ApiTaskParameters, ApiNmlTaskParameters, ApiExperience, ApiBoundingBox, ApiTaskCreationResult
+from ..client.apiclient.models import (
+    ApiBoundingBox,
+    ApiExperience,
+    ApiNmlTaskParameters,
+    ApiTask,
+    ApiTaskCreationResult,
+    ApiTaskParameters,
+    ApiTaskType,
+)
 from ..client.context import _get_api_client
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
@@ -82,37 +88,31 @@ class Task:
             len(base_annotations) > 0
         ), "Must supply at least one base annotation to create tasks"
 
-        client = _get_generated_client(enforce_auth=True)
-        url = f"{client.base_url}/api/tasks/createFromFiles"
-        task_parameters = {
-            "taskTypeId": task_type_id,
-            "neededExperience": {
-                "domain": needed_experience_domain,
-                "value": needed_experience_value,
-            },
-            "pendingInstances": instances,
-            "projectName": project_name,
-            "scriptId": script_id,
-            "boundingBox": bounding_box.to_wkw_dict()
+        client = _get_api_client(enforce_auth=True)
+        nml_task_parameters = ApiNmlTaskParameters(
+            task_type_id=task_type_id,
+            needed_experience=ApiExperience(
+                domain=needed_experience_domain,
+                value=needed_experience_value,
+            ),
+            pending_instances=instances,
+            project_name=project_name,
+            script_id=script_id,
+            bounding_box=ApiBoundingBox(
+                bounding_box.topleft.to_tuple(),
+                bounding_box.size.x,
+                bounding_box.size.y,
+                bounding_box.size.z,
+            )
             if bounding_box is not None
             else None,
-        }
-        form_data = {"formJSON": json.dumps(task_parameters)}
-        files: Mapping[str, Tuple[str, Union[bytes, BinaryIO]]] = {
-            f"{a.name}.zip": (f"{a.name}.zip", a._binary_zip())
-            for a in base_annotations
-        }
-
-        response = httpx.post(
-            url=url,
-            headers=client.get_headers(),
-            cookies=client.get_cookies(),
-            timeout=client.get_timeout(),
-            data=form_data,
-            files=files,
         )
+        annotation_files = [
+            (f"{a.name}.zip", a._binary_zip()) for a in base_annotations
+        ]
+        result = client.tasks_create_from_files(nml_task_parameters, annotation_files)
 
-        return cls._handle_task_creation_result(response)
+        return cls._handle_task_creation_result(result)
 
     @classmethod
     def create(
@@ -123,7 +123,7 @@ class Task:
         needed_experience_domain: str,
         needed_experience_value: int,
         starting_position: Vec3Int,
-        starting_rotation: Optional[Vec3Int] = Vec3Int(0, 0, 0),
+        starting_rotation: Vec3Int = Vec3Int(0, 0, 0),
         instances: int = 1,
         script_id: Optional[str] = None,
         bounding_box: Optional[BoundingBox] = None,
@@ -134,35 +134,30 @@ class Task:
         if isinstance(dataset_name, RemoteDataset):
             dataset_name = dataset_name._dataset_name
         task_parameters = ApiTaskParameters(
-            task_type_id = task_type_id,
-            needed_experience= ApiExperience(
-                domain= needed_experience_domain,
-                value= needed_experience_value,
+            task_type_id=task_type_id,
+            needed_experience=ApiExperience(
+                domain=needed_experience_domain,
+                value=needed_experience_value,
             ),
-            pending_instances= instances,
+            pending_instances=instances,
             project_name=project_name,
             script_id=script_id,
-            dataset_name= dataset_name,
-            edit_position= starting_position,
-            edit_rotation= starting_rotation,
-            bounding_box= ApiBoundingBox(bounding_box.topleft.to_tuple(), bounding_box.size.x, bounding_box.size.y, bounding_box.size.z)
+            data_set=dataset_name,
+            edit_position=starting_position.to_tuple(),
+            edit_rotation=starting_rotation.to_tuple(),
+            bounding_box=ApiBoundingBox(
+                bounding_box.topleft.to_tuple(),
+                bounding_box.size.x,
+                bounding_box.size.y,
+                bounding_box.size.z,
+            )
             if bounding_box is not None
             else None,
         )
 
-        response = client.tasks_create(task_parameters)
+        response = client.tasks_create([task_parameters])
 
         return cls._handle_task_creation_result(response)
-
-    @classmethod
-    def _from_dict(cls, response_dict: Dict) -> "Task":
-        from ..client._generated.models.task_info_response_200 import (
-            TaskInfoResponse200,
-        )
-
-        return cls._from_generated_response(
-            TaskInfoResponse200.from_dict(response_dict)
-        )
 
     @classmethod
     def _from_api_task(cls, api_task: ApiTask) -> "Task":
@@ -178,36 +173,20 @@ class Task:
             TaskType._from_api_task_type(api_task.type),
         )
 
-    @classmethod
-    def _from_generated_response(
-        cls,
-        response: Union["TaskInfoResponse200", "TaskInfosByProjectIdResponse200Item"],
-    ) -> "Task":
-        return cls(
-            response.id,
-            response.project_id,
-            response.data_set,
-            TaskStatus(
-                response.status.pending,
-                response.status.active,
-                response.status.finished,
-            ),
-            TaskType._from_generated_response(response.type),
-        )
-
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
         client = _get_api_client(enforce_auth=True)
-        api_annotations = client.annotation_infos_by_task(self, task.id)
+        api_annotations = client.annotation_infos_by_task(self.task_id)
         return [AnnotationInfo._from_api_annotation(a) for a in api_annotations]
 
     def get_project(self) -> Project:
         """Returns the project this task belongs to"""
         return Project.get_by_id(self.project_id)
 
-
     @classmethod
-    def _handle_task_creation_result(cls, result: ApiTaskCreationResult) -> List["Task"]:
+    def _handle_task_creation_result(
+        cls, result: ApiTaskCreationResult
+    ) -> List["Task"]:
         if len(result.warnings) > 0:
             logger.warning(
                 f"There were {len(result.warnings)} warnings during task creation:"

@@ -1,9 +1,9 @@
-from typing import Any, Dict, Type, TypeVar, Callable, Mapping, cast
+from typing import Any, Callable, Dict, Mapping, Type, TypeVar, cast
 
 import cattrs
+from attrs import AttrsInstance
 from attrs import fields as attr_fields
 from attrs import has as is_attr_class
-from attrs import AttrsInstance
 
 from ...utils import snake_to_camel_case
 

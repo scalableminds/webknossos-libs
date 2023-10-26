@@ -5,7 +5,7 @@ from webknossos.client.apiclient.models import (
     ApiUploadInformation,
 )
 
-from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient
+from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
 
 
 class DatastoreApiClient(AbstractApiClient):
@@ -51,28 +51,30 @@ class DatastoreApiClient(AbstractApiClient):
             retry_count=retry_count,
         )
 
-    def dataset_get_raw_data(self,
-                             organization_name: str,
-                             dataset_name: str,
-                             data_layer_name: str,
-                             mag: str,
-                             token: Optional[str],
-                             x: int,
-                             y: int,
-                             z: int,
-                             width: int,
-                             height: int,
-                             depth: int) -> Tuple[bytes, str]:
+    def dataset_get_raw_data(
+        self,
+        organization_name: str,
+        dataset_name: str,
+        data_layer_name: str,
+        mag: str,
+        token: Optional[str],
+        x: int,
+        y: int,
+        z: int,
+        width: int,
+        height: int,
+        depth: int,
+    ) -> Tuple[bytes, str]:
         route = f"/datasets/{organization_name}/{dataset_name}/layers/{data_layer_name}/data"
-        query = {
-            "mag":mag,
-            "x":x,
-            "y":y,
-            "z":z,
-            "width":width,
-            "height":height,
-            "depth":depth,
-            "token":token,
+        query: Query = {
+            "mag": mag,
+            "x": x,
+            "y": y,
+            "z": z,
+            "width": width,
+            "height": height,
+            "depth": depth,
+            "token": token,
         }
         response = self._get(route, query)
         return response.content, response.headers.get("MISSING-BUCKETS")

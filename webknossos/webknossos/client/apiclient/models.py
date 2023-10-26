@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import attr
 
@@ -80,13 +80,6 @@ class ApiSharingToken:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatastore:
-    name: str
-    allows_upload: bool
-    url: str
-
-
-@attr.s(auto_attribs=True)
 class ApiUploadInformation:
     upload_id: str
 
@@ -141,29 +134,27 @@ class ApiExperience:
     value: int
 
 
-
 @attr.s(auto_attribs=True)
 class ApiNmlTaskParameters:
-    taks_type_id: str
+    task_type_id: str
     needed_experience: ApiExperience
     pending_instances: int
     project_name: str
     script_id: Optional[str]
-    bounding_box: ApiBoundingBox
+    bounding_box: Optional[ApiBoundingBox]
 
 
 @attr.s(auto_attribs=True)
 class ApiTaskParameters:
-    taks_type_id: str
+    task_type_id: str
     needed_experience: ApiExperience
     pending_instances: int
     project_name: str
     script_id: Optional[str]
-    bounding_box: ApiBoundingBox
+    bounding_box: Optional[ApiBoundingBox]
     data_set: str
     edit_position: Tuple[int, int, int]
     edit_rotation: Tuple[float, float, float]
-    bounding_box: Optional[ApiBoundingBox]
 
 
 @attr.s(auto_attribs=True)
@@ -213,7 +204,7 @@ class ApiLoggedTimeForMonth:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatastoreToken:
+class ApiDataStoreToken:
     token: str
 
 
@@ -244,7 +235,7 @@ class ApiAnnotation:
     state: str
     modified: int
     data_store: ApiDataStore
-    tracing_time: Optional[int] = None # millis
+    tracing_time: Optional[int] = None  # millis
 
 
 @attr.s(auto_attribs=True)
