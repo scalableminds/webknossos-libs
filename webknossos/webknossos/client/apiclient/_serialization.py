@@ -23,7 +23,8 @@ def attr_to_camel_case_structure(cl: Type[T]) -> Callable[[Mapping[str, Any], An
         custom_converter,
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
-            for a in attr_fields(cast(type[AttrsInstance], cl))
+            # https://github.com/python/mypy/issues/16254
+            for a in attr_fields(cast(type[AttrsInstance], cl))  # type: ignore
         },
     )
 
@@ -34,7 +35,8 @@ def attr_to_camel_case_unstructure(cl: Type[T]) -> Callable[[T], Dict[str, Any]]
         custom_converter,
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
-            for a in attr_fields(cast(type[AttrsInstance], cl))
+            # https://github.com/python/mypy/issues/16254
+            for a in attr_fields(cast(type[AttrsInstance], cl))  # type: ignore
         },
     )
 

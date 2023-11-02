@@ -214,7 +214,7 @@ for cls in [
                 a.name: override(
                     omit_if_default=True, rename=snake_to_camel_case(a.name)
                 )
-                for a in attr.fields(cls)  # pylint: disable=not-an-iterable
+                for a in attr.fields(cls)  # type: ignore  # pylint: disable=not-an-iterable
             },
         ),
     )
@@ -225,7 +225,7 @@ for cls in [
             dataset_converter,
             **{
                 a.name: override(rename=snake_to_camel_case(a.name))
-                for a in attr.fields(cls)  # pylint: disable=not-an-iterable
+                for a in attr.fields(cls)  # type: ignore  # pylint: disable=not-an-iterable
             },
         ),
     )
@@ -302,7 +302,7 @@ for cls in [
                     a.name: override(
                         omit_if_default=True, rename=snake_to_camel_case(a.name)
                     )
-                    for a in attr.fields(cls)  # pylint: disable=not-an-iterable
+                    for a in attr.fields(cls)  # type: ignore  # pylint: disable=not-an-iterable
                 },
             )
         ),
@@ -315,7 +315,7 @@ for cls in [
                 dataset_converter,
                 **{
                     a.name: override(rename=snake_to_camel_case(a.name))
-                    for a in attr.fields(cls)  # pylint: disable=not-an-iterable
+                    for a in attr.fields(cls)  # type: ignore  # pylint: disable=not-an-iterable
                 },
             )
         ),
