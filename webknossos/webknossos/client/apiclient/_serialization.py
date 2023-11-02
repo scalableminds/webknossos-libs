@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Mapping, Type, TypeVar, cast
+from typing import Any, Callable, Dict, Mapping, Type, TypeVar
 
 import cattrs
 from attrs import AttrsInstance
@@ -24,7 +24,7 @@ def attr_to_camel_case_structure(cl: Type[T]) -> Callable[[Mapping[str, Any], An
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
             # https://github.com/python/mypy/issues/16254
-            for a in attr_fields(cast(type[AttrsInstance], cl))  # type: ignore[misc]
+            for a in attr_fields(cl)  # type: ignore[arg-type,misc]
         },
     )
 
@@ -36,7 +36,7 @@ def attr_to_camel_case_unstructure(cl: Type[T]) -> Callable[[T], Dict[str, Any]]
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
             # https://github.com/python/mypy/issues/16254
-            for a in attr_fields(cast(type[AttrsInstance], cl))  # type: ignore[misc]
+            for a in attr_fields(cl)  # type: ignore[arg-type,misc]
         },
     )
 
