@@ -5,6 +5,7 @@ import httpx
 
 from webknossos.client.apiclient.models import (
     ApiAnnotation,
+    ApiAnnotationUploadResult,
     ApiDataset,
     ApiDataStore,
     ApiDataStoreToken,
@@ -61,7 +62,7 @@ class WkApiClient(AbstractApiClient):
         sharing_token: Optional[str] = None,
     ) -> ApiDataset:
         route = f"/datasets/{organization_name}/{dataset_name}"
-        return self._get_json(route, ApiDataset, query={"sharing_token": sharing_token})
+        return self._get_json(route, ApiDataset, query={"sharingToken": sharing_token})
 
     def dataset_list(
         self, is_active: Optional[bool], organization_name: Optional[str]
@@ -116,7 +117,7 @@ class WkApiClient(AbstractApiClient):
         return self._get_json_paginated(route, List[ApiTask], limit, page_number)
 
     def annotation_info(self, annotation_id: str) -> ApiAnnotation:
-        route = f"/annotations/{annotation_id}"
+        route = f"/annotations/{annotation_id}/info"
         return self._get_json(
             route, ApiAnnotation, query={"timestamp": time_since_epoch_in_ms()}
         )
@@ -129,7 +130,7 @@ class WkApiClient(AbstractApiClient):
 
     def annotation_upload(
         self, file_body: bytes, filename: str, createGroupForEachFile: bool
-    ) -> ApiAnnotation:
+    ) -> ApiAnnotationUploadResult:
         route = "/annotations/upload"
         data: httpx._types.RequestData = {
             "createGroupForEachFile": createGroupForEachFile
@@ -137,7 +138,7 @@ class WkApiClient(AbstractApiClient):
         files: httpx._types.RequestFiles = {
             filename: (filename, file_body),
         }
-        return self.post_multipart_with_json_response(route, ApiAnnotation, data, files)
+        return self.post_multipart_with_json_response(route, ApiAnnotationUploadResult, data, files)
 
     def annotation_infos_by_task(self, task_id: str) -> List[ApiAnnotation]:
         route = f"/tasks/{task_id}/annotations"

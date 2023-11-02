@@ -15,8 +15,8 @@ from ._resumable import Resumable
 from .apiclient import ApiClientError
 from .apiclient.models import (
     ApiLinkedLayerIdentifier,
-    ApiReserveUploadInformation,
-    ApiUploadInformation,
+    ApiReserveDatasetUploadInformation,
+    ApiDatasetUploadInformation,
 )
 from .context import _get_context, _WebknossosContext
 
@@ -126,7 +126,7 @@ def upload_dataset(
         ) from e
 
     datastore_api_client.dataset_reserve_upload(
-        ApiReserveUploadInformation(
+        ApiReserveDatasetUploadInformation(
             upload_id,
             new_dataset_name,
             context.organization_id,
@@ -163,7 +163,7 @@ def upload_dataset(
                 )
 
     datastore_api_client.dataset_finish_upload(
-        ApiUploadInformation(upload_id),
+        ApiDatasetUploadInformation(upload_id),
         datastore_token,
         retry_count=MAXIMUM_RETRY_COUNT,
     )

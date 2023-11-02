@@ -1,8 +1,8 @@
 from typing import Dict, Optional, Tuple
 
 from webknossos.client.apiclient.models import (
-    ApiReserveUploadInformation,
-    ApiUploadInformation,
+    ApiReserveDatasetUploadInformation,
+    ApiDatasetUploadInformation,
 )
 
 from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
@@ -24,7 +24,7 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_finish_upload(
         self,
-        upload_information: ApiUploadInformation,
+        upload_information: ApiDatasetUploadInformation,
         token: Optional[str],
         retry_count: int,
     ) -> None:
@@ -39,7 +39,7 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_reserve_upload(
         self,
-        reserve_upload_information: ApiReserveUploadInformation,
+        reserve_upload_information: ApiReserveDatasetUploadInformation,
         token: Optional[str],
         retry_count: int,
     ) -> None:

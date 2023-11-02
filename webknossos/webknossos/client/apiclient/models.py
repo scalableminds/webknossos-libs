@@ -80,7 +80,7 @@ class ApiSharingToken:
 
 
 @attr.s(auto_attribs=True)
-class ApiUploadInformation:
+class ApiDatasetUploadInformation:
     upload_id: str
 
 
@@ -93,7 +93,7 @@ class ApiLinkedLayerIdentifier:
 
 
 @attr.s(auto_attribs=True)
-class ApiReserveUploadInformation:
+class ApiReserveDatasetUploadInformation:
     upload_id: str
     name: str
     organization: str
@@ -192,6 +192,16 @@ class ApiUser:
 
 
 @attr.s(auto_attribs=True)
+class ApiUserCompact:
+    id: str
+    email: str
+    first_name: str
+    last_name: str
+    is_admin: bool
+    is_dataset_manager: bool
+
+
+@attr.s(auto_attribs=True)
 class ApiMonth:
     month: int
     year: int
@@ -229,13 +239,25 @@ class ApiProject:
 class ApiAnnotation:
     id: str
     typ: str
-    owner: ApiUser
+    owner: ApiUserCompact
     name: str
     description: str
     state: str
     modified: int
     data_store: ApiDataStore
     tracing_time: Optional[int] = None  # millis
+
+
+@attr.s(auto_attribs=True)
+class ApiAnnotationIdentifier:
+    id: str
+    typ: str
+
+
+@attr.s(auto_attribs=True)
+class ApiAnnotationUploadResult:
+    annotation: ApiAnnotationIdentifier
+    messages: List[str]
 
 
 @attr.s(auto_attribs=True)

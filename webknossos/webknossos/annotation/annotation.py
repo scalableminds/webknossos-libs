@@ -515,7 +515,7 @@ class Annotation:
             self._binary_zip(), f"{self.name}.zip", createGroupForEachFile=False
         )
 
-        return f"{context.url}/annotations/{response_annotation_info.typ}/{response_annotation_info.id}"
+        return f"{context.url}/annotations/{response_annotation_info.annotation.typ}/{response_annotation_info.annotation.id}"
 
     def _binary_zip(self) -> bytes:
         with BytesIO() as buffer:
