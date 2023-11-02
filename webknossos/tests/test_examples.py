@@ -13,6 +13,7 @@ import pytest
 from scipy.spatial import cKDTree
 
 import webknossos as wk
+from webknossos.client.apiclient.errors import UnexpectedStatusError
 
 pytestmark = [pytest.mark.with_vcr]
 
@@ -265,7 +266,7 @@ def test_remote_datasets() -> None:
     (own_remote_datasets,) = exec_main_and_get_vars(
         example,
         "own_remote_datasets",
-        raises=AssertionError,
+        raises=UnexpectedStatusError,  # request with scalable_minds organization param won’t work against localhost
     )
 
     ds = own_remote_datasets["l4_sample"]

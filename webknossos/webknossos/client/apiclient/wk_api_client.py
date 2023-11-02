@@ -138,7 +138,9 @@ class WkApiClient(AbstractApiClient):
         files: httpx._types.RequestFiles = {
             filename: (filename, file_body),
         }
-        return self.post_multipart_with_json_response(route, ApiAnnotationUploadResult, data, files)
+        return self.post_multipart_with_json_response(
+            route, ApiAnnotationUploadResult, data, files
+        )
 
     def annotation_infos_by_task(self, task_id: str) -> List[ApiAnnotation]:
         route = f"/tasks/{task_id}/annotations"

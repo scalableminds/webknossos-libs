@@ -181,7 +181,7 @@ class AbstractApiClient(ABC):
         assert (
             response is not None
         ), "Got no http response. Was retry_count less than one?"
-        self._assert_good_response(url, response)
+        self._assert_good_response(response)
         return response
 
     # Omit all entries where the value is None
@@ -190,9 +190,7 @@ class AbstractApiClient(ABC):
             return None
         return {k: v for (k, v) in query.items() if v is not None}
 
-    def _parse_json(
-        self, response: httpx.Response, response_type: Type[T]
-    ) -> T:
+    def _parse_json(self, response: httpx.Response, response_type: Type[T]) -> T:
         try:
             return custom_converter.structure(response.json(), response_type)
         except Exception as e:
@@ -216,7 +214,7 @@ class AbstractApiClient(ABC):
     def _prepare_for_json(self, body_structured: Any) -> Any:
         return custom_converter.unstructure(body_structured)
 
-    def _assert_good_response(self, url: str, response: httpx.Response) -> None:
+    def _assert_good_response(self, response: httpx.Response) -> None:
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as e:

@@ -14,9 +14,9 @@ from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .apiclient import ApiClientError
 from .apiclient.models import (
+    ApiDatasetUploadInformation,
     ApiLinkedLayerIdentifier,
     ApiReserveDatasetUploadInformation,
-    ApiDatasetUploadInformation,
 )
 from .context import _get_context, _WebknossosContext
 

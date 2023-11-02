@@ -1,8 +1,8 @@
 from typing import Dict, Optional, Tuple
 
 from webknossos.client.apiclient.models import (
-    ApiReserveDatasetUploadInformation,
     ApiDatasetUploadInformation,
+    ApiReserveDatasetUploadInformation,
 )
 
 from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
