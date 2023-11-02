@@ -13,7 +13,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://webknossos.org/api/datasets/scalable_minds/l4_sample_dev
+    uri: https://webknossos.org/api/v5/datasets/scalable_minds/l4_sample_dev
   response:
     content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"jobsEnabled":true,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null}'
     headers:
@@ -48,7 +48,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev/layers/color/data?depth=10&halfByte=false&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev/layers/color/data?depth=10&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       g5GThpWTi4l+gY6UkpCKh5h9k4qNmZGZepaTjn6Dk4qOg4qFgIyGl4OBkZqakH2ThIKPjYaUkJyC
@@ -113,7 +113,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev/layers/segmentation/data?depth=10&halfByte=false&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev/layers/segmentation/data?depth=10&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
