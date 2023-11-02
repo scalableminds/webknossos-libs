@@ -469,13 +469,12 @@ class Dataset:
 
         with context_manager:
             wk_context = _get_context()
-            dataset_info = wk_context.api_client.dataset_info(
+            api_dataset_info = wk_context.api_client.dataset_info(
                 organization_id, dataset_name, sharing_token
             )
-            print(f" got dataset_info, name is {dataset_info.name}")
             token = sharing_token or wk_context.datastore_token
 
-        datastore_url = dataset_info.data_store.url
+        datastore_url = api_dataset_info.data_store.url
 
         zarr_path = UPath(
             f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",
@@ -1892,10 +1891,10 @@ class RemoteDataset(Dataset):
         from ..client.context import _get_api_client
 
         with self._context:
-            sharing_token = _get_api_client().dataset_sharing_token(
+            api_sharing_token = _get_api_client().dataset_sharing_token(
                 self._organization_id, self._dataset_name
             )
-            return sharing_token.sharing_token
+            return api_sharing_token.sharing_token
 
     @property
     def allowed_teams(self) -> Tuple["Team", ...]:
@@ -1913,8 +1912,6 @@ class RemoteDataset(Dataset):
         from ..client.context import _get_api_client
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
-
-        logger.info(f"setting to {team_ids}")
 
         with self._context:
             client = _get_api_client()

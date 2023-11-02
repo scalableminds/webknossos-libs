@@ -2,6 +2,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import attr
 
+# Request and response bodies for wk/datastore routes
+# Should contain only the fields that are actually used by the python libs
+# Note that keys are converted to/from camelCase to match this
+# Optional fields in response bodies should always have “= None” defaults.
+# When adding things here, check which fields are optional on the WK server side
+
 
 @attr.s(auto_attribs=True)
 class ApiWkBuildInfoWebknossos:

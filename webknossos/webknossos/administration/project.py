@@ -46,7 +46,7 @@ class Project:
 
         from .task import Task
 
-        PAGINATION_LIMIT = 10
+        PAGINATION_LIMIT = 1000
         pagination_page = 0
 
         client = _get_api_client(enforce_auth=True)
