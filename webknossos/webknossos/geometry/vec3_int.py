@@ -1,3 +1,4 @@
+import re
 from operator import add, floordiv, mod, mul, sub
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 
@@ -71,6 +72,13 @@ class Vec3Int(tuple):
             return Vec3Int.full(vec_or_int)
         else:
             return Vec3Int(vec_or_int)
+
+    @staticmethod
+    def from_str(string: str) -> "Vec3Int":
+        if re.match(r"\(\d+,\d+,\d+\)", string):
+            return Vec3Int(tuple(map(int, re.findall(r"\d+", string))))
+        else:
+            return Vec3Int.full(int(string))
 
     @property
     def x(self) -> int:

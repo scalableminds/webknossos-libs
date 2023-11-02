@@ -113,14 +113,21 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         else:
             submit_fn = super().submit  # type: ignore[assignment]
 
-        # Depending on the start_method and output_pickle_path, wrapper functions may need to be
+        # Depending on the start_method and output_pickle_path, setup functions may need to be
         # executed in the new process context, before the actual code is ran.
         # These wrapper functions consume their arguments from *args, **kwargs and assume
-        # that the next argument will be another function that is then called.
-        # The call_stack holds all of these wrapper functions and their arguments in the correct order.
-        # For example, call_stack = [wrapper_fn_1, wrapper_fn_1_arg_1, wrapper_fn_2, actual_fn, actual_fn_arg_1]
-        # where wrapper_fn_1 is called, which eventually calls wrapper_fn_2, which eventually calls actual_fn.
-        call_stack: List[Callable] = []
+        # that the next and last argument will be another function that is then called.
+        # Eventually, the actually submitted function will be called.
+
+        if output_pickle_path is not None:
+            __fn = cast(
+                Callable[_P, _T],
+                partial(
+                    MultiprocessingExecutor._execute_and_persist_function,
+                    Path(output_pickle_path),
+                    __fn,
+                ),
+            )
 
         if self._mp_logging_handler_pool is not None:
             # If a start_method other than the default "fork" is used, logging needs to be re-setup,
@@ -128,22 +135,16 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             multiprocessing_logging_setup_fn = (
                 self._mp_logging_handler_pool.get_multiprocessing_logging_setup_fn()
             )
-            call_stack.append(
+            __fn = cast(
+                Callable[_P, _T],
                 partial(
                     MultiprocessingExecutor._setup_logging_and_execute,
                     multiprocessing_logging_setup_fn,
-                )
+                    __fn,
+                ),
             )
 
-        if output_pickle_path is not None:
-            call_stack.append(
-                partial(
-                    MultiprocessingExecutor._execute_and_persist_function,
-                    output_pickle_path,
-                )
-            )
-
-        fut = submit_fn(*call_stack, __fn, *args, **kwargs)
+        fut = submit_fn(__fn, *args, **kwargs)
 
         enrich_future_with_uncaught_warning(fut)
         return fut
@@ -173,7 +174,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
         output_pickle_path = Path(dirpath) / "jobdescription.pickle"
 
-        with open(output_pickle_path, "wb") as file:
+        with output_pickle_path.open("wb") as file:
             pickling.dump((__fn, args, kwargs), file)
 
         future = super().submit(
@@ -208,7 +209,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     @staticmethod
     def _execute_and_persist_function(
-        output_pickle_path: os.PathLike,
+        output_pickle_path: Path,
         fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
@@ -226,7 +227,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             # disk. However, the output will have a .preliminary prefix at first
             # which is only removed in the success case so that a checkpoint at
             # the desired target only exists if the job was successful.
-            with open(output_pickle_path, "wb") as file:
+            with output_pickle_path.open("wb") as file:
                 pickling.dump((True, result), file)
             return result
 

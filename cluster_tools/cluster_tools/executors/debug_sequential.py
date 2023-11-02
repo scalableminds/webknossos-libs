@@ -1,4 +1,5 @@
 from concurrent.futures import Future
+from pathlib import Path
 from typing import Callable, TypeVar, cast
 
 from typing_extensions import ParamSpec
@@ -23,31 +24,21 @@ class DebugSequentialExecutor(SequentialExecutor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> "Future[_T]":
+        fut: "Future[_T]" = Future()
         if "__cfut_options" in kwargs:
             output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
                 "output_pickle_path"
             ]
             del kwargs["__cfut_options"]
-            fut = self._blocking_submit(
-                MultiprocessingExecutor._execute_and_persist_function,  # type: ignore[arg-type]
-                output_pickle_path,  # type: ignore[arg-type]
-                __fn,  # type: ignore[arg-type]
+            result = MultiprocessingExecutor._execute_and_persist_function(
+                Path(output_pickle_path),
+                __fn,
                 *args,
                 **kwargs,
             )
         else:
-            fut = self._blocking_submit(__fn, *args, **kwargs)
+            result = __fn(*args, **kwargs)
 
-        enrich_future_with_uncaught_warning(fut)
-        return fut
-
-    def _blocking_submit(
-        self,
-        __fn: Callable[_P, _T],
-        *args: _P.args,
-        **kwargs: _P.kwargs,
-    ) -> "Future[_T]":
-        fut: "Future[_T]" = Future()
-        result = __fn(*args, **kwargs)
         fut.set_result(result)
+        enrich_future_with_uncaught_warning(fut)
         return fut
