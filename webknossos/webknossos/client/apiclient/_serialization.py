@@ -1,7 +1,6 @@
 from typing import Any, Callable, Dict, Mapping, Type, TypeVar
 
 import cattrs
-from attrs import AttrsInstance
 from attrs import fields as attr_fields
 from attrs import has as is_attr_class
 
