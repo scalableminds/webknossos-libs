@@ -2,7 +2,7 @@ from typing import Iterable, List
 
 import attr
 
-from ..client.apiclient.models import ApiFolderWithParent
+from ..client.api_client.models import ApiFolderWithParent
 
 
 def _get_folder_path(

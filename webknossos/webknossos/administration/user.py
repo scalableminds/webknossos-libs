@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple
 
 import attr
 
-from ..client.apiclient.models import ApiLoggedTimeGroupedByMonth, ApiUser
+from ..client.api_client.models import ApiLoggedTimeGroupedByMonth, ApiUser
 from ..client.context import _get_api_client
 
 
@@ -72,7 +72,7 @@ class User:
     def get_current_user(cls) -> "User":
         """Returns the current user from the authentication context."""
         client = _get_api_client(enforce_auth=True)
-        api_user = client.current_user()
+        api_user = client.user_current()
         return cls._from_api_user(api_user)
 
     @classmethod

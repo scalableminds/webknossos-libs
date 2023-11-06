@@ -12,8 +12,8 @@ import httpx
 from ..dataset import Dataset, Layer, RemoteDataset
 from ..utils import get_rich_progress
 from ._resumable import Resumable
-from .apiclient import ApiClientError
-from .apiclient.models import (
+from .api_client import ApiClientError
+from .api_client.models import (
     ApiDatasetUploadInformation,
     ApiLinkedLayerIdentifier,
     ApiReserveDatasetUploadInformation,
@@ -117,7 +117,7 @@ def upload_dataset(
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
     try:
-        context.api_client_with_auth.assert_new_dataset_name_is_valid(
+        context.api_client_with_auth.dataset_assert_new_name_is_valid(
             context.organization_id, new_dataset_name
         )
     except ApiClientError as e:

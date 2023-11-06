@@ -1,8 +1,8 @@
 import pytest
 
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
-from webknossos.client.apiclient import WkApiClient
-from webknossos.client.apiclient.models import ApiDataStore
+from webknossos.client.api_client import WkApiClient
+from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client, webknossos_context
 
 pytestmark = [pytest.mark.with_vcr]
@@ -47,12 +47,12 @@ def test_datastore_list(auth_client: WkApiClient) -> None:
 
 
 def test_generate_token_for_data_store(auth_client: WkApiClient) -> None:
-    api_datastore_token = auth_client.generate_token_for_data_store()
+    api_datastore_token = auth_client.token_generate_for_data_store()
     assert len(api_datastore_token.token) > 0
 
 
 def test_current_user_info_and_user_logged_time(auth_client: WkApiClient) -> None:
-    current_api_user = auth_client.current_user()
+    current_api_user = auth_client.user_current()
 
     assert len(current_api_user.email) > 0
     assert len(current_api_user.teams) > 0

@@ -57,7 +57,7 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
-from .apiclient import DatastoreApiClient, WkApiClient
+from .api_client import DatastoreApiClient, WkApiClient
 
 load_dotenv()
 
@@ -78,14 +78,14 @@ def _cached_ask_for_token(webknossos_url: str) -> str:
 
 @lru_cache(maxsize=None)
 def _cached_get_org(context: "_WebknossosContext") -> str:
-    current_api_user = context.api_client_with_auth.current_user()
+    current_api_user = context.api_client_with_auth.user_current()
     return current_api_user.organization
 
 
 # TODO reset invalid tokens e.g. using cachetools  pylint: disable=fixme
 @lru_cache(maxsize=None)
 def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
-    api_datastore_token = context.api_client_with_auth.generate_token_for_data_store()
+    api_datastore_token = context.api_client_with_auth.token_generate_for_data_store()
     return api_datastore_token.token
 
 

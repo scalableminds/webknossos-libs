@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 import attr
 
-from ..client.apiclient.models import ApiProject
+from ..client.api_client.models import ApiProject
 from ..client.context import _get_api_client
 from .user import User
 

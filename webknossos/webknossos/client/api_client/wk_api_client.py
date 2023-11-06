@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Tuple
 
 import httpx
 
-from webknossos.client.apiclient.models import (
+from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
@@ -28,6 +28,11 @@ from ._abstract_api_client import AbstractApiClient
 
 
 class WkApiClient(AbstractApiClient):
+    # Client to use the HTTP API of WEBKNOSSOS servers.
+    # When adding a method here, use the utility methods from AbstractApiClient
+    # and add more as needed.
+    # Methods here are prefixed with the domain, e.g. dataset_update_teams (not update_dataset_teams)
+
     def __init__(
         self,
         base_wk_url: str,
@@ -92,7 +97,7 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{organization_name}/{dataset_name}/sharingToken"
         return self._get_json(route, ApiSharingToken)
 
-    def assert_new_dataset_name_is_valid(
+    def dataset_assert_new_name_is_valid(
         self, organization_name: str, dataset_name: str
     ) -> None:
         route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
@@ -158,7 +163,7 @@ class WkApiClient(AbstractApiClient):
         route = f"/users/{user_id}"
         return self._get_json(route, ApiUser)
 
-    def current_user(self) -> ApiUser:
+    def user_current(self) -> ApiUser:
         route = "/user"
         return self._get_json(route, ApiUser)
 
@@ -166,15 +171,15 @@ class WkApiClient(AbstractApiClient):
         route = "/users"
         return self._get_json(route, List[ApiUser])
 
-    def team_list(self) -> List[ApiTeam]:
-        route = "/teams"
-        return self._get_json(route, List[ApiTeam])
-
     def user_logged_time(self, user_id: str) -> ApiLoggedTimeGroupedByMonth:
         route = f"/users/{user_id}/loggedTime"
         return self._get_json(route, ApiLoggedTimeGroupedByMonth)
 
-    def generate_token_for_data_store(self) -> ApiDataStoreToken:
+    def team_list(self) -> List[ApiTeam]:
+        route = "/teams"
+        return self._get_json(route, List[ApiTeam])
+
+    def token_generate_for_data_store(self) -> ApiDataStoreToken:
         route = "/userToken/generate"
         return self._post_with_json_response(route, ApiDataStoreToken)
 

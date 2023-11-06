@@ -35,7 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ..client.apiclient.models import ApiDataset
+from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
 from .defaults import (

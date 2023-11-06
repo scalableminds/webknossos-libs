@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 import attr
 
 from ..annotation import Annotation, AnnotationInfo
-from ..client.apiclient.models import (
+from ..client.api_client.models import (
     ApiBoundingBox,
     ApiExperience,
     ApiNmlTaskParameters,

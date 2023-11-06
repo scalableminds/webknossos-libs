@@ -2,7 +2,7 @@ from typing import Optional
 
 import attr
 
-from ..client.apiclient.models import ApiAnnotation
+from ..client.api_client.models import ApiAnnotation
 from ..utils import warn_deprecated
 from .annotation import Annotation, AnnotationState, AnnotationType
 
