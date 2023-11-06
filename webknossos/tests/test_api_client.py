@@ -29,7 +29,7 @@ def test_health(client: WkApiClient) -> None:
 
 
 def test_annotation_info(auth_client: WkApiClient) -> None:
-    annotation_id = "570ba0092a7c0e980056fe9b"  # pylint: disable=redefined-builtin
+    annotation_id = "570ba0092a7c0e980056fe9b"
     typ = "Explorational"
     api_annotation = auth_client.annotation_info(annotation_id)
     assert api_annotation.id == annotation_id

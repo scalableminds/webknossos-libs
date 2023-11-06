@@ -11,7 +11,7 @@ T = TypeVar("T")
 custom_converter = cattrs.Converter()
 
 # Structuring and destructuring used for the attrs classes in apiclient.models.
-# The server expects and sends camelCase fields, we want snake_Case here
+# The server expects and sends camelCase fields, we want snake_case here
 # However, the case conversion should happen only for the attrs classes,
 # and not for dicts that may contain user data (e.g. user experiences)
 

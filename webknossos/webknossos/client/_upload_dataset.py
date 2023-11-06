@@ -21,7 +21,7 @@ from .apiclient.models import (
 from .context import _get_context, _WebknossosContext
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
-MAXIMUM_RETRY_COUNT = 5
+MAXIMUM_RETRY_COUNT = 4
 
 
 class LayerToLink(NamedTuple):

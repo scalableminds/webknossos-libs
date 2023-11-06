@@ -13,7 +13,7 @@ T = TypeVar("T")
 
 Query = Dict[str, Optional[Union[str, int, float, bool]]]
 
-LONG_TIMEOUT_SECONDS = 7200.0
+LONG_TIMEOUT_SECONDS = 7200.0  # 2 hours
 
 
 class AbstractApiClient(ABC):
@@ -50,10 +50,9 @@ class AbstractApiClient(ABC):
             "pageNumber": page_number,
             "includeTotalCount": True,
         }
-        query_adapted = pagination_query.copy()
         if query is not None:
-            query_adapted.update(query)
-        response = self._get(route, query_adapted)
+            pagination_query.update(query)
+        response = self._get(route, pagination_query)
         return self._parse_json(
             response, response_type
         ), self._extract_total_count_header(response)
@@ -67,7 +66,7 @@ class AbstractApiClient(ABC):
         route: str,
         body_structured: Any,
         query: Optional[Query] = None,
-        retry_count: int = 1,
+        retry_count: int = 0,
         timeout_seconds: Optional[float] = None,
     ) -> None:
         body_json = self._prepare_for_json(body_structured)
@@ -134,7 +133,7 @@ class AbstractApiClient(ABC):
         query: Optional[Query] = None,
         multipart_data: Optional[httpx._types.RequestData] = None,
         files: Optional[httpx._types.RequestFiles] = None,
-        retry_count: int = 1,
+        retry_count: int = 0,
         timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
         return self._request(
@@ -156,19 +155,19 @@ class AbstractApiClient(ABC):
         body_json: Optional[Any] = None,
         multipart_data: Optional[httpx._types.RequestData] = None,
         files: Optional[httpx._types.RequestFiles] = None,
-        retry_count: int = 1,
+        retry_count: int = 0,
         timeout_seconds: Optional[float] = None,
     ) -> httpx.Response:
         assert (
-            retry_count > 0
-        ), f"Cannot perform request with retry_count < 1, got {retry_count}"
+            retry_count >= 0
+        ), f"Cannot perform request with retry_count < 0, got {retry_count}"
         url = self.url_from_route(route)
         response = None
-        for _ in range(retry_count):
+        for _ in range(retry_count + 1):
             response = httpx.request(
                 method,
                 url,
-                params=self._filter_query(query),
+                params=self._omit_none_values_in_query(query),
                 json=body_json,
                 data=multipart_data,
                 files=files,
@@ -178,14 +177,11 @@ class AbstractApiClient(ABC):
             if response.status_code == 200 or response.status_code == 400:
                 # Stop retrying in case of success or bad request
                 break
-        assert (
-            response is not None
-        ), "Got no http response. Was retry_count less than one?"
+        assert response is not None, "Got no http response object"
         self._assert_good_response(response)
         return response
 
-    # Omit all entries where the value is None
-    def _filter_query(self, query: Optional[Query]) -> Optional[Query]:
+    def _omit_none_values_in_query(self, query: Optional[Query]) -> Optional[Query]:
         if query is None:
             return None
         return {k: v for (k, v) in query.items() if v is not None}
