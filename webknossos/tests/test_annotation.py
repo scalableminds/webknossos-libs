@@ -230,7 +230,7 @@ def test_reading_bounding_boxes() -> None:
 
 
 def test_bounding_box_roundtrip() -> None:
-    ds = wk.Dataset.open_remote("e2006_knossos")
+    ds = wk.Dataset.open_remote("l4_sample")
 
     annotation_before = wk.Annotation(
         name="test_bounding_box_roundtrip",

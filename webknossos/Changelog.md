@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
+- Refactored the WEBKNOSSOS API client to no longer use generated client code. [#948](https://github.com/scalableminds/webknossos-libs/pull/948)
 
 
 ### Fixed
