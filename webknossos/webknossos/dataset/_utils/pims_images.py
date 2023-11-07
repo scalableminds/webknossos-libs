@@ -142,6 +142,7 @@ class PimsImages:
             self.dtype = images.dtype
 
             if isinstance(images, pims.FramesSequenceND):
+                # TODO: assertion that phrohibites nd data
                 assert all(
                     axis in "xyzct" for axis in images.axes
                 ), f"Found unknown axes {set(images.axes) - set('xyzct')}"

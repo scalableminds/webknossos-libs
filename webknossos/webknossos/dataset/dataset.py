@@ -1243,6 +1243,7 @@ class Dataset:
                 z_end = min(z_start + batch_size, pims_images.expected_shape.z)
                 # return shapes and set to union when using --pad
                 args.append((z_start, z_end))
+            print(args)
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
                 # However, dataset borders might change between different parallelized writes, when sizes differ.
