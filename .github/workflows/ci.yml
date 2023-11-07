@@ -175,7 +175,7 @@ jobs:
         timeout-minutes: 30
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: ./test.sh -vv -p no:faulthandler --durations=0 tests/dataset/test_dataset.py -sv
+        run: ./test.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
       - name: Check if git is dirty
         run: |
