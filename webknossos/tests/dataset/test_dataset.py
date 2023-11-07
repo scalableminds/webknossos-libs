@@ -176,9 +176,6 @@ def assure_exported_properties(ds: Dataset) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> None:
-    print(
-        f"running test_aligned_downsampling with data_format {data_format} and output_path {output_path}"
-    )
     ds_path = copy_simple_dataset(data_format, output_path, "aligned_downsampling")
     dataset = Dataset.open(ds_path)
     input_layer = dataset.get_layer("color")
@@ -190,7 +187,13 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
         num_channels=3,
         data_format=input_layer.data_format,
     )
-    test_mag = test_layer.add_mag("1")
+    chunks_per_shard = None
+    if data_format == DataFormat.Zarr3:
+        # Writing compressed zarr with large shard shape is slow, compare #issue
+        chunks_per_shard = (4, 4, 4)
+    test_mag = test_layer.add_mag(
+        "1", chunks_per_shard=chunks_per_shard, chunk_shape=32
+    )
     test_mag.write(
         absolute_offset=(0, 0, 0),
         # assuming the layer has 3 channels:
@@ -220,8 +223,14 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
 
     input_dataset = Dataset.open(ds_path)
     input_layer = input_dataset.get_layer("color")
+
+    chunks_per_shard = None
+    if data_format == DataFormat.Zarr3:
+        # Writing compressed zarr with large shard shape is slow, compare #issue
+        chunks_per_shard = (4, 4, 4)
+
     # Adding additional mags to the input dataset for testing
-    input_layer.get_or_add_mag("2-2-1")
+    input_layer.add_mag("2-2-1", chunks_per_shard=chunks_per_shard, chunk_shape=32)
     input_layer.redownsample()
     assert len(input_layer.mags) == 2
     # Use the mag with the best resolution
@@ -238,7 +247,9 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
         data_format=input_layer.data_format,
     )
     # Create the same mag in the new output dataset
-    output_mag = output_layer.add_mag(finest_input_mag.mag)
+    output_mag = output_layer.add_mag(
+        finest_input_mag.mag, chunks_per_shard=chunks_per_shard, chunk_shape=32
+    )
     # Copying some data into the output dataset
     input_data = finest_input_mag.read(absolute_offset=(0, 0, 0), size=(24, 24, 24))
     output_mag.write(absolute_offset=(0, 0, 0), data=input_data)
