@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Performance improvements for reading from and writing to sharded zarr3 datasets, also speeding up the automated tests [#963](https://github.com/scalableminds/webknossos-libs/pull/963)
 
 ### Fixed
 
