@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Performance improvements for reading from and writing to sharded zarr3 datasets, also speeding up the automated tests [#963](https://github.com/scalableminds/webknossos-libs/pull/963)
 
 ### Fixed
 
@@ -27,7 +28,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - The `DEFAULT_DATA_FORMAT` and `DEFAULT_CHUNKS_PER_SHARD` can now be set with the env variables `WK_DEFAULT_DATA_FORMAT` and `WK_DEFAULT_CHUNKS_PER_SHARD`
 - A `Vec3Int` can now be initialized with a string containing an int or a tuple.
-- Performance improvements for reading from and writing to sharded zarr3 datasets, also speeding up the automated tests [#963](https://github.com/scalableminds/webknossos-libs/pull/963)
 
 ### Changed
 - Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
