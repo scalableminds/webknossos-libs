@@ -7,17 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.4...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
-
 
 ### Fixed
+
+
+## [0.14.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.4) - 2023-11-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.3...v0.14.4)
+
+### Changed
+- Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
+
 
 
 ## [0.14.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.3) - 2023-10-19
