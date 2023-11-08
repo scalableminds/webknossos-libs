@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.5...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Performance improvements for reading from and writing to sharded zarr3 datasets, also speeding up the automated tests [#963](https://github.com/scalableminds/webknossos-libs/pull/963)
 
 ### Fixed
+
+
+## [0.14.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.5) - 2023-11-08
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.4...v0.14.5)
+
+### Changed
+- Performance improvements for reading from and writing to sharded zarr3 datasets, also speeding up the automated tests [#963](https://github.com/scalableminds/webknossos-libs/pull/963)
 
 
 ## [0.14.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.4) - 2023-11-07
