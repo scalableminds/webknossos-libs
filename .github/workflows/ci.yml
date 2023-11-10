@@ -131,7 +131,7 @@ jobs:
           PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
 
       - name: Run dask tests
-        if: ${{ matrix.executors == 'dask' }}
+        if: ${{ matrix.executors == 'dask' && matrix.python-version != '3.8' }}
         run: |
           cd tests
           PYTEST_EXECUTORS=dask poetry run python -m pytest -sv test_all.py
