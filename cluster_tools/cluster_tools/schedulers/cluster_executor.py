@@ -47,7 +47,7 @@ _S = TypeVar("_S")
 
 
 def _handle_kill_through_weakref(
-    executor_ref: ReferenceType["ClusterExecutor"],
+    executor_ref: "ReferenceType[ClusterExecutor]",
     existing_sigint_handler: Any,
     signum: Optional[int],
     frame: Any,

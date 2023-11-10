@@ -75,7 +75,7 @@ def _parse_mem(size: str) -> int:
 
 
 def _handle_kill_through_weakref(
-    executor_ref: ReferenceType["DaskExecutor"],
+    executor_ref: "ReferenceType[DaskExecutor]",
     existing_sigint_handler: Any,
     signum: Optional[int],
     frame: Any,
