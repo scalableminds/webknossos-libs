@@ -19,6 +19,7 @@ from typing import (
     TypeVar,
     cast,
 )
+from weakref import ReferenceType, ref
 
 from typing_extensions import ParamSpec
 
@@ -66,10 +67,23 @@ def _run_with_nanny(
 
 def _parse_mem(size: str) -> int:
     units = {"": 1, "K": 2**10, "M": 2**20, "G": 2**30, "T": 2**40}
-    m = re.match(r"^([\d\.]+)\s*([a-zA-Z]{0,3})$", str(size).strip())
-    assert m is not None
+    m = re.match(r"^([\d\.]+)\s*([kmgtKMGT]{0,1})$", str(size).strip())
+    assert m is not None, f"Could not parse {size}"
     number, unit = float(m.group(1)), m.group(2).upper()
+    assert unit in units
     return int(number * units[unit])
+
+
+def _handle_kill_through_weakref(
+    executor_ref: ReferenceType["DaskExecutor"],
+    existing_sigint_handler: Any,
+    signum: Optional[int],
+    frame: Any,
+) -> None:
+    executor = executor_ref()
+    if executor is None:
+        return
+    executor.handle_kill(existing_sigint_handler, signum, frame)
 
 
 class DaskExecutor(futures.Executor):
@@ -113,7 +127,10 @@ class DaskExecutor(futures.Executor):
         # shutdown of the main process which sends SIGTERM signals to terminate all
         # child processes.
         existing_sigint_handler = signal.getsignal(signal.SIGINT)
-        signal.signal(signal.SIGINT, partial(self.handle_kill, existing_sigint_handler))
+        signal.signal(
+            signal.SIGINT,
+            partial(_handle_kill_through_weakref, ref(self), existing_sigint_handler),
+        )
 
     @classmethod
     def from_config(
@@ -224,7 +241,10 @@ class DaskExecutor(futures.Executor):
         return fut.result()
 
     def handle_kill(
-        self, existing_sigint_handler: Any, signum: Optional[int], frame: Any
+        self,
+        existing_sigint_handler: Any,
+        signum: Optional[int],
+        frame: Any,
     ) -> None:
         if self.is_shutting_down:
             return
