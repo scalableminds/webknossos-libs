@@ -35,6 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
 from .defaults import (
@@ -55,7 +56,6 @@ from .sampling_modes import SamplingModes
 
 if TYPE_CHECKING:
     import pims
-    from ..client._generated.models import DatasetInfoResponse200
     from ..client._upload_dataset import LayerToLink
     from ..administration.user import Team
 
@@ -456,7 +456,6 @@ class Dataset:
           and allows to specifiy in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         """
-        from ..client._generated.api.default import dataset_info
         from ..client.context import _get_context
 
         (
@@ -470,19 +469,12 @@ class Dataset:
 
         with context_manager:
             wk_context = _get_context()
-            dataset_info_response = dataset_info.sync_detailed(
-                organization_name=organization_id,
-                data_set_name=dataset_name,
-                client=wk_context.generated_client,
-                sharing_token=sharing_token,
+            api_dataset_info = wk_context.api_client.dataset_info(
+                organization_id, dataset_name, sharing_token
             )
-            assert dataset_info_response.status_code == 200, dataset_info_response
-            parsed = dataset_info_response.parsed
-            assert parsed is not None
-
             token = sharing_token or wk_context.datastore_token
 
-        datastore_url = parsed.data_store.url
+        datastore_url = api_dataset_info.data_store.url
 
         zarr_path = UPath(
             f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",
@@ -1813,22 +1805,14 @@ class RemoteDataset(Dataset):
             wk_url = _get_context().url
         return f"{wk_url}/datasets/{self._organization_id}/{self._dataset_name}"
 
-    def _get_dataset_info(self) -> "DatasetInfoResponse200":
-        from ..client._generated.api.default import dataset_info
-        from ..client.context import _get_generated_client
+    def _get_dataset_info(self) -> ApiDataset:
+        from ..client.context import _get_api_client
 
         with self._context:
-            dataset_info_response = dataset_info.sync_detailed(
-                organization_name=self._organization_id,
-                data_set_name=self._dataset_name,
-                client=_get_generated_client(),
-                sharing_token=self._sharing_token,
+            client = _get_api_client()
+            return client.dataset_info(
+                self._organization_id, self._dataset_name, self._sharing_token
             )
-            assert dataset_info_response.status_code == 200, dataset_info_response
-            parsed = dataset_info_response.parsed
-            assert parsed is not None
-
-            return parsed
 
     def _update_dataset_info(
         self,
@@ -1838,39 +1822,29 @@ class RemoteDataset(Dataset):
         folder_id: str = _UNSET,
         tags: List[str] = _UNSET,
     ) -> None:
-        from ..client._generated.api.default import dataset_update
-        from ..client._generated.models.dataset_update_json_body import (
-            DatasetUpdateJsonBody,
-        )
-        from ..client.context import _get_generated_client
+        from ..client.context import _get_api_client
 
         # Atm, the wk backend needs to get previous parameters passed
         # (this is a race-condition with parallel updates).
 
-        info = self._get_dataset_info().to_dict()
+        info = self._get_dataset_info()
         if display_name is not _UNSET:
-            info["displayName"] = display_name
+            info.display_name = display_name
         if description is not _UNSET:
-            info["description"] = description
+            info.description = description
         if tags is not _UNSET:
-            info["tags"] = tags
+            info.tags = tags
         if is_public is not _UNSET:
-            info["isPublic"] = is_public
+            info.is_public = is_public
         if folder_id is not _UNSET:
-            info["folderId"] = folder_id
+            info.folder_id = folder_id
         if display_name is not _UNSET:
-            info["displayName"] = display_name
+            info.display_name = display_name
 
         with self._context:
-            dataset_info_update_response = dataset_update.sync_detailed(
-                organization_name=self._organization_id,
-                data_set_name=self._dataset_name,
-                client=_get_generated_client(),
-                json_body=DatasetUpdateJsonBody.from_dict(info),
+            _get_api_client().dataset_update(
+                self._organization_id, self._dataset_name, info
             )
-            assert (
-                dataset_info_update_response.status_code == 200
-            ), dataset_info_update_response
 
     @property
     def display_name(self) -> Optional[str]:
@@ -1914,20 +1888,13 @@ class RemoteDataset(Dataset):
 
     @property
     def sharing_token(self) -> str:
-        from ..client._generated.api.default import dataset_sharing_token
-        from ..client.context import _get_generated_client
+        from ..client.context import _get_api_client
 
         with self._context:
-            dataset_sharing_token_response = dataset_sharing_token.sync_detailed(
-                organization_name=self._organization_id,
-                data_set_name=self._dataset_name,
-                client=_get_generated_client(),
+            api_sharing_token = _get_api_client().dataset_sharing_token(
+                self._organization_id, self._dataset_name
             )
-            assert (
-                dataset_sharing_token_response.status_code == 200
-            ), dataset_sharing_token_response
-            assert dataset_sharing_token_response.parsed is not None
-            return dataset_sharing_token_response.parsed.sharing_token
+            return api_sharing_token.sharing_token
 
     @property
     def allowed_teams(self) -> Tuple["Team", ...]:
@@ -1942,21 +1909,15 @@ class RemoteDataset(Dataset):
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
         """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
         from ..administration.user import Team
-        from ..client._generated.api.default import dataset_update_teams
-        from ..client.context import _get_generated_client
+        from ..client.context import _get_api_client
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
 
         with self._context:
-            dataset_update_teams_response = dataset_update_teams.sync_detailed(
-                organization_name=self._organization_id,
-                data_set_name=self._dataset_name,
-                client=_get_generated_client(),
-                json_body=team_ids,
+            client = _get_api_client()
+            client.dataset_update_teams(
+                self._organization_id, self._dataset_name, team_ids
             )
-            assert (
-                dataset_update_teams_response.status_code == 200
-            ), dataset_update_teams_response
 
     @property
     def folder(self) -> RemoteFolder:

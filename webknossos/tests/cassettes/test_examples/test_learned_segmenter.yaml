@@ -15,7 +15,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: POST
-    uri: http://localhost:9000/api/userToken/generate
+    uri: http://localhost:9000/api/v5/userToken/generate
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
@@ -30,6 +30,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -46,7 +48,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/datastores
+    uri: http://localhost:9000/api/v5/datastores
   response:
     content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true}]'
     headers:
@@ -61,6 +63,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -77,9 +81,9 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/user
+    uri: http://localhost:9000/api/v5/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1695729342146,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
       cache-control:
       - no-cache
@@ -92,6 +96,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -108,7 +114,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/datasets/Organization_X/skin_segmented_2000-01-01_00-00-00/isValidNewName
+    uri: http://localhost:9000/api/v5/datasets/Organization_X/skin_segmented_2000-01-01_00-00-00/isValidNewName
   response:
     content: ''
     headers:
@@ -121,12 +127,14 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
-      "name": "skin_segmented_2000-01-01_00-00-00", "totalFileCount": 12, "initialTeams":
-      [], "layersToLink": []}'
+    body: '{"uploadId": "2000-01-01T00-00-00__0011", "name": "skin_segmented_2000-01-01_00-00-00",
+      "organization": "Organization_X", "totalFileCount": 12, "initialTeams": [],
+      "layersToLink": [], "folderId": null}'
     headers:
       accept:
       - '*/*'
@@ -135,7 +143,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '215'
+      - '233'
       content-type:
       - application/json
       host:
@@ -160,144 +168,45 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: '--
-
-      Content-Disposition: form-data; name="resumableChunkSize"
-
-
-      104857600
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalSize"
-
-
-      4839665
-
-      --
-
-      Content-Disposition: form-data; name="resumableType"
-
-
-
-      --
-
-      Content-Disposition: form-data; name="resumableIdentifier"
-
-
-      2000-01-01T00-00-00__0011/segmentation/2-2-1/z0/y0/x0.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableFilename"
-
-
-      x0.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableRelativePath"
-
-
-      segmentation/2-2-1/z0/y0/x0.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalChunks"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableChunkNumber"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableCurrentChunkSize"
-
-
-      4839665
-
-      --
-
-      Content-Disposition: form-data; name="owningOrganization"
-
-
-      Organization_X
-
-      --
-
-      Content-Disposition: form-data; name="name"
-
-
-      skin_segmented_2000-01-01_00-00-00
-
-      --
-
-      Content-Disposition: form-data; name="totalFileCount"
-
-
-      12
-
-      --
-
-      Content-Disposition: form-data; name="file"; filename="upload"
-
-      Content-Type: application/octet-stream<omitted> --'
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '4841227'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.24.1
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n1789\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
+      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n1789\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
+      \   \"id\": {\n        \"name\": \"skin_segmented_2000-01-01_00-00-00\",\n        \"team\":
+      \"\"\n    },\n    \"scale\": [\n        550.0,\n        550.0,\n        550.0\n
+      \   ],\n    \"dataLayers\": [\n        {\n            \"name\": \"segmentation\",\n
+      \           \"category\": \"segmentation\",\n            \"boundingBox\": {\n
+      \               \"topLeft\": [\n                    0,\n                    0,\n
+      \                   0\n                ],\n                \"width\": 1280,\n
+      \               \"height\": 960,\n                \"depth\": 1\n            },\n
+      \           \"elementClass\": \"uint8\",\n            \"dataFormat\": \"wkw\",\n
+      \           \"numChannels\": 1,\n            \"largestSegmentId\": 4,\n            \"wkwResolutions\":
+      [\n                {\n                    \"cubeLength\": 1024,\n                    \"resolution\":
+      [\n                        1,\n                        1,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      1024,\n                    \"resolution\": [\n                        2,\n                        2,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 1024,\n                    \"resolution\":
+      [\n                        4,\n                        4,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      1024,\n                    \"resolution\": [\n                        8,\n                        8,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 1024,\n                    \"resolution\":
+      [\n                        16,\n                        16,\n                        1\n
+      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
     headers:
       accept:
       - '*/*'
@@ -306,7 +215,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1568'
+      - '3371'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -331,6 +240,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -455,6 +366,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -502,130 +415,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: '--
-
-      Content-Disposition: form-data; name="resumableChunkSize"
-
-
-      104857600
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalSize"
-
-
-      4833074
-
-      --
-
-      Content-Disposition: form-data; name="resumableType"
-
-
-
-      --
-
-      Content-Disposition: form-data; name="resumableIdentifier"
-
-
-      2000-01-01T00-00-00__0011/segmentation/1/z0/y0/x1.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableFilename"
-
-
-      x1.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableRelativePath"
-
-
-      segmentation/1/z0/y0/x1.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalChunks"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableChunkNumber"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableCurrentChunkSize"
-
-
-      4833074
-
-      --
-
-      Content-Disposition: form-data; name="owningOrganization"
-
-
-      Organization_X
-
-      --
-
-      Content-Disposition: form-data; name="name"
-
-
-      skin_segmented_2000-01-01_00-00-00
-
-      --
-
-      Content-Disposition: form-data; name="totalFileCount"
-
-
-      12
-
-      --
-
-      Content-Disposition: form-data; name="file"; filename="upload"
-
-      Content-Type: application/octet-stream<omitted> --'
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '4834628'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.24.1
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -750,6 +541,134 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      4833074
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/1/z0/y0/x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/1/z0/y0/x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      4833074
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      skin_segmented_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      12
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4834628'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.24.1
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -797,177 +716,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: '--
-
-      Content-Disposition: form-data; name="resumableChunkSize"
-
-
-      104857600
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalSize"
-
-
-      4823525
-
-      --
-
-      Content-Disposition: form-data; name="resumableType"
-
-
-
-      --
-
-      Content-Disposition: form-data; name="resumableIdentifier"
-
-
-      2000-01-01T00-00-00__0011/segmentation/4-4-1/z0/y0/x0.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableFilename"
-
-
-      x0.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableRelativePath"
-
-
-      segmentation/4-4-1/z0/y0/x0.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalChunks"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableChunkNumber"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableCurrentChunkSize"
-
-
-      4823525
-
-      --
-
-      Content-Disposition: form-data; name="owningOrganization"
-
-
-      Organization_X
-
-      --
-
-      Content-Disposition: form-data; name="name"
-
-
-      skin_segmented_2000-01-01_00-00-00
-
-      --
-
-      Content-Disposition: form-data; name="totalFileCount"
-
-
-      12
-
-      --
-
-      Content-Disposition: form-data; name="file"; filename="upload"
-
-      Content-Type: application/octet-stream<omitted> --'
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '4825087'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.24.1
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-1/header.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-1/header.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
-      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
-      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '1568'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.24.1
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -1092,6 +842,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -1139,43 +891,99 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n1789\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
-      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n1789\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
-      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
-      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
-      \   \"id\": {\n        \"name\": \"skin_segmented_2000-01-01_00-00-00\",\n        \"team\":
-      \"\"\n    },\n    \"scale\": [\n        550.0,\n        550.0,\n        550.0\n
-      \   ],\n    \"dataLayers\": [\n        {\n            \"name\": \"segmentation\",\n
-      \           \"category\": \"segmentation\",\n            \"boundingBox\": {\n
-      \               \"topLeft\": [\n                    0,\n                    0,\n
-      \                   0\n                ],\n                \"width\": 1280,\n
-      \               \"height\": 960,\n                \"depth\": 1\n            },\n
-      \           \"elementClass\": \"uint8\",\n            \"dataFormat\": \"wkw\",\n
-      \           \"numChannels\": 1,\n            \"largestSegmentId\": 4,\n            \"wkwResolutions\":
-      [\n                {\n                    \"cubeLength\": 1024,\n                    \"resolution\":
-      [\n                        1,\n                        1,\n                        1\n
-      \                   ]\n                },\n                {\n                    \"cubeLength\":
-      1024,\n                    \"resolution\": [\n                        2,\n                        2,\n
-      \                       1\n                    ]\n                },\n                {\n
-      \                   \"cubeLength\": 1024,\n                    \"resolution\":
-      [\n                        4,\n                        4,\n                        1\n
-      \                   ]\n                },\n                {\n                    \"cubeLength\":
-      1024,\n                    \"resolution\": [\n                        8,\n                        8,\n
-      \                       1\n                    ]\n                },\n                {\n
-      \                   \"cubeLength\": 1024,\n                    \"resolution\":
-      [\n                        16,\n                        16,\n                        1\n
-      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      4823525
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/4-4-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/4-4-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      4823525
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      skin_segmented_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      12
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
     headers:
       accept:
       - '*/*'
@@ -1184,7 +992,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '3371'
+      - '4825087'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -1209,12 +1017,22 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
-      "name": "skin_segmented_2000-01-01_00-00-00", "needsConversion": false, "layersToLink":
-      []}'
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
     headers:
       accept:
       - '*/*'
@@ -1223,7 +1041,221 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '199'
+      - '1568'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.24.1
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      4839665
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/2-2-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/2-2-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      4839665
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      skin_segmented_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      12
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4841227'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.24.1
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1568'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.24.1
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '{"uploadId": "2000-01-01T00-00-00__0011"}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '73'
       content-type:
       - application/json
       host:
@@ -1248,6 +1280,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -1264,9 +1298,9 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/datasets/Organization_X/skin_segmented_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v5/datasets/Organization_X/skin_segmented_2000-01-01_00-00-00
   response:
-    content: '{"name":"skin_segmented_2023-09-26_12-16-29","dataSource":{"id":{"name":"skin_segmented_2023-09-26_12-16-29","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":[550,550,550]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1695730613528,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1695730613528,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"skin_segmented_2023-11-02_14-44-35","dataSource":{"id":{"name":"skin_segmented_2023-11-02_14-44-35","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":[550,550,550]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1698936295928,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1698936295928,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       cache-control:
       - no-cache
@@ -1279,6 +1313,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -1301,7 +1337,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1322,6 +1358,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1345,7 +1383,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1366,6 +1404,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1389,7 +1429,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1410,6 +1450,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1420,7 +1462,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"skin_segmented_2023-09-26_12-16-29","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+      string: '{"id":{"name":"skin_segmented_2023-11-02_14-44-35","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1437,6 +1479,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1447,7 +1491,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"skin_segmented_2023-09-26_12-16-29","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+      string: '{"id":{"name":"skin_segmented_2023-11-02_14-44-35","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1464,6 +1508,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1493,6 +1539,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1505,7 +1553,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"skin_segmented_2023-09-26_12-16-29","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+      string: '{"id":{"name":"skin_segmented_2023-11-02_14-44-35","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1522,6 +1570,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1545,7 +1595,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1565,6 +1615,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1593,34 +1645,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1648,9 +1674,41 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -1676,34 +1734,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1731,9 +1763,41 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -1754,7 +1818,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1774,6 +1838,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1797,7 +1863,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1817,6 +1883,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1845,34 +1913,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1900,9 +1942,41 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -1928,34 +2002,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1983,9 +2031,41 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -2006,7 +2086,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2026,6 +2106,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2049,7 +2131,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/4-4-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/4-4-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2069,6 +2151,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2097,6 +2181,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2124,6 +2210,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2152,6 +2240,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2180,6 +2270,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2207,6 +2299,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2235,6 +2329,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2258,7 +2354,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/4-4-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/4-4-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2278,6 +2374,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2301,7 +2399,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/8-8-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/8-8-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2321,6 +2419,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2349,34 +2449,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2404,9 +2478,41 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -2432,34 +2538,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2487,9 +2567,41 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -2510,7 +2622,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/8-8-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/8-8-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2530,6 +2642,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2553,7 +2667,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/16-16-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/16-16-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2573,6 +2687,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2601,34 +2717,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2656,9 +2746,41 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -2684,6 +2806,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2711,6 +2835,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -2739,6 +2865,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -2762,7 +2890,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-09-26_12-16-29/segmentation/16-16-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2023-11-02_14-44-35/segmentation/16-16-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2782,6 +2910,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     status:
       code: 200
       message: OK

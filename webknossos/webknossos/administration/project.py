@@ -1,24 +1,13 @@
 import warnings
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List, Optional
 
 import attr
 
-from ..client._generated.api.default import (
-    project_info_by_id,
-    project_info_by_name,
-    task_infos_by_project_id,
-)
-from ..client._generated.types import Unset
-from ..client.context import _get_generated_client
+from ..client.api_client.models import ApiProject
+from ..client.context import _get_api_client
 from .user import User
 
 if TYPE_CHECKING:
-    from ..client._generated.models.project_info_by_id_response_200 import (
-        ProjectInfoByIdResponse200,
-    )
-    from ..client._generated.models.project_info_by_name_response_200 import (
-        ProjectInfoByNameResponse200,
-    )
     from .task import Task
 
 
@@ -33,25 +22,21 @@ class Project:
     owner_id: str
     priority: int
     paused: bool
-    expected_time: int
+    expected_time: Optional[int]
 
     @classmethod
     def get_by_id(
         cls, project_id: str
     ) -> "Project":  # pylint: disable=redefined-builtin
         """Returns the project specified by the passed id if your token authorizes you to see it."""
-        client = _get_generated_client(enforce_auth=True)
-        response = project_info_by_id.sync(project_id, client=client)
-        assert response is not None, "Could not fetch project by id."
-        return cls._from_generated_response(response)
+        api_project = _get_api_client(enforce_auth=True).project_info_by_id(project_id)
+        return cls._from_api_project(api_project)
 
     @classmethod
     def get_by_name(cls, name: str) -> "Project":
         """Returns the user specified by the passed name if your token authorizes you to see it."""
-        client = _get_generated_client(enforce_auth=True)
-        response = project_info_by_name.sync(name, client=client)
-        assert response is not None, "Could not fetch project by name."
-        return cls._from_generated_response(response)
+        api_project = _get_api_client(enforce_auth=True).project_info_by_name(name)
+        return cls._from_api_project(api_project)
 
     def get_tasks(self, fetch_all: bool = False) -> List["Task"]:
         """Returns the tasks of this project.
@@ -64,35 +49,21 @@ class Project:
         PAGINATION_LIMIT = 1000
         pagination_page = 0
 
-        client = _get_generated_client(enforce_auth=True)
-        response_raw = task_infos_by_project_id.sync_detailed(
-            self.project_id,
-            limit=PAGINATION_LIMIT,
-            page_number=pagination_page,
-            include_total_count=True,
-            client=client,
+        client = _get_api_client(enforce_auth=True)
+        api_tasks_batch, total_count = client.task_infos_by_project_id_paginated(
+            self.project_id, limit=PAGINATION_LIMIT, page_number=pagination_page
         )
-        total_count_raw = response_raw.headers.get("X-Total-Count")
-        assert total_count_raw is not None, "X-Total-Count header missing from response"
-        total_count = int(total_count_raw)
-        response = response_raw.parsed
-        assert response is not None, "Could not fetch task infos by project id."
-        all_tasks = [Task._from_generated_response(t) for t in response]
+        all_tasks = [Task._from_api_task(t) for t in api_tasks_batch]
         if total_count > PAGINATION_LIMIT:
             if fetch_all:
                 while total_count > len(all_tasks):
                     pagination_page += 1
-                    response = task_infos_by_project_id.sync(
+                    api_tasks_batch, _ = client.task_infos_by_project_id_paginated(
                         self.project_id,
                         limit=PAGINATION_LIMIT,
                         page_number=pagination_page,
-                        include_total_count=False,
-                        client=client,
                     )
-                    assert (
-                        response is not None
-                    ), "Could not fetch task infos by project id."
-                    new_tasks = [Task._from_generated_response(t) for t in response]
+                    new_tasks = [Task._from_api_task(t) for t in api_tasks_batch]
                     all_tasks.extend(new_tasks)
 
             else:
@@ -107,18 +78,14 @@ class Project:
         return User.get_by_id(self.owner_id)
 
     @classmethod
-    def _from_generated_response(
-        cls,
-        response: Union["ProjectInfoByIdResponse200", "ProjectInfoByNameResponse200"],
-    ) -> "Project":
-        assert not isinstance(response.owner, Unset)
+    def _from_api_project(cls, api_project: ApiProject) -> "Project":
         return cls(
-            response.id,
-            response.name,
-            response.team,
-            response.team_name,
-            response.owner.id,
-            response.priority,
-            bool(response.paused),
-            response.expected_time,
+            api_project.id,
+            api_project.name,
+            api_project.team,
+            api_project.team_name,
+            api_project.owner.id,
+            api_project.priority,
+            api_project.paused,
+            api_project.expected_time,
         )

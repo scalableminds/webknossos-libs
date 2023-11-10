@@ -13,9 +13,9 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/users
+    uri: http://localhost:9000/api/v5/users
   response:
-    content: '[{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1695730614716,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"670b9f4d2a7c0e4d008da6ef","email":"user_B@scalableminds.com","firstName":"user_B","lastName":"BoyB","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true}],"experiences":{},"lastActivity":1460465869053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"770b9f4d2a7c0e4d008da6ef","email":"user_C@scalableminds.com","firstName":"user_C","lastName":"BoyC","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":false}],"experiences":{},"lastActivity":1460552269053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"870b9f4d2a7c0e4d008da6ef","email":"user_D@scalableminds.com","firstName":"user_D","lastName":"BoyD","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"69882b370d889b84020efd4f","name":"team_X2","isTeamManager":true}],"experiences":{},"lastActivity":1460638669053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"light","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}]'
+    content: '[{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1698936296511,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"670b9f4d2a7c0e4d008da6ef","email":"user_B@scalableminds.com","firstName":"user_B","lastName":"BoyB","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true}],"experiences":{},"lastActivity":1460465869053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"770b9f4d2a7c0e4d008da6ef","email":"user_C@scalableminds.com","firstName":"user_C","lastName":"BoyC","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":false}],"experiences":{},"lastActivity":1460552269053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"870b9f4d2a7c0e4d008da6ef","email":"user_D@scalableminds.com","firstName":"user_D","lastName":"BoyD","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"69882b370d889b84020efd4f","name":"team_X2","isTeamManager":true}],"experiences":{},"lastActivity":1460638669053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"light","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}]'
     headers:
       cache-control:
       - no-cache
@@ -28,6 +28,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -44,7 +46,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/users/570b9f4d2a7c0e4d008da6ef/loggedTime
+    uri: http://localhost:9000/api/v5/users/570b9f4d2a7c0e4d008da6ef/loggedTime
   response:
     content: '{"loggedTime": [{"paymentInterval": {"month": 8, "year": 2018}, "durationInSeconds":
       265}, {"paymentInterval": {"month": 5, "year": 2021}, "durationInSeconds": 158},
@@ -57,7 +59,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '555'
+      - '556'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -65,6 +67,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -81,7 +85,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/users/670b9f4d2a7c0e4d008da6ef/loggedTime
+    uri: http://localhost:9000/api/v5/users/670b9f4d2a7c0e4d008da6ef/loggedTime
   response:
     content: '{"loggedTime": []}'
     headers:
@@ -96,6 +100,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -112,11 +118,11 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/users/770b9f4d2a7c0e4d008da6ef/loggedTime
+    uri: http://localhost:9000/api/v5/users/770b9f4d2a7c0e4d008da6ef/loggedTime
   response:
-    content: '{"loggedTime": [{"paymentInterval": {"month": 4, "year": 2016}, "durationInSeconds":
-      58}, {"paymentInterval": {"month": 1, "year": 2021}, "durationInSeconds": 32},
-      {"paymentInterval": {"month": 2, "year": 2021}, "durationInSeconds": 210}]}'
+    content: '{"loggedTime": [{"paymentInterval": {"month": 2, "year": 2021}, "durationInSeconds":
+      210}, {"paymentInterval": {"month": 1, "year": 2021}, "durationInSeconds": 32},
+      {"paymentInterval": {"month": 4, "year": 2016}, "durationInSeconds": 58}]}'
     headers:
       cache-control:
       - no-cache
@@ -129,6 +135,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -145,7 +153,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/users/870b9f4d2a7c0e4d008da6ef/loggedTime
+    uri: http://localhost:9000/api/v5/users/870b9f4d2a7c0e4d008da6ef/loggedTime
   response:
     content: '{"loggedTime": []}'
     headers:
@@ -160,6 +168,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
+      x-xss-protection:
+      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 version: 1

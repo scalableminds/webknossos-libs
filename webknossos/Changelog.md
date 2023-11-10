@@ -10,9 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.5...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.14.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.5) - 2023-11-08
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.4...v0.14.5)
+
+### Changed
+- Performance improvements for reading from and writing to sharded zarr3 datasets, also speeding up the automated tests [#963](https://github.com/scalableminds/webknossos-libs/pull/963)
+
+
+## [0.14.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.4) - 2023-11-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.3...v0.14.4)
 
 ### Added
 - The `DEFAULT_DATA_FORMAT` and `DEFAULT_CHUNKS_PER_SHARD` can now be set with the env variables `WK_DEFAULT_DATA_FORMAT` and `WK_DEFAULT_CHUNKS_PER_SHARD`
@@ -20,9 +37,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Upgrades mypy to 1.6. [#956](https://github.com/scalableminds/webknossos-libs/pull/956)
+- Refactored the WEBKNOSSOS API client to no longer use generated client code. [#948](https://github.com/scalableminds/webknossos-libs/pull/948)
 
-
-### Fixed
 
 
 ## [0.14.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.3) - 2023-10-19
