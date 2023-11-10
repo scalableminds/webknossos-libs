@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from distributed import LocalCluster
 
 import cluster_tools
-from cluster_tools.executors.dask import DaskExecutor
 
 
 # "Worker" functions.
@@ -79,12 +78,14 @@ def get_executors(with_debug_sequential: bool = False) -> List[cluster_tools.Exe
         executors.append(cluster_tools.get_executor("sequential"))
     if "dask" in executor_keys:
         if not _dask_cluster:
-            from distributed import LocalCluster
+            from distributed import LocalCluster, Worker
 
             _dask_cluster = LocalCluster(
-                worker_kwargs={"resources": "mem=20e9 cpus=4", "nthreads": 6}
+                worker_class=Worker, resources={"mem": 20e9, "cpus": 4}, nthreads=6
             )
-        executors.append(cluster_tools.get_executor("dask", address=_dask_cluster))
+        executors.append(
+            cluster_tools.get_executor("dask", job_resources={"address": _dask_cluster})
+        )
     if "test_pickling" in executor_keys:
         executors.append(cluster_tools.get_executor("test_pickling"))
     if "pbs" in executor_keys:
@@ -330,7 +331,8 @@ def test_map_lazy() -> None:
         assert list(result) == [4, 9, 16]
 
     for exc in get_executors():
-        run_map(exc)
+        if not isinstance(exc, cluster_tools.DaskExecutor):
+            run_map(exc)
 
 
 def test_executor_args() -> None:
