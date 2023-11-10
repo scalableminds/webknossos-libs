@@ -81,7 +81,9 @@ def get_executors(with_debug_sequential: bool = False) -> List[cluster_tools.Exe
         if not _dask_cluster:
             from distributed import LocalCluster
 
-            _dask_cluster = LocalCluster()
+            _dask_cluster = LocalCluster(
+                worker_kwargs={"resources": "mem=20e9 cpus=4", "nthreads": 6}
+            )
         executors.append(cluster_tools.get_executor("dask", address=_dask_cluster))
     if "test_pickling" in executor_keys:
         executors.append(cluster_tools.get_executor("test_pickling"))
