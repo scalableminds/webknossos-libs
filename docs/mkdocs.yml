@@ -60,8 +60,8 @@ nav:
           - Volume Annotation: webknossos/tutorial_volume_annotation.md
           - Data Sharing: webknossos/tutorial_data_sharing.md
           - Automation: webknossos/tutorial_automation.md
-          - Today I Learned: webknossos/today_i_learned.md
-      - Data Formats:
+          # - Today I Learned: webknossos/today_i_learned.md
+      - Data Sources:
           - webknossos/image_stacks.md
           - webknossos/zarr.md
           - webknossos/wkw.md
