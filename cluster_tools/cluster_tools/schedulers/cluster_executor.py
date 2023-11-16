@@ -23,6 +23,7 @@ from typing import (
     Union,
     cast,
 )
+from weakref import ReferenceType, ref
 
 from typing_extensions import ParamSpec
 
@@ -43,6 +44,18 @@ NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
+
+
+def _handle_kill_through_weakref(
+    executor_ref: "ReferenceType[ClusterExecutor]",
+    existing_sigint_handler: Any,
+    signum: Optional[int],
+    frame: Any,
+) -> None:
+    executor = executor_ref()
+    if executor is None:
+        return
+    executor.handle_kill(existing_sigint_handler, signum, frame)
 
 
 def join_messages(strings: List[str]) -> str:
@@ -130,7 +143,10 @@ class ClusterExecutor(futures.Executor):
         # shutdown of the main process which sends SIGTERM signals to terminate all
         # child processes.
         existing_sigint_handler = signal.getsignal(signal.SIGINT)
-        signal.signal(signal.SIGINT, partial(self.handle_kill, existing_sigint_handler))
+        signal.signal(
+            signal.SIGINT,
+            partial(_handle_kill_through_weakref, ref(self), existing_sigint_handler),
+        )
 
         self.meta_data = {}
         assert not (

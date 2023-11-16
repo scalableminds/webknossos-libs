@@ -37,7 +37,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        executors: [multiprocessing, slurm, kubernetes]
+        executors: [multiprocessing, slurm, kubernetes, dask]
         python-version: ["3.11", "3.10", "3.9", "3.8"]
     defaults:
       run:
@@ -88,7 +88,7 @@ jobs:
           ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
-        if: ${{ matrix.executors == 'multiprocessing' || matrix.executors == 'kubernetes' }}
+        if: ${{ matrix.executors != 'slurm' }}
         run: |
           pip install -r ../requirements.txt
           poetry install
@@ -129,6 +129,12 @@ jobs:
         run: |
           cd tests
           PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
+
+      - name: Run dask tests
+        if: ${{ matrix.executors == 'dask' && matrix.python-version != '3.8' }}
+        run: |
+          cd tests
+          PYTEST_EXECUTORS=dask poetry run python -m pytest -sv test_all.py
 
   webknossos_linux:
     needs: changes
