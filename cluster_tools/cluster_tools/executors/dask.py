@@ -1,7 +1,6 @@
 import os
 import re
 import signal
-import traceback
 from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
@@ -261,8 +260,6 @@ class DaskExecutor(futures.Executor):
             existing_sigint_handler(signum, frame)
 
     def shutdown(self, wait: bool = True, *, cancel_futures: bool = False) -> None:
-        print(f"{wait=} {cancel_futures=}")
-        traceback.print_stack()
         if wait:
             for fut in list(self.pending_futures):
                 fut.result()
