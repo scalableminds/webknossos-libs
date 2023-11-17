@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.6...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.14.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.6) - 2023-11-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.5...v0.14.6)
 
 ### Added
 - Added SIGINT handling to `DaskExecutor`. [#959](https://github.com/scalableminds/webknossos-libs/pull/959)
@@ -18,8 +28,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - Tasks using the `DaskExecutor` are run in their own process. This is required to not block the GIL for the dask worker to communicate with the scheduler. Env variables are propagated to the task processes. [#959](https://github.com/scalableminds/webknossos-libs/pull/959)
-
-### Fixed
 
 
 ## [0.14.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.5) - 2023-11-08
