@@ -20,11 +20,10 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         tags: Optional[Union[str, Sequence[str]]],
     ) -> None:
         from ..administration.user import User
-        from ..client._generated.api.default import dataset_list
-        from ..client.context import _get_generated_client
+        from ..client.context import _get_api_client
         from .dataset import Dataset
 
-        client = _get_generated_client(enforce_auth=True)
+        client = _get_api_client(enforce_auth=True)
 
         if organization_id is None:
             organization_id = User.get_current_user().organization_id
@@ -32,22 +31,18 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         if isinstance(tags, str):
             tags = [tags]
 
-        response = dataset_list.sync(
-            is_active=True,
-            # is_unreported=False,  # this is included in is_active=True
-            organization_name=organization_id,
-            client=client,
+        dataset_infos = client.dataset_list(
+            is_active=True, organization_name=organization_id
         )
-        assert response is not None
 
-        ds_names = []
+        datasets_names = []
 
-        for ds_info in response:
-            tags_match = tags is None or any(tag in tags for tag in ds_info.tags)
+        for dataset_info in dataset_infos:
+            tags_match = tags is None or any(tag in tags for tag in dataset_info.tags)
             if tags_match:
-                ds_names.append(ds_info.name)
+                datasets_names.append(dataset_info.name)
 
         super().__init__(
-            entries=dict(zip(ds_names, ds_names)),
+            entries=dict(zip(datasets_names, datasets_names)),
             func=lambda name: Dataset.open_remote(name, organization_id),
         )

@@ -346,10 +346,9 @@ class ZarrArray(BaseArray):
                 offset.y : (offset.y + shape.y),
                 offset.z : (offset.z + shape.z),
             ]
-        if data.shape != shape:
-            padded_data = np.zeros(
-                (self.info.num_channels,) + shape.to_tuple(), dtype=data.dtype
-            )
+        shape_with_channels = (self.info.num_channels,) + shape.to_tuple()
+        if data.shape != shape and data.shape != shape_with_channels:
+            padded_data = np.zeros(shape_with_channels, dtype=data.dtype)
             padded_data[
                 :,
                 0 : data.shape[1],
@@ -591,10 +590,9 @@ class ZarritaArray(BaseArray):
                 offset.y : (offset.y + shape.y),
                 offset.z : (offset.z + shape.z),
             ]
-        if data.shape != shape:
-            padded_data = np.zeros(
-                (self.info.num_channels,) + shape.to_tuple(), dtype=data.dtype
-            )
+        shape_with_channels = (self.info.num_channels,) + shape.to_tuple()
+        if data.shape != shape and data.shape != shape_with_channels:
+            padded_data = np.zeros(shape_with_channels, dtype=data.dtype)
             padded_data[
                 :,
                 0 : data.shape[1],

@@ -1,18 +1,10 @@
-from typing import TYPE_CHECKING, Optional, Union
+from typing import Optional
 
 import attr
 
-from ..client._generated.types import Unset
+from ..client.api_client.models import ApiAnnotation
 from ..utils import warn_deprecated
 from .annotation import Annotation, AnnotationState, AnnotationType
-
-if TYPE_CHECKING:
-    from ..client._generated.models.annotation_info_response_200 import (
-        AnnotationInfoResponse200,
-    )
-    from ..client._generated.models.annotation_infos_by_task_id_response_200_item import (
-        AnnotationInfosByTaskIdResponse200Item,
-    )
 
 
 @attr.frozen
@@ -25,7 +17,7 @@ class AnnotationInfo:
     description: str
     type: AnnotationType
     state: AnnotationState
-    duration_in_seconds: Optional[int]
+    duration_in_seconds: Optional[float]
     modified: Optional[int]
 
     def download_annotation(self) -> Annotation:
@@ -33,26 +25,19 @@ class AnnotationInfo:
         return Annotation.download(self.id)
 
     @classmethod
-    def _from_generated_response(
-        cls,
-        response: Union[
-            "AnnotationInfoResponse200", "AnnotationInfosByTaskIdResponse200Item"
-        ],
-    ) -> "AnnotationInfo":
-        maybe_owner = response.owner or response.user
-        owner_id = None if isinstance(maybe_owner, Unset) else maybe_owner.id
+    def _from_api_annotation(cls, api_annotation: ApiAnnotation) -> "AnnotationInfo":
+        owner_id = api_annotation.owner.id if api_annotation.owner is not None else None
         return AnnotationInfo(
-            id=response.id,
+            id=api_annotation.id,
             owner_id=owner_id,
-            name=response.name,
-            description=response.description,
-            type=AnnotationType(response.typ),
-            state=AnnotationState(response.state),
-            duration_in_seconds=response.tracing_time // 1000
-            if response.tracing_time is not None
-            and not isinstance(response.tracing_time, Unset)
+            name=api_annotation.name,
+            description=api_annotation.description,
+            type=AnnotationType(api_annotation.typ),
+            state=AnnotationState(api_annotation.state),
+            duration_in_seconds=(api_annotation.tracing_time / 1000)
+            if api_annotation.tracing_time is not None
             else None,
-            modified=response.modified,
+            modified=api_annotation.modified,
         )
 
     @property

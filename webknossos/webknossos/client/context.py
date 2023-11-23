@@ -57,7 +57,7 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
-from ._generated import Client as GeneratedClient
+from .api_client import DatastoreApiClient, WkApiClient
 
 load_dotenv()
 
@@ -78,47 +78,38 @@ def _cached_ask_for_token(webknossos_url: str) -> str:
 
 @lru_cache(maxsize=None)
 def _cached_get_org(context: "_WebknossosContext") -> str:
-    from ._generated.api.default import current_user_info
-
-    current_user_info_response = current_user_info.sync(
-        client=context.generated_auth_client
-    )
-    assert current_user_info_response is not None
-    return current_user_info_response.organization
+    current_api_user = context.api_client_with_auth.user_current()
+    return current_api_user.organization
 
 
 # TODO reset invalid tokens e.g. using cachetools  pylint: disable=fixme
 @lru_cache(maxsize=None)
 def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
-    from ._generated.api.default import generate_token_for_data_store
-
-    generate_token_for_data_store_response = generate_token_for_data_store.sync(
-        client=context.generated_auth_client
-    )
-    assert generate_token_for_data_store_response is not None
-    return generate_token_for_data_store_response.token
+    api_datastore_token = context.api_client_with_auth.token_generate_for_data_store()
+    return api_datastore_token.token
 
 
 @lru_cache(maxsize=None)
-def _cached__get_generated_client(
+def _cached__get_api_client(
     webknossos_url: str,
     token: Optional[str],
     timeout: int,
-) -> GeneratedClient:
+) -> WkApiClient:
     """Generates a client which might contain an x-auth-token header."""
     if token is None:
-        return GeneratedClient(base_url=webknossos_url, timeout=timeout)
-    else:
-        return GeneratedClient(
-            base_url=webknossos_url, headers={"X-Auth-Token": token}, timeout=timeout
-        )
+        return WkApiClient(base_wk_url=webknossos_url, timeout_seconds=timeout)
+    return WkApiClient(
+        base_wk_url=webknossos_url,
+        headers={"X-Auth-Token": token},
+        timeout_seconds=timeout,
+    )
 
 
 def _clear_all_context_caches() -> None:
     _cached_ask_for_token.cache_clear()
     _cached_get_org.cache_clear()
     _cached_get_datastore_token.cache_clear()
-    _cached__get_generated_client.cache_clear()
+    _cached__get_api_client.cache_clear()
 
 
 @attr.frozen
@@ -159,17 +150,17 @@ class _WebknossosContext:
         return _cached_get_datastore_token(self)
 
     @property
-    def generated_client(self) -> GeneratedClient:
-        return _cached__get_generated_client(self.url, self.token, self.timeout)
+    def api_client(self) -> WkApiClient:
+        return _cached__get_api_client(self.url, self.token, self.timeout)
 
     @property
-    def generated_auth_client(self) -> GeneratedClient:
-        return _cached__get_generated_client(
-            self.url, self.required_token, self.timeout
-        )
+    def api_client_with_auth(self) -> WkApiClient:
+        return _cached__get_api_client(self.url, self.required_token, self.timeout)
 
-    def get_generated_datastore_client(self, datastore_url: str) -> GeneratedClient:
-        return GeneratedClient(base_url=datastore_url, timeout=self.timeout)
+    def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
+        return DatastoreApiClient(
+            datastore_base_url=datastore_url, timeout_seconds=self.timeout
+        )
 
 
 _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
@@ -226,8 +217,8 @@ class webknossos_context(ContextDecorator):
         _webknossos_context_var.reset(self._context_var_token_stack.pop())
 
 
-def _get_generated_client(enforce_auth: bool = False) -> GeneratedClient:
+def _get_api_client(enforce_auth: bool = False) -> WkApiClient:
     if enforce_auth:
-        return _get_context().generated_auth_client
+        return _get_context().api_client_with_auth
     else:
-        return _get_context().generated_client
+        return _get_context().api_client

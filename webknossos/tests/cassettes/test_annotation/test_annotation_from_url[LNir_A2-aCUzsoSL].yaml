@@ -13,7 +13,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://webknossos.org/api/shortLinks/byKey/LNir_A2-aCUzsoSL
+    uri: https://webknossos.org/api/v5/shortLinks/byKey/LNir_A2-aCUzsoSL
   response:
     content: '{"_id":"638f5df40100006301d8ac1e","key":"LNir_A2-aCUzsoSL","longLink":"https://webknossos.org/annotations/61c20205010000cc004a6356#%7B%22position%22:%5B2830,4356,1792%5D,%22mode%22:%22orthogonal%22,%22zoomStep%22:1,%22activeNode%22:3,%22stateByLayer%22:%7B%22color%22:%7B%22isDisabled%22:false%7D,%22predictions%22:%7B%22isDisabled%22:true%7D,%223301cf7c-5efd-454b-87b8-0137d6056f9b%22:%7B%22isDisabled%22:false%7D,%22Skeleton%22:%7B%22isDisabled%22:false%7D%7D%7D"}'
     headers:
@@ -48,13 +48,13 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://webknossos.org/api/annotations/61c20205010000cc004a6356/download?skipVolumeData=true
+    uri: https://webknossos.org/api/v5/annotations/61c20205010000cc004a6356/download?skipVolumeData=true
   response:
     content:
       zip:
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"43d88dd943673e54ff7daf43da86a86c8eec6530\" />\n  <meta name=\"timestamp\"
+          content=\"b453b5e8207fe199edbd056534a6b7bea7a47fb1\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"
@@ -114,7 +114,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://webknossos.org/api/datasets/scalable_minds/l4dense_motta_et_al_demo_v2
+    uri: https://webknossos.org/api/v5/datasets/scalable_minds/l4dense_motta_et_al_demo_v2
   response:
     content: '{"name":"l4dense_motta_et_al_demo_v2","dataSource":{"id":{"name":"l4dense_motta_et_al_demo_v2","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint8","adminViewConfiguration":{}},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint24","adminViewConfiguration":{"isDisabled":true}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint32","largestSegmentId":2504697,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":"Segmentation
       created with [Voxelytics](https://scalableminds.com/voxelytics) by [scalable

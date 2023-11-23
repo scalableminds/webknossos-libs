@@ -1,31 +1,25 @@
-import json
 import logging
-from typing import TYPE_CHECKING, BinaryIO, Dict, List, Mapping, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import attr
-import httpx
 
 from ..annotation import Annotation, AnnotationInfo
-from ..client._generated.api.default import annotation_infos_by_task_id, task_info
-from ..client.context import _get_generated_client
+from ..client.api_client.models import (
+    ApiBoundingBox,
+    ApiExperience,
+    ApiNmlTaskParameters,
+    ApiTask,
+    ApiTaskCreationResult,
+    ApiTaskParameters,
+    ApiTaskType,
+)
+from ..client.context import _get_api_client
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
 from ..utils import warn_deprecated
 from .project import Project
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from ..client._generated.models.task_info_response_200 import TaskInfoResponse200
-    from ..client._generated.models.task_info_response_200_type import (
-        TaskInfoResponse200Type,
-    )
-    from ..client._generated.models.task_infos_by_project_id_response_200_item import (
-        TaskInfosByProjectIdResponse200Item,
-    )
-    from ..client._generated.models.task_infos_by_project_id_response_200_item_type import (
-        TaskInfosByProjectIdResponse200ItemType,
-    )
 
 
 @attr.frozen
@@ -49,18 +43,13 @@ class TaskType:
     team_name: str
 
     @classmethod
-    def _from_generated_response(
-        cls,
-        response: Union[
-            "TaskInfoResponse200Type", "TaskInfosByProjectIdResponse200ItemType"
-        ],
-    ) -> "TaskType":
+    def _from_api_task_type(cls, api_task_type: ApiTaskType) -> "TaskType":
         return cls(
-            response.id,
-            response.summary,
-            response.description,
-            response.team_id,
-            response.team_name,
+            api_task_type.id,
+            api_task_type.summary,
+            api_task_type.description,
+            api_task_type.team_id,
+            api_task_type.team_name,
         )
 
 
@@ -77,12 +66,9 @@ class Task:
     @classmethod
     def get_by_id(cls, task_id: str) -> "Task":
         """Returns the task specified by the passed id (if your token authorizes you to see it)"""
-        client = _get_generated_client(enforce_auth=True)
-        response = task_info.sync(id=task_id, client=client)
-        assert (
-            response is not None
-        ), f"Requesting task infos from {client.base_url} failed."
-        return cls._from_generated_response(response)
+        client = _get_api_client(enforce_auth=True)
+        api_task = client.task_info(task_id)
+        return cls._from_api_task(api_task)
 
     @classmethod
     def create_from_annotations(
@@ -102,40 +88,31 @@ class Task:
             len(base_annotations) > 0
         ), "Must supply at least one base annotation to create tasks"
 
-        client = _get_generated_client(enforce_auth=True)
-        url = f"{client.base_url}/api/tasks/createFromFiles"
-        task_parameters = {
-            "taskTypeId": task_type_id,
-            "neededExperience": {
-                "domain": needed_experience_domain,
-                "value": needed_experience_value,
-            },
-            "pendingInstances": instances,
-            "projectName": project_name,
-            "scriptId": script_id,
-            "boundingBox": bounding_box.to_wkw_dict()
+        client = _get_api_client(enforce_auth=True)
+        nml_task_parameters = ApiNmlTaskParameters(
+            task_type_id=task_type_id,
+            needed_experience=ApiExperience(
+                domain=needed_experience_domain,
+                value=needed_experience_value,
+            ),
+            pending_instances=instances,
+            project_name=project_name,
+            script_id=script_id,
+            bounding_box=ApiBoundingBox(
+                bounding_box.topleft.to_tuple(),
+                bounding_box.size.x,
+                bounding_box.size.y,
+                bounding_box.size.z,
+            )
             if bounding_box is not None
             else None,
-        }
-        form_data = {"formJSON": json.dumps(task_parameters)}
-        files: Mapping[str, Tuple[str, Union[bytes, BinaryIO]]] = {
-            f"{a.name}.zip": (f"{a.name}.zip", a._binary_zip())
-            for a in base_annotations
-        }
-
-        response = httpx.post(
-            url=url,
-            headers=client.get_headers(),
-            cookies=client.get_cookies(),
-            timeout=client.get_timeout(),
-            data=form_data,
-            files=files,
         )
-        assert (
-            response.status_code == 200
-        ), f"Failed to create tasks from files: {response.status_code}: {response.text}"
+        annotation_files = [
+            (f"{a.name}.zip", a._binary_zip()) for a in base_annotations
+        ]
+        result = client.tasks_create_from_files(nml_task_parameters, annotation_files)
 
-        return cls._handle_task_creation_response(response)
+        return cls._handle_task_creation_result(result)
 
     @classmethod
     def create(
@@ -146,112 +123,88 @@ class Task:
         needed_experience_domain: str,
         needed_experience_value: int,
         starting_position: Vec3Int,
-        starting_rotation: Optional[Vec3Int] = Vec3Int(0, 0, 0),
+        starting_rotation: Vec3Int = Vec3Int(0, 0, 0),
         instances: int = 1,
         script_id: Optional[str] = None,
         bounding_box: Optional[BoundingBox] = None,
     ) -> List["Task"]:
         """Submits tasks in WEBKNOSSOS based on a dataset, starting position + rotation, and returns the Task objects"""
 
-        client = _get_generated_client(enforce_auth=True)
-        url = f"{client.base_url}/api/tasks"
+        client = _get_api_client(enforce_auth=True)
         if isinstance(dataset_name, RemoteDataset):
             dataset_name = dataset_name._dataset_name
-        task_parameters = {
-            "taskTypeId": task_type_id,
-            "neededExperience": {
-                "domain": needed_experience_domain,
-                "value": needed_experience_value,
-            },
-            "pendingInstances": instances,
-            "projectName": project_name,
-            "scriptId": script_id,
-            "dataSet": dataset_name,
-            "editPosition": starting_position,
-            "editRotation": starting_rotation,
-            "boundingBox": bounding_box.to_wkw_dict()
+        task_parameters = ApiTaskParameters(
+            task_type_id=task_type_id,
+            needed_experience=ApiExperience(
+                domain=needed_experience_domain,
+                value=needed_experience_value,
+            ),
+            pending_instances=instances,
+            project_name=project_name,
+            script_id=script_id,
+            data_set=dataset_name,
+            edit_position=starting_position.to_tuple(),
+            edit_rotation=starting_rotation.to_tuple(),
+            bounding_box=ApiBoundingBox(
+                bounding_box.topleft.to_tuple(),
+                bounding_box.size.x,
+                bounding_box.size.y,
+                bounding_box.size.z,
+            )
             if bounding_box is not None
             else None,
-        }
-
-        response = httpx.post(
-            url=url,
-            headers=client.get_headers(),
-            cookies=client.get_cookies(),
-            timeout=client.get_timeout(),
-            json=[task_parameters],
         )
-        assert (
-            response.status_code == 200
-        ), f"Failed to create tasks: {response.status_code}: {response.text}"
 
-        return cls._handle_task_creation_response(response)
+        response = client.tasks_create([task_parameters])
+
+        return cls._handle_task_creation_result(response)
 
     @classmethod
-    def _from_dict(cls, response_dict: Dict) -> "Task":
-        from ..client._generated.models.task_info_response_200 import (
-            TaskInfoResponse200,
-        )
-
-        return cls._from_generated_response(
-            TaskInfoResponse200.from_dict(response_dict)
-        )
-
-    @classmethod
-    def _from_generated_response(
-        cls,
-        response: Union["TaskInfoResponse200", "TaskInfosByProjectIdResponse200Item"],
-    ) -> "Task":
+    def _from_api_task(cls, api_task: ApiTask) -> "Task":
         return cls(
-            response.id,
-            response.project_id,
-            response.data_set,
+            api_task.id,
+            api_task.project_id,
+            api_task.data_set,
             TaskStatus(
-                response.status.pending,
-                response.status.active,
-                response.status.finished,
+                api_task.status.pending,
+                api_task.status.active,
+                api_task.status.finished,
             ),
-            TaskType._from_generated_response(response.type),
+            TaskType._from_api_task_type(api_task.type),
         )
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
-        client = _get_generated_client(enforce_auth=True)
-        response = annotation_infos_by_task_id.sync(id=self.task_id, client=client)
-        assert (
-            response is not None
-        ), f"Requesting annotation infos for task from {client.base_url} failed."
-        return [AnnotationInfo._from_generated_response(a) for a in response]
+        client = _get_api_client(enforce_auth=True)
+        api_annotations = client.annotation_infos_by_task(self.task_id)
+        return [AnnotationInfo._from_api_annotation(a) for a in api_annotations]
 
     def get_project(self) -> Project:
         """Returns the project this task belongs to"""
         return Project.get_by_id(self.project_id)
 
     @classmethod
-    def _handle_task_creation_response(cls, response: httpx.Response) -> List["Task"]:
-        result = response.json()
-        if "warnings" in result:
-            warnings = result["warnings"]
-            if len(warnings) > 0:
-                logger.warning(
-                    f"There were {len(warnings)} warnings during task creation:"
-                )
-            for warning in warnings:
-                logger.warning(warning)
-        assert "tasks" in result, "Invalid result of task creation"
+    def _handle_task_creation_result(
+        cls, result: ApiTaskCreationResult
+    ) -> List["Task"]:
+        if len(result.warnings) > 0:
+            logger.warning(
+                f"There were {len(result.warnings)} warnings during task creation:"
+            )
+        for warning in result.warnings:
+            logger.warning(warning)
 
         successes = []
         errors = []
-        for t in result["tasks"]:
-            print(t)
-            if "success" in t:
-                successes.append(t["success"])
-            if "error" in t:
-                errors.append(t["error"])
+        for t in result.tasks:
+            if t.success is not None:
+                successes.append(t.success)
+            if t.error is not None:
+                errors.append(t.error)
         if len(errors) > 0:
             logger.error(f"{len(errors)} tasks could not be created:")
             for error in errors:
                 logger.error(error)
         if len(successes) > 0:
             logger.info(f"{len(successes)} tasks were successfully created.")
-        return [cls._from_dict(t) for t in successes]
+        return [cls._from_api_task(t) for t in successes]
