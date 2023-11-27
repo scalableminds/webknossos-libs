@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from itertools import product
 from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
@@ -8,9 +7,10 @@ import numpy as np
 
 from .mag import Mag
 from .vec3_int import Vec3Int
-from .vecn_int import VecNInt, VecNIntLike
+from .vec_int import VecInt, VecIntLike
 
 _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
+
 
 @attr.frozen
 class NDBoundingBox:
@@ -29,10 +29,10 @@ class NDBoundingBox:
     ```
     """
 
-    topleft: VecNInt = attr.field(converter=VecNInt)
-    size: VecNInt = attr.field(converter=VecNInt)
+    topleft: VecInt = attr.field(converter=VecInt)
+    size: VecInt = attr.field(converter=VecInt)
     axes: Tuple[str, ...] = attr.field(converter=tuple)
-    bottomright: VecNInt = attr.field(init=False)
+    bottomright: VecInt = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
     color: Optional[Tuple[float, float, float, float]] = None
@@ -42,41 +42,68 @@ class NDBoundingBox:
             f"The dimensions of topleft, size and axes ({len(self.topleft)}, "
             + f"{len(self.size)} and {len(self.axes)} dimensions) do not match."
         )
-
-        # Bring topleft and size in required order ('x', 'y', 'z', ...)
-        try:
-            source = [self.axes.index('x'), self.axes.index('y'), self.axes.index('z')]
-        except ValueError as err:
-            raise ValueError("There are at least 3 dimensions needed with names `x`, `y` and `z`.") from err
-        target = [1,2,3]
-        self.size.moveaxis(source, target)
-        self.topleft.moveaxis(source, target)
-        object.__setattr__(self, "axes", ("x", "y", "z", *(e for e in self.axes if e not in ["x", "y", "z"])))
+        if not self._is_sorted():
+            self._sort_positions_of_axes()
 
         if not self.size.is_positive():
             # Flip the size in negative dimensions, so that the topleft is smaller than bottomright.
             # E.g. BoundingBox((10, 10, 10), (-5, 5, 5)) -> BoundingBox((5, 10, 10), (5, 5, 5)).
             negative_size = (min(0, value) for value in self.size)
-            new_topleft = (val1 + val2 for val1, val2 in zip(self.topleft, negative_size))
+            new_topleft = (
+                val1 + val2 for val1, val2 in zip(self.topleft, negative_size)
+            )
             new_size = (max(value, -value) for value in self.size)
             object.__setattr__(self, "topleft", new_topleft)
             object.__setattr__(self, "size", new_size)
-
 
         # Compute bottomright to avoid that it's recomputed every time
         # it is needed.
         object.__setattr__(self, "bottomright", self.topleft + self.size)
 
-    def with_additional_axis(self, name: str, extent: Tuple[int, int]) -> "NDBoundingBox":
+    def _sort_positions_of_axes(self) -> None:
+        # Bring topleft and size in required order
+        # ('x', 'y', 'z', <alphabetically sorted remaining axes>)
+
+        size, topleft, axes = zip(
+            *sorted(zip(self.size, self.topleft, self.axes), key=lambda x: x[2])
+        )
+        object.__setattr__(self, "size", VecInt(size))
+        object.__setattr__(self, "topleft", VecInt(topleft))
+        object.__setattr__(self, "axes", axes)
+        try:
+            source = [self.axes.index("x"), self.axes.index("y"), self.axes.index("z")]
+        except ValueError as err:
+            raise ValueError(
+                "There are at least 3 dimensions needed with names `x`, `y` and `z`."
+            ) from err
+        target = [0, 1, 2]
+        object.__setattr__(self, "size", self.size.moveaxis(source, target))
+        object.__setattr__(self, "topleft", self.topleft.moveaxis(source, target))
+        object.__setattr__(
+            self,
+            "axes",
+            ("x", "y", "z", *(e for e in self.axes if e not in ["x", "y", "z"])),
+        )
+
+    def _is_sorted(self) -> bool:
+        if self.axes[0:3] != ["x", "y", "z"]:
+            return False
+        return all(
+            self.axes[i] < self.axes[i + 1] for i in range(3, len(self.axes) - 2)
+        )
+
+    def with_additional_axis(
+        self, name: str, extent: Tuple[int, int]
+    ) -> "NDBoundingBox":
         assert name not in self.axes, "The identifier of the axis is already taken."
         start, end = extent
         return attr.evolve(
             self,
             topleft=(*self.topleft, start),
             size=(*self.size, end - start),
-            axes=(*self.axes, name)
+            axes=(*self.axes, name),
         )
-    
+
     def with_name(self, name: Optional[str]) -> "NDBoundingBox":
         return attr.evolve(self, name=name)
 
@@ -87,13 +114,15 @@ class NDBoundingBox:
         self, color: Optional[Tuple[float, float, float, float]]
     ) -> "NDBoundingBox":
         return attr.evolve(self, color=color)
-    
-    def with_bounds(self, axis: str, new_topleft: Optional[int], new_size: Optional[int]) -> "NDBoundingBox":
+
+    def with_bounds(
+        self, axis: str, new_topleft: Optional[int], new_size: Optional[int]
+    ) -> "NDBoundingBox":
         try:
             index = self.axes.index(axis)
         except ValueError as err:
             raise ValueError("The given axis name does not exist.") from err
-        
+
         _new_topleft = (
             self.topleft.with_replaced(index, new_topleft)
             if new_topleft is not None
@@ -106,28 +135,6 @@ class NDBoundingBox:
         )
 
         return attr.evolve(self, topleft=_new_topleft, size=_new_size)
-
-    @classmethod
-    def from_checkpoint_name(cls, checkpoint_name: str) -> "NDBoundingBox":
-        """This function extracts a bounding box in the format `x_y_z_sx_sy_xz` which is contained in a string."""
-        regex = r"(([0-9]+_){5}([0-9]+))"
-        match = re.search(regex, checkpoint_name)
-        assert (
-            match is not None
-        ), f"Could not extract bounding box from {checkpoint_name}"
-        bbox_tuple = tuple(int(value) for value in match.group().split("_"))
-        return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
-
-    @classmethod
-    def from_csv(cls, csv_bbox: str) -> "NDBoundingBox":
-        bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
-        return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
-
-    @classmethod
-    def from_auto(
-        cls, obj: Union["NDBoundingBox", str, Dict, List, Tuple]
-    ) -> "NDBoundingBox":
-        raise NotImplementedError
 
     @classmethod
     def group_boxes_with_aligned_mag(
@@ -148,9 +155,8 @@ class NDBoundingBox:
 
         return chunks_with_bboxes
 
-
     def to_wkw_dict(self) -> dict:
-        ( 
+        (
             width,
             height,
             depth,
@@ -169,23 +175,29 @@ class NDBoundingBox:
     def to_checkpoint_name(self) -> str:
         return f"{'_'.join(str(element) for element in self.topleft)}_{'_'.join(str(element) for element in self.size)}"
 
-    def to_csv(self) -> str:
-        return ",".join(map(str, self.to_tuple6()))
-
     def __repr__(self) -> str:
-        return f"NDBoundingBox(topleft={self.topleft}, size={self.size}, axes={self.axes})"
+        return f"NDBoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()}, axes={self.axes})"
 
     def __str__(self) -> str:
         return self.__repr__()
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, NDBoundingBox):
+            self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
         else:
             raise NotImplementedError()
 
+    def _check_compatibility(self, other) -> None:
+        if self.axes == other.axes:
+            return
+        else:
+            raise ValueError(
+                f"Operation with two bboxes is only possible if they have the same axes. {self.axes} != {other.axes}"
+            )
+
     def padded_with_margins(
-        self, margins_left: VecNIntLike, margins_right: Optional[VecNIntLike] = None
+        self, margins_left: VecIntLike, margins_right: Optional[VecIntLike] = None
     ) -> None:
         raise NotImplementedError()
 
@@ -194,9 +206,10 @@ class NDBoundingBox:
     ) -> "NDBoundingBox":
         """If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))"""
 
+        self._check_compatibility(other)
         topleft = self.topleft.pairmax(other.topleft)
         bottomright = self.bottomright.pairmin(other.bottomright)
-        size = (bottomright - topleft).pairmax(VecNInt.zeros(len(self.size)))
+        size = (bottomright - topleft).pairmax(VecInt.zeros(len(self.size)))
 
         intersection = attr.evolve(self, topleft=topleft, size=size)
 
@@ -208,6 +221,7 @@ class NDBoundingBox:
         return intersection
 
     def extended_by(self, other: "NDBoundingBox") -> "NDBoundingBox":
+        self._check_compatibility(other)
         if self.is_empty():
             return other
         if other.is_empty():
@@ -293,7 +307,7 @@ class NDBoundingBox:
                 size=aligned_roundup - aligned_rounddown,
             )
 
-    def contains(self, coord: VecNIntLike) -> bool:
+    def contains(self, coord: VecIntLike) -> bool:
         """Check whether a point is inside of the bounding box.
         Note that the point may have float coordinates in the ndarray case"""
 
@@ -309,19 +323,20 @@ class NDBoundingBox:
             # In earlier versions, we simply converted to ndarray to have
             # a unified calculation here, but this turned out to be a performance bottleneck.
             # Therefore, the contains-check is performed on the tuple here.
-            coord = VecNInt(coord)
+            coord = VecInt(coord)
             return all(
                 self.topleft[i] <= coord[i] < self.bottomright[i]
                 for i in range(len(self.axes))
             )
 
     def contains_bbox(self, inner_bbox: "NDBoundingBox") -> bool:
+        self._check_compatibility(inner_bbox)
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
 
     def chunk(
         self,
-        chunk_shape: VecNIntLike,
-        chunk_border_alignments: Optional[VecNIntLike] = None,
+        chunk_shape: VecIntLike,
+        chunk_border_alignments: Optional[VecIntLike] = None,
     ) -> Generator["NDBoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_shape`.
 
@@ -331,9 +346,9 @@ class NDBoundingBox:
         """
 
         start = self.topleft.to_np()
-        chunk_shape = VecNInt(chunk_shape).to_np()
+        chunk_shape = VecInt(chunk_shape).to_np()
 
-        start_adjust = VecNInt.zeros(len(self.topleft)).to_np()
+        start_adjust = VecInt.zeros(len(self.topleft)).to_np()
         if chunk_border_alignments is not None:
             chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
             assert np.all(
@@ -344,11 +359,14 @@ class NDBoundingBox:
             # the start of the first chunk, because we'll intersect with `self`,
             # but it'll lead to all chunk borders being aligned correctly.
             start_adjust = start % chunk_border_alignments_array
-        for coordinates in product(*[
-                range(start[i] - start_adjust[i], start[i] + self.size[i], chunk_shape[i])
+        for coordinates in product(
+            *[
+                range(
+                    start[i] - start_adjust[i], start[i] + self.size[i], chunk_shape[i]
+                )
                 for i in range(len(self.axes))
-            ]):
-
+            ]
+        ):
             yield NDBoundingBox(topleft=coordinates, size=chunk_shape, axes=self.axes)
 
     def volume(self) -> int:
@@ -368,8 +386,5 @@ class NDBoundingBox:
             self.topleft.z : self.bottomright.z,
         ]
 
-    def offset(self, vector: VecNIntLike) -> "NDBoundingBox":
-        return attr.evolve(self, topleft=self.topleft + VecNInt(vector))
-
-    def __hash__(self) -> int:
-        return hash(self.to_tuple6())
+    def offset(self, vector: VecIntLike) -> "NDBoundingBox":
+        return attr.evolve(self, topleft=self.topleft + VecInt(vector))

@@ -53,15 +53,17 @@ class BoundingBox(NDBoundingBox):
         # it is needed.
         object.__setattr__(self, "bottomright", self.topleft + self.size)
 
-    def with_additional_axis(self, name: str, extent: Tuple[int, int]) -> "NDBoundingBox":
-        assert (name not in ["x", "y", "z"]), f"The name '{name}' of the axis is already taken."
+    def with_additional_axis(
+        self, name: str, extent: Tuple[int, int]
+    ) -> "NDBoundingBox":
+        assert name not in self.axes, f"The name '{name}' of the axis is already taken."
         new_topleft = min(extent)
         new_size = max(extent) - new_topleft
 
         return NDBoundingBox(
             topleft=(*self.topleft, new_topleft),
             size=(*self.size, new_size),
-            axes=(*self.axes, name)
+            axes=(*self.axes, name),
         )
 
     def with_bounds_x(
@@ -84,7 +86,6 @@ class BoundingBox(NDBoundingBox):
         """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
 
         return cast(BoundingBox, self.with_bounds("z", new_topleft_z, new_size_z))
-    
 
     @classmethod
     def from_wkw_dict(cls, bbox: Dict) -> "BoundingBox":

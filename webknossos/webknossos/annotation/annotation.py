@@ -476,7 +476,7 @@ class Annotation:
         assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
         assert (
             len(nml_paths) == 1
-        ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
+        ), f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 

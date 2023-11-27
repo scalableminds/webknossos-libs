@@ -1,13 +1,14 @@
 import re
-from typing import Iterable, Optional, Tuple, Union, cast
+from typing import Iterable, Optional, Tuple, Type, Union, cast
 
 import numpy as np
 
-from .vecn_int import VecNInt
+from .vec_int import VecInt
 
 VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object."
 
-class Vec3Int(VecNInt):
+
+class Vec3Int(VecInt):
     def __new__(
         cls,
         vec: Union[int, "Vec3IntLike"],
@@ -33,9 +34,9 @@ class Vec3Int(VecNInt):
 
         if isinstance(vec, Vec3Int):
             return vec
-        
+
         as_tuple: Optional[Tuple[int, int, int]] = None
-        
+
         if isinstance(vec, int):
             assert y is not None and z is not None, VALUE_ERROR
             assert isinstance(y, int) and isinstance(z, int), VALUE_ERROR
@@ -90,5 +91,6 @@ class Vec3Int(VecNInt):
     @classmethod
     def full(cls, an_int: int, length: int = 3) -> "Vec3Int":
         return cls(an_int, an_int, an_int)
-    
+
+
 Vec3IntLike = Union[Vec3Int, Tuple[int, int, int], np.ndarray, Iterable[int]]
