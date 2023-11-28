@@ -540,6 +540,11 @@ def test_cpu_bind_regression() -> None:
         "SLURM_CPU_BIND"
     ] = "quiet,mask_cpu:0x000000000000040000000000000000040000"
 
+    stdout, _ = chcall("scontrol show config | sed -n '/^TaskPlugin/s/.*= *//p'")
+    assert (
+        "task/affinity" in stdout
+    ), "The task/affinity TaskPlugin needs to be enabled in order for SLURM_CPU_BIND to have an effect."
+
     with cluster_tools.get_executor("slurm") as executor:
         # The slurm job should not fail, although an invalid CPU mask was set before the submission
         # See https://bugs.schedmd.com/show_bug.cgi?id=14298
