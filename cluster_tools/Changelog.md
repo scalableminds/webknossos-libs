@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Added check whether any dask worker has enough resources for the submitted job in the `DaskExecutor`. [#967](https://github.com/scalableminds/webknossos-libs/pull/967)
 
 ### Fixed
 
