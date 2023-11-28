@@ -181,6 +181,35 @@ class DaskExecutor(futures.Executor):
         # with the scheduler regularly.
         __fn = partial(_run_with_nanny, __fn)
 
+        currently_available_workers = self.client.scheduler_info()["workers"]
+
+        def check_resources(
+            job_resources: Optional[Dict[str, float]],
+            worker_resources: Optional[Dict[str, float]],
+        ) -> bool:
+            if job_resources is None or len(job_resources) == 0:
+                return True
+            if worker_resources is None:
+                return False
+            for key, value in job_resources.items():
+                if worker_resources.get(key, 0) < value:
+                    return False
+            return True
+
+        assert any(
+            check_resources(self.job_resources, worker.get("resources"))
+            for worker in currently_available_workers.values()
+        ), (
+            "Requested resources are not available on any currently available worker. "
+            + f"Requested resources: {self.job_resources}. Available workers: "
+            + str(
+                [
+                    f"{w['id']} => {w.get('resources', {})}"
+                    for w in currently_available_workers.values()
+                ]
+            )
+        )
+
         fut = self.client.submit(
             partial(__fn, *args, **kwargs), pure=False, resources=self.job_resources
         )
