@@ -50,8 +50,9 @@ nav:
           - webknossos/sharing.md
           - webknossos/installation.md
           - webknossos/automated_analysis.md
+          - webknossos/animations.md
+          - Pen Tablets, iPads, Wacom: webknossos/pen_tablets.md
           - webknossos/jobs.md
-          - webknossos/tooling.md
           - webknossos/export.md
           - webknossos/proof_reading.md
           - webknossos/connectome_viewer.md
@@ -59,6 +60,13 @@ nav:
           - Volume Annotation: webknossos/tutorial_volume_annotation.md
           - Data Sharing: webknossos/tutorial_data_sharing.md
           - Automation: webknossos/tutorial_automation.md
+          # - Today I Learned: webknossos/today_i_learned.md
+      - Data Sources:
+          - webknossos/image_stacks.md
+          - webknossos/zarr.md
+          - webknossos/wkw.md
+          - webknossos/n5.md
+          - webknossos/neuroglancer_precomputed.md
       - Reference:
           - Terminology: webknossos/terminology.md
           - webknossos/data_formats.md
