@@ -10,12 +10,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.7...HEAD)
 
 ### Breaking Changes
+- Manually setting the `SLURM_CPU_BIND` environment variable before job submission is no longer supported. [#969](https://github.com/scalableminds/webknossos-libs/pull/969)
 
 ### Added
 
 ### Changed
 
 ### Fixed
+- Fixed the nested scheduling of Slurm jobs for Slurm versions >= 22.05. [#969](https://github.com/scalableminds/webknossos-libs/pull/969)
 
 
 ## [0.14.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.7) - 2023-11-17
