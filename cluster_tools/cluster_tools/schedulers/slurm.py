@@ -240,6 +240,11 @@ class SlurmExecutor(ClusterExecutor):
         )
         with open(filename, "w", encoding="utf-8") as f:
             f.write(job)
+
+        # Workaround to avoid "Unable to satisfy cpu bind request" errors in nested slurm scheduling for Slurm versions >=22.05.
+        # Can be removed if https://bugs.schedmd.com/show_bug.cgi?id=14298 is ever fixed (currently won't fix)
+        os.environ.pop("SLURM_CPU_BIND", None)
+
         job_id, stderr = chcall("sbatch --parsable {}".format(filename))
         os.unlink(filename)
 
