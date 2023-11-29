@@ -7,16 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.9...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Added check whether any dask worker has enough resources for the submitted job in the `DaskExecutor`. [#967](https://github.com/scalableminds/webknossos-libs/pull/967)
 
 ### Fixed
+
+
+## [0.14.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.9) - 2023-11-29
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.8...v0.14.9)
+
+### Changed
+- Added check whether any dask worker has enough resources for the submitted job in the `DaskExecutor`. [#967](https://github.com/scalableminds/webknossos-libs/pull/967)
 
 
 ## [0.14.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.8) - 2023-11-28
