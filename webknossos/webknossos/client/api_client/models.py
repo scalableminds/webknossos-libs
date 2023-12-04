@@ -235,7 +235,7 @@ class ApiProject:
     name: str
     team: str
     team_name: str
-    owner: ApiUser
+    owner: ApiUserCompact
     priority: int
     paused: bool
     expected_time: Optional[int] = None
