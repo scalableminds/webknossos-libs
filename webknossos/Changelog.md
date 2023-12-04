@@ -20,6 +20,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 
+- Fixed a bug in reading project info from webknossos using the api client. [#970](https://github.com/scalableminds/webknossos-libs/pull/970)
+
 
 ## [0.14.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.9) - 2023-11-29
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.8...v0.14.9)
