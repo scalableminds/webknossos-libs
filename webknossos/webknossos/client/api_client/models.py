@@ -235,7 +235,7 @@ class ApiProject:
     name: str
     team: str
     team_name: str
-    owner: ApiUserCompact
+    owner: Optional[ApiUserCompact]  # None in case you have no read access on the owner
     priority: int
     paused: bool
     expected_time: Optional[int] = None
