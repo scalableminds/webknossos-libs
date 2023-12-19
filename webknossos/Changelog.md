@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
-
+- Fixes that the buffered slice writer could overwrite data when writing less slices than buffer_size at an offset that is not aligned. [#973](https://github.com/scalableminds/webknossos-libs/pull/973)
 
 ## [0.14.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.11) - 2023-12-06
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.10...v0.14.11)
