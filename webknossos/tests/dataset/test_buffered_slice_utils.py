@@ -174,13 +174,12 @@ def test_buffered_slice_writer_unaligned(
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
 
-
     # Write some data to z=32. We will check that this
     # data is left untouched by the buffered slice writer.
     ones_at_z32 = np.ones((512, 512, 4), dtype=np.uint8)
     ones_offset = (0, 0, 32)
     mag1.write(ones_at_z32, absolute_offset=ones_offset)
-    
+
     # Allocate some data (~ 8 MB). Note that this will write
     # from z=1 to z=31 (i.e., 31 slices instead of 32 which
     # is the buffer_size with which we configure the BufferedSliceWriter).
@@ -198,10 +197,14 @@ def test_buffered_slice_writer_unaligned(
                 writer.send(section)
 
     written_data = mag1.read(absolute_offset=offset, size=shape)
-    assert np.all(data == written_data), "Read data is not equal to the data that was just written."
+    assert np.all(
+        data == written_data
+    ), "Read data is not equal to the data that was just written."
 
     data_at_z32 = mag1.read(absolute_offset=ones_offset, size=ones_at_z32.shape)
-    assert np.all(ones_at_z32 == data_at_z32), "The BufferedSliceWriter seems to have overwritten older data."
+    assert np.all(
+        ones_at_z32 == data_at_z32
+    ), "The BufferedSliceWriter seems to have overwritten older data."
 
 
 def test_buffered_slice_writer_should_warn_about_unaligned_usage(

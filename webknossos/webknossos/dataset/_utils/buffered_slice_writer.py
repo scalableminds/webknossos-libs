@@ -131,9 +131,7 @@ class BufferedSliceWriter:
             channel_count = self.slices_to_write[0].shape[0]
 
             buffer_depth = min(self.buffer_size, len(self.slices_to_write))
-            buffer_bbox = BoundingBox(
-                (0, 0, 0), (max_width, max_height, buffer_depth)
-            )
+            buffer_bbox = BoundingBox((0, 0, 0), (max_width, max_height, buffer_depth))
 
             shard_dimensions = self.view._get_file_dimensions().moveaxis(
                 -1, self.dimension
