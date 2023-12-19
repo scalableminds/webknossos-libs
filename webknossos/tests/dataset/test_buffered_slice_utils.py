@@ -164,6 +164,46 @@ def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
     assert np.all(data == written_data)
 
 
+def test_buffered_slice_writer_unaligned(
+    tmp_path: Path,
+) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+
+
+    # Write some data to z=32. We will check that this
+    # data is left untouched by the buffered slice writer.
+    ones_at_z32 = np.ones((512, 512, 4), dtype=np.uint8)
+    ones_offset = (0, 0, 32)
+    mag1.write(ones_at_z32, absolute_offset=ones_offset)
+    
+    # Allocate some data (~ 8 MB). Note that this will write
+    # from z=1 to z=31 (i.e., 31 slices instead of 32 which
+    # is the buffer_size with which we configure the BufferedSliceWriter).
+    offset = (1, 1, 1)
+    shape = (512, 512, 31)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("default", module="webknossos", message=r"\[WARNING\]")
+        with mag1.get_buffered_slice_writer(
+            absolute_offset=offset, buffer_size=32
+        ) as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
+
+    written_data = mag1.read(absolute_offset=offset, size=shape)
+    assert np.all(data == written_data), "Read data is not equal to the data that was just written."
+
+    data_at_z32 = mag1.read(absolute_offset=ones_offset, size=ones_at_z32.shape)
+    assert np.all(ones_at_z32 == data_at_z32), "The BufferedSliceWriter seems to have overwritten older data."
+
+
 def test_buffered_slice_writer_should_warn_about_unaligned_usage(
     tmp_path: Path,
 ) -> None:
