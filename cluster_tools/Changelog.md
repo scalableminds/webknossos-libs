@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.12...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,36 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.12) - 2023-12-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.11...v0.14.12)
+
+
+## [0.14.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.11) - 2023-12-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.10...v0.14.11)
+
+
+## [0.14.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.10) - 2023-12-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.9...v0.14.10)
+
+
+## [0.14.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.9) - 2023-11-29
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.8...v0.14.9)
+
+### Changed
+- Added check whether any dask worker has enough resources for the submitted job in the `DaskExecutor`. [#967](https://github.com/scalableminds/webknossos-libs/pull/967)
+
+
+## [0.14.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.8) - 2023-11-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.7...v0.14.8)
+
+### Breaking Changes
+- Manually setting the `SLURM_CPU_BIND` environment variable before job submission is no longer supported. [#969](https://github.com/scalableminds/webknossos-libs/pull/969)
+
+### Fixed
+- Fixed the nested scheduling of Slurm jobs for Slurm versions >= 22.05. [#969](https://github.com/scalableminds/webknossos-libs/pull/969)
+
 
 
 ## [0.14.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.7) - 2023-11-17
