@@ -6,7 +6,7 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from ..geometry import BoundingBox, Mag, Vec3Int
+from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
 from .layer_categories import LayerCategoryType
@@ -119,7 +119,7 @@ class LayerViewConfiguration:
 @attr.define
 class MagViewProperties:
     mag: Mag
-    path: Optional[str]
+    path: Optional[str] = None
     cube_length: Optional[int] = None
     axis_order: Optional[Dict[str, int]] = None
 
@@ -132,7 +132,7 @@ class MagViewProperties:
 @attr.define
 class AxisProperties:
     name: str
-    bounds: List[int]
+    bounds: Tuple[int, int]
     index: int
 
 
@@ -152,6 +152,20 @@ class LayerProperties:
     def resolutions(self) -> List[MagViewProperties]:
         warn_deprecated("resolutions", "mags")
         return self.mags
+
+    @property
+    def nd_bounding_box(self) -> NDBoundingBox:
+        if self.additional_axes is None:
+            return self.bounding_box
+        else:
+            nd_bbox = self.bounding_box
+            for axis in self.additional_axes:
+                nd_bbox = nd_bbox.with_additional_axis(axis.name, axis.bounds)
+            return nd_bbox
+
+    @nd_bounding_box.setter
+    def nd_bounding_box(self, bbox: NDBoundingBox) -> None:
+        self.nd_bounding_box = bbox
 
 
 @attr.define

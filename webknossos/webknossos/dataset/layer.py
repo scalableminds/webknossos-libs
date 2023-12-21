@@ -1079,7 +1079,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag, path: Optional[str]) -> None:
+    def _setup_mag(self, mag, path: Optional[str] = None) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         mag_name = mag.to_layer_name()

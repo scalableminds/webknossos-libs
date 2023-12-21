@@ -46,6 +46,7 @@ except ImportError:
     pass
 # pylint: enable=unused-import
 
+from ...geometry.vec3_int import Vec3Int
 from ...geometry.vec_int import VecInt
 from ..mag_view import MagView
 
