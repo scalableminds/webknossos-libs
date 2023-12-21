@@ -30,7 +30,12 @@ if TYPE_CHECKING:
 from .view import View
 
 
-def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
+def _find_mag_path_on_disk(
+    dataset_path: Path, layer_name: str, mag_name: str, path: Optional[str] = None
+) -> Path:
+    if path is not None:
+        return dataset_path / path
+
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()

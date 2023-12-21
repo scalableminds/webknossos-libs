@@ -70,26 +70,32 @@ class Vec3Int(VecInt):
     def from_vec_or_int(vec_or_int: Union["Vec3IntLike", int]) -> "Vec3Int":
         if isinstance(vec_or_int, int):
             return Vec3Int.full(vec_or_int)
-        else:
-            return Vec3Int(vec_or_int)
+
+        return Vec3Int(vec_or_int)
 
     @staticmethod
     def from_str(string: str) -> "Vec3Int":
         if re.match(r"\(\d+,\d+,\d+\)", string):
             return Vec3Int(tuple(map(int, re.findall(r"\d+", string))))
-        else:
-            return Vec3Int.full(int(string))
+
+        return Vec3Int.full(int(string))
 
     @classmethod
     def zeros(cls, length: int = 3) -> "Vec3Int":
+        del length
+
         return cls(0, 0, 0)
 
     @classmethod
     def ones(cls, length: int = 3) -> "Vec3Int":
+        del length
+
         return cls(1, 1, 1)
 
     @classmethod
     def full(cls, an_int: int, length: int = 3) -> "Vec3Int":
+        del length
+
         return cls(an_int, an_int, an_int)
 
 

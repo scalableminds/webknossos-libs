@@ -46,7 +46,7 @@ except ImportError:
     pass
 # pylint: enable=unused-import
 
-from ...geometry.vec3_int import Vec3Int
+from ...geometry.vec_int import VecInt
 from ..mag_view import MagView
 
 try:
@@ -68,7 +68,7 @@ def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
 
 class PimsImages:
     dtype: DTypeLike
-    expected_shape: Vec3Int
+    expected_shape: VecInt
     num_channels: int
 
     def __init__(
@@ -426,7 +426,7 @@ class PimsImages:
         """
         images_context_manager: Optional[ContextManager]
         with warnings.catch_warnings():
-            if isinstance(self._original_images, pims.FramesSequence):
+            if isinstance(self._original_images, pims.FramesSequenceND):
                 images_context_manager = nullcontext(enter_result=self._original_images)
             else:
                 exceptions: List[Exception] = []

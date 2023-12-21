@@ -119,6 +119,7 @@ class LayerViewConfiguration:
 @attr.define
 class MagViewProperties:
     mag: Mag
+    path: Optional[str]
     cube_length: Optional[int] = None
     axis_order: Optional[Dict[str, int]] = None
 
@@ -126,6 +127,13 @@ class MagViewProperties:
     def resolution(self) -> Mag:
         warn_deprecated("resolution", "mag")
         return self.mag
+
+
+@attr.define
+class AxisProperties:
+    name: str
+    bounds: List[int]
+    index: int
 
 
 @attr.define
@@ -137,6 +145,7 @@ class LayerProperties:
     data_format: DataFormat
     mags: List[MagViewProperties]
     num_channels: Optional[int] = None
+    additional_axes: Optional[List[AxisProperties]] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None
 
     @property

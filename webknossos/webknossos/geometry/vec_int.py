@@ -49,9 +49,12 @@ class VecInt(tuple):
                 for key, value in kwargs.items():
                     assert key not in ["x", "y", "z"]
                     remaining_axes.append((key, value))
-                as_tuple = (vec, y, z, *[
-                    x[1] for x in sorted(remaining_axes, key=lambda x: x[0])
-                ])
+                as_tuple = (
+                    vec,
+                    y,
+                    z,
+                    *[x[1] for x in sorted(remaining_axes, key=lambda x: x[0])],
+                )
         else:
             if args:
                 raise ValueError(VALUE_ERROR)
@@ -166,7 +169,7 @@ class VecInt(tuple):
         return self._element_wise(other, min)
 
     def prod(self) -> int:
-        return np.prod(self)
+        return int(np.prod(self))
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({', '.join((str(element) for element in self))})"

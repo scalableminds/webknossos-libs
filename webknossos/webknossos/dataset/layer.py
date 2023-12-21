@@ -194,7 +194,7 @@ class Layer:
         self.path.mkdir(parents=True, exist_ok=True)
 
         for mag in properties.mags:
-            self._setup_mag(Mag(mag.mag))
+            self._setup_mag(Mag(mag.mag), mag.path)
         # Only keep the properties of mags that were initialized.
         # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
         self._properties.mags = [
@@ -1079,7 +1079,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag) -> None:
+    def _setup_mag(self, mag, path: Optional[str]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         mag_name = mag.to_layer_name()
@@ -1089,7 +1089,7 @@ class Layer:
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
             info = cls_array.open(
-                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
+                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name, path)
             ).info
             self._mags[mag] = MagView(
                 self,
