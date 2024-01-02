@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.12...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.13...HEAD)
 
 ### Breaking Changes
 
@@ -20,7 +20,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 
+
+## [0.14.13](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.13) - 2024-01-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.12...v0.14.13)
+
+### Fixed
+
 - Fixed a bug in reading project info from webknossos using the api client for non-admins. [#972](https://github.com/scalableminds/webknossos-libs/pull/972)
+
 
 
 ## [0.14.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.12) - 2023-12-19
