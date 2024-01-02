@@ -19,7 +19,7 @@ class Project:
     name: str
     team_id: str
     team_name: str
-    owner_id: str
+    owner_id: Optional[str]  # None in case you have no read access on the owner
     priority: int
     paused: bool
     expected_time: Optional[int]
@@ -75,16 +75,22 @@ class Project:
 
     def get_owner(self) -> User:
         """Returns the user that is the owner of this task"""
+        assert (
+            self.owner_id is not None
+        ), "Project owner is None, you may not have enough access rights to read the project owner."
         return User.get_by_id(self.owner_id)
 
     @classmethod
     def _from_api_project(cls, api_project: ApiProject) -> "Project":
+        owner_id = None
+        if api_project.owner is not None:
+            owner_id = api_project.owner.id
         return cls(
             api_project.id,
             api_project.name,
             api_project.team,
             api_project.team_name,
-            api_project.owner.id,
+            owner_id,
             api_project.priority,
             api_project.paused,
             api_project.expected_time,
