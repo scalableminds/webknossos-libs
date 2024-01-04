@@ -59,6 +59,7 @@ class NDBoundingBox:
         # Compute bottomright to avoid that it's recomputed every time
         # it is needed.
         object.__setattr__(self, "bottomright", self.topleft + self.size)
+        
 
     def _sort_positions_of_axes(self) -> None:
         # Bring topleft and size in required order
@@ -154,19 +155,18 @@ class NDBoundingBox:
             chunks_with_bboxes[chunk_key].append(bbox)
 
         return chunks_with_bboxes
+    
+    @classmethod
+    def from_wkw_dict(cls, bbox: Dict) -> "NDBoundingBox":
+        # TODO: include index in nd_bounding_box to clarify axis order
+        return cls(bbox["topLeft"], bbox["size"], bbox["axes"])
+
 
     def to_wkw_dict(self) -> dict:
-        (
-            width,
-            height,
-            depth,
-        ) = self.size.to_list()
-
         return {
             "topLeft": self.topleft.to_list(),
-            "width": width,
-            "height": height,
-            "depth": depth,
+            "size": self.size.to_list(),
+            "axes": self.axes,
         }
 
     def to_config_dict(self) -> dict:
@@ -243,21 +243,21 @@ class NDBoundingBox:
             Vec3Int(self.topleft.to_xyz()) % mag_vec == Vec3Int.zeros()
         ), f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
         assert (
-            self.bottomright % mag_vec == Vec3Int.zeros()
+            Vec3Int(self.bottomright.to_xyz()) % mag_vec == Vec3Int.zeros()
         ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
 
         return attr.evolve(
             self,
-            topleft=(self.topleft // mag_vec),
-            size=(self.size // mag_vec),
+            topleft=VecInt(*Vec3Int(self.topleft.to_xyz()) // mag_vec, *self.topleft[3:]),
+            size=VecInt(*Vec3Int(self.size.to_xyz()) // mag_vec, *self.size[3:]),
         )
 
     def from_mag_to_mag1(self, from_mag: Mag) -> "NDBoundingBox":
         mag_vec = from_mag.to_vec3_int()
         return attr.evolve(
             self,
-            topleft=(self.topleft * mag_vec),
-            size=(self.size * mag_vec),
+            topleft=VecInt(*Vec3Int(self.topleft) * mag_vec, *self.topleft[3:]),
+            size=VecInt(*Vec3Int(self.size) * mag_vec, *self.size[3:]),
         )
 
     def _align_with_mag_slow(self, mag: Mag, ceil: bool = False) -> "NDBoundingBox":
@@ -290,21 +290,25 @@ class NDBoundingBox:
         # This does the same as _align_with_mag_slow, which is more readable.
         # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
         mag_vec = mag.to_vec3_int() if isinstance(mag, Mag) else mag
-        roundup = self.topleft if ceil else self.bottomright
-        rounddown = self.bottomright if ceil else self.topleft
+        topleft = Vec3Int(self.topleft[:3])
+        bottomright= Vec3Int(self.bottomright[:3])
+        roundup = topleft if ceil else bottomright
+        rounddown = bottomright if ceil else topleft
         margin_to_roundup = roundup % mag_vec
         aligned_roundup = roundup - margin_to_roundup
         margin_to_rounddown = (mag_vec - (rounddown % mag_vec)) % mag_vec
         aligned_rounddown = rounddown + margin_to_rounddown
         if ceil:
             return attr.evolve(
-                self, topleft=aligned_roundup, size=aligned_rounddown - aligned_roundup
+                self, 
+                topleft=VecInt(*aligned_roundup, *self.topleft[3:]), 
+                size=VecInt(*(aligned_rounddown - aligned_roundup), *self.topleft[3:])
             )
         else:
             return attr.evolve(
                 self,
-                topleft=aligned_rounddown,
-                size=aligned_roundup - aligned_rounddown,
+                topleft=VecInt(*aligned_rounddown, *self.topleft[3:]),
+                size=VecInt(*(aligned_roundup - aligned_rounddown), *self.size[3:])
             )
 
     def contains(self, coord: VecIntLike) -> bool:

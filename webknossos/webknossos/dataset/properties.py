@@ -6,7 +6,7 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int
+from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
 from .layer_categories import LayerCategoryType
@@ -140,33 +140,17 @@ class AxisProperties:
 class LayerProperties:
     name: str
     category: LayerCategoryType
-    bounding_box: BoundingBox
+    bounding_box: NDBoundingBox
     element_class: str
     data_format: DataFormat
     mags: List[MagViewProperties]
     num_channels: Optional[int] = None
-    additional_axes: Optional[List[AxisProperties]] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None
 
     @property
     def resolutions(self) -> List[MagViewProperties]:
         warn_deprecated("resolutions", "mags")
         return self.mags
-
-    @property
-    def nd_bounding_box(self) -> NDBoundingBox:
-        if self.additional_axes is None:
-            return self.bounding_box
-        else:
-            nd_bbox = self.bounding_box
-            for axis in self.additional_axes:
-                nd_bbox = nd_bbox.with_additional_axis(axis.name, axis.bounds)
-            return nd_bbox
-
-    @nd_bounding_box.setter
-    def nd_bounding_box(self, bbox: NDBoundingBox) -> None:
-        self.nd_bounding_box = bbox
-
 
 @attr.define
 class SegmentationLayerProperties(LayerProperties):
@@ -192,10 +176,10 @@ class DatasetProperties:
 dataset_converter = cattr.Converter()
 
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()
-dataset_converter.register_unstructure_hook(BoundingBox, bbox_to_wkw)
+bbox_to_wkw: Callable[[NDBoundingBox], dict] = lambda o: o.to_wkw_dict()
+dataset_converter.register_unstructure_hook(NDBoundingBox, bbox_to_wkw)
 dataset_converter.register_structure_hook(
-    BoundingBox, lambda d, _: BoundingBox.from_wkw_dict(d)
+    NDBoundingBox, lambda d, _: NDBoundingBox.from_wkw_dict(d)
 )
 
 
@@ -282,6 +266,13 @@ def layer_properties_post_unstructure(
                 mag_view_properties_post_structure(m) for m in d["mags"]
             ]
             del d["mags"]
+        # json expects nd_bounding_box to be represented as bounding_box and additional_axes
+        bbox = d["boundingBox"]
+        topleft: List[int] = bbox["topLeft"][:3]
+        width, height, depth = bbox["size"][:3]
+        additional_axes = [{"name": name, "bounds": (top_left, top_left + size)} for name, top_left, size in zip(bbox["axes"][3:], bbox["topLeft"][3:], bbox["size"][3:])]
+        d["boundingBox"] = {"topLeft": topleft, "width": width, "height": height, "depth": depth}
+        d["additionalAxes"] = additional_axes
         return d
 
     return __layer_properties_post_unstructure
@@ -305,6 +296,19 @@ def layer_properties_pre_structure(
                 mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
             ]
             del d["wkwResolutions"]
+        # bounding_box and additional_axes are internally handled as nd_bounding_box
+        bbox = d["boundingBox"]
+        topleft: List[int] = bbox["topLeft"]
+        size: List[int] = [bbox["width"], bbox["height"], bbox["depth"]]
+        axes: List[str] = ["x", "y", "z"]
+        if "additionalAxes" in d:
+            for axis in d["additionalAxes"]:
+                axes.append(axis["name"])
+                topleft.append(axis["bounds"][0])
+                size.append(axis["bounds"][1] - axis["bounds"][0])
+        nd_bbox = {"topLeft": topleft, "size": size, "axes": axes}
+        d["boundingBox"] = nd_bbox
+        del d["additionalAxes"]
         obj = converter_fn(d, type_value)
         return obj
 

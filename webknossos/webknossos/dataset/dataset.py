@@ -30,10 +30,11 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
-from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -59,7 +60,7 @@ if TYPE_CHECKING:
     from ..client._upload_dataset import LayerToLink
     from ..administration.user import Team
 
-from ..geometry import BoundingBox, Mag
+from ..geometry import BoundingBox, Mag, NDBoundingBox
 from ..utils import (
     copy_directory_with_symlinks,
     copytree,
@@ -758,7 +759,7 @@ class Dataset:
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
-        bounding_box: Optional[BoundingBox] = None,
+        bounding_box: Optional[NDBoundingBox] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -818,7 +819,7 @@ class Dataset:
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
+            bounding_box=bounding_box or NDBoundingBox((0, 0, 0), (0, 0, 0), ("x", "y", "z")),
             element_class=_dtype_per_channel_to_element_class(
                 dtype_per_channel, num_channels
             ),

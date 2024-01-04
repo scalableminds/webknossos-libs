@@ -22,6 +22,8 @@ def open_existing_dataset():
     color_layer = ds.get_color_layers()[0]
     finest_mag = color_layer.get_finest_mag()
     layers = ds.layers
+    #finest_mag.read()
+    ds.copy_dataset("../copied_dataset")
 
 
 def main() -> None:
