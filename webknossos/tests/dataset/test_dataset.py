@@ -1052,6 +1052,21 @@ def test_changing_layer_bounding_box(
     assure_exported_properties(ds)
 
 
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_dataset_bounding_box_calculation(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "change_layer_bounding_box")
+    ds = Dataset.open(ds_path)
+    layer = ds.get_layer("color")
+    # BoundingBox(topleft=(0, 0, 0), size=(24, 24, 24))
+    assert layer.bounding_box == ds.calculate_bounding_box(), "The calculated bounding box of the dataset does not " +\
+        "match the color layer's bounding box."
+    layer.bounding_box = layer.bounding_box.with_size((512,512,512))
+    assert layer.bounding_box == ds.calculate_bounding_box(), "The calculated bounding box of the dataset does not " +\
+        "match the color layer's enlarged bounding box."
+
+
 def test_get_view() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "get_view")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))

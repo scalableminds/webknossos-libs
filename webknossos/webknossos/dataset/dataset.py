@@ -1485,6 +1485,9 @@ class Dataset:
         return self.layers[new_layer_name]
 
     def calculate_bounding_box(self) -> BoundingBox:
+        """
+        Calculates and returns the enclosing bounding box of all data layers of the dataset.
+        """
         all_layers = list(self.layers.values())
         if len(all_layers) <= 0:
             return BoundingBox.empty()

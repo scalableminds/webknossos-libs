@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added a method to the Datasets class that calculates a dataset's bounding box covering all layers. [#975](https://github.com/scalableminds/webknossos-libs/pull/975)
 
 ### Changed
 
