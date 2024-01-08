@@ -32,15 +32,16 @@ class NDBoundingBox:
     topleft: VecInt = attr.field(converter=VecInt)
     size: VecInt = attr.field(converter=VecInt)
     axes: Tuple[str, ...] = attr.field(converter=tuple)
+    index: VecInt = attr.field(converter=VecInt)
     bottomright: VecInt = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
     color: Optional[Tuple[float, float, float, float]] = None
 
     def __attrs_post_init__(self) -> None:
-        assert len(self.topleft) == len(self.size) == len(self.axes), (
-            f"The dimensions of topleft, size and axes ({len(self.topleft)}, "
-            + f"{len(self.size)} and {len(self.axes)} dimensions) do not match."
+        assert len(self.topleft) == len(self.size) == len(self.axes) == len(self.index), (
+            f"The dimensions of topleft, size, axes and index ({len(self.topleft)}, "
+            + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
         )
         if not self._is_sorted():
             self._sort_positions_of_axes()
@@ -63,38 +64,23 @@ class NDBoundingBox:
 
     def _sort_positions_of_axes(self) -> None:
         # Bring topleft and size in required order
-        # ('x', 'y', 'z', <alphabetically sorted remaining axes>)
+        # defined in axisOrder and index of additionalAxes
 
-        size, topleft, axes = zip(
-            *sorted(zip(self.size, self.topleft, self.axes), key=lambda x: x[2])
+        size, topleft, axes, index = zip(
+            *sorted(zip(self.size, self.topleft, self.axes, self.index), key=lambda x: x[3])
         )
         object.__setattr__(self, "size", VecInt(size))
         object.__setattr__(self, "topleft", VecInt(topleft))
         object.__setattr__(self, "axes", axes)
-        try:
-            source = [self.axes.index("x"), self.axes.index("y"), self.axes.index("z")]
-        except ValueError as err:
-            raise ValueError(
-                "There are at least 3 dimensions needed with names `x`, `y` and `z`."
-            ) from err
-        target = [0, 1, 2]
-        object.__setattr__(self, "size", self.size.moveaxis(source, target))
-        object.__setattr__(self, "topleft", self.topleft.moveaxis(source, target))
-        object.__setattr__(
-            self,
-            "axes",
-            ("x", "y", "z", *(e for e in self.axes if e not in ["x", "y", "z"])),
-        )
+        object.__setattr__(self, "index", index)
 
     def _is_sorted(self) -> bool:
-        if self.axes[0:3] != ["x", "y", "z"]:
-            return False
         return all(
-            self.axes[i] < self.axes[i + 1] for i in range(3, len(self.axes) - 2)
+            self.index[i - 1] < self.index[i] for i in range(1, len(self.index))
         )
 
     def with_additional_axis(
-        self, name: str, extent: Tuple[int, int]
+        self, name: str, extent: Tuple[int, int], index: Optional[int]= None
     ) -> "NDBoundingBox":
         assert name not in self.axes, "The identifier of the axis is already taken."
         start, end = extent
@@ -103,6 +89,7 @@ class NDBoundingBox:
             topleft=(*self.topleft, start),
             size=(*self.size, end - start),
             axes=(*self.axes, name),
+            index=(*self.index, index if not index is None else max(self.index) + 1)
         )
 
     def with_name(self, name: Optional[str]) -> "NDBoundingBox":
@@ -158,19 +145,51 @@ class NDBoundingBox:
     
     @classmethod
     def from_wkw_dict(cls, bbox: Dict) -> "NDBoundingBox":
-        # TODO: include index in nd_bounding_box to clarify axis order
-        return cls(bbox["topLeft"], bbox["size"], bbox["axes"])
+        topleft: List[int] = bbox["topLeft"]
+        size: List[int] = [bbox["width"], bbox["height"], bbox["depth"]]
+        axes: List[str] = ["x", "y", "z"]
+        index: List[int] = [0, 1, 2]
+
+        if "axisOrder" in bbox:
+            axes = list(bbox["axisOrder"].keys())
+            index = [bbox["axisOrder"][axis] for axis in axes]
+
+            if "additionalAxes" in bbox:
+                assert "axisOrder" in bbox, ""
+                for axis in bbox["additionalAxes"]:
+                    topleft.append(axis["bounds"][0])
+                    size.append(axis["bounds"][1] - axis["bounds"][0])
+                    axes.append(axis["name"])
+                    index.append(axis["index"])
+
+        return cls(topleft, size, axes, index)
 
 
     def to_wkw_dict(self) -> dict:
+        topleft = [None, None, None]
+        size = [None, None, None]
+        additional_axes = []
+        for index, axis in enumerate(self.axes):
+            if axis == "x":
+                topleft[0] = self.topleft[index]
+                size[0] = self.size[index]
+            elif axis == "y":
+                topleft[1] = self.topleft[index]
+                size[1] = self.size[index]
+            elif axis == "z":
+                topleft[2] = self.topleft[index]
+                size[2] = self.size[index]
+            else:
+                additional_axes.append({"name": axis, "bounds": [self.topleft[index], self.bottomright[index]], "index": index})
+
         return {
-            "topLeft": self.topleft.to_list(),
-            "size": self.size.to_list(),
-            "axes": self.axes,
+            "topLeft": topleft,
+            "size": size,
+            "additionalAxes": additional_axes,
         }
 
     def to_config_dict(self) -> dict:
-        return {"topleft": self.topleft.to_list(), "size": self.size.to_list()}
+        return {"topleft": self.topleft.to_list(), "size": self.size.to_list(), "axes": self.axes}
 
     def to_checkpoint_name(self) -> str:
         return f"{'_'.join(str(element) for element in self.topleft)}_{'_'.join(str(element) for element in self.size)}"
@@ -189,9 +208,7 @@ class NDBoundingBox:
             raise NotImplementedError()
 
     def _check_compatibility(self, other) -> None:
-        if self.axes == other.axes:
-            return
-        else:
+        if self.axes != other.axes:
             raise ValueError(
                 f"Operation with two bboxes is only possible if they have the same axes. {self.axes} != {other.axes}"
             )
@@ -300,7 +317,7 @@ class NDBoundingBox:
         aligned_rounddown = rounddown + margin_to_rounddown
         if ceil:
             return attr.evolve(
-                self, 
+                self,
                 topleft=VecInt(*aligned_roundup, *self.topleft[3:]), 
                 size=VecInt(*(aligned_rounddown - aligned_roundup), *self.topleft[3:])
             )
@@ -371,7 +388,7 @@ class NDBoundingBox:
                 for i in range(len(self.axes))
             ]
         ):
-            yield NDBoundingBox(topleft=coordinates, size=chunk_shape, axes=self.axes)
+            yield NDBoundingBox(topleft=coordinates, size=chunk_shape, axes=self.axes, index=self.index)
 
     def volume(self) -> int:
         return self.size.prod()

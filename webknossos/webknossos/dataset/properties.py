@@ -240,13 +240,13 @@ for cls in [
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
-def mag_view_properties_post_structure(d: Dict[str, Any]) -> Dict[str, Any]:
+def mag_view_properties_post_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
     d["resolution"] = d["mag"]
     del d["mag"]
     return d
 
 
-def mag_view_properties_pre_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
+def mag_view_properties_pre_structure(d: Dict[str, Any]) -> Dict[str, Any]:
     d["mag"] = d["resolution"]
     del d["resolution"]
     return d
@@ -263,13 +263,14 @@ def layer_properties_post_unstructure(
         d = converter_fn(obj)
         if d["dataFormat"] == "wkw":
             d["wkwResolutions"] = [
-                mag_view_properties_post_structure(m) for m in d["mags"]
+                mag_view_properties_post_unstructure(m) for m in d["mags"]
             ]
             del d["mags"]
         # json expects nd_bounding_box to be represented as bounding_box and additional_axes
         bbox = d["boundingBox"]
-        topleft: List[int] = bbox["topLeft"][:3]
-        width, height, depth = bbox["size"][:3]
+        x_pos, y_pos, z_pos = bbox["axes"].index("x"), bbox["axes"].index("y"), bbox["axes"].index("z")
+        topleft: List[int] = [bbox["topLeft"][x_pos], bbox["topLeft"][y_pos], bbox["topLeft"][z_pos]]
+        width, height, depth = [bbox["size"][x_pos], bbox["size"][y_pos], bbox["size"][z_pos]]
         additional_axes = [{"name": name, "bounds": (top_left, top_left + size)} for name, top_left, size in zip(bbox["axes"][3:], bbox["topLeft"][3:], bbox["size"][3:])]
         d["boundingBox"] = {"topLeft": topleft, "width": width, "height": height, "depth": depth}
         d["additionalAxes"] = additional_axes
@@ -293,22 +294,18 @@ def layer_properties_pre_structure(
     ) -> Union[LayerProperties, SegmentationLayerProperties]:
         if d["dataFormat"] == "wkw":
             d["mags"] = [
-                mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
+                mag_view_properties_pre_structure(m) for m in d["wkwResolutions"]
             ]
             del d["wkwResolutions"]
         # bounding_box and additional_axes are internally handled as nd_bounding_box
-        bbox = d["boundingBox"]
-        topleft: List[int] = bbox["topLeft"]
-        size: List[int] = [bbox["width"], bbox["height"], bbox["depth"]]
-        axes: List[str] = ["x", "y", "z"]
         if "additionalAxes" in d:
-            for axis in d["additionalAxes"]:
-                axes.append(axis["name"])
-                topleft.append(axis["bounds"][0])
-                size.append(axis["bounds"][1] - axis["bounds"][0])
-        nd_bbox = {"topLeft": topleft, "size": size, "axes": axes}
-        d["boundingBox"] = nd_bbox
-        del d["additionalAxes"]
+            d["boundingBox"]["additionalAxes"] = d["additionalAxes"]
+            del d["additionalAxes"]
+        if "axisOrder" in (first_mag := d["mags"][0]):
+            assert all(first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"])
+            d["boundingBox"]["axisOrder"] = first_mag["axisOrder"]
+
+
         obj = converter_fn(d, type_value)
         return obj
 

@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayException, BaseArray, DataFormat
@@ -477,7 +478,7 @@ class Layer:
         file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
-        Creates a new mag called and adds it to the dataset, in case it did not exist before.
+        Creates a new mag and adds it to the dataset, in case it did not exist before.
         Then, returns the mag.
 
         See `add_mag` for more information.

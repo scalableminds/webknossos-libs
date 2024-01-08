@@ -34,6 +34,7 @@ class BoundingBox(NDBoundingBox):
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
     axes: Tuple[str, str, str] = attr.field(default=("x", "y", "z"))
+    index: Vec3Int = attr.field(default=Vec3Int(0, 1, 2))
     bottomright: Vec3Int = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
@@ -54,7 +55,7 @@ class BoundingBox(NDBoundingBox):
         object.__setattr__(self, "bottomright", self.topleft + self.size)
 
     def with_additional_axis(
-        self, name: str, extent: Tuple[int, int]
+        self, name: str, extent: Tuple[int, int], index: Optional[int] = None
     ) -> "NDBoundingBox":
         assert name not in self.axes, f"The name '{name}' of the axis is already taken."
         new_topleft = min(extent)
@@ -64,6 +65,7 @@ class BoundingBox(NDBoundingBox):
             topleft=(*self.topleft, new_topleft),
             size=(*self.size, new_size),
             axes=(*self.axes, name),
+            index=(*self.index, index if not index is None else max(self.index) + 1)
         )
 
     def with_bounds_x(
