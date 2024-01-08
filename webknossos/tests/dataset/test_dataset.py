@@ -1060,11 +1060,15 @@ def test_dataset_bounding_box_calculation(
     ds = Dataset.open(ds_path)
     layer = ds.get_layer("color")
     # BoundingBox(topleft=(0, 0, 0), size=(24, 24, 24))
-    assert layer.bounding_box == ds.calculate_bounding_box(), "The calculated bounding box of the dataset does not " +\
-        "match the color layer's bounding box."
-    layer.bounding_box = layer.bounding_box.with_size((512,512,512))
-    assert layer.bounding_box == ds.calculate_bounding_box(), "The calculated bounding box of the dataset does not " +\
-        "match the color layer's enlarged bounding box."
+    assert layer.bounding_box == ds.calculate_bounding_box(), (
+        "The calculated bounding box of the dataset does not "
+        + "match the color layer's bounding box."
+    )
+    layer.bounding_box = layer.bounding_box.with_size((512, 512, 512))
+    assert layer.bounding_box == ds.calculate_bounding_box(), (
+        "The calculated bounding box of the dataset does not "
+        + "match the color layer's enlarged bounding box."
+    )
 
 
 def test_get_view() -> None:
