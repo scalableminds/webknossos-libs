@@ -819,7 +819,7 @@ class Dataset:
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or NDBoundingBox((0, 0, 0), (0, 0, 0), ("x", "y", "z")),
+            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
             element_class=_dtype_per_channel_to_element_class(
                 dtype_per_channel, num_channels
             ),

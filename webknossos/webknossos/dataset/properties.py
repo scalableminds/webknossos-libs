@@ -6,6 +6,8 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from webknossos.geometry.bounding_box import BoundingBox
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
@@ -140,7 +142,7 @@ class AxisProperties:
 class LayerProperties:
     name: str
     category: LayerCategoryType
-    bounding_box: NDBoundingBox
+    bounding_box: Union[BoundingBox, NDBoundingBox]
     element_class: str
     data_format: DataFormat
     mags: List[MagViewProperties]
@@ -268,12 +270,13 @@ def layer_properties_post_unstructure(
             del d["mags"]
         # json expects nd_bounding_box to be represented as bounding_box and additional_axes
         bbox = d["boundingBox"]
-        x_pos, y_pos, z_pos = bbox["axes"].index("x"), bbox["axes"].index("y"), bbox["axes"].index("z")
-        topleft: List[int] = [bbox["topLeft"][x_pos], bbox["topLeft"][y_pos], bbox["topLeft"][z_pos]]
-        width, height, depth = [bbox["size"][x_pos], bbox["size"][y_pos], bbox["size"][z_pos]]
-        additional_axes = [{"name": name, "bounds": (top_left, top_left + size)} for name, top_left, size in zip(bbox["axes"][3:], bbox["topLeft"][3:], bbox["size"][3:])]
-        d["boundingBox"] = {"topLeft": topleft, "width": width, "height": height, "depth": depth}
-        d["additionalAxes"] = additional_axes
+        if "axes" in bbox:
+            x_pos, y_pos, z_pos = bbox["axes"].index("x"), bbox["axes"].index("y"), bbox["axes"].index("z")
+            topleft: List[int] = [bbox["topLeft"][x_pos], bbox["topLeft"][y_pos], bbox["topLeft"][z_pos]]
+            width, height, depth = [bbox["size"][x_pos], bbox["size"][y_pos], bbox["size"][z_pos]]
+            additional_axes = [{"name": name, "bounds": (top_left, top_left + size)} for name, top_left, size in zip(bbox["axes"][3:], bbox["topLeft"][3:], bbox["size"][3:])]
+            d["boundingBox"] = {"topLeft": topleft, "width": width, "height": height, "depth": depth}
+            d["additionalAxes"] = additional_axes
         return d
 
     return __layer_properties_post_unstructure
@@ -301,9 +304,13 @@ def layer_properties_pre_structure(
         if "additionalAxes" in d:
             d["boundingBox"]["additionalAxes"] = d["additionalAxes"]
             del d["additionalAxes"]
-        if "axisOrder" in (first_mag := d["mags"][0]):
-            assert all(first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"])
-            d["boundingBox"]["axisOrder"] = first_mag["axisOrder"]
+        if len(d["mags"]) > 0:
+            first_mag = d["mags"][0]
+            if "axisOrder" in first_mag:
+                assert first_mag["axisOrder"]["c"] == 0
+                assert all(first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"])
+                d["boundingBox"]["axisOrder"] = first_mag["axisOrder"]
+                del d["boundingBox"]["axisOrder"]["c"]
 
 
         obj = converter_fn(d, type_value)
@@ -311,6 +318,16 @@ def layer_properties_pre_structure(
 
     return __layer_properties_pre_structure
 
+def disambiguate_bounding_box(obj: dict, _: Any) -> Union[BoundingBox, NDBoundingBox]:
+    if "additionalAxes" in obj:
+        return dataset_converter.structure(obj, NDBoundingBox)
+    else:
+        return dataset_converter.structure(obj, BoundingBox)
+
+
+dataset_converter.register_structure_hook(
+    Union[BoundingBox, NDBoundingBox], disambiguate_bounding_box,
+)
 
 for cls in [
     LayerProperties,
@@ -357,7 +374,7 @@ def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
         raise RuntimeError(
             "Failed to read the properties of a layer: the category has to be `color` or `segmentation`."
         )
-
+    
 
 dataset_converter.register_structure_hook(
     Union[

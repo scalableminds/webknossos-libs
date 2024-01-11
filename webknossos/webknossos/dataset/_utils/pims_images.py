@@ -143,11 +143,6 @@ class PimsImages:
             self.dtype = images.dtype
 
             if isinstance(images, pims.FramesSequenceND):
-                # TODO: assertion that phrohibites nd data
-                assert all(
-                    axis in "xyzct" for axis in images.axes
-                ), f"Found unknown axes {set(images.axes) - set('xyzct')}"
-
                 self._default_coords = {}
                 self._init_c_axis = False
                 if isinstance(images, pims.imageio_reader.ImageIOReader):
@@ -512,8 +507,8 @@ class PimsImages:
                 for image_slice in images[z_start:z_end]:
                     image_slice = np.array(image_slice)
                     # place channels first
-                    if self._img_dims.endswith("c"):
-                        image_slice = np.moveaxis(image_slice, source=-1, destination=0)
+                    if "c" in self._img_dims:
+                        image_slice = np.moveaxis(image_slice, source=self._img_dims.index("c"), destination=0)
                     # ensure the last two axes are xy:
                     if ("yx" in self._img_dims and not self._swap_xy) or (
                         "xy" in self._img_dims and self._swap_xy

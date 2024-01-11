@@ -4,17 +4,18 @@ import pims
 
 import webknossos as wk
 
-TIF_PATH = Path(".") / "webknossos" / "testdata" / "4D" / "4D-series.ome.tif"
+TIF_PATH = Path(".") / "webknossos" / "testdata" / "4D"
 ZARR_PATH = Path("..") / "idr0101A-4d-zarr"
+OUTPUT = Path('.') / "testoutput"
 
 
 def from_images_import():
-    reader = pims.ImageSequenceND([str(TIF_PATH)])
-    print(reader.sizes)
-    print(isinstance(reader, pims.FramesSequenceND))
-    # wk.Dataset.from_images(
-    #     input_path, output_path, voxel_size=(10, 10, 10), data_format="zarr3"
-    # )
+    # reader = pims.Bioformats(str(TIF_PATH))
+    # print(reader.sizes)
+    # print(isinstance(reader, pims.FramesSequenceND))
+    wk.Dataset.from_images(
+        TIF_PATH, OUTPUT, voxel_size=(10, 10, 10), data_format="zarr3", use_bioformats=True
+    )
 
 
 def open_existing_dataset():
@@ -28,8 +29,8 @@ def open_existing_dataset():
 
 def main() -> None:
     """Imports a dataset with more than 3 dimensions."""
-    # from_images_import()
-    open_existing_dataset()
+    from_images_import()
+    # open_existing_dataset()
 
 
 if __name__ == "__main__":

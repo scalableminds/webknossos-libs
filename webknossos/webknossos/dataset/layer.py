@@ -419,7 +419,7 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    {key: value for key, value in zip(('c', *self.bounding_box.axes), (0, *self.bounding_box.index))}
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
@@ -456,7 +456,7 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    {key: value for key, value in zip(('c', *self.bounding_box.axes), (0, *self.bounding_box.index))}
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
