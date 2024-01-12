@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.13...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.14...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added a method to the Datasets class that calculates a dataset's bounding box covering all layers. [#975](https://github.com/scalableminds/webknossos-libs/pull/975)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.14.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.14) - 2024-01-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.13...v0.14.14)
+
+### Added
+- Added a method to the Datasets class that calculates a dataset's bounding box covering all layers. [#975](https://github.com/scalableminds/webknossos-libs/pull/975)
 
 
 ## [0.14.13](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.13) - 2024-01-02
