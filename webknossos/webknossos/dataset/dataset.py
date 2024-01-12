@@ -1484,6 +1484,19 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
+    def calculate_bounding_box(self) -> BoundingBox:
+        """
+        Calculates and returns the enclosing bounding box of all data layers of the dataset.
+        """
+        all_layers = list(self.layers.values())
+        if len(all_layers) <= 0:
+            return BoundingBox.empty()
+        dataset_bbox = all_layers[0].bounding_box
+        for layer in all_layers[1:]:
+            bbox = layer.bounding_box
+            dataset_bbox = dataset_bbox.extended_by(bbox)
+        return dataset_bbox
+
     def copy_dataset(
         self,
         new_dataset_path: Union[str, Path],
