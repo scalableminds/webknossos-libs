@@ -168,27 +168,31 @@ class PimsImages:
                         self._default_coords["c"] = 0
                     self._img_dims = "yx"
 
-                self._iter_dim = ""
+                _iter_dim = []
+                for axis in images.sizes:
+                    if axis not in ["x", "y", "c"]:
+                        _iter_dim.append(axis)
+                self._iter_dim = tuple(_iter_dim)
 
-                if images.sizes.get("z", 1) > 1:
-                    self._iter_dim = "z"
-                elif "z" in images.axes:
-                    self._default_coords["z"] = 0
+                # if images.sizes.get("z", 1) > 1:
+                #     self._iter_dim = "z"
+                # elif "z" in images.axes:
+                #     self._default_coords["z"] = 0
 
-                if timepoint is None:
-                    if images.sizes.get("t", 1) > 1:
-                        if self._iter_dim == "":
-                            self._iter_dim = "t"
-                        else:
-                            self._default_coords["t"] = 0
-                            self._possible_layers["timepoint"] = list(
-                                range(0, images.sizes["t"])
-                            )
-                    elif "t" in images.axes:
-                        self._default_coords["t"] = 0
-                else:
-                    assert "t" in images.axes
-                    self._default_coords["t"] = timepoint
+                # if timepoint is None:
+                #     if images.sizes.get("t", 1) > 1:
+                #         if self._iter_dim == "":
+                #             self._iter_dim = "t"
+                #         else:
+                #             self._default_coords["t"] = 0
+                #             self._possible_layers["timepoint"] = list(
+                #                 range(0, images.sizes["t"])
+                #             )
+                #     elif "t" in images.axes:
+                #         self._default_coords["t"] = 0
+                # else:
+                #     assert "t" in images.axes
+                #     self._default_coords["t"] = timepoint
             else:
                 # Fallback for generic pims classes that do not name their
                 # dimensions as pims.FramesSequenceND does:
