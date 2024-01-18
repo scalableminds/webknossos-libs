@@ -73,7 +73,6 @@ def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
 
 class PimsImages:
     dtype: DTypeLike
-    expected_shape: VecInt
     num_channels: int
 
     def __init__(
@@ -132,7 +131,6 @@ class PimsImages:
 
         ## attributes that will also be set in __init__()
         # dtype
-        # expected_shape
         # num_channels
         # _first_n_channels
 
@@ -470,7 +468,7 @@ class PimsImages:
 
     def copy_to_view(
         self,
-        args: Tuple[int, int],
+        args: Tuple[int, int, Optional[Dict[str, int]]],
         mag_view: MagView,
         is_segmentation: bool,
         dtype: Optional[DTypeLike] = None,
@@ -480,7 +478,7 @@ class PimsImages:
         copy_to_view returns an iterable of image shapes and largest segment ids. When using this
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
-        z_start, z_end = args
+        z_start, z_end, additional_axes_args = args
         shapes = []
         max_id: Optional[int]
         if is_segmentation:
@@ -492,6 +490,9 @@ class PimsImages:
             if self._flip_z:
                 images = images[::-1]  # pylint: disable=unsubscriptable-object
             with mag_view.get_buffered_slice_writer(
+                # TODO according to the additional_axes_args a relative bounding box is
+                # computed that is passed to the buffered slice writer
+                relative_bounding_box=NDBoundingBox(topleft=(0, 0, z_start * mag_view.mag.z) ...)
                 relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
                 # copy_to_view is typically used in a multiprocessing-context. Therefore the
@@ -542,6 +543,7 @@ class PimsImages:
 
     @cached_property
     def expected_bbox(self) -> Union[NDBoundingBox, BoundingBox]:
+        # replaces the previous expected_shape to enable n-dimensional input files
         with self._open_images() as images:
             if isinstance(images, list):
                 images_shape = (len(images),) + cast(
@@ -553,6 +555,7 @@ class PimsImages:
             y_index = self._img_dims.find("y") + 1
             if self._swap_xy:
                 x_index, y_index = y_index, x_index
+            
             if self._iter_dim is None or len(self._iter_dim) == 0:
                 return BoundingBox((0, 0, 0), (images_shape[x_index], images_shape[y_index], images_shape[0]))
             else:
@@ -565,7 +568,7 @@ class PimsImages:
                             axes[axis] = 0
             topleft = VecInt.zeros(len(axes))
             axes_names, size = zip(*axes.items())
-
+            #TODO get current axis order from file and use it for nd bbbox
             return NDBoundingBox(topleft, size, axes_names, index=(i+1 for i, _ in enumerate(axes_names)))
 
 
@@ -625,4 +628,4 @@ def has_image_z_dimension(
         flip_z=False,
     )
 
-    return pims_images.expected_bbox. > 1
+    return pims_images.expected_bbox.get_shape("z") > 1

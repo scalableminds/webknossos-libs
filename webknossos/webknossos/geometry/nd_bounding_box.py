@@ -206,6 +206,33 @@ class NDBoundingBox:
             return self.topleft == other.topleft and self.size == other.size
         else:
             raise NotImplementedError()
+        
+    def get_shape(self, key) -> int:
+        try:
+            index = self.axes.index(key)
+            return self.size[index]
+        except ValueError as err:
+            raise ValueError(f"Axis {key} doesn't exist in NDBoundingBox.") from err
+        
+    def get_3d(self, attr_name: str) -> Vec3Int:
+        axes = ("x", "y", "z")
+        attr_3d = []
+
+        for axis in axes:
+            index = self.axes.index(axis)
+            attr_3d.append(getattr(self, attr_name)[index])
+        
+        return Vec3Int(attr_3d)
+    
+    def set_3d(self, attr_name: str, value: Vec3Int) -> VecInt:
+        axes = ("x", "y", "z")
+        modified_attr = getattr(self, attr_name).to_list()
+
+        for i, axis in enumerate(axes):
+            index = self.axes.index(axis)
+            modified_attr[index] = value[i]
+        
+        return VecInt(modified_attr)
 
     def _check_compatibility(self, other) -> None:
         if self.axes != other.axes:
@@ -257,24 +284,29 @@ class NDBoundingBox:
         mag_vec = mag.to_vec3_int()
 
         assert (
-            Vec3Int(self.topleft.to_xyz()) % mag_vec == Vec3Int.zeros()
+            self.get_3d("topleft") % mag_vec == Vec3Int.zeros()
         ), f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
         assert (
-            Vec3Int(self.bottomright.to_xyz()) % mag_vec == Vec3Int.zeros()
+            self.get_3d("bottomright") % mag_vec == Vec3Int.zeros()
         ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+
+        new_topleft = self.set_3d("topleft", Vec3Int(self.get_3d("topleft") * mag_vec))
+        new_size = self.set_3d("size", Vec3Int(self.get_3d("size") * mag_vec))
 
         return attr.evolve(
             self,
-            topleft=VecInt(*Vec3Int(self.topleft.to_xyz()) // mag_vec, *self.topleft[3:]),
-            size=VecInt(*Vec3Int(self.size.to_xyz()) // mag_vec, *self.size[3:]),
+            topleft=new_topleft,
+            size=new_size,
         )
 
     def from_mag_to_mag1(self, from_mag: Mag) -> "NDBoundingBox":
         mag_vec = from_mag.to_vec3_int()
+        new_topleft = self.set_3d("topleft", Vec3Int(self.get_3d("topleft") * mag_vec))
+        new_size = self.set_3d("size", Vec3Int(self.get_3d("size") * mag_vec))
         return attr.evolve(
             self,
-            topleft=VecInt(*Vec3Int(self.topleft) * mag_vec, *self.topleft[3:]),
-            size=VecInt(*Vec3Int(self.size) * mag_vec, *self.size[3:]),
+            topleft=new_topleft,
+            size=new_size,
         )
 
     def _align_with_mag_slow(self, mag: Mag, ceil: bool = False) -> "NDBoundingBox":
@@ -307,8 +339,8 @@ class NDBoundingBox:
         # This does the same as _align_with_mag_slow, which is more readable.
         # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
         mag_vec = mag.to_vec3_int() if isinstance(mag, Mag) else mag
-        topleft = Vec3Int(self.topleft[:3])
-        bottomright= Vec3Int(self.bottomright[:3])
+        topleft = self.get_3d("topleft")
+        bottomright= self.get_3d("bottomright")
         roundup = topleft if ceil else bottomright
         rounddown = bottomright if ceil else topleft
         margin_to_roundup = roundup % mag_vec
@@ -408,4 +440,9 @@ class NDBoundingBox:
         ]
 
     def offset(self, vector: VecIntLike) -> "NDBoundingBox":
-        return attr.evolve(self, topleft=self.topleft + VecInt(vector))
+        vec_int = VecInt(vector)
+        if len(vec_int) == 3:
+            new_topleft = self.set_3d("topleft", Vec3Int(self.get_3d("topleft") + vec_int))
+            return attr.evolve(self, topleft=new_topleft)
+        else:
+            return attr.evolve(self, topleft=self.topleft + vec_int)

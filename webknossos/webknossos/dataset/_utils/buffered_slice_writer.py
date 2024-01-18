@@ -4,10 +4,12 @@ import warnings
 from logging import error, info
 from os import getpid
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, List, Optional, Type
+from typing import TYPE_CHECKING, Generator, List, Optional, Type, Union
 
 import numpy as np
 import psutil
+
+from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 from ...geometry import BoundingBox, Vec3Int, Vec3IntLike
 
@@ -43,6 +45,8 @@ class BufferedSliceWriter:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,
+        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,
         use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_writer()`"""

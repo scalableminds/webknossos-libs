@@ -1092,7 +1092,6 @@ class Dataset:
             is_segmentation=category == "segmentation",
         )
         possible_layers = pims_images.get_possible_layers()
-        additional_axes = pims_images.get_additional_axes()
         # Check if 4 color channels should be converted to
         # 3 color channels (rbg)
         if (
@@ -1187,8 +1186,9 @@ class Dataset:
                 num_channels=pims_images.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
+            # When the expected bbox is 2D the chunk_shape is set to 2D too.
             if (
-                pims_images.expected_shape.z == 1
+                pims_images.expected_bbox.get_shape("z") == 1
                 and layer.data_format == DataFormat.Zarr
             ):
                 if chunk_shape is None:
@@ -1230,11 +1230,19 @@ class Dataset:
             )
 
             args = []
-            for z_start in range(0, pims_images.expected_shape.z, batch_size):
-                z_end = min(z_start + batch_size, pims_images.expected_shape.z)
-                # return shapes and set to union when using --pad
-                args.append((z_start, z_end))
-            print(args)
+            additional_axes_args = {x: 0 for x in pims_images.expected_bbox.axes if x not in ("x", "y", "z")}
+            z_shape = pims_images.expected_bbox.get_shape("z")
+            for z_start in range(0, z_shape, batch_size):
+                z_end = min(z_start + batch_size, z_shape)
+                if not additional_axes_args:
+                    args.append((z_start, z_end))
+                else:
+                    for axis in additional_axes_args:
+                        axis_shape = pims_images.expected_bbox.get_shape(axis)
+                        for axis_index in range(0, axis_shape):
+                            additional_axes_args[axis] = axis_index
+                            args.append((z_start, z_end, additional_axes_args))
+            
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
                 # However, dataset borders might change between different parallelized writes, when sizes differ.
@@ -1264,17 +1272,17 @@ class Dataset:
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
                 actual_size = Vec3Int(
-                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
+                    dimwise_max(shapes) + (pims_images.expected_bbox.get_shape("z"),)
                 )
                 layer.bounding_box = (
                     BoundingBox((0, 0, 0), actual_size)
                     .from_mag_to_mag1(mag)
                     .offset(topleft)
                 )
-            if pims_images.expected_shape != actual_size:
+            if pims_images.expected_bbox != actual_size:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
-                    + f"New size is {actual_size}, expected {pims_images.expected_shape}."
+                    + f"New size is {actual_size}, expected {pims_images.expected_bbox.get_shape('z')}."
                 )
             if first_layer is None:
                 first_layer = layer

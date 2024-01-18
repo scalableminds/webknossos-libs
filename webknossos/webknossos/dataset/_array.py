@@ -605,7 +605,7 @@ class ZarritaArray(BaseArray):
     def ensure_size(
         self, new_shape: Vec3IntLike, align_with_shards: bool = True, warn: bool = False
     ) -> None:
-        new_shape = Vec3Int(new_shape.to_xyz())
+        new_shape = Vec3Int(new_shape)
         zarray = self._zarray
 
         new_shape_tuple = (

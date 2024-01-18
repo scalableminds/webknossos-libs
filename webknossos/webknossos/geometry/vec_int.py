@@ -72,27 +72,6 @@ class VecInt(tuple):
     def from_str(string: str) -> "VecInt":
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
-    @property
-    def x(self) -> int:
-        return self[0]
-
-    @property
-    def y(self) -> int:
-        return self[1]
-
-    @property
-    def z(self) -> int:
-        return self[2]
-
-    def with_x(self, new_x: int) -> "VecInt":
-        return self.__class__(new_x, self.y, self.z, *self[3:])
-
-    def with_y(self, new_y: int) -> "VecInt":
-        return self.__class__(self.x, new_y, self.z, *self[3:])
-
-    def with_z(self, new_z: int) -> "VecInt":
-        return self.__class__(self.x, self.y, new_z, *self[3:])
-
     def with_replaced(self, index: int, new_element: int) -> "VecInt":
         """Returns a new ND Vector with a replaced element at a given index."""
 
@@ -106,10 +85,6 @@ class VecInt(tuple):
 
     def to_tuple(self) -> Tuple[int, ...]:
         return tuple(self)
-
-    def to_xyz(self) -> Tuple[int, int, int]:
-        """Returns the x, y and z component of the n dimensional vector. Other axes are ignored."""
-        return (self.x, self.y, self.z)
 
     def contains(self, needle: int) -> bool:
         return any(element == needle for element in self)

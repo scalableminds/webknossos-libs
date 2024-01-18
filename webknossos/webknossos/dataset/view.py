@@ -13,13 +13,15 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    Union,
 )
 
 import numpy as np
 import wkw
+
 from cluster_tools import Executor
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..utils import (
     get_executor_for_args,
     get_rich_progress,
@@ -674,6 +676,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceWriter":
         """
@@ -682,8 +686,10 @@ class View:
 
         Arguments:
         * The user can specify where the writer should start:
-            * `relative_offset` in Mag(1)
-            * `absolute_offset` in Mag(1)
+            * `relative_offset` in Mag(1) -> not usable for n-dimensional data
+            * `absolute_offset` in Mag(1) -> not usable for n-dimensional data
+            * `relative_bounding_box` in Mag(1)
+            * `absolute_bounding_box` in Mag(1)
             * ⚠️ deprecated: `offset` in the current Mag,
               used to be relative for `View` and absolute for `MagView`
         * `buffer_size`: amount of slices that get buffered
@@ -717,6 +723,8 @@ class View:
             dimension=dimension,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
+            relative_bounding_box=relative_bounding_box,
+            absolute_bounding_box=absolute_bounding_box,
             use_logging=use_logging,
         )
 

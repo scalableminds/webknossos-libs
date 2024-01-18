@@ -54,6 +54,28 @@ class Vec3Int(VecInt):
 
         return cast(cls, super().__new__(cls, as_tuple))
 
+
+    @property
+    def x(self) -> int:
+        return self[0]
+
+    @property
+    def y(self) -> int:
+        return self[1]
+
+    @property
+    def z(self) -> int:
+        return self[2]
+
+    def with_x(self, new_x: int) -> "Vec3Int":
+        return Vec3Int.from_xyz(new_x, self.y, self.z)
+
+    def with_y(self, new_y: int) -> "Vec3Int":
+        return Vec3Int.from_xyz(self.x, new_y, self.z)
+
+    def with_z(self, new_z: int) -> "Vec3Int":
+        return Vec3Int.from_xyz(self.x, self.y, new_z)
+
     @staticmethod
     def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
         """Use Vec3Int.from_xyz for fast construction."""
