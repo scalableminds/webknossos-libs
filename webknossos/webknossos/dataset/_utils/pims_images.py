@@ -1,5 +1,6 @@
 import warnings
 from contextlib import contextmanager, nullcontext
+from functools import cached_property
 from itertools import chain
 from os import PathLike
 from pathlib import Path
@@ -23,6 +24,9 @@ from urllib.error import HTTPError
 import numpy as np
 from natsort import natsorted
 from numpy.typing import DTypeLike
+
+from webknossos.geometry.bounding_box import BoundingBox
+from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 # pylint: disable=unused-import
 try:
@@ -261,12 +265,6 @@ class PimsImages:
         #############################
 
         with self._open_images() as images:
-            if isinstance(images, list):
-                images_shape = (len(images),) + cast(
-                    pims.FramesSequence, images[0]
-                ).shape
-            else:
-                images_shape = images.shape  # pylint: disable=no-member
             c_index = self._img_dims.find("c")
             if c_index == -1:
                 self.num_channels = 1
@@ -275,14 +273,6 @@ class PimsImages:
                 # we need to offset the index by one before accessing the images_shape.
                 # images_shape corresponds to (z, *_img_dims)
                 self.num_channels = images_shape[c_index + 1]
-
-            x_index = self._img_dims.find("x") + 1
-            y_index = self._img_dims.find("y") + 1
-            if swap_xy:
-                x_index, y_index = y_index, x_index
-            self.expected_shape = Vec3Int(
-                images_shape[x_index], images_shape[y_index], images_shape[0]
-            )
 
         self._first_n_channels = None
         if self._channel is not None:
@@ -550,6 +540,34 @@ class PimsImages:
         else:
             return self._possible_layers
 
+    @cached_property
+    def expected_bbox(self) -> Union[NDBoundingBox, BoundingBox]:
+        with self._open_images() as images:
+            if isinstance(images, list):
+                images_shape = (len(images),) + cast(
+                    pims.FramesSequence, images[0]
+                ).shape
+            else:
+                images_shape = images.shape  # pylint: disable=no-member
+            x_index = self._img_dims.find("x") + 1
+            y_index = self._img_dims.find("y") + 1
+            if self._swap_xy:
+                x_index, y_index = y_index, x_index
+            if self._iter_dim is None or len(self._iter_dim) == 0:
+                return BoundingBox((0, 0, 0), (images_shape[x_index], images_shape[y_index], images_shape[0]))
+            else:
+                axes = {"x": images_shape[x_index], "y": images_shape[y_index]}
+                with self._open_images() as images:
+                    for axis in self._iter_dim:
+                        if images.sizes is not None:
+                            axes[axis] = images.sizes[axis]
+                        else:
+                            axes[axis] = 0
+            topleft = VecInt.zeros(len(axes))
+            axes_names, size = zip(*axes.items())
+
+            return NDBoundingBox(topleft, size, axes_names, index=(i+1 for i, _ in enumerate(axes_names)))
+
 
 T = TypeVar("T", bound=Tuple[int, ...])
 
@@ -607,4 +625,4 @@ def has_image_z_dimension(
         flip_z=False,
     )
 
-    return pims_images.expected_shape.z > 1
+    return pims_images.expected_bbox. > 1

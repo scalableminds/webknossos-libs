@@ -35,6 +35,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from cluster_tools import Executor
+from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -1018,7 +1019,7 @@ class Dataset:
         compress: bool = False,
         *,
         ## other arguments
-        topleft: Vec3IntLike = Vec3Int.zeros(),  # in Mag(1)
+        topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -1091,6 +1092,7 @@ class Dataset:
             is_segmentation=category == "segmentation",
         )
         possible_layers = pims_images.get_possible_layers()
+        additional_axes = pims_images.get_additional_axes()
         # Check if 4 color channels should be converted to
         # 3 color channels (rbg)
         if (
@@ -1204,11 +1206,7 @@ class Dataset:
                 compress=compress,
             )
             mag = mag_view.mag
-            layer.bounding_box = (
-                BoundingBox((0, 0, 0), pims_images.expected_shape)
-                .from_mag_to_mag1(mag)
-                .offset(topleft)
-            )
+            layer.bounding_box = pims_images.expected_bbox.from_mag_to_mag1(mag).offset(topleft)
 
             if batch_size is None:
                 if compress:

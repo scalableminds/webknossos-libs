@@ -13,6 +13,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from cluster_tools import Executor
+from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayException, BaseArray, DataFormat
@@ -254,11 +255,11 @@ class Layer:
         return self._dataset
 
     @property
-    def bounding_box(self) -> BoundingBox:
+    def bounding_box(self) -> Union[NDBoundingBox, BoundingBox]:
         return self._properties.bounding_box
 
     @bounding_box.setter
-    def bounding_box(self, bbox: BoundingBox) -> None:
+    def bounding_box(self, bbox: Union[NDBoundingBox, BoundingBox]) -> None:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
