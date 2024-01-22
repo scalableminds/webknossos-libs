@@ -20,6 +20,7 @@ import numpy as np
 import wkw
 
 from cluster_tools import Executor
+from webknossos.geometry.vec_int import VecInt
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -56,7 +57,7 @@ class View:
 
     _path: Path
     _array_info: ArrayInfo
-    _bounding_box: Optional[BoundingBox]
+    _bounding_box: Optional[Union[NDBoundingBox, BoundingBox]]
     _read_only: bool
     _cached_array: Optional[BaseArray]
     _mag: Mag
@@ -66,7 +67,7 @@ class View:
         path_to_mag_view: Path,
         array_info: ArrayInfo,
         bounding_box: Optional[
-            BoundingBox
+            Union[NDBoundingBox, BoundingBox]
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
         read_only: bool = False,
@@ -95,7 +96,7 @@ class View:
         return self._array._wkw_dataset.header
 
     @property
-    def bounding_box(self) -> BoundingBox:
+    def bounding_box(self) -> Union[NDBoundingBox, BoundingBox]:
         assert self._bounding_box is not None
         return self._bounding_box
 
@@ -108,7 +109,7 @@ class View:
         return self._read_only
 
     @property
-    def global_offset(self) -> Vec3Int:
+    def global_offset(self) -> VecInt:
         """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).topleft` instead."""
         warnings.warn(
             "[DEPRECATION] view.global_offset is deprecated. "
@@ -119,7 +120,7 @@ class View:
         return self.bounding_box.in_mag(self._mag).topleft
 
     @property
-    def size(self) -> Vec3Int:
+    def size(self) -> VecInt:
         """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).size` instead."""
         warnings.warn(
             "[DEPRECATION] view.size is deprecated. "
@@ -131,15 +132,15 @@ class View:
 
     def _get_mag1_bbox(
         self,
-        abs_mag1_bbox: Optional[BoundingBox] = None,
-        rel_mag1_bbox: Optional[BoundingBox] = None,
+        abs_mag1_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,
+        rel_mag1_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,
         abs_mag1_offset: Optional[Vec3IntLike] = None,
         rel_mag1_offset: Optional[Vec3IntLike] = None,
         mag1_size: Optional[Vec3IntLike] = None,
         abs_current_mag_offset: Optional[Vec3IntLike] = None,
         rel_current_mag_offset: Optional[Vec3IntLike] = None,
         current_mag_size: Optional[Vec3IntLike] = None,
-    ) -> BoundingBox:
+    ) -> Union[NDBoundingBox, BoundingBox]:
         num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
         num_offsets = _count_defined_values(
             [
@@ -199,6 +200,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
     ) -> None:
         """
         Writes the `data` at the specified `relative_offset` or `absolute_offset`, both specified in Mag(1).
@@ -232,7 +235,7 @@ class View:
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
-        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+        if all(i is None for i in [offset, absolute_offset, relative_offset, absolute_bounding_box, relative_bounding_box]):
             relative_offset = Vec3Int.zeros()
 
         if offset is not None:
@@ -265,6 +268,8 @@ class View:
             rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
+            rel_mag1_bbox=relative_bounding_box,
+            abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
         if json_update_allowed:

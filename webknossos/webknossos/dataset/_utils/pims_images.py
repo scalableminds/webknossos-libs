@@ -267,6 +267,12 @@ class PimsImages:
             if c_index == -1:
                 self.num_channels = 1
             else:
+                if isinstance(images, list):
+                    images_shape = (len(images),) + cast(
+                        pims.FramesSequence, images[0]
+                    ).shape
+                else:
+                    images_shape = images.shape
                 # Since images_shape contains the first dimension iter_dim,
                 # we need to offset the index by one before accessing the images_shape.
                 # images_shape corresponds to (z, *_img_dims)
@@ -468,7 +474,7 @@ class PimsImages:
 
     def copy_to_view(
         self,
-        args: Tuple[int, int, Optional[Dict[str, int]]],
+        args: Union[BoundingBox, NDBoundingBox],
         mag_view: MagView,
         is_segmentation: bool,
         dtype: Optional[DTypeLike] = None,
@@ -478,7 +484,8 @@ class PimsImages:
         copy_to_view returns an iterable of image shapes and largest segment ids. When using this
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
-        z_start, z_end, additional_axes_args = args
+        relative_bbox = args
+        z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
         max_id: Optional[int]
         if is_segmentation:
@@ -489,11 +496,13 @@ class PimsImages:
         with self._open_images() as images:
             if self._flip_z:
                 images = images[::-1]  # pylint: disable=unsubscriptable-object
+            
+
             with mag_view.get_buffered_slice_writer(
-                # TODO according to the additional_axes_args a relative bounding box is
-                # computed that is passed to the buffered slice writer
-                relative_bounding_box=NDBoundingBox(topleft=(0, 0, z_start * mag_view.mag.z) ...)
-                relative_offset=(0, 0, z_start * mag_view.mag.z),
+                # Previously only z_start and its end were important, now the slice writer needs to know
+                # which axis is currently written.
+                relative_bounding_box=relative_bbox,
+                #relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
                 # copy_to_view is typically used in a multiprocessing-context. Therefore the
                 # buffered slice writer should not update the json file to avoid race conditions.
@@ -560,12 +569,11 @@ class PimsImages:
                 return BoundingBox((0, 0, 0), (images_shape[x_index], images_shape[y_index], images_shape[0]))
             else:
                 axes = {"x": images_shape[x_index], "y": images_shape[y_index]}
-                with self._open_images() as images:
-                    for axis in self._iter_dim:
-                        if images.sizes is not None:
-                            axes[axis] = images.sizes[axis]
-                        else:
-                            axes[axis] = 0
+                for axis in self._iter_dim:
+                    if hasattr(images, "sizes"):
+                        axes[axis] = images.sizes[axis]
+                    else:
+                        axes[axis] = 0
             topleft = VecInt.zeros(len(axes))
             axes_names, size = zip(*axes.items())
             #TODO get current axis order from file and use it for nd bbbox

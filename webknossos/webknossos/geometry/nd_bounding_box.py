@@ -123,6 +123,14 @@ class NDBoundingBox:
         )
 
         return attr.evolve(self, topleft=_new_topleft, size=_new_size)
+    
+    def get_bounds(self, axis: str) -> Tuple[int, int]:
+        try:
+            index = self.axes.index(axis)
+        except ValueError as err:
+            raise ValueError("The given axis name does not exist.") from err
+        
+        return (self.topleft[index], self.topleft[index] + self.size[index])
 
     @classmethod
     def group_boxes_with_aligned_mag(
@@ -155,7 +163,7 @@ class NDBoundingBox:
             index = [bbox["axisOrder"][axis] for axis in axes]
 
             if "additionalAxes" in bbox:
-                assert "axisOrder" in bbox, ""
+                assert "axisOrder" in bbox, "If there are additionalAxes an axisOrder needs to be given."
                 for axis in bbox["additionalAxes"]:
                     topleft.append(axis["bounds"][0])
                     size.append(axis["bounds"][1] - axis["bounds"][0])
@@ -427,16 +435,16 @@ class NDBoundingBox:
 
     def slice_array(self, array: np.ndarray) -> np.ndarray:
         return array[
-            self.topleft.x : self.bottomright.x,
-            self.topleft.y : self.bottomright.y,
-            self.topleft.z : self.bottomright.z,
+            self.get_bounds("x")[0] : self.get_bounds("x")[1],
+            self.get_bounds("y")[0] : self.get_bounds("y")[1],
+            self.get_bounds("z")[0] : self.get_bounds("z")[1],
         ]
 
     def to_slices(self) -> Tuple[slice, slice, slice]:
         return np.index_exp[
-            self.topleft.x : self.bottomright.x,
-            self.topleft.y : self.bottomright.y,
-            self.topleft.z : self.bottomright.z,
+            self.get_bounds("x")[0] : self.get_bounds("x")[1],
+            self.get_bounds("y")[0] : self.get_bounds("y")[1],
+            self.get_bounds("z")[0] : self.get_bounds("z")[1],
         ]
 
     def offset(self, vector: VecIntLike) -> "NDBoundingBox":

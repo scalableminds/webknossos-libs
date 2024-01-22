@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from cluster_tools import Executor
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from cluster_tools import Executor
+
+from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     NDArrayLike,
     get_executor_for_args,
@@ -93,7 +94,7 @@ class MagView(View):
 
     # Overwrites of View methods:
     @property
-    def bounding_box(self) -> BoundingBox:
+    def bounding_box(self) -> Union[NDBoundingBox, BoundingBox]:
         # Overwrites View's method since no extra bbox is stored for a MagView,
         # but the Layer's bbox is used:
         return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
@@ -110,7 +111,7 @@ class MagView(View):
         return Vec3Int.zeros()
 
     @property
-    def size(self) -> Vec3Int:
+    def size(self) -> VecInt:
         """⚠️ Deprecated, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright` instead."""
         warnings.warn(
             "[DEPRECATION] mag_view.size is deprecated. "
@@ -154,6 +155,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
     ) -> None:
         if offset is not None:
             if self._mag == Mag(1):
@@ -171,13 +174,15 @@ class MagView(View):
                 DeprecationWarning,
             )
 
-        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+        if all(i is None for i in [offset, absolute_offset, relative_offset, absolute_bounding_box, relative_bounding_box]):
             relative_offset = Vec3Int.zeros()
 
         mag1_bbox = self._get_mag1_bbox(
             abs_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
+            abs_mag1_bbox=absolute_bounding_box,
+            rel_mag1_bbox=relative_bounding_box,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
 
@@ -263,7 +268,7 @@ class MagView(View):
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Iterator[BoundingBox]:
+    ) -> Iterator[Union[NDBoundingBox, BoundingBox]]:
         """
         Returns a Mag(1) bounding box for each file on disk.
 

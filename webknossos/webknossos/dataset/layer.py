@@ -420,7 +420,7 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {key: value for key, value in zip(('c', *self.bounding_box.axes), (0, *self.bounding_box.index))}
+                    dict(zip(('c', *self.bounding_box.axes), (0, *self.bounding_box.index)))
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),

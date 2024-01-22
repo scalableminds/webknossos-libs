@@ -1230,18 +1230,21 @@ class Dataset:
             )
 
             args = []
-            additional_axes_args = {x: 0 for x in pims_images.expected_bbox.axes if x not in ("x", "y", "z")}
-            z_shape = pims_images.expected_bbox.get_shape("z")
+            bbox = pims_images.expected_bbox
+            additional_axes = [axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")]
+            additional_axes_shapes = product(*[range(bbox.get_shape(axis_name)) for axis_name in additional_axes])
+            z_shape = bbox.get_shape("z")
             for z_start in range(0, z_shape, batch_size):
                 z_end = min(z_start + batch_size, z_shape)
-                if not additional_axes_args:
-                    args.append((z_start, z_end))
+                z_bbox = bbox.with_bounds("z", z_start, z_end)
+                if not additional_axes:
+                    args.append(z_bbox)
                 else:
-                    for axis in additional_axes_args:
-                        axis_shape = pims_images.expected_bbox.get_shape(axis)
-                        for axis_index in range(0, axis_shape):
-                            additional_axes_args[axis] = axis_index
-                            args.append((z_start, z_end, additional_axes_args))
+                    for shape in additional_axes_shapes:
+                        reduced_bbox = z_bbox
+                        for index, axis in enumerate(additional_axes):
+                            reduced_bbox = reduced_bbox.with_bounds(axis, shape[index], shape[index]+1)
+                        args.append(reduced_bbox)
             
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.

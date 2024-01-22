@@ -230,36 +230,6 @@ class BoundingBox(NDBoundingBox):
             size=self.size + (margins_left + margins_right),
         )
 
-    def intersected_with(
-        self, other: "BoundingBox", dont_assert: bool = False
-    ) -> "BoundingBox":
-        """If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))"""
-
-        topleft = self.topleft.pairmax(other.topleft)
-        bottomright = self.bottomright.pairmin(other.bottomright)
-        size = (bottomright - topleft).pairmax(Vec3Int.zeros())
-
-        intersection = attr.evolve(self, topleft=topleft, size=size)
-
-        if not dont_assert:
-            assert (
-                not intersection.is_empty()
-            ), f"No intersection between bounding boxes {self} and {other}."
-
-        return intersection
-
-    def extended_by(self, other: "BoundingBox") -> "BoundingBox":
-        if self.is_empty():
-            return other
-        if other.is_empty():
-            return self
-
-        topleft = self.topleft.pairmin(other.topleft)
-        bottomright = self.bottomright.pairmax(other.bottomright)
-        size = bottomright - topleft
-
-        return attr.evolve(self, topleft=topleft, size=size)
-
     def is_empty(self) -> bool:
         return not self.size.is_positive(strictly_positive=True)
 
@@ -277,14 +247,6 @@ class BoundingBox(NDBoundingBox):
             self,
             topleft=(self.topleft // mag_vec),
             size=(self.size // mag_vec),
-        )
-
-    def from_mag_to_mag1(self, from_mag: Mag) -> "BoundingBox":
-        mag_vec = from_mag.to_vec3_int()
-        return attr.evolve(
-            self,
-            topleft=(self.topleft * mag_vec),
-            size=(self.size * mag_vec),
         )
 
     def _align_with_mag_slow(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
@@ -356,9 +318,6 @@ class BoundingBox(NDBoundingBox):
                 and self.topleft[1] <= coord[1] < self.bottomright[1]
                 and self.topleft[2] <= coord[2] < self.bottomright[2]
             )
-
-    def contains_bbox(self, inner_bbox: "BoundingBox") -> bool:
-        return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
 
     def chunk(
         self,

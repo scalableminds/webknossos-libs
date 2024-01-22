@@ -56,7 +56,7 @@ class BufferedSliceWriter:
         self.dtype = self.view.get_dtype()
         self.use_logging = use_logging
         self.json_update_allowed = json_update_allowed
-        if offset is None and relative_offset is None and absolute_offset is None:
+        if offset is None and relative_offset is None and absolute_offset is None and relative_bounding_box is None and absolute_bounding_box is None:
             relative_offset = Vec3Int.zeros()
         if offset is not None:
             warnings.warn(
@@ -80,6 +80,14 @@ class BufferedSliceWriter:
         if self.absolute_offset is not None:
             effective_offset = self.absolute_offset
 
+        if relative_bounding_box is not None:
+            effective_offset = self.view.bounding_box.get_3d("topleft") + relative_bounding_box.get_3d("topleft")
+
+        if absolute_bounding_box is not None:
+            effective_offset = absolute_bounding_box.get_3d("topleft")
+
+        self.absolute_offset = effective_offset
+
         view_chunk_depth = self.view.info.chunk_shape[self.dimension]
         if (
             effective_offset is not None
@@ -94,8 +102,8 @@ class BufferedSliceWriter:
                 "[WARNING] Using a buffer size that doesn't align with the datataset's chunk size, "
                 + "will slow down the buffered slice writer.",
             )
-
-        assert 0 <= dimension <= 2
+        # Previously the dimension was x, y or z now it can possibly be any axis of the bounding_box
+        #assert 0 <= dimension <= 2
 
         self.slices_to_write: List[np.ndarray] = []
         self.current_slice: Optional[int] = None
