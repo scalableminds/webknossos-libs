@@ -268,15 +268,11 @@ def layer_properties_post_unstructure(
                 mag_view_properties_post_unstructure(m) for m in d["mags"]
             ]
             del d["mags"]
+
         # json expects nd_bounding_box to be represented as bounding_box and additional_axes
-        bbox = d["boundingBox"]
-        if "axes" in bbox:
-            x_pos, y_pos, z_pos = bbox["axes"].index("x"), bbox["axes"].index("y"), bbox["axes"].index("z")
-            topleft: List[int] = [bbox["topLeft"][x_pos], bbox["topLeft"][y_pos], bbox["topLeft"][z_pos]]
-            width, height, depth = [bbox["size"][x_pos], bbox["size"][y_pos], bbox["size"][z_pos]]
-            additional_axes = [{"name": name, "bounds": (top_left, top_left + size)} for name, top_left, size in zip(bbox["axes"][3:], bbox["topLeft"][3:], bbox["size"][3:])]
-            d["boundingBox"] = {"topLeft": topleft, "width": width, "height": height, "depth": depth}
-            d["additionalAxes"] = additional_axes
+        if "additionalAxes" in d["boundingBox"]:
+            d["additionalAxes"] = d["boundingBox"]["additionalAxes"]
+            del d["boundingBox"]["additionalAxes"]
         return d
 
     return __layer_properties_post_unstructure

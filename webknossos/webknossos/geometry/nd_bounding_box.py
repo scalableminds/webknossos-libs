@@ -94,6 +94,9 @@ class NDBoundingBox:
 
     def with_name(self, name: Optional[str]) -> "NDBoundingBox":
         return attr.evolve(self, name=name)
+    
+    def with_size(self, new_size: VecInt) -> "NDBoundingBox":
+        return attr.evolve(self, size=new_size)
 
     def with_is_visible(self, is_visible: bool) -> "NDBoundingBox":
         return attr.evolve(self, is_visible=is_visible)
@@ -175,24 +178,26 @@ class NDBoundingBox:
 
     def to_wkw_dict(self) -> dict:
         topleft = [None, None, None]
-        size = [None, None, None]
+        width, height, depth = None, None, None
         additional_axes = []
         for index, axis in enumerate(self.axes):
             if axis == "x":
                 topleft[0] = self.topleft[index]
-                size[0] = self.size[index]
+                width = self.size[index]
             elif axis == "y":
                 topleft[1] = self.topleft[index]
-                size[1] = self.size[index]
+                height = self.size[index]
             elif axis == "z":
                 topleft[2] = self.topleft[index]
-                size[2] = self.size[index]
+                depth = self.size[index]
             else:
                 additional_axes.append({"name": axis, "bounds": [self.topleft[index], self.bottomright[index]], "index": index})
 
         return {
             "topLeft": topleft,
-            "size": size,
+            "width": width,
+            "height": height,
+            "depth": depth,
             "additionalAxes": additional_axes,
         }
 

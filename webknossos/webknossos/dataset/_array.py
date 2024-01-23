@@ -14,6 +14,8 @@ import zarr
 from upath import UPath
 from zarr.storage import FSStore
 
+from webknossos.geometry.nd_bounding_box import NDBoundingBox
+
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 from ..utils import is_fs_path, warn_deprecated
 from .data_format import DataFormat
@@ -392,22 +394,41 @@ class ZarrArray(BaseArray):
                 )
             zarray.resize(new_shape_tuple)
 
-    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
-        offset = Vec3Int(offset)
+    def write(self, offset: Vec3IntLike, data: np.ndarray, bbox: Optional[NDBoundingBox] = None) -> None:
+        """Writes ZarrArray. If offset and bbox are given the bbox is prefered to enable writing of n-dimensional data."""
 
+        # When there are only 3-dimensions in the data, there is only one channel. Thus the shape is adapted to write channel information too.
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        with _blosc_disable_threading():
-            self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
-            zarray = self._zarray
-            zarray[
-                :,
-                offset.x : (offset.x + data.shape[1]),
-                offset.y : (offset.y + data.shape[2]),
-                offset.z : (offset.z + data.shape[3]),
-            ] = data
+        if bbox is not None:
+            with _blosc_disable_threading():
+                zarray = self._zarray
+                topleft = bbox.get_3d("topleft")
+                index_tuple = [
+                    slice(None),
+                    slice(topleft.x, topleft.x + data.shape[1]),
+                    slice(topleft.y, topleft.y + data.shape[2]),
+                    slice(topleft.z, topleft.z + data.shape[3]),
+                    ]
+                for axis in bbox.axes:
+                    index_tuple.append(slice(*bbox.get_bounds(axis)))
+                zarray[index_tuple] = data
+        else:
+            offset = Vec3Int(offset)
+
+            with _blosc_disable_threading():
+                self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
+                zarray = self._zarray
+                zarray[
+                    :,
+                    offset.x : (offset.x + data.shape[1]),
+                    offset.y : (offset.y + data.shape[2]),
+                    offset.z : (offset.z + data.shape[3]),
+                ] = data
+        
+        
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         zarray = self._zarray
@@ -535,6 +556,7 @@ class ZarritaArray(BaseArray):
         from zarrita import Array, ArrayV2
 
         assert array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
+        # TODO Get nd-bounding box in zarrita array creation to get dimension names and shape correctly
         if array_info.data_format == DataFormat.Zarr3:
             Array.create(
                 store=path,
@@ -580,6 +602,7 @@ class ZarritaArray(BaseArray):
         return ZarritaArray(path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
+        # TODO additionall to offset deliver nd-bounding box to read nd data
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
         zarray = self._zarray
@@ -635,6 +658,7 @@ class ZarritaArray(BaseArray):
             self._cached_zarray = zarray.resize(new_shape_tuple)
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
+        # TODO additional to offset deliver nd-bounding box to write nd data
         offset = Vec3Int(offset)
 
         if data.ndim == 3:
