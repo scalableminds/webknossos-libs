@@ -56,6 +56,7 @@ class BufferedSliceWriter:
         self.dtype = self.view.get_dtype()
         self.use_logging = use_logging
         self.json_update_allowed = json_update_allowed
+    
         if offset is None and relative_offset is None and absolute_offset is None and relative_bounding_box is None and absolute_bounding_box is None:
             relative_offset = Vec3Int.zeros()
         if offset is not None:
@@ -86,7 +87,11 @@ class BufferedSliceWriter:
         if absolute_bounding_box is not None:
             effective_offset = absolute_bounding_box.get_3d("topleft")
 
-        self.absolute_offset = effective_offset
+        if relative_bounding_box is not None:
+            self.bbox = relative_bounding_box.offset(self.view.bounding_box.topleft)
+
+        if absolute_bounding_box is not None:
+            self.bbox = absolute_bounding_box
 
         view_chunk_depth = self.view.info.chunk_shape[self.dimension]
         if (
@@ -187,6 +192,7 @@ class BufferedSliceWriter:
                     relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
                     absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
                     json_update_allowed=self.json_update_allowed,
+                    absolute_bounding_box=self.bbox,
                 )
                 del data
 

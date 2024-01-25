@@ -271,7 +271,7 @@ class Layer:
         self.dataset._export_as_json()
         for mag in self.mags.values():
             mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag).get_3d("bottomright")
+                bbox.align_with_mag(mag.mag).in_mag(mag.mag)
             )
 
     @property
@@ -406,7 +406,7 @@ class Layer:
         )
 
         mag_view._array.ensure_size(
-            self.bounding_box.align_with_mag(mag).in_mag(mag).bottomright
+            self.bounding_box.align_with_mag(mag).in_mag(mag)
         )
 
         self._mags[mag] = mag_view

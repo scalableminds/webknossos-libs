@@ -1199,14 +1199,14 @@ class Dataset:
             if chunks_per_shard is None and layer.data_format == DataFormat.Zarr3:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
 
+            mag = Mag(mag)
+            layer.bounding_box = pims_images.expected_bbox.from_mag_to_mag1(mag).offset(topleft)
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
             )
-            mag = mag_view.mag
-            layer.bounding_box = pims_images.expected_bbox.from_mag_to_mag1(mag).offset(topleft)
 
             if batch_size is None:
                 if compress:

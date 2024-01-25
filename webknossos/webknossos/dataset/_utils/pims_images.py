@@ -577,7 +577,7 @@ class PimsImages:
             topleft = VecInt.zeros(len(axes))
             axes_names, size = zip(*axes.items())
             #TODO get current axis order from file and use it for nd bbbox
-            return NDBoundingBox(topleft, size, axes_names, index=(i+1 for i, _ in enumerate(axes_names)))
+            return NDBoundingBox(topleft, size, axes_names, index=(len(axes_names) - i for i, _ in enumerate(axes_names)))
 
 
 T = TypeVar("T", bound=Tuple[int, ...])

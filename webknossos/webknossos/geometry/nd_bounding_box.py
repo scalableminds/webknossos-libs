@@ -43,6 +43,7 @@ class NDBoundingBox:
             f"The dimensions of topleft, size, axes and index ({len(self.topleft)}, "
             + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
         )
+        assert 0 not in self.index, "Index 0 is reserved for channels."
         if not self._is_sorted():
             self._sort_positions_of_axes()
 
@@ -159,7 +160,7 @@ class NDBoundingBox:
         topleft: List[int] = bbox["topLeft"]
         size: List[int] = [bbox["width"], bbox["height"], bbox["depth"]]
         axes: List[str] = ["x", "y", "z"]
-        index: List[int] = [0, 1, 2]
+        index: List[int] = [3, 2, 1]
 
         if "axisOrder" in bbox:
             axes = list(bbox["axisOrder"].keys())
@@ -226,6 +227,9 @@ class NDBoundingBox:
             return self.size[index]
         except ValueError as err:
             raise ValueError(f"Axis {key} doesn't exist in NDBoundingBox.") from err
+        
+    def get_slice_tuple(self) -> Tuple[slice, ...]:
+        return tuple(slice(topleft, topleft + size) for topleft, size in zip(self.topleft, self.size))
         
     def get_3d(self, attr_name: str) -> Vec3Int:
         axes = ("x", "y", "z")

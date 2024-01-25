@@ -265,12 +265,12 @@ class View:
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
 
         mag1_bbox = self._get_mag1_bbox(
-            rel_current_mag_offset=offset,
-            rel_mag1_offset=relative_offset,
-            abs_mag1_offset=absolute_offset,
+            # rel_current_mag_offset=offset,
+            # rel_mag1_offset=relative_offset,
+            # abs_mag1_offset=absolute_offset,
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
-            current_mag_size=Vec3Int(data.shape[-3:]),
+            #current_mag_size=Vec3Int(data.shape[-3:]),
         )
         if json_update_allowed:
             assert self.bounding_box.contains_bbox(
@@ -286,9 +286,9 @@ class View:
             for current_mag_bbox, chunked_data in self._prepare_compressed_write(
                 current_mag_bbox, data, json_update_allowed
             ):
-                self._array.write(current_mag_bbox.topleft, chunked_data)
+                self._array.write(current_mag_bbox, chunked_data)
         else:
-            self._array.write(current_mag_bbox.topleft, data)
+            self._array.write(current_mag_bbox, data)
 
     def _prepare_compressed_write(
         self,
@@ -518,9 +518,7 @@ class View:
         self,
         current_mag_bbox: BoundingBox,
     ) -> np.ndarray:
-        data = self._array.read(
-            current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
-        )
+        data = self._array.read(current_mag_bbox)
         return data
 
     def get_view(

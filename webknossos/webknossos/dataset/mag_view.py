@@ -79,6 +79,9 @@ class MagView(View):
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
+            axis_order=(0, ) + layer.bounding_box.index,
+            shape=(layer.num_channels, ) + layer.bounding_box.size.to_tuple(),
+            dimension_names=("c", ) + layer.bounding_box.axes,
         )
         if create:
             self_path = layer.dataset.path / layer.name / mag.to_layer_name()
@@ -183,7 +186,7 @@ class MagView(View):
             abs_mag1_offset=absolute_offset,
             abs_mag1_bbox=absolute_bounding_box,
             rel_mag1_bbox=relative_bounding_box,
-            current_mag_size=Vec3Int(data.shape[-3:]),
+            #current_mag_size=Vec3Int(data.shape[-3:]),
         )
 
         # Only update the layer's bbox if we are actually larger
@@ -195,6 +198,7 @@ class MagView(View):
             data,
             absolute_offset=mag1_bbox.topleft,
             json_update_allowed=json_update_allowed,
+            absolute_bounding_box=absolute_bounding_box,
         )
 
     def read(
