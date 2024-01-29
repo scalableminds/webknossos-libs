@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from cluster_tools import Executor
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -270,9 +270,7 @@ class Layer:
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag)
-            )
+            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property
     def category(self) -> LayerCategoryType:
@@ -405,9 +403,7 @@ class Layer:
             create=True,
         )
 
-        mag_view._array.ensure_size(
-            self.bounding_box.align_with_mag(mag).in_mag(mag)
-        )
+        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
@@ -420,7 +416,12 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    dict(zip(('c', *self.bounding_box.axes), (0, *self.bounding_box.index)))
+                    dict(
+                        zip(
+                            ("c", "x", "y", "z"),
+                            (0, *self.bounding_box.get_3d("index")),
+                        )
+                    )
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
@@ -457,7 +458,13 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {key: value for key, value in zip(('c', *self.bounding_box.axes), (0, *self.bounding_box.index))}
+                    {
+                        key: value
+                        for key, value in zip(
+                            ("c", *self.bounding_box.axes),
+                            (0, *self.bounding_box.index),
+                        )
+                    }
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),

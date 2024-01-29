@@ -7,9 +7,8 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from upath import UPath
-
 from cluster_tools import Executor
+from upath import UPath
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
@@ -79,9 +78,9 @@ class MagView(View):
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
-            axis_order=(0, ) + layer.bounding_box.index,
-            shape=(layer.num_channels, ) + layer.bounding_box.size.to_tuple(),
-            dimension_names=("c", ) + layer.bounding_box.axes,
+            axis_order=VecInt(0, *layer.bounding_box.index),
+            shape=VecInt(layer.num_channels, *layer.bounding_box.size),
+            dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
             self_path = layer.dataset.path / layer.name / mag.to_layer_name()
@@ -90,7 +89,7 @@ class MagView(View):
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
             array_info,
-            bounding_box=None,
+            bounding_box=layer.bounding_box,
             mag=mag,
         )
         self._layer = layer
@@ -158,8 +157,12 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
-        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        relative_bounding_box: Optional[
+            Union[NDBoundingBox, BoundingBox]
+        ] = None,  # in mag1
+        absolute_bounding_box: Optional[
+            Union[NDBoundingBox, BoundingBox]
+        ] = None,  # in mag1
     ) -> None:
         if offset is not None:
             if self._mag == Mag(1):
@@ -177,7 +180,16 @@ class MagView(View):
                 DeprecationWarning,
             )
 
-        if all(i is None for i in [offset, absolute_offset, relative_offset, absolute_bounding_box, relative_bounding_box]):
+        if all(
+            i is None
+            for i in [
+                offset,
+                absolute_offset,
+                relative_offset,
+                absolute_bounding_box,
+                relative_bounding_box,
+            ]
+        ):
             relative_offset = Vec3Int.zeros()
 
         mag1_bbox = self._get_mag1_bbox(
@@ -186,7 +198,7 @@ class MagView(View):
             abs_mag1_offset=absolute_offset,
             abs_mag1_bbox=absolute_bounding_box,
             rel_mag1_bbox=relative_bounding_box,
-            #current_mag_size=Vec3Int(data.shape[-3:]),
+            current_mag_size=Vec3Int(data.shape[-3:]),
         )
 
         # Only update the layer's bbox if we are actually larger

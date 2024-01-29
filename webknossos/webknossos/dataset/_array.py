@@ -24,14 +24,7 @@ import zarr
 from upath import UPath
 from zarr.storage import FSStore
 
-from ..geometry import (
-    BoundingBox,
-    NDBoundingBox,
-    Vec3Int,
-    Vec3IntLike,
-    VecInt,
-    VecIntLike,
-)
+from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
 from ..utils import is_fs_path, warn_deprecated
 from .data_format import DataFormat
 
@@ -77,9 +70,9 @@ class ArrayInfo:
     voxel_type: np.dtype
     chunk_shape: Vec3Int
     chunks_per_shard: Vec3Int
-    shape: Tuple[int, ...] = (1, 1, 1, 1)
+    shape: VecInt = VecInt(1, 1, 1, 1)
     dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
-    axis_order: Tuple[int, ...] = (3, 2, 1, 0)
+    axis_order: VecInt = VecInt(3, 2, 1, 0)
     compression_mode: bool = False
 
     @property
@@ -89,7 +82,7 @@ class ArrayInfo:
 
     @property
     def shard_shape(self) -> Vec3Int:
-        return self.chunk_shape * self.chunks_per_shard
+        return Vec3Int(self.chunk_shape * self.chunks_per_shard)
 
 
 class BaseArray(ABC):
@@ -132,7 +125,10 @@ class BaseArray(ABC):
 
     @abstractmethod
     def ensure_size(
-        self, new_bbox: NDBoundingBox, align_with_shards: bool = True, warn: bool = False
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
     ) -> None:
         pass
 
@@ -360,7 +356,7 @@ class ZarrArray(BaseArray):
         zarray = self._zarray
         with _blosc_disable_threading():
             data = zarray[(slice(None),) + bbox.get_slice_tuple()]
-                
+
         shape_with_channels = (self.info.num_channels,) + shape.to_tuple()
         if data.shape not in (shape, shape_with_channels):
             padded_data = np.zeros(shape_with_channels, dtype=data.dtype)
@@ -374,14 +370,20 @@ class ZarrArray(BaseArray):
         return data
 
     def ensure_size(
-        self, new_bbox: NDBoundingBox, align_with_shards: bool = True, warn: bool = False
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
     ) -> None:
         new_shape = VecInt(new_bbox.size)
         zarray = self._zarray
 
-        new_shape_tuple = (
-            zarray.shape[0],
-        ) + tuple(max(zarray.shape[i+1], new_shape[i]) if len(zarray.shape) > i else new_shape[i] for i in range(len(new_shape)))
+        new_shape_tuple = (zarray.shape[0],) + tuple(
+            max(zarray.shape[i + 1], new_shape[i])
+            if len(zarray.shape) > i
+            else new_shape[i]
+            for i in range(len(new_shape))
+        )
         if new_shape_tuple != zarray.shape:
             if align_with_shards:
                 shard_shape = self.info.shard_shape
@@ -415,9 +417,7 @@ class ZarrArray(BaseArray):
         with _blosc_disable_threading():
             self.ensure_size(bbox)
             zarray = self._zarray
-            index_tuple = (
-                slice(None),
-            ) + bbox.get_slice_tuple()
+            index_tuple = (slice(None),) + bbox.get_slice_tuple()
 
             zarray[index_tuple] = data
 
@@ -500,6 +500,10 @@ class ZarritaArray(BaseArray):
         from zarrita.sharding import ShardingCodec
 
         zarray = self._zarray
+        if (names := getattr(zarray.metadata, "dimension_names", None)) is None:
+            dimension_names = ("c", "x", "y", "z")
+        else:
+            dimension_names = names
         if isinstance(zarray, Array):
             if len(zarray.codec_pipeline.codecs) == 1 and isinstance(
                 zarray.codec_pipeline.codecs[0], ShardingCodec
@@ -517,7 +521,7 @@ class ZarritaArray(BaseArray):
                     chunk_shape=Vec3Int(chunk_shape[1:4]),
                     chunks_per_shard=Vec3Int(shard_shape[1:4])
                     // Vec3Int(chunk_shape[1:4]),
-                    dimension_names=zarray.metadata.dimension_names
+                    dimension_names=dimension_names,
                 )
             return ArrayInfo(
                 data_format=DataFormat.Zarr3,
@@ -531,7 +535,7 @@ class ZarritaArray(BaseArray):
                 )
                 or Vec3Int.full(1),
                 chunks_per_shard=Vec3Int.full(1),
-                dimension_names=zarray.metadata.dimension_names,
+                dimension_names=dimension_names,
             )
         else:
             return ArrayInfo(
@@ -541,7 +545,7 @@ class ZarritaArray(BaseArray):
                 compression_mode=zarray.metadata.compressor is not None,
                 chunk_shape=Vec3Int(*zarray.metadata.chunks[1:4]) or Vec3Int.full(1),
                 chunks_per_shard=Vec3Int.full(1),
-                dimension_names=zarray.meta
+                dimension_names=dimension_names,
             )
 
     @classmethod
@@ -550,19 +554,21 @@ class ZarritaArray(BaseArray):
         from zarrita import Array, ArrayV2
 
         assert array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
-        # TODO Get nd-bounding box in zarrita array creation to get dimension names and shape correctly
         if array_info.data_format == DataFormat.Zarr3:
+            chunk_shape = (array_info.num_channels,) + tuple(
+                getattr(array_info.chunk_shape, axis, 1)
+                for axis in array_info.dimension_names[1:]
+            )
             Array.create(
                 store=path,
                 shape=array_info.shape,
-                chunk_shape=(array_info.num_channels,)+(1, 32, 4096, 4096),
+                chunk_shape=chunk_shape,
                 chunk_key_encoding=("default", "/"),
                 dtype=array_info.voxel_type,
                 dimension_names=array_info.dimension_names,
                 codecs=[
                     zarrita.codecs.sharding_codec(
-                        chunk_shape=(array_info.num_channels,)
-                        + array_info.chunk_shape.to_tuple(),
+                        chunk_shape=chunk_shape,
                         codecs=[
                             zarrita.codecs.transpose_codec(array_info.axis_order),
                             zarrita.codecs.bytes_codec(),
@@ -613,19 +619,27 @@ class ZarritaArray(BaseArray):
         return data
 
     def ensure_size(
-        self, new_bbox: NDBoundingBox, align_with_shards: bool = True, warn: bool = False
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
     ) -> None:
         new_shape = new_bbox.size
         zarray = self._zarray
 
-        new_shape_tuple = (
-            zarray.metadata.shape[0],
-        ) + tuple(max(zarray.metadata.shape[i+1], new_shape[i]) for i in range(len(new_shape)))
+        new_shape_tuple = (zarray.metadata.shape[0],) + tuple(
+            max(zarray.metadata.shape[i + 1], new_shape[i])
+            for i in range(len(new_shape))
+        )
         if new_shape_tuple != zarray.metadata.shape:
             if align_with_shards:
                 shard_shape = self.info.shard_shape
-                new_shape = Vec3Int(new_bbox.get_3d("size").ceildiv(shard_shape) * shard_shape)
-                new_shape_tuple = (zarray.metadata.shape[0],) + new_bbox.set_3d("size", new_shape).to_tuple()
+                new_shape = Vec3Int(
+                    new_bbox.get_3d("size").ceildiv(shard_shape) * shard_shape
+                )
+                new_shape_tuple = (zarray.metadata.shape[0],) + new_bbox.set_3d(
+                    "size", new_shape
+                ).to_tuple()
 
             # Check on-disk for changes to shape
             current_zarray = zarray.open(self._path)
@@ -645,11 +659,9 @@ class ZarritaArray(BaseArray):
         with _blosc_disable_threading():
             self.ensure_size(bbox)
             zarray = self._zarray
-            index_tuple = (
-                slice(None),
-            ) + bbox.get_slice_tuple()
+            index_tuple = (slice(None),) + bbox.get_slice_tuple()
 
-            zarray[index_tuple] = data
+            zarray[index_tuple] = data.reshape((1,) + bbox.size.to_tuple())
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError

@@ -30,11 +30,11 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from cluster_tools import Executor
 from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset
@@ -1200,7 +1200,9 @@ class Dataset:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
 
             mag = Mag(mag)
-            layer.bounding_box = pims_images.expected_bbox.from_mag_to_mag1(mag).offset(topleft)
+            layer.bounding_box = pims_images.expected_bbox.from_mag_to_mag1(mag).offset(
+                topleft
+            )
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
@@ -1231,8 +1233,12 @@ class Dataset:
 
             args = []
             bbox = pims_images.expected_bbox
-            additional_axes = [axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")]
-            additional_axes_shapes = product(*[range(bbox.get_shape(axis_name)) for axis_name in additional_axes])
+            additional_axes = [
+                axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")
+            ]
+            additional_axes_shapes = product(
+                *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
+            )
             z_shape = bbox.get_shape("z")
             for z_start in range(0, z_shape, batch_size):
                 z_end = min(z_start + batch_size, z_shape)
@@ -1243,9 +1249,11 @@ class Dataset:
                     for shape in additional_axes_shapes:
                         reduced_bbox = z_bbox
                         for index, axis in enumerate(additional_axes):
-                            reduced_bbox = reduced_bbox.with_bounds(axis, shape[index], shape[index]+1)
+                            reduced_bbox = reduced_bbox.with_bounds(
+                                axis, shape[index], 1
+                            )
                         args.append(reduced_bbox)
-            
+
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
                 # However, dataset borders might change between different parallelized writes, when sizes differ.
@@ -1274,9 +1282,13 @@ class Dataset:
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                actual_size = pims_images.expected_bbox.set_3d("size", Vec3Int(
-                    dimwise_max(shapes) + (pims_images.expected_bbox.get_shape("z"),)
-                ))
+                actual_size = pims_images.expected_bbox.set_3d(
+                    "size",
+                    Vec3Int(
+                        dimwise_max(shapes)
+                        + (pims_images.expected_bbox.get_shape("z"),)
+                    ),
+                )
                 layer.bounding_box = pims_images.expected_bbox.with_size(actual_size)
             if pims_images.expected_bbox.size != actual_size:
                 warnings.warn(
@@ -1699,12 +1711,19 @@ class Dataset:
         self._ensure_writable()
 
         properties_on_disk = self._load_properties()
-
-        if properties_on_disk != self._last_read_properties:
+        try:
+            if properties_on_disk != self._last_read_properties:
+                warnings.warn(
+                    "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
+                    + "newer than the ones that were seen last time. The properties will be overwritten. This is "
+                    + "likely happening because multiple processes changed the metadata of this dataset."
+                )
+        except ValueError:
+            # the __eq__ operator raises a ValueError when two bboxes are not comparable. This is the case when the
+            # axes are not the same. During initialization axes are added or moved sometimes.
             warnings.warn(
-                "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
-                + "newer than the ones that were seen last time. The properties will be overwritten. This is "
-                + "likely happening because multiple processes changed the metadata of this dataset."
+                "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
+                + "within the bounding box changed the naming or order of the axes."
             )
 
         with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:

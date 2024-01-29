@@ -50,7 +50,6 @@ except ImportError:
     pass
 # pylint: enable=unused-import
 
-from ...geometry.vec3_int import Vec3Int
 from ...geometry.vec_int import VecInt
 from ..mag_view import MagView
 
@@ -496,13 +495,12 @@ class PimsImages:
         with self._open_images() as images:
             if self._flip_z:
                 images = images[::-1]  # pylint: disable=unsubscriptable-object
-            
 
             with mag_view.get_buffered_slice_writer(
                 # Previously only z_start and its end were important, now the slice writer needs to know
                 # which axis is currently written.
                 relative_bounding_box=relative_bbox,
-                #relative_offset=(0, 0, z_start * mag_view.mag.z),
+                # relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
                 # copy_to_view is typically used in a multiprocessing-context. Therefore the
                 # buffered slice writer should not update the json file to avoid race conditions.
@@ -512,7 +510,9 @@ class PimsImages:
                     image_slice = np.array(image_slice)
                     # place channels first
                     if "c" in self._img_dims:
-                        image_slice = np.moveaxis(image_slice, source=self._img_dims.index("c"), destination=0)
+                        image_slice = np.moveaxis(
+                            image_slice, source=self._img_dims.index("c"), destination=0
+                        )
                     # ensure the last two axes are xy:
                     if ("yx" in self._img_dims and not self._swap_xy) or (
                         "xy" in self._img_dims and self._swap_xy
@@ -564,9 +564,12 @@ class PimsImages:
             y_index = self._img_dims.find("y") + 1
             if self._swap_xy:
                 x_index, y_index = y_index, x_index
-            
+
             if self._iter_dim is None or len(self._iter_dim) == 0:
-                return BoundingBox((0, 0, 0), (images_shape[x_index], images_shape[y_index], images_shape[0]))
+                return BoundingBox(
+                    (0, 0, 0),
+                    (images_shape[x_index], images_shape[y_index], images_shape[0]),
+                )
             else:
                 axes = {"x": images_shape[x_index], "y": images_shape[y_index]}
                 for axis in self._iter_dim:
@@ -576,8 +579,13 @@ class PimsImages:
                         axes[axis] = 0
             topleft = VecInt.zeros(len(axes))
             axes_names, size = zip(*axes.items())
-            #TODO get current axis order from file and use it for nd bbbox
-            return NDBoundingBox(topleft, size, axes_names, index=(len(axes_names) - i for i, _ in enumerate(axes_names)))
+            # TODO get current axis order from file and use it for nd bbbox
+            return NDBoundingBox(
+                topleft,
+                size,
+                axes_names,
+                index=(len(axes_names) - i for i, _ in enumerate(axes_names)),
+            )
 
 
 T = TypeVar("T", bound=Tuple[int, ...])

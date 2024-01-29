@@ -154,6 +154,7 @@ class LayerProperties:
         warn_deprecated("resolutions", "mags")
         return self.mags
 
+
 @attr.define
 class SegmentationLayerProperties(LayerProperties):
     largest_segment_id: Optional[int] = None
@@ -304,15 +305,17 @@ def layer_properties_pre_structure(
             first_mag = d["mags"][0]
             if "axisOrder" in first_mag:
                 assert first_mag["axisOrder"]["c"] == 0
-                assert all(first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"])
+                assert all(
+                    first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
+                )
                 d["boundingBox"]["axisOrder"] = first_mag["axisOrder"]
                 del d["boundingBox"]["axisOrder"]["c"]
-
 
         obj = converter_fn(d, type_value)
         return obj
 
     return __layer_properties_pre_structure
+
 
 def disambiguate_bounding_box(obj: dict, _: Any) -> Union[BoundingBox, NDBoundingBox]:
     if "additionalAxes" in obj:
@@ -322,7 +325,8 @@ def disambiguate_bounding_box(obj: dict, _: Any) -> Union[BoundingBox, NDBoundin
 
 
 dataset_converter.register_structure_hook(
-    Union[BoundingBox, NDBoundingBox], disambiguate_bounding_box,
+    Union[BoundingBox, NDBoundingBox],
+    disambiguate_bounding_box,
 )
 
 for cls in [
@@ -370,7 +374,7 @@ def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
         raise RuntimeError(
             "Failed to read the properties of a layer: the category has to be `color` or `segmentation`."
         )
-    
+
 
 dataset_converter.register_structure_hook(
     Union[

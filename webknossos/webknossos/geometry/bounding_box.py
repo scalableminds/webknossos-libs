@@ -33,8 +33,8 @@ class BoundingBox(NDBoundingBox):
 
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
-    axes: Tuple[str, str, str] = attr.field(default=("z", "y", "x"))
-    index: Vec3Int = attr.field(default=Vec3Int(1, 2, 3))
+    axes: Tuple[str, str, str] = attr.field(default=("x", "y", "z"))
+    index: Vec3Int = attr.field(default=Vec3Int(3, 2, 1))
     bottomright: Vec3Int = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
@@ -65,7 +65,7 @@ class BoundingBox(NDBoundingBox):
             topleft=(*self.topleft, new_topleft),
             size=(*self.size, new_size),
             axes=(*self.axes, name),
-            index=(*self.index, index if not index is None else max(self.index) + 1)
+            index=(*self.index, index if not index is None else max(self.index) + 1),
         )
 
     def with_bounds_x(

@@ -54,7 +54,6 @@ class Vec3Int(VecInt):
 
         return cast(cls, super().__new__(cls, as_tuple))
 
-
     @property
     def x(self) -> int:
         return self[0]
