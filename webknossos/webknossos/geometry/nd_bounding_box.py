@@ -183,22 +183,22 @@ class NDBoundingBox:
         topleft = [None, None, None]
         width, height, depth = None, None, None
         additional_axes = []
-        for index, axis in enumerate(self.axes):
+        for i, axis in enumerate(self.axes):
             if axis == "x":
-                topleft[0] = self.topleft[index]
-                width = self.size[index]
+                topleft[0] = self.topleft[i]
+                width = self.size[i]
             elif axis == "y":
-                topleft[1] = self.topleft[index]
-                height = self.size[index]
+                topleft[1] = self.topleft[i]
+                height = self.size[i]
             elif axis == "z":
-                topleft[2] = self.topleft[index]
-                depth = self.size[index]
+                topleft[2] = self.topleft[i]
+                depth = self.size[i]
             else:
                 additional_axes.append(
                     {
                         "name": axis,
-                        "bounds": [self.topleft[index], self.bottomright[index]],
-                        "index": index,
+                        "bounds": [self.topleft[i], self.bottomright[i]],
+                        "index": self.index[i],
                     }
                 )
 
@@ -232,6 +232,9 @@ class NDBoundingBox:
             return self.topleft == other.topleft and self.size == other.size
         else:
             raise NotImplementedError()
+        
+    def __len__(self) -> int:
+        return len(self.axes)
 
     def get_shape(self, key) -> int:
         try:
@@ -431,7 +434,16 @@ class NDBoundingBox:
         """
 
         start = self.topleft.to_np()
-        chunk_shape = VecInt(chunk_shape).to_np()
+        try:
+            # If a 3D chunk_shape is given it is assumed that iteration over xyz is
+            # intended. Therefore NDBoundingBoxes are generated that have a shape of
+            # x: chunk_shape.x, y: chunk_shape.y, z: chunk_shape.z and 1 for all other
+            # axes.
+            chunk_shape = Vec3Int(chunk_shape)
+
+            chunk_shape = self.with_size(VecInt.ones(len(self))).set_3d("size", chunk_shape)
+        except AssertionError:
+            chunk_shape = VecInt(chunk_shape).to_np()
 
         start_adjust = VecInt.zeros(len(self.topleft)).to_np()
         if chunk_border_alignments is not None:

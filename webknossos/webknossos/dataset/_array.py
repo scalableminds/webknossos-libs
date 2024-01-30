@@ -661,7 +661,7 @@ class ZarritaArray(BaseArray):
             zarray = self._zarray
             index_tuple = (slice(None),) + bbox.get_slice_tuple()
 
-            zarray[index_tuple] = data.reshape((1,) + bbox.size.to_tuple())
+            zarray[index_tuple] = data.reshape((self.info.num_channels,) + bbox.size.to_tuple())
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError

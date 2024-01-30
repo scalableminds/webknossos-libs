@@ -565,7 +565,7 @@ class PimsImages:
             if self._swap_xy:
                 x_index, y_index = y_index, x_index
 
-            if self._iter_dim is None or len(self._iter_dim) == 0:
+            if self._iter_dim is None or len(self._iter_dim) == 0 or self._iter_dim == "z":
                 return BoundingBox(
                     (0, 0, 0),
                     (images_shape[x_index], images_shape[y_index], images_shape[0]),

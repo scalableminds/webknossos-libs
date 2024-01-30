@@ -18,8 +18,8 @@ from typing import (
 
 import numpy as np
 import wkw
-from cluster_tools import Executor
 
+from cluster_tools import Executor
 from webknossos.geometry.vec_int import VecInt
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
@@ -377,8 +377,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
     ) -> np.ndarray:
         """
         The user can specify which data should be read.
@@ -528,7 +528,7 @@ class View:
 
     def _read_without_checks(
         self,
-        current_mag_bbox: BoundingBox,
+        current_mag_bbox: Union[NDBoundingBox, BoundingBox],
     ) -> np.ndarray:
         data = self._array.read(current_mag_bbox)
         return data
@@ -540,6 +540,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None, # in mag1
+        absolute_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None, # in mag1
         read_only: Optional[bool] = None,
     ) -> "View":
         """
@@ -636,6 +638,8 @@ class View:
             relative_offset = Vec3Int.zeros()
 
         mag1_bbox = self._get_mag1_bbox(
+            abs_mag1_bbox=absolute_bbox,
+            rel_mag1_bbox=relative_bbox,
             rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
@@ -754,8 +758,8 @@ class View:
         buffer_size: int = 32,
         dimension: int = 2,  # z
         *,
-        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceReader":
         """

@@ -30,11 +30,11 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
-from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from cluster_tools import Executor
 from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset
@@ -1241,8 +1241,8 @@ class Dataset:
             )
             z_shape = bbox.get_shape("z")
             for z_start in range(0, z_shape, batch_size):
-                z_end = min(z_start + batch_size, z_shape)
-                z_bbox = bbox.with_bounds("z", z_start, z_end)
+                z_size = min(batch_size, z_shape)
+                z_bbox = bbox.with_bounds("z", z_start, z_size)
                 if not additional_axes:
                     args.append(z_bbox)
                 else:

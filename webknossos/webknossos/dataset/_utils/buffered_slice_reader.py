@@ -9,7 +9,7 @@ import numpy as np
 if TYPE_CHECKING:
     from ..view import View
 
-from ...geometry import BoundingBox, Vec3IntLike
+from ...geometry import BoundingBox, NDBoundingBox, Vec3IntLike
 from ...utils import get_chunks
 
 
@@ -23,8 +23,8 @@ class BufferedSliceReader:
         buffer_size: int = 32,
         dimension: int = 2,  # z
         *,
-        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_reader()`"""
@@ -77,8 +77,8 @@ class BufferedSliceReader:
                 n_slices <= self.buffer_size
             ), f"n_slices should at most be batch_size, but {n_slices} > {self.buffer_size}"
 
-            bbox_offset = self.bbox_current_mag.topleft
-            bbox_size = self.bbox_current_mag.size
+            bbox_offset = self.bbox_current_mag.get_3d("topleft")
+            bbox_size = self.bbox_current_mag.get_3d("size")
 
             buffer_bounding_box = BoundingBox.from_tuple2(
                 (
@@ -90,6 +90,7 @@ class BufferedSliceReader:
                     + bbox_size[self.dimension + 1 :],
                 )
             )
+            buffer_bounding_box = self.bbox_current_mag.with_size(self.bbox_current_mag.set_3d("size", buffer_bounding_box.size)).offset(self.bbox_current_mag.set_3d("topleft", buffer_bounding_box.topleft))
 
             if self.use_logging:
                 info(

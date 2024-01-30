@@ -167,7 +167,7 @@ class BufferedSliceWriter:
                 buffer_depth,
             )
             for chunk_bbox in buffer_bbox.chunk(chunk_size):
-                info(f"Writing chunk {chunk_bbox}")
+                info(f"Writing chunk {chunk_bbox}{f' in {self.bbox}' if self.bbox is not None else ''}.")
                 width, height, depth = chunk_bbox.size
                 data = np.zeros(
                     (channel_count, width, height, depth),
