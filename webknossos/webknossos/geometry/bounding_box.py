@@ -34,7 +34,7 @@ class BoundingBox(NDBoundingBox):
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
     axes: Tuple[str, str, str] = attr.field(default=("x", "y", "z"))
-    index: Vec3Int = attr.field(default=Vec3Int(3, 2, 1))
+    index: Vec3Int = attr.field(default=Vec3Int(1, 2, 3))
     bottomright: Vec3Int = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True

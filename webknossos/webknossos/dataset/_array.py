@@ -605,6 +605,7 @@ class ZarritaArray(BaseArray):
         zarray = self._zarray
         with _blosc_disable_threading():
             data = zarray[(slice(None),) + bbox.get_slice_tuple()]
+        assert data is not None, f"There is no data for given BoundingBox: {bbox}"
 
         shape_with_channels = (self.info.num_channels,) + shape
         if data.shape not in (shape, shape_with_channels):
@@ -661,7 +662,11 @@ class ZarritaArray(BaseArray):
             zarray = self._zarray
             index_tuple = (slice(None),) + bbox.get_slice_tuple()
 
-            zarray[index_tuple] = data.reshape((self.info.num_channels,) + bbox.size.to_tuple())
+            # transform data to write into desired zarray shape
+            data = data[(slice(None), slice(None), slice(None)) + tuple(np.newaxis for i in range(len(bbox) - 2))]
+            data = np.moveaxis(data, [1,0,2], bbox.get_3d("index"))
+
+            zarray[index_tuple] = data
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError

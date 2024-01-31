@@ -6,7 +6,7 @@ import attr
 import numpy as np
 
 from .mag import Mag
-from .vec3_int import Vec3Int
+from .vec3_int import Vec3Int, Vec3IntLike
 from .vec_int import VecInt, VecIntLike
 
 _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
@@ -97,8 +97,8 @@ class NDBoundingBox:
     def with_name(self, name: Optional[str]) -> "NDBoundingBox":
         return attr.evolve(self, name=name)
 
-    def with_size(self, new_size: VecInt) -> "NDBoundingBox":
-        return attr.evolve(self, size=new_size)
+    def with_size(self, new_size: VecIntLike) -> "NDBoundingBox":
+        return attr.evolve(self, size=VecInt(new_size))
 
     def with_is_visible(self, is_visible: bool) -> "NDBoundingBox":
         return attr.evolve(self, is_visible=is_visible)
@@ -236,12 +236,12 @@ class NDBoundingBox:
     def __len__(self) -> int:
         return len(self.axes)
 
-    def get_shape(self, key) -> int:
+    def get_shape(self, axis_name: str) -> int:
         try:
-            index = self.axes.index(key)
+            index = self.axes.index(axis_name)
             return self.size[index]
         except ValueError as err:
-            raise ValueError(f"Axis {key} doesn't exist in NDBoundingBox.") from err
+            raise ValueError(f"Axis {axis_name} doesn't exist in NDBoundingBox.") from err
 
     def get_slice_tuple(self) -> Tuple[slice, ...]:
         return tuple(
@@ -259,7 +259,8 @@ class NDBoundingBox:
 
         return Vec3Int(attr_3d)
 
-    def set_3d(self, attr_name: str, value: Vec3Int) -> VecInt:
+    def set_3d(self, attr_name: str, value: Vec3IntLike) -> VecInt:
+        value = Vec3Int(value)
         axes = ("x", "y", "z")
         modified_attr = getattr(self, attr_name).to_list()
 
