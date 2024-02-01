@@ -603,19 +603,15 @@ class ZarritaArray(BaseArray):
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
         shape = bbox.size.to_tuple()
         zarray = self._zarray
+        slice_tuple = (slice(None),) + bbox.get_slice_tuple()
         with _blosc_disable_threading():
-            data = zarray[(slice(None),) + bbox.get_slice_tuple()]
+            data = zarray[slice_tuple]
         assert data is not None, f"There is no data for given BoundingBox: {bbox}"
 
         shape_with_channels = (self.info.num_channels,) + shape
         if data.shape not in (shape, shape_with_channels):
             padded_data = np.zeros(shape_with_channels, dtype=data.dtype)
-            padded_data[
-                :,
-                0 : data.shape[1],
-                0 : data.shape[2],
-                0 : data.shape[3],
-            ] = data
+            padded_data[slice_tuple] = data
             data = padded_data
         return data
 
@@ -661,10 +657,6 @@ class ZarritaArray(BaseArray):
             self.ensure_size(bbox)
             zarray = self._zarray
             index_tuple = (slice(None),) + bbox.get_slice_tuple()
-
-            # transform data to write into desired zarray shape
-            data = data[(slice(None), slice(None), slice(None)) + tuple(np.newaxis for i in range(len(bbox) - 2))]
-            data = np.moveaxis(data, [1,0,2], bbox.get_3d("index"))
 
             zarray[index_tuple] = data
 

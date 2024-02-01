@@ -514,6 +514,10 @@ class PimsImages:
 
                     if max_id is not None:
                         max_id = max(max_id, image_slice.max())
+                    
+                    x_index, y_index, _ = relative_bbox.get_3d("index")
+                    if x_index > y_index:
+                        image_slice = np.moveaxis(image_slice, -1, -2)
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
 
@@ -540,14 +544,14 @@ class PimsImages:
             if self._swap_xy:
                 x_index, y_index = y_index, x_index
 
-            if self._iter_axes is None or (len(self._iter_axes) <= 1 and self._iter_axes[0] == "z"):
+            if self._iter_axes is None or len(self._iter_axes) <= 1:
                 return BoundingBox(
                     (0, 0, 0),
                     (images_shape[x_index], images_shape[y_index], images_shape[0]),
                 )
             else:
                 if isinstance(images, pims.FramesSequenceND):
-                    axes_names = self._iter_axes + self._bundle_axes
+                    axes_names = self._iter_axes + [axis for axis in self._bundle_axes if axis != "c"]
                     axes_sizes = [images.sizes[axis] for axis in axes_names]
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(len(axes_names))

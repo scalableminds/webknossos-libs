@@ -41,7 +41,7 @@ class BufferedSliceWriter:
         json_update_allowed: bool = True,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: int = 2,  # z
+        dimension: int = 2,  # z (TODO: This currently don't work for nd data)
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -192,7 +192,17 @@ class BufferedSliceWriter:
                 ).moveaxis(-1, self.dimension)
                 buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
 
-                data = np.moveaxis(data, -1, self.dimension + 1)
+
+                if self.bbox is not None:
+                    # SliceWriter is used with bbox the data axes are ordered according to the axes_order
+                    # of the bbox.
+                    data = data[(slice(None), slice(None), slice(None), slice(None)) + tuple(np.newaxis for _ in range(len(self.bbox) - 3))]
+                    data = np.moveaxis(data, [1,2,3], self.bbox.get_3d("index"))
+                else:
+                    # Otherwise the axis that was used to write the slices should be moved back to its
+                    # old position
+                    data = np.moveaxis(data, -1, self.dimension + 1)
+
 
                 self.view.write(
                     data,

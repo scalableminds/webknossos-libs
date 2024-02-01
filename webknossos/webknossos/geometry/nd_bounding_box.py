@@ -161,7 +161,7 @@ class NDBoundingBox:
         topleft: List[int] = bbox["topLeft"]
         size: List[int] = [bbox["width"], bbox["height"], bbox["depth"]]
         axes: List[str] = ["x", "y", "z"]
-        index: List[int] = [3, 2, 1]
+        index: List[int] = [1, 2, 3]
 
         if "axisOrder" in bbox:
             axes = list(bbox["axisOrder"].keys())
