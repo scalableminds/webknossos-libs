@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from cluster_tools import Executor
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -740,7 +740,7 @@ class Layer:
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
-        if self._properties.bounding_box.size.z == 1:
+        if self._properties.bounding_box.get_3d("size").z == 1:
             if sampling_mode != SamplingModes.CONSTANT_Z:
                 warnings.warn(
                     "[INFO] The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."

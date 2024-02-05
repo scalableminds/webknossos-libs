@@ -230,8 +230,8 @@ class NDBoundingBox:
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
-        else:
-            raise NotImplementedError()
+        
+        raise NotImplementedError()
         
     def __len__(self) -> int:
         return len(self.axes)
@@ -326,8 +326,8 @@ class NDBoundingBox:
             self.get_3d("bottomright") % mag_vec == Vec3Int.zeros()
         ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
 
-        new_topleft = self.set_3d("topleft", Vec3Int(self.get_3d("topleft") * mag_vec))
-        new_size = self.set_3d("size", Vec3Int(self.get_3d("size") * mag_vec))
+        new_topleft = self.set_3d("topleft", Vec3Int(self.get_3d("topleft") // mag_vec))
+        new_size = self.set_3d("size", Vec3Int(self.get_3d("size") // mag_vec))
 
         return attr.evolve(
             self,
@@ -442,7 +442,7 @@ class NDBoundingBox:
             # axes.
             chunk_shape = Vec3Int(chunk_shape)
 
-            chunk_shape = self.with_size(VecInt.ones(len(self))).set_3d("size", chunk_shape)
+            chunk_shape = self.with_size(VecInt.ones(len(self))).set_3d("size", chunk_shape).to_np()
         except AssertionError:
             chunk_shape = VecInt(chunk_shape).to_np()
 

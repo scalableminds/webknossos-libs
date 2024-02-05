@@ -539,12 +539,14 @@ class PimsImages:
                 ).shape
             else:
                 images_shape = images.shape  # pylint: disable=no-member
-            x_index = self._bundle_axes.index("x") + 1
-            y_index = self._bundle_axes.index("y") + 1
-            if self._swap_xy:
-                x_index, y_index = y_index, x_index
 
             if self._iter_axes is None or len(self._iter_axes) <= 1:
+                if self._bundle_axes.index("x") < self._bundle_axes.index("y"):
+                    x_index, y_index = 1, 2
+                else:
+                    x_index, y_index = 2, 1
+                if self._swap_xy:
+                    x_index, y_index = y_index, x_index
                 return BoundingBox(
                     (0, 0, 0),
                     (images_shape[x_index], images_shape[y_index], images_shape[0]),

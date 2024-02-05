@@ -41,7 +41,7 @@ class BufferedSliceWriter:
         json_update_allowed: bool = True,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: int = 2,  # z (TODO: This currently don't work for nd data)
+        dimension: int = 2,  # z
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -56,6 +56,7 @@ class BufferedSliceWriter:
         self.dtype = self.view.get_dtype()
         self.use_logging = use_logging
         self.json_update_allowed = json_update_allowed
+
 
         if (
             offset is None
@@ -72,39 +73,26 @@ class BufferedSliceWriter:
                 DeprecationWarning,
             )
         self.offset = None if offset is None else Vec3Int(offset)
-        self.relative_offset = (
-            None if relative_offset is None else Vec3Int(relative_offset)
-        )
-        self.absolute_offset = (
-            None if absolute_offset is None else Vec3Int(absolute_offset)
-        )
-        self.dimension = dimension
 
-        effective_offset = Vec3Int.full(0)
-        if self.relative_offset is not None:
-            effective_offset = self.view.bounding_box.topleft + self.relative_offset
+        if relative_offset is not None:
+            self.bbox = BoundingBox(self.view.bounding_box.topleft + relative_offset, Vec3Int.zeros())
 
-        if self.absolute_offset is not None:
-            effective_offset = self.absolute_offset
-
-        if relative_bounding_box is not None:
-            effective_offset = self.view.bounding_box.get_3d(
-                "topleft"
-            ) + relative_bounding_box.get_3d("topleft")
-
-        if absolute_bounding_box is not None:
-            effective_offset = absolute_bounding_box.get_3d("topleft")
+        if absolute_offset is not None:
+            self.bbox = BoundingBox(absolute_offset, Vec3Int.zeros())
 
         if relative_bounding_box is not None:
             self.bbox = relative_bounding_box.offset(self.view.bounding_box.topleft)
 
         if absolute_bounding_box is not None:
             self.bbox = absolute_bounding_box
+        
+        assert 0 <= dimension <= 2 # either x (0), y (1) or z (2)
+        self.dimension = self.bbox.get_3d("index")[dimension] - 1
 
-        view_chunk_depth = self.view.info.chunk_shape[self.dimension]
+        view_chunk_depth = self.view.info.chunk_shape[dimension]
         if (
-            effective_offset is not None
-            and effective_offset[self.dimension] % view_chunk_depth != 0
+            self.bbox is not None
+            and self.bbox.topleft[self.dimension] % view_chunk_depth != 0
         ):
             warnings.warn(
                 "[WARNING] Using an offset that doesn't align with the datataset's chunk size, "
@@ -115,8 +103,6 @@ class BufferedSliceWriter:
                 "[WARNING] Using a buffer size that doesn't align with the datataset's chunk size, "
                 + "will slow down the buffered slice writer.",
             )
-        # Previously the dimension was x, y or z now it can possibly be any axis of the bounding_box
-        # assert 0 <= dimension <= 2
 
         self.slices_to_write: List[np.ndarray] = []
         self.current_slice: Optional[int] = None
@@ -154,9 +140,8 @@ class BufferedSliceWriter:
             max_width = max(section.shape[-2] for section in self.slices_to_write)
             max_height = max(section.shape[-1] for section in self.slices_to_write)
             channel_count = self.slices_to_write[0].shape[0]
-
             buffer_depth = min(self.buffer_size, len(self.slices_to_write))
-            buffer_bbox = BoundingBox((0, 0, 0), (max_width, max_height, buffer_depth))
+            self.bbox = self.bbox.with_size(self.bbox.set_3d("size", (max_width, max_height, buffer_depth)))
 
             shard_dimensions = self.view._get_file_dimensions().moveaxis(
                 -1, self.dimension
@@ -166,51 +151,42 @@ class BufferedSliceWriter:
                 min(shard_dimensions[1], max_height),
                 buffer_depth,
             )
-            for chunk_bbox in buffer_bbox.chunk(chunk_size):
+            for chunk_bbox in self.bbox.chunk(chunk_size):
                 info(f"Writing chunk {chunk_bbox}{f' in {self.bbox}' if self.bbox is not None else ''}.")
-                width, height, depth = chunk_bbox.size
+
                 data = np.zeros(
-                    (channel_count, width, height, depth),
+                    (channel_count, *chunk_bbox.size),
                     dtype=self.slices_to_write[0].dtype,
                 )
+                section_topleft = chunk_bbox.get_3d("topleft")
+                section_bottomright = chunk_bbox.get_3d("bottomright")
+
+                slice_tuple = (slice(None), ) + chunk_bbox.get_slice_tuple()
+                z_index = chunk_bbox.get_3d("index")[2]
 
                 z = 0
                 for section in self.slices_to_write:
                     section_chunk = section[
                         :,
-                        chunk_bbox.topleft.x : chunk_bbox.bottomright.x,
-                        chunk_bbox.topleft.y : chunk_bbox.bottomright.y,
+                        section_topleft[0] : section_bottomright[0],
+                        section_topleft[1] : section_bottomright[1],
                     ]
-                    data[
-                        :, 0 : section_chunk.shape[-2], 0 : section_chunk.shape[-1], z
-                    ] = section_chunk
+                    section_chunk = section_chunk[(slice(None), slice(None), slice(None)) + tuple(np.newaxis for _ in range(len(self.bbox) - 2))]
+                    section_chunk = np.moveaxis(section_chunk, [1,2], self.bbox.get_3d("index")[:2])
+
+
+                    data[slice_tuple[:z_index] + (slice(z), ) + slice_tuple[z_index+1:]] = section_chunk
 
                     z += 1
 
-                buffer_start = Vec3Int(
-                    chunk_bbox.topleft.x, chunk_bbox.topleft.y, self.buffer_start_slice
-                ).moveaxis(-1, self.dimension)
+                buffer_start = Vec3Int(*chunk_bbox.get_3d("topleft")[:2], self.buffer_start_slice)
                 buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
-
-
-                if self.bbox is not None:
-                    # SliceWriter is used with bbox the data axes are ordered according to the axes_order
-                    # of the bbox.
-                    data = data[(slice(None), slice(None), slice(None), slice(None)) + tuple(np.newaxis for _ in range(len(self.bbox) - 3))]
-                    data = np.moveaxis(data, [1,2,3], self.bbox.get_3d("index"))
-                else:
-                    # Otherwise the axis that was used to write the slices should be moved back to its
-                    # old position
-                    data = np.moveaxis(data, -1, self.dimension + 1)
-
 
                 self.view.write(
                     data,
                     offset=buffer_start.add_or_none(self.offset),
-                    relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
-                    absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
                     json_update_allowed=self.json_update_allowed,
-                    absolute_bounding_box=self.bbox.offset(buffer_start_mag1)
+                    absolute_bounding_box=chunk_bbox.offset(buffer_start_mag1)
                     if self.bbox
                     else None,
                 )
