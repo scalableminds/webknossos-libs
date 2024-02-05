@@ -7,8 +7,8 @@ from tifffile import imwrite
 import webknossos as wk
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
-TIF_PATH = Path(".") / "webknossos" / "testdata" / "4D" / "multi_channel_4D_series"
-OUTPUT = Path(".") / "multi_channel_4D_series"
+TIF_PATH = Path(".") / "webknossos" / "testdata" / "4D" / "4D_series"
+OUTPUT = Path(".") / "4D_series"
 
 
 def from_images_import():

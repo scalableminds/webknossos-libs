@@ -1123,7 +1123,7 @@ class View:
         return self.info.shard_shape
 
     def _get_file_dimensions_mag1(self) -> Vec3Int:
-        return self._get_file_dimensions() * self.mag.to_vec3_int()
+        return Vec3Int(self._get_file_dimensions() * self.mag.to_vec3_int())
 
     @property
     def _array(self) -> BaseArray:

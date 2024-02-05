@@ -87,12 +87,12 @@ class BufferedSliceWriter:
             self.bbox = absolute_bounding_box
         
         assert 0 <= dimension <= 2 # either x (0), y (1) or z (2)
-        self.dimension = self.bbox.get_3d("index")[dimension] - 1
+        self.dimension = dimension
 
         view_chunk_depth = self.view.info.chunk_shape[dimension]
         if (
             self.bbox is not None
-            and self.bbox.topleft[self.dimension] % view_chunk_depth != 0
+            and self.bbox.get_3d("topleft")[self.dimension] % view_chunk_depth != 0
         ):
             warnings.warn(
                 "[WARNING] Using an offset that doesn't align with the datataset's chunk size, "
@@ -152,7 +152,7 @@ class BufferedSliceWriter:
                 buffer_depth,
             )
             for chunk_bbox in self.bbox.chunk(chunk_size):
-                info(f"Writing chunk {chunk_bbox}{f' in {self.bbox}' if self.bbox is not None else ''}.")
+                info(f"Writing chunk {chunk_bbox}.")
 
                 data = np.zeros(
                     (channel_count, *chunk_bbox.size),
@@ -161,8 +161,8 @@ class BufferedSliceWriter:
                 section_topleft = chunk_bbox.get_3d("topleft")
                 section_bottomright = chunk_bbox.get_3d("bottomright")
 
-                slice_tuple = (slice(None), ) + chunk_bbox.get_slice_tuple()
-                z_index = chunk_bbox.get_3d("index")[2]
+                slice_tuple = (slice(None), ) + tuple(slice(0, size) for size in chunk_bbox.size)
+                z_index = chunk_bbox.get_3d("index")[self.dimension]
 
                 z = 0
                 for section in self.slices_to_write:
@@ -172,14 +172,14 @@ class BufferedSliceWriter:
                         section_topleft[1] : section_bottomright[1],
                     ]
                     section_chunk = section_chunk[(slice(None), slice(None), slice(None)) + tuple(np.newaxis for _ in range(len(self.bbox) - 2))]
-                    section_chunk = np.moveaxis(section_chunk, [1,2], self.bbox.get_3d("index")[:2])
+                    section_chunk = np.moveaxis(section_chunk, [1,2], self.bbox.get_3d("index")[:self.dimension] + self.bbox.get_3d("index")[self.dimension+1:])
 
-
-                    data[slice_tuple[:z_index] + (slice(z), ) + slice_tuple[z_index+1:]] = section_chunk
+                    data[slice_tuple[:z_index] + (slice(z, z+1), ) + slice_tuple[z_index+1:]] = section_chunk
 
                     z += 1
-
-                buffer_start = Vec3Int(*chunk_bbox.get_3d("topleft")[:2], self.buffer_start_slice)
+                
+                chunk_topleft = chunk_bbox.get_3d("topleft")
+                buffer_start = Vec3Int(*(chunk_topleft[:self.dimension] + (self.buffer_start_slice,) + chunk_topleft[self.dimension+1:]))
                 buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
 
                 self.view.write(
