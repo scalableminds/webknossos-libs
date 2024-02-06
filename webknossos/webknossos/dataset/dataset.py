@@ -30,11 +30,11 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from cluster_tools import Executor
 from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset

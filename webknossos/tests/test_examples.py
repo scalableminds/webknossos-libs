@@ -312,7 +312,7 @@ def test_download_segments() -> None:
 
         assert (
             len(list(output_path.iterdir()))
-            == 2 * mag_view.layer.bounding_box.size.z / mag_view.mag.z
+            == 2 * mag_view.layer.bounding_box.get_3d("size").z / mag_view.mag.z
         )
 
 
@@ -329,7 +329,7 @@ def test_download_tiff_stack() -> None:
 
         assert (
             len(list(output_path.iterdir()))
-            == mag_view.bounding_box.size.z / mag_view.mag.z
+            == mag_view.bounding_box.get_3d("size").z / mag_view.mag.z
         )
 
 

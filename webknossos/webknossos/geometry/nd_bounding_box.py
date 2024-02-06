@@ -230,9 +230,9 @@ class NDBoundingBox:
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
-        
+
         raise NotImplementedError()
-        
+
     def __len__(self) -> int:
         return len(self.axes)
 
@@ -241,7 +241,9 @@ class NDBoundingBox:
             index = self.axes.index(axis_name)
             return self.size[index]
         except ValueError as err:
-            raise ValueError(f"Axis {axis_name} doesn't exist in NDBoundingBox.") from err
+            raise ValueError(
+                f"Axis {axis_name} doesn't exist in NDBoundingBox."
+            ) from err
 
     def get_slice_tuple(self) -> Tuple[slice, ...]:
         return tuple(
@@ -442,7 +444,11 @@ class NDBoundingBox:
             # axes.
             chunk_shape = Vec3Int(chunk_shape)
 
-            chunk_shape = self.with_size(VecInt.ones(len(self))).set_3d("size", chunk_shape).to_np()
+            chunk_shape = (
+                self.with_size(VecInt.ones(len(self)))
+                .set_3d("size", chunk_shape)
+                .to_np()
+            )
         except AssertionError:
             chunk_shape = VecInt(chunk_shape).to_np()
 

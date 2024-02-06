@@ -18,8 +18,8 @@ from typing import (
 
 import numpy as np
 import wkw
-
 from cluster_tools import Executor
+
 from webknossos.geometry.vec_int import VecInt
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
@@ -289,8 +289,8 @@ class View:
                 mag1_bbox
             ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
 
-        if len(data.shape) == 4 and data.shape[0] == 1:
-            data = data[0]  # remove channel dimension for single-channel data
+        # if len(data.shape) == 4 and data.shape[0] == 1:
+        #     data = data[0]  # remove channel dimension for single-channel data
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
@@ -377,8 +377,12 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
-        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        relative_bounding_box: Optional[
+            Union[NDBoundingBox, BoundingBox]
+        ] = None,  # in mag1
+        absolute_bounding_box: Optional[
+            Union[NDBoundingBox, BoundingBox]
+        ] = None,  # in mag1
     ) -> np.ndarray:
         """
         The user can specify which data should be read.
@@ -540,8 +544,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None, # in mag1
-        absolute_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None, # in mag1
+        relative_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        absolute_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> "View":
         """

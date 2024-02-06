@@ -174,14 +174,20 @@ class PimsImages:
                     self._bundle_axes = ["y", "x"]
 
                 # All other axes are used to iterate over them. The last one is iterated the fastest.
-                self._iter_axes = list(set(images.axes).difference({*self._bundle_axes, "c", "z"}))
+                self._iter_axes = list(
+                    set(images.axes).difference({*self._bundle_axes, "c", "z"})
+                )
                 self._iter_axes.append("z")
 
                 if len(self._iter_axes) > 1:
                     iter_size = 1
                     self._iter_loop_size = dict()
-                    for axis, other_axis in zip(self._iter_axes[-1:0:-1], self._iter_axes[-2::-1]):
-                        self._iter_loop_size[other_axis] = (iter_size := iter_size * images.sizes[axis])
+                    for axis, other_axis in zip(
+                        self._iter_axes[-1:0:-1], self._iter_axes[-2::-1]
+                    ):
+                        self._iter_loop_size[other_axis] = (
+                            iter_size := iter_size * images.sizes[axis]
+                        )
 
             else:
                 # Fallback for generic pims classes that do not name their
@@ -225,7 +231,6 @@ class PimsImages:
                         + "a N-dimensional image file with use_bioformats="
                         + "True."
                     )
-            
 
         #########################
         # IDENTIFY NUM_CHANNELS #
@@ -235,17 +240,17 @@ class PimsImages:
             try:
                 c_index = self._bundle_axes.index("c")
                 if isinstance(images, list):
-                    images_shape = (len(images), ) + cast(
+                    images_shape = (len(images),) + cast(
                         pims.FramesSequence, images[0]
                     ).shape
                 else:
                     images_shape = images.shape
-                
+
                 self.num_channels = images_shape[c_index + 1]
 
             except ValueError:
                 self.num_channels = 1
-            
+
         self._first_n_channels = None
         if self._channel is not None:
             assert (
@@ -451,9 +456,9 @@ class PimsImages:
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
         relative_bbox = args
-        assert relative_bbox.set_3d("size", (1, 1, 1)) == VecInt.ones(len(relative_bbox)), (
-            "The delivered BoundingBox has to be flat except for x,y and z dimension."
-        )
+        assert relative_bbox.set_3d("size", (1, 1, 1)) == VecInt.ones(
+            len(relative_bbox)
+        ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
         z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
         max_id: Optional[int]
@@ -465,7 +470,11 @@ class PimsImages:
         with self._open_images() as images:
             if self._iter_axes is not None and self._iter_loop_size is not None:
                 # select the range of images that represents one xyz combination
-                lower_bounds = sum(self._iter_loop_size[axis_name]*relative_bbox.get_bounds(axis_name)[0] for axis_name in self._iter_axes[:-1])
+                lower_bounds = sum(
+                    self._iter_loop_size[axis_name]
+                    * relative_bbox.get_bounds(axis_name)[0]
+                    for axis_name in self._iter_axes[:-1]
+                )
                 upper_bounds = lower_bounds + relative_bbox.get_shape("z")
                 images = images[lower_bounds:upper_bounds]
             if self._flip_z:
@@ -486,7 +495,9 @@ class PimsImages:
                     # place channels first
                     if "c" in self._bundle_axes:
                         image_slice = np.moveaxis(
-                            image_slice, source=self._bundle_axes.index("c"), destination=0
+                            image_slice,
+                            source=self._bundle_axes.index("c"),
+                            destination=0,
                         )
                     # ensure the last two axes are xy:
                     if ("yx" in self._bundle_axes and not self._swap_xy) or (
@@ -514,7 +525,7 @@ class PimsImages:
 
                     if max_id is not None:
                         max_id = max(max_id, image_slice.max())
-                    
+
                     x_index, y_index, _ = relative_bbox.get_3d("index")
                     if x_index > y_index:
                         image_slice = np.moveaxis(image_slice, -1, -2)
@@ -553,7 +564,9 @@ class PimsImages:
                 )
             else:
                 if isinstance(images, pims.FramesSequenceND):
-                    axes_names = self._iter_axes + [axis for axis in self._bundle_axes if axis != "c"]
+                    axes_names = self._iter_axes + [
+                        axis for axis in self._bundle_axes if axis != "c"
+                    ]
                     axes_sizes = [images.sizes[axis] for axis in axes_names]
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(len(axes_names))
@@ -564,10 +577,11 @@ class PimsImages:
                         axes_names,
                         axes_index,
                     )
-                
+
                 raise ValueError(
                     "It seems as if you try to load an N-dimensional image from 2D images. This is currently not supported."
                 )
+
 
 T = TypeVar("T", bound=Tuple[int, ...])
 

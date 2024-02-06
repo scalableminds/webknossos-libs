@@ -1,3 +1,4 @@
+import copy
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
@@ -308,7 +309,7 @@ def layer_properties_pre_structure(
                 assert all(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
                 )
-                d["boundingBox"]["axisOrder"] = first_mag["axisOrder"]
+                d["boundingBox"]["axisOrder"] = copy.deepcopy(first_mag["axisOrder"])
                 del d["boundingBox"]["axisOrder"]["c"]
 
         obj = converter_fn(d, type_value)

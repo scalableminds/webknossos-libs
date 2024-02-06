@@ -587,7 +587,7 @@ class ZarritaArray(BaseArray):
         else:
             ArrayV2.create(
                 store=path,
-                shape=(array_info.num_channels, 1, 1, 1),
+                shape=(array_info.shape),
                 chunks=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
                 dtype=array_info.voxel_type,
                 compressor=(

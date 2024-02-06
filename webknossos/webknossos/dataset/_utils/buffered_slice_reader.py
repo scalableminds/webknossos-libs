@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from ..view import View
 
 from ...geometry import BoundingBox, NDBoundingBox, Vec3IntLike
-from ...utils import get_chunks
 
 
 class BufferedSliceReader:
@@ -61,49 +60,18 @@ class BufferedSliceReader:
         self.bbox_current_mag = absolute_bounding_box.in_mag(view.mag)
 
     def _get_slice_generator(self) -> Generator[np.ndarray, None, None]:
-        for batch in get_chunks(
-            list(
-                range(
-                    self.bbox_current_mag.topleft[self.dimension],
-                    self.bbox_current_mag.bottomright[self.dimension],
-                )
-            ),
-            self.buffer_size,
-        ):
-            n_slices = len(batch)
-            batch_start_idx = batch[0]
+        chunk_size = self.bbox_current_mag.get_3d("size").to_list()
+        chunk_size[self.dimension] = self.buffer_size
 
-            assert (
-                n_slices <= self.buffer_size
-            ), f"n_slices should at most be batch_size, but {n_slices} > {self.buffer_size}"
-
-            bbox_offset = self.bbox_current_mag.get_3d("topleft")
-            bbox_size = self.bbox_current_mag.get_3d("size")
-
-            buffer_bounding_box = BoundingBox.from_tuple2(
-                (
-                    bbox_offset[: self.dimension]
-                    + (batch_start_idx,)
-                    + bbox_offset[self.dimension + 1 :],
-                    bbox_size[: self.dimension]
-                    + (n_slices,)
-                    + bbox_size[self.dimension + 1 :],
-                )
-            )
-            buffer_bounding_box = self.bbox_current_mag.with_size(self.bbox_current_mag.set_3d("size", buffer_bounding_box.size)).offset(self.bbox_current_mag.set_3d("topleft", buffer_bounding_box.topleft))
-
+        for chunk in self.bbox_current_mag.chunk(chunk_size):
             if self.use_logging:
-                info(
-                    f"({getpid()}) Reading {n_slices} slices at position {batch_start_idx}."
-                )
+                info(f"({getpid()}) Reading data from bbox {chunk}.")
             data = self.view.read(
-                absolute_bounding_box=buffer_bounding_box.from_mag_to_mag1(
-                    self.view.mag
-                )
+                absolute_bounding_box=chunk.from_mag_to_mag1(self.view.mag)
             )
 
-            for current_slice in np.rollaxis(
-                data, self.dimension + 1
+            for current_slice in np.moveaxis(
+                data, self.dimension + 1, 0
             ):  # The '+1' is important because the first dimension is the channel
                 yield current_slice
 

@@ -211,12 +211,12 @@ class BoundingBox(NDBoundingBox):
 
     def to_csv(self) -> str:
         return ",".join(map(str, self.to_tuple6()))
-    
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
-        
+
         raise NotImplementedError()
 
     def __repr__(self) -> str:

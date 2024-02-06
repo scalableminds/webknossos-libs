@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from cluster_tools import Executor
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
