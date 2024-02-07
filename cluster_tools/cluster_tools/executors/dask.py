@@ -41,6 +41,9 @@ def _run_in_nanny(
         for key, value in __env.items():
             os.environ[key] = value
 
+        print(os.environ["PWD"])
+        if "PWD" in os.environ:
+            os.chdir(os.environ["PWD"])
         ret = __fn(*args, **kwargs)
         queue.put({"value": ret})
     except Exception as exc:
@@ -174,7 +177,9 @@ class DaskExecutor(futures.Executor):
                 ),
             )
 
-        kwargs["__env"] = os.environ.copy()
+        __env = os.environ.copy()
+        __env["PWD"] = os.getcwd()
+        kwargs["__env"] = __env
 
         # We run the functions in dask as a separate process to not hold the
         # GIL for too long, because dask workers need to be able to communicate
