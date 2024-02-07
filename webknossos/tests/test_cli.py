@@ -23,7 +23,7 @@ from tests.constants import (
     TESTDATA_DIR,
     use_minio,
 )
-from webknossos import BoundingBox, DataFormat, Dataset
+from webknossos import BoundingBox, DataFormat, Dataset, Annotation
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
@@ -481,3 +481,25 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                     f"The tiff file {tiff_path} that was written "
                     f"is not equal to the original wkw_file."
                 )
+
+def test_merge_fallback(tmp_path: Path) -> None:
+    source_annotation = TESTDATA_DIR \
+        / "annotations" \
+        / "l4dense_motta_et_al_demo_v2__explorational__4a6356.zip"
+    
+    target_dataset_path = tmp_path / "merged_dataset"
+    fallback_dataset = Annotation.load(source_annotation)\
+        .export_volume_layer_to_dataset(tmp_path / "fallback_dataset")
+
+
+    result = runner.invoke(
+        app,
+        [
+            "merge-fallback",
+            str(target_dataset_path),
+            str(source_annotation),
+            str(fallback_dataset),
+        ]
+    )
+
+    assert result.exit_code == 0
