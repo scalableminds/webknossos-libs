@@ -41,7 +41,6 @@ def _run_in_nanny(
         for key, value in __env.items():
             os.environ[key] = value
 
-        print(os.environ["PWD"])
         if "PWD" in os.environ:
             os.chdir(os.environ["PWD"])
         ret = __fn(*args, **kwargs)
