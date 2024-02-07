@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed working directory propagation in DaskExecutor. [#994](https://github.com/scalableminds/webknossos-libs/pull/994)
 
 
 ## [0.14.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.14) - 2024-01-12
