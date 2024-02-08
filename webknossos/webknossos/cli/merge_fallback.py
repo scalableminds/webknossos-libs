@@ -2,23 +2,19 @@
 
 import logging
 from argparse import Namespace
-from functools import partial
 from multiprocessing import cpu_count
 from typing import Any, List, Optional, Tuple
 
 import typer
 from cluster_tools import Executor
-from typing_extensions import Annotated
 from rich.progress import track
-
+from typing_extensions import Annotated
 
 from ..annotation import Annotation
 from ..dataset import Dataset, MagView
 from ..geometry import BoundingBox, Mag
 from ..utils import get_executor_for_args
 from ._utils import DistributionStrategy, parse_path
-
-logging.basicConfig(level=logging.INFO)
 
 
 def main(
@@ -110,34 +106,42 @@ def main(
 
     else:
         fallback_dataset_path = dataset_folder / annotation.dataset_name
-        fallback_layer = Dataset.open(fallback_dataset_path).get_layer(fallback_layer_name)
+        fallback_layer = Dataset.open(fallback_dataset_path).get_layer(
+            fallback_layer_name
+        )
 
-        with get_executor_for_args(args=executor_args) as executor:
-            if volume_layer.zip is None:
-                logging.info("No volume annotation found. Copy fallback layer.")
+        if volume_layer.zip is None:
+            logging.info("No volume annotation found. Copy fallback layer.")
+            with get_executor_for_args(args=executor_args) as executor:
                 output_dataset.add_copy_layer(
                     fallback_layer, compress=True, executor=executor
                 )
 
-            else:
-                tmp_annotation_layer_name = f"{annotation.name}-TMP"
-                logging.info(f"Unpack annotation layer {volume_layer_name} temporarily in {output_dataset.name} as {tmp_annotation_layer_name}")
-                # NOTE(erjel): Cannot use "temporary_volume_layer_copy" here, since tmp folders
-                # might not be accessible from slurm compute nodes.
-                input_annotation_layer = annotation.export_volume_layer_to_dataset(
-                    output_dataset, 
-                    layer_name=tmp_annotation_layer_name,
-                    volume_layer_name=volume_layer_name
-                )
+        else:
+            tmp_annotation_layer_name = f"{annotation.name}-TMP"
+            logging.info(
+                f"Unpack annotation layer {volume_layer_name} temporarily in {output_dataset.name} as {tmp_annotation_layer_name}"
+            )
+            # NOTE(erjel): Cannot use "temporary_volume_layer_copy" here, since tmp folders
+            # might not be accessible from slurm compute nodes.
+            input_annotation_layer = annotation.export_volume_layer_to_dataset(
+                output_dataset,
+                layer_name=tmp_annotation_layer_name,
+                volume_layer_name=volume_layer_name,
+            )
 
-                input_annotation_mag = input_annotation_layer.get_finest_mag()
-                fallback_mag = fallback_layer.get_mag(input_annotation_mag.mag)
+            input_annotation_mag = input_annotation_layer.get_finest_mag()
+            fallback_mag = fallback_layer.get_mag(input_annotation_mag.mag)
 
-                logging.info(f"Create layer {fallback_layer.name} in {output_dataset.path}")
-                output_layer = output_dataset.add_layer_like(
-                    fallback_layer, fallback_layer.name
+            logging.info(f"Create layer {fallback_layer.name} in {output_dataset.path}")
+            output_layer = output_dataset.add_layer_like(
+                fallback_layer, fallback_layer.name
+            )
+
+            with get_executor_for_args(args=executor_args) as executor:
+                logging.info(
+                    f"Copy Mag {fallback_mag.mag} from {fallback_layer.path} to {output_layer.path}"
                 )
-                logging.info(f"Copy Mag {fallback_mag.mag} from {fallback_layer.path} to {output_layer.path}")
                 output_mag = output_layer.add_copy_mag(
                     fallback_mag,
                     compress=True,
@@ -146,17 +150,16 @@ def main(
 
                 merge_mags(output_mag, input_annotation_mag, executor)
 
-                ## TODO(erjel): Is there no blocking until all executor tasks are done?
-                #logging.info("Delete temporary annotation layer")
-                #output_dataset.delete_layer(tmp_annotation_layer_name)
-                #logging.info("Done.")
+            logging.info("Delete temporary annotation layer")
+            output_dataset.delete_layer(tmp_annotation_layer_name)
+            logging.info("Done.")
+
 
 def merge_mags(
     output_mag: MagView,
     input_annotation_mag: MagView,
     executor: Executor,
 ) -> None:
-    
     assert all(
         input_annotation_mag.info.chunks_per_shard.to_np() == 1
     ), "volume annotation must have file_len=1"
@@ -167,23 +170,24 @@ def merge_mags(
         input_annotation_mag.mag == output_mag.mag
     ), f"Volume annotation mag {input_annotation_mag.mag} must match the fallback layer mag {output_mag.mag}"
 
-    logging.info(f"Scan disk for annotation shards.")
+    logging.info("Scan disk for annotation shards.")
     bboxes = list(bbox for bbox in input_annotation_mag.get_bounding_boxes_on_disk())
 
     logging.info(f"Grouping {len(bboxes)} bboxes according to output shards.")
     shards_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(
-        bboxes, Mag(output_mag.info.shard_size * output_mag.mag) 
+        bboxes, Mag(output_mag.info.shard_size * output_mag.mag)
     )
 
-    args = [(input_annotation_mag, output_mag, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
+    args = [
+        (input_annotation_mag, output_mag, shard, bboxes)
+        for shard, bboxes in shards_with_bboxes.items()
+    ]
 
-    logging.info(f"Merging {len(args)} shards.")        
+    logging.info(f"Merging {len(args)} shards.")
     executor.map(merge_chunk, args)
 
 
-def merge_chunk(
-    args: Tuple[MagView, MagView, BoundingBox, List[BoundingBox]]
-) -> None:
+def merge_chunk(args: Tuple[MagView, MagView, BoundingBox, List[BoundingBox]]) -> None:
     mag_in, mag_out, shard, bboxes = args
     data_buffer = mag_out.read(absolute_bounding_box=shard)[0]
 
