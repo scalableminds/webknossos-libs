@@ -90,11 +90,11 @@ class PimsImages:
         """
         During initialization the pims objects are examined and configured to produce
         ndarrays that follow the following form:
-        (self._iter_dim, *self._img_dims)
-        self._iter_dim can be either "z", "t" or "" if the image is 2D.
+        (self._iter_axis, *self._bundle_axis)
+        self._iter_axis can be a list of different axis or an empty list if the image is 2D.
         In the latter case, the inner 2D image is still wrapped in a single-element list
         by _open_images() to be consistent with 3D images.
-        self._img_dims can consist of "x", "y" and "c", where "c" is optional and must be
+        self._bundle_axis can consist of "x", "y" and "c", where "c" is optional and must be
         at the start or the end, so one of "xy", "yx", "xyc", "yxc", "cxy", "cyx".
 
         The part "IDENTIFY AXIS ORDER" figures out (self._iter_dim, *self._img_dims)
@@ -111,6 +111,7 @@ class PimsImages:
 
         ## arguments as inner attributes
         self._channel = channel
+        self._timepoint = timepoint
         self._czi_channel = czi_channel
         self._swap_xy = swap_xy
         self._flip_x = flip_x
@@ -177,7 +178,14 @@ class PimsImages:
                 self._iter_axes = list(
                     set(images.axes).difference({*self._bundle_axes, "c", "z"})
                 )
-                self._iter_axes.append("z")
+                if "z" in images.axes:
+                    self._iter_axes.append("z")
+
+                if self._timepoint is not None:
+                    # if a timepoint is given, PimsImages should only generate image slices for that timepoint
+                    if "t" in self._iter_axes:
+                        self._iter_axes.remove("t")
+                        self._default_coords["t"] = self._timepoint
 
                 if len(self._iter_axes) > 1:
                     iter_size = 1
@@ -244,7 +252,7 @@ class PimsImages:
                         pims.FramesSequence, images[0]
                     ).shape
                 else:
-                    images_shape = images.shape
+                    images_shape = images.shape  # pylint: disable=no-member
 
                 self.num_channels = images_shape[c_index + 1]
 
@@ -499,12 +507,6 @@ class PimsImages:
                             source=self._bundle_axes.index("c"),
                             destination=0,
                         )
-                    # ensure the last two axes are xy:
-                    if ("yx" in self._bundle_axes and not self._swap_xy) or (
-                        "xy" in self._bundle_axes and self._swap_xy
-                    ):
-                        image_slice = image_slice.swapaxes(-1, -2)
-
                     if "c" in self._bundle_axes:
                         if self._channel is not None:
                             image_slice = image_slice[self._channel : self._channel + 1]
@@ -527,7 +529,12 @@ class PimsImages:
                         max_id = max(max_id, image_slice.max())
 
                     x_index, y_index, _ = relative_bbox.get_3d("index")
-                    if x_index > y_index:
+                    if (
+                        x_index > y_index
+                        and self._swap_xy is False
+                        or x_index < y_index
+                        and self._swap_xy is True
+                    ):
                         image_slice = np.moveaxis(image_slice, -1, -2)
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
@@ -556,7 +563,7 @@ class PimsImages:
                     x_index, y_index = 1, 2
                 else:
                     x_index, y_index = 2, 1
-                if self._swap_xy:
+                if not self._swap_xy:
                     x_index, y_index = y_index, x_index
                 return BoundingBox(
                     (0, 0, 0),
@@ -567,9 +574,16 @@ class PimsImages:
                     axes_names = self._iter_axes + [
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
-                    axes_sizes = [images.sizes[axis] for axis in axes_names]
+                    axes_sizes = [images.sizes[axis] for axis in axes_names]  # pylint: disable=no-member
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(len(axes_names))
+
+                    if self._swap_xy:
+                        x_index, y_index = axes_names.index("x"), axes_names.index("y")
+                        axes_sizes[x_index], axes_sizes[y_index] = (
+                            axes_sizes[y_index],
+                            axes_sizes[x_index],
+                        )
 
                     return NDBoundingBox(
                         topleft,

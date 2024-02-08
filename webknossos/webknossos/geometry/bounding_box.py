@@ -362,21 +362,10 @@ class BoundingBox(NDBoundingBox):
                 for z in range(
                     start[2] - start_adjust[2], start[2] + self.size[2], chunk_shape[2]
                 ):
-                    yield BoundingBox([x, y, z], chunk_shape).intersected_with(self)
-
-    def slice_array(self, array: np.ndarray) -> np.ndarray:
-        return array[
-            self.topleft.x : self.bottomright.x,
-            self.topleft.y : self.bottomright.y,
-            self.topleft.z : self.bottomright.z,
-        ]
-
-    def to_slices(self) -> Tuple[slice, slice, slice]:
-        return np.index_exp[
-            self.topleft.x : self.bottomright.x,
-            self.topleft.y : self.bottomright.y,
-            self.topleft.z : self.bottomright.z,
-        ]
+                    yield cast(
+                        BoundingBox,
+                        BoundingBox([x, y, z], chunk_shape).intersected_with(self),
+                    )
 
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
         return attr.evolve(self, topleft=self.topleft + Vec3Int(vector))

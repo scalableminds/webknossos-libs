@@ -1232,7 +1232,7 @@ class Dataset:
             )
 
             args = []
-            bbox = pims_images.expected_bbox
+            bbox = layer.bounding_box
             additional_axes = [
                 axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")
             ]
@@ -1282,14 +1282,11 @@ class Dataset:
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                actual_size = pims_images.expected_bbox.set_3d(
+                actual_size = layer.bounding_box.set_3d(
                     "size",
-                    Vec3Int(
-                        dimwise_max(shapes)
-                        + (pims_images.expected_bbox.get_shape("z"),)
-                    ),
+                    Vec3Int(dimwise_max(shapes) + (layer.bounding_box.get_shape("z"),)),
                 )
-                layer.bounding_box = pims_images.expected_bbox.with_size(actual_size)
+                layer.bounding_box = layer.bounding_box.with_size(actual_size)
             if pims_images.expected_bbox.size != actual_size:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "

@@ -70,8 +70,8 @@ class BufferedSliceReader:
                 absolute_bounding_box=chunk.from_mag_to_mag1(self.view.mag)
             )
 
-            for current_slice in np.moveaxis(
-                data, self.dimension + 1, 0
+            for current_slice in np.rollaxis(
+                data, chunk.get_3d("index")[2]
             ):  # The '+1' is important because the first dimension is the channel
                 yield current_slice
 

@@ -164,9 +164,6 @@ class BufferedSliceWriter:
                 section_topleft = chunk_bbox.get_3d("topleft")
                 section_bottomright = chunk_bbox.get_3d("bottomright")
 
-                slice_tuple = (slice(None),) + tuple(
-                    slice(0, size) for size in chunk_bbox.size
-                )
                 z_index = chunk_bbox.get_3d("index")[self.dimension]
 
                 z = 0
@@ -187,6 +184,13 @@ class BufferedSliceWriter:
                         + self.bbox.get_3d("index")[self.dimension + 1 :],
                     )
 
+                    slice_tuple = (slice(None),) + tuple(
+                        slice(0, min(size1, size2))
+                        for size1, size2 in zip(
+                            chunk_bbox.size, section_chunk.shape[1:]
+                        )
+                    )
+
                     data[
                         slice_tuple[:z_index]
                         + (slice(z, z + 1),)
@@ -203,15 +207,11 @@ class BufferedSliceWriter:
                         + chunk_topleft[self.dimension + 1 :]
                     )
                 )
-                buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
-
                 self.view.write(
                     data,
                     offset=buffer_start.add_or_none(self.offset),
                     json_update_allowed=self.json_update_allowed,
-                    absolute_bounding_box=chunk_bbox  # .offset(buffer_start_mag1)
-                    if self.bbox
-                    else None,
+                    absolute_bounding_box=chunk_bbox if self.bbox else None,
                 )
                 del data
 

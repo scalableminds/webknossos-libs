@@ -267,12 +267,14 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        absolute_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
         # This has other defaults than the View implementation
-        # (all deprecations are handled in the subsclass)
+        # (all deprecations are handled in the superclass)
         bb = self.bounding_box.in_mag(self._mag)
         if offset is not None and size is None:
             offset = Vec3Int(offset)

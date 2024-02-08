@@ -22,7 +22,7 @@ from cluster_tools import Executor
 
 from webknossos.geometry.vec_int import VecInt
 
-from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecIntLike
 from ..utils import (
     get_executor_for_args,
     get_rich_progress,
@@ -134,12 +134,12 @@ class View:
         self,
         abs_mag1_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,
         rel_mag1_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,
-        abs_mag1_offset: Optional[Vec3IntLike] = None,
-        rel_mag1_offset: Optional[Vec3IntLike] = None,
-        mag1_size: Optional[Vec3IntLike] = None,
-        abs_current_mag_offset: Optional[Vec3IntLike] = None,
-        rel_current_mag_offset: Optional[Vec3IntLike] = None,
-        current_mag_size: Optional[Vec3IntLike] = None,
+        abs_mag1_offset: Optional[VecIntLike] = None,
+        rel_mag1_offset: Optional[VecIntLike] = None,
+        mag1_size: Optional[VecIntLike] = None,
+        abs_current_mag_offset: Optional[VecIntLike] = None,
+        rel_current_mag_offset: Optional[VecIntLike] = None,
+        current_mag_size: Optional[VecIntLike] = None,
     ) -> Union[NDBoundingBox, BoundingBox]:
         # num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
         # num_offsets = _count_defined_values(
@@ -304,7 +304,7 @@ class View:
 
     def _prepare_compressed_write(
         self,
-        current_mag_bbox: BoundingBox,
+        current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
         json_update_allowed: bool = True,
     ) -> Iterator[Tuple[BoundingBox, np.ndarray]]:
@@ -333,7 +333,7 @@ class View:
 
     def _prepare_compressed_write_chunk(
         self,
-        current_mag_bbox: BoundingBox,
+        current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
         json_update_allowed: bool = True,
     ) -> Tuple[BoundingBox, np.ndarray]:

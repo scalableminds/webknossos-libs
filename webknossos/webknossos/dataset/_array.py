@@ -355,7 +355,7 @@ class ZarrArray(BaseArray):
         shape = bbox.size
         zarray = self._zarray
         with _blosc_disable_threading():
-            data = zarray[(slice(None),) + bbox.get_slice_tuple()]
+            data = zarray[(slice(None),) + bbox.to_slices()]
 
         shape_with_channels = (self.info.num_channels,) + shape.to_tuple()
         if data.shape not in (shape, shape_with_channels):
@@ -417,7 +417,7 @@ class ZarrArray(BaseArray):
         with _blosc_disable_threading():
             self.ensure_size(bbox)
             zarray = self._zarray
-            index_tuple = (slice(None),) + bbox.get_slice_tuple()
+            index_tuple = (slice(None),) + bbox.to_slices()
 
             zarray[index_tuple] = data
 
@@ -603,7 +603,7 @@ class ZarritaArray(BaseArray):
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
         shape = bbox.size.to_tuple()
         zarray = self._zarray
-        slice_tuple = (slice(None),) + bbox.get_slice_tuple()
+        slice_tuple = (slice(None),) + bbox.to_slices()
         with _blosc_disable_threading():
             data = zarray[slice_tuple]
         assert data is not None, f"There is no data for given BoundingBox: {bbox}"
@@ -656,7 +656,7 @@ class ZarritaArray(BaseArray):
         with _blosc_disable_threading():
             self.ensure_size(bbox)
             zarray = self._zarray
-            index_tuple = (slice(None),) + bbox.get_slice_tuple()
+            index_tuple = (slice(None),) + bbox.to_slices()
 
             zarray[index_tuple] = data
 

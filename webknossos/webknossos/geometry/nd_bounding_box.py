@@ -245,12 +245,6 @@ class NDBoundingBox:
                 f"Axis {axis_name} doesn't exist in NDBoundingBox."
             ) from err
 
-    def get_slice_tuple(self) -> Tuple[slice, ...]:
-        return tuple(
-            slice(topleft, topleft + size)
-            for topleft, size in zip(self.topleft, self.size)
-        )
-
     def get_3d(self, attr_name: str) -> Vec3Int:
         axes = ("x", "y", "z")
         attr_3d = []
@@ -471,26 +465,26 @@ class NDBoundingBox:
                 for i in range(len(self.axes))
             ]
         ):
-            yield NDBoundingBox(
-                topleft=coordinates, size=chunk_shape, axes=self.axes, index=self.index
+            yield self.intersected_with(
+                NDBoundingBox(
+                    topleft=coordinates,
+                    size=chunk_shape,
+                    axes=self.axes,
+                    index=self.index,
+                )
             )
 
     def volume(self) -> int:
         return self.size.prod()
 
     def slice_array(self, array: np.ndarray) -> np.ndarray:
-        return array[
-            self.get_bounds("x")[0] : self.get_bounds("x")[1],
-            self.get_bounds("y")[0] : self.get_bounds("y")[1],
-            self.get_bounds("z")[0] : self.get_bounds("z")[1],
-        ]
+        return array[self.to_slices()]
 
-    def to_slices(self) -> Tuple[slice, slice, slice]:
-        return np.index_exp[
-            self.get_bounds("x")[0] : self.get_bounds("x")[1],
-            self.get_bounds("y")[0] : self.get_bounds("y")[1],
-            self.get_bounds("z")[0] : self.get_bounds("z")[1],
-        ]
+    def to_slices(self) -> Tuple[slice, ...]:
+        return tuple(
+            slice(topleft, topleft + size)
+            for topleft, size in zip(self.topleft, self.size)
+        )
 
     def offset(self, vector: VecIntLike) -> "NDBoundingBox":
         vec_int = VecInt(vector)

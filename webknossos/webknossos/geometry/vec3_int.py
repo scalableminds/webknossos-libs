@@ -12,8 +12,10 @@ class Vec3Int(VecInt):
     def __new__(
         cls,
         vec: Union[int, "Vec3IntLike"],
+        *args: int,
         y: Optional[int] = None,
         z: Optional[int] = None,
+        **kwargs: int,
     ) -> "Vec3Int":
         """
         Class to represent a 3D vector. Inherits from tuple and provides useful
@@ -35,24 +37,10 @@ class Vec3Int(VecInt):
         if isinstance(vec, Vec3Int):
             return vec
 
-        as_tuple: Optional[Tuple[int, int, int]] = None
-
-        if isinstance(vec, int):
-            assert y is not None and z is not None, VALUE_ERROR
-            assert isinstance(y, int) and isinstance(z, int), VALUE_ERROR
-            as_tuple = vec, y, z
-        else:
-            assert y is None and z is None, VALUE_ERROR
-            if isinstance(vec, np.ndarray):
-                assert np.count_nonzero(vec % 1) == 0, VALUE_ERROR
-                assert vec.shape == (
-                    3,
-                ), "Numpy array for Vec3Int must have shape (3,)."
-            if isinstance(vec, Iterable):
-                as_tuple = cast(Tuple[int, int, int], tuple(int(item) for item in vec))
+        as_tuple = super().__new__(cls, vec, *args, y=y, z=z, **kwargs)
         assert as_tuple is not None and len(as_tuple) == 3, VALUE_ERROR
 
-        return cast(cls, super().__new__(cls, as_tuple))
+        return cast(cls, as_tuple)
 
     @property
     def x(self) -> int:

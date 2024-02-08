@@ -144,10 +144,12 @@ class VecInt(tuple):
         return self._element_wise(other, min)
 
     def prod(self) -> int:
-        return int(np.prod(self))
+        return int(np.prod(self.to_np()))
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({', '.join((str(element) for element in self))})"
+        return (
+            f"{self.__class__.__name__}({','.join((str(element) for element in self))})"
+        )
 
     def add_or_none(self, other: Optional["VecInt"]) -> Optional["VecInt"]:
         return None if other is None else self + other
