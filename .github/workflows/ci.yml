@@ -134,7 +134,7 @@ jobs:
         if: ${{ matrix.executors == 'dask' && matrix.python-version != '3.8' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=dask poetry run python -m pytest -sv test_all.py
+          PYTEST_EXECUTORS=dask poetry run python -m pytest -sv test_all.py test_dask.py
 
   webknossos_linux:
     needs: changes
