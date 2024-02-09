@@ -23,7 +23,7 @@ from tests.constants import (
     TESTDATA_DIR,
     use_minio,
 )
-from webknossos import Annotation, BoundingBox, DataFormat, Dataset
+from webknossos import BoundingBox, DataFormat, Dataset
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
