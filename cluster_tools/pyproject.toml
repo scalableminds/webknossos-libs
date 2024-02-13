@@ -14,7 +14,7 @@ kubernetes = "^27.2.0"
 typing-extensions = "^4.4.0"
 
 [tool.poetry.dev-dependencies]
-black = "^23.1.0"
+black = "^24.2.0"
 icecream = "^2.1.1"
 isort = "^5.9.3"
 mypy = "^1.0.0"
