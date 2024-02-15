@@ -10,7 +10,7 @@ import webknossos as wk
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 TIF_PATH = Path(".") / "webknossos" / "testdata" / "4D" / "4D_series"
-OUTPUT = Path(".") / "testdata"
+OUTPUT = Path(".") / "testdata" / "4D_series"
 
 
 def from_images_import():
@@ -22,20 +22,21 @@ def from_images_import():
         OUTPUT,
         voxel_size=(10, 10, 10),
         data_format="zarr3",
+        compress=True,
         use_bioformats=True,
     )
     layer = dataset.get_color_layers()[0]
     mag_view = layer.get_finest_mag()
-    data = mag_view.read()[0, 0, 0, :, :]  # absolute_bounding_box=read_bbox)
+    # data = mag_view.read()[0, 0, 0, :, :]  # absolute_bounding_box=read_bbox)
     # assert data.shape == (1,)+read_bbox.size
 
-    imwrite("l4_sample_tiff/test.tiff", data)
+    # imwrite("l4_sample_tiff/test.tiff", data)
 
     for bbox in layer.bounding_box.chunk((439, 167, 5)):
         with mag_view.get_buffered_slice_reader(absolute_bounding_box=bbox) as reader:
-            for slice_data in reader:
+            for i, slice_data in enumerate(reader):
                 imwrite(
-                    f"l4_sample_tiff/tiff_from_bbox{bbox}.tiff",
+                    f"l4_sample_tiff/tiff_{i}_from_bbox{bbox}.tiff",
                     slice_data,
                 )
 

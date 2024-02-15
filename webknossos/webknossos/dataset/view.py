@@ -307,7 +307,7 @@ class View:
         current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
         json_update_allowed: bool = True,
-    ) -> Iterator[Tuple[BoundingBox, np.ndarray]]:
+    ) -> Iterator[Tuple[NDBoundingBox, np.ndarray]]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox,
         divides these into chunks of shard_shape size and delegates
         the preparation to _prepare_compressed_write_chunk."""
@@ -336,7 +336,7 @@ class View:
         current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
         json_update_allowed: bool = True,
-    ) -> Tuple[BoundingBox, np.ndarray]:
+    ) -> Tuple[NDBoundingBox, np.ndarray]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox
         (ideally not larger than a shard) and enlarges that chunk to fit the shard it
         resides in (by reading the entire shard data and writing the passed data ndarray

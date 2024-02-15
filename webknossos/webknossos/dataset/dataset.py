@@ -1186,9 +1186,12 @@ class Dataset:
                 num_channels=pims_images.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
+
+            expected_bbox = pims_images.expected_bbox
+
             # When the expected bbox is 2D the chunk_shape is set to 2D too.
             if (
-                pims_images.expected_bbox.get_shape("z") == 1
+                expected_bbox.get_shape("z") == 1
                 and layer.data_format == DataFormat.Zarr
             ):
                 if chunk_shape is None:
@@ -1200,9 +1203,7 @@ class Dataset:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
 
             mag = Mag(mag)
-            layer.bounding_box = pims_images.expected_bbox.from_mag_to_mag1(mag).offset(
-                topleft
-            )
+            layer.bounding_box = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
@@ -1239,9 +1240,20 @@ class Dataset:
             additional_axes_shapes = product(
                 *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
             )
+            if additional_axes and data_format != DataFormat.Zarr3:
+                assert all(
+                    shape == 1 for shape in additional_axes_shapes
+                ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
+
+                # Convert NDBoundingBox to 3D BoundingBox
+                bbox = BoundingBox(bbox.get_3d("topleft"), bbox.get_3d("size"))
+                expected_bbox = bbox
+                additional_axes = []
+
             z_shape = bbox.get_shape("z")
+            bbox = bbox.offset(-bbox.topleft)
             for z_start in range(0, z_shape, batch_size):
-                z_size = min(batch_size, z_shape)
+                z_size = min(batch_size, z_shape - z_start)
                 z_bbox = bbox.with_bounds("z", z_start, z_size)
                 if not additional_axes:
                     args.append(z_bbox)
@@ -1282,15 +1294,16 @@ class Dataset:
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                actual_size = layer.bounding_box.set_3d(
+                actual_size = bbox.set_3d(
                     "size",
-                    Vec3Int(dimwise_max(shapes) + (layer.bounding_box.get_shape("z"),)),
+                    Vec3Int(dimwise_max(shapes) + (layer.bounding_box.get_shape("z"),))
+                    * mag.to_vec3_int().with_z(1),
                 )
                 layer.bounding_box = layer.bounding_box.with_size(actual_size)
-            if pims_images.expected_bbox.size != actual_size:
+            if expected_bbox.size != actual_size:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
-                    + f"New size is {actual_size}, expected {pims_images.expected_bbox.size}."
+                    + f"New size is {actual_size}, expected {expected_bbox.size}."
                 )
             if first_layer is None:
                 first_layer = layer

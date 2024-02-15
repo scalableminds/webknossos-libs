@@ -464,9 +464,11 @@ class PimsImages:
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
         relative_bbox = args
+
         assert relative_bbox.set_3d("size", (1, 1, 1)) == VecInt.ones(
             len(relative_bbox)
         ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
+
         z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
         max_id: Optional[int]
@@ -492,7 +494,6 @@ class PimsImages:
                 # Previously only z_start and its end were important, now the slice writer needs to know
                 # which axis is currently written.
                 relative_bounding_box=relative_bbox,
-                # relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
                 # copy_to_view is typically used in a multiprocessing-context. Therefore the
                 # buffered slice writer should not update the json file to avoid race conditions.
@@ -529,13 +530,11 @@ class PimsImages:
                         max_id = max(max_id, image_slice.max())
 
                     x_index, y_index, _ = relative_bbox.get_3d("index")
-                    if (
-                        x_index > y_index
-                        and self._swap_xy is False
-                        or x_index < y_index
-                        and self._swap_xy is True
+                    if (x_index < y_index and self._swap_xy is False) or (
+                        x_index > y_index and self._swap_xy is True
                     ):
                         image_slice = np.moveaxis(image_slice, -1, -2)
+
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
 
@@ -563,7 +562,7 @@ class PimsImages:
                     x_index, y_index = 1, 2
                 else:
                     x_index, y_index = 2, 1
-                if not self._swap_xy:
+                if self._swap_xy:
                     x_index, y_index = y_index, x_index
                 return BoundingBox(
                     (0, 0, 0),
@@ -574,7 +573,9 @@ class PimsImages:
                     axes_names = self._iter_axes + [
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
-                    axes_sizes = [images.sizes[axis] for axis in axes_names]  # pylint: disable=no-member
+                    axes_sizes = [
+                        images.sizes[axis] for axis in axes_names
+                    ]  # pylint: disable=no-member
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(len(axes_names))
 

@@ -606,12 +606,14 @@ class ZarritaArray(BaseArray):
         slice_tuple = (slice(None),) + bbox.to_slices()
         with _blosc_disable_threading():
             data = zarray[slice_tuple]
-        assert data is not None, f"There is no data for given BoundingBox: {bbox}"
 
         shape_with_channels = (self.info.num_channels,) + shape
-        if data.shape not in (shape, shape_with_channels):
-            padded_data = np.zeros(shape_with_channels, dtype=data.dtype)
-            padded_data[slice_tuple] = data
+        if data.shape != shape_with_channels:
+            data_slice_tuple = tuple(slice(0, size) for size in data.shape)
+            padded_data = np.zeros(shape_with_channels, dtype=zarray.metadata.dtype)
+            padded_data[
+                data_slice_tuple
+            ] = data  # TODO: Fix this easy to fix bug, the solution is really obvious
             data = padded_data
         return data
 
@@ -621,7 +623,7 @@ class ZarritaArray(BaseArray):
         align_with_shards: bool = True,
         warn: bool = False,
     ) -> None:
-        new_shape = new_bbox.size
+        new_shape = new_bbox.bottomright
         zarray = self._zarray
 
         new_shape_tuple = (zarray.metadata.shape[0],) + tuple(
@@ -632,10 +634,10 @@ class ZarritaArray(BaseArray):
             if align_with_shards:
                 shard_shape = self.info.shard_shape
                 new_shape = Vec3Int(
-                    new_bbox.get_3d("size").ceildiv(shard_shape) * shard_shape
+                    new_bbox.get_3d("bottomright").ceildiv(shard_shape) * shard_shape
                 )
                 new_shape_tuple = (zarray.metadata.shape[0],) + new_bbox.set_3d(
-                    "size", new_shape
+                    "bottomright", new_shape
                 ).to_tuple()
 
             # Check on-disk for changes to shape
@@ -653,6 +655,12 @@ class ZarritaArray(BaseArray):
             self._cached_zarray = zarray.resize(new_shape_tuple)
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+        if data.ndim == len(bbox):
+            # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
+            data = data.reshape((1,) + data.shape)
+
+        assert data.ndim == len(bbox) + 1
+
         with _blosc_disable_threading():
             self.ensure_size(bbox)
             zarray = self._zarray

@@ -446,17 +446,27 @@ class NDBoundingBox:
         except AssertionError:
             chunk_shape = VecInt(chunk_shape).to_np()
 
-        start_adjust = VecInt.zeros(len(self.topleft)).to_np()
+        start_adjust = VecInt.zeros(len(self)).to_np()
         if chunk_border_alignments is not None:
-            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
+            try:
+                chunk_border_alignments = Vec3Int(chunk_border_alignments)
+
+                chunk_border_alignments = (
+                    self.with_size(VecInt.ones(len(self)))
+                    .set_3d("size", chunk_border_alignments)
+                    .to_np()
+                )
+            except AssertionError:
+                chunk_border_alignments = VecInt(chunk_border_alignments).to_np()
+
             assert np.all(
-                chunk_shape % chunk_border_alignments_array == 0
-            ), f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+                chunk_shape % chunk_border_alignments == 0
+            ), f"{chunk_shape} not divisible by {chunk_border_alignments}"
 
             # Move the start to be aligned correctly. This doesn't actually change
             # the start of the first chunk, because we'll intersect with `self`,
             # but it'll lead to all chunk borders being aligned correctly.
-            start_adjust = start % chunk_border_alignments_array
+            start_adjust = start % chunk_border_alignments
         for coordinates in product(
             *[
                 range(

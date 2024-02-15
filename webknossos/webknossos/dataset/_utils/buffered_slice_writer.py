@@ -45,8 +45,12 @@ class BufferedSliceWriter:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,
-        absolute_bounding_box: Optional[Union[NDBoundingBox, BoundingBox]] = None,
+        relative_bounding_box: Optional[
+            Union[NDBoundingBox, BoundingBox]
+        ] = None,  # in mag1
+        absolute_bounding_box: Optional[
+            Union[NDBoundingBox, BoundingBox]
+        ] = None,  # in mag1
         use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_writer()`"""
@@ -142,9 +146,13 @@ class BufferedSliceWriter:
             max_height = max(section.shape[-1] for section in self.slices_to_write)
             channel_count = self.slices_to_write[0].shape[0]
             buffer_depth = min(self.buffer_size, len(self.slices_to_write))
-            self.bbox = self.bbox.with_size(
-                self.bbox.set_3d("size", (max_width, max_height, buffer_depth))
+            buffer_start = Vec3Int.zeros().with_replaced(
+                self.dimension, self.buffer_start_slice
             )
+
+            bbox = self.bbox.with_size(
+                self.bbox.set_3d("size", (max_width, max_height, buffer_depth))
+            ).offset(buffer_start)
 
             shard_dimensions = self.view._get_file_dimensions().moveaxis(
                 -1, self.dimension
@@ -154,15 +162,19 @@ class BufferedSliceWriter:
                 min(shard_dimensions[1], max_height),
                 buffer_depth,
             )
-            for chunk_bbox in self.bbox.chunk(chunk_size):
+            for chunk_bbox in bbox.chunk(chunk_size):
                 info(f"Writing chunk {chunk_bbox}.")
 
                 data = np.zeros(
                     (channel_count, *chunk_bbox.size),
                     dtype=self.slices_to_write[0].dtype,
                 )
-                section_topleft = chunk_bbox.get_3d("topleft")
-                section_bottomright = chunk_bbox.get_3d("bottomright")
+                section_topleft = Vec3Int(
+                    chunk_bbox.get_3d("topleft") - bbox.get_3d("topleft")
+                )
+                section_bottomright = Vec3Int(
+                    chunk_bbox.get_3d("bottomright") - bbox.get_3d("topleft")
+                )
 
                 z_index = chunk_bbox.get_3d("index")[self.dimension]
 
@@ -170,18 +182,18 @@ class BufferedSliceWriter:
                 for section in self.slices_to_write:
                     section_chunk = section[
                         :,
-                        section_topleft[0] : section_bottomright[0],
-                        section_topleft[1] : section_bottomright[1],
+                        section_topleft.x : section_bottomright.x,
+                        section_topleft.y : section_bottomright.y,
                     ]
                     section_chunk = section_chunk[
                         (slice(None), slice(None), slice(None))
-                        + tuple(np.newaxis for _ in range(len(self.bbox) - 2))
+                        + tuple(np.newaxis for _ in range(len(bbox) - 2))
                     ]
                     section_chunk = np.moveaxis(
                         section_chunk,
                         [1, 2],
-                        self.bbox.get_3d("index")[: self.dimension]
-                        + self.bbox.get_3d("index")[self.dimension + 1 :],
+                        bbox.get_3d("index")[: self.dimension]
+                        + bbox.get_3d("index")[self.dimension + 1 :],
                     )
 
                     slice_tuple = (slice(None),) + tuple(
@@ -199,19 +211,11 @@ class BufferedSliceWriter:
 
                     z += 1
 
-                chunk_topleft = chunk_bbox.get_3d("topleft")
-                buffer_start = Vec3Int(
-                    *(
-                        chunk_topleft[: self.dimension]
-                        + (self.buffer_start_slice,)
-                        + chunk_topleft[self.dimension + 1 :]
-                    )
-                )
                 self.view.write(
                     data,
-                    offset=buffer_start.add_or_none(self.offset),
+                    offset=chunk_bbox.get_3d("topleft").add_or_none(self.offset),
                     json_update_allowed=self.json_update_allowed,
-                    absolute_bounding_box=chunk_bbox if self.bbox else None,
+                    absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self.view._mag),
                 )
                 del data
 

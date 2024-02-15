@@ -1,5 +1,5 @@
 import re
-from typing import Iterable, Optional, Tuple, Union, cast
+from typing import Iterable, Optional, Tuple, Type, Union, cast
 
 import numpy as np
 
@@ -40,7 +40,7 @@ class Vec3Int(VecInt):
         as_tuple = super().__new__(cls, vec, *args, y=y, z=z, **kwargs)
         assert as_tuple is not None and len(as_tuple) == 3, VALUE_ERROR
 
-        return cast(cls, as_tuple)
+        return cast(Vec3Int, as_tuple)
 
     @property
     def x(self) -> int:

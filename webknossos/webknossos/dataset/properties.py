@@ -300,7 +300,7 @@ def layer_properties_pre_structure(
             del d["wkwResolutions"]
         # bounding_box and additional_axes are internally handled as nd_bounding_box
         if "additionalAxes" in d:
-            d["boundingBox"]["additionalAxes"] = d["additionalAxes"]
+            d["boundingBox"]["additionalAxes"] = copy.deepcopy(d["additionalAxes"])
             del d["additionalAxes"]
         if len(d["mags"]) > 0:
             first_mag = d["mags"][0]
