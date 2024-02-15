@@ -1240,7 +1240,7 @@ class Dataset:
             additional_axes_shapes = product(
                 *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
             )
-            if additional_axes and data_format != DataFormat.Zarr3:
+            if additional_axes and layer.data_format != DataFormat.Zarr3:
                 assert all(
                     shape == 1 for shape in additional_axes_shapes
                 ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."

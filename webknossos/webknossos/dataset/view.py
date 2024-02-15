@@ -140,33 +140,7 @@ class View:
         abs_current_mag_offset: Optional[VecIntLike] = None,
         rel_current_mag_offset: Optional[VecIntLike] = None,
         current_mag_size: Optional[VecIntLike] = None,
-    ) -> Union[NDBoundingBox, BoundingBox]:
-        # num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
-        # num_offsets = _count_defined_values(
-        #     [
-        #         abs_mag1_offset,
-        #         rel_mag1_offset,
-        #         abs_current_mag_offset,
-        #         rel_current_mag_offset,
-        #     ]
-        # )
-        # num_sizes = _count_defined_values([mag1_size, current_mag_size])
-        # if num_bboxes == 0:
-        #     assert num_offsets != 0, "You must supply an offset or a bounding box."
-        #     assert (
-        #         num_sizes != 0
-        #     ), "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
-        #     assert num_offsets == 1, "Only one offset can be supplied."
-        #     assert num_sizes == 1, "Only one size can be supplied."
-        # else:
-        #     assert num_bboxes == 1, "Only one bounding-box can be supplied."
-        #     assert (
-        #         num_offsets == 0
-        #     ), "A bounding-box was supplied, you cannot also supply an offset."
-        #     assert (
-        #         num_sizes == 0
-        #     ), "A bounding-box was supplied, you cannot also supply a size."
-
+    ) -> NDBoundingBox:
         if abs_mag1_bbox is not None:
             return abs_mag1_bbox
 
@@ -189,7 +163,9 @@ class View:
 
             assert abs_mag1_offset is not None, "No offset was supplied."
             assert mag1_size is not None, "No size was supplied."
-            return BoundingBox(Vec3Int(abs_mag1_offset), Vec3Int(mag1_size))
+
+            bbox = self.bounding_box.offset(-self.bounding_box.topleft)
+            return bbox.offset(abs_mag1_offset).with_size(mag1_size)
 
     def write(
         self,
@@ -471,7 +447,7 @@ class View:
                     mag1_size = None
 
             if all(i is None for i in [offset, absolute_offset, relative_offset]):
-                relative_offset = Vec3Int.zeros()
+                relative_offset = VecInt.zeros(len(self.bounding_box))
         else:
             assert (
                 size is None

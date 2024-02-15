@@ -1,5 +1,5 @@
 import re
-from typing import Iterable, Optional, Tuple, Type, Union, cast
+from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 

@@ -611,9 +611,7 @@ class ZarritaArray(BaseArray):
         if data.shape != shape_with_channels:
             data_slice_tuple = tuple(slice(0, size) for size in data.shape)
             padded_data = np.zeros(shape_with_channels, dtype=zarray.metadata.dtype)
-            padded_data[
-                data_slice_tuple
-            ] = data  # TODO: Fix this easy to fix bug, the solution is really obvious
+            padded_data[data_slice_tuple] = data
             data = padded_data
         return data
 

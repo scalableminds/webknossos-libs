@@ -529,10 +529,7 @@ class PimsImages:
                     if max_id is not None:
                         max_id = max(max_id, image_slice.max())
 
-                    x_index, y_index, _ = relative_bbox.get_3d("index")
-                    if (x_index < y_index and self._swap_xy is False) or (
-                        x_index > y_index and self._swap_xy is True
-                    ):
+                    if self._swap_xy is False:
                         image_slice = np.moveaxis(image_slice, -1, -2)
 
                     shapes.append(image_slice.shape[-2:])
@@ -574,8 +571,9 @@ class PimsImages:
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
                     axes_sizes = [
-                        images.sizes[axis] for axis in axes_names
-                    ]  # pylint: disable=no-member
+                        images.sizes[axis]
+                        for axis in axes_names  # pylint: disable=no-member
+                    ]
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(len(axes_names))
 

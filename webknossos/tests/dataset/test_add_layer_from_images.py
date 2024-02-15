@@ -43,6 +43,26 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         assert np.array_equal(data[:, :, z_index], comparison_slice)
 
 
+def test_compare_nd_tifffile(tmp_path: Path) -> None:
+    ds = wk.Dataset(tmp_path, (1, 1, 1))
+    l = ds.add_layer_from_images(
+        "testdata/4D/4D_series/4D-series.ome.tif",
+        layer_name="color",
+        category="color",
+        topleft=(100, 100, 55),
+        use_bioformats=True,
+        data_format="zarr3",
+        chunk_shape=(8, 8, 8),
+        chunks_per_shard=(8, 8, 8),
+    )
+    assert l.bounding_box.topleft == wk.VecInt(0, 55, 100, 100)
+    assert l.bounding_box.size == wk.VecInt(7, 5, 167, 439)
+    assert np.array_equal(
+        l.get_finest_mag().read()[0],
+        TiffFile("testdata/4D/4D_series/4D-series.ome.tif").asarray(),
+    )
+
+
 REPO_IMAGES_ARGS: List[
     Tuple[Union[str, List[Path]], Dict[str, Any], str, int, Tuple[int, int, int]]
 ] = [
