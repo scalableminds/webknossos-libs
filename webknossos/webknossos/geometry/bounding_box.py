@@ -1,6 +1,5 @@
 import json
 import re
-from collections import defaultdict
 from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
 
 import attr
@@ -156,25 +155,6 @@ class BoundingBox(NDBoundingBox):
                 return cls.from_tuple6(obj)  # type: ignore
 
         raise Exception("Unknown bounding box format.")
-
-    @classmethod
-    def group_boxes_with_aligned_mag(
-        cls, bounding_boxes: Iterable["BoundingBox"], aligning_mag: Mag
-    ) -> Dict["BoundingBox", List["BoundingBox"]]:
-        """
-        Groups the given BoundingBox instances by aligning each
-        bbox to the given mag and using that as the key.
-        For example, bounding boxes of size 256**3 could be grouped
-        into the corresponding 1024**3 chunks to which they belong
-        by using aligning_mag = Mag(1024).
-        """
-
-        chunks_with_bboxes = defaultdict(list)
-        for bbox in bounding_boxes:
-            chunk_key = bbox.align_with_mag(aligning_mag, ceil=True)
-            chunks_with_bboxes[chunk_key].append(bbox)
-
-        return chunks_with_bboxes
 
     @classmethod
     def empty(

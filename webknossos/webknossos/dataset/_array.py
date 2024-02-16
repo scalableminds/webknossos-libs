@@ -519,8 +519,9 @@ class ZarritaArray(BaseArray):
                         sharding_codec.codec_pipeline.codecs
                     ),
                     chunk_shape=Vec3Int(chunk_shape[1:4]),
-                    chunks_per_shard=Vec3Int(shard_shape[1:4])
-                    // Vec3Int(chunk_shape[1:4]),
+                    chunks_per_shard=Vec3Int(
+                        Vec3Int(shard_shape[1:4]) // Vec3Int(chunk_shape[1:4])
+                    ),
                     dimension_names=dimension_names,
                 )
             return ArrayInfo(

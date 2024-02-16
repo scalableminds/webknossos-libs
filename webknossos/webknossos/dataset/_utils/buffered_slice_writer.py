@@ -4,7 +4,7 @@ import warnings
 from logging import error, info
 from os import getpid
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Generator, List, Optional, Type
 
 import numpy as np
 import psutil
@@ -45,12 +45,8 @@ class BufferedSliceWriter:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
-        absolute_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_writer()`"""
@@ -60,6 +56,7 @@ class BufferedSliceWriter:
         self.dtype = self.view.get_dtype()
         self.use_logging = use_logging
         self.json_update_allowed = json_update_allowed
+        self.bbox: NDBoundingBox
 
         if (
             offset is None

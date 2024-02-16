@@ -1513,7 +1513,7 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
-    def calculate_bounding_box(self) -> BoundingBox:
+    def calculate_bounding_box(self) -> NDBoundingBox:
         """
         Calculates and returns the enclosing bounding box of all data layers of the dataset.
         """

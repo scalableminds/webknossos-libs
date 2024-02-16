@@ -63,6 +63,9 @@ class Vec3Int(VecInt):
     def with_z(self, new_z: int) -> "Vec3Int":
         return Vec3Int.from_xyz(self.x, self.y, new_z)
 
+    def to_tuple(self) -> Tuple[int, int, int]:
+        return (self.x, self.y, self.z)
+
     @staticmethod
     def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
         """Use Vec3Int.from_xyz for fast construction."""

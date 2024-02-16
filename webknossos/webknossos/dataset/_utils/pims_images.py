@@ -571,8 +571,8 @@ class PimsImages:
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
                     axes_sizes = [
-                        images.sizes[axis]
-                        for axis in axes_names  # pylint: disable=no-member
+                        images.sizes[axis]  # pylint: disable=no-member
+                        for axis in axes_names
                     ]
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(len(axes_names))

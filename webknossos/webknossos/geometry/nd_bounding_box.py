@@ -201,13 +201,19 @@ class NDBoundingBox:
                         "index": self.index[i],
                     }
                 )
-
+        if additional_axes:
+            return {
+                "topLeft": topleft,
+                "width": width,
+                "height": height,
+                "depth": depth,
+                "additionalAxes": additional_axes,
+            }
         return {
             "topLeft": topleft,
             "width": width,
             "height": height,
             "depth": depth,
-            "additionalAxes": additional_axes,
         }
 
     def to_config_dict(self) -> dict:
