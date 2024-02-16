@@ -35,7 +35,7 @@ def main(
             parser=parse_path,
         ),
     ],
-    dataset_folder: Annotated[
+    dataset_directory: Annotated[
         Any,
         typer.Argument(
             help="Path to your WEBKNOSSOS dataset folder.",
@@ -105,7 +105,7 @@ def main(
         annotation.export_volume_layer_to_dataset(output_dataset)
 
     else:
-        fallback_dataset_path = dataset_folder / annotation.dataset_name
+        fallback_dataset_path = dataset_directory / annotation.dataset_name
         fallback_layer = Dataset.open(fallback_dataset_path).get_layer(
             fallback_layer_name
         )
