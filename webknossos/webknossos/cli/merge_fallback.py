@@ -175,7 +175,7 @@ def merge_mags(
 
     logging.info(f"Grouping {len(bboxes)} bboxes according to output shards.")
     shards_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(
-        bboxes, Mag(output_mag.info.shard_size * output_mag.mag)
+        bboxes, Mag(output_mag.info.shard_shape * output_mag.mag)
     )
 
     args = [
