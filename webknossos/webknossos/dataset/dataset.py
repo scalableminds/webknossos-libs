@@ -30,11 +30,11 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
-from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from cluster_tools import Executor
 from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset
@@ -1746,7 +1746,7 @@ class Dataset:
             # axes are not the same. During initialization axes are added or moved sometimes.
             warnings.warn(
                 "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
-                + "within the bounding box changed the naming or order of the axes."
+                + "the bounding box naming or axis order changed."
             )
 
         with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:

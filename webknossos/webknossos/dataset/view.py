@@ -18,8 +18,8 @@ from typing import (
 
 import numpy as np
 import wkw
-from cluster_tools import Executor
 
+from cluster_tools import Executor
 from webknossos.geometry.vec_int import VecInt
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecIntLike
@@ -264,9 +264,6 @@ class View:
             assert self.bounding_box.contains_bbox(
                 mag1_bbox
             ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
-
-        # if len(data.shape) == 4 and data.shape[0] == 1:
-        #     data = data[0]  # remove channel dimension for single-channel data
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
@@ -689,8 +686,8 @@ class View:
 
         Arguments:
         * The user can specify where the writer should start:
-            * `relative_offset` in Mag(1) -> not usable for n-dimensional data
-            * `absolute_offset` in Mag(1) -> not usable for n-dimensional data
+            * `relative_offset` in Mag(1)
+            * `absolute_offset` in Mag(1)
             * `relative_bounding_box` in Mag(1)
             * `absolute_bounding_box` in Mag(1)
             * ⚠️ deprecated: `offset` in the current Mag,

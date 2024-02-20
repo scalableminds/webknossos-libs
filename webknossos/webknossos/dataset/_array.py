@@ -407,7 +407,7 @@ class ZarrArray(BaseArray):
             zarray.resize(new_shape_tuple)
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        """Writes ZarrArray. If offset and bbox are given the bbox is prefered to enable writing of n-dimensional data."""
+        """Writes a ZarrArray. If offset and bbox are given the bbox is prefered to enable writing of n-dimensional data."""
 
         # If data is 3-dimensional, it is assumed that num_channels=1.
         if data.ndim == 3:

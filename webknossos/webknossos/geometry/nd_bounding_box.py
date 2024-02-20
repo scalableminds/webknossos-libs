@@ -15,16 +15,17 @@ _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 @attr.frozen
 class NDBoundingBox:
     """
-    This class is used to represent an axis-aligned cuboid in N-D.
+    This class is used to represent an axis-aligned, n-dimensional cuboid.
     The top-left coordinate is inclusive and the bottom-right coordinate is exclusive.
+    The index parameter defines the axis order of the data, all values have to be greater or equal to 1, as index 0 is reserved for channel data.
 
     A small usage example:
 
     ```python
     from webknossos import NDBoundingBox
 
-    bbox_1 = NDBoundingBox(top_left=(0, 0, 0), size=(100, 100, 100), axes=("x", "y", "z"))
-    bbox_2 = NDBoundingBox(top_left=(75, 75, 75, 0), size=(100, 100, 100, 20), axes=("x", "y", "z", "t"))
+    bbox_1 = NDBoundingBox(top_left=(0, 0, 0), size=(100, 100, 100), axes=("x", "y", "z"), index=(1,2,3))
+    bbox_2 = NDBoundingBox(top_left=(75, 75, 75, 0), size=(100, 100, 100, 20), axes=("x", "y", "z", "t"), index=(2,3,4,1))
 
     ```
     """
@@ -170,7 +171,7 @@ class NDBoundingBox:
             if "additionalAxes" in bbox:
                 assert (
                     "axisOrder" in bbox
-                ), "If there are additionalAxes an axisOrder needs to be given."
+                ), "If there are additionalAxes an axisOrder needs to be provided."
                 for axis in bbox["additionalAxes"]:
                     topleft.append(axis["bounds"][0])
                     size.append(axis["bounds"][1] - axis["bounds"][0])
