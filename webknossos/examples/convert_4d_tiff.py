@@ -19,16 +19,17 @@ def main() -> None:
 
     # Read the data of the dataset within a bounding box
     read_bbox = wk.NDBoundingBox(
-        topleft=(2,0,0,0),
+        topleft=(2, 0, 0, 0),
         size=(1, 5, 167, 439),
         axes=("t", "z", "y", "x"),
-        index=(1,2,3,4)
+        index=(1, 2, 3, 4),
     )
     data = mag_view.read(absolute_bounding_box=read_bbox)
     # data.shape -> (1, 1, 5, 167, 439)
 
     # Write some data to a given position
-    mag_view.write(data, absolute_bounding_box=read_bbox.offset((2,0,0,0)))
+    mag_view.write(data, absolute_bounding_box=read_bbox.offset((2, 0, 0, 0)))
+
 
 if __name__ == "__main__":
     main()

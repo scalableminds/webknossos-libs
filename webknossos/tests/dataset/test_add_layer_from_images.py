@@ -57,10 +57,11 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
     )
     assert l.bounding_box.topleft == wk.VecInt(0, 55, 100, 100)
     assert l.bounding_box.size == wk.VecInt(7, 5, 167, 439)
-    assert np.array_equal(
-        l.get_finest_mag().read()[0],
-        TiffFile("testdata/4D/4D_series/4D-series.ome.tif").asarray(),
-    )
+    read_with_tifffile_reader = TiffFile(
+        "testdata/4D/4D_series/4D-series.ome.tif"
+    ).asarray()
+    read_first_channel_from_dataset = l.get_finest_mag().read()[0]
+    assert np.array_equal(read_with_tifffile_reader, read_first_channel_from_dataset)
 
 
 REPO_IMAGES_ARGS: List[

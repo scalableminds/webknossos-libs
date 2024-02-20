@@ -252,7 +252,7 @@ class NDBoundingBox:
                 f"Axis {axis_name} doesn't exist in NDBoundingBox."
             ) from err
 
-    def get_3d(self, attr_name: str) -> Vec3Int:
+    def get_xyz_for_attribute(self, attr_name: str) -> Vec3Int:
         axes = ("x", "y", "z")
         attr_3d = []
 
@@ -274,9 +274,10 @@ class NDBoundingBox:
         return VecInt(modified_attr)
 
     def _check_compatibility(self, other) -> None:
+        """Checks if two bounding boxes are comparable. To be comparable they need the same number of axes, with same names and same order."""
         if self.axes != other.axes:
             raise ValueError(
-                f"Operation with two bboxes is only possible if they have the same axes. {self.axes} != {other.axes}"
+                f"Operation with two bboxes is only possible if they have the same axes and axes order. {self.axes} != {other.axes}"
             )
 
     def padded_with_margins(

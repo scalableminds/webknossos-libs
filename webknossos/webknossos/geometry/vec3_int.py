@@ -93,21 +93,15 @@ class Vec3Int(VecInt):
         return Vec3Int.full(int(string))
 
     @classmethod
-    def zeros(cls, length: int = 3) -> "Vec3Int":
-        del length
-
+    def zeros(cls, _length: int = 3) -> "Vec3Int":
         return cls(0, 0, 0)
 
     @classmethod
-    def ones(cls, length: int = 3) -> "Vec3Int":
-        del length
-
+    def ones(cls, _length: int = 3) -> "Vec3Int":
         return cls(1, 1, 1)
 
     @classmethod
-    def full(cls, an_int: int, length: int = 3) -> "Vec3Int":
-        del length
-
+    def full(cls, an_int: int, _length: int = 3) -> "Vec3Int":
         return cls(an_int, an_int, an_int)
 
 

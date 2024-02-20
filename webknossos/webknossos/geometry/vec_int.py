@@ -47,7 +47,11 @@ class VecInt(tuple):
                 assert y is not None and z is not None, VALUE_ERROR
                 remaining_axes = []
                 for key, value in kwargs.items():
-                    assert key not in ["x", "y", "z"], "Additional axis must not be called x, y or z."
+                    assert key not in [
+                        "x",
+                        "y",
+                        "z",
+                    ], "Additional axis must not be called x, y or z."
                     remaining_axes.append((key, value))
                 as_tuple = (
                     vec,

@@ -56,7 +56,9 @@ class BoundingBox(NDBoundingBox):
     def with_additional_axis(
         self, name: str, extent: Tuple[int, int], index: Optional[int] = None
     ) -> "NDBoundingBox":
-        assert name not in self.axes, f"The identifier '{name}' of the axis is already taken."
+        assert (
+            name not in self.axes
+        ), f"The identifier '{name}' of the axis is already taken."
         new_topleft = min(extent)
         new_size = max(extent) - new_topleft
 

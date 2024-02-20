@@ -18,8 +18,8 @@ from typing import (
 
 import numpy as np
 import wkw
-
 from cluster_tools import Executor
+
 from webknossos.geometry.vec_int import VecInt
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecIntLike
