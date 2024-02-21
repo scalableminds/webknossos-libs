@@ -53,22 +53,6 @@ class BoundingBox(NDBoundingBox):
         # it is needed.
         object.__setattr__(self, "bottomright", self.topleft + self.size)
 
-    def with_additional_axis(
-        self, name: str, extent: Tuple[int, int], index: Optional[int] = None
-    ) -> "NDBoundingBox":
-        assert (
-            name not in self.axes
-        ), f"The identifier '{name}' of the axis is already taken."
-        new_topleft = min(extent)
-        new_size = max(extent) - new_topleft
-
-        return NDBoundingBox(
-            topleft=(*self.topleft, new_topleft),
-            size=(*self.size, new_size),
-            axes=(*self.axes, name),
-            index=(*self.index, index if not index is None else max(self.index) + 1),
-        )
-
     def with_bounds_x(
         self, new_topleft_x: Optional[int] = None, new_size_x: Optional[int] = None
     ) -> "BoundingBox":

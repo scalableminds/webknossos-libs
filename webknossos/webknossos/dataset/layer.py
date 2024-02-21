@@ -419,7 +419,7 @@ class Layer:
                     dict(
                         zip(
                             ("c", "x", "y", "z"),
-                            (0, *self.bounding_box.get_3d("index")),
+                            (0, *self.bounding_box.index_xyz),
                         )
                     )
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
@@ -740,7 +740,7 @@ class Layer:
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
-        if self._properties.bounding_box.get_3d("size").z == 1:
+        if self._properties.bounding_box.size_xyz.z == 1:
             if sampling_mode != SamplingModes.CONSTANT_Z:
                 warnings.warn(
                     "[INFO] The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."
@@ -1088,7 +1088,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag, path: Optional[str] = None) -> None:
+    def _setup_mag(self, mag: Mag, path: Optional[str] = None) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         mag_name = mag.to_layer_name()

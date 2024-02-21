@@ -60,7 +60,7 @@ class BufferedSliceReader:
         self.bbox_current_mag = absolute_bounding_box.in_mag(view.mag)
 
     def _get_slice_generator(self) -> Generator[np.ndarray, None, None]:
-        chunk_size = self.bbox_current_mag.get_3d("size").to_list()
+        chunk_size = self.bbox_current_mag.size_xyz.to_list()
         chunk_size[self.dimension] = self.buffer_size
 
         for chunk in self.bbox_current_mag.chunk(chunk_size):
@@ -71,7 +71,7 @@ class BufferedSliceReader:
             )
 
             for current_slice in np.rollaxis(
-                data, chunk.get_3d("index").z
+                data, chunk.index_xyz.z
             ):  # The '+1' is important because the first dimension is the channel
                 yield current_slice
 

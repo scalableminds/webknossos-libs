@@ -74,9 +74,9 @@ def export_tiff_slice(
         tiff_data = view.read()
     else:
         padded_tiff_bbox_size = Vec3Int(
-            tiling_size[0] * ceil(tiff_bbox.get_3d("size").x / tiling_size[0]),
-            tiling_size[1] * ceil(tiff_bbox.get_3d("size").y / tiling_size[1]),
-            tiff_bbox.get_3d("size").z,
+            tiling_size[0] * ceil(tiff_bbox.size_xyz.x / tiling_size[0]),
+            tiling_size[1] * ceil(tiff_bbox.size_xyz.y / tiling_size[1]),
+            tiff_bbox.size_xyz.z,
         )
         tiff_data = view.read()
         padded_tiff_data = np.zeros(
@@ -87,9 +87,9 @@ def export_tiff_slice(
             :, 0 : tiff_data.shape[1], 0 : tiff_data.shape[2], 0 : tiff_data.shape[3]
         ] = tiff_data
         tiff_data = padded_tiff_data
-    for slice_index in range(tiff_bbox.get_3d("size").z):
+    for slice_index in range(tiff_bbox.size_xyz.z):
         slice_name_number = (
-            tiff_bbox_mag1.get_3d("topleft").z + slice_index + 1 - start_slice_index
+            tiff_bbox_mag1.topleft_xyz.z + slice_index + 1 - start_slice_index
         )
         if tiling_size is None:
             tiff_file_name = _make_tiff_name(name, slice_name_number)
@@ -100,16 +100,12 @@ def export_tiff_slice(
             logging.debug("Saved slice %s", slice_name_number)
 
         else:
-            for y_tile_index in range(
-                ceil(tiff_bbox.get_3d("size").y / tiling_size[1])
-            ):
+            for y_tile_index in range(ceil(tiff_bbox.size_xyz.y / tiling_size[1])):
                 tile_tiff_path = (
                     dest_path / str(slice_name_number) / str(y_tile_index + 1)
                 )
                 tile_tiff_path.mkdir(parents=True, exist_ok=True)
-                for x_tile_index in range(
-                    ceil(tiff_bbox.get_3d("size").x / tiling_size[0])
-                ):
+                for x_tile_index in range(ceil(tiff_bbox.size_xyz.x / tiling_size[0])):
                     tile_tiff_filename = f"{x_tile_index + 1}.tiff"
                     tile_image = _slice_to_image(
                         tiff_data[

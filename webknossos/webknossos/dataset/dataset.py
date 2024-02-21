@@ -1237,16 +1237,21 @@ class Dataset:
             additional_axes = [
                 axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")
             ]
-            additional_axes_shapes = product(
-                *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
+            additional_axes_shapes = tuple(
+                product(
+                    *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
+                )
             )
             if additional_axes and layer.data_format != DataFormat.Zarr3:
-                assert all(
-                    shape == 1 for shape in additional_axes_shapes
+                assert (
+                    len(additional_axes_shapes) == 1
                 ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
 
                 # Convert NDBoundingBox to 3D BoundingBox
-                bbox = BoundingBox(bbox.get_3d("topleft"), bbox.get_3d("size"))
+                bbox = BoundingBox(
+                    bbox.topleft_xyz,
+                    bbox.size_xyz,
+                )
                 expected_bbox = bbox
                 additional_axes = []
 
@@ -1294,8 +1299,7 @@ class Dataset:
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                actual_size = bbox.set_3d(
-                    "size",
+                actual_size = bbox.size_with_xyz(
                     Vec3Int(dimwise_max(shapes) + (layer.bounding_box.get_shape("z"),))
                     * mag.to_vec3_int().with_z(1),
                 )

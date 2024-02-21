@@ -151,8 +151,8 @@ def convert_cube_job(
     time_start(f"Converting of {target_view.bounding_box}")
     cube_size = cast(Tuple[int, int, int], (KNOSSOS_CUBE_EDGE_LEN,) * 3)
 
-    offset = target_view.bounding_box.in_mag(target_view.mag).get_3d("topleft")
-    size = target_view.bounding_box.in_mag(target_view.mag).get_3d("size")
+    offset = target_view.bounding_box.in_mag(target_view.mag).topleft_xyz
+    size = target_view.bounding_box.in_mag(target_view.mag).size_xyz
     buffer = np.zeros(size.to_tuple(), dtype=target_view.get_dtype())
     with open_knossos(source_knossos_info) as source_knossos:
         for x in range(0, size.x, KNOSSOS_CUBE_EDGE_LEN):

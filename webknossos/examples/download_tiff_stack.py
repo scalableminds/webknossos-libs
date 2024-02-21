@@ -15,7 +15,7 @@ def main() -> None:
     )
     mag_view = dataset.get_layer(LAYER_NAME).get_mag(MAG)
 
-    z = mag_view.bounding_box.get_3d("topleft").z
+    z = mag_view.bounding_box.topleft_xyz.z
     with mag_view.get_buffered_slice_reader() as reader:
         for slice_data in reader:
             slice_data = slice_data[0]  # First channel only

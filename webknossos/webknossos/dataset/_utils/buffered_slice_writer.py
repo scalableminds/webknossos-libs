@@ -94,7 +94,7 @@ class BufferedSliceWriter:
         view_chunk_depth = self.view.info.chunk_shape[dimension]
         if (
             self.bbox is not None
-            and self.bbox.get_3d("topleft")[self.dimension] % view_chunk_depth != 0
+            and self.bbox.topleft_xyz[self.dimension] % view_chunk_depth != 0
         ):
             warnings.warn(
                 "[WARNING] Using an offset that doesn't align with the datataset's chunk size, "
@@ -148,7 +148,7 @@ class BufferedSliceWriter:
             )
 
             bbox = self.bbox.with_size(
-                self.bbox.set_3d("size", (max_width, max_height, buffer_depth))
+                self.bbox.size_with_xyz((max_width, max_height, buffer_depth))
             ).offset(buffer_start)
 
             shard_dimensions = self.view._get_file_dimensions().moveaxis(
@@ -166,14 +166,12 @@ class BufferedSliceWriter:
                     (channel_count, *chunk_bbox.size),
                     dtype=self.slices_to_write[0].dtype,
                 )
-                section_topleft = Vec3Int(
-                    chunk_bbox.get_3d("topleft") - bbox.get_3d("topleft")
-                )
+                section_topleft = Vec3Int(chunk_bbox.topleft_xyz - bbox.topleft_xyz)
                 section_bottomright = Vec3Int(
-                    chunk_bbox.get_3d("bottomright") - bbox.get_3d("topleft")
+                    chunk_bbox.bottomright_xyz - bbox.topleft_xyz
                 )
 
-                z_index = chunk_bbox.get_3d("index")[self.dimension]
+                z_index = chunk_bbox.index_xyz[self.dimension]
 
                 z = 0
                 for section in self.slices_to_write:
@@ -189,8 +187,8 @@ class BufferedSliceWriter:
                     section_chunk = np.moveaxis(
                         section_chunk,
                         [1, 2],
-                        bbox.get_3d("index")[: self.dimension]
-                        + bbox.get_3d("index")[self.dimension + 1 :],
+                        bbox.index_xyz[: self.dimension]
+                        + bbox.index_xyz[self.dimension + 1 :],
                     )
 
                     slice_tuple = (slice(None),) + tuple(
@@ -210,7 +208,7 @@ class BufferedSliceWriter:
 
                 self.view.write(
                     data,
-                    offset=chunk_bbox.get_3d("topleft").add_or_none(self.offset),
+                    offset=chunk_bbox.topleft_xyz.add_or_none(self.offset),
                     json_update_allowed=self.json_update_allowed,
                     absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self.view._mag),
                 )

@@ -466,7 +466,7 @@ class PimsImages:
         """
         relative_bbox = args
 
-        assert relative_bbox.set_3d("size", (1, 1, 1)) == VecInt.ones(
+        assert relative_bbox.size_with_xyz((1, 1, 1)) == VecInt.ones(
             len(relative_bbox)
         ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
 

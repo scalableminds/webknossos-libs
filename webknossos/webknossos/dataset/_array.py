@@ -133,7 +133,7 @@ class BaseArray(ABC):
         pass
 
     @abstractmethod
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
         "The bounding boxes are measured in voxels of the current mag."
 
     @abstractmethod
@@ -248,7 +248,7 @@ class WKWArray(BaseArray):
             for filename in self._wkw_dataset.list_files()
         )
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
         def _extract_num(s: str) -> int:
             match = re.search("[0-9]+", s)
             assert match is not None
@@ -415,13 +415,13 @@ class ZarrArray(BaseArray):
         assert data.ndim == 4
 
         with _blosc_disable_threading():
-            self.ensure_size(bbox)
+            self.ensure_size(bbox, warn=True)
             zarray = self._zarray
             index_tuple = (slice(None),) + bbox.to_slices()
 
             zarray[index_tuple] = data
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
         zarray = self._zarray
         chunk_shape = Vec3Int(*zarray.chunks[1:4])
         for key in zarray.store.keys():
@@ -633,11 +633,11 @@ class ZarritaArray(BaseArray):
             if align_with_shards:
                 shard_shape = self.info.shard_shape
                 new_shape = Vec3Int(
-                    new_bbox.get_3d("bottomright").ceildiv(shard_shape) * shard_shape
+                    new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
                 )
-                new_shape_tuple = (zarray.metadata.shape[0],) + new_bbox.set_3d(
-                    "bottomright", new_shape
-                ).to_tuple()
+                new_shape_tuple = (
+                    zarray.metadata.shape[0],
+                ) + new_bbox.bottomright_with_xyz(new_shape).to_tuple()
 
             # Check on-disk for changes to shape
             current_zarray = zarray.open(self._path)
@@ -661,13 +661,13 @@ class ZarritaArray(BaseArray):
         assert data.ndim == len(bbox) + 1
 
         with _blosc_disable_threading():
-            self.ensure_size(bbox)
+            self.ensure_size(bbox, warn=True)
             zarray = self._zarray
             index_tuple = (slice(None),) + bbox.to_slices()
 
             zarray[index_tuple] = data
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
         raise NotImplementedError
 
     def close(self) -> None:

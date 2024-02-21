@@ -56,7 +56,7 @@ def upsample_cube_job(
         )
 
         for tile in tiles:
-            target_offset = Vec3Int(tile) * buffer_shape
+            target_offset = Vec3Int(Vec3Int(tile) * buffer_shape)
             source_offset = _vec3int_mulf(target_offset, mag_factors)
             source_size = source_view.bounding_box.in_mag(source_view.mag).size
             source_size = _vec3int_mulf(buffer_shape, mag_factors).pairmin(
