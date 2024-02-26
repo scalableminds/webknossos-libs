@@ -232,6 +232,30 @@ class PimsImages:
                     else:
                         self._bundle_axes = ["y", "x", "c"]
                     self._iter_axes = ["z"]
+                elif len(images.shape) == 5:
+                    # Assume tzcyx or tzyxc
+                    # t has to be constant for this reader to obtain 4D image
+                    # (only possible if not specified manually already, since
+                    # the timepoint would already be indexed here and the
+                    # 5th dimension would be something else)
+                    if timepoint is not None:
+                        raise RuntimeError(
+                            f"Got {len(images.shape)} axes for the images after "
+                            + "removing time dimension, can only map to 3D+channels."
+                            + "To import image with more dimensions use dataformat"
+                            + "Zarr3 and set use_bioformats=True."
+                        )
+
+                    if _assume_color_channel(images.shape[2], images.dtype):
+                        self._bundle_axes = ["c", "y", "x"]
+                    else:
+                        self._bundle_axes = ["y", "x", "c"]
+                    self._iter_axes = ["z"]
+                    self._timepoint = 0
+                    if images.shape[0] > 1:
+                        self._possible_layers["timepoint"] = list(
+                            range(0, images.shape[0])
+                        )
                 else:
                     raise RuntimeError(
                         f"Got {len(images.shape)} axes for the images, "
