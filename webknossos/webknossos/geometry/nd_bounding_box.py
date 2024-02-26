@@ -12,6 +12,12 @@ from .vec_int import VecInt, VecIntLike
 _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 
 
+def str_tpl(str_list: Iterable[str]) -> Tuple[str, ...]:
+    # Fix for mypy bug https://github.com/python/mypy/issues/5313.
+    # Solution based on other issue for the same bug: https://github.com/python/mypy/issues/8389.
+    return tuple(str_list)
+
+
 @attr.frozen
 class NDBoundingBox:
     """
@@ -32,7 +38,7 @@ class NDBoundingBox:
 
     topleft: VecInt = attr.field(converter=VecInt)
     size: VecInt = attr.field(converter=VecInt)
-    axes: Tuple[str, ...] = attr.field(converter=tuple)
+    axes: Tuple[str, ...] = attr.field(converter=str_tpl)
     index: VecInt = attr.field(converter=VecInt)
     bottomright: VecInt = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
@@ -53,13 +59,13 @@ class NDBoundingBox:
         if not self.size.is_positive():
             # Flip the size in negative dimensions, so that the topleft is smaller than bottomright.
             # E.g. BoundingBox((10, 10, 10), (-5, 5, 5)) -> BoundingBox((5, 10, 10), (5, 5, 5)).
-            negative_size = (min(0, value) for value in self.size)
-            new_topleft = (
+            negative_size = tuple(min(0, value) for value in self.size)
+            new_topleft = tuple(
                 val1 + val2 for val1, val2 in zip(self.topleft, negative_size)
             )
             new_size = (max(value, -value) for value in self.size)
-            object.__setattr__(self, "topleft", new_topleft)
-            object.__setattr__(self, "size", new_size)
+            object.__setattr__(self, "topleft", VecInt(new_topleft))
+            object.__setattr__(self, "size", VecInt(new_size))
 
         # Compute bottomright to avoid that it's recomputed every time
         # it is needed.
@@ -86,10 +92,18 @@ class NDBoundingBox:
         return attr.evolve(self, name=name)
 
     def with_topleft(self, new_topleft: VecIntLike) -> "NDBoundingBox":
-        return attr.evolve(self, topleft=new_topleft)
+        return attr.evolve(self, topleft=VecInt(new_topleft))
 
     def with_size(self, new_size: VecIntLike) -> "NDBoundingBox":
-        return attr.evolve(self, size=new_size)
+        return attr.evolve(self, size=VecInt(new_size))
+
+    def with_index(self, new_index: VecIntLike) -> "NDBoundingBox":
+        return attr.evolve(self, index=VecInt(new_index))
+
+    def with_bottomright(self, new_bottomright: VecIntLike) -> "NDBoundingBox":
+        new_size = VecInt(new_bottomright) - self.topleft
+
+        return self.with_size(new_size)
 
     def with_is_visible(self, is_visible: bool) -> "NDBoundingBox":
         return attr.evolve(self, is_visible=is_visible)
@@ -287,17 +301,25 @@ class NDBoundingBox:
 
         return self._get_attr_xyz("index")
 
-    def topleft_with_xyz(self, new_xyz: Vec3IntLike) -> VecInt:
-        return self._get_attr_with_replaced_xyz("topleft", new_xyz)
+    def with_topleft_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        new_topleft = self._get_attr_with_replaced_xyz("topleft", new_xyz)
 
-    def size_with_xyz(self, new_xyz: Vec3IntLike) -> VecInt:
-        return self._get_attr_with_replaced_xyz("size", new_xyz)
+        return self.with_topleft(new_topleft)
 
-    def bottomright_with_xyz(self, new_xyz: Vec3IntLike) -> VecInt:
-        return self._get_attr_with_replaced_xyz("bottomright", new_xyz)
+    def with_size_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        new_size = self._get_attr_with_replaced_xyz("size", new_xyz)
 
-    def index_with_xyz(self, new_xyz: Vec3IntLike) -> VecInt:
-        return self._get_attr_with_replaced_xyz("index", new_xyz)
+        return self.with_size(new_size)
+
+    def with_bottomright_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        new_bottomright = self._get_attr_with_replaced_xyz("bottomright", new_xyz)
+
+        return self.with_bottomright(new_bottomright)
+
+    def with_index_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        new_index = self._get_attr_with_replaced_xyz("index", new_xyz)
+
+        return self.with_index(new_index)
 
     def _check_compatibility(self, other: "NDBoundingBox") -> None:
         """Checks if two bounding boxes are comparable. To be comparable they need the same number of axes, with same names and same order."""
@@ -356,24 +378,15 @@ class NDBoundingBox:
             self.bottomright_xyz % mag_vec == Vec3Int.zeros()
         ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
 
-        new_topleft = self.topleft_with_xyz(self.topleft_xyz // mag_vec)
-        new_size = self.size_with_xyz(self.size_xyz // mag_vec)
-
-        return attr.evolve(
-            self,
-            topleft=new_topleft,
-            size=new_size,
+        return self.with_topleft_xyz(self.topleft_xyz // mag_vec).with_size_xyz(
+            self.size_xyz // mag_vec
         )
 
     def from_mag_to_mag1(self, from_mag: Mag) -> "NDBoundingBox":
         mag_vec = from_mag.to_vec3_int()
-        new_topleft = self.topleft_with_xyz(self.topleft_xyz * mag_vec)
-        new_size = self.size_with_xyz(self.size_xyz * mag_vec)
 
-        return attr.evolve(
-            self,
-            topleft=new_topleft,
-            size=new_size,
+        return self.with_topleft_xyz(self.topleft_xyz * mag_vec).with_size_xyz(
+            self.size_xyz * mag_vec
         )
 
     def _align_with_mag_slow(self, mag: Mag, ceil: bool = False) -> "NDBoundingBox":
@@ -415,16 +428,12 @@ class NDBoundingBox:
         margin_to_rounddown = (mag_vec - (rounddown % mag_vec)) % mag_vec
         aligned_rounddown = rounddown + margin_to_rounddown
         if ceil:
-            return attr.evolve(
-                self,
-                topleft=self.topleft_with_xyz(aligned_roundup),
-                size=self.size_with_xyz(aligned_rounddown - aligned_roundup),
+            return self.with_topleft_xyz(aligned_roundup).with_size_xyz(
+                aligned_rounddown - aligned_roundup
             )
         else:
-            return attr.evolve(
-                self,
-                topleft=self.topleft_with_xyz(aligned_rounddown),
-                size=self.size_with_xyz(aligned_roundup - aligned_rounddown),
+            return self.with_topleft_xyz(aligned_rounddown).with_size_xyz(
+                aligned_roundup - aligned_rounddown
             )
 
     def contains(self, coord: VecIntLike) -> bool:
@@ -475,8 +484,8 @@ class NDBoundingBox:
 
             chunk_shape = (
                 self.with_size(VecInt.ones(len(self)))
-                .size_with_xyz(chunk_shape)
-                .to_np()
+                .with_size_xyz(chunk_shape)
+                .size.to_np()
             )
         except AssertionError:
             chunk_shape = VecInt(chunk_shape).to_np()
@@ -488,8 +497,8 @@ class NDBoundingBox:
 
                 chunk_border_alignments = (
                     self.with_size(VecInt.ones(len(self)))
-                    .size_with_xyz(chunk_border_alignments)
-                    .to_np()
+                    .with_size_xyz(chunk_border_alignments)
+                    .size.to_np()
                 )
             except AssertionError:
                 chunk_border_alignments = VecInt(chunk_border_alignments).to_np()
@@ -534,8 +543,6 @@ class NDBoundingBox:
     def offset(self, vector: VecIntLike) -> "NDBoundingBox":
         vec_int = VecInt(vector)
         if len(vec_int) == 3:
-            new_topleft = self.topleft_with_xyz(self.topleft_xyz + vec_int)
+            return self.with_topleft_xyz(self.topleft_xyz + vec_int)
 
-            return attr.evolve(self, topleft=new_topleft)
-        else:
-            return attr.evolve(self, topleft=self.topleft + vec_int)
+        return self.with_topleft(self.topleft + vec_int)

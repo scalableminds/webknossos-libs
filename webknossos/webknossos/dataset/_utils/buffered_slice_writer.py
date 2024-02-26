@@ -147,18 +147,18 @@ class BufferedSliceWriter:
                 self.dimension, self.buffer_start_slice
             )
 
-            bbox = self.bbox.with_size(
-                self.bbox.size_with_xyz((max_width, max_height, buffer_depth))
+            bbox = self.bbox.with_size_xyz(
+                Vec3Int(max_width, max_height, buffer_depth).moveaxis(
+                    -1, self.dimension
+                )
             ).offset(buffer_start)
 
-            shard_dimensions = self.view._get_file_dimensions().moveaxis(
-                -1, self.dimension
-            )
+            shard_dimensions = self.view._get_file_dimensions()
             chunk_size = Vec3Int(
                 min(shard_dimensions[0], max_width),
                 min(shard_dimensions[1], max_height),
                 buffer_depth,
-            )
+            ).moveaxis(-1, self.dimension)
             for chunk_bbox in bbox.chunk(chunk_size):
                 info(f"Writing chunk {chunk_bbox}.")
 
@@ -166,9 +166,15 @@ class BufferedSliceWriter:
                     (channel_count, *chunk_bbox.size),
                     dtype=self.slices_to_write[0].dtype,
                 )
-                section_topleft = Vec3Int(chunk_bbox.topleft_xyz - bbox.topleft_xyz)
+                section_topleft = Vec3Int(
+                    (chunk_bbox.topleft_xyz - bbox.topleft_xyz).moveaxis(
+                        self.dimension, -1
+                    )
+                )
                 section_bottomright = Vec3Int(
-                    chunk_bbox.bottomright_xyz - bbox.topleft_xyz
+                    (chunk_bbox.bottomright_xyz - bbox.topleft_xyz).moveaxis(
+                        self.dimension, -1
+                    )
                 )
 
                 z_index = chunk_bbox.index_xyz[self.dimension]

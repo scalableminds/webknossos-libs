@@ -7,8 +7,6 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from webknossos.geometry.bounding_box import BoundingBox
-
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
@@ -143,7 +141,7 @@ class AxisProperties:
 class LayerProperties:
     name: str
     category: LayerCategoryType
-    bounding_box: Union[BoundingBox, NDBoundingBox]
+    bounding_box: NDBoundingBox
     element_class: str
     data_format: DataFormat
     mags: List[MagViewProperties]
@@ -319,18 +317,6 @@ def layer_properties_pre_structure(
 
     return __layer_properties_pre_structure
 
-
-def disambiguate_bounding_box(obj: dict, _: Any) -> Union[BoundingBox, NDBoundingBox]:
-    if "additionalAxes" in obj:
-        return dataset_converter.structure(obj, NDBoundingBox)
-    else:
-        return dataset_converter.structure(obj, BoundingBox)
-
-
-dataset_converter.register_structure_hook(
-    Union[BoundingBox, NDBoundingBox],
-    disambiguate_bounding_box,
-)
 
 for cls in [
     LayerProperties,

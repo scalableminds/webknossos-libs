@@ -1,6 +1,5 @@
 import warnings
 from contextlib import contextmanager, nullcontext
-from functools import cached_property
 from itertools import chain
 from os import PathLike
 from pathlib import Path
@@ -466,8 +465,10 @@ class PimsImages:
         """
         relative_bbox = args
 
-        assert relative_bbox.size_with_xyz((1, 1, 1)) == VecInt.ones(
-            len(relative_bbox)
+        assert all(
+            size == 1
+            for size, axis in zip(relative_bbox.size, relative_bbox.axes)
+            if axis not in ("x", "y", "z")
         ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
 
         z_start, z_end = relative_bbox.get_bounds("z")
@@ -544,7 +545,7 @@ class PimsImages:
         else:
             return self._possible_layers
 
-    @cached_property
+    @property
     def expected_bbox(self) -> NDBoundingBox:
         # replaces the previous expected_shape to enable n-dimensional input files
         with self._open_images() as images:

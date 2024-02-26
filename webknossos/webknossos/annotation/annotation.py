@@ -60,7 +60,7 @@ from ..dataset import (
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.properties import DatasetProperties, dataset_converter
-from ..geometry import BoundingBox, Vec3Int
+from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
 from ..utils import time_since_epoch_in_ms, warn_deprecated
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
@@ -124,8 +124,8 @@ class Annotation:
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     metadata: Dict[str, str] = attr.Factory(dict)
-    task_bounding_box: Optional[BoundingBox] = None
-    user_bounding_boxes: List[BoundingBox] = attr.Factory(list)
+    task_bounding_box: Optional[NDBoundingBox] = None
+    user_bounding_boxes: List[NDBoundingBox] = attr.Factory(list)
     _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod

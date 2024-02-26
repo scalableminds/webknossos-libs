@@ -560,10 +560,14 @@ class ZarritaArray(BaseArray):
                 getattr(array_info.chunk_shape, axis, 1)
                 for axis in array_info.dimension_names[1:]
             )
+            shard_shape = (array_info.num_channels,) + tuple(
+                getattr(array_info.shard_shape, axis, 1)
+                for axis in array_info.dimension_names[1:]
+            )
             Array.create(
                 store=path,
                 shape=array_info.shape,
-                chunk_shape=chunk_shape,
+                chunk_shape=shard_shape,
                 chunk_key_encoding=("default", "/"),
                 dtype=array_info.voxel_type,
                 dimension_names=array_info.dimension_names,
@@ -622,22 +626,24 @@ class ZarritaArray(BaseArray):
         align_with_shards: bool = True,
         warn: bool = False,
     ) -> None:
-        new_shape = new_bbox.bottomright
         zarray = self._zarray
 
-        new_shape_tuple = (zarray.metadata.shape[0],) + tuple(
-            max(zarray.metadata.shape[i + 1], new_shape[i])
-            for i in range(len(new_shape))
+        new_bbox = new_bbox.with_bottomright(
+            (
+                max(zarray.metadata.shape[i + 1], new_bbox.bottomright[i])
+                for i in range(len(new_bbox))
+            )
         )
+        new_shape_tuple = (zarray.metadata.shape[0],) + tuple(new_bbox.bottomright)
         if new_shape_tuple != zarray.metadata.shape:
             if align_with_shards:
                 shard_shape = self.info.shard_shape
-                new_shape = Vec3Int(
+                new_aligned_bbox = new_bbox.with_bottomright_xyz(
                     new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
                 )
                 new_shape_tuple = (
                     zarray.metadata.shape[0],
-                ) + new_bbox.bottomright_with_xyz(new_shape).to_tuple()
+                ) + new_aligned_bbox.bottomright.to_tuple()
 
             # Check on-disk for changes to shape
             current_zarray = zarray.open(self._path)

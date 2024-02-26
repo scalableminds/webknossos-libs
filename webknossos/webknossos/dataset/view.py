@@ -13,7 +13,6 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    Union,
 )
 
 import numpy as np
@@ -57,7 +56,7 @@ class View:
 
     _path: Path
     _array_info: ArrayInfo
-    _bounding_box: Optional[Union[NDBoundingBox, BoundingBox]]
+    _bounding_box: Optional[NDBoundingBox]
     _read_only: bool
     _cached_array: Optional[BaseArray]
     _mag: Mag
@@ -67,7 +66,7 @@ class View:
         path_to_mag_view: Path,
         array_info: ArrayInfo,
         bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
+            NDBoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
         read_only: bool = False,
@@ -96,7 +95,7 @@ class View:
         return self._array._wkw_dataset.header
 
     @property
-    def bounding_box(self) -> Union[NDBoundingBox, BoundingBox]:
+    def bounding_box(self) -> NDBoundingBox:
         assert self._bounding_box is not None
         return self._bounding_box
 
@@ -132,8 +131,8 @@ class View:
 
     def _get_mag1_bbox(
         self,
-        abs_mag1_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,
-        rel_mag1_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,
+        abs_mag1_bbox: Optional[NDBoundingBox] = None,
+        rel_mag1_bbox: Optional[NDBoundingBox] = None,
         abs_mag1_offset: Optional[VecIntLike] = None,
         rel_mag1_offset: Optional[VecIntLike] = None,
         mag1_size: Optional[VecIntLike] = None,
@@ -164,8 +163,7 @@ class View:
             assert abs_mag1_offset is not None, "No offset was supplied."
             assert mag1_size is not None, "No size was supplied."
 
-            bbox = self.bounding_box.offset(-self.bounding_box.topleft)
-            return bbox.offset(abs_mag1_offset).with_size(mag1_size)
+            return self.bounding_box.with_topleft(abs_mag1_offset).with_size(mag1_size)
 
     def write(
         self,
@@ -175,12 +173,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
-        absolute_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
         """
         Writes the `data` at the specified `relative_offset` or `absolute_offset`, both specified in Mag(1).
@@ -350,12 +344,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
-        absolute_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> np.ndarray:
         """
         The user can specify which data should be read.
@@ -505,7 +495,7 @@ class View:
 
     def _read_without_checks(
         self,
-        current_mag_bbox: Union[NDBoundingBox, BoundingBox],
+        current_mag_bbox: NDBoundingBox,
     ) -> np.ndarray:
         data = self._array.read(current_mag_bbox)
         return data
@@ -517,8 +507,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
-        absolute_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        relative_bbox: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bbox: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> "View":
         """
@@ -672,12 +662,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
-        absolute_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceWriter":
         """

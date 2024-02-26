@@ -157,12 +157,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
-        absolute_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
         if offset is not None:
             if self._mag == Mag(1):
@@ -222,12 +218,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
-        absolute_bounding_box: Optional[
-            Union[NDBoundingBox, BoundingBox]
-        ] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> np.ndarray:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
@@ -267,8 +259,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
-        absolute_bbox: Optional[Union[NDBoundingBox, BoundingBox]] = None,  # in mag1
+        relative_bbox: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bbox: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED

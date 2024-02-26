@@ -35,7 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.geometry.vec_int import VecIntLike
+from webknossos.geometry.vec_int import VecInt, VecIntLike
 
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -1256,7 +1256,7 @@ class Dataset:
                 additional_axes = []
 
             z_shape = bbox.get_shape("z")
-            bbox = bbox.offset(-bbox.topleft)
+            bbox = bbox.with_topleft(VecInt.zeros(len(bbox)))
             for z_start in range(0, z_shape, batch_size):
                 z_size = min(batch_size, z_shape - z_start)
                 z_bbox = bbox.with_bounds("z", z_start, z_size)
@@ -1299,15 +1299,14 @@ class Dataset:
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                actual_size = bbox.size_with_xyz(
+                layer.bounding_box = layer.bounding_box.with_size_xyz(
                     Vec3Int(dimwise_max(shapes) + (layer.bounding_box.get_shape("z"),))
-                    * mag.to_vec3_int().with_z(1),
+                    * mag.to_vec3_int().with_z(1)
                 )
-                layer.bounding_box = layer.bounding_box.with_size(actual_size)
-            if expected_bbox.size != actual_size:
+            if expected_bbox != layer.bounding_box:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
-                    + f"New size is {actual_size}, expected {expected_bbox.size}."
+                    + f"New bbox is {layer.bounding_box}, expected {expected_bbox}."
                 )
             if first_layer is None:
                 first_layer = layer

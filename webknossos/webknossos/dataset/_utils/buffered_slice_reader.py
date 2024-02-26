@@ -71,7 +71,7 @@ class BufferedSliceReader:
             )
 
             for current_slice in np.rollaxis(
-                data, chunk.index_xyz.z
+                data, chunk.index_xyz[self.dimension]
             ):  # The '+1' is important because the first dimension is the channel
                 yield current_slice
 

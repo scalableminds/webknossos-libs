@@ -120,6 +120,10 @@ class BoundingBox(NDBoundingBox):
         return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
 
     @classmethod
+    def from_ndbbox(cls, bbox: NDBoundingBox) -> "BoundingBox":
+        return cls(bbox.topleft_xyz, bbox.size_xyz)
+
+    @classmethod
     def from_auto(
         cls, obj: Union["BoundingBox", str, Dict, List, Tuple]
     ) -> "BoundingBox":
