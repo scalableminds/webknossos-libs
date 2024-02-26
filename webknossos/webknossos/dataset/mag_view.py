@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from cluster_tools import Executor
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
@@ -79,7 +80,7 @@ class MagView(View):
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
             axis_order=VecInt(0, *layer.bounding_box.index),
-            shape=VecInt(layer.num_channels, *layer.bounding_box.size),
+            shape=VecInt(layer.num_channels, *VecInt.ones(len(layer.bounding_box))),
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:

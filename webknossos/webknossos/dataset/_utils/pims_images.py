@@ -446,6 +446,8 @@ class PimsImages:
                         images.bundle_axes = self._bundle_axes
                         images.iter_axes = self._iter_axes or []
                 else:
+                    if self._timepoint is not None:
+                        images = images[self._timepoint]
                     if self._iter_axes == []:
                         # add outer list to wrap 2D images as 3D-like structure
                         images = [images]
@@ -510,7 +512,6 @@ class PimsImages:
                             source=self._bundle_axes.index("c"),
                             destination=0,
                         )
-                    if "c" in self._bundle_axes:
                         if self._channel is not None:
                             image_slice = image_slice[self._channel : self._channel + 1]
                         elif self._first_n_channels is not None:

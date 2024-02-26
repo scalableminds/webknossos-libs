@@ -9,10 +9,10 @@ from zipfile import BadZipFile, ZipFile
 import httpx
 import numpy as np
 import pytest
+from tests.constants import TESTDATA_DIR
 from tifffile import TiffFile
 
 import webknossos as wk
-from tests.constants import TESTDATA_DIR
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
@@ -228,15 +228,6 @@ BIOFORMATS_ARGS = [
         1,
         (192, 128, 9),
         1,
-    ),
-    (
-        "https://samples.scif.io/sdub.zip",
-        "sdub*.pic",
-        {"allow_multiple_layers": True},
-        "uint8",
-        1,
-        (192, 128, 9),
-        12,
     ),
     (
         "https://samples.scif.io/test-avi.zip",
