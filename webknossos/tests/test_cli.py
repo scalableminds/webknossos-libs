@@ -481,3 +481,118 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                     f"The tiff file {tiff_path} that was written "
                     f"is not equal to the original wkw_file."
                 )
+
+
+def test_merge_fallback_no_fallback_layer(tmp_path: Path) -> None:
+    from zipfile import ZIP_DEFLATED, ZipFile
+    from zlib import Z_BEST_SPEED
+
+    import webknossos.annotation
+    from webknossos import SEGMENTATION_CATEGORY, Annotation, Skeleton
+
+    fallback_layer_data = np.ones((64, 64, 64), dtype=np.uint8)
+
+    fallback_mag = (
+        Dataset(tmp_path / "fallback_dataset", (11.24, 11.24, 25))
+        .add_layer(
+            "fallback_layer",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=fallback_layer_data.dtype,
+        )
+        .add_mag(1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3)
+    )
+
+    fallback_mag.write(absolute_offset=(0,) * 3, data=fallback_layer_data)
+
+    annotation_zip_path = tmp_path / "annotation.zip"
+    annotation_data = np.ones((32, 32, 32), dtype=fallback_layer_data.dtype) * 2
+    voxel_size = (11.24, 11.24, 25)
+
+    topleft = (32,) * 3
+
+    with TemporaryDirectory(dir=tmp_path) as tmp_dir:
+        tmp_ds_dir = Path(tmp_dir)
+        tmp_dataset = Dataset(tmp_ds_dir / "tmp_dataset", voxel_size)
+
+        largest_segment_id = int(annotation_data.max())
+
+        tmp_layer = tmp_dataset.add_layer(
+            "Volume",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=annotation_data.dtype,
+            largest_segment_id=largest_segment_id,
+        )
+
+        mag1 = tmp_layer.add_mag(
+            1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3, compress=True
+        )
+
+        mag1.write(absolute_offset=topleft, data=annotation_data)
+
+        volume_layer_zip = tmp_ds_dir / "data_Volume.zip"
+
+        with ZipFile(
+            volume_layer_zip,
+            mode="x",
+            compression=ZIP_DEFLATED,
+            compresslevel=Z_BEST_SPEED,
+        ) as zf:
+            for dirname, _, files in os.walk(str(tmp_layer.path)):
+                arcname = str(Path(dirname).relative_to(tmp_layer.path))
+                for filename in files:
+                    if filename.endswith(".wkw"):
+                        zf.write(
+                            os.path.join(dirname, filename),
+                            os.path.join(arcname, filename),
+                        )
+
+        annotation = Annotation(
+            name="test_annotation",
+            skeleton=Skeleton(
+                voxel_size=tmp_dataset.voxel_size,
+                dataset_name=fallback_mag.layer.dataset.name,
+            ),
+        )
+
+        annotation._volume_layers = [
+            webknossos.annotation._VolumeLayer(  # type: ignore # pylint: disable=no-member
+                id=0,
+                name=tmp_layer.name,
+                fallback_layer_name=fallback_mag.layer.name,
+                zip=volume_layer_zip,
+                segments={},
+                data_format=DataFormat.WKW,
+                largest_segment_id=largest_segment_id,
+            ),
+        ]
+
+        annotation.save(annotation_zip_path)
+
+    target_dataset_path = tmp_path / "merged_dataset"
+
+    result = runner.invoke(
+        app,
+        [
+            "merge-fallback",
+            str(target_dataset_path),
+            str(annotation_zip_path),
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    expected_data = fallback_layer_data
+    expected_data[
+        tuple(slice(t, t + s) for t, s in zip(topleft, annotation_data.shape))
+    ] = annotation_data
+
+    merged_data = (
+        Dataset.open(target_dataset_path)
+        .get_layer(fallback_mag.layer.name)
+        .get_mag(1)
+        .read()
+        .squeeze(0)
+    )
+
+    assert (merged_data == expected_data).all()
