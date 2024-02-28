@@ -46,17 +46,19 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
             topleft=offset, size=sample_size_for_view
         ).align_with_mag(view.mag)
         data = view.read(absolute_bounding_box=bbox_to_read)
+        size_before = data.size
+        data = data[data != 0]
+        data = data[data != np.iinfo(data.dtype).max]
+        if data.size < size_before:
+            print(f"size reduced from {size_before} to {data.size}")
 
         distinct_color_values_in_sample = np.unique(data)
 
-        if (
-            len(distinct_color_values_in_sample) == 1
-            and distinct_color_values_in_sample[0] == 0
-        ):
+        if len(distinct_color_values_in_sample) == 0:
             invalid_sample_count += 1
         else:
             distinct_color_values += len(distinct_color_values_in_sample)
             valid_sample_count += 1
-            inspected_voxel_count += bbox_to_read.in_mag(view.mag).volume()
+            inspected_voxel_count += data.size
 
     return distinct_color_values / inspected_voxel_count

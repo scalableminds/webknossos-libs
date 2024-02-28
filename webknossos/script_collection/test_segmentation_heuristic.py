@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List
+import sys
 
 import webknossos as wk
 from webknossos.dataset._utils.segmentation_recognition import (
@@ -23,6 +24,8 @@ def main(path_to_datasets: Path) -> None:
         if item.is_dir() and not item.name.startswith(".")
     ]
     for dataset_path in dataset_paths:
+        print(".", end="")
+        sys.stdout.flush()
         if looks_like_remote_dataset(dataset_path):
             continue
         try:
