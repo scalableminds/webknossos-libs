@@ -21,6 +21,8 @@ def guess_if_segmentation_path(filepath: Path) -> bool:
 
 
 def guess_if_segmentation_from_view(view: MagView) -> bool:
+    if view.layer.num_channels > 1:
+        return False
     return sample_distinct_values_per_vx(view) <= THRESHOLD
 
 
