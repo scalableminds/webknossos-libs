@@ -1100,9 +1100,10 @@ class Layer:
             )
             self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:
-            logging.exception(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
-            )
+            # logging.exception(
+            #    f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
+            # )
+            pass
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool

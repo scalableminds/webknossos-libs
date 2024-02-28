@@ -3,48 +3,67 @@ from typing import List
 
 import webknossos as wk
 from webknossos.dataset._utils.segmentation_recognition import (
+    THRESHOLD,
     guess_if_segmentation_from_view,
+    sample_distinct_values_per_vx,
 )
 
 
 def main(path_to_datasets: Path) -> None:
-    correct_prediction = 0
-    wrong_prediction = 0
+    correct_prediction_count = 0
+    wrong_prediction_count = 0
     wrongly_predicted: List[str] = []
+    correctly_predicted: List[str] = []
     for path in [dir for dir in path_to_datasets.iterdir() if dir.is_dir()]:
         try:
             dataset = wk.Dataset.open(path)
             for color_layer in dataset.get_color_layers():
                 try:
+                    score = sample_distinct_values_per_vx(color_layer.get_finest_mag())
                     if (
                         guess_if_segmentation_from_view(color_layer.get_finest_mag())
                         == True
                     ):
-                        wrong_prediction += 1
-                        wrongly_predicted += f"Dataset: {dataset.name} Layer: {color_layer.name} predicted as segmentation but is stored as color."
+                        wrong_prediction_count += 1
+                        wrongly_predicted.append(
+                            f"{dataset.name}/{color_layer.name}: guessed segmentation, but is color. Score = {score}."
+                        )
                     else:
-                        correct_prediction += 1
+                        correct_prediction_count += 1
+                        correctly_predicted.append(
+                            f"{dataset.name}/{color_layer.name}: correct as color. Score = {score}."
+                        )
                 except Exception:
                     pass
             for segmentation_layer in dataset.get_segmentation_layers():
                 try:
+                    score = sample_distinct_values_per_vx(
+                        segmentation_layer.get_finest_mag()
+                    )
                     if (
                         guess_if_segmentation_from_view(
                             segmentation_layer.get_finest_mag()
                         )
                         == True
                     ):
-                        correct_prediction += 1
+                        correct_prediction_count += 1
+                        correctly_predicted.append(
+                            f"{dataset.name}/{segmentation_layer.name}: correct as segmentation. Score = {score}."
+                        )
                     else:
-                        wrong_prediction += 1
-                        wrongly_predicted += f"Dataset: {dataset.name} Layer: {segmentation_layer.name} predicted as color but is stored as segmentation."
+                        wrong_prediction_count += 1
+                        wrongly_predicted.append(
+                            f"{dataset.name}/{segmentation_layer.name}: guessed color, but is segmentation. Score = {score}."
+                        )
                 except Exception:
                     pass
         except Exception:
             pass
-        print(
-            f"Wrong predictions: {wrong_prediction}, Correct predictions: {correct_prediction}"
-        )
+    print(
+        f"{wrong_prediction_count} wrong, {correct_prediction_count} correct with threshold {THRESHOLD}."
+    )
+    for element in correctly_predicted:
+        print(element)
     for element in wrongly_predicted:
         print(element)
 
