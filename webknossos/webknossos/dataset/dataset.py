@@ -833,6 +833,7 @@ class Dataset:
 
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif category == SEGMENTATION_CATEGORY:
             segmentation_layer_properties: SegmentationLayerProperties = (
@@ -846,6 +847,7 @@ class Dataset:
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
             self._properties.data_layers += [segmentation_layer_properties]
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
                 self, segmentation_layer_properties
             )
@@ -941,8 +943,10 @@ class Dataset:
 
         self._properties.data_layers += [layer_properties]
         if layer_properties.category == COLOR_CATEGORY:
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif layer_properties.category == SEGMENTATION_CATEGORY:
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(self, layer_properties)
         else:
             raise RuntimeError(

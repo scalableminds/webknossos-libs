@@ -17,15 +17,16 @@ def main(path_to_datasets: Path) -> None:
     wrongly_predicted: List[str] = []
     correctly_predicted: List[str] = []
     failures: List[str] = []
-    for path in [
+    dataset_paths = [
         item
         for item in path_to_datasets.iterdir()
         if item.is_dir() and not item.name.startswith(".")
-    ]:
-        if looks_like_remote_dataset(path):
+    ]
+    for dataset_path in dataset_paths:
+        if looks_like_remote_dataset(dataset_path):
             continue
         try:
-            dataset = wk.Dataset.open(path)
+            dataset = wk.Dataset.open(dataset_path)
             for color_layer in dataset.get_color_layers():
                 try:
                     score = sample_distinct_values_per_vx(color_layer.get_finest_mag())
@@ -42,7 +43,6 @@ def main(path_to_datasets: Path) -> None:
                         )
                 except Exception as e:
                     failures.append(f"Failed to analyze {color_layer.path}: {e}")
-                    pass
             for segmentation_layer in dataset.get_segmentation_layers():
                 try:
                     score = sample_distinct_values_per_vx(
@@ -64,7 +64,7 @@ def main(path_to_datasets: Path) -> None:
                 except Exception as e:
                     failures.append(f"Failed to analyze {segmentation_layer.path}: {e}")
         except Exception as e:
-            failures.append(f"Failed to analyze dataset at {path}: {e}")
+            failures.append(f"Failed to analyze dataset at {dataset_path}: {e}")
     for element in correctly_predicted:
         print(element)
     print("")

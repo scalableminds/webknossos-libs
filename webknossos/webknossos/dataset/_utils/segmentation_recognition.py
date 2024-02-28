@@ -25,7 +25,7 @@ def guess_if_segmentation_from_view(view: MagView) -> bool:
 
 
 def sample_distinct_values_per_vx(view: MagView) -> float:
-    sample_size_for_view = view.size.pairmin(SAMPLE_SIZE)
+    sample_size_for_view = view.size.pairmin(SAMPLE_SIZE * view.mag)
     min_offset = view.bounding_box.topleft
     max_offset = view.bounding_box.bottomright - sample_size_for_view
 
@@ -57,9 +57,6 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
         else:
             distinct_color_values += len(distinct_color_values_in_sample)
             valid_sample_count += 1
-            inspected_voxel_count += bbox_to_read.volume()
+            inspected_voxel_count += bbox_to_read.in_mag(view.mag).volume()
 
-    print(
-        f"{view.layer.path}: distinct values {distinct_color_values} in {inspected_voxel_count} voxels"
-    )
     return distinct_color_values / inspected_voxel_count
