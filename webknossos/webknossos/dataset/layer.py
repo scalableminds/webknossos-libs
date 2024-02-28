@@ -191,6 +191,8 @@ class Layer:
         )
         self._mags: Dict[Mag, MagView] = {}
 
+        self.path.mkdir(parents=True, exist_ok=True)
+
         for mag in properties.mags:
             self._setup_mag(Mag(mag.mag))
         # Only keep the properties of mags that were initialized.
@@ -1098,10 +1100,9 @@ class Layer:
             )
             self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:
-            pass
-            # logging.exception(
-            #     f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
-            # )
+            logging.exception(
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
+            )
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool

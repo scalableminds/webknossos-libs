@@ -49,8 +49,8 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
         data = data[data != 0]
         try:
             data = data[data != np.iinfo(data.dtype).max]
-        except:
-            pass # does not work or make sense for float data types
+        except Exception:  # pylint: disable=bare-except
+            pass  # does not work or make sense for float data types
 
         distinct_color_values_in_sample = np.unique(data)
 
@@ -62,6 +62,8 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
             inspected_voxel_count += data.size
 
     if inspected_voxel_count < 1000:
-        raise RuntimeError(f"Failed to find enough valid samples (saw {inspected_voxel_count} voxels).")
+        raise RuntimeError(
+            f"Failed to find enough valid samples (saw {inspected_voxel_count} voxels)."
+        )
 
     return distinct_color_values / inspected_voxel_count
