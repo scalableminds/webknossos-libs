@@ -12,7 +12,7 @@ THRESHOLD = (
     1 / 200
 )  # more unique values per voxel than this value means color, less segmentation
 SAMPLE_SIZE = Vec3Int(16, 16, 16)
-MAX_FAILS = 100
+MAX_FAILS = 200
 
 
 def guess_if_segmentation_path(filepath: Path) -> bool:
@@ -36,7 +36,7 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
 
     while valid_sample_count < NUM_SAMPLES:
         if invalid_sample_count > MAX_FAILS:
-            raise RuntimeError("Failed to find enough valid samples.")
+            break
         offset = Vec3Int(
             random.randint(min_offset.x, max_offset.x),
             random.randint(min_offset.y, max_offset.y),
@@ -47,7 +47,10 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
         ).align_with_mag(view.mag)
         data = view.read(absolute_bounding_box=bbox_to_read)
         data = data[data != 0]
-        data = data[data != np.iinfo(data.dtype).max]
+        try:
+            data = data[data != np.iinfo(data.dtype).max]
+        except:
+            pass # does not work or make sense for float data types
 
         distinct_color_values_in_sample = np.unique(data)
 
@@ -57,5 +60,8 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
             distinct_color_values += len(distinct_color_values_in_sample)
             valid_sample_count += 1
             inspected_voxel_count += data.size
+
+    if inspected_voxel_count < 1000:
+        raise RuntimeError(f"Failed to find enough valid samples (saw {inspected_voxel_count} voxels).")
 
     return distinct_color_values / inspected_voxel_count
