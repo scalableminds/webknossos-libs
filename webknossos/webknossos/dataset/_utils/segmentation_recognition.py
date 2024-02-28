@@ -25,8 +25,8 @@ def guess_if_segmentation_from_view(view: View) -> bool:
 
 def sample_distinct_values_per_vx(view: View) -> float:
     sample_size_for_view = view.size.pairmin(SAMPLE_SIZE)
-    min_x, min_y, min_z = view.bounding_box.topleft
-    max_x, max_y, max_z = view.bounding_box.bottomright - sample_size_for_view
+    min_offset = view.bounding_box.topleft
+    max_offset = view.bounding_box.bottomright - sample_size_for_view
 
     distinct_color_values = 0
     valid_sample_count = 0
@@ -37,9 +37,9 @@ def sample_distinct_values_per_vx(view: View) -> float:
         if invalid_sample_count > MAX_FAILS:
             raise RuntimeError("Failed to find enough valid samples.")
         offset = Vec3Int(
-            random.randint(min_x, max_x),
-            random.randint(min_y, max_y),
-            random.randint(min_z, max_z),
+            random.randint(min_offset.x, max_offset.x),
+            random.randint(min_offset.y, max_offset.y),
+            random.randint(min_offset.z, max_offset.z),
         )
         data = view.read(size=sample_size_for_view, absolute_offset=offset)
 
