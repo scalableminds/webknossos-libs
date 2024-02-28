@@ -3,12 +3,13 @@ from pathlib import Path
 
 import numpy as np
 
-from webknossos.dataset.view import View
+from webknossos.dataset.mag_view import MagView
+from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.geometry.vec3_int import Vec3Int
 
 NUM_SAMPLES = 20
 THRESHOLD = (
-    1 / 100
+    1 / 200
 )  # more unique values per voxel than this value means color, less segmentation
 SAMPLE_SIZE = Vec3Int(16, 16, 16)
 MAX_FAILS = 100
@@ -19,11 +20,11 @@ def guess_if_segmentation_path(filepath: Path) -> bool:
     return any(i in lowercase_filepath for i in ["segmentation", "labels"])
 
 
-def guess_if_segmentation_from_view(view: View) -> bool:
+def guess_if_segmentation_from_view(view: MagView) -> bool:
     return sample_distinct_values_per_vx(view) <= THRESHOLD
 
 
-def sample_distinct_values_per_vx(view: View) -> float:
+def sample_distinct_values_per_vx(view: MagView) -> float:
     sample_size_for_view = view.size.pairmin(SAMPLE_SIZE)
     min_offset = view.bounding_box.topleft
     max_offset = view.bounding_box.bottomright - sample_size_for_view
@@ -41,7 +42,10 @@ def sample_distinct_values_per_vx(view: View) -> float:
             random.randint(min_offset.y, max_offset.y),
             random.randint(min_offset.z, max_offset.z),
         )
-        data = view.read(size=sample_size_for_view, absolute_offset=offset)
+        bbox_to_read = BoundingBox(
+            topleft=offset, size=sample_size_for_view
+        ).align_with_mag(view.mag)
+        data = view.read(absolute_bounding_box=bbox_to_read)
 
         distinct_color_values_in_sample = np.unique(data)
 
@@ -53,6 +57,9 @@ def sample_distinct_values_per_vx(view: View) -> float:
         else:
             distinct_color_values += len(distinct_color_values_in_sample)
             valid_sample_count += 1
-            inspected_voxel_count += SAMPLE_SIZE.prod()
+            inspected_voxel_count += bbox_to_read.volume()
 
+    print(
+        f"{view.layer.path}: distinct values {distinct_color_values} in {inspected_voxel_count} voxels"
+    )
     return distinct_color_values / inspected_voxel_count

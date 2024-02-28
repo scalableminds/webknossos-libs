@@ -9,11 +9,21 @@ from webknossos.dataset._utils.segmentation_recognition import (
 )
 
 
+def looks_like_remote_dataset(path: Path) -> bool:
+    return len([item for item in path.iterdir() if item.is_dir()]) == 0
+
+
 def main(path_to_datasets: Path) -> None:
     wrongly_predicted: List[str] = []
     correctly_predicted: List[str] = []
     failures: List[str] = []
-    for path in [dir for dir in path_to_datasets.iterdir() if dir.is_dir()]:
+    for path in [
+        item
+        for item in path_to_datasets.iterdir()
+        if item.is_dir() and not item.name.startswith(".")
+    ]:
+        if looks_like_remote_dataset(path):
+            continue
         try:
             dataset = wk.Dataset.open(path)
             for color_layer in dataset.get_color_layers():
