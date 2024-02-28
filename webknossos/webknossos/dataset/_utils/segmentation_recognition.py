@@ -46,11 +46,8 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
             topleft=offset, size=sample_size_for_view
         ).align_with_mag(view.mag)
         data = view.read(absolute_bounding_box=bbox_to_read)
-        size_before = data.size
         data = data[data != 0]
         data = data[data != np.iinfo(data.dtype).max]
-        if data.size < size_before:
-            print(f"size reduced from {size_before} to {data.size}")
 
         distinct_color_values_in_sample = np.unique(data)
 
