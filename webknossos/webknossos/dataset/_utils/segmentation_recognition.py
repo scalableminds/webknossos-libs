@@ -22,9 +22,9 @@ def guess_if_segmentation_path(filepath: Path) -> bool:
 
 
 def guess_category_from_view(view: MagView) -> LayerCategoryType:
-    if sample_distinct_values_per_vx(view) <= THRESHOLD:
-        return "segmentation"
-    return "color"
+    if view.layer.num_channels > 1 or sample_distinct_values_per_vx(view) > THRESHOLD:
+        return "color"
+    return "segmentation"
 
 
 def sample_distinct_values_per_vx(view: MagView) -> float:
