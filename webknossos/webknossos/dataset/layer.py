@@ -563,9 +563,11 @@ class Layer:
             chunk_shape=chunk_shape or foreign_mag_view._array_info.chunk_shape,
             chunks_per_shard=chunks_per_shard
             or foreign_mag_view._array_info.chunks_per_shard,
-            compress=compress
-            if compress is not None
-            else foreign_mag_view._array_info.compression_mode,
+            compress=(
+                compress
+                if compress is not None
+                else foreign_mag_view._array_info.compression_mode
+            ),
         )
 
         if extend_layer_bounding_box:

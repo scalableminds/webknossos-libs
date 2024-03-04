@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
+from webknossos.dataset.layer_categories import LayerCategoryType
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.geometry.vec3_int import Vec3Int
@@ -20,8 +21,10 @@ def guess_if_segmentation_path(filepath: Path) -> bool:
     return any(i in lowercase_filepath for i in ["segmentation", "labels"])
 
 
-def guess_if_segmentation_from_view(view: MagView) -> bool:
-    return sample_distinct_values_per_vx(view) <= THRESHOLD
+def guess_category_from_view(view: MagView) -> LayerCategoryType:
+    if sample_distinct_values_per_vx(view) <= THRESHOLD:
+        return "segmentation"
+    return "color"
 
 
 def sample_distinct_values_per_vx(view: MagView) -> float:

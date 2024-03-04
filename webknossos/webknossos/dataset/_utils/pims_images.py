@@ -481,7 +481,6 @@ class PimsImages:
         self,
         args: Tuple[int, int],
         mag_view: MagView,
-        is_segmentation: bool,
         dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
@@ -491,11 +490,7 @@ class PimsImages:
         """
         z_start, z_end = args
         shapes = []
-        max_id: Optional[int]
-        if is_segmentation:
-            max_id = 0
-        else:
-            max_id = None
+        max_id = 0
 
         with self._open_images() as images:
             if self._flip_z:
@@ -536,12 +531,11 @@ class PimsImages:
                     if dtype is not None:
                         image_slice = image_slice.astype(dtype, order="F")
 
-                    if max_id is not None:
-                        max_id = max(max_id, image_slice.max())
+                    max_id = max(max_id, image_slice.max())
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
 
-            return dimwise_max(shapes), None if max_id is None else int(max_id)
+            return dimwise_max(shapes), max_id
 
     def get_possible_layers(self) -> Optional[Dict["str", List[int]]]:
         if len(self._possible_layers) == 0:

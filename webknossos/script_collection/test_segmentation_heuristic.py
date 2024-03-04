@@ -5,7 +5,7 @@ from typing import List
 import webknossos as wk
 from webknossos.dataset._utils.segmentation_recognition import (
     THRESHOLD,
-    guess_if_segmentation_from_view,
+    guess_category_from_view,
     sample_distinct_values_per_vx,
 )
 
@@ -34,8 +34,8 @@ def main(path_to_datasets: Path) -> None:
                 try:
                     score = sample_distinct_values_per_vx(color_layer.get_finest_mag())
                     if (
-                        guess_if_segmentation_from_view(color_layer.get_finest_mag())
-                        == True
+                        guess_category_from_view(color_layer.get_finest_mag())
+                        == "segmentation"
                     ):
                         wrongly_predicted.append(
                             f"{color_layer.path} guessed segmentation, but is color. Score = {score}."
@@ -52,10 +52,8 @@ def main(path_to_datasets: Path) -> None:
                         segmentation_layer.get_finest_mag()
                     )
                     if (
-                        guess_if_segmentation_from_view(
-                            segmentation_layer.get_finest_mag()
-                        )
-                        == True
+                        guess_category_from_view(segmentation_layer.get_finest_mag())
+                        == "segmentation"
                     ):
                         correctly_predicted.append(
                             f"{segmentation_layer.path} correct as segmentation. Score = {score}."
