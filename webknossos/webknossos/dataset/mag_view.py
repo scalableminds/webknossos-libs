@@ -188,13 +188,18 @@ class MagView(View):
         ):
             relative_offset = Vec3Int.zeros()
 
+        if (absolute_bounding_box or relative_bounding_box) is not None:
+            data_shape = None
+        else:
+            data_shape = Vec3Int(data.shape[-3:])
+
         mag1_bbox = self._get_mag1_bbox(
             abs_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
             abs_mag1_bbox=absolute_bounding_box,
             rel_mag1_bbox=relative_bounding_box,
-            current_mag_size=Vec3Int(data.shape[-3:]),
+            current_mag_size=data_shape,
         )
 
         # Only update the layer's bbox if we are actually larger
@@ -204,9 +209,8 @@ class MagView(View):
 
         super().write(
             data,
-            absolute_offset=mag1_bbox.topleft,
             json_update_allowed=json_update_allowed,
-            absolute_bounding_box=absolute_bounding_box,
+            absolute_bounding_box=mag1_bbox,
         )
 
     def read(

@@ -214,7 +214,6 @@ class BufferedSliceWriter:
 
                 self.view.write(
                     data,
-                    offset=chunk_bbox.topleft_xyz.add_or_none(self.offset),
                     json_update_allowed=self.json_update_allowed,
                     absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self.view._mag),
                 )

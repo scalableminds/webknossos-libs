@@ -140,11 +140,38 @@ class View:
         rel_current_mag_offset: Optional[VecIntLike] = None,
         current_mag_size: Optional[VecIntLike] = None,
     ) -> NDBoundingBox:
+        num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
+        num_offsets = _count_defined_values(
+            [
+                abs_mag1_offset,
+                rel_mag1_offset,
+                abs_current_mag_offset,
+                rel_current_mag_offset,
+            ]
+        )
+        num_sizes = _count_defined_values([mag1_size, current_mag_size])
+        if num_bboxes == 0:
+            assert num_offsets != 0, "You must supply an offset or a bounding box."
+            assert (
+                num_sizes != 0
+            ), "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
+            assert num_offsets == 1, "Only one offset can be supplied."
+            assert num_sizes == 1, "Only one size can be supplied."
+        else:
+            assert num_bboxes == 1, "Only one bounding-box can be supplied."
+            assert (
+                num_offsets == 0
+            ), "A bounding-box was supplied, you cannot also supply an offset."
+            assert (
+                num_sizes == 0
+            ), "A bounding-box was supplied, you cannot also supply a size."
+
         if abs_mag1_bbox is not None:
             return abs_mag1_bbox
 
-        elif rel_mag1_bbox is not None:
+        if rel_mag1_bbox is not None:
             return rel_mag1_bbox.offset(self.bounding_box.topleft)
+
         else:
             mag_vec = self._mag.to_vec3_int()
             if rel_current_mag_offset is not None:
@@ -177,7 +204,13 @@ class View:
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
         """
-        Writes the `data` at the specified `relative_offset` or `absolute_offset`, both specified in Mag(1).
+        The user can specify where the data should be written.
+        The default is to write the data to the view's bounding box.
+        Alternatively, one can supply one of the following keywords:
+        * `relative_offset` in Mag(1) -> only usable for 3D datasets
+        * `absolute_offset` in Mag(1) -> only usable for 3D datasets
+        * `relative_bounding_box` in Mag(1)
+        * `absolute_bounding_box` in Mag(1)
 
         ⚠️ The `offset` parameter is deprecated.
         This parameter used to be relative for `View` and absolute for `MagView`,
@@ -220,6 +253,11 @@ class View:
         ):
             relative_offset = Vec3Int.zeros()
 
+        if (absolute_bounding_box or relative_bounding_box) is not None:
+            data_shape = None
+        else:
+            data_shape = Vec3Int(data.shape[-3:])
+
         if offset is not None:
             if self._mag == Mag(1):
                 alternative = "Since this is a View in Mag(1), please use view.write(relative_offset=my_vec)"
@@ -252,7 +290,7 @@ class View:
             abs_mag1_offset=absolute_offset,
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
-            current_mag_size=Vec3Int(data.shape[-3:]),
+            current_mag_size=data_shape,
         )
         if json_update_allowed:
             assert self.bounding_box.contains_bbox(
