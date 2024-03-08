@@ -631,7 +631,7 @@ class PimsImages:
                 )
             else:
                 if isinstance(images, pims.FramesSequenceND):
-                    axes_names = self._iter_axes or [] + [
+                    axes_names = (self._iter_axes or []) + [
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
                     axes_sizes = [
