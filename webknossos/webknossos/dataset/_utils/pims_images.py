@@ -31,20 +31,22 @@ except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
 
 try:
-    from .pims_dm_readers import (  # pylint: disable=unused-import
-        PimsDm3Reader,
-        PimsDm4Reader,
-    )
+    from .pims_dm_readers import PimsDm3Reader, PimsDm4Reader
 except ImportError:
     pass
 
 try:
-    from .pims_imagej_tiff_reader import (  # pylint: disable=unused-import
-        PimsImagejTiffReader,
-    )
+    from .pims_imagej_tiff_reader import PimsImagejTiffReader
 except ImportError:
     pass
+
+try:
+    from .pims_dicom_reader import DicomReader
+except ImportError:
+    pass
+
 # pylint: enable=unused-import
+
 
 from ...geometry.vec3_int import Vec3Int
 from ..mag_view import MagView
@@ -464,9 +466,9 @@ class PimsImages:
                             # This might get fixed via https://github.com/soft-matter/pims/pull/430
                             images._init_axis("c", images._shape[-1])
                             for key in list(images._get_frame_dict.keys()):
-                                images._get_frame_dict[
-                                    key + ("c",)
-                                ] = images._get_frame_dict.pop(key)
+                                images._get_frame_dict[key + ("c",)] = (
+                                    images._get_frame_dict.pop(key)
+                                )
                         images.bundle_axes = self._img_dims
                         images.iter_axes = self._iter_dim or ""
                 else:

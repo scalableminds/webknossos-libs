@@ -5,10 +5,10 @@ from typing import Iterator
 
 import numpy as np
 import pytest
+from tests.constants import TESTDATA_DIR
 from tifffile import TiffFile
 
 import webknossos as wk
-from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset
 
 
@@ -58,6 +58,21 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == channels
         assert layer.bounding_box.size == size
+
+
+def test_from_dicom_images(tmp_path: Path) -> None:
+    ds = wk.Dataset.from_images(
+        TESTDATA_DIR / "dicoms",
+        tmp_path,
+        (1, 1, 1),
+    )
+    assert len(ds.layers) == 1
+    assert "dicoms" in ds.layers
+    data = ds.layers["dicoms"].get_finest_mag().read()
+    assert data.shape == (1, 274, 384, 384)
+    assert (
+        data.max() == 127
+    ), f"The maximum value of the image should be 127 but is {data.max()}"
 
 
 def test_no_slashes_in_layername(tmp_path: Path) -> None:
