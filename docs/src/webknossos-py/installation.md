@@ -16,3 +16,9 @@ For extended file format conversation support it is necessary to install the opt
 ```bash
 pip install "webknossos[all]"
 ```
+
+If you have issues with installing the `pylibczirw` package on macOS, try:
+
+```bash
+pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[all]"
+```
