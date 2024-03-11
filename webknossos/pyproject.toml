@@ -80,7 +80,7 @@ hypothesis = "^6.35.0"
 icecream = "^2.1.1"
 inducoapi = "^2.0.2"
 jsonschema = "^4.6.0"
-mypy = "^1.0.0"
+mypy = "^1.9.0"
 openapi-python-client = "0.14.1"
 pytest = "^7.2.1"
 pytest-custom-exit-code = "^0.3.0"
@@ -129,12 +129,6 @@ show_error_codes = true
 disallow_untyped_defs = true
 no_implicit_optional = true
 
-# [tool.pylint.MASTER]
-# load-plugins = ["_helpers.pylint_plugins.attrs_ng_api"]
-
-# [tool.pylint."MESSAGES CONTROL"]
-# disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","broad-exception-raised","protected-access","R","C"]
-
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
@@ -167,9 +161,11 @@ indent-width = 4
 target-version = "py311"
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-# I = iSort
-select = ["E", "F", "I"]
+# F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
+# E = subset of the pycodestyle https://docs.astral.sh/ruff/rules/#pycodestyle-e-w
+# I = iSort https://docs.astral.sh/ruff/rules/#isort-i
+# A  = Flake8 Builting https://docs.astral.sh/ruff/rules/#flake8-builtins-a
+select = ["E", "F", "I", "A", "W"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
