@@ -21,7 +21,7 @@ from cluster_tools import Executor
 
 from webknossos.geometry.vec_int import VecInt
 
-from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecIntLike
+from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..utils import (
     get_executor_for_args,
     get_rich_progress,
@@ -133,12 +133,12 @@ class View:
         self,
         abs_mag1_bbox: Optional[NDBoundingBox] = None,
         rel_mag1_bbox: Optional[NDBoundingBox] = None,
-        abs_mag1_offset: Optional[VecIntLike] = None,
-        rel_mag1_offset: Optional[VecIntLike] = None,
-        mag1_size: Optional[VecIntLike] = None,
-        abs_current_mag_offset: Optional[VecIntLike] = None,
-        rel_current_mag_offset: Optional[VecIntLike] = None,
-        current_mag_size: Optional[VecIntLike] = None,
+        abs_mag1_offset: Optional[Vec3IntLike] = None,
+        rel_mag1_offset: Optional[Vec3IntLike] = None,
+        mag1_size: Optional[Vec3IntLike] = None,
+        abs_current_mag_offset: Optional[Vec3IntLike] = None,
+        rel_current_mag_offset: Optional[Vec3IntLike] = None,
+        current_mag_size: Optional[Vec3IntLike] = None,
     ) -> NDBoundingBox:
         num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
         num_offsets = _count_defined_values(
@@ -189,6 +189,10 @@ class View:
 
             assert abs_mag1_offset is not None, "No offset was supplied."
             assert mag1_size is not None, "No size was supplied."
+
+            assert (
+                len(self.bounding_box) == 3
+            ), "The delivered offset and size are only usable for 3D views."
 
             return self.bounding_box.with_topleft(abs_mag1_offset).with_size(mag1_size)
 
@@ -424,8 +428,9 @@ class View:
                     assert (
                         relative_offset is None and absolute_offset is None
                     ), "You must supply size, when reading with an offset."
+                    absolute_bounding_box = self.bounding_box
                     current_mag_size = None
-                    mag1_size = self.bounding_box.size
+                    mag1_size = None
                 else:
                     if relative_offset is None and absolute_offset is None:
                         if type(self) == View:
@@ -464,15 +469,27 @@ class View:
                 )
 
                 if size is None:
+                    absolute_bounding_box = self.bounding_box.offset(
+                        self._mag.to_vec3_int() * offset
+                    )
+                    offset = None
                     current_mag_size = None
-                    mag1_size = self.bounding_box.size
+                    mag1_size = None
                 else:
                     # (deprecated) offset and size are given
                     current_mag_size = size
                     mag1_size = None
 
-            if all(i is None for i in [offset, absolute_offset, relative_offset]):
-                relative_offset = VecInt.zeros(len(self.bounding_box))
+            if all(
+                i is None
+                for i in [
+                    offset,
+                    absolute_offset,
+                    relative_offset,
+                    absolute_bounding_box,
+                ]
+            ):
+                relative_offset = Vec3Int.zeros()
         else:
             assert (
                 size is None

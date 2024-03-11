@@ -8,6 +8,10 @@ VALUE_ERROR = "VecInt can be instantiated with int values `VecInt(1,2,3,4) or wi
 
 
 class VecInt(tuple):
+    """
+    Class to represent a ND vector of integer values.
+    """
+
     def __new__(
         cls,
         vec: Union[int, "VecIntLike"],
@@ -18,8 +22,7 @@ class VecInt(tuple):
     ) -> "VecInt":
         """
         Class to represent a ND vector. Inherits from tuple and provides useful
-        methods and operations on top. The vector has a minimal length of 3 and
-        it is assumed that the first three axes are `x`, `y` and `z`.
+        methods and operations on top. The vector has a minimal length of 3.
 
         A small usage example:
 
@@ -74,6 +77,15 @@ class VecInt(tuple):
 
     @staticmethod
     def from_str(string: str) -> "VecInt":
+        """
+        Returns a new ND Vector from a string representation.
+
+        Args:
+            string (str): The string representation of the vector.
+
+        Returns:
+            VecInt: The new vector.
+        """
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
     def with_replaced(self, index: int, new_element: int) -> "VecInt":
@@ -82,24 +94,48 @@ class VecInt(tuple):
         return VecInt(*self[:index], new_element, *self[index + 1 :])
 
     def to_np(self) -> np.ndarray:
+        """
+        Returns the vector as a numpy array.
+        """
         return np.array(self)
 
     def to_list(self) -> List[int]:
+        """
+        Returns the vector as a list.
+        """
         return list(self)
 
     def to_tuple(self) -> Tuple[int, ...]:
+        """
+        Returns the vector as a tuple.
+        """
         return tuple(self)
 
     def contains(self, needle: int) -> bool:
+        """
+        Checks if the vector contains a given element.
+        """
         return any(element == needle for element in self)
 
     def is_positive(self, strictly_positive: bool = False) -> bool:
+        """
+        Checks if all elements in the vector are positive.
+
+        Args:
+            strictly_positive (bool): If True, checks if all elements are strictly positive.
+
+        Returns:
+            bool: True if all elements are positive, False otherwise.
+        """
         if strictly_positive:
             return all(i > 0 for i in self)
 
         return all(i >= 0 for i in self)
 
     def is_uniform(self) -> bool:
+        """
+        Checks if all elements in the vector are the same.
+        """
         first = self[0]
         return all(element == first for element in self)
 
@@ -139,15 +175,27 @@ class VecInt(tuple):
         return self.__class__(-elem for elem in self)
 
     def ceildiv(self, other: Union[int, "VecIntLike"]) -> "VecInt":
+        """
+        Returns a new VecInt with the ceil division of each element by the other.
+        """
         return (self + other - 1) // other
 
     def pairmax(self, other: Union[int, "VecIntLike"]) -> "VecInt":
+        """
+        Returns a new VecInt with the maximum of each pair of elements from the two vectors.
+        """
         return self._element_wise(other, max)
 
     def pairmin(self, other: Union[int, "VecIntLike"]) -> "VecInt":
+        """
+        Returns a new VecInt with the minimum of each pair of elements from the two vectors.
+        """
         return self._element_wise(other, min)
 
     def prod(self) -> int:
+        """
+        Returns the product of all elements in the vector.
+        """
         return int(np.prod(self.to_np()))
 
     def __repr__(self) -> str:
@@ -156,6 +204,15 @@ class VecInt(tuple):
         )
 
     def add_or_none(self, other: Optional["VecInt"]) -> Optional["VecInt"]:
+        """
+        Adds two VecInts or returns None if the other is None.
+
+        Args:
+            other (Optional[VecInt]): The other vector to add.
+
+        Returns:
+            Optional[VecInt]: The sum of the two vectors or None if the other is None.
+        """
         return None if other is None else self + other
 
     def moveaxis(
@@ -165,6 +222,13 @@ class VecInt(tuple):
         Allows to move one element at index `source` to another index `target`. Similar to
         np.moveaxis, this is *not* a swap operation but instead it moves the specified
         source so that the other elements move when necessary.
+
+        Args:
+            source (Union[int, List[int]]): The index of the element to move.
+            target (Union[int, List[int]]): The index where the element should be moved to.
+
+        Returns:
+            VecInt: A new vector with the moved element.
         """
 
         # Piggy-back on np.moveaxis by creating an auxiliary array where the indices 0, 1 and
@@ -177,14 +241,42 @@ class VecInt(tuple):
 
     @classmethod
     def zeros(cls, length: int) -> "VecInt":
+        """
+        Returns a new ND Vector with all elements set to 0.
+
+        Args:
+            length (int): The length of the vector.
+
+        Returns:
+            VecInt: The new vector.
+        """
         return cls((0 for _ in range(length)))
 
     @classmethod
     def ones(cls, length: int) -> "VecInt":
+        """
+        Returns a new ND Vector with all elements set to 1.
+
+        Args:
+            length (int): The length of the vector.
+
+        Returns:
+            VecInt: The new vector.
+        """
         return cls((1 for _ in range(length)))
 
     @classmethod
     def full(cls, an_int: int, length: int) -> "VecInt":
+        """
+        Returns a new ND Vector with all elements set to the same value.
+
+        Args:
+            an_int (int): The value of the elements.
+            length (int): The length of the vector.
+
+        Returns:
+            VecInt: The new vector.
+        """
         return cls((an_int for _ in range(length)))
 
 

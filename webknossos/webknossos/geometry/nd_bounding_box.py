@@ -89,33 +89,112 @@ class NDBoundingBox:
         return all(self.index[i - 1] < self.index[i] for i in range(1, len(self.index)))
 
     def with_name(self, name: Optional[str]) -> "NDBoundingBox":
+        """
+        Returns a new instance of `NDBoundingBox` with the specified name.
+
+        Args:
+            name (Optional[str]): The name to assign to the new `NDBoundingBox` instance.
+
+        Returns:
+            NDBoundingBox: A new instance of `NDBoundingBox` with the specified name.
+        """
         return attr.evolve(self, name=name)
 
     def with_topleft(self, new_topleft: VecIntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with the specified top left coordinates.
+
+        Args:
+        - new_topleft (VecIntLike): The new top left coordinates for the bounding box.
+
+        Returns:
+        - NDBoundingBox: A new NDBoundingBox object with the updated top left coordinates.
+        """
         return attr.evolve(self, topleft=VecInt(new_topleft))
 
     def with_size(self, new_size: VecIntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with the specified size.
+
+        Args:
+        - new_size (VecIntLike): The new size of the bounding box. Can be a VecInt or any object that can be converted to a VecInt.
+
+        Returns:
+        - A new NDBoundingBox object with the specified size.
+        """
         return attr.evolve(self, size=VecInt(new_size))
 
     def with_index(self, new_index: VecIntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with the specified index.
+
+        Args:
+            new_index (VecIntLike): The new axis order for the bounding box.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the updated index.
+        """
         return attr.evolve(self, index=VecInt(new_index))
 
     def with_bottomright(self, new_bottomright: VecIntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox with an updated bottomright value.
+
+        Args:
+            new_bottomright (VecIntLike): The new bottom right corner coordinates.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the updated bottom right corner.
+        """
         new_size = VecInt(new_bottomright) - self.topleft
 
         return self.with_size(new_size)
 
     def with_is_visible(self, is_visible: bool) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with the specified visibility.
+
+        Args:
+            is_visible (bool): The visibility value to set.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the updated visibility value.
+        """
         return attr.evolve(self, is_visible=is_visible)
 
     def with_color(
         self, color: Optional[Tuple[float, float, float, float]]
     ) -> "NDBoundingBox":
+        """
+        Returns a new instance of NDBoundingBox with the specified color.
+
+        Args:
+            color (Optional[Tuple[float, float, float, float]]): The color to set for the bounding box.
+                The color should be specified as a tuple of four floats representing RGBA values.
+
+        Returns:
+            NDBoundingBox: A new instance of NDBoundingBox with the specified color.
+        """
         return attr.evolve(self, color=color)
 
     def with_bounds(
         self, axis: str, new_topleft: Optional[int], new_size: Optional[int]
     ) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with updated bounds along the specified axis.
+
+        Args:
+            axis (str): The name of the axis to update.
+            new_topleft (Optional[int]): The new value for the top-left coordinate along the specified axis.
+            new_size (Optional[int]): The new size along the specified axis.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with updated bounds.
+
+        Raises:
+            ValueError: If the given axis name does not exist.
+
+        """
         try:
             index = self.axes.index(axis)
         except ValueError as err:
@@ -135,6 +214,15 @@ class NDBoundingBox:
         return attr.evolve(self, topleft=_new_topleft, size=_new_size)
 
     def get_bounds(self, axis: str) -> Tuple[int, int]:
+        """
+        Returns the bounds of the given axis.
+
+        Args:
+            axis (str): The name of the axis to get the bounds for.
+
+        Returns:
+            Tuple[int, int]: A tuple containing the top-left and bottom-right coordinates along the specified axis.
+        """
         try:
             index = self.axes.index(axis)
         except ValueError as err:
@@ -163,6 +251,19 @@ class NDBoundingBox:
 
     @classmethod
     def from_wkw_dict(cls, bbox: Dict) -> "NDBoundingBox":
+        """
+        Create an instance of NDBoundingBox from a dictionary representation.
+
+        Args:
+            bbox (Dict): The dictionary representation of the bounding box.
+
+        Returns:
+            NDBoundingBox: An instance of NDBoundingBox.
+
+        Raises:
+            AssertionError: If additionalAxes are present but axisOrder is not provided.
+        """
+
         topleft: Tuple[int, ...] = bbox["topLeft"]
         size: Tuple[int, ...] = (bbox["width"], bbox["height"], bbox["depth"])
         axes: Tuple[str, ...] = ("x", "y", "z")
@@ -185,6 +286,12 @@ class NDBoundingBox:
         return cls(topleft=topleft, size=size, axes=axes, index=index)
 
     def to_wkw_dict(self) -> dict:
+        """
+        Converts the bounding box object to a json dictionary.
+
+        Returns:
+            dict: A json dictionary representing the bounding box.
+        """
         topleft = [None, None, None]
         width, height, depth = None, None, None
         additional_axes = []
@@ -222,6 +329,12 @@ class NDBoundingBox:
         }
 
     def to_config_dict(self) -> dict:
+        """
+        Returns a dictionary representation of the bounding box.
+
+        Returns:
+            dict: A dictionary representation of the bounding box.
+        """
         return {
             "topleft": self.topleft.to_list(),
             "size": self.size.to_list(),
@@ -229,6 +342,12 @@ class NDBoundingBox:
         }
 
     def to_checkpoint_name(self) -> str:
+        """
+        Returns a string representation of the bounding box that can be used as a checkpoint name.
+
+        Returns:
+            str: A string representation of the bounding box.
+        """
         return f"{'_'.join(str(element) for element in self.topleft)}_{'_'.join(str(element) for element in self.size)}"
 
     def __repr__(self) -> str:
@@ -248,6 +367,15 @@ class NDBoundingBox:
         return len(self.axes)
 
     def get_shape(self, axis_name: str) -> int:
+        """
+        Returns the size of the bounding box along the specified axis.
+
+        Args:
+            axis_name (str): The name of the axis to get the size for.
+
+        Returns:
+            int: The size of the bounding box along the specified axis.
+        """
         try:
             index = self.axes.index(axis_name)
             return self.size[index]
@@ -302,21 +430,57 @@ class NDBoundingBox:
         return self._get_attr_xyz("index")
 
     def with_topleft_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with changed x, y and z coordinates of the topleft corner.
+
+        Args:
+            new_xyz (Vec3IntLike): The new x, y and z coordinates for the topleft corner.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z coordinates of the topleft corner.
+        """
         new_topleft = self._get_attr_with_replaced_xyz("topleft", new_xyz)
 
         return self.with_topleft(new_topleft)
 
     def with_size_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with changed x, y and z size.
+
+        Args:
+            new_xyz (Vec3IntLike): The new x, y and z size for the bounding box.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z size.
+        """
         new_size = self._get_attr_with_replaced_xyz("size", new_xyz)
 
         return self.with_size(new_size)
 
     def with_bottomright_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with changed x, y and z coordinates of the bottomright corner.
+
+        Args:
+            new_xyz (Vec3IntLike): The new x, y and z coordinates for the bottomright corner.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z coordinates of the bottomright corner.
+        """
         new_bottomright = self._get_attr_with_replaced_xyz("bottomright", new_xyz)
 
         return self.with_bottomright(new_bottomright)
 
     def with_index_xyz(self, new_xyz: Vec3IntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with changed x, y and z index.
+
+        Args:
+            new_xyz (Vec3IntLike): The new x, y and z index for the bounding box.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z index.
+        """
         new_index = self._get_attr_with_replaced_xyz("index", new_xyz)
 
         return self.with_index(new_index)
@@ -336,7 +500,18 @@ class NDBoundingBox:
     def intersected_with(
         self, other: "NDBoundingBox", dont_assert: bool = False
     ) -> "NDBoundingBox":
-        """If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))"""
+        """
+        Returns the intersection of two bounding boxes.
+
+        If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))
+
+        Args:
+            other (NDBoundingBox): The other bounding box to intersect with.
+            dont_assert (bool): If True, the method may return empty bounding boxes.
+
+        Returns:
+            NDBoundingBox: The intersection of the two bounding boxes.
+        """
 
         self._check_compatibility(other)
         topleft = self.topleft.pairmax(other.topleft)
@@ -353,6 +528,15 @@ class NDBoundingBox:
         return intersection
 
     def extended_by(self, other: "NDBoundingBox") -> "NDBoundingBox":
+        """
+        Returns the smallest bounding box that contains both bounding boxes.
+
+        Args:
+            other (NDBoundingBox): The other bounding box to extend with.
+
+        Returns:
+            NDBoundingBox: The smallest bounding box that contains both bounding boxes.
+        """
         self._check_compatibility(other)
         if self.is_empty():
             return other
@@ -366,9 +550,24 @@ class NDBoundingBox:
         return attr.evolve(self, topleft=topleft, size=size)
 
     def is_empty(self) -> bool:
+        """
+        Boolean check whether the boundung box is empty.
+
+        Returns:
+            bool: True if the bounding box is empty, False otherwise.
+        """
         return not self.size.is_positive(strictly_positive=True)
 
     def in_mag(self, mag: Mag) -> "NDBoundingBox":
+        """
+        Returns the bounding box in the given mag.
+
+        Args:
+            mag (Mag): The magnification to convert the bounding box to.
+
+        Returns:
+            NDBoundingBox: The bounding box in the given magnification.
+        """
         mag_vec = mag.to_vec3_int()
 
         assert (
@@ -383,6 +582,15 @@ class NDBoundingBox:
         )
 
     def from_mag_to_mag1(self, from_mag: Mag) -> "NDBoundingBox":
+        """
+        Returns the bounging box in the finest magnification (Mag(1)).
+
+        Args:
+            from_mag (Mag): The current magnification of the bounding box.
+
+        Returns:
+            NDBoundingBox: The bounding box in the given magnification.
+        """
         mag_vec = from_mag.to_vec3_int()
 
         return self.with_topleft_xyz(self.topleft_xyz * mag_vec).with_size_xyz(
@@ -412,9 +620,15 @@ class NDBoundingBox:
     def align_with_mag(
         self, mag: Union[Mag, Vec3Int], ceil: bool = False
     ) -> "NDBoundingBox":
-        """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
+        """
+        Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
+        Args:
+            mag (Union[Mag, Vec3Int]): The magnification to align the bounding box to.
+            ceil (bool): If True, the bounding box is enlarged when necessary. If False, it's shrinked when necessary.
+
+        Returns:
+            NDBoundingBox: The aligned bounding box.
         """
         # This does the same as _align_with_mag_slow, which is more readable.
         # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
@@ -437,8 +651,16 @@ class NDBoundingBox:
             )
 
     def contains(self, coord: VecIntLike) -> bool:
-        """Check whether a point is inside of the bounding box.
-        Note that the point may have float coordinates in the ndarray case"""
+        """
+        Check whether a point is inside of the bounding box.
+        Note that the point may have float coordinates in the ndarray case
+
+        Args:
+            coord (VecIntLike): The coordinates to check.
+
+        Returns:
+            bool: True if the point is inside of the bounding box, False otherwise.
+        """
 
         if isinstance(coord, np.ndarray):
             assert coord.shape == (
@@ -459,6 +681,15 @@ class NDBoundingBox:
             )
 
     def contains_bbox(self, inner_bbox: "NDBoundingBox") -> bool:
+        """
+        Check whether a bounding box is completely inside of the bounding box.
+
+        Args:
+            inner_bbox (NDBoundingBox): The bounding box to check.
+
+        Returns:
+            bool: True if the bounding box is completely inside of the bounding box, False otherwise.
+        """
         self._check_compatibility(inner_bbox)
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
 
@@ -467,11 +698,20 @@ class NDBoundingBox:
         chunk_shape: VecIntLike,
         chunk_border_alignments: Optional[VecIntLike] = None,
     ) -> Generator["NDBoundingBox", None, None]:
-        """Decompose the bounding box into smaller chunks of size `chunk_shape`.
+        """
+        Decompose the bounding box into smaller chunks of size `chunk_shape`.
 
         Chunks at the border of the bounding box might be smaller than chunk_shape.
         If `chunk_border_alignment` is set, all border coordinates
         *between two chunks* will be divisible by that value.
+
+        Args:
+            chunk_shape (VecIntLike): The size of the chunks to generate.
+            chunk_border_alignments (Optional[VecIntLike]): The alignment of the chunk borders.
+
+
+        Yields:
+            Generator[NDBoundingBox]: A generator of the chunks.
         """
 
         start = self.topleft.to_np()
@@ -529,18 +769,36 @@ class NDBoundingBox:
             )
 
     def volume(self) -> int:
+        """
+        Returns the volume of the bounding box.
+        """
         return self.size.prod()
 
     def slice_array(self, array: np.ndarray) -> np.ndarray:
+        """
+        Returns a slice of the given array that corresponds to the bounding box.
+        """
         return array[self.to_slices()]
 
     def to_slices(self) -> Tuple[slice, ...]:
+        """
+        Returns a tuple of slices that corresponds to the bounding box.
+        """
         return tuple(
             slice(topleft, topleft + size)
             for topleft, size in zip(self.topleft, self.size)
         )
 
     def offset(self, vector: VecIntLike) -> "NDBoundingBox":
+        """
+        Returns a new NDBoundingBox object with the specified offset.
+
+        Args:
+            vector (VecIntLike): The offset to apply to the bounding box.
+
+        Returns:
+            NDBoundingBox: A new NDBoundingBox object with the specified offset.
+        """
         vec_int = VecInt(vector)
         if len(vec_int) == 3:
             return self.with_topleft_xyz(self.topleft_xyz + vec_int)
