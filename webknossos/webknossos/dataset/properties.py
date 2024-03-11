@@ -95,11 +95,11 @@ class LayerViewConfiguration:
     """Min and max data value range (dependent on the layer's data type). Can be used to threshold the value range.
     The WEBKNOSSOS default is the full value range."""
 
-    min: Optional[float] = None  # pylint: disable=redefined-builtin
+    min: Optional[float] = None
     """Minimum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the min value of the `intensityRange` (if that is lower)."""
 
-    max: Optional[float] = None  # pylint: disable=redefined-builtin
+    max: Optional[float] = None
     """Maximum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the max value of the `intensityRange` (if that is higher)."""
 

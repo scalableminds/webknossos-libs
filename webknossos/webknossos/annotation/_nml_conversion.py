@@ -117,7 +117,7 @@ def _random_color_rgba() -> Tuple[float, float, float, float]:
     return (r, g, b, 1.0)
 
 
-def annotation_to_nml(  # pylint: disable=dangerous-default-value
+def annotation_to_nml(
     annotation: "Annotation",
 ) -> wknml.Nml:
     nmlParameters = wknml.Parameters(

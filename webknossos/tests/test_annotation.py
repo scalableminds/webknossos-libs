@@ -25,7 +25,7 @@ def test_annotation_from_wkw_zip_file() -> None:
     assert annotation.owner_name == "Philipp Otto"
     assert annotation.annotation_id == "61c20205010000cc004a6356"
     assert (
-        "timestamp" in annotation.metadata  # pylint: disable=unsupported-membership-test
+        "timestamp" in annotation.metadata
     )
     assert len(list(annotation.get_volume_layer_names())) == 1
     assert len(list(annotation.skeleton.flattened_trees())) == 1
@@ -38,7 +38,7 @@ def test_annotation_from_wkw_zip_file() -> None:
     assert copied_annotation.owner_name == "Philipp Otto"
     assert copied_annotation.annotation_id == "61c20205010000cc004a6356"
     assert (
-        "timestamp" in copied_annotation.metadata  # pylint: disable=unsupported-membership-test
+        "timestamp" in copied_annotation.metadata
     )
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
     assert len(list(copied_annotation.skeleton.flattened_trees())) == 1

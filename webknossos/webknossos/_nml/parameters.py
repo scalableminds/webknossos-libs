@@ -67,8 +67,6 @@ class Parameters(NamedTuple):
         user_bounding_boxes = getattr(self, "userBoundingBoxes")
 
         if user_bounding_boxes is not None:
-            # pylint: disable=not-an-iterable
-
             # User bounding boxes need an id to be recognized
             # when uploaded to webknossos, which is added by bbox_idx:
             for bbox_idx, user_bounding_box in enumerate(
@@ -100,7 +98,6 @@ class Parameters(NamedTuple):
         )
 
         if self.offset is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "offset",
                 {
@@ -113,7 +110,6 @@ class Parameters(NamedTuple):
         if self.time is not None:
             xf.tag("time", {"ms": str(self.time)})
         if self.editPosition is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "editPosition",
                 {
@@ -123,7 +119,6 @@ class Parameters(NamedTuple):
                 },
             )
         if self.editRotation is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "editRotation",
                 {

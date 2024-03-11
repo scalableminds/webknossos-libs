@@ -24,7 +24,6 @@ import numpy as np
 from natsort import natsorted
 from numpy.typing import DTypeLike
 
-# pylint: disable=unused-import
 try:
     from .pims_czi_reader import PimsCziReader
 except ImportError:
@@ -265,7 +264,7 @@ class PimsImages:
                     pims.FramesSequence, images[0]
                 ).shape
             else:
-                images_shape = images.shape  # pylint: disable=no-member
+                images_shape = images.shape
             c_index = self._img_dims.find("c")
             if c_index == -1:
                 self.num_channels = 1
@@ -499,7 +498,7 @@ class PimsImages:
 
         with self._open_images() as images:
             if self._flip_z:
-                images = images[::-1]  # pylint: disable=unsubscriptable-object
+                images = images[::-1]
             with mag_view.get_buffered_slice_writer(
                 relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,

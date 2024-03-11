@@ -352,7 +352,7 @@ class Annotation:
         annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
     ) -> Dataset:
-        (  # pylint: disable=unpacking-non-sequence
+        (
             annotation,
             context,
         ) = Annotation.download(

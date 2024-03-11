@@ -5,11 +5,9 @@ from time import gmtime, strftime
 
 import numpy as np
 from skimage import feature
-from skimage.future import TrainableSegmenter  # pylint: disable=no-name-in-module
+from skimage.future import TrainableSegmenter
 
 import webknossos as wk
-
-# pylint: disable=unsubscriptable-object
 
 
 def main() -> None:

@@ -1505,7 +1505,7 @@ def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
 
 
 def test_bounding_box_on_disk(
-    create_dataset: MagView,  # pylint: disable=redefined-outer-name
+    create_dataset: MagView,
 ) -> None:
     mag = create_dataset
 

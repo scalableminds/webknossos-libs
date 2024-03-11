@@ -114,7 +114,7 @@ class Tree(nx.Graph):
         group: "Group",
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None,  # pylint: disable=unused-argument
+        enforced_id: Optional[int] = None,
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -133,10 +133,10 @@ class Tree(nx.Graph):
 
     def __new__(
         cls,
-        name: str,  # pylint: disable=unused-argument
-        group: "Group",  # pylint: disable=unused-argument
-        skeleton: "Skeleton",  # pylint: disable=unused-argument
-        color: Optional[Vector4] = None,  # pylint: disable=unused-argument
+        name: str,
+        group: "Group",
+        skeleton: "Skeleton",
+        color: Optional[Vector4] = None,
         enforced_id: Optional[int] = None,
     ) -> "Tree":
         self = super().__new__(cls)
@@ -208,7 +208,7 @@ class Tree(nx.Graph):
         """Returns the node in this tree with the requested id."""
         return self._node.get_node(node_id)
 
-    def add_node(  # pylint: disable=arguments-differ arguments-renamed
+    def add_node(
         self,
         position: Vec3IntLike,
         comment: Optional[str] = None,

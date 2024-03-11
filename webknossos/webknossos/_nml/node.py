@@ -41,7 +41,6 @@ class Node(NamedTuple):
             attributes["radius"] = str(self.radius)
 
         if self.rotation is not None:
-            # pylint: disable=unsubscriptable-object
             attributes["rotX"] = str(self.rotation[0])
             attributes["rotY"] = str(self.rotation[1])
             attributes["rotZ"] = str(self.rotation[2])

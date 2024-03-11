@@ -211,7 +211,7 @@ class BoundingBox:
         return cls(Vec3Int.zeros(), Vec3Int.zeros())
 
     def to_wkw_dict(self) -> dict:
-        (  # pylint: disable=unbalanced-tuple-unpacking
+        (
             width,
             height,
             depth,
@@ -334,7 +334,7 @@ class BoundingBox:
         np_mag = mag.to_np()
 
         def align(point: Vec3Int, round_fn: Callable) -> Vec3Int:
-            round_fn(point.to_np() / np_mag).astype(int) * np_mag
+            return round_fn(point.to_np() / np_mag).astype(int) * np_mag
 
         if ceil:
             topleft = align(self.topleft, np.floor)

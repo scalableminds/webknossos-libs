@@ -207,7 +207,7 @@ class Group:
 
     def get_tree_by_id(self, tree_id: int) -> Tree:
         """Returns the tree which has the specified tree id."""
-        # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
+        # Todo: Use hashed access if it turns out to be worth it?
         for tree in self.flattened_trees():
             if tree.id == tree_id:
                 return tree
@@ -228,7 +228,7 @@ class Group:
 
     def get_group_by_id(self, group_id: int) -> "Group":
         """Returns the group which has the specified group id."""
-        # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
+        # Todo: Use hashed access if it turns out to be worth it?
         for group in self.flattened_groups():
             if group.id == group_id:
                 return group

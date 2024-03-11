@@ -31,7 +31,6 @@
 ## SOFTWARE
 ################################################################################
 
-# pylint: disable=bare-except
 # mypy: disable-error-code=no-untyped-def
 
 from __future__ import print_function
@@ -57,7 +56,7 @@ if PY3:
     # unicode() deprecated in Python 3
     unicode_str = str
 else:
-    unicode_str = unicode  # pylint: disable=undefined-variable
+    unicode_str = unicode
 
 ### utility fuctions ###
 
@@ -887,7 +886,6 @@ class DM3(object):
         # - save tn file
         try:
             if hasattr(self, "thumbnail"):
-                # pylint: disable=no-member
                 self.thumbnail.save(tn_path, "PNG")
                 if self._debug > 0:
                     print("Thumbnail saved as '%s'." % tn_path)

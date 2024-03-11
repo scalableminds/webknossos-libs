@@ -1,5 +1,5 @@
 # type: ignore
-# pylint: skip-file
+# ruff: noqa
 import numpy as np
 
 import webknossos as wk

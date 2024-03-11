@@ -50,7 +50,7 @@ def upsample_cube_job(
             *list(
                 [
                     list(range(0, math.ceil(len)))
-                    for len in target_size.to_np() / buffer_shape.to_np()
+                    for len in target_size.to_np() / buffer_shape.to_np() #  noqa: A001 Variable `len` is shadowing a Python builtin
                 ]
             )
         )
