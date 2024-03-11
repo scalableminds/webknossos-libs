@@ -79,7 +79,7 @@ class Group:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
 
-        if type(name_or_tree) is str:
+        if isinstance(name_or_tree, str):
             name = name_or_tree
             new_tree = Tree(
                 name=name,

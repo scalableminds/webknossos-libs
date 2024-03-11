@@ -169,7 +169,7 @@ class DatasetProperties:
 dataset_converter = cattr.Converter()
 
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()
+bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
 dataset_converter.register_unstructure_hook(BoundingBox, bbox_to_wkw)
 dataset_converter.register_structure_hook(
     BoundingBox, lambda d, _: BoundingBox.from_wkw_dict(d)
@@ -183,7 +183,7 @@ def mag_unstructure(mag: Mag) -> List[int]:
 dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
-vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()
+vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()  # noqa: E731
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
 dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)

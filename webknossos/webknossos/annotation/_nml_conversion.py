@@ -108,7 +108,7 @@ def _random_color_rgba() -> Tuple[float, float, float, float]:
     """
     # https://stackoverflow.com/a/43437435/783758
 
-    h, s, l = (
+    h, s, l = (  # noqa: E741 Ambiguous variable name
         np.random.random(),
         0.5 + np.random.random() / 2.0,
         0.4 + np.random.random() / 5.0,

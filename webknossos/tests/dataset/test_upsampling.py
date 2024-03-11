@@ -115,21 +115,21 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
     ).astype("uint8")
 
     ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
-    l = ds.add_layer(
+    layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=num_channels,
     )
-    mag2 = l.add_mag("2", chunks_per_shard=32)
+    mag2 = layer.add_mag("2", chunks_per_shard=32)
 
     mag2.write(source_data)
     assert np.any(source_data != 0)
 
-    l._initialize_mag_from_other_mag("1", mag2, False)
+    layer._initialize_mag_from_other_mag("1", mag2, False)
 
     upsample_cube_job(
-        (mag2.get_view(), l.get_mag("1").get_view(), 0),
+        (mag2.get_view(), layer.get_mag("1").get_view(), 0),
         [0.5, 0.5, 0.5],
         BUFFER_SHAPE,
     )
@@ -139,24 +139,26 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
         channels.append(upsample_cube(source_data[channel_index], [2, 2, 2]))
     joined_buffer = np.stack(channels)
 
-    target_buffer = l.get_mag("1").read()
+    target_buffer = layer.get_mag("1").read()
     assert np.any(target_buffer != 0)
     assert np.all(target_buffer == joined_buffer)
 
 
 def test_upsampling_non_aligned(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "test", (50, 50, 50))
-    l = ds.add_layer(
+    layer = ds.add_layer(
         "color", SEGMENTATION_CATEGORY, dtype_per_channel="uint8", largest_segment_id=0
     )
-    l.bounding_box = BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))
-    l.add_mag(32)
+    layer.bounding_box = BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))
+    layer.add_mag(32)
 
-    l.upsample(
+    layer.upsample(
         from_mag=Mag(32),
         finest_mag=Mag(8),
         sampling_mode=SamplingModes.ISOTROPIC,
         compress=True,
     )
     # The original bbox should be unchanged
-    assert l.bounding_box == BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))
+    assert layer.bounding_box == BoundingBox(
+        topleft=(0, 0, 0), size=(8409, 10267, 5271)
+    )

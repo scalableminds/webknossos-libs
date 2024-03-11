@@ -31,7 +31,7 @@ except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
 
 try:
-    from .pims_dm_readers import (  # pylint: disable=unused-import
+    from .pims_dm_readers import (  # noqa: F401 unused-import
         PimsDm3Reader,
         PimsDm4Reader,
     )
@@ -39,12 +39,12 @@ except ImportError:
     pass
 
 try:
-    from .pims_imagej_tiff_reader import (  # pylint: disable=unused-import
+    from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
         PimsImagejTiffReader,
     )
 except ImportError:
     pass
-# pylint: enable=unused-import
+
 
 from ...geometry.vec3_int import Vec3Int
 from ..mag_view import MagView
@@ -348,7 +348,7 @@ class PimsImages:
             return result
 
         # try pims.ImageSequence, which uses skimage internally but works for multiple images
-        strategy_1 = lambda: pims.ImageSequence(original_images)
+        strategy_1 = lambda: pims.ImageSequence(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
 
         # for image lists, try to guess the correct reader using only the first image,
         # and apply that for all images via pims.ReaderSequence
