@@ -1081,11 +1081,14 @@ class Dataset:
         )
 
         if category is None:
+            image_path_for_category_guess: Path
+            if isinstance(images, str) or isinstance(images, PathLike):
+                image_path_for_category_guess = Path(images)
+            else:
+                image_path_for_category_guess = Path(images[0])
             category = (
                 "segmentation"
-                if guess_if_segmentation_path(
-                    Path(images) if isinstance(images, str) else Path(images[0])
-                )
+                if guess_if_segmentation_path(image_path_for_category_guess)
                 else "color"
             )
             user_set_category = False
