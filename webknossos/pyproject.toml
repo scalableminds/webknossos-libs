@@ -156,6 +156,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
+    "webknossos/dataset/_utils/vendor"
 ]
 
 # Same as Black.
@@ -173,8 +174,9 @@ select = ["E", "F", "I"]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 
-# E501 Line too long
-ignore = ["E501"]
+# E501 Line too long https://docs.astral.sh/ruff/rules/line-too-long/
+# E712 true-false-comparison https://docs.astral.sh/ruff/rules/true-false-comparison/
+ignore = ["E501", "E712"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
