@@ -283,9 +283,10 @@ def copytree(in_path: Path, out_path: Path) -> None:
         if in_sub_path.is_dir():
             (out_path / sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with (in_path / sub_path).open("rb") as in_file, (out_path / sub_path).open(
-                "wb"
-            ) as out_file:
+            with (
+                (in_path / sub_path).open("rb") as in_file,
+                (out_path / sub_path).open("wb") as out_file,
+            ):
                 copyfileobj(in_file, out_file)
 
 
@@ -311,20 +312,15 @@ class LazyReadOnlyDict(Mapping[K, V]):
 
 
 class NDArrayLike(Protocol):
-    def __getitem__(self, selection: Tuple[slice, ...]) -> np.ndarray:
-        ...
+    def __getitem__(self, selection: Tuple[slice, ...]) -> np.ndarray: ...
 
-    def __setitem__(self, selection: Tuple[slice, ...], value: np.ndarray) -> None:
-        ...
+    def __setitem__(self, selection: Tuple[slice, ...], value: np.ndarray) -> None: ...
 
     @property
-    def shape(self) -> Tuple[int, ...]:
-        ...
+    def shape(self) -> Tuple[int, ...]: ...
 
     @property
-    def ndim(self) -> int:
-        ...
+    def ndim(self) -> int: ...
 
     @property
-    def dtype(self) -> np.dtype:
-        ...
+    def dtype(self) -> np.dtype: ...

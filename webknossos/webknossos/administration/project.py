@@ -25,9 +25,7 @@ class Project:
     expected_time: Optional[int]
 
     @classmethod
-    def get_by_id(
-        cls, project_id: str
-    ) -> "Project":  # pylint: disable=redefined-builtin
+    def get_by_id(cls, project_id: str) -> "Project":  # pylint: disable=redefined-builtin
         """Returns the project specified by the passed id if your token authorizes you to see it."""
         api_project = _get_api_client(enforce_auth=True).project_info_by_id(project_id)
         return cls._from_api_project(api_project)

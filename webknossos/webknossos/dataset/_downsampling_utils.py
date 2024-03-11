@@ -9,7 +9,7 @@ import numpy as np
 from scipy.ndimage import zoom
 
 if TYPE_CHECKING:
-    from .dataset import Dataset, Layer
+    from .dataset import Dataset
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayInfo

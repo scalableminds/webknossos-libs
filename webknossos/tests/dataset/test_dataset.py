@@ -643,9 +643,7 @@ def test_num_channel_mismatch_assertion(
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     mag = ds.add_layer(
         "color", category=COLOR_CATEGORY, num_channels=1, data_format=data_format
-    ).add_mag(
-        "1"
-    )  # num_channel=1 is also the default
+    ).add_mag("1")  # num_channel=1 is also the default
 
     np.random.seed(1234)
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)  # 3 channels

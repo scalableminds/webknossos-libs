@@ -56,8 +56,9 @@ from .sampling_modes import SamplingModes
 
 if TYPE_CHECKING:
     import pims
-    from ..client._upload_dataset import LayerToLink
+
     from ..administration.user import Team
+    from ..client._upload_dataset import LayerToLink
 
 from ..geometry import BoundingBox, Mag
 from ..utils import (
@@ -335,8 +336,8 @@ class Dataset:
             elif voxel_size == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
-                assert self.voxel_size == tuple(
-                    voxel_size
+                assert (
+                    self.voxel_size == tuple(voxel_size)
                 ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size} != {voxel_size})"
             if name is not None:
                 assert (
@@ -790,12 +791,14 @@ class Dataset:
             )
         elif dtype_per_channel is not None:
             dtype_per_channel = _properties_floating_type_to_python_type.get(
-                dtype_per_channel, dtype_per_channel  # type: ignore[arg-type]
+                dtype_per_channel,
+                dtype_per_channel,  # type: ignore[arg-type]
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
             dtype_per_layer = _properties_floating_type_to_python_type.get(
-                dtype_per_layer, dtype_per_layer  # type: ignore[arg-type]
+                dtype_per_layer,
+                dtype_per_layer,  # type: ignore[arg-type]
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
             dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(

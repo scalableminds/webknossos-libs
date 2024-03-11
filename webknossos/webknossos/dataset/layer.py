@@ -182,9 +182,7 @@ class Layer:
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
 
-        self._name: str = (
-            properties.name
-        )  # The name is also stored in the properties, but the name is required to get the properties.
+        self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
         self._dataset = dataset
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
             properties.element_class, properties.num_channels
@@ -262,9 +260,7 @@ class Layer:
         Updates the offset and size of the bounding box of this layer in the properties.
         """
         self.dataset._ensure_writable()
-        assert (
-            bbox.topleft.is_positive()
-        ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
+        assert bbox.topleft.is_positive(), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
@@ -1143,8 +1139,8 @@ class SegmentationLayer(Layer):
     def largest_segment_id(self, largest_segment_id: Optional[int]) -> None:
         self.dataset._ensure_writable()
         if largest_segment_id is not None and type(largest_segment_id) != int:
-            assert largest_segment_id == int(
-                largest_segment_id
+            assert (
+                largest_segment_id == int(largest_segment_id)
             ), f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
             largest_segment_id = int(largest_segment_id)
 

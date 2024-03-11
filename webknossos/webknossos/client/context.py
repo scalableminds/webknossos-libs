@@ -45,7 +45,6 @@ There are the following four options to specify which server context to use:
    subsequent interactions in the same python run as well.
 """
 
-
 import os
 from contextlib import ContextDecorator
 from contextvars import ContextVar, Token

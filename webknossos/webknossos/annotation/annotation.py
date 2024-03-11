@@ -101,9 +101,10 @@ def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
         if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
             out_file_path = out_path / (zip_entry.filename[len(prefix) :])
             out_file_path.parent.mkdir(parents=True, exist_ok=True)
-            with zip_file.open(zip_entry, "r") as zip_f, out_file_path.open(
-                "wb"
-            ) as out_f:
+            with (
+                zip_file.open(zip_entry, "r") as zip_f,
+                out_file_path.open("wb") as out_f,
+            ):
                 copyfileobj(zip_f, out_f)
 
 
@@ -255,8 +256,7 @@ class Annotation:
         webknossos_url: Optional[str] = None,
         *,
         skip_volume_data: bool = False,
-    ) -> "Annotation":
-        ...
+    ) -> "Annotation": ...
 
     @overload
     @classmethod
@@ -268,8 +268,7 @@ class Annotation:
         *,
         skip_volume_data: bool = False,
         _return_context: bool,
-    ) -> Tuple["Annotation", ContextManager[None]]:
-        ...
+    ) -> Tuple["Annotation", ContextManager[None]]: ...
 
     @classmethod
     def download(
@@ -623,9 +622,9 @@ class Annotation:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
-            assert volume_layer_id not in [
-                i.id for i in self._volume_layers
-            ], f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
+            assert (
+                volume_layer_id not in [i.id for i in self._volume_layers]
+            ), f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
         fallback_layer_name: Optional[str]
         if isinstance(fallback_layer, Layer):
             assert (

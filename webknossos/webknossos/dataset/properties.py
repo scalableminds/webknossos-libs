@@ -190,7 +190,8 @@ dataset_converter.register_structure_hook(
 )
 
 dataset_converter.register_structure_hook_func(
-    lambda d: d == LayerCategoryType, lambda d, _: str(d)  # type: ignore[comparison-overlap]
+    lambda d: d == LayerCategoryType,
+    lambda d, _: str(d),  # type: ignore[comparison-overlap]
 )
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
@@ -248,10 +249,10 @@ def mag_view_properties_pre_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
 def layer_properties_post_unstructure(
     converter_fn: Callable[
         [Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]
-    ]
+    ],
 ) -> Callable[[Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]]:
     def __layer_properties_post_unstructure(
-        obj: Union[LayerProperties, SegmentationLayerProperties]
+        obj: Union[LayerProperties, SegmentationLayerProperties],
     ) -> Dict[str, Any]:
         d = converter_fn(obj)
         if d["dataFormat"] == "wkw":
@@ -268,7 +269,7 @@ def layer_properties_pre_structure(
     converter_fn: Callable[
         [Dict[str, Any], Type[Union[LayerProperties, SegmentationLayerProperties]]],
         Union[LayerProperties, SegmentationLayerProperties],
-    ]
+    ],
 ) -> Callable[
     [Any, Type[Union[LayerProperties, SegmentationLayerProperties]]],
     Union[LayerProperties, SegmentationLayerProperties],

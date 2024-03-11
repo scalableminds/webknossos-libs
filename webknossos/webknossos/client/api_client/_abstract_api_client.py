@@ -25,8 +25,7 @@ class AbstractApiClient(ABC):
 
     @property
     @abstractmethod
-    def url_prefix(self) -> str:
-        ...
+    def url_prefix(self) -> str: ...
 
     def url_from_route(self, route: str) -> str:
         return f"{self.url_prefix}{route}"

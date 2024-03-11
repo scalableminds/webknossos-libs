@@ -368,8 +368,8 @@ class BoundingBox:
         Note that the point may have float coordinates in the ndarray case"""
 
         if isinstance(coord, np.ndarray):
-            assert coord.shape == (
-                3,
+            assert (
+                coord.shape == (3,)
             ), f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
             return cast(
                 bool,

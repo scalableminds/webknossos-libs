@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, Sequence, TypeVar, Union
 from ..utils import LazyReadOnlyDict
 
 if TYPE_CHECKING:
-    from .dataset import RemoteDataset
+    pass
 
 
 K = TypeVar("K")  # key

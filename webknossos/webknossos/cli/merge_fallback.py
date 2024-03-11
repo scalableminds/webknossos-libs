@@ -87,7 +87,7 @@ def main(
     )
     assert len(annotation_volumes) > 0, "Annotation does not contain any volume layers!"
 
-    if not volume_layer_name is None:
+    if volume_layer_name is not None:
         assert (
             volume_layer_name in annotation_volumes
         ), f'Volume layer name "{volume_layer_name}" not found in annotation'
@@ -193,8 +193,8 @@ def merge_chunk(args: Tuple[MagView, MagView, BoundingBox, List[BoundingBox]]) -
 
     for bbox in track(bboxes, description="Processing..."):
         read_data = mag_in.read(absolute_bounding_box=bbox)[0]
-        data_buffer[
-            bbox.offset(-shard.topleft).in_mag(mag_in.mag).to_slices()
-        ] = read_data
+        data_buffer[bbox.offset(-shard.topleft).in_mag(mag_in.mag).to_slices()] = (
+            read_data
+        )
 
     mag_out.write(data_buffer, absolute_offset=shard.topleft)

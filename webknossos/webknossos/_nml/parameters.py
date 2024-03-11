@@ -16,9 +16,9 @@ class Parameters(NamedTuple):
     description: Optional[str] = None
     organization: Optional[str] = None
     offset: Optional[Vector3] = None  # deprecated. Kept for backward compatibility.
-    time: Optional[
-        int
-    ] = None  # UNIX timestamp marking the creation time & date of an annotation.
+    time: Optional[int] = (
+        None  # UNIX timestamp marking the creation time & date of an annotation.
+    )
     editPosition: Optional[Vector3] = None
     editRotation: Optional[Vector3] = None
     zoomLevel: Optional[float] = None

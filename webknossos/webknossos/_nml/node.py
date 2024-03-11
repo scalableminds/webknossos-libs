@@ -9,15 +9,15 @@ from .utils import Vector3, enforce_not_null
 class Node(NamedTuple):
     id: int
     position: Vector3
-    radius: Optional[
-        float
-    ] = None  # radius of a node when rendered in wK, unit: nanometers (nm)
+    radius: Optional[float] = (
+        None  # radius of a node when rendered in wK, unit: nanometers (nm)
+    )
     # 3D rotation of the camera when the node was annotated.
     # Mostly relevant for `Flight` mode to resume in the same direction when returning to `Flight` mode.
     rotation: Optional[Vector3] = None
-    inVp: Optional[
-        int
-    ] = None  # wK UI viewport in which the node was set, `0`: XY plane, `1`: YZ plane. `2`: XY plane, `3`: 3D viewport
+    inVp: Optional[int] = (
+        None  # wK UI viewport in which the node was set, `0`: XY plane, `1`: YZ plane. `2`: XY plane, `3`: 3D viewport
+    )
     # wK rendering magnification-level when the node was annotated.
     # Lower magnification levels typically indicate a "zoomed-in" workflow resulting in more accurate annotations.
     inMag: Optional[int] = None
