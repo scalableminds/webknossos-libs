@@ -190,8 +190,8 @@ dataset_converter.register_structure_hook(
 )
 
 dataset_converter.register_structure_hook_func(
-    lambda d: d == LayerCategoryType,
-    lambda d, _: str(d),  # type: ignore[comparison-overlap]
+    lambda d: d == LayerCategoryType, # type: ignore[comparison-overlap]
+    lambda d, _: str(d),
 )
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.

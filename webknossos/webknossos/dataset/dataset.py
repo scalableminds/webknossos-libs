@@ -791,13 +791,13 @@ class Dataset:
             )
         elif dtype_per_channel is not None:
             dtype_per_channel = _properties_floating_type_to_python_type.get(
-                dtype_per_channel,
-                dtype_per_channel,  # type: ignore[arg-type]
+                dtype_per_channel, # type: ignore[arg-type]
+                dtype_per_channel, # type: ignore[arg-type]
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
             dtype_per_layer = _properties_floating_type_to_python_type.get(
-                dtype_per_layer,
+                dtype_per_layer, # type: ignore[arg-type]
                 dtype_per_layer,  # type: ignore[arg-type]
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
