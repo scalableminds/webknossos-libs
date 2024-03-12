@@ -130,7 +130,7 @@ def wait_and_ensure_success(
     results = []
     if progress_desc is None:
         for fut in executor.as_completed(futures):
-            results.append(fut.result())
+            results.append(fut.result())  #  noqa: PERF401 Use a list comprehension to create a transformed list
     else:
         with get_rich_progress() as progress:
             task = progress.add_task(progress_desc, total=len(futures))

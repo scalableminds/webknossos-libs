@@ -190,7 +190,7 @@ dataset_converter.register_structure_hook(
 )
 
 dataset_converter.register_structure_hook_func(
-    lambda d: d == LayerCategoryType, # type: ignore[comparison-overlap]
+    lambda d: d == LayerCategoryType,  # type: ignore[comparison-overlap]
     lambda d, _: str(d),
 )
 

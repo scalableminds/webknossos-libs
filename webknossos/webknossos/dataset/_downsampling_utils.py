@@ -314,7 +314,7 @@ def downsample_cube_job(
         tiles = product(
             *(
                 list(range(0, math.ceil(len / buffer_edge_len)))
-                for len, buffer_edge_len in zip(shape[-3:], buffer_shape) # noqa:  A001 Variable `len` is shadowing a Python builtin
+                for len, buffer_edge_len in zip(shape[-3:], buffer_shape)  # noqa:  A001 Variable `len` is shadowing a Python builtin
             )
         )
 

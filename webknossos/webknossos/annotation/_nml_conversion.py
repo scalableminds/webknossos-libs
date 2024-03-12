@@ -167,27 +167,26 @@ def annotation_to_nml(
 
     groups = annotation.skeleton.as_nml_group().children
 
-    volumes = []
-    for volume in annotation._volume_layers:
-        volumes.append(
-            wknml.Volume(
-                id=volume.id,
-                location=volume._default_zip_name(),
-                fallback_layer=volume.fallback_layer_name,
-                name=volume.name,
-                segments=[
-                    wknml.Segment(
-                        id=segment_id,
-                        name=segment_info.name,
-                        anchor_position=segment_info.anchor_position,
-                        color=segment_info.color,
-                    )
-                    for segment_id, segment_info in volume.segments.items()
-                ],
-                format=str(volume.data_format),
-                largest_segment_id=volume.largest_segment_id,
-            )
+    volumes = [
+        wknml.Volume(
+            id=volume.id,
+            location=volume._default_zip_name(),
+            fallback_layer=volume.fallback_layer_name,
+            name=volume.name,
+            segments=[
+                wknml.Segment(
+                    id=segment_id,
+                    name=segment_info.name,
+                    anchor_position=segment_info.anchor_position,
+                    color=segment_info.color,
+                )
+                for segment_id, segment_info in volume.segments.items()
+            ],
+            format=str(volume.data_format),
+            largest_segment_id=volume.largest_segment_id,
         )
+        for volume in annotation._volume_layers
+    ]
 
     meta = [
         wknml.Meta(name=key, content=value)

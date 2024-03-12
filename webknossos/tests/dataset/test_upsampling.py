@@ -134,9 +134,10 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
         BUFFER_SHAPE,
     )
 
-    channels = []
-    for channel_index in range(num_channels):
-        channels.append(upsample_cube(source_data[channel_index], [2, 2, 2]))
+    channels = [
+        upsample_cube(source_data[channel_index], [2, 2, 2])
+        for channel_index in range(num_channels)
+    ]
     joined_buffer = np.stack(channels)
 
     target_buffer = layer.get_mag("1").read()

@@ -161,13 +161,10 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
         BUFFER_SHAPE,
     )
 
-    channels = []
-    for channel_index in range(num_channels):
-        channels.append(
-            downsample_cube(
-                source_data[channel_index], [2, 2, 2], InterpolationModes.MAX
-            )
-        )
+    channels = [
+        downsample_cube(source_data[channel_index], [2, 2, 2], InterpolationModes.MAX)
+        for channel_index in range(num_channels)
+    ]
     joined_buffer = np.stack(channels)
 
     target_buffer = mag2.read()

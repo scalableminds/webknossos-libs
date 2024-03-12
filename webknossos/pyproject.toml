@@ -162,10 +162,11 @@ target-version = "py311"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
-# E = subset of the pycodestyle https://docs.astral.sh/ruff/rules/#pycodestyle-e-w
+# E, W = pycodestyle https://docs.astral.sh/ruff/rules/#pycodestyle-e-w
 # I = iSort https://docs.astral.sh/ruff/rules/#isort-i
-# A  = Flake8 Builting https://docs.astral.sh/ruff/rules/#flake8-builtins-a
-select = ["E", "F", "I", "A", "W"]
+# A  = Flake8 Builtins https://docs.astral.sh/ruff/rules/#flake8-builtins-a
+# PERF = Perflint https://docs.astral.sh/ruff/rules/#perflint-perf
+select = ["F", "E", "W", "I", "A", "PERF"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
