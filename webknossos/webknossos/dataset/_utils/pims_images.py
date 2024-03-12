@@ -466,9 +466,9 @@ class PimsImages:
                             # This might get fixed via https://github.com/soft-matter/pims/pull/430
                             images._init_axis("c", images._shape[-1])
                             for key in list(images._get_frame_dict.keys()):
-                                images._get_frame_dict[key + ("c",)] = (
-                                    images._get_frame_dict.pop(key)
-                                )
+                                images._get_frame_dict[
+                                    key + ("c",)
+                                ] = images._get_frame_dict.pop(key)
                         images.bundle_axes = self._img_dims
                         images.iter_axes = self._iter_dim or ""
                 else:

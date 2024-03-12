@@ -5,10 +5,10 @@ from typing import Iterator
 
 import numpy as np
 import pytest
-from tests.constants import TESTDATA_DIR
 from tifffile import TiffFile
 
 import webknossos as wk
+from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset
 
 
