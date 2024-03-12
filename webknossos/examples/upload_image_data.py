@@ -31,7 +31,7 @@ def main() -> None:
     # The example microscopy data has two channels
     # Channel 0 contains cell membranes, channel 1 contains nuclei.
     layer_membranes = ds.add_layer(
-        "cell membranes",
+        "cell_membranes",
         COLOR_CATEGORY,
         dtype_per_layer=img.dtype,
     )
