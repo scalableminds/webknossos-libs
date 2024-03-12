@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
-ruff lint .
+poerty run ruff lint .

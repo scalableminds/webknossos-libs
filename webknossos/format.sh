@@ -2,8 +2,8 @@
 set -eEuo pipefail
 
 if [ $# -eq 1 ] && [ "$1" = "check" ]; then
-    ruff check .
+    poetry run ruff check .
 else
-    ruff check --fix .
-    ruff format .
+    poetry run ruff check --fix .
+    poetry run ruff format .
 fi
