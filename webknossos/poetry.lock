@@ -2376,20 +2376,6 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
-name = "pydicom"
-version = "2.4.4"
-description = "A pure Python package for reading and writing DICOM data"
-optional = true
-python-versions = ">=3.7"
-files = [
-    {file = "pydicom-2.4.4-py3-none-any.whl", hash = "sha256:f9f8e19b78525be57aa6384484298833e4d06ac1d6226c79459131ddb0bd7c42"},
-    {file = "pydicom-2.4.4.tar.gz", hash = "sha256:90b4801d851ce65be3df520e16bbfa3d6c767cf2a3a3b1c18f6780e6b670b87a"},
-]
-
-[package.extras]
-docs = ["matplotlib", "numpy", "numpydoc", "pillow", "sphinx", "sphinx-copybutton", "sphinx-gallery", "sphinx_rtd_theme", "sphinxcontrib-napoleon"]
-
-[[package]]
 name = "pyflakes"
 version = "3.1.0"
 description = "passive checker of Python programs"
@@ -3687,10 +3673,9 @@ cffi = {version = ">=1.11", markers = "platform_python_implementation == \"PyPy\
 cffi = ["cffi (>=1.11)"]
 
 [extras]
-all = ["JPype1", "imagecodecs", "pims", "pydicom", "pylibCZIrw", "tifffile"]
+all = ["JPype1", "imagecodecs", "pims", "pylibCZIrw", "tifffile"]
 bioformats = ["JPype1", "pims"]
 czi = ["pims", "pylibCZIrw"]
-dicom = ["pims", "pydicom"]
 imagecodecs = ["imagecodecs", "pims"]
 pims = ["pims"]
 tifffile = ["pims", "tifffile"]
@@ -3698,4 +3683,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "883849eef69f65b48bc5f6128504e8108e00e9df6a7664ee34e00753908102c7"
+content-hash = "ba3856c77858421671108f303da3363e88ed62df61de77f7d01dee790db90dc1"

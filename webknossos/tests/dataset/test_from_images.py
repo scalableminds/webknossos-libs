@@ -65,11 +65,12 @@ def test_from_dicom_images(tmp_path: Path) -> None:
         TESTDATA_DIR / "dicoms",
         tmp_path,
         (1, 1, 1),
+        use_bioformats=True,
     )
     assert len(ds.layers) == 1
     assert "dicoms" in ds.layers
     data = ds.layers["dicoms"].get_finest_mag().read()
-    assert data.shape == (1, 274, 384, 384)
+    assert data.shape == (1, 274, 384, 10)
     assert (
         data.max() == 127
     ), f"The maximum value of the image should be 127 but is {data.max()}"
