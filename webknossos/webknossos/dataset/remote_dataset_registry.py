@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, Sequence, TypeVar, Union
 from ..utils import LazyReadOnlyDict
 
 if TYPE_CHECKING:
-    pass
+    from .dataset import RemoteDataset  # noqa: F401 imported but unused
 
 
 K = TypeVar("K")  # key
