@@ -151,7 +151,9 @@ target-version = "py38"
 # I = iSort https://docs.astral.sh/ruff/rules/#isort-i
 # A  = Flake8 Builtins https://docs.astral.sh/ruff/rules/#flake8-builtins-a
 # PERF = Perflint https://docs.astral.sh/ruff/rules/#perflint-perf
-select = ["F", "E", "W", "I", "A", "PERF"]
+# FIX = Flake8 fixme https://docs.astral.sh/ruff/rules/#flake8-fixme-fix
+# ARG = Flake8 unused-arguments https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
+select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

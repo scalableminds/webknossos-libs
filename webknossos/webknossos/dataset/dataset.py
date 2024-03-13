@@ -186,7 +186,7 @@ class Dataset:
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
                 return lambda p: p.as_posix().replace("/", "_")
             elif self == ConversionLayerMapping.ENFORCE_SINGLE_LAYER:
-                return lambda p: input_path.name
+                return lambda _p: input_path.name
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
                 return (
                     lambda p: input_path.name
@@ -1806,7 +1806,7 @@ class RemoteDataset(Dataset):
         self._context = context
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
+    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":  # noqa: ARG003 Unused class method argument: `dataset_path`
         """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 

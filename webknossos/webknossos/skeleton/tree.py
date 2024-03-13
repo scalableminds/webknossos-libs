@@ -114,7 +114,7 @@ class Tree(nx.Graph):
         group: "Group",
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None,
+        enforced_id: Optional[int] = None,  # noqa: ARG002 Unused method argument: `enforced_id`
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -133,10 +133,10 @@ class Tree(nx.Graph):
 
     def __new__(
         cls,
-        name: str,
-        group: "Group",
+        name: str,  # noqa: ARG003 Unused class method argument: `name`
+        group: "Group",  # noqa: ARG003 Unused class method argument: `group`
         skeleton: "Skeleton",
-        color: Optional[Vector4] = None,
+        color: Optional[Vector4] = None,  # noqa: ARG003 Unused class method argument: `color`
         enforced_id: Optional[int] = None,
     ) -> "Tree":
         self = super().__new__(cls)
