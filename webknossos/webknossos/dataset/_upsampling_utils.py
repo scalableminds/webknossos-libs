@@ -49,8 +49,8 @@ def upsample_cube_job(
         tiles = product(
             *list(
                 [
-                    list(range(0, math.ceil(len)))
-                    for len in target_size.to_np() / buffer_shape.to_np()  #  noqa: A001 Variable `len` is shadowing a Python builtin
+                    list(range(0, math.ceil(length)))
+                    for length in target_size.to_np() / buffer_shape.to_np()
                 ]
             )
         )

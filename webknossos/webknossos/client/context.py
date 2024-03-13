@@ -63,7 +63,7 @@ load_dotenv()
 
 @lru_cache(maxsize=None)
 def _cached_ask_for_token(webknossos_url: str) -> str:
-    # TODO
+    # TODO # noqa: FIX002 Line contains TODO
     # -validate token and ask again if necessary
     # -ask if the token should be saved in some .env file
     # -reset invalid tokens
@@ -81,7 +81,7 @@ def _cached_get_org(context: "_WebknossosContext") -> str:
     return current_api_user.organization
 
 
-# TODO reset invalid tokens e.g. using cachetools
+# TODO reset invalid tokens e.g. using cachetools # noqa: FIX002 Line contains TODO
 @lru_cache(maxsize=None)
 def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
     api_datastore_token = context.api_client_with_auth.token_generate_for_data_store()

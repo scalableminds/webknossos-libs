@@ -20,6 +20,7 @@ class DistributionStrategy(str, Enum):
     TODO
     - As soon as supported by typer this enum should be
     replaced with typing.Literal in type hint.
+    https://github.com/tiangolo/typer/pull/669
     """
 
     SLURM = "slurm"
@@ -34,6 +35,7 @@ class LayerCategory(str, Enum):
     TODO
     - As soon as supported by typer this enum should be
     replaced with typing.Literal in type hint.
+    https://github.com/tiangolo/typer/pull/669
     """
 
     COLOR = "color"
