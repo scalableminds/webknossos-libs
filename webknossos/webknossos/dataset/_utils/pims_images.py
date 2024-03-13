@@ -365,7 +365,7 @@ class PimsImages:
         for strategy in [strategy_0, strategy_1, strategy_2]:
             try:
                 images_context_manager = strategy()
-            except Exception as e:
+            except Exception as e:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 exceptions.append(e)
             else:
                 if images_context_manager is not None:

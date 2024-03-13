@@ -265,7 +265,7 @@ def rmtree(path: Path) -> None:
                 sub_path.unlink()
             elif sub_path.is_dir():
                 sub_path.rmdir()
-        except FileNotFoundError:
+        except FileNotFoundError:  # noqa:  PERF203 `try`-`except` within a loop incurs performance overhead
             # Some implementations `UPath` do not have explicit directory representations
             # Therefore, directories only exist, if they have files. Consequently, when
             # all files have been deleted, the directory does not exist anymore.
@@ -283,10 +283,9 @@ def copytree(in_path: Path, out_path: Path) -> None:
         if in_sub_path.is_dir():
             (out_path / sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with (
-                (in_path / sub_path).open("rb") as in_file,
-                (out_path / sub_path).open("wb") as out_file,
-            ):
+            with (in_path / sub_path).open("rb") as in_file, (out_path / sub_path).open(
+                "wb"
+            ) as out_file:
                 copyfileobj(in_file, out_file)
 
 

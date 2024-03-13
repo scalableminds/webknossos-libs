@@ -93,7 +93,7 @@ class BaseArray(ABC):
             try:
                 array = cls.open(path)
                 return array
-            except ArrayException:
+            except ArrayException:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 pass
         raise ArrayException(f"Could not open the array at {path}.")
 
