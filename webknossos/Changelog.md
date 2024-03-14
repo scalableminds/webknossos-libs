@@ -18,7 +18,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Add CLI tool for offline merging of zip annotations with fallback datasets. [#996](https://github.com/scalableminds/webknossos-libs/pull/996)
 
 ### Changed
-- The rules for naming the layers have been tightened to match the allowed layer names on webknossos.
+- The rules for naming the layers have been tightened to match the allowed layer names on webknossos. [#1016](https://github.com/scalableminds/webknossos-libs/pull/1016)
+- The remote operations now use the WEBKNOSSOS API version 6. [#1018](https://github.com/scalableminds/webknossos-libs/pull/1018)
 
 ### Fixed
 
