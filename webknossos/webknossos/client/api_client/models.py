@@ -81,6 +81,12 @@ class ApiDataset:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetIsValidNewNameResponse:
+    is_valid: bool
+    errors: Optional[List[str]] = None
+
+
+@attr.s(auto_attribs=True)
 class ApiSharingToken:
     sharing_token: str
 
