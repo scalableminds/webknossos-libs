@@ -140,34 +140,31 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
     ).astype("uint8")
 
     ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
-    l = ds.add_layer(
+    layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=num_channels,
     )
-    mag1 = l.add_mag("1", chunks_per_shard=32)
+    mag1 = layer.add_mag("1", chunks_per_shard=32)
 
     print("writing source_data shape", source_data.shape)
     mag1.write(source_data)
     assert np.any(source_data != 0)
 
-    mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
+    mag2 = layer._initialize_mag_from_other_mag("2", mag1, False)
 
     downsample_cube_job(
-        (l.get_mag("1").get_view(), l.get_mag("2").get_view(), 0),
+        (layer.get_mag("1").get_view(), layer.get_mag("2").get_view(), 0),
         Vec3Int(2, 2, 2),
         InterpolationModes.MAX,
         BUFFER_SHAPE,
     )
 
-    channels = []
-    for channel_index in range(num_channels):
-        channels.append(
-            downsample_cube(
-                source_data[channel_index], [2, 2, 2], InterpolationModes.MAX
-            )
-        )
+    channels = [
+        downsample_cube(source_data[channel_index], [2, 2, 2], InterpolationModes.MAX)
+        for channel_index in range(num_channels)
+    ]
     joined_buffer = np.stack(channels)
 
     target_buffer = mag2.read()

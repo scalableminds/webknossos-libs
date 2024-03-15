@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - The rules for naming the layers have been tightened to match the allowed layer names on webknossos.
+- Replaced PyLint linter + black formatter with Ruff for development. [#1013](https://github.com/scalableminds/webknossos-libs/pull/1013)
 
 ### Fixed
 

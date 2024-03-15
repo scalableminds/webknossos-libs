@@ -311,19 +311,20 @@ def main(args: argparse.Namespace) -> None:
     nml_file.close()
     for line in lines:
         matches = nml_regex.findall(line)
-        for match in matches:
-            # each match is a tuple of (source_id, target_id, seed, timestamp, top_left_x, top_left_y, top_left_z, width, height, depth
-            bboxes.append(
-                FloodFillBbox(
-                    bounding_box=BoundingBox(
-                        (match[4], match[5], match[6]), (match[7], match[8], match[9])
-                    ),
-                    seed_position=Vec3Int(match[2].split(",")),
-                    source_id=int(match[0]),
-                    target_id=int(match[1]),
-                    timestamp=int(match[3]),
-                )
+
+        # each match is a tuple of (source_id, target_id, seed, timestamp, top_left_x, top_left_y, top_left_z, width, height, depth
+        bboxes = [
+            FloodFillBbox(
+                bounding_box=BoundingBox(
+                    (match[4], match[5], match[6]), (match[7], match[8], match[9])
+                ),
+                seed_position=Vec3Int(match[2].split(",")),
+                source_id=int(match[0]),
+                target_id=int(match[1]),
+                timestamp=int(match[3]),
             )
+            for match in matches
+        ]
     bboxes = sorted(bboxes, key=lambda x: x.timestamp)
 
     time_start("Merge with fallback layer")
