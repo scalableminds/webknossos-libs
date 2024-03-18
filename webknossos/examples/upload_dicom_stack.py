@@ -10,7 +10,6 @@ def main() -> None:
         str(Path(__file__).parent.parent / "testdata" / "dicoms"),
         f"dicom_dataset_{time_str}",
         voxel_size=(12, 12, 12),
-        use_bioformats=True,
     )
     dataset.compress()
 
