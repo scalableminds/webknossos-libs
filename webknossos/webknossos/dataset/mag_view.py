@@ -3,12 +3,13 @@ import warnings
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from cluster_tools import Executor
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -389,6 +390,48 @@ class MagView(View):
                 self.info.chunks_per_shard,
                 True,
             )
+
+    def merge_with_view(
+        self,
+        other: "MagView",
+        executor: Executor,
+    ) -> None:
+        assert all(
+            other.info.chunks_per_shard.to_np() == 1
+        ), "volume annotation must have file_len=1"
+        assert (
+            self.info.voxel_type == other.info.voxel_type
+        ), "Volume annotation must have same dtype as fallback layer"
+        assert (
+            self.mag == other.mag
+        ), f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+
+        logging.info("Scan disk for annotation shards.")
+        bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
+
+        logging.info(f"Grouping {len(bboxes)} bboxes according to output shards.")
+        shards_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(
+            bboxes, Mag(self.info.shard_shape * self.mag)
+        )
+
+        args = [(other, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
+
+        logging.info(f"Merging {len(args)} shards.")
+        executor.map(self.merge_chunk, args)
+
+    def merge_chunk(
+        self, args: Tuple["MagView", BoundingBox, List[BoundingBox]]
+    ) -> None:
+        mag_in, shard, bboxes = args
+        data_buffer = self.read(absolute_bounding_box=shard)[0]
+
+        for bbox in track(bboxes, description="Processing..."):
+            read_data = mag_in.read(absolute_bounding_box=bbox)[0]
+            data_buffer[bbox.offset(-shard.topleft).in_mag(mag_in.mag).to_slices()] = (
+                read_data
+            )
+
+        self.write(data_buffer, absolute_offset=shard.topleft)
 
     @property
     def _properties(self) -> MagViewProperties:
