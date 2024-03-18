@@ -30,6 +30,12 @@ def str_tpl(str_list: Iterable[str]) -> Tuple[str, ...]:
     return tuple(str_list)
 
 
+def int_tpl(vec_int_like: VecIntLike) -> VecInt:
+    return VecInt(
+        vec_int_like, axes=(f"unset_{i}" for i in range(len(list(vec_int_like))))
+    )
+
+
 @attr.frozen
 class NDBoundingBox:
     """
@@ -48,10 +54,10 @@ class NDBoundingBox:
     ```
     """
 
-    topleft: VecInt = attr.field(converter=tuple)  # type: ignore
-    size: VecInt = attr.field(converter=tuple)  # type: ignore
+    topleft: VecInt = attr.field(converter=int_tpl)
+    size: VecInt = attr.field(converter=int_tpl)
     axes: Tuple[str, ...] = attr.field(converter=str_tpl)
-    index: VecInt = attr.field(converter=tuple)  # type: ignore
+    index: VecInt = attr.field(converter=int_tpl)
     bottomright: VecInt = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
