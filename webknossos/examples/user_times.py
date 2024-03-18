@@ -11,9 +11,9 @@ def main() -> None:
     users = wk.User.get_all_managed_users()
     for user in users:
         for logged_time in user.get_logged_times():
-            df.loc[
-                user.email, (logged_time.year, logged_time.month)
-            ] = logged_time.duration_in_seconds
+            df.loc[user.email, (logged_time.year, logged_time.month)] = (
+                logged_time.duration_in_seconds
+            )
 
     df = df.fillna(0).astype("uint")
     df = df.sort_index(axis="index").sort_index(axis="columns")

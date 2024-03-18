@@ -14,9 +14,6 @@ def env_context() -> _WebknossosContext:
     return _get_context()
 
 
-# pylint: disable=redefined-outer-name
-
-
 def test_user_organization(env_context: _WebknossosContext) -> None:
     assert env_context.organization_id == "Organization_X"
 

@@ -3,7 +3,7 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Tuple
 
-from webknossos.cli._utils import parse_voxel_size  # pylint: disable=import-error
+from webknossos.cli._utils import parse_voxel_size
 from webknossos.dataset import Dataset, MagView, View
 from webknossos.utils import get_executor_for_args, named_partial
 

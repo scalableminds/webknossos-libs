@@ -93,7 +93,7 @@ class BaseArray(ABC):
             try:
                 array = cls.open(path)
                 return array
-            except ArrayException as e:
+            except ArrayException:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 pass
         raise ArrayException(f"Could not open the array at {path}.")
 
@@ -172,9 +172,7 @@ class WKWArray(BaseArray):
     def create(cls, path: Path, array_info: ArrayInfo) -> "WKWArray":
         assert array_info.data_format == cls.data_format
 
-        assert (
-            array_info.chunk_shape.is_uniform()
-        ), f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
+        assert array_info.chunk_shape.is_uniform(), f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
         assert _is_power_of_two(
             array_info.chunk_shape.x
         ), f"`chunk_shape` needs to be a power of 2 for WKW storage. Got {array_info.chunk_shape.x}."
@@ -182,9 +180,7 @@ class WKWArray(BaseArray):
             1 <= array_info.chunk_shape.x and array_info.chunk_shape.x <= 32768
         ), f"`chunk_shape` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunk_shape.x}."
 
-        assert (
-            array_info.chunks_per_shard.is_uniform()
-        ), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
+        assert array_info.chunks_per_shard.is_uniform(), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
         assert _is_power_of_two(
             array_info.chunks_per_shard.x
         ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {array_info.chunks_per_shard.x}."

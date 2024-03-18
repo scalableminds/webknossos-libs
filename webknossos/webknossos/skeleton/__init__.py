@@ -1,3 +1,5 @@
+# ruff: noqa: F401 imported but unused
+
 from os import PathLike
 from typing import Union
 

@@ -1,7 +1,7 @@
 """
-Example application: 
+Example application:
 Finding synapse candidates with a threshold in a skeleton
-annotation where each neuron is represented/reconstructed as one long tree 
+annotation where each neuron is represented/reconstructed as one long tree
 of many nodes placed reguarly along its axon/dendrite paths.
 
 Method:

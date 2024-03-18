@@ -17,9 +17,10 @@ Vec2Int = namedtuple("Vec2Int", ("x", "y"))
 class DistributionStrategy(str, Enum):
     """Enum of available distribution strategies.
 
-    TODO  pylint: disable=fixme
+    TODO
     - As soon as supported by typer this enum should be
     replaced with typing.Literal in type hint.
+    https://github.com/tiangolo/typer/pull/669
     """
 
     SLURM = "slurm"
@@ -31,9 +32,10 @@ class DistributionStrategy(str, Enum):
 class LayerCategory(str, Enum):
     """Enum of available layer categories.
 
-    TODO  pylint: disable=fixme
+    TODO
     - As soon as supported by typer this enum should be
     replaced with typing.Literal in type hint.
+    https://github.com/tiangolo/typer/pull/669
     """
 
     COLOR = "color"

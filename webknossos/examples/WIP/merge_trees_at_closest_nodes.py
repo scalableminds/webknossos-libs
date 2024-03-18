@@ -1,5 +1,5 @@
 # type: ignore
-# pylint: skip-file
+# ruff: noqa
 from itertools import combinations
 
 import networkx as nx

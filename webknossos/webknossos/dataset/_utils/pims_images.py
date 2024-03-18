@@ -24,14 +24,13 @@ import numpy as np
 from natsort import natsorted
 from numpy.typing import DTypeLike
 
-# pylint: disable=unused-import
 try:
     from .pims_czi_reader import PimsCziReader
 except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
 
 try:
-    from .pims_dm_readers import (  # pylint: disable=unused-import
+    from .pims_dm_readers import (  # noqa: F401 unused-import
         PimsDm3Reader,
         PimsDm4Reader,
     )
@@ -39,12 +38,12 @@ except ImportError:
     pass
 
 try:
-    from .pims_imagej_tiff_reader import (  # pylint: disable=unused-import
+    from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
         PimsImagejTiffReader,
     )
 except ImportError:
     pass
-# pylint: enable=unused-import
+
 
 from ...geometry.vec3_int import Vec3Int
 from ..mag_view import MagView
@@ -265,7 +264,7 @@ class PimsImages:
                     pims.FramesSequence, images[0]
                 ).shape
             else:
-                images_shape = images.shape  # pylint: disable=no-member
+                images_shape = images.shape
             c_index = self._img_dims.find("c")
             if c_index == -1:
                 self.num_channels = 1
@@ -348,7 +347,7 @@ class PimsImages:
             return result
 
         # try pims.ImageSequence, which uses skimage internally but works for multiple images
-        strategy_1 = lambda: pims.ImageSequence(original_images)
+        strategy_1 = lambda: pims.ImageSequence(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
 
         # for image lists, try to guess the correct reader using only the first image,
         # and apply that for all images via pims.ReaderSequence
@@ -366,7 +365,7 @@ class PimsImages:
         for strategy in [strategy_0, strategy_1, strategy_2]:
             try:
                 images_context_manager = strategy()
-            except Exception as e:
+            except Exception as e:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 exceptions.append(e)
             else:
                 if images_context_manager is not None:
@@ -464,9 +463,9 @@ class PimsImages:
                             # This might get fixed via https://github.com/soft-matter/pims/pull/430
                             images._init_axis("c", images._shape[-1])
                             for key in list(images._get_frame_dict.keys()):
-                                images._get_frame_dict[
-                                    key + ("c",)
-                                ] = images._get_frame_dict.pop(key)
+                                images._get_frame_dict[key + ("c",)] = (
+                                    images._get_frame_dict.pop(key)
+                                )
                         images.bundle_axes = self._img_dims
                         images.iter_axes = self._iter_dim or ""
                 else:
@@ -499,7 +498,7 @@ class PimsImages:
 
         with self._open_images() as images:
             if self._flip_z:
-                images = images[::-1]  # pylint: disable=unsubscriptable-object
+                images = images[::-1]
             with mag_view.get_buffered_slice_writer(
                 relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,

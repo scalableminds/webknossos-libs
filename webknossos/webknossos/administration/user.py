@@ -61,7 +61,7 @@ class User:
         )
 
     @classmethod
-    def get_by_id(cls, id: str) -> "User":  # pylint: disable=redefined-builtin
+    def get_by_id(cls, id: str) -> "User":  # noqa: A002 Argument `id` is shadowing a Python builtin
         """Returns the user specified by the passed id if your token authorizes you to see them."""
         client = _get_api_client(enforce_auth=True)
         api_user = client.user_by_id(id)
