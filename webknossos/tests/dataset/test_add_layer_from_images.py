@@ -26,7 +26,7 @@ def ignore_warnings() -> Iterator:
 
 def test_compare_tifffile(tmp_path: Path) -> None:
     ds = wk.Dataset(tmp_path, (1, 1, 1))
-    l = ds.add_layer_from_images(
+    layer = ds.add_layer_from_images(
         "testdata/tiff/test.02*.tiff",
         layer_name="compare_tifffile",
         compress=True,
@@ -35,8 +35,8 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         chunk_shape=(8, 8, 8),
         chunks_per_shard=(8, 8, 8),
     )
-    assert l.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
-    data = l.get_finest_mag().read()[0, :, :]
+    assert layer.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
+    data = layer.get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
         with TiffFile("testdata/tiff/test.0200.tiff") as tif_file:
             comparison_slice = tif_file.asarray().T
@@ -122,23 +122,20 @@ def test_repo_images(
 ) -> wk.Dataset:
     with wk.utils.get_executor_for_args(None) as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
-        layer_name = "__".join(
-            (path if isinstance(path, str) else str(path[0])).split("/")[1:]
-        )
-        l = ds.add_layer_from_images(
+        layer = ds.add_layer_from_images(
             path,
-            layer_name=layer_name,
+            layer_name="color",
             compress=True,
             executor=executor,
             use_bioformats=False,
             **kwargs,
         )
-        assert l.dtype_per_channel == np.dtype(dtype)
-        assert l.num_channels == num_channels
-        assert l.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
-        if isinstance(l, wk.SegmentationLayer):
-            assert l.largest_segment_id is not None
-            assert l.largest_segment_id > 0
+        assert layer.dtype_per_channel == np.dtype(dtype)
+        assert layer.num_channels == num_channels
+        assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        if isinstance(layer, wk.SegmentationLayer):
+            assert layer.largest_segment_id is not None
+            assert layer.largest_segment_id > 0
     return ds
 
 
@@ -246,17 +243,17 @@ def test_bioformats(
     download_and_unpack(url, unzip_path, filename)
     ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
-        l = ds.add_layer_from_images(
+        layer = ds.add_layer_from_images(
             str(unzip_path / filename),
-            layer_name=filename,
+            layer_name="color",
             compress=True,
             executor=executor,
             use_bioformats=True,
             **kwargs,
         )
-        assert l.dtype_per_channel == np.dtype(dtype)
-        assert l.num_channels == num_channels
-        assert l.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        assert layer.dtype_per_channel == np.dtype(dtype)
+        assert layer.num_channels == num_channels
+        assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
     assert len(ds.layers) == num_layers
     return ds
 
@@ -403,7 +400,7 @@ def test_test_images(
 
 
 if __name__ == "__main__":
-    time = lambda: strftime("%Y-%m-%d_%H-%M-%S", gmtime())
+    time = lambda: strftime("%Y-%m-%d_%H-%M-%S", gmtime())  # noqa: E731
 
     for repo_images_args in REPO_IMAGES_ARGS:
         with TemporaryDirectory() as tempdir:

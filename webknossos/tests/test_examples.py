@@ -44,7 +44,7 @@ def exec_main_and_get_vars(
     new_source = source.replace(
         def_main_needle, "def main() -> None:\n" + global_statements + "\n"
     )
-    exec(new_source, module.__dict__)  # pylint: disable=exec-used
+    exec(new_source, module.__dict__)
     cm_raises: ContextManager[Any]
     cm_warns: ContextManager[Any]
     if raises is None:

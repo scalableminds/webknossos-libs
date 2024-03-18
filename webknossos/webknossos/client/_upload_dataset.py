@@ -28,9 +28,9 @@ class LayerToLink(NamedTuple):
     dataset_name: str
     layer_name: str
     new_layer_name: Optional[str] = None
-    organization_id: Optional[
-        str
-    ] = None  # defaults to the user's organization before uploading
+    organization_id: Optional[str] = (
+        None  # defaults to the user's organization before uploading
+    )
 
     @classmethod
     def from_remote_layer(
@@ -150,7 +150,8 @@ def upload_dataset(
                 "totalFileCount": len(file_infos),
             },
             chunk_size=100 * 1024 * 1024,  # 100 MiB
-            generate_unique_identifier=lambda _, relative_path: f"{upload_id}/{relative_path}",
+            generate_unique_identifier=lambda _,
+            relative_path: f"{upload_id}/{relative_path}",
             test_chunks=False,
             permanent_errors=[400, 403, 404, 409, 415, 500, 501],
             client=httpx.Client(timeout=None),

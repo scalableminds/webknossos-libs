@@ -221,7 +221,7 @@ def _read_tag_data(dmfile, tag, endian):
         elif tag_data_type_code == 20:
             return read_tag_data_array(dmfile, tag, endian)
 
-        if not tag_data_type_code in DM4DataTypeDict:
+        if tag_data_type_code not in DM4DataTypeDict:
             print("Missing type " + str(tag_data_type_code))
             return None
 

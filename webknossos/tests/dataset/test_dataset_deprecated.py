@@ -551,7 +551,11 @@ def test_properties_with_segmentation() -> None:
         # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
         segmentation_layer = cast(
             SegmentationLayerProperties,
-            [l for l in ds_properties.data_layers if l.name == "segmentation"][0],
+            [
+                layer
+                for layer in ds_properties.data_layers
+                if layer.name == "segmentation"
+            ][0],
         )
         assert segmentation_layer.largest_segment_id == 1000000000
         assert segmentation_layer.mappings == [
@@ -1501,7 +1505,7 @@ def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
 
 
 def test_bounding_box_on_disk(
-    create_dataset: MagView,  # pylint: disable=redefined-outer-name
+    create_dataset: MagView,
 ) -> None:
     mag = create_dataset
 
@@ -1582,13 +1586,13 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     default_view_configuration = ds1.default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.four_bit == True
-    assert default_view_configuration.interpolation == None
-    assert default_view_configuration.render_missing_data_black == None
-    assert default_view_configuration.loading_strategy == None
-    assert default_view_configuration.segmentation_pattern_opacity == None
-    assert default_view_configuration.zoom == None
-    assert default_view_configuration.position == None
-    assert default_view_configuration.rotation == None
+    assert default_view_configuration.interpolation is None
+    assert default_view_configuration.render_missing_data_black is None
+    assert default_view_configuration.loading_strategy is None
+    assert default_view_configuration.segmentation_pattern_opacity is None
+    assert default_view_configuration.zoom is None
+    assert default_view_configuration.position is None
+    assert default_view_configuration.rotation is None
 
     # Test if only the set parameters are stored in the properties
     with open(ds1.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
@@ -1815,8 +1819,14 @@ def test_rename_layer(tmp_path: Path) -> None:
 
     assert not (tmp_path / "ds" / "color").exists()
     assert (tmp_path / "ds" / "color2").exists()
-    assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 0
-    assert len([l for l in ds._properties.data_layers if l.name == "color2"]) == 1
+    assert (
+        len([layer for layer in ds._properties.data_layers if layer.name == "color"])
+        == 0
+    )
+    assert (
+        len([layer for layer in ds._properties.data_layers if layer.name == "color2"])
+        == 1
+    )
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
 
@@ -1834,8 +1844,20 @@ def test_delete_layer_and_mag(tmp_path: Path) -> None:
     ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999)
     assert "color" in ds.layers
     assert "segmentation" in ds.layers
-    assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 1
-    assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
+    assert (
+        len([layer for layer in ds._properties.data_layers if layer.name == "color"])
+        == 1
+    )
+    assert (
+        len(
+            [
+                layer
+                for layer in ds._properties.data_layers
+                if layer.name == "segmentation"
+            ]
+        )
+        == 1
+    )
     assert len(color_layer._properties.resolutions) == 2
 
     color_layer.delete_mag(1)
@@ -1854,8 +1876,20 @@ def test_delete_layer_and_mag(tmp_path: Path) -> None:
     ds.delete_layer("color")
     assert "color" not in ds.layers
     assert "segmentation" in ds.layers
-    assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 0
-    assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
+    assert (
+        len([layer for layer in ds._properties.data_layers if layer.name == "color"])
+        == 0
+    )
+    assert (
+        len(
+            [
+                layer
+                for layer in ds._properties.data_layers
+                if layer.name == "segmentation"
+            ]
+        )
+        == 1
+    )
 
     assure_exported_properties(ds)
 

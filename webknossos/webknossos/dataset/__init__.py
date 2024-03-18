@@ -8,6 +8,7 @@ The dataset stores the data on disk in `.wkw`-files (see [WEBKNOSSOS-wrap (wkw)]
 
 Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
 """
+# ruff: noqa: F401 imported but unused
 
 from .data_format import DataFormat
 from .dataset import Dataset, RemoteDataset

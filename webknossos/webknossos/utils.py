@@ -130,7 +130,7 @@ def wait_and_ensure_success(
     results = []
     if progress_desc is None:
         for fut in executor.as_completed(futures):
-            results.append(fut.result())
+            results.append(fut.result())  #  noqa: PERF401 Use a list comprehension to create a transformed list
     else:
         with get_rich_progress() as progress:
             task = progress.add_task(progress_desc, total=len(futures))
@@ -265,7 +265,7 @@ def rmtree(path: Path) -> None:
                 sub_path.unlink()
             elif sub_path.is_dir():
                 sub_path.rmdir()
-        except FileNotFoundError:
+        except FileNotFoundError:  # noqa:  PERF203 `try`-`except` within a loop incurs performance overhead
             # Some implementations `UPath` do not have explicit directory representations
             # Therefore, directories only exist, if they have files. Consequently, when
             # all files have been deleted, the directory does not exist anymore.
@@ -311,20 +311,15 @@ class LazyReadOnlyDict(Mapping[K, V]):
 
 
 class NDArrayLike(Protocol):
-    def __getitem__(self, selection: Tuple[slice, ...]) -> np.ndarray:
-        ...
+    def __getitem__(self, selection: Tuple[slice, ...]) -> np.ndarray: ...
 
-    def __setitem__(self, selection: Tuple[slice, ...], value: np.ndarray) -> None:
-        ...
+    def __setitem__(self, selection: Tuple[slice, ...], value: np.ndarray) -> None: ...
 
     @property
-    def shape(self) -> Tuple[int, ...]:
-        ...
+    def shape(self) -> Tuple[int, ...]: ...
 
     @property
-    def ndim(self) -> int:
-        ...
+    def ndim(self) -> int: ...
 
     @property
-    def dtype(self) -> np.dtype:
-        ...
+    def dtype(self) -> np.dtype: ...

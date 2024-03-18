@@ -20,9 +20,6 @@ def auth_client() -> WkApiClient:
     return _get_api_client(enforce_auth=True)
 
 
-# pylint: disable=redefined-outer-name
-
-
 def test_health(client: WkApiClient) -> None:
     # No exception should be raised
     client.health()

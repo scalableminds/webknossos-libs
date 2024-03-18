@@ -79,7 +79,7 @@ class Group:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
 
-        if type(name_or_tree) is str:
+        if isinstance(name_or_tree, str):
             name = name_or_tree
             new_tree = Tree(
                 name=name,
@@ -207,7 +207,7 @@ class Group:
 
     def get_tree_by_id(self, tree_id: int) -> Tree:
         """Returns the tree which has the specified tree id."""
-        # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
+        # Todo: Use hashed access if it turns out to be worth it? # noqa: FIX002 Line contains TODO
         for tree in self.flattened_trees():
             if tree.id == tree_id:
                 return tree
@@ -228,7 +228,7 @@ class Group:
 
     def get_group_by_id(self, group_id: int) -> "Group":
         """Returns the group which has the specified group id."""
-        # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
+        # Todo: Use hashed access if it turns out to be worth it? # noqa: FIX002 Line contains TODO
         for group in self.flattened_groups():
             if group.id == group_id:
                 return group

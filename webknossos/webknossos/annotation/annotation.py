@@ -255,8 +255,7 @@ class Annotation:
         webknossos_url: Optional[str] = None,
         *,
         skip_volume_data: bool = False,
-    ) -> "Annotation":
-        ...
+    ) -> "Annotation": ...
 
     @overload
     @classmethod
@@ -268,8 +267,7 @@ class Annotation:
         *,
         skip_volume_data: bool = False,
         _return_context: bool,
-    ) -> Tuple["Annotation", ContextManager[None]]:
-        ...
+    ) -> Tuple["Annotation", ContextManager[None]]: ...
 
     @classmethod
     def download(
@@ -353,7 +351,7 @@ class Annotation:
         annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
     ) -> Dataset:
-        (  # pylint: disable=unpacking-non-sequence
+        (
             annotation,
             context,
         ) = Annotation.download(
@@ -623,9 +621,9 @@ class Annotation:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
-            assert volume_layer_id not in [
-                i.id for i in self._volume_layers
-            ], f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
+            assert (
+                volume_layer_id not in [i.id for i in self._volume_layers]
+            ), f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
         fallback_layer_name: Optional[str]
         if isinstance(fallback_layer, Layer):
             assert (

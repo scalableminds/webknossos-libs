@@ -95,11 +95,11 @@ class LayerViewConfiguration:
     """Min and max data value range (dependent on the layer's data type). Can be used to threshold the value range.
     The WEBKNOSSOS default is the full value range."""
 
-    min: Optional[float] = None  # pylint: disable=redefined-builtin
+    min: Optional[float] = None
     """Minimum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the min value of the `intensityRange` (if that is lower)."""
 
-    max: Optional[float] = None  # pylint: disable=redefined-builtin
+    max: Optional[float] = None
     """Maximum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the max value of the `intensityRange` (if that is higher)."""
 
@@ -169,7 +169,7 @@ class DatasetProperties:
 dataset_converter = cattr.Converter()
 
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()
+bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
 dataset_converter.register_unstructure_hook(BoundingBox, bbox_to_wkw)
 dataset_converter.register_structure_hook(
     BoundingBox, lambda d, _: BoundingBox.from_wkw_dict(d)
@@ -183,14 +183,15 @@ def mag_unstructure(mag: Mag) -> List[int]:
 dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
-vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()
+vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()  # noqa: E731
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
 dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
 )
 
 dataset_converter.register_structure_hook_func(
-    lambda d: d == LayerCategoryType, lambda d, _: str(d)  # type: ignore[comparison-overlap]
+    lambda d: d == LayerCategoryType,  # type: ignore[comparison-overlap]
+    lambda d, _: str(d),
 )
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
@@ -248,10 +249,10 @@ def mag_view_properties_pre_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
 def layer_properties_post_unstructure(
     converter_fn: Callable[
         [Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]
-    ]
+    ],
 ) -> Callable[[Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]]:
     def __layer_properties_post_unstructure(
-        obj: Union[LayerProperties, SegmentationLayerProperties]
+        obj: Union[LayerProperties, SegmentationLayerProperties],
     ) -> Dict[str, Any]:
         d = converter_fn(obj)
         if d["dataFormat"] == "wkw":
@@ -268,7 +269,7 @@ def layer_properties_pre_structure(
     converter_fn: Callable[
         [Dict[str, Any], Type[Union[LayerProperties, SegmentationLayerProperties]]],
         Union[LayerProperties, SegmentationLayerProperties],
-    ]
+    ],
 ) -> Callable[
     [Any, Type[Union[LayerProperties, SegmentationLayerProperties]]],
     Union[LayerProperties, SegmentationLayerProperties],

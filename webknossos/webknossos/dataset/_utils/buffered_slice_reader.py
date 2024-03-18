@@ -114,5 +114,4 @@ class BufferedSliceReader:
         _type: Optional[Type[BaseException]],
         _value: Optional[BaseException],
         _tb: Optional[TracebackType],
-    ) -> None:
-        ...
+    ) -> None: ...
