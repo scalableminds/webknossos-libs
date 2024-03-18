@@ -13,23 +13,23 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://webknossos.org/api/v5/datasets/scalable_minds/l4_sample_dev_sharing?sharingToken=ilDXmfQa2G8e719vb1U9YQ
+    uri: https://webknossos.org/api/v6/datasets/scalable_minds/l4_sample_dev_sharing?sharingToken=ilDXmfQa2G8e719vb1U9YQ
   response:
-    content: '{"name":"l4_sample_dev_sharing","dataSource":{"id":{"name":"l4_sample_dev_sharing","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8"},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1647612907522,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1647612907522,"details":null,"isUnreported":false,"jobsEnabled":true,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null}'
+    content: '{"name":"l4_sample_dev_sharing","dataSource":{"id":{"name":"l4_sample_dev_sharing","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8"},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","compute_segment_index_file","infer_nuclei","render_animation","convert_to_wkw","infer_neurons","export_tiff","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1647612907522,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1647612907522,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
     headers:
       cache-control:
       - no-cache
       connection:
       - keep-alive
       content-length:
-      - '1127'
+      - '1375'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
     http_version: HTTP/1.1
@@ -77,7 +77,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -130,7 +130,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -183,7 +183,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -218,7 +218,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -253,7 +253,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -290,7 +290,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -327,7 +327,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -378,7 +378,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -414,7 +414,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -449,7 +449,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -485,7 +485,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -521,43 +521,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/color/1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -592,7 +556,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -602,6 +566,42 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/color/1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -643,7 +643,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -694,7 +694,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -730,7 +730,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -765,7 +765,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -801,7 +801,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -837,7 +837,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -872,7 +872,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -908,7 +908,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -959,7 +959,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1010,7 +1010,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1046,7 +1046,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1081,7 +1081,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1117,7 +1117,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1153,7 +1153,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1188,7 +1188,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1224,7 +1224,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1275,7 +1275,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1326,7 +1326,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1362,7 +1362,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1397,7 +1397,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1433,7 +1433,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1469,7 +1469,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1504,7 +1504,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1540,7 +1540,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1591,7 +1591,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1642,7 +1642,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1678,7 +1678,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1713,7 +1713,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1749,7 +1749,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1785,7 +1785,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1820,7 +1820,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1856,7 +1856,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1907,7 +1907,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1958,7 +1958,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -1994,7 +1994,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2029,7 +2029,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2065,7 +2065,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2101,7 +2101,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2136,7 +2136,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2172,7 +2172,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2223,7 +2223,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2259,7 +2259,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2294,7 +2294,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2330,7 +2330,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -2940,7 +2940,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
@@ -3550,7 +3550,7 @@ interactions:
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
-      - max-age=15724800; includeSubDomains
+      - max-age=31536000; includeSubDomains
       x-frame-options:
       - DENY
       x-permitted-cross-domain-policies:
