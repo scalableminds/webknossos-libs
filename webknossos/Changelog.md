@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Add CLI tool for offline merging of zip annotations with fallback datasets. [#996](https://github.com/scalableminds/webknossos-libs/pull/996)
+- Added support for converting new file formats such as DICOM, using the bioformats reader. [#1014](https://github.com/scalableminds/webknossos-libs/pull/1014)
 
 ### Changed
 - The rules for naming the layers have been tightened to match the allowed layer names on webknossos.
