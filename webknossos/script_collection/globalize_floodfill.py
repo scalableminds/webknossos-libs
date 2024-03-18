@@ -97,9 +97,9 @@ def create_parser() -> argparse.ArgumentParser:
 def get_chunk_pos_and_offset(
     global_position: Vec3Int, chunk_shape: Vec3Int
 ) -> Tuple[Vec3Int, Vec3Int]:
-    offset = Vec3Int(global_position % chunk_shape)
+    offset = global_position % chunk_shape
     return (
-        Vec3Int(global_position - offset),
+        global_position - offset,
         offset,
     )
 
@@ -179,12 +179,10 @@ def execute_floodfill(
                             already_processed_bbox.contains(global_neighbor_pos)
                             and cube_data[neighbor_pos] == target_id
                         ):
-                            seeds_in_current_chunk.add(Vec3Int(neighbor_pos))
+                            seeds_in_current_chunk.add(neighbor_pos)
                     else:
                         chunk_with_relative_seed.append(
-                            get_chunk_pos_and_offset(
-                                Vec3Int(global_neighbor_pos), Vec3Int(cube_size)
-                            )
+                            get_chunk_pos_and_offset(global_neighbor_pos, cube_size)
                         )
             time_stop("traverse cube")
 

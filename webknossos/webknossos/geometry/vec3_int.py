@@ -11,10 +11,8 @@ VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object.
 class Vec3Int(VecInt):
     def __new__(
         cls,
-        vec: Union[int, "Vec3IntLike"],
-        *args: int,
-        y: Optional[int] = None,
-        z: Optional[int] = None,
+        *args: Union["Vec3IntLike", Iterable[str], int],
+        axes: Optional[Iterable[str]] = ("x", "y", "z"),
         **kwargs: int,
     ) -> "Vec3Int":
         """
@@ -34,13 +32,36 @@ class Vec3Int(VecInt):
         ```
         """
 
-        if isinstance(vec, Vec3Int):
-            return vec
+        if args:
+            if isinstance(args[0], Vec3Int):
+                return args[0]
 
-        as_tuple = super().__new__(cls, vec, *args, y=y, z=z, **kwargs)
-        assert as_tuple is not None and len(as_tuple) == 3, VALUE_ERROR
+            assert axes is not None, VALUE_ERROR
 
-        return cast(Vec3Int, as_tuple)
+            if isinstance(args[0], Iterable):
+                self = super().__new__(cls, *args[0], axes=("x", "y", "z"))
+                assert self is not None and len(self) == 3, VALUE_ERROR
+
+                return cast(Vec3Int, self)
+
+            assert len(args) == 3 and len(tuple(axes)) == 3, VALUE_ERROR
+            assert kwargs is None or len(kwargs) == 0, VALUE_ERROR
+            assert "x" in axes and "y" in axes and "z" in axes, VALUE_ERROR
+            values, _ = zip(*sorted(zip(args, axes), key=lambda x: x[1]))
+        else:
+            assert "x" in kwargs and "y" in kwargs and "z" in kwargs, VALUE_ERROR
+            assert len(kwargs) == 3, VALUE_ERROR
+            values = kwargs["x"], kwargs["y"], kwargs["z"]
+
+        self = super().__new__(cls, *values, axes=("x", "y", "z"))
+        self.axes = ("x", "y", "z")
+
+        assert self is not None and len(self) == 3, VALUE_ERROR
+
+        return cast(Vec3Int, self)
+
+    def __getnewargs__(self) -> Tuple[Tuple[int, ...], Tuple[str, ...]]:
+        return (self.to_tuple(), self.axes)
 
     @property
     def x(self) -> int:
@@ -72,7 +93,9 @@ class Vec3Int(VecInt):
 
         # By calling __new__ of tuple directly, we circumvent
         # the tolerant (and potentially) slow Vec3Int.__new__ method.
-        return tuple.__new__(Vec3Int, (x, y, z))
+        vec3int = tuple.__new__(Vec3Int, (x, y, z))
+        vec3int.axes = ("x", "y", "z")
+        return vec3int
 
     @staticmethod
     def from_vec3_float(vec: Tuple[float, float, float]) -> "Vec3Int":
@@ -93,15 +116,15 @@ class Vec3Int(VecInt):
         return Vec3Int.full(int(string))
 
     @classmethod
-    def zeros(cls, _length: int = 3) -> "Vec3Int":
+    def zeros(cls, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(0, 0, 0)
 
     @classmethod
-    def ones(cls, _length: int = 3) -> "Vec3Int":
+    def ones(cls, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(1, 1, 1)
 
     @classmethod
-    def full(cls, an_int: int, _length: int = 3) -> "Vec3Int":
+    def full(cls, an_int: int, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(an_int, an_int, an_int)
 
 

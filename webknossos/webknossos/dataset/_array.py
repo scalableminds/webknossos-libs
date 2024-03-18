@@ -70,9 +70,9 @@ class ArrayInfo:
     voxel_type: np.dtype
     chunk_shape: Vec3Int
     chunks_per_shard: Vec3Int
-    shape: VecInt = VecInt(1, 1, 1, 1)
+    shape: VecInt = VecInt(c=1, x=1, y=1, z=1)
     dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
-    axis_order: VecInt = VecInt(3, 2, 1, 0)
+    axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
     compression_mode: bool = False
 
     @property
@@ -82,7 +82,7 @@ class ArrayInfo:
 
     @property
     def shard_shape(self) -> Vec3Int:
-        return Vec3Int(self.chunk_shape * self.chunks_per_shard)
+        return self.chunk_shape * self.chunks_per_shard
 
 
 class BaseArray(ABC):
@@ -375,13 +375,15 @@ class ZarrArray(BaseArray):
         align_with_shards: bool = True,
         warn: bool = False,
     ) -> None:
-        new_shape = VecInt(new_bbox.size)
+        new_shape = VecInt(new_bbox.size, axes=new_bbox.axes)
         zarray = self._zarray
 
         new_shape_tuple = (zarray.shape[0],) + tuple(
-            max(zarray.shape[i + 1], new_shape[i])
-            if len(zarray.shape) > i
-            else new_shape[i]
+            (
+                max(zarray.shape[i + 1], new_shape[i])
+                if len(zarray.shape) > i
+                else new_shape[i]
+            )
             for i in range(len(new_shape))
         )
         if new_shape_tuple != zarray.shape:
@@ -407,7 +409,7 @@ class ZarrArray(BaseArray):
             zarray.resize(new_shape_tuple)
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        """Writes a ZarrArray. If offset and bbox are given the bbox is prefered to enable writing of n-dimensional data."""
+        """Writes a ZarrArray. If offset and bbox are given, the bbox is preferred to enable writing of n-dimensional data."""
 
         # If data is 3-dimensional, it is assumed that num_channels=1.
         if data.ndim == 3:
@@ -574,18 +576,20 @@ class ZarritaArray(BaseArray):
                 codecs=[
                     zarrita.codecs.sharding_codec(
                         chunk_shape=chunk_shape,
-                        codecs=[
-                            zarrita.codecs.transpose_codec(array_info.axis_order),
-                            zarrita.codecs.bytes_codec(),
-                            zarrita.codecs.blosc_codec(
-                                typesize=array_info.voxel_type.itemsize
-                            ),
-                        ]
-                        if array_info.compression_mode
-                        else [
-                            zarrita.codecs.transpose_codec(array_info.axis_order),
-                            zarrita.codecs.bytes_codec(),
-                        ],
+                        codecs=(
+                            [
+                                zarrita.codecs.transpose_codec(array_info.axis_order),
+                                zarrita.codecs.bytes_codec(),
+                                zarrita.codecs.blosc_codec(
+                                    typesize=array_info.voxel_type.itemsize
+                                ),
+                            ]
+                            if array_info.compression_mode
+                            else [
+                                zarrita.codecs.transpose_codec(array_info.axis_order),
+                                zarrita.codecs.bytes_codec(),
+                            ]
+                        ),
                     )
                 ],
             )

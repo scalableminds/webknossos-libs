@@ -89,8 +89,8 @@ class PimsImages:
         """
         During initialization the pims objects are examined and configured to produce
         ndarrays that follow the following form:
-        (self._iter_axis, *self._bundle_axis)
-        self._iter_axis can be a list of different axis or an empty list if the image is 2D.
+        (self._iter_axes, *self._bundle_axis)
+        self._iter_axes can be a list of different axes or an empty list if the image is 2D.
         In the latter case, the inner 2D image is still wrapped in a single-element list
         by _open_images() to be consistent with 3D images.
         self._bundle_axis can consist of "x", "y" and "c", where "c" is optional and must be
@@ -197,9 +197,9 @@ class PimsImages:
                         # the axes are identified by their index in the _iter_axes list
                         # the last axis is the fastest iterating axis, therfore the size of the loop
                         # for the last axis is 1. For all other axes it is the product of all previous axes sizes.
-                        # self._iter_axis[-1:0:-1] is a reversed copy of self._iter_axis without the last element
+                        # self._iter_axes[-1:0:-1] is a reversed copy of self._iter_axes without the last element
                         # e.g. [1,2,3,4] -> [4,3,2]
-                        # self._iter_axis[-2::-1] is a reversed copy of self._iter_axis without the first element
+                        # self._iter_axes[-2::-1] is a reversed copy of self._iter_axes without the first element
                         # e.g. [1,2,3,4] -> [3,2,1]
                         self._iter_loop_size[other_axis] = (
                             iter_size := iter_size * images.sizes[axis]
@@ -268,7 +268,7 @@ class PimsImages:
                     raise RuntimeError(
                         f"Got {len(images.shape)} axes for the images, "
                         + "but don't have axes information. Try to open "
-                        + "a N-dimensional image file with use_bioformats="
+                        + "an N-dimensional image file with use_bioformats="
                         + "True."
                     )
 
@@ -608,7 +608,7 @@ class PimsImages:
                     axes = ("z", "c", "y", "x")
 
             if self._iter_loop_size is None:
-                # There is no or only one iter_axis, so a 3D bounding box is sufficient.
+                # There is no or only one element in self._iter_axes, so a 3D bounding box is sufficient.
                 x_index, y_index = (
                     axes.index("x"),
                     axes.index("y"),
@@ -639,7 +639,7 @@ class PimsImages:
                         for axis in axes_names
                     ]
                     axes_index = list(range(1, len(axes_names) + 1))
-                    topleft = VecInt.zeros(len(axes_names))
+                    topleft = VecInt.zeros(tuple(axes_names))
 
                     if self._swap_xy:
                         x_index, y_index = axes_names.index("x"), axes_names.index("y")
@@ -650,9 +650,9 @@ class PimsImages:
 
                     return NDBoundingBox(
                         topleft,
-                        axes_sizes,
+                        VecInt(axes_sizes, axes=axes_names),
                         axes_names,
-                        axes_index,
+                        VecInt(axes_index, axes=axes_names),
                     )
 
                 raise ValueError(

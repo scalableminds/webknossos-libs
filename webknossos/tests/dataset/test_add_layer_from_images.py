@@ -55,8 +55,10 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
         chunk_shape=(8, 8, 8),
         chunks_per_shard=(8, 8, 8),
     )
-    assert l.bounding_box.topleft == wk.VecInt(0, 55, 100, 100)
-    assert l.bounding_box.size == wk.VecInt(7, 5, 167, 439)
+    assert l.bounding_box.topleft == wk.VecInt(
+        0, 55, 100, 100, axes=("t", "z", "y", "x")
+    )
+    assert l.bounding_box.size == wk.VecInt(7, 5, 167, 439, axes=("t", "z", "y", "x"))
     read_with_tifffile_reader = TiffFile(
         "testdata/4D/4D_series/4D-series.ome.tif"
     ).asarray()

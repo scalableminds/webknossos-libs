@@ -570,9 +570,11 @@ class Layer:
             chunk_shape=chunk_shape or foreign_mag_view._array_info.chunk_shape,
             chunks_per_shard=chunks_per_shard
             or foreign_mag_view._array_info.chunks_per_shard,
-            compress=compress
-            if compress is not None
-            else foreign_mag_view._array_info.compression_mode,
+            compress=(
+                compress
+                if compress is not None
+                else foreign_mag_view._array_info.compression_mode
+            ),
         )
 
         if extend_layer_bounding_box:
@@ -738,7 +740,7 @@ class Layer:
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
-        if self._properties.bounding_box.size_xyz.z == 1:
+        if self._properties.bounding_box.size.z == 1:
             if sampling_mode != SamplingModes.CONSTANT_Z:
                 warnings.warn(
                     "[INFO] The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."

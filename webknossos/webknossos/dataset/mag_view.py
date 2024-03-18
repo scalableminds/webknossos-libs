@@ -10,7 +10,7 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     NDArrayLike,
     get_executor_for_args,
@@ -78,8 +78,14 @@ class MagView(View):
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
-            axis_order=VecInt(0, *layer.bounding_box.index),
-            shape=VecInt(layer.num_channels, *VecInt.ones(len(layer.bounding_box))),
+            axis_order=VecInt(
+                0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
+            ),
+            shape=VecInt(
+                layer.num_channels,
+                *VecInt.ones(layer.bounding_box.axes),
+                axes=("c",) + layer.bounding_box.axes,
+            ),
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
@@ -96,7 +102,7 @@ class MagView(View):
 
     # Overwrites of View methods:
     @property
-    def bounding_box(self) -> Union[NDBoundingBox, BoundingBox]:
+    def bounding_box(self) -> NDBoundingBox:
         # Overwrites View's method since no extra bbox is stored for a MagView,
         # but the Layer's bbox is used:
         return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
@@ -286,7 +292,7 @@ class MagView(View):
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Iterator[Union[NDBoundingBox, BoundingBox]]:
+    ) -> Iterator[NDBoundingBox]:
         """
         Returns a Mag(1) bounding box for each file on disk.
 

@@ -199,7 +199,7 @@ def test_annotation_from_url(url: str) -> None:
 def test_reading_bounding_boxes() -> None:
     def check_properties(annotation: wk.Annotation) -> None:
         assert len(annotation.user_bounding_boxes) == 2
-        assert annotation.user_bounding_boxes[0].topleft_xyz.x == 2371
+        assert annotation.user_bounding_boxes[0].topleft.x == 2371
         assert annotation.user_bounding_boxes[0].name == "Bounding box 1"
         assert annotation.user_bounding_boxes[0].is_visible
 

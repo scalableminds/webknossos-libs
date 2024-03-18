@@ -186,8 +186,9 @@ class BufferedSliceWriter:
                         section_topleft.x : section_bottomright.x,
                         section_topleft.y : section_bottomright.y,
                     ]
-                    # Section chunk already includes x and y axes. All other axes are added to
-                    # adapt the shape of the section chunk to the shape of the chunk_bbox.
+                    # Section chunk includes the axes c, x, y. The remaining axes are added by considering
+                    # the length of the bbox. Since the bbox does not contain the channel, we subtract 2
+                    # instead of 3.
                     section_chunk = section_chunk[
                         (slice(None), slice(None), slice(None))
                         + tuple(np.newaxis for _ in range(len(bbox) - 2))

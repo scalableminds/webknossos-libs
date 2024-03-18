@@ -70,9 +70,7 @@ class BufferedSliceReader:
                 absolute_bounding_box=chunk.from_mag_to_mag1(self.view.mag)
             )
 
-            for current_slice in np.rollaxis(
-                data, chunk.index_xyz[self.dimension]
-            ):  # The '+1' is important because the first dimension is the channel
+            for current_slice in np.rollaxis(data, chunk.index_xyz[self.dimension]):
                 yield current_slice
 
     def __enter__(self) -> Generator[np.ndarray, None, None]:

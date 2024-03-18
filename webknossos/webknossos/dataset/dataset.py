@@ -189,8 +189,8 @@ class Dataset:
             elif self == ConversionLayerMapping.ENFORCE_SINGLE_LAYER:
                 return lambda p: input_path.name
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
-                return (
-                    lambda p: input_path.name
+                return lambda p: (
+                    input_path.name
                     if p.parent == Path()
                     else p.parent.as_posix().replace("/", "_")
                 )
@@ -199,16 +199,18 @@ class Dataset:
             elif self == ConversionLayerMapping.INSPECT_EVERY_FILE:
                 # If a file has z dimensions, it becomes its own layer,
                 # if it's 2D, the folder becomes a layer.
-                return (
-                    lambda p: str(p)
+                return lambda p: (
+                    str(p)
                     if has_image_z_dimension(
                         input_path / p,
                         use_bioformats=use_bioformats,
                         is_segmentation=guess_if_segmentation_path(p),
                     )
-                    else input_path.name
-                    if p.parent == Path()
-                    else p.parent.as_posix().replace("/", "_")
+                    else (
+                        input_path.name
+                        if p.parent == Path()
+                        else p.parent.as_posix().replace("/", "_")
+                    )
                 )
             elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
                 # As before, but only a single image is inspected to determine 2D vs 3D.
@@ -219,8 +221,8 @@ class Dataset:
                 ):
                     return str
                 else:
-                    return (
-                        lambda p: input_path.name if p.parent == Path() else p.parts[-2]
+                    return lambda p: (
+                        input_path.name if p.parent == Path() else p.parts[-2]
                     )
             else:
                 raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
@@ -318,9 +320,11 @@ class Dataset:
                 layer_properties.num_channels,
                 UPath(dataset_path),
                 layer_properties.name,
-                layer_properties.mags[0].mag
-                if len(layer_properties.mags) > 0
-                else None,
+                (
+                    layer_properties.mags[0].mag
+                    if len(layer_properties.mags) > 0
+                    else None
+                ),
             )
             layer_properties.num_channels = num_channels
 
@@ -1256,7 +1260,7 @@ class Dataset:
                 additional_axes = []
 
             z_shape = bbox.get_shape("z")
-            bbox = bbox.with_topleft(VecInt.zeros(len(bbox)))
+            bbox = bbox.with_topleft(VecInt.zeros(bbox.axes))
             for z_start in range(0, z_shape, batch_size):
                 z_size = min(batch_size, z_shape - z_start)
                 z_bbox = bbox.with_bounds("z", z_start, z_size)

@@ -35,20 +35,22 @@ class Parameters(NamedTuple):
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
 
         attributes = {
-            "name": _DEFAULT_BBOX_NAME
-            if bounding_box.name is None
-            else str(bounding_box.name),
+            "name": (
+                _DEFAULT_BBOX_NAME
+                if bounding_box.name is None
+                else str(bounding_box.name)
+            ),
             "isVisible": "true" if bounding_box.is_visible else "false",
             "color.r": str(color[0]),
             "color.g": str(color[1]),
             "color.b": str(color[2]),
             "color.a": str(color[3]),
-            "topLeftX": str(bounding_box.topleft_xyz.x),
-            "topLeftY": str(bounding_box.topleft_xyz.y),
-            "topLeftZ": str(bounding_box.topleft_xyz.z),
-            "width": str(bounding_box.size_xyz.x),
-            "height": str(bounding_box.size_xyz.y),
-            "depth": str(bounding_box.size_xyz.z),
+            "topLeftX": str(bounding_box.topleft.x),
+            "topLeftY": str(bounding_box.topleft.y),
+            "topLeftZ": str(bounding_box.topleft.z),
+            "width": str(bounding_box.size.x),
+            "height": str(bounding_box.size.y),
+            "depth": str(bounding_box.size.z),
         }
         if bbox_id is not None:
             attributes["id"] = str(bbox_id)

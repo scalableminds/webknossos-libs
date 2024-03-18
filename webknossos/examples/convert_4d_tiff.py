@@ -26,6 +26,7 @@ def main() -> None:
     )
     data = mag_view.read(absolute_bounding_box=read_bbox)
     # data.shape -> (1, 1, 5, 167, 439)
+    # The data shape is different to the read_bbox size because it includes the channel dimension
 
     # Write some data to a given position
     mag_view.write(data, absolute_bounding_box=read_bbox.offset((2, 0, 0, 0)))
