@@ -304,6 +304,8 @@ class PimsImages:
             original_images_path = Path(original_images)
             if original_images_path.is_dir():
                 valid_suffixes = get_valid_pims_suffixes()
+                if self._use_bioformats is not False:
+                    valid_suffixes.update(get_valid_bioformats_suffixes())
                 original_images = natsorted(
                     str(i)
                     for i in original_images_path.glob("**/*")
@@ -323,7 +325,7 @@ class PimsImages:
     ) -> None:
         if (
             isinstance(images_context_manager, pims.bioformats.BioformatsReader)
-            and self._use_bioformats == False
+            and self._use_bioformats is False
         ):  # None is allowed
             raise RuntimeError(
                 "Selected bioformats reader, but using bioformats is not allowed "
@@ -351,7 +353,7 @@ class PimsImages:
 
         # for image lists, try to guess the correct reader using only the first image,
         # and apply that for all images via pims.ReaderSequence
-        def strategy_2() -> pims.FramesSequence:
+        def strategy_2() -> Optional[pims.FramesSequence]:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
                 first_image_handler = pims.open(original_images[0], **open_kwargs)
@@ -376,9 +378,9 @@ class PimsImages:
         self,
         original_images: Union[str, List[str]],
         exceptions: List[Exception],
-    ) -> pims.FramesSequence:
+    ) -> Optional[pims.FramesSequence]:
         try:
-            if self._use_bioformats == False:  # None is allowed
+            if self._use_bioformats is False:  # None is allowed
                 raise RuntimeError(
                     "Using bioformats is not allowed (use_bioformats is False)."
                 )
@@ -412,6 +414,7 @@ class PimsImages:
                 return pims.bioformats.BioformatsReader(original_images)
         except Exception as e:
             exceptions.append(e)
+            return None
 
     @contextmanager
     def _open_images(
@@ -584,6 +587,31 @@ def get_valid_pims_suffixes() -> Set[str]:
     for pims_handler in _get_all_pims_handlers():
         valid_suffixes.update(pims_handler.class_exts())
     return valid_suffixes
+
+
+def get_valid_bioformats_suffixes() -> Set[str]:
+    # Added the most present suffixes that are implemnted in bioformats
+    return {
+        "dcm",
+        "dicom",
+        "ics",
+        "ids",
+        "lei",
+        "tif",
+        "lif",
+        "stk",
+        "nd",
+        "nd2",
+        "png",
+        "tiff",
+        "tf2",
+        "tf8",
+        "btf",
+        "pic",
+        "raw",
+        "xml",
+        "gif",
+    }
 
 
 def has_image_z_dimension(
