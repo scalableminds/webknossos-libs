@@ -622,7 +622,7 @@ class NDBoundingBox:
         """
         np_mag = mag.to_np()
 
-        align = (
+        align = (  # noqa E731
             lambda point, round_fn: round_fn(point.to_np() / np_mag).astype(int)
             * np_mag
         )

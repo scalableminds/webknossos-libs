@@ -8,8 +8,6 @@ import pytest
 
 import webknossos as wk
 
-# pylint: disable=redefined-outer-name
-
 pytestmark = [pytest.mark.with_vcr]
 
 

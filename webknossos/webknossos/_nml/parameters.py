@@ -16,9 +16,9 @@ class Parameters(NamedTuple):
     description: Optional[str] = None
     organization: Optional[str] = None
     offset: Optional[Vector3] = None  # deprecated. Kept for backward compatibility.
-    time: Optional[
-        int
-    ] = None  # UNIX timestamp marking the creation time & date of an annotation.
+    time: Optional[int] = (
+        None  # UNIX timestamp marking the creation time & date of an annotation.
+    )
     editPosition: Optional[Vector3] = None
     editRotation: Optional[Vector3] = None
     zoomLevel: Optional[float] = None
@@ -69,8 +69,6 @@ class Parameters(NamedTuple):
         user_bounding_boxes = getattr(self, "userBoundingBoxes")
 
         if user_bounding_boxes is not None:
-            # pylint: disable=not-an-iterable
-
             # User bounding boxes need an id to be recognized
             # when uploaded to webknossos, which is added by bbox_idx:
             for bbox_idx, user_bounding_box in enumerate(
@@ -102,7 +100,6 @@ class Parameters(NamedTuple):
         )
 
         if self.offset is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "offset",
                 {
@@ -115,7 +112,6 @@ class Parameters(NamedTuple):
         if self.time is not None:
             xf.tag("time", {"ms": str(self.time)})
         if self.editPosition is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "editPosition",
                 {
@@ -125,7 +121,6 @@ class Parameters(NamedTuple):
                 },
             )
         if self.editRotation is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "editRotation",
                 {

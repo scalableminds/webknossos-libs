@@ -1,6 +1,16 @@
 import json
 import re
-from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
+from typing import (
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 import attr
 import numpy as np
@@ -153,7 +163,7 @@ class BoundingBox(NDBoundingBox):
         return cls(Vec3Int.zeros(), Vec3Int.zeros())
 
     def to_wkw_dict(self) -> dict:
-        (  # pylint: disable=unbalanced-tuple-unpacking
+        (
             width,
             height,
             depth,
@@ -233,10 +243,8 @@ class BoundingBox(NDBoundingBox):
         """
         np_mag = mag.to_np()
 
-        align = (
-            lambda point, round_fn: round_fn(point.to_np() / np_mag).astype(int)
-            * np_mag
-        )
+        def align(point: Vec3Int, round_fn: Callable) -> Vec3Int:
+            return round_fn(point.to_np() / np_mag).astype(int) * np_mag
 
         if ceil:
             topleft = align(self.topleft, np.floor)
@@ -278,8 +286,8 @@ class BoundingBox(NDBoundingBox):
         Note that the point may have float coordinates in the ndarray case"""
 
         if isinstance(coord, np.ndarray):
-            assert coord.shape == (
-                3,
+            assert (
+                coord.shape == (3,)
             ), f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
             return cast(
                 bool,

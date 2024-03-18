@@ -287,6 +287,8 @@ class MagView(View):
             size,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
+            relative_bbox=relative_bbox,
+            absolute_bbox=absolute_bbox,
             read_only=read_only,
         )
 

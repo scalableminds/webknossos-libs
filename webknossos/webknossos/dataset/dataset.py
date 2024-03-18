@@ -58,8 +58,9 @@ from .sampling_modes import SamplingModes
 
 if TYPE_CHECKING:
     import pims
-    from ..client._upload_dataset import LayerToLink
+
     from ..administration.user import Team
+    from ..client._upload_dataset import LayerToLink
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox
 from ..utils import (
@@ -105,6 +106,12 @@ _DATASET_URL_REGEX = re.compile(
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
+# A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
+# As the begin and the end are anchored, all of the name must match the regex.
+# The first regex group ensures that the name does not start with a dot.
+_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_\-]+[A-Za-z0-9_\-\.]*$")
+# This regex matches any character that is not allowed in a layer name.
+_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_\-\.]")
 
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
@@ -187,7 +194,7 @@ class Dataset:
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
                 return lambda p: p.as_posix().replace("/", "_")
             elif self == ConversionLayerMapping.ENFORCE_SINGLE_LAYER:
-                return lambda p: input_path.name
+                return lambda _p: input_path.name
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
                 return lambda p: (
                     input_path.name
@@ -341,8 +348,8 @@ class Dataset:
             elif voxel_size == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
-                assert self.voxel_size == tuple(
-                    voxel_size
+                assert (
+                    self.voxel_size == tuple(voxel_size)
                 ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size} != {voxel_size})"
             if name is not None:
                 assert (
@@ -397,7 +404,7 @@ class Dataset:
 
         dataset_name_or_url = resolve_short_link(dataset_name_or_url)
 
-        match = re.match(_DATASET_URL_REGEX, dataset_name_or_url)
+        match = _DATASET_URL_REGEX.match(dataset_name_or_url)
         if match is not None:
             assert (
                 organization_id is None
@@ -623,6 +630,15 @@ class Dataset:
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
             layer_name = map_filepath_to_layer_name(input_file)
+            # Remove characters from layer name that are not allowed
+            layer_name = _UNALLOWED_LAYER_NAME_CHARS.sub("", layer_name)
+            # Ensure layer name does not start with a dot
+            layer_name = layer_name.lstrip(".")
+
+            assert (
+                layer_name != ""
+            ), f"Could not determine a layer name for {input_file}."
+
             filepaths_per_layer.setdefault(layer_name, []).append(
                 input_path / input_file
             )
@@ -783,6 +799,10 @@ class Dataset:
 
         self._ensure_writable()
 
+        assert _ALLOWED_LAYER_NAME_REGEX.match(
+            layer_name
+        ), f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+
         if "dtype" in kwargs:
             raise ValueError(
                 f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
@@ -796,12 +816,14 @@ class Dataset:
             )
         elif dtype_per_channel is not None:
             dtype_per_channel = _properties_floating_type_to_python_type.get(
-                dtype_per_channel, dtype_per_channel  # type: ignore[arg-type]
+                dtype_per_channel,  # type: ignore[arg-type]
+                dtype_per_channel,  # type: ignore[arg-type]
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
             dtype_per_layer = _properties_floating_type_to_python_type.get(
-                dtype_per_layer, dtype_per_layer  # type: ignore[arg-type]
+                dtype_per_layer,  # type: ignore[arg-type]
+                dtype_per_layer,  # type: ignore[arg-type]
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
             dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
@@ -1846,7 +1868,7 @@ class RemoteDataset(Dataset):
         self._context = context
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
+    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":  # noqa: ARG003 Unused class method argument: `dataset_path`
         """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 

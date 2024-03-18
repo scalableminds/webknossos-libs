@@ -108,7 +108,7 @@ def _random_color_rgba() -> Tuple[float, float, float, float]:
     """
     # https://stackoverflow.com/a/43437435/783758
 
-    h, s, l = (
+    h, s, l = (  # noqa: E741 Ambiguous variable name
         np.random.random(),
         0.5 + np.random.random() / 2.0,
         0.4 + np.random.random() / 5.0,
@@ -117,7 +117,7 @@ def _random_color_rgba() -> Tuple[float, float, float, float]:
     return (r, g, b, 1.0)
 
 
-def annotation_to_nml(  # pylint: disable=dangerous-default-value
+def annotation_to_nml(
     annotation: "Annotation",
 ) -> wknml.Nml:
     nmlParameters = wknml.Parameters(
@@ -167,27 +167,26 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
 
     groups = annotation.skeleton.as_nml_group().children
 
-    volumes = []
-    for volume in annotation._volume_layers:
-        volumes.append(
-            wknml.Volume(
-                id=volume.id,
-                location=volume._default_zip_name(),
-                fallback_layer=volume.fallback_layer_name,
-                name=volume.name,
-                segments=[
-                    wknml.Segment(
-                        id=segment_id,
-                        name=segment_info.name,
-                        anchor_position=segment_info.anchor_position,
-                        color=segment_info.color,
-                    )
-                    for segment_id, segment_info in volume.segments.items()
-                ],
-                format=str(volume.data_format),
-                largest_segment_id=volume.largest_segment_id,
-            )
+    volumes = [
+        wknml.Volume(
+            id=volume.id,
+            location=volume._default_zip_name(),
+            fallback_layer=volume.fallback_layer_name,
+            name=volume.name,
+            segments=[
+                wknml.Segment(
+                    id=segment_id,
+                    name=segment_info.name,
+                    anchor_position=segment_info.anchor_position,
+                    color=segment_info.color,
+                )
+                for segment_id, segment_info in volume.segments.items()
+            ],
+            format=str(volume.data_format),
+            largest_segment_id=volume.largest_segment_id,
         )
+        for volume in annotation._volume_layers
+    ]
 
     meta = [
         wknml.Meta(name=key, content=value)

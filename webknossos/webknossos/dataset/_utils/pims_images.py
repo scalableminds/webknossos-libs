@@ -34,7 +34,7 @@ except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
 
 try:
-    from .pims_dm_readers import (  # pylint: disable=unused-import
+    from .pims_dm_readers import (  # noqa: F401 unused-import
         PimsDm3Reader,
         PimsDm4Reader,
     )
@@ -42,12 +42,12 @@ except ImportError:
     pass
 
 try:
-    from .pims_imagej_tiff_reader import (  # pylint: disable=unused-import
+    from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
         PimsImagejTiffReader,
     )
 except ImportError:
     pass
-# pylint: enable=unused-import
+
 
 from ...geometry.vec_int import VecInt
 from ..mag_view import MagView
@@ -356,7 +356,7 @@ class PimsImages:
             return result
 
         # try pims.ImageSequence, which uses skimage internally but works for multiple images
-        strategy_1 = lambda: pims.ImageSequence(original_images)
+        strategy_1 = lambda: pims.ImageSequence(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
 
         # for image lists, try to guess the correct reader using only the first image,
         # and apply that for all images via pims.ReaderSequence
@@ -374,7 +374,7 @@ class PimsImages:
         for strategy in [strategy_0, strategy_1, strategy_2]:
             try:
                 images_context_manager = strategy()
-            except Exception as e:
+            except Exception as e:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 exceptions.append(e)
             else:
                 if images_context_manager is not None:
@@ -472,9 +472,9 @@ class PimsImages:
                             # This might get fixed via https://github.com/soft-matter/pims/pull/430
                             images._init_axis("c", images._shape[-1])
                             for key in list(images._get_frame_dict.keys()):
-                                images._get_frame_dict[
-                                    key + ("c",)
-                                ] = images._get_frame_dict.pop(key)
+                                images._get_frame_dict[key + ("c",)] = (
+                                    images._get_frame_dict.pop(key)
+                                )
                             self._bundle_axes.remove("c")
                             self._bundle_axes.append("c")
                         images.bundle_axes = self._bundle_axes

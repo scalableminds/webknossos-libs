@@ -2,7 +2,7 @@ import numpy as np
 
 import webknossos as wk
 
-# pylint: disable=unused-variable
+# ruff: noqa: F841 unused-variable
 
 
 def main() -> None:

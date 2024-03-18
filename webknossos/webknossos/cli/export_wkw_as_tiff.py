@@ -110,11 +110,9 @@ def export_tiff_slice(
                     tile_image = _slice_to_image(
                         tiff_data[
                             :,
-                            x_tile_index
-                            * tiling_size[0] : (x_tile_index + 1)
+                            x_tile_index * tiling_size[0] : (x_tile_index + 1)
                             * tiling_size[0],
-                            y_tile_index
-                            * tiling_size[1] : (y_tile_index + 1)
+                            y_tile_index * tiling_size[1] : (y_tile_index + 1)
                             * tiling_size[1],
                             slice_index,
                         ],

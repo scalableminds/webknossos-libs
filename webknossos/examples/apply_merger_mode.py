@@ -68,7 +68,6 @@ def main() -> None:
     def apply_mapping_for_chunk(args: Tuple[wk.View, wk.View, int]) -> None:
         (in_view, out_view, _) = args
         cube_data = in_view.read()[0]
-        # pylint: disable=c-extension-no-member
         fastremap.remap(
             cube_data,
             segment_id_mapping,
