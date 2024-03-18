@@ -48,10 +48,10 @@ class NDBoundingBox:
     ```
     """
 
-    topleft: VecInt = attr.field(converter=VecInt)
-    size: VecInt = attr.field(converter=VecInt)
+    topleft: VecInt = attr.field(converter=tuple)  # type: ignore
+    size: VecInt = attr.field(converter=tuple)  # type: ignore
     axes: Tuple[str, ...] = attr.field(converter=str_tpl)
-    index: VecInt = attr.field(converter=VecInt)
+    index: VecInt = attr.field(converter=tuple)  # type: ignore
     bottomright: VecInt = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
@@ -65,6 +65,12 @@ class NDBoundingBox:
             + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
         )
         assert 0 not in self.index, "Index 0 is reserved for channels."
+
+        # Convert the delivered tuples to VecInts
+        object.__setattr__(self, "topleft", VecInt(self.topleft, axes=self.axes))
+        object.__setattr__(self, "size", VecInt(self.size, axes=self.axes))
+        object.__setattr__(self, "index", VecInt(self.index, axes=self.axes))
+
         if not self._is_sorted():
             self._sort_positions_of_axes()
 
@@ -679,8 +685,8 @@ class NDBoundingBox:
         """
 
         if isinstance(coord, np.ndarray):
-            assert coord.shape == (
-                len(self.size),
+            assert (
+                coord.shape == (len(self.size),)
             ), f"Numpy array BoundingBox.contains must have shape ({len(self.size)},), got {coord.shape}."
             return cast(
                 bool,
