@@ -71,7 +71,6 @@ nav:
           - Terminology: webknossos/terminology.md
           - webknossos/data_formats.md
           - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
-          - Backend REST API: webknossos/rest_api.md
           - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
           - Changelog: webknossos/CHANGELOG.released.md
           - Migration Guide: webknossos/MIGRATIONS.released.md
