@@ -15,7 +15,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: POST
-    uri: http://localhost:9000/api/v5/userToken/generate
+    uri: http://localhost:9000/api/v6/userToken/generate
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
@@ -30,8 +30,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -48,14 +46,14 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/datastores
+    uri: http://localhost:9000/api/v6/datastores
   response:
-    content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true}]'
+    content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '90'
+      - '147'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -63,8 +61,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -81,7 +77,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/user
+    uri: http://localhost:9000/api/v6/user
   response:
     content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
@@ -96,8 +92,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -114,21 +108,21 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/datasets/Organization_X/cell_2000-01-01_00-00-00/isValidNewName
+    uri: http://localhost:9000/api/v6/datasets/Organization_X/cell_2000-01-01_00-00-00/isValidNewName
   response:
-    content: ''
+    content: '{"isValid":true}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '0'
+      - '16'
+      content-type:
+      - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -168,8 +162,82 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n2193\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
+      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2193\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ncell_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n5\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
+      \   \"id\": {\n        \"name\": \"cell_2000-01-01_00-00-00\",\n        \"team\":
+      \"\"\n    },\n    \"scale\": [\n        260.0,\n        260.0,\n        290.0\n
+      \   ],\n    \"dataLayers\": [\n        {\n            \"name\": \"cell_membranes\",\n
+      \           \"category\": \"color\",\n            \"boundingBox\": {\n                \"topLeft\":
+      [\n                    0,\n                    0,\n                    0\n                ],\n
+      \               \"width\": 256,\n                \"height\": 256,\n                \"depth\":
+      60\n            },\n            \"elementClass\": \"uint16\",\n            \"dataFormat\":
+      \"wkw\",\n            \"numChannels\": 1,\n            \"defaultViewConfiguration\":
+      {\n                \"color\": [\n                    17,\n                    212,\n
+      \                   17\n                ],\n                \"intensityRange\":
+      [\n                    0,\n                    16000\n                ]\n            },\n
+      \           \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
+      1024,\n                    \"resolution\": [\n                        1,\n                        1,\n
+      \                       1\n                    ]\n                }\n            ]\n
+      \       },\n        {\n            \"name\": \"nuclei\",\n            \"category\":
+      \"color\",\n            \"boundingBox\": {\n                \"topLeft\": [\n
+      \                   0,\n                    0,\n                    0\n                ],\n
+      \               \"width\": 256,\n                \"height\": 256,\n                \"depth\":
+      60\n            },\n            \"elementClass\": \"uint16\",\n            \"dataFormat\":
+      \"wkw\",\n            \"numChannels\": 1,\n            \"defaultViewConfiguration\":
+      {\n                \"color\": [\n                    212,\n                    17,\n
+      \                   17\n                ],\n                \"intensityRange\":
+      [\n                    3000,\n                    30000\n                ]\n
+      \           },\n            \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
+      1024,\n                    \"resolution\": [\n                        1,\n                        1,\n
+      \                       1\n                    ]\n                }\n            ]\n
+      \       }\n    ],\n    \"defaultViewConfiguration\": {\n        \"zoom\": 0.35\n
+      \   }\n}\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '3764'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.24.1
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -198,7 +266,7 @@ interactions:
       Content-Disposition: form-data; name="resumableIdentifier"
 
 
-      2000-01-01T00-00-00__0011/cell membranes/1/z0/y0/x0.wkw
+      2000-01-01T00-00-00__0011/cell_membranes/1/z0/y0/x0.wkw
 
       --
 
@@ -212,7 +280,7 @@ interactions:
       Content-Disposition: form-data; name="resumableRelativePath"
 
 
-      cell membranes/1/z0/y0/x0.wkw
+      cell_membranes/1/z0/y0/x0.wkw
 
       --
 
@@ -294,16 +362,14 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/cell
-      membranes/1/header.wkw\n--\nContent-Disposition: form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ncell membranes/1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/cell_membranes/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncell_membranes/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -343,86 +409,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n2193\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
-      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2193\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
-      form-data; name=\"name\"\n\ncell_2000-01-01_00-00-00\n--\nContent-Disposition:
-      form-data; name=\"totalFileCount\"\n\n5\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
-      \   \"id\": {\n        \"name\": \"cell_2000-01-01_00-00-00\",\n        \"team\":
-      \"\"\n    },\n    \"scale\": [\n        260.0,\n        260.0,\n        290.0\n
-      \   ],\n    \"dataLayers\": [\n        {\n            \"name\": \"cell membranes\",\n
-      \           \"category\": \"color\",\n            \"boundingBox\": {\n                \"topLeft\":
-      [\n                    0,\n                    0,\n                    0\n                ],\n
-      \               \"width\": 256,\n                \"height\": 256,\n                \"depth\":
-      60\n            },\n            \"elementClass\": \"uint16\",\n            \"dataFormat\":
-      \"wkw\",\n            \"numChannels\": 1,\n            \"defaultViewConfiguration\":
-      {\n                \"color\": [\n                    17,\n                    212,\n
-      \                   17\n                ],\n                \"intensityRange\":
-      [\n                    0,\n                    16000\n                ]\n            },\n
-      \           \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
-      1024,\n                    \"resolution\": [\n                        1,\n                        1,\n
-      \                       1\n                    ]\n                }\n            ]\n
-      \       },\n        {\n            \"name\": \"nuclei\",\n            \"category\":
-      \"color\",\n            \"boundingBox\": {\n                \"topLeft\": [\n
-      \                   0,\n                    0,\n                    0\n                ],\n
-      \               \"width\": 256,\n                \"height\": 256,\n                \"depth\":
-      60\n            },\n            \"elementClass\": \"uint16\",\n            \"dataFormat\":
-      \"wkw\",\n            \"numChannels\": 1,\n            \"defaultViewConfiguration\":
-      {\n                \"color\": [\n                    212,\n                    17,\n
-      \                   17\n                ],\n                \"intensityRange\":
-      [\n                    3000,\n                    30000\n                ]\n
-      \           },\n            \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
-      1024,\n                    \"resolution\": [\n                        1,\n                        1,\n
-      \                       1\n                    ]\n                }\n            ]\n
-      \       }\n    ],\n    \"defaultViewConfiguration\": {\n        \"zoom\": 0.35\n
-      \   }\n}\n----\n"
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '3764'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.24.1
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -547,8 +533,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -596,8 +580,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -635,8 +617,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -653,15 +633,14 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/datasets/Organization_X/cell_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v6/datasets/Organization_X/cell_2000-01-01_00-00-00
   response:
-    content: '{"name":"cell_2023-11-02_14-44-31","dataSource":{"id":{"name":"cell_2023-11-02_14-44-31","team":"Organization_X"},"dataLayers":[{"name":"cell
-      membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":[260,260,290]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1698936273560,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1698936273560,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"cell_2024-03-14_12-23-53","dataSource":{"id":{"name":"cell_2024-03-14_12-23-53","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":[260,260,290]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419035373,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419035373,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":31973009}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1145'
+      - '1210'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -669,8 +648,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -693,11 +670,11 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-11-02_14-44-31\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2024-03-14_12-23-53\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
-        href=\"cell membranes\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
+        href=\"cell_membranes\">cell_membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -715,8 +692,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -740,11 +715,11 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-11-02_14-44-31\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2024-03-14_12-23-53\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
-        href=\"cell membranes\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
+        href=\"cell_membranes\">cell_membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -762,8 +737,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -787,11 +760,11 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-11-02_14-44-31\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2024-03-14_12-23-53\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
-        href=\"cell membranes\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
+        href=\"cell_membranes\">cell_membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -809,8 +782,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -821,8 +792,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2023-11-02_14-44-31","team":"Organization_X"},"dataLayers":[{"name":"cell
-        membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
+      string: '{"id":{"name":"cell_2024-03-14_12-23-53","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -839,8 +809,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -851,8 +819,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2023-11-02_14-44-31","team":"Organization_X"},"dataLayers":[{"name":"cell
-        membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
+      string: '{"id":{"name":"cell_2024-03-14_12-23-53","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -869,8 +836,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -900,8 +865,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -914,8 +877,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2023-11-02_14-44-31","team":"Organization_X"},"dataLayers":[{"name":"cell
-        membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
+      string: '{"id":{"name":"cell_2024-03-14_12-23-53","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -932,8 +894,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -941,7 +901,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
@@ -957,10 +917,10 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-11-02_14-44-31/cell
-        membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
-        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray\">.zarray</a></li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2024-03-14_12-23-53/cell_membranes/1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -977,8 +937,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -986,7 +944,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/zarr.json
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1/zarr.json
   response:
     body:
       string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
@@ -1007,8 +965,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1016,7 +972,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1/.zarray
   response:
     body:
       string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
@@ -1036,8 +992,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1045,7 +999,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zattrs
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1/.zattrs
   response:
     body:
       string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
@@ -1066,8 +1020,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1075,7 +1027,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/zarr.json
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1/zarr.json
   response:
     body:
       string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
@@ -1096,8 +1048,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1105,7 +1055,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1/.zarray
   response:
     body:
       string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
@@ -1125,8 +1075,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1134,7 +1082,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zattrs
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1/.zattrs
   response:
     body:
       string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
@@ -1155,8 +1103,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1164,7 +1110,7 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell_membranes/1
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
@@ -1180,10 +1126,10 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-11-02_14-44-31/cell
-        membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
-        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray\">.zarray</a></li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2024-03-14_12-23-53/cell_membranes/1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1200,8 +1146,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1225,7 +1169,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-11-02_14-44-31/nuclei/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2024-03-14_12-23-53/nuclei/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1245,8 +1189,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1275,8 +1217,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1304,8 +1244,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1334,8 +1272,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1364,8 +1300,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1393,8 +1327,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -1423,8 +1355,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -1448,7 +1378,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2023-11-02_14-44-31/nuclei/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/cell_2024-03-14_12-23-53/nuclei/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1468,8 +1398,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
