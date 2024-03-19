@@ -15,7 +15,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: POST
-    uri: http://localhost:9000/api/v5/userToken/generate
+    uri: http://localhost:9000/api/v6/userToken/generate
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
@@ -30,8 +30,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -48,14 +46,14 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/datastores
+    uri: http://localhost:9000/api/v6/datastores
   response:
-    content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true}]'
+    content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '90'
+      - '147'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -63,8 +61,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -81,7 +77,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/user
+    uri: http://localhost:9000/api/v6/user
   response:
     content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
@@ -96,8 +92,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -114,21 +108,21 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/datasets/Organization_X/dicom_dataset_2000-01-01_00-00-00/isValidNewName
+    uri: http://localhost:9000/api/v6/datasets/Organization_X/dicom_dataset_2000-01-01_00-00-00/isValidNewName
   response:
-    content: ''
+    content: '{"isValid":true}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '0'
+      - '16'
+      content-type:
+      - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -168,8 +162,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -217,8 +209,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -343,8 +333,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -404,8 +392,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -443,8 +429,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -461,14 +445,14 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v5/datasets/Organization_X/dicom_dataset_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v6/datasets/Organization_X/dicom_dataset_2000-01-01_00-00-00
   response:
-    content: '{"name":"dicom_dataset_2024-03-18_13-35-27","dataSource":{"id":{"name":"dicom_dataset_2024-03-18_13-35-27","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"resolutions":[[1,1,1]],"elementClass":"int8"}],"scale":[12,12,12]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710768931496,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710768931496,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"dicom_dataset_2024-03-19_10-17-55","dataSource":{"id":{"name":"dicom_dataset_2024-03-19_10-17-55","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"resolutions":[[1,1,1]],"elementClass":"int8"}],"scale":[12,12,12]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710843480671,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710843480671,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":5248507}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '840'
+      - '904'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -476,8 +460,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
@@ -500,7 +482,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-18_13-35-27\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-19_10-17-55\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -521,8 +503,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -546,7 +526,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-18_13-35-27\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-19_10-17-55\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -567,8 +547,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -592,7 +570,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-18_13-35-27\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-19_10-17-55\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -613,8 +591,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -625,7 +601,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"dicom_dataset_2024-03-18_13-35-27","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"dicom_dataset_2024-03-19_10-17-55","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -642,8 +618,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -654,7 +628,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"dicom_dataset_2024-03-18_13-35-27","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"dicom_dataset_2024-03-19_10-17-55","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -671,8 +645,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -702,8 +674,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -716,7 +686,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"dicom_dataset_2024-03-18_13-35-27","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"dicom_dataset_2024-03-19_10-17-55","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -733,8 +703,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -758,7 +726,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-18_13-35-27/dicoms/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-19_10-17-55/dicoms/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -778,8 +746,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -808,8 +774,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -838,8 +802,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -867,8 +829,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -897,8 +857,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -926,8 +884,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -956,8 +912,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 404
       message: Not Found
@@ -981,7 +935,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-18_13-35-27/dicoms/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-03-19_10-17-55/dicoms/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1001,8 +955,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
