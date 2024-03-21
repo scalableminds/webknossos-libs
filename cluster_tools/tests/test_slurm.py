@@ -413,7 +413,7 @@ def test_pickled_logging() -> None:
     assert test_output_str in debug_out
 
     info_out = execute_with_log_level(logging.INFO)
-    assert not (test_output_str in info_out)
+    assert test_output_str not in info_out
 
 
 def test_tailed_logging() -> None:
@@ -434,7 +434,7 @@ def test_tailed_logging() -> None:
         assert "jid" in f.getvalue()
 
 
-def fail(val: Any) -> None:
+def fail(_val: Any) -> None:
     raise Exception("Fail()")
 
 

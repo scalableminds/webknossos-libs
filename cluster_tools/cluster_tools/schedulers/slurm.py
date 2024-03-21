@@ -253,7 +253,7 @@ class SlurmExecutor(ClusterExecutor):
 
         return str(int(job_id))  # int() ensures coherent parsing
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
+    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:  # noqa ARG002 Unused method argument: `args`, kwargs
         for submit_thread in self.submit_threads:
             submit_thread.stop()
 

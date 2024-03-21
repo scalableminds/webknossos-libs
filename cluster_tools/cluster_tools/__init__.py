@@ -7,10 +7,10 @@ from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 from cluster_tools.executors.pickle_ import PickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
 from cluster_tools.schedulers.cluster_executor import (
-    ClusterExecutor,
-    RemoteOutOfMemoryException,
-    RemoteResourceLimitException,
-    RemoteTimeLimitException,
+    ClusterExecutor,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
+    RemoteOutOfMemoryException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
+    RemoteResourceLimitException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
+    RemoteTimeLimitException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
 )
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
