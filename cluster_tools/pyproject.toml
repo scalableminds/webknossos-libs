@@ -15,7 +15,6 @@ typing-extensions = "^4.4.0"
 
 [tool.poetry.dev-dependencies]
 icecream = "^2.1.1"
-isort = "^5.9.3"
 mypy = "^1.0.0"
 pytest = "^7.2.1"
 ruff = "^0.3.2"
@@ -89,6 +88,3 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
-
-[tool.pylint."MESSAGES CONTROL"]
-disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","broad-exception-raised","protected-access","R","C","fixme","global-statement","redefined-outer-name","arguments-differ","unused-argument"]
