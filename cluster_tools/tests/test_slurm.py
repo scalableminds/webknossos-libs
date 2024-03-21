@@ -536,9 +536,9 @@ def test_preliminary_file_map() -> None:
 
 
 def test_cpu_bind_regression() -> None:
-    os.environ[
-        "SLURM_CPU_BIND"
-    ] = "quiet,mask_cpu:0x000000000000040000000000000000040000"
+    os.environ["SLURM_CPU_BIND"] = (
+        "quiet,mask_cpu:0x000000000000040000000000000000040000"
+    )
 
     stdout, _ = chcall("scontrol show config | sed -n '/^TaskPlugin/s/.*= *//p'")
     assert (

@@ -200,7 +200,8 @@ class ClusterExecutor(futures.Executor):
         pass
 
     def investigate_failed_job(
-        self, job_id_with_index: str  # pylint: disable=unused-argument
+        self,
+        job_id_with_index: str,  # pylint: disable=unused-argument
     ) -> Optional[Tuple[str, Type[RemoteException]]]:
         """
         When a job fails, this method is called to investigate why. If a tuple is returned,

@@ -1,5 +1,5 @@
-"""Abstracts access to a Slurm cluster via its command-line tools.
-"""
+"""Abstracts access to a Slurm cluster via its command-line tools."""
+
 import logging
 import os
 import re

@@ -54,53 +54,45 @@ def _test_valid_multiprocessing() -> None:
 
 
 @overload
-def get_executor(environment: Literal["slurm"], **kwargs: Any) -> SlurmExecutor:
-    ...
+def get_executor(environment: Literal["slurm"], **kwargs: Any) -> SlurmExecutor: ...
 
 
 @overload
-def get_executor(environment: Literal["pbs"], **kwargs: Any) -> PBSExecutor:
-    ...
+def get_executor(environment: Literal["pbs"], **kwargs: Any) -> PBSExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["kubernetes"], **kwargs: Any
-) -> KubernetesExecutor:
-    ...
+) -> KubernetesExecutor: ...
 
 
 @overload
-def get_executor(environment: Literal["dask"], **kwargs: Any) -> DaskExecutor:
-    ...
+def get_executor(environment: Literal["dask"], **kwargs: Any) -> DaskExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["multiprocessing"], **kwargs: Any
-) -> MultiprocessingExecutor:
-    ...
+) -> MultiprocessingExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["sequential"], **kwargs: Any
-) -> SequentialExecutor:
-    ...
+) -> SequentialExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["debug_sequential"], **kwargs: Any
-) -> DebugSequentialExecutor:
-    ...
+) -> DebugSequentialExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["test_pickling"], **kwargs: Any
-) -> PickleExecutor:
-    ...
+) -> PickleExecutor: ...
 
 
 def get_executor(environment: str, **kwargs: Any) -> "Executor":
