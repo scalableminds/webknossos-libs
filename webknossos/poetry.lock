@@ -3656,4 +3656,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "607e90271b073f5c0b6bda868a507e079cd1070db946c1bda27669f6d83579db"
+content-hash = "c1ae9702f57e2f34ffe89c491ee14564bfa955636582b3f1fcda4c83a253770b"
