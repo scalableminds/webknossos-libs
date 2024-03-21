@@ -288,7 +288,7 @@ class DaskExecutor(futures.Executor):
         self.client.cancel(list(self.pending_futures))
 
         if (
-            existing_sigint_handler  # pylint: disable=comparison-with-callable
+            existing_sigint_handler
             != signal.default_int_handler
             and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
         ):

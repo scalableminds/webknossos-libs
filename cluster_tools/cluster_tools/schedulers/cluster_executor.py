@@ -178,7 +178,7 @@ class ClusterExecutor(futures.Executor):
         self.wait_thread.stop()
 
         if (
-            existing_sigint_handler  # pylint: disable=comparison-with-callable
+            existing_sigint_handler
             != signal.default_int_handler
             and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
         ):
@@ -331,7 +331,7 @@ class ClusterExecutor(futures.Executor):
             # We don't try to deserialize pickling output, because it won't exist.
             success = False
 
-            opt_reason_and_exception_cls = (  # pylint: disable=assignment-from-none
+            opt_reason_and_exception_cls = (
                 self.investigate_failed_job(jobid)
             )
             reason = None
