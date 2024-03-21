@@ -37,9 +37,12 @@ pip install webknossos
 
 ## Examples
 See the [examples folder](examples) or the [the documentation](https://docs.webknossos.org/webknossos-py).
+The dependencies for the examples are not installed by default. Use `poetry install --with examples` to install them.
 
 ## Contributions & Development
 Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/development.html).
+
+The development dependencies not installed by default. Use `poetry install --with dev` to install them.
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)
