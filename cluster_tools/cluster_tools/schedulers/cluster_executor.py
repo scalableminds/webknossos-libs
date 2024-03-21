@@ -178,8 +178,7 @@ class ClusterExecutor(futures.Executor):
         self.wait_thread.stop()
 
         if (
-            existing_sigint_handler
-            != signal.default_int_handler
+            existing_sigint_handler != signal.default_int_handler
             and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
         ):
             existing_sigint_handler(signum, frame)
@@ -331,9 +330,7 @@ class ClusterExecutor(futures.Executor):
             # We don't try to deserialize pickling output, because it won't exist.
             success = False
 
-            opt_reason_and_exception_cls = (
-                self.investigate_failed_job(jobid)
-            )
+            opt_reason_and_exception_cls = self.investigate_failed_job(jobid)
             reason = None
             if opt_reason_and_exception_cls is not None:
                 reason, wrapping_exception_cls = opt_reason_and_exception_cls
@@ -667,7 +664,7 @@ class ClusterExecutor(futures.Executor):
 
         # Don't use a logger instance here, since the child process
         # probably already used a logger.
-        def log_callback(s):
+        def log_callback(s: str) -> None:
             sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")  # type: ignore[attr-defined]
 
         tailer = Tail(log_path, log_callback)

@@ -19,10 +19,12 @@ def _volume_name_from_path(path: Path) -> str:
 
 
 def _deduplicate_mounts(mounts: List[Path]) -> List[Path]:
-    output = []
     unique_mounts = set(mounts)
-    for mount in unique_mounts:
-        output = [mount for m in unique_mounts if not any(m in mount.parents)]
+    output = [
+        mount
+        for mount in unique_mounts
+        if not any(m in mount.parents for m in unique_mounts)
+    ]
     return output
 
 
@@ -101,7 +103,11 @@ class KubernetesExecutor(ClusterExecutor):
             return job_id
         return cls.get_jobid_with_index(job_id, job_index)
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002 Unused method argument: `args`, kwargs
+    def inner_handle_kill(
+        self,
+        *args: Any,
+        **kwargs: Any,  # noqa: ARG002 Unused method argument: `args`, kwargs
+    ) -> None:
         job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
         print(
@@ -187,9 +193,9 @@ class KubernetesExecutor(ClusterExecutor):
                             "cluster-tools.scalableminds.com/job-is-array-job": str(
                                 is_array_job
                             ),
-                            "cluster-tools.scalableminds.com/job-name": job_name
-                            if job_name is not None
-                            else "",
+                            "cluster-tools.scalableminds.com/job-name": (
+                                job_name if job_name is not None else ""
+                            ),
                         }
                     ),
                     spec=kubernetes_models.V1PodSpec(

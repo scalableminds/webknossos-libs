@@ -73,7 +73,7 @@ def test_slurm_cfut_dir() -> None:
     if os.path.exists(cfut_dir):
         shutil.rmtree(cfut_dir)
 
-    exc = cluster_tools.get_executor("slurm", debug=True, cfut_dir=cfut_dir)
+    exc = cluster_tools.get_executor("slurm", debug=True, cfut_dir=cfut_dir)  # type: ignore[attr-defined]
     with exc:
         future = exc.submit(square, 2)
         assert future.result() == 4

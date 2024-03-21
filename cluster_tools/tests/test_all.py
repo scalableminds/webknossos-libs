@@ -115,7 +115,7 @@ def test_uncaught_warning() -> None:
     cases = [False, True]
 
     def expect_marker(marker: str, msg: str, should_exist: bool = True) -> None:
-        def maybe_negate(b) -> bool:
+        def maybe_negate(b: bool) -> bool:
             return b if should_exist else not b
 
         fh.flush()
