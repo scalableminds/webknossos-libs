@@ -163,7 +163,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r ../requirements.txt
-          poetry install --extras all --with examples
+          poetry install --extras all --with examples --with dev
 
       - name: Check formatting
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
