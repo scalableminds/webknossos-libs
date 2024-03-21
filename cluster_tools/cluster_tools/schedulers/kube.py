@@ -105,8 +105,8 @@ class KubernetesExecutor(ClusterExecutor):
 
     def inner_handle_kill(
         self,
-        *args: Any,
-        **kwargs: Any,  # noqa: ARG002 Unused method argument: `args`, kwargs
+        *args: Any,  # noqa: ARG002 Unused method argument: `args`
+        **kwargs: Any,  # noqa: ARG002 Unused method argument: `kwargs`
     ) -> None:
         job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
