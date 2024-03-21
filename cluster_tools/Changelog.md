@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Replaced black+isort formatters and pylint linter with ruff. [#1023](https://github.com/scalableminds/webknossos-libs/pull/1023)
 
 ### Fixed
 

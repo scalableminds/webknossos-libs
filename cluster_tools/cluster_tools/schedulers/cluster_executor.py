@@ -178,8 +178,7 @@ class ClusterExecutor(futures.Executor):
         self.wait_thread.stop()
 
         if (
-            existing_sigint_handler  # pylint: disable=comparison-with-callable
-            != signal.default_int_handler
+            existing_sigint_handler != signal.default_int_handler
             and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
         ):
             existing_sigint_handler(signum, frame)
@@ -200,7 +199,8 @@ class ClusterExecutor(futures.Executor):
         pass
 
     def investigate_failed_job(
-        self, job_id_with_index: str  # pylint: disable=unused-argument
+        self,
+        job_id_with_index: str,  # noqa: ARG002 Unused method argument: `job_id_with_index`
     ) -> Optional[Tuple[str, Type[RemoteException]]]:
         """
         When a job fails, this method is called to investigate why. If a tuple is returned,
@@ -330,9 +330,7 @@ class ClusterExecutor(futures.Executor):
             # We don't try to deserialize pickling output, because it won't exist.
             success = False
 
-            opt_reason_and_exception_cls = (  # pylint: disable=assignment-from-none
-                self.investigate_failed_job(jobid)
-            )
+            opt_reason_and_exception_cls = self.investigate_failed_job(jobid)
             reason = None
             if opt_reason_and_exception_cls is not None:
                 reason, wrapping_exception_cls = opt_reason_and_exception_cls
@@ -471,7 +469,9 @@ class ClusterExecutor(futures.Executor):
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
-        args: Iterable[_S],  # TODO change: allow more than one arg per call
+        args: Iterable[
+            _S
+        ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
     ) -> List["Future[_T]"]:
         self.ensure_not_shutdown()
@@ -610,7 +610,7 @@ class ClusterExecutor(futures.Executor):
         for file_to_clean_up in self.files_to_clean_up:
             try:
                 os.unlink(file_to_clean_up)
-            except OSError:
+            except OSError:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 pass
         self.files_to_clean_up = []
 
@@ -661,9 +661,12 @@ class ClusterExecutor(futures.Executor):
         """
 
         log_path = self.format_log_file_path(self.cfut_dir, fut.cluster_jobid)  # type: ignore[attr-defined]
+
         # Don't use a logger instance here, since the child process
         # probably already used a logger.
-        log_callback = lambda s: sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")  # type: ignore[attr-defined]
+        def log_callback(s: str) -> None:
+            sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")  # type: ignore[attr-defined]
+
         tailer = Tail(log_path, log_callback)
         fut.add_done_callback(lambda _: tailer.cancel())
 

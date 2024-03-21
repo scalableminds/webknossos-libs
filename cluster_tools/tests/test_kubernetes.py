@@ -23,8 +23,8 @@ def test_simple() -> None:
             "namespace": "cluster-tools",
         },
         debug=True,
-    ) as exec:
-        assert list(exec.map(square, [n + 2 for n in range(2)])) == [4, 9]
+    ) as executor:
+        assert list(executor.map(square, [n + 2 for n in range(2)])) == [4, 9]
 
 
 def test_mounts() -> None:
@@ -40,8 +40,8 @@ def test_mounts() -> None:
             "mounts": [parent_dir],
         },
         debug=True,
-    ) as exec:
-        assert "cluster_tools" in list(exec.map(list_dir, [parent_dir]))[0]
+    ) as executor:
+        assert "cluster_tools" in list(executor.map(list_dir, [parent_dir]))[0]
 
     with cluster_tools.get_executor(
         "kubernetes",
@@ -53,5 +53,5 @@ def test_mounts() -> None:
             "namespace": "cluster-tools",
         },
         debug=True,
-    ) as exec:
-        assert "cluster_tools" not in list(exec.map(list_dir, [parent_dir]))[0]
+    ) as executor:
+        assert "cluster_tools" not in list(executor.map(list_dir, [parent_dir]))[0]
