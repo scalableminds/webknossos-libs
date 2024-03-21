@@ -1,4 +1,3 @@
-import concurrent.futures
 import logging
 import os
 import tempfile
@@ -116,7 +115,8 @@ def test_uncaught_warning() -> None:
     cases = [False, True]
 
     def expect_marker(marker: str, msg: str, should_exist: bool = True) -> None:
-        maybe_negate = lambda b: b if should_exist else not b
+        def maybe_negate(b: bool) -> bool:
+            return b if should_exist else not b
 
         fh.flush()
         with open(log_file_name) as file:
@@ -360,9 +360,9 @@ def test_cloudpickle_serialization() -> None:
     for fn in [enum_consumer, enum_consumer_inner]:
         try:
             with cluster_tools.get_executor("test_pickling") as executor:
-                fut = executor.submit(fn, DummyEnum.BANANA)
+                _fut = executor.submit(fn, DummyEnum.BANANA)
             assert fn == enum_consumer
-        except Exception:
+        except Exception:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
             assert fn != enum_consumer
 
     assert True

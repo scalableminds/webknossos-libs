@@ -52,7 +52,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
                 record = self.queue.get(timeout=0.2)
                 if record is not None:
                     self.wrapped_handler.emit(record)
-            except (KeyboardInterrupt, SystemExit):  # pylint: disable=try-except-raise
+            except (KeyboardInterrupt, SystemExit):
                 raise
             # The following errors pop up quite often.
             # It seems that they can be safely ignored, though.

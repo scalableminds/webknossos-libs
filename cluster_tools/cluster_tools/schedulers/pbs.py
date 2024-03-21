@@ -1,5 +1,5 @@
-"""Abstracts access to a PBS cluster via its command-line tools.
-"""
+"""Abstracts access to a PBS cluster via its command-line tools."""
+
 import logging
 import os
 import re
@@ -56,7 +56,7 @@ class PBSExecutor(ClusterExecutor):
     def get_job_id_string(cls) -> str:
         return cls.get_current_job_id()
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
+    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002 Unused method argument: `args`, kwargs
         scheduled_job_ids: List[Union[int, str]] = list(self.jobs.keys())
 
         if len(scheduled_job_ids):
