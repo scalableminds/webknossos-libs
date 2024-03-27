@@ -14,7 +14,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from ._array import ArrayException, BaseArray, DataFormat
+from ._array import ArrayException, BaseArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -24,6 +24,7 @@ from ._downsampling_utils import (
     parse_interpolation_mode,
 )
 from ._upsampling_utils import upsample_cube_job
+from .data_format import DataFormat
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     LayerProperties,
@@ -264,9 +265,7 @@ class Layer:
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
-            )
+            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property
     def category(self) -> LayerCategoryType:
@@ -399,9 +398,7 @@ class Layer:
             create=True,
         )
 
-        mag_view._array.ensure_size(
-            self.bounding_box.align_with_mag(mag).in_mag(mag).bottomright
-        )
+        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
@@ -559,9 +556,11 @@ class Layer:
             chunk_shape=chunk_shape or foreign_mag_view._array_info.chunk_shape,
             chunks_per_shard=chunks_per_shard
             or foreign_mag_view._array_info.chunks_per_shard,
-            compress=compress
-            if compress is not None
-            else foreign_mag_view._array_info.compression_mode,
+            compress=(
+                compress
+                if compress is not None
+                else foreign_mag_view._array_info.compression_mode
+            ),
         )
 
         if extend_layer_bounding_box:
