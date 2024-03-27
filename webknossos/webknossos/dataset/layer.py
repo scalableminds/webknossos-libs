@@ -9,12 +9,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from cluster_tools import Executor
+
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from ._array import ArrayException, BaseArray, DataFormat
+from ._array import ArrayException, BaseArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -24,6 +25,7 @@ from ._downsampling_utils import (
     parse_interpolation_mode,
 )
 from ._upsampling_utils import upsample_cube_job
+from .data_format import DataFormat
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     LayerProperties,
@@ -182,7 +184,9 @@ class Layer:
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
 
-        self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
+        self._name: str = (
+            properties.name
+        )  # The name is also stored in the properties, but the name is required to get the properties.
         self._dataset = dataset
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
             properties.element_class, properties.num_channels
@@ -260,13 +264,13 @@ class Layer:
         Updates the offset and size of the bounding box of this layer in the properties.
         """
         self.dataset._ensure_writable()
-        assert bbox.topleft.is_positive(), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
+        assert (
+            bbox.topleft.is_positive()
+        ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
-            )
+            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property
     def category(self) -> LayerCategoryType:
@@ -399,9 +403,7 @@ class Layer:
             create=True,
         )
 
-        mag_view._array.ensure_size(
-            self.bounding_box.align_with_mag(mag).in_mag(mag).bottomright
-        )
+        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
@@ -559,9 +561,11 @@ class Layer:
             chunk_shape=chunk_shape or foreign_mag_view._array_info.chunk_shape,
             chunks_per_shard=chunks_per_shard
             or foreign_mag_view._array_info.chunks_per_shard,
-            compress=compress
-            if compress is not None
-            else foreign_mag_view._array_info.compression_mode,
+            compress=(
+                compress
+                if compress is not None
+                else foreign_mag_view._array_info.compression_mode
+            ),
         )
 
         if extend_layer_bounding_box:
@@ -1139,8 +1143,8 @@ class SegmentationLayer(Layer):
     def largest_segment_id(self, largest_segment_id: Optional[int]) -> None:
         self.dataset._ensure_writable()
         if largest_segment_id is not None and not isinstance(largest_segment_id, int):
-            assert (
-                largest_segment_id == int(largest_segment_id)
+            assert largest_segment_id == int(
+                largest_segment_id
             ), f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
             largest_segment_id = int(largest_segment_id)
 

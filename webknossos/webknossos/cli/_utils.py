@@ -1,5 +1,6 @@
 """Utilities to work with the CLI of webknossos."""
 
+from base64 import b64encode
 from collections import namedtuple
 from enum import Enum
 from os import environ
@@ -8,7 +9,8 @@ from typing import Tuple, Union
 import numpy as np
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, Vec3Int
+from webknossos import BoundingBox, Mag
+from webknossos.geometry.vec3_int import Vec3Int
 
 VoxelSize = namedtuple("VoxelSize", ("x", "y", "z"))
 Vec2Int = namedtuple("Vec2Int", ("x", "y"))
@@ -17,10 +19,9 @@ Vec2Int = namedtuple("Vec2Int", ("x", "y"))
 class DistributionStrategy(str, Enum):
     """Enum of available distribution strategies.
 
-    TODO
+    TODO  pylint: disable=fixme
     - As soon as supported by typer this enum should be
     replaced with typing.Literal in type hint.
-    https://github.com/tiangolo/typer/pull/669
     """
 
     SLURM = "slurm"
@@ -32,10 +33,9 @@ class DistributionStrategy(str, Enum):
 class LayerCategory(str, Enum):
     """Enum of available layer categories.
 
-    TODO
+    TODO  pylint: disable=fixme
     - As soon as supported by typer this enum should be
     replaced with typing.Literal in type hint.
-    https://github.com/tiangolo/typer/pull/669
     """
 
     COLOR = "color"
@@ -142,25 +142,10 @@ def parse_path(value: str) -> UPath:
         and "HTTP_BASIC_USER" in environ
         and "HTTP_BASIC_PASSWORD" in environ
     ):
-        import aiohttp
-
-        return UPath(
-            value,
-            client_kwargs={
-                "auth": aiohttp.BasicAuth(
-                    environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]
-                )
-            },
+        basic_auth = b64encode(
+            f'{environ["HTTP_BASIC_USER"]}:{environ["HTTP_BASIC_PASSWORD"]}'.encode()
         )
-    if (
-        (value.startswith("webdav+http://") or value.startswith("webdav+https://"))
-        and "HTTP_BASIC_USER" in environ
-        and "HTTP_BASIC_PASSWORD" in environ
-    ):
-        return UPath(
-            value,
-            auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
-        )
+        return UPath(value, headers={"Authentication": f"Basic {basic_auth.decode()}"})
     if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
         return UPath(
             value,

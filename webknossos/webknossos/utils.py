@@ -12,7 +12,7 @@ from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
-from pathlib import Path
+from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj
 from typing import (
     Any,
@@ -31,9 +31,10 @@ from typing import (
 
 import numpy as np
 import rich
-from cluster_tools import Executor, get_executor
 from rich.progress import Progress
 from upath import UPath
+
+from cluster_tools import Executor, get_executor
 
 times = {}
 
@@ -130,7 +131,9 @@ def wait_and_ensure_success(
     results = []
     if progress_desc is None:
         for fut in executor.as_completed(futures):
-            results.append(fut.result())  #  noqa: PERF401 Use a list comprehension to create a transformed list
+            results.append(
+                fut.result()
+            )  #  noqa: PERF401 Use a list comprehension to create a transformed list
     else:
         with get_rich_progress() as progress:
             task = progress.add_task(progress_desc, total=len(futures))
@@ -238,15 +241,14 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
 def is_fs_path(path: Path) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
-    return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
+    return not isinstance(path, UPath) or isinstance(
+        path, (PosixPath, WindowsPath, PosixUPath, WindowsUPath)
+    )
 
 
 def strip_trailing_slash(path: Path) -> Path:
-    if isinstance(path, UPath):
-        return UPath(
-            str(path).rstrip("/"),
-            **path._kwargs.copy(),
-        )
+    if isinstance(path, UPath) and not is_fs_path(path):
+        return UPath(str(path).rstrip("/"), **path.storage_options)
     else:
         return Path(str(path).rstrip("/"))
 
@@ -265,7 +267,9 @@ def rmtree(path: Path) -> None:
                 sub_path.unlink()
             elif sub_path.is_dir():
                 sub_path.rmdir()
-        except FileNotFoundError:  # noqa:  PERF203 `try`-`except` within a loop incurs performance overhead
+        except (
+            FileNotFoundError
+        ):  # noqa:  PERF203 `try`-`except` within a loop incurs performance overhead
             # Some implementations `UPath` do not have explicit directory representations
             # Therefore, directories only exist, if they have files. Consequently, when
             # all files have been deleted, the directory does not exist anymore.

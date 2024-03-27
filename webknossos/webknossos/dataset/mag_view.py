@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from cluster_tools import Executor
 from upath import UPath
+
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -19,7 +20,7 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, WKWArray, ZarrArray, ZarritaArray
+from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -136,10 +137,8 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(array_wrapper, ZarrArray) or isinstance(
-            array_wrapper, ZarritaArray
-        )  # for typechecking
-        return array_wrapper._zarray
+        assert isinstance(array_wrapper, TensorStoreArray)  # for typechecking
+        return array_wrapper._array
 
     def write(
         self,

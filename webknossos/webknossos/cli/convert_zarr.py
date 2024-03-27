@@ -9,15 +9,15 @@ from pathlib import Path
 from typing import Any, Optional, Tuple, Union, cast
 
 import numpy as np
+import tensorstore
 import typer
-import zarr
 from typing_extensions import Annotated
 
 from ..dataset import DataFormat, Dataset, MagView, SegmentationLayer
 from ..dataset._array import _fsstore_from_path
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, wait_and_ensure_success
+from ..utils import get_executor_for_args, is_fs_path, wait_and_ensure_success
 from ._utils import (
     DistributionStrategy,
     SamplingMode,
@@ -31,6 +31,13 @@ from ._utils import (
 logger = logging.getLogger(__name__)
 
 
+def _make_kvstore(path: Path) -> Union[str, Dict[str, str]]:
+    if is_fs_path(path):
+        return {"driver": "file", "path": str(path)}
+    else:
+        return str(path)
+
+
 def _zarr_chunk_converter(
     bounding_box: BoundingBox,
     source_zarr_path: Path,
@@ -40,7 +47,13 @@ def _zarr_chunk_converter(
     logging.info("Conversion of %s", bounding_box.topleft)
 
     slices = bounding_box.to_slices()
-    zarr_file = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
+    zarr_file = tensorstore.open(
+        {
+            "driver": "zarr",
+            "kvstore": _make_kvstore(source_zarr_path),
+        }
+    ).result()
+    source_data: Any = zarr_file[slices].read().result()[None, ...]
     source_data: Any = zarr_file[slices][None, ...]
 
     if flip_axes:
@@ -68,8 +81,13 @@ def convert_zarr(
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
 
-    file = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
-    input_dtype: Any = file.dtype
+    file = tensorstore.open(
+        {
+            "driver": "zarr",
+            "kvstore": _make_kvstore(source_zarr_path),
+        }
+    ).result()
+    input_dtype: Any = file.dtype.numpy_dtype
     shape: Any = file.shape
 
     if voxel_size is None:
