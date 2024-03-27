@@ -6,7 +6,7 @@ from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Optional, Tuple, Union, cast
+from typing import Any, Dict, Optional, Tuple, Union, cast
 
 import numpy as np
 import tensorstore
@@ -14,7 +14,6 @@ import typer
 from typing_extensions import Annotated
 
 from ..dataset import DataFormat, Dataset, MagView, SegmentationLayer
-from ..dataset._array import _fsstore_from_path
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, is_fs_path, wait_and_ensure_success
