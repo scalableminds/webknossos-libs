@@ -299,6 +299,17 @@ def test_upload_tiff_stack() -> None:
         )
 
 
+def test_upload_dicom_stack() -> None:
+    import examples.upload_dicom_stack as example
+
+    with tmp_cwd():
+        (remote_dataset,) = exec_main_and_get_vars(example, "remote_dataset")
+
+        assert remote_dataset.url.startswith(
+            "http://localhost:9000/datasets/Organization_X/dicom_dataset"
+        )
+
+
 @pytest.mark.block_network(allowed_hosts=[".*"])
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_segments() -> None:
