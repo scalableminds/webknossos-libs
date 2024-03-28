@@ -10,7 +10,7 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     NDArrayLike,
     get_executor_for_args,
@@ -30,7 +30,12 @@ if TYPE_CHECKING:
 from .view import View
 
 
-def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
+def _find_mag_path_on_disk(
+    dataset_path: Path, layer_name: str, mag_name: str, path: Optional[str] = None
+) -> Path:
+    if path is not None:
+        return dataset_path / path
+
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
@@ -73,6 +78,15 @@ class MagView(View):
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
+            axis_order=VecInt(
+                0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
+            ),
+            shape=VecInt(
+                layer.num_channels,
+                *VecInt.ones(layer.bounding_box.axes),
+                axes=("c",) + layer.bounding_box.axes,
+            ),
+            dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
             self_path = layer.dataset.path / layer.name / mag.to_layer_name()
@@ -81,14 +95,14 @@ class MagView(View):
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
             array_info,
-            bounding_box=None,
+            bounding_box=layer.bounding_box,
             mag=mag,
         )
         self._layer = layer
 
     # Overwrites of View methods:
     @property
-    def bounding_box(self) -> BoundingBox:
+    def bounding_box(self) -> NDBoundingBox:
         # Overwrites View's method since no extra bbox is stored for a MagView,
         # but the Layer's bbox is used:
         return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
@@ -105,7 +119,7 @@ class MagView(View):
         return Vec3Int.zeros()
 
     @property
-    def size(self) -> Vec3Int:
+    def size(self) -> VecInt:
         """⚠️ Deprecated, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright` instead."""
         warnings.warn(
             "[DEPRECATION] mag_view.size is deprecated. "
@@ -149,6 +163,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
         if offset is not None:
             if self._mag == Mag(1):
@@ -166,14 +182,30 @@ class MagView(View):
                 DeprecationWarning,
             )
 
-        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+        if all(
+            i is None
+            for i in [
+                offset,
+                absolute_offset,
+                relative_offset,
+                absolute_bounding_box,
+                relative_bounding_box,
+            ]
+        ):
             relative_offset = Vec3Int.zeros()
+
+        if (absolute_bounding_box or relative_bounding_box) is not None:
+            data_shape = None
+        else:
+            data_shape = Vec3Int(data.shape[-3:])
 
         mag1_bbox = self._get_mag1_bbox(
             abs_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
-            current_mag_size=Vec3Int(data.shape[-3:]),
+            abs_mag1_bbox=absolute_bounding_box,
+            rel_mag1_bbox=relative_bounding_box,
+            current_mag_size=data_shape,
         )
 
         # Only update the layer's bbox if we are actually larger
@@ -183,8 +215,8 @@ class MagView(View):
 
         super().write(
             data,
-            absolute_offset=mag1_bbox.topleft,
             json_update_allowed=json_update_allowed,
+            absolute_bounding_box=mag1_bbox,
         )
 
     def read(
@@ -196,8 +228,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> np.ndarray:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
@@ -237,12 +269,14 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bbox: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bbox: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
         # This has other defaults than the View implementation
-        # (all deprecations are handled in the subsclass)
+        # (all deprecations are handled in the superclass)
         bb = self.bounding_box.in_mag(self._mag)
         if offset is not None and size is None:
             offset = Vec3Int(offset)
@@ -253,12 +287,14 @@ class MagView(View):
             size,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
+            relative_bbox=relative_bbox,
+            absolute_bbox=absolute_bbox,
             read_only=read_only,
         )
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Iterator[BoundingBox]:
+    ) -> Iterator[NDBoundingBox]:
         """
         Returns a Mag(1) bounding box for each file on disk.
 
