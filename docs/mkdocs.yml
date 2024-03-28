@@ -113,8 +113,10 @@ nav:
           - Overview: api/webknossos.md
           - Geometry:
               - BoundingBox: api/webknossos/geometry/bounding_box.md
+              - NDBoundingBox: api/webknossos/geometry/nd_bounding_box.md
               - Mag: api/webknossos/geometry/mag.md
               - Vec3Int: api/webknossos/geometry/vec3_int.md
+              - VecInt: api/webknossos/geometry/vec_int.md
           - Dataset:
               - Dataset: api/webknossos/dataset/dataset.md
               - Layer: api/webknossos/dataset/layer.md

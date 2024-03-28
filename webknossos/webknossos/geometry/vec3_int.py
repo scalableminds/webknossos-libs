@@ -5,7 +5,7 @@ import numpy as np
 
 from .vec_int import VecInt
 
-VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object."
+_VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object."
 
 
 class Vec3Int(VecInt):
@@ -36,27 +36,27 @@ class Vec3Int(VecInt):
             if isinstance(args[0], Vec3Int):
                 return args[0]
 
-            assert axes is not None, VALUE_ERROR
+            assert axes is not None, _VALUE_ERROR
 
             if isinstance(args[0], Iterable):
                 self = super().__new__(cls, *args[0], axes=("x", "y", "z"))
-                assert self is not None and len(self) == 3, VALUE_ERROR
+                assert self is not None and len(self) == 3, _VALUE_ERROR
 
                 return cast(Vec3Int, self)
 
-            assert len(args) == 3 and len(tuple(axes)) == 3, VALUE_ERROR
-            assert kwargs is None or len(kwargs) == 0, VALUE_ERROR
-            assert "x" in axes and "y" in axes and "z" in axes, VALUE_ERROR
+            assert len(args) == 3 and len(tuple(axes)) == 3, _VALUE_ERROR
+            assert kwargs is None or len(kwargs) == 0, _VALUE_ERROR
+            assert "x" in axes and "y" in axes and "z" in axes, _VALUE_ERROR
             values, _ = zip(*sorted(zip(args, axes), key=lambda x: x[1]))
         else:
-            assert "x" in kwargs and "y" in kwargs and "z" in kwargs, VALUE_ERROR
-            assert len(kwargs) == 3, VALUE_ERROR
+            assert "x" in kwargs and "y" in kwargs and "z" in kwargs, _VALUE_ERROR
+            assert len(kwargs) == 3, _VALUE_ERROR
             values = kwargs["x"], kwargs["y"], kwargs["z"]
 
         self = super().__new__(cls, *values, axes=("x", "y", "z"))
         self.axes = ("x", "y", "z")
 
-        assert self is not None and len(self) == 3, VALUE_ERROR
+        assert self is not None and len(self) == 3, _VALUE_ERROR
 
         return cast(Vec3Int, self)
 

@@ -4,14 +4,36 @@ from typing import Any, Callable, Iterable, List, Optional, Tuple, TypeVar, Unio
 
 import numpy as np
 
-VALUE_ERROR = "VecInt can be instantiated with int values `VecInt(1,2,3,4) or with `VecIntLike` object `VecInt([1,2,3,4])."
+_VALUE_ERROR = "VecInt can be instantiated with int values `VecInt(1,2,3,4) or with `VecIntLike` object `VecInt([1,2,3,4])."
 
-T = TypeVar("T", bound="VecInt")
+_T = TypeVar("_T", bound="VecInt")
 
 
 class VecInt(tuple):
     """
-    Class to represent an ND vector of integer values.
+    The VecInt class is designed to represent a vector of integers. This class is a subclass of the built-in tuple class, and it extends the functionality of tuples by providing additional methods and operations.
+
+    One of the key features of the VecInt class is that it allows for the storage of axis names along with their corresponding values.
+
+    Here is a brief example demonstrating how to use the VecInt class:
+
+    ```python
+    from webknossos import VecInt
+
+    # Creating a VecInt instance with 4 elements and axes x, y, z, t:
+    vector_1 = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
+    # Alternative ways to create the same VecInt instance:
+    vector_1 = VecInt([1, 2, 3, 4], axes=("x", "y", "z", "t"))
+    vector_1 = VecInt(x=1, y=2, z=3, t=4)
+
+    # Creating a VecInt instance with all elements set to 1 and axes x, y, z, t:
+    vector_2 = VecInt.full(1, axes=("x", "y", "z", "t"))
+    # Asserting that all elements in vector_2 are equal to 1:
+    assert vector_2[0] == vector_2[1] == vector_2[2] == vector_2[3]
+
+    # Demonstrating the addition operation between two VecInt instances:
+    assert vector_1 + vector_2 == VecInt(2, 3, 4, 5)
+    ```
     """
 
     axes: Tuple[str, ...]
@@ -25,53 +47,31 @@ class VecInt(tuple):
         axes: Optional[Iterable[str]] = None,
         **kwargs: int,
     ) -> "VecInt":
-        """
-        Class to represent a ND vector. Inherits from tuple and provides useful
-        methods and operations on top. The vector stores the axes names together with the values.
-
-        A small usage example:
-
-        ```python
-        from webknossos import VecInt
-
-        # To create a vector with 4 elements and axes x, y, z, t:
-        vector_1 = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
-        # or
-        vector_1 = VecInt([1, 2, 3, 4], axes=("x", "y", "z", "t"))
-        # or
-        vector_1 = VecInt(x=1, y=2, z=3, t=4)
-
-        vector_2 = VecInt.full(1, axes=("x", "y", "z", "t"))
-        assert vector_2[0] == vector_2[1] == vector_2[2] == vector_2[3]
-
-        assert vector_1 + vector_2 == VecInt(2, 3, 4, 5)
-        ```
-        """
         as_tuple: Optional[Tuple[int, ...]] = None
 
         if args:
             if isinstance(args[0], VecInt):
                 return args[0]
             if isinstance(args[0], np.ndarray):
-                assert np.count_nonzero(args[0] % 1) == 0, VALUE_ERROR
+                assert np.count_nonzero(args[0] % 1) == 0, _VALUE_ERROR
             if isinstance(args[0], str):
                 return cls.from_str(args[0])
             if isinstance(args[0], Iterable):
                 as_tuple = tuple(int(item) for item in args[0])
                 if args[1:] and isinstance(args[1], Iterable):
-                    assert all(isinstance(arg, str) for arg in args[1]), VALUE_ERROR
+                    assert all(isinstance(arg, str) for arg in args[1]), _VALUE_ERROR
                     axes = tuple(args[1])  # type: ignore
             elif isinstance(args, Iterable):
                 as_tuple = tuple(int(arg) for arg in args)  # type: ignore
             else:
-                raise ValueError(VALUE_ERROR)
-            assert axes is not None, VALUE_ERROR
+                raise ValueError(_VALUE_ERROR)
+            assert axes is not None, _VALUE_ERROR
         else:
-            assert kwargs, VALUE_ERROR
-            assert axes is None, VALUE_ERROR
+            assert kwargs, _VALUE_ERROR
+            assert axes is None, _VALUE_ERROR
             as_tuple = tuple(kwargs.values())
 
-        assert as_tuple is not None, VALUE_ERROR
+        assert as_tuple is not None, _VALUE_ERROR
 
         self = super().__new__(cls, cast(Iterable, as_tuple))
         # self.axes is set in __new__ instead of __init__ so that pickling/unpickling
@@ -126,14 +126,14 @@ class VecInt(tuple):
         Returns a new ND Vector from a string representation.
 
         Args:
-            string (str): The string representation of the vector.
+        - string (str): The string representation of the vector.
 
         Returns:
-            VecInt: The new vector.
+        - VecInt: The new vector.
         """
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
-    def with_replaced(self: T, index: int, new_element: int) -> T:
+    def with_replaced(self: _T, index: int, new_element: int) -> _T:
         """Returns a new ND Vector with a replaced element at a given index."""
 
         return self.__class__(
@@ -169,10 +169,10 @@ class VecInt(tuple):
         Checks if all elements in the vector are positive.
 
         Args:
-            strictly_positive (bool): If True, checks if all elements are strictly positive.
+        - strictly_positive (bool): If True, checks if all elements are strictly positive.
 
         Returns:
-            bool: True if all elements are positive, False otherwise.
+        - bool: True if all elements are positive, False otherwise.
         """
         if strictly_positive:
             return all(i > 0 for i in self)
@@ -187,8 +187,8 @@ class VecInt(tuple):
         return all(element == first for element in self)
 
     def _element_wise(
-        self: T, other: Union[int, "VecIntLike"], fn: Callable[[int, Any], int]
-    ) -> T:
+        self: _T, other: Union[int, "VecIntLike"], fn: Callable[[int, Any], int]
+    ) -> _T:
         if isinstance(other, int):
             other_imported = VecInt.full(other, axes=self.axes)
         else:
@@ -206,39 +206,39 @@ class VecInt(tuple):
     # Note: When adding regular tuples the first tuple is extended with the second tuple.
     # For VecInt we want to add the elements at the same index.
     # Do not add VecInt to plain tuple! Hence the type:ignore)
-    def __add__(self: T, other: Union[int, "VecIntLike"]) -> T:  # type: ignore[override]
+    def __add__(self: _T, other: Union[int, "VecIntLike"]) -> _T:  # type: ignore[override]
         return self._element_wise(other, add)
 
-    def __sub__(self: T, other: Union[int, "VecIntLike"]) -> T:
+    def __sub__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         return self._element_wise(other, sub)
 
     # Note: When multiplying regular tuples with an int those are repeated,
     # which is a different behavior in the superclass! Hence the type:ignore.
-    def __mul__(self: T, other: Union[int, "VecIntLike"]) -> T:  # type: ignore[override]
+    def __mul__(self: _T, other: Union[int, "VecIntLike"]) -> _T:  # type: ignore[override]
         return self._element_wise(other, mul)
 
-    def __floordiv__(self: T, other: Union[int, "VecIntLike"]) -> T:
+    def __floordiv__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         return self._element_wise(other, floordiv)
 
-    def __mod__(self: T, other: Union[int, "VecIntLike"]) -> T:
+    def __mod__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         return self._element_wise(other, mod)
 
-    def __neg__(self: T) -> T:
+    def __neg__(self: _T) -> _T:
         return self.__class__((-elem for elem in self), axes=self.axes)
 
-    def ceildiv(self: T, other: Union[int, "VecIntLike"]) -> T:
+    def ceildiv(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         """
         Returns a new VecInt with the ceil division of each element by the other.
         """
         return (self + other - 1) // other
 
-    def pairmax(self: T, other: Union[int, "VecIntLike"]) -> T:
+    def pairmax(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         """
         Returns a new VecInt with the maximum of each pair of elements from the two vectors.
         """
         return self._element_wise(other, max)
 
-    def pairmin(self: T, other: Union[int, "VecIntLike"]) -> T:
+    def pairmin(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         """
         Returns a new VecInt with the minimum of each pair of elements from the two vectors.
         """
@@ -255,32 +255,32 @@ class VecInt(tuple):
             f"{self.__class__.__name__}({','.join((str(element) for element in self))})"
         )
 
-    def add_or_none(self: T, other: Optional["VecInt"]) -> Optional[T]:
+    def add_or_none(self: _T, other: Optional["VecInt"]) -> Optional[_T]:
         """
         Adds two VecInts or returns None if the other is None.
 
         Args:
-            other (Optional[VecInt]): The other vector to add.
+        - other (Optional[VecInt]): The other vector to add.
 
         Returns:
-            Optional[VecInt]: The sum of the two vectors or None if the other is None.
+        - Optional[VecInt]: The sum of the two vectors or None if the other is None.
         """
         return None if other is None else self + other
 
     def moveaxis(
-        self: T, source: Union[int, List[int]], target: Union[int, List[int]]
-    ) -> T:
+        self: _T, source: Union[int, List[int]], target: Union[int, List[int]]
+    ) -> _T:
         """
         Allows to move one element at index `source` to another index `target`. Similar to
         np.moveaxis, this is *not* a swap operation but instead it moves the specified
         source so that the other elements move when necessary.
 
         Args:
-            source (Union[int, List[int]]): The index of the element to move.
-            target (Union[int, List[int]]): The index where the element should be moved to.
+        - source (Union[int, List[int]]): The index of the element to move.
+        - target (Union[int, List[int]]): The index where the element should be moved to.
 
         Returns:
-            VecInt: A new vector with the moved element.
+        - VecInt: A new vector with the moved element.
         """
 
         # Piggy-back on np.moveaxis by creating an auxiliary array where the indices 0, 1 and
@@ -298,10 +298,10 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 0.
 
         Args:
-            length (int): The length of the vector.
+        - axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-            VecInt: The new vector.
+        - VecInt: The new vector.
         """
         return cls((0 for _ in range(len(axes))), axes=axes)
 
@@ -311,10 +311,10 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 1.
 
         Args:
-            length (int): The length of the vector.
+        - axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-            VecInt: The new vector.
+        - VecInt: The new vector.
         """
         return cls((1 for _ in range(len(axes))), axes=axes)
 
@@ -324,11 +324,11 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to the same value.
 
         Args:
-            an_int (int): The value of the elements.
-            length (int): The length of the vector.
+        - an_int (int): The value to set all elements to.
+        - axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-            VecInt: The new vector.
+        - VecInt: The new vector.
         """
         return cls((an_int for _ in range(len(axes))), axes=axes)
 
