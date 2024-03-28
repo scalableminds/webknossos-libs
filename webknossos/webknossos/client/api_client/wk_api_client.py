@@ -7,6 +7,7 @@ from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
     ApiDataStoreToken,
     ApiFolderWithParent,
@@ -38,7 +39,7 @@ class WkApiClient(AbstractApiClient):
         base_wk_url: str,
         timeout_seconds: float,
         headers: Optional[Dict[str, str]] = None,
-        webknossos_api_version: int = 5,
+        webknossos_api_version: int = 6,
     ):
         super().__init__(timeout_seconds, headers)
         self.webknossos_api_version = webknossos_api_version
@@ -97,11 +98,11 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{organization_name}/{dataset_name}/sharingToken"
         return self._get_json(route, ApiSharingToken)
 
-    def dataset_assert_new_name_is_valid(
+    def dataset_is_valid_new_name(
         self, organization_name: str, dataset_name: str
-    ) -> None:
+    ) -> ApiDatasetIsValidNewNameResponse:
         route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
-        self._get(route)
+        return self._get_json(route, ApiDatasetIsValidNewNameResponse)
 
     def datastore_list(self) -> List[ApiDataStore]:
         route = "/datastores"

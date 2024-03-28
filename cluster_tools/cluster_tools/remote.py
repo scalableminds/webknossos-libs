@@ -1,4 +1,5 @@
 """Tools for executing remote commands."""
+
 import logging
 import os
 import sys
@@ -71,7 +72,7 @@ def worker(
                 assert len(unpickled_tuple) == 5, "Unexpected encoding"
                 fun, args, kwargs, meta_data, output_pickle_path = unpickled_tuple
 
-        if type(fun) == str:
+        if isinstance(fun, str):
             with open(fun, "rb") as function_file:
                 fun = pickling.load(function_file, custom_main_path)
 
