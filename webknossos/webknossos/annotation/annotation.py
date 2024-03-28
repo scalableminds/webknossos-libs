@@ -19,6 +19,7 @@ annotation data programmatically is discouraged therefore.
 """
 
 import json
+import logging
 import re
 import warnings
 from contextlib import contextmanager, nullcontext
@@ -45,11 +46,11 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
 import attr
+from cluster_tools.executor_protocol import Executor
 from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
-from cluster_tools.executor_protocol import Executor
 
 from ..dataset import (
     SEGMENTATION_CATEGORY,
@@ -65,6 +66,8 @@ from ..geometry import BoundingBox, Vec3Int
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, time_since_epoch_in_ms, warn_deprecated
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
+
+logger = logging.getLogger(__name__)
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
@@ -512,6 +515,9 @@ class Annotation:
         volume_layer_name: Optional[str] = None,
         executor: Optional[Executor] = None,
     ) -> None:
+        """
+        Merge the volume annotation with the fallback layer.
+        """
         annotation_volumes = list(self.get_volume_layer_names())
 
         output_dataset = Dataset(
@@ -546,7 +552,7 @@ class Annotation:
             )
 
             if volume_layer.zip is None:
-                logging.info("No volume annotation found. Copy fallback layer.")
+                logger.info("No volume annotation found. Copy fallback layer.")
                 with get_executor_for_args(args=None, executor=executor) as executor:
                     output_dataset.add_copy_layer(
                         fallback_layer, compress=True, executor=executor
@@ -554,8 +560,11 @@ class Annotation:
 
             else:
                 tmp_annotation_layer_name = f"{self.name}-TMP"
-                logging.info(
-                    f"Unpack annotation layer {volume_layer_name} temporarily in {output_dataset.name} as {tmp_annotation_layer_name}"
+                logger.info(
+                    "Unpack annotation layer %s temporarily in %s as %s",
+                    volume_layer_name,
+                    output_dataset.name,
+                    tmp_annotation_layer_name,
                 )
                 # NOTE(erjel): Cannot use "temporary_volume_layer_copy" here, since tmp folders
                 # might not be accessible from slurm compute nodes.
@@ -568,16 +577,21 @@ class Annotation:
                 input_annotation_mag = input_annotation_layer.get_finest_mag()
                 fallback_mag = fallback_layer.get_mag(input_annotation_mag.mag)
 
-                logging.info(
-                    f"Create layer {fallback_layer.name} in {output_dataset.path}"
+                logger.info(
+                    "Create layer %s in %s",
+                    fallback_layer.name,
+                    output_dataset.path,
                 )
                 output_layer = output_dataset.add_layer_like(
                     fallback_layer, fallback_layer.name
                 )
 
                 with get_executor_for_args(args=None, executor=executor) as executor:
-                    logging.info(
-                        f"Copy Mag {fallback_mag.mag} from {fallback_layer.path} to {output_layer.path}"
+                    logger.info(
+                        "Copy Mag %s from %s to %s",
+                        fallback_mag.mag,
+                        fallback_layer.path,
+                        output_layer.path,
                     )
                     output_mag = output_layer.add_copy_mag(
                         fallback_mag,
@@ -585,7 +599,7 @@ class Annotation:
                         executor=executor,
                     )
 
-                    merge_mags(output_mag, input_annotation_mag, executor)
+                    output_mag.merge_with_view(input_annotation_mag, executor)
 
                 logging.info("Delete temporary annotation layer")
                 output_dataset.delete_layer(tmp_annotation_layer_name)
@@ -710,9 +724,9 @@ class Annotation:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
-            assert volume_layer_id not in [
-                i.id for i in self._volume_layers
-            ], f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
+            assert (
+                volume_layer_id not in [i.id for i in self._volume_layers]
+            ), f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
         fallback_layer_name: Optional[str]
         if isinstance(fallback_layer, Layer):
             assert (

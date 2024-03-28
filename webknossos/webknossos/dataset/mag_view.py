@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from upath import UPath
-
 from cluster_tools import Executor
+from rich.progress import track
+from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -409,14 +409,14 @@ class MagView(View):
         logging.info("Scan disk for annotation shards.")
         bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
 
-        logging.info(f"Grouping {len(bboxes)} bboxes according to output shards.")
+        logging.info("Grouping %s bboxes according to output shards.", len(bboxes))
         shards_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(
             bboxes, Mag(self.info.shard_shape * self.mag)
         )
 
         args = [(other, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
 
-        logging.info(f"Merging {len(args)} shards.")
+        logging.info("Merging %s shards.", len(args))
         executor.map(self.merge_chunk, args)
 
     def merge_chunk(
