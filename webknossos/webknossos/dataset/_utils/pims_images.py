@@ -590,7 +590,7 @@ def get_valid_pims_suffixes() -> Set[str]:
 
 
 def get_valid_bioformats_suffixes() -> Set[str]:
-    # Added the most present suffixes that are implemnted in bioformats
+    # Added the most present suffixes that are implemented in bioformats
     return {
         "dcm",
         "dicom",
