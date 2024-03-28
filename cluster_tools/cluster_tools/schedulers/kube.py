@@ -1,4 +1,5 @@
 """Abstracts access to a Kubernetes cluster via its Python library."""
+
 import os
 import re
 import sys
@@ -18,11 +19,12 @@ def _volume_name_from_path(path: Path) -> str:
 
 
 def _deduplicate_mounts(mounts: List[Path]) -> List[Path]:
-    output = []
     unique_mounts = set(mounts)
-    for mount in unique_mounts:
-        if not any(m in mount.parents for m in unique_mounts):
-            output.append(mount)
+    output = [
+        mount
+        for mount in unique_mounts
+        if not any(m in mount.parents for m in unique_mounts)
+    ]
     return output
 
 
@@ -101,7 +103,11 @@ class KubernetesExecutor(ClusterExecutor):
             return job_id
         return cls.get_jobid_with_index(job_id, job_index)
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
+    def inner_handle_kill(
+        self,
+        *args: Any,  # noqa: ARG002 Unused method argument: `args`
+        **kwargs: Any,  # noqa: ARG002 Unused method argument: `kwargs`
+    ) -> None:
         job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
         print(
@@ -134,7 +140,7 @@ class KubernetesExecutor(ClusterExecutor):
         self,
         cmdline: str,
         job_name: Optional[str] = None,
-        additional_setup_lines: Optional[List[str]] = None,
+        additional_setup_lines: Optional[List[str]] = None,  # noqa:  ARG002 Unused method argument: `additional_setup_lines`
         job_count: Optional[int] = None,
     ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
@@ -187,9 +193,9 @@ class KubernetesExecutor(ClusterExecutor):
                             "cluster-tools.scalableminds.com/job-is-array-job": str(
                                 is_array_job
                             ),
-                            "cluster-tools.scalableminds.com/job-name": job_name
-                            if job_name is not None
-                            else "",
+                            "cluster-tools.scalableminds.com/job-name": (
+                                job_name if job_name is not None else ""
+                            ),
                         }
                     ),
                     spec=kubernetes_models.V1PodSpec(

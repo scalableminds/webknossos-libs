@@ -2,9 +2,8 @@
 set -eEuo pipefail
 
 if [ $# -eq 1 ] && [ "$1" = "check" ]; then
-    poetry run black --check .
-    poetry run isort --check-only .
+    poetry run ruff format --check .
 else
-    poetry run isort .
-    poetry run black .
+    poetry run ruff check --select I --fix . # format the imports 
+    poetry run ruff format .
 fi
