@@ -65,7 +65,7 @@ def main(
         ),
     ] = None,
 ) -> None:
-    """Merges a given WEBKNOSSOS annotation."""
+    """Merges a given WEBKNOSSOS annotation with a volume annotation of a fallback layer."""
 
     executor_args = Namespace(
         jobs=jobs,
@@ -73,10 +73,8 @@ def main(
         job_resources=job_resources,
     )
 
-    annotation = Annotation.load(source_annotation)
-
     with get_executor_for_args(args=executor_args) as executor:
-        annotation.merge_fallback_layer(
+        Annotation.load(source_annotation).merge_fallback_layer(
             target=target,
             dataset_directory=dataset_directory,
             volume_layer_name=volume_layer_name,

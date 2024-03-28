@@ -8,7 +8,6 @@ from uuid import uuid4
 
 import numpy as np
 from cluster_tools import Executor
-from rich.progress import track
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -422,12 +421,12 @@ class MagView(View):
     def merge_chunk(
         self, args: Tuple["MagView", BoundingBox, List[BoundingBox]]
     ) -> None:
-        mag_in, shard, bboxes = args
+        other, shard, bboxes = args
         data_buffer = self.read(absolute_bounding_box=shard)[0]
 
-        for bbox in track(bboxes, description="Processing..."):
-            read_data = mag_in.read(absolute_bounding_box=bbox)[0]
-            data_buffer[bbox.offset(-shard.topleft).in_mag(mag_in.mag).to_slices()] = (
+        for bbox in bboxes:
+            read_data = other.read(absolute_bounding_box=bbox)[0]
+            data_buffer[bbox.offset(-shard.topleft).in_mag(other.mag).to_slices()] = (
                 read_data
             )
 
