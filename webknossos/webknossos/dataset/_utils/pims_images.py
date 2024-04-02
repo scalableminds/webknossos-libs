@@ -24,6 +24,10 @@ import numpy as np
 from natsort import natsorted
 from numpy.typing import DTypeLike
 
+from webknossos.geometry.bounding_box import BoundingBox
+from webknossos.geometry.nd_bounding_box import NDBoundingBox
+
+# pylint: disable=unused-import
 try:
     from .pims_czi_reader import PimsCziReader
 except ImportError:
@@ -45,7 +49,7 @@ except ImportError:
     pass
 
 
-from ...geometry.vec3_int import Vec3Int
+from ...geometry.vec_int import VecInt
 from ..mag_view import MagView
 
 try:
@@ -67,7 +71,6 @@ def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
 
 class PimsImages:
     dtype: DTypeLike
-    expected_shape: Vec3Int
     num_channels: int
 
     def __init__(
@@ -86,11 +89,11 @@ class PimsImages:
         """
         During initialization the pims objects are examined and configured to produce
         ndarrays that follow the following form:
-        (self._iter_dim, *self._img_dims)
-        self._iter_dim can be either "z", "t" or "" if the image is 2D.
+        (self._iter_axes, *self._bundle_axis)
+        self._iter_axes can be a list of different axes or an empty list if the image is 2D.
         In the latter case, the inner 2D image is still wrapped in a single-element list
         by _open_images() to be consistent with 3D images.
-        self._img_dims can consist of "x", "y" and "c", where "c" is optional and must be
+        self._bundle_axis can consist of "x", "y" and "c", where "c" is optional and must be
         at the start or the end, so one of "xy", "yx", "xyc", "yxc", "cxy", "cyx".
 
         The part "IDENTIFY AXIS ORDER" figures out (self._iter_dim, *self._img_dims)
@@ -116,9 +119,10 @@ class PimsImages:
         self._use_bioformats = use_bioformats
 
         ## attributes that will be set in __init__()
-        self._iter_dim = None
+        # _bundle_axes
+        self._iter_axes = None
+        self._iter_loop_size = None
         self._possible_layers = {}
-        # _img_dims
 
         ## attributes only for pims.FramesSequenceND instances:
         # _default_coords
@@ -126,7 +130,6 @@ class PimsImages:
 
         ## attributes that will also be set in __init__()
         # dtype
-        # expected_shape
         # num_channels
         # _first_n_channels
 
@@ -141,10 +144,6 @@ class PimsImages:
             self.dtype = images.dtype
 
             if isinstance(images, pims.FramesSequenceND):
-                assert all(
-                    axis in "xyzct" for axis in images.axes
-                ), f"Found unknown axes {set(images.axes) - set('xyzct')}"
-
                 self._default_coords = {}
                 self._init_c_axis = False
                 if isinstance(images, pims.imageio_reader.ImageIOReader):
@@ -163,34 +162,49 @@ class PimsImages:
                     if len(available_czi_channels) > 1:
                         self._possible_layers["czi_channel"] = available_czi_channels
 
+                # An image slice should always consist of a 2D image. If there are multiple channels
+                # the data of each channel is part of the image slices. Possible shapes of an image
+                # slice are (#y_shape, #x_shape), (1, #y_shape, #x_shape) or (3, #y_shape, #x_shape).
                 if images.sizes.get("c", 1) > 1:
-                    self._img_dims = "cyx"
+                    self._bundle_axes = ["c", "y", "x"]
                 else:
                     if "c" in images.axes:
+                        # When c-axis is not in _bundle_axes and _iter_axes its value at coordinate 0
+                        # should be returned
                         self._default_coords["c"] = 0
-                    self._img_dims = "yx"
+                    self._bundle_axes = ["y", "x"]
 
-                self._iter_dim = ""
+                # All other axes are used to iterate over them. The last one is iterated the fastest.
+                self._iter_axes = list(
+                    set(images.axes).difference({*self._bundle_axes, "c", "z"})
+                )
+                if "z" in images.axes:
+                    self._iter_axes.append("z")
 
-                if images.sizes.get("z", 1) > 1:
-                    self._iter_dim = "z"
-                elif "z" in images.axes:
-                    self._default_coords["z"] = 0
+                if self._timepoint is not None:
+                    # if a timepoint is given, PimsImages should only generate image slices for that timepoint
+                    if "t" in self._iter_axes:
+                        self._iter_axes.remove("t")
+                        self._default_coords["t"] = self._timepoint
 
-                if timepoint is None:
-                    if images.sizes.get("t", 1) > 1:
-                        if self._iter_dim == "":
-                            self._iter_dim = "t"
-                        else:
-                            self._default_coords["t"] = 0
-                            self._possible_layers["timepoint"] = list(
-                                range(0, images.sizes["t"])
-                            )
-                    elif "t" in images.axes:
-                        self._default_coords["t"] = 0
-                else:
-                    assert "t" in images.axes
-                    self._default_coords["t"] = timepoint
+                if len(self._iter_axes) > 1:
+                    iter_size = 1
+                    self._iter_loop_size = dict()
+                    for axis, other_axis in zip(
+                        self._iter_axes[-1:0:-1], self._iter_axes[-2::-1]
+                    ):
+                        # Creates a dict that contains the size of the loop for each axis
+                        # the axes are identified by their index in the _iter_axes list
+                        # the last axis is the fastest iterating axis, therfore the size of the loop
+                        # for the last axis is 1. For all other axes it is the product of all previous axes sizes.
+                        # self._iter_axes[-1:0:-1] is a reversed copy of self._iter_axes without the last element
+                        # e.g. [1,2,3,4] -> [4,3,2]
+                        # self._iter_axes[-2::-1] is a reversed copy of self._iter_axes without the first element
+                        # e.g. [1,2,3,4] -> [3,2,1]
+                        self._iter_loop_size[other_axis] = (
+                            iter_size := iter_size * images.sizes[axis]
+                        )
+
             else:
                 # Fallback for generic pims classes that do not name their
                 # dimensions as pims.FramesSequenceND does:
@@ -201,31 +215,31 @@ class PimsImages:
 
                 if len(images.shape) == 2:
                     # Assume yx
-                    self._img_dims = "yx"
-                    self._iter_dim = ""
+                    self._bundle_axes = ["y", "x"]
+                    self._iter_axes = []
                 elif len(images.shape) == 3:
                     # Assume yxc, cyx or zyx
                     if _assume_color_channel(images.shape[2], images.dtype):
-                        self._img_dims = "yxc"
-                        self._iter_dim = ""
+                        self._bundle_axes = ["y", "x", "c"]
+                        self._iter_axes = []
                     elif images.shape[0] == 1 or (
                         _allow_channels_first
                         and _assume_color_channel(images.shape[0], images.dtype)
                     ):
-                        self._img_dims = "cyx"
-                        self._iter_dim = ""
+                        self._bundle_axes = ["c", "y", "x"]
+                        self._iter_axes = []
                     else:
-                        self._img_dims = "yx"
-                        self._iter_dim = "z"
+                        self._bundle_axes = ["y", "x"]
+                        self._iter_axes = ["z"]
                 elif len(images.shape) == 4:
                     # Assume zcyx or zyxc
                     if images.shape[1] == 1 or _assume_color_channel(
                         images.shape[1], images.dtype
                     ):
-                        self._img_dims = "cyx"
+                        self._bundle_axes = ["c", "y", "x"]
                     else:
-                        self._img_dims = "yxc"
-                    self._iter_dim = "z"
+                        self._bundle_axes = ["y", "x", "c"]
+                    self._iter_axes = ["z"]
                 elif len(images.shape) == 5:
                     # Assume tzcyx or tzyxc
                     # t has to be constant for this reader to obtain 4D image
@@ -236,13 +250,15 @@ class PimsImages:
                         raise RuntimeError(
                             f"Got {len(images.shape)} axes for the images after "
                             + "removing time dimension, can only map to 3D+channels."
+                            + "To import image with more dimensions use dataformat"
+                            + "Zarr3 and set use_bioformats=True."
                         )
 
                     if _assume_color_channel(images.shape[2], images.dtype):
-                        self._img_dims = "cyx"
+                        self._bundle_axes = ["c", "y", "x"]
                     else:
-                        self._img_dims = "yxc"
-                    self._iter_dim = "z"
+                        self._bundle_axes = ["y", "x", "c"]
+                    self._iter_axes = ["z"]
                     self._timepoint = 0
                     if images.shape[0] > 1:
                         self._possible_layers["timepoint"] = list(
@@ -251,36 +267,29 @@ class PimsImages:
                 else:
                     raise RuntimeError(
                         f"Got {len(images.shape)} axes for the images, "
-                        + "cannot map to 3D+channels+timepoints."
+                        + "but don't have axes information. Try to open "
+                        + "an N-dimensional image file with use_bioformats="
+                        + "True."
                     )
 
-        #############################
-        # IDENTIFY SHAPE & CHANNELS #
-        #############################
+        #########################
+        # IDENTIFY NUM_CHANNELS #
+        #########################
 
         with self._open_images() as images:
-            if isinstance(images, list):
-                images_shape = (len(images),) + cast(
-                    pims.FramesSequence, images[0]
-                ).shape
-            else:
-                images_shape = images.shape
-            c_index = self._img_dims.find("c")
-            if c_index == -1:
-                self.num_channels = 1
-            else:
-                # Since images_shape contains the first dimension iter_dim,
-                # we need to offset the index by one before accessing the images_shape.
-                # images_shape corresponds to (z, *_img_dims)
+            try:
+                c_index = self._bundle_axes.index("c")
+                if isinstance(images, list):
+                    images_shape = (len(images),) + cast(
+                        pims.FramesSequence, images[0]
+                    ).shape
+                else:
+                    images_shape = images.shape  # pylint: disable=no-member
+
                 self.num_channels = images_shape[c_index + 1]
 
-            x_index = self._img_dims.find("x") + 1
-            y_index = self._img_dims.find("y") + 1
-            if swap_xy:
-                x_index, y_index = y_index, x_index
-            self.expected_shape = Vec3Int(
-                images_shape[x_index], images_shape[y_index], images_shape[0]
-            )
+            except ValueError:
+                self.num_channels = 1
 
         self._first_n_channels = None
         if self._channel is not None:
@@ -421,13 +430,13 @@ class PimsImages:
         self,
     ) -> Iterator[Union[pims.FramesSequence, List[pims.FramesSequence]]]:
         """
-        This yields well-defined images of the form (self._iter_dim, *self._img_dims),
+        This yields well-defined images of the form (self._iter_axes, *self._bundle_axes),
         after IDENTIFY AXIS ORDER of __init__() has run.
         For a 2D image this is achieved by wrapping it in a list.
         """
         images_context_manager: Optional[ContextManager]
         with warnings.catch_warnings():
-            if isinstance(self._original_images, pims.FramesSequence):
+            if isinstance(self._original_images, pims.FramesSequenceND):
                 images_context_manager = nullcontext(enter_result=self._original_images)
             else:
                 exceptions: List[Exception] = []
@@ -457,7 +466,7 @@ class PimsImages:
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
-                    if hasattr(self, "_img_dims"):
+                    if hasattr(self, "_bundle_axes"):
                         # first part of __init__() has happened
                         images.default_coords.update(self._default_coords)
                         if self._init_c_axis and "c" not in images.sizes:
@@ -469,29 +478,41 @@ class PimsImages:
                                 images._get_frame_dict[key + ("c",)] = (
                                     images._get_frame_dict.pop(key)
                                 )
-                        images.bundle_axes = self._img_dims
-                        images.iter_axes = self._iter_dim or ""
+                            self._bundle_axes.remove("c")
+                            self._bundle_axes.append("c")
+                        images.bundle_axes = self._bundle_axes
+                        images.iter_axes = self._iter_axes
                 else:
                     if self._timepoint is not None:
                         images = images[self._timepoint]
-                    if self._iter_dim == "":
+                        if self._iter_axes and "t" in self._iter_axes:
+                            self._iter_axes.remove("t")
+                    if self._iter_axes == []:
                         # add outer list to wrap 2D images as 3D-like structure
                         images = [images]
                 yield images
 
     def copy_to_view(
         self,
-        args: Tuple[int, int],
+        args: Union[BoundingBox, NDBoundingBox],
         mag_view: MagView,
         is_segmentation: bool,
         dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
-        args is expected to be the start and end of the z-range, meant for usage with an executor.
+        args is expected to be a (ND)BoundingBox the start and end of the z-range, meant for usage with an executor.
         copy_to_view returns an iterable of image shapes and largest segment ids. When using this
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
-        z_start, z_end = args
+        relative_bbox = args
+
+        assert all(
+            size == 1
+            for size, axis in zip(relative_bbox.size, relative_bbox.axes)
+            if axis not in ("x", "y", "z")
+        ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
+
+        z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
         max_id: Optional[int]
         if is_segmentation:
@@ -500,10 +521,22 @@ class PimsImages:
             max_id = None
 
         with self._open_images() as images:
+            if self._iter_axes is not None and self._iter_loop_size is not None:
+                # select the range of images that represents one xyz combination
+                lower_bounds = sum(
+                    self._iter_loop_size[axis_name]
+                    * relative_bbox.get_bounds(axis_name)[0]
+                    for axis_name in self._iter_axes[:-1]
+                )
+                upper_bounds = lower_bounds + relative_bbox.get_shape("z")
+                images = images[lower_bounds:upper_bounds]
             if self._flip_z:
-                images = images[::-1]
+                images = images[::-1]  # pylint: disable=unsubscriptable-object
+
             with mag_view.get_buffered_slice_writer(
-                relative_offset=(0, 0, z_start * mag_view.mag.z),
+                # Previously only z_start and its end were important, now the slice writer needs to know
+                # which axis is currently written.
+                relative_bounding_box=relative_bbox,
                 buffer_size=mag_view.info.chunk_shape.z,
                 # copy_to_view is typically used in a multiprocessing-context. Therefore the
                 # buffered slice writer should not update the json file to avoid race conditions.
@@ -512,15 +545,17 @@ class PimsImages:
                 for image_slice in images[z_start:z_end]:
                     image_slice = np.array(image_slice)
                     # place channels first
-                    if self._img_dims.endswith("c"):
-                        image_slice = np.moveaxis(image_slice, source=-1, destination=0)
-                    # ensure the last two axes are xy:
-                    if ("yx" in self._img_dims and not self._swap_xy) or (
-                        "xy" in self._img_dims and self._swap_xy
-                    ):
-                        image_slice = image_slice.swapaxes(-1, -2)
-
-                    if "c" in self._img_dims:
+                    if "c" in self._bundle_axes:
+                        if hasattr(self, "_init_c_axis") and self._init_c_axis:
+                            # Bugfix for ImageIOReader which misses channel axis sometimes,
+                            # assuming channels come last. _init_c_axis is set in __init__().
+                            # This might get fixed via
+                            image_slice = image_slice[0]
+                        image_slice = np.moveaxis(
+                            image_slice,
+                            source=self._bundle_axes.index("c"),
+                            destination=0,
+                        )
                         if self._channel is not None:
                             image_slice = image_slice[self._channel : self._channel + 1]
                         elif self._first_n_channels is not None:
@@ -540,6 +575,10 @@ class PimsImages:
 
                     if max_id is not None:
                         max_id = max(max_id, image_slice.max())
+
+                    if self._swap_xy is False:
+                        image_slice = np.moveaxis(image_slice, -1, -2)
+
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
 
@@ -550,6 +589,78 @@ class PimsImages:
             return None
         else:
             return self._possible_layers
+
+    @property
+    def expected_bbox(self) -> NDBoundingBox:
+        # replaces the previous expected_shape to enable n-dimensional input files
+        with self._open_images() as images:
+            if isinstance(images, pims.FramesSequenceND):
+                axes = images.axes
+                images_shape = tuple(images.sizes[axis] for axis in axes)
+            else:
+                if isinstance(images, list):
+                    images_shape = (len(images),) + cast(
+                        pims.FramesSequence, images[0]
+                    ).shape
+
+                else:
+                    images_shape = images.shape  # pylint: disable=no-member
+                if len(images_shape) == 3:
+                    axes = ("z", "y", "x")
+                else:
+                    axes = ("z", "c", "y", "x")
+
+            if self._iter_loop_size is None:
+                # There is no or only one element in self._iter_axes, so a 3D bounding box is sufficient.
+                x_index, y_index = (
+                    axes.index("x"),
+                    axes.index("y"),
+                )
+                if self._iter_axes:
+                    try:
+                        # In case the naming of the third axis is not "z",
+                        # it is still considered as the z-axis.
+                        z_index = axes.index(self._iter_axes[0])
+                    except ValueError:
+                        z_index = axes.index("z")
+                    z_shape = images_shape[z_index]
+                else:
+                    z_shape = 1
+                if self._swap_xy:
+                    x_index, y_index = y_index, x_index
+                return BoundingBox(
+                    (0, 0, 0),
+                    (images_shape[x_index], images_shape[y_index], z_shape),
+                )
+            else:
+                if isinstance(images, pims.FramesSequenceND):
+                    axes_names = (self._iter_axes or []) + [
+                        axis for axis in self._bundle_axes if axis != "c"
+                    ]
+                    axes_sizes = [
+                        images.sizes[axis]  # pylint: disable=no-member
+                        for axis in axes_names
+                    ]
+                    axes_index = list(range(1, len(axes_names) + 1))
+                    topleft = VecInt.zeros(tuple(axes_names))
+
+                    if self._swap_xy:
+                        x_index, y_index = axes_names.index("x"), axes_names.index("y")
+                        axes_sizes[x_index], axes_sizes[y_index] = (
+                            axes_sizes[y_index],
+                            axes_sizes[x_index],
+                        )
+
+                    return NDBoundingBox(
+                        topleft,
+                        VecInt(axes_sizes, axes=axes_names),
+                        axes_names,
+                        VecInt(axes_index, axes=axes_names),
+                    )
+
+                raise ValueError(
+                    "It seems as if you try to load an N-dimensional image from 2D images. This is currently not supported."
+                )
 
 
 T = TypeVar("T", bound=Tuple[int, ...])
@@ -633,4 +744,4 @@ def has_image_z_dimension(
         flip_z=False,
     )
 
-    return pims_images.expected_shape.z > 1
+    return pims_images.expected_bbox.get_shape("z") > 1
