@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Generator, List, Optional, Type
 import numpy as np
 import psutil
 
+from webknossos.geometry.nd_bounding_box import NDBoundingBox
+
 from ...geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
@@ -43,6 +45,8 @@ class BufferedSliceWriter:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_writer()`"""
@@ -52,7 +56,15 @@ class BufferedSliceWriter:
         self.dtype = self.view.get_dtype()
         self.use_logging = use_logging
         self.json_update_allowed = json_update_allowed
-        if offset is None and relative_offset is None and absolute_offset is None:
+        self.bbox: NDBoundingBox
+
+        if (
+            offset is None
+            and relative_offset is None
+            and absolute_offset is None
+            and relative_bounding_box is None
+            and absolute_bounding_box is None
+        ):
             relative_offset = Vec3Int.zeros()
         if offset is not None:
             warnings.warn(
@@ -61,25 +73,28 @@ class BufferedSliceWriter:
                 DeprecationWarning,
             )
         self.offset = None if offset is None else Vec3Int(offset)
-        self.relative_offset = (
-            None if relative_offset is None else Vec3Int(relative_offset)
-        )
-        self.absolute_offset = (
-            None if absolute_offset is None else Vec3Int(absolute_offset)
-        )
+
+        if relative_offset is not None:
+            self.bbox = BoundingBox(
+                self.view.bounding_box.topleft + relative_offset, Vec3Int.zeros()
+            )
+
+        if absolute_offset is not None:
+            self.bbox = BoundingBox(absolute_offset, Vec3Int.zeros())
+
+        if relative_bounding_box is not None:
+            self.bbox = relative_bounding_box.offset(self.view.bounding_box.topleft)
+
+        if absolute_bounding_box is not None:
+            self.bbox = absolute_bounding_box
+
+        assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
         self.dimension = dimension
 
-        effective_offset = Vec3Int.full(0)
-        if self.relative_offset is not None:
-            effective_offset = self.view.bounding_box.topleft + self.relative_offset
-
-        if self.absolute_offset is not None:
-            effective_offset = self.absolute_offset
-
-        view_chunk_depth = self.view.info.chunk_shape[self.dimension]
+        view_chunk_depth = self.view.info.chunk_shape[dimension]
         if (
-            effective_offset is not None
-            and effective_offset[self.dimension] % view_chunk_depth != 0
+            self.bbox is not None
+            and self.bbox.topleft_xyz[self.dimension] % view_chunk_depth != 0
         ):
             warnings.warn(
                 "[WARNING] Using an offset that doesn't align with the datataset's chunk size, "
@@ -90,8 +105,6 @@ class BufferedSliceWriter:
                 "[WARNING] Using a buffer size that doesn't align with the datataset's chunk size, "
                 + "will slow down the buffered slice writer.",
             )
-
-        assert 0 <= dimension <= 2
 
         self.slices_to_write: List[np.ndarray] = []
         self.current_slice: Optional[int] = None
@@ -129,52 +142,83 @@ class BufferedSliceWriter:
             max_width = max(section.shape[-2] for section in self.slices_to_write)
             max_height = max(section.shape[-1] for section in self.slices_to_write)
             channel_count = self.slices_to_write[0].shape[0]
-
             buffer_depth = min(self.buffer_size, len(self.slices_to_write))
-            buffer_bbox = BoundingBox((0, 0, 0), (max_width, max_height, buffer_depth))
-
-            shard_dimensions = self.view._get_file_dimensions().moveaxis(
-                -1, self.dimension
+            buffer_start = Vec3Int.zeros().with_replaced(
+                self.dimension, self.buffer_start_slice
             )
+
+            bbox = self.bbox.with_size_xyz(
+                Vec3Int(max_width, max_height, buffer_depth).moveaxis(
+                    -1, self.dimension
+                )
+            ).offset(buffer_start)
+
+            shard_dimensions = self.view._get_file_dimensions()
             chunk_size = Vec3Int(
                 min(shard_dimensions[0], max_width),
                 min(shard_dimensions[1], max_height),
                 buffer_depth,
-            )
-            for chunk_bbox in buffer_bbox.chunk(chunk_size):
-                info(f"Writing chunk {chunk_bbox}")
-                width, height, depth = chunk_bbox.size
+            ).moveaxis(-1, self.dimension)
+            for chunk_bbox in bbox.chunk(chunk_size):
+                info(f"Writing chunk {chunk_bbox}.")
+
                 data = np.zeros(
-                    (channel_count, width, height, depth),
+                    (channel_count, *chunk_bbox.size),
                     dtype=self.slices_to_write[0].dtype,
                 )
+                section_topleft = Vec3Int(
+                    (chunk_bbox.topleft_xyz - bbox.topleft_xyz).moveaxis(
+                        self.dimension, -1
+                    )
+                )
+                section_bottomright = Vec3Int(
+                    (chunk_bbox.bottomright_xyz - bbox.topleft_xyz).moveaxis(
+                        self.dimension, -1
+                    )
+                )
+
+                z_index = chunk_bbox.index_xyz[self.dimension]
 
                 z = 0
                 for section in self.slices_to_write:
                     section_chunk = section[
                         :,
-                        chunk_bbox.topleft.x : chunk_bbox.bottomright.x,
-                        chunk_bbox.topleft.y : chunk_bbox.bottomright.y,
+                        section_topleft.x : section_bottomright.x,
+                        section_topleft.y : section_bottomright.y,
                     ]
+                    # Section chunk includes the axes c, x, y. The remaining axes are added by considering
+                    # the length of the bbox. Since the bbox does not contain the channel, we subtract 2
+                    # instead of 3.
+                    section_chunk = section_chunk[
+                        (slice(None), slice(None), slice(None))
+                        + tuple(np.newaxis for _ in range(len(bbox) - 2))
+                    ]
+                    section_chunk = np.moveaxis(
+                        section_chunk,
+                        [1, 2],
+                        bbox.index_xyz[: self.dimension]
+                        + bbox.index_xyz[self.dimension + 1 :],
+                    )
+
+                    slice_tuple = (slice(None),) + tuple(
+                        slice(0, min(size1, size2))
+                        for size1, size2 in zip(
+                            chunk_bbox.size, section_chunk.shape[1:]
+                        )
+                    )
+
                     data[
-                        :, 0 : section_chunk.shape[-2], 0 : section_chunk.shape[-1], z
+                        slice_tuple[:z_index]
+                        + (slice(z, z + 1),)
+                        + slice_tuple[z_index + 1 :]
                     ] = section_chunk
 
                     z += 1
 
-                buffer_start = Vec3Int(
-                    chunk_bbox.topleft.x, chunk_bbox.topleft.y, self.buffer_start_slice
-                ).moveaxis(-1, self.dimension)
-                buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
-
-                data = np.moveaxis(data, -1, self.dimension + 1)
-
                 self.view.write(
                     data,
-                    offset=buffer_start.add_or_none(self.offset),
-                    relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
-                    absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
                     json_update_allowed=self.json_update_allowed,
+                    absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self.view._mag),
                 )
                 del data
 
