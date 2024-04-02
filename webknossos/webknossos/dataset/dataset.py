@@ -603,11 +603,16 @@ class Dataset:
         For more fine-grained control, please create an empty dataset and use
         `add_layer_from_images`.
         """
-        from ._utils.pims_images import get_valid_pims_suffixes
+        from ._utils.pims_images import (
+            get_valid_bioformats_suffixes,
+            get_valid_pims_suffixes,
+        )
 
         input_upath = UPath(input_path)
 
         valid_suffixes = get_valid_pims_suffixes()
+        if use_bioformats is not False:
+            valid_suffixes.update(get_valid_bioformats_suffixes())
 
         input_files = [
             i.relative_to(input_upath)
