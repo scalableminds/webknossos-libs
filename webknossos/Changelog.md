@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.16...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.14.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.16) - 2024-04-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...v0.14.16)
 
 ### Added
 - Add CLI tool for offline merging of zip annotations with fallback datasets. [#996](https://github.com/scalableminds/webknossos-libs/pull/996)
@@ -23,8 +33,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Replaced PyLint linter + black formatter with Ruff for development. [#1013](https://github.com/scalableminds/webknossos-libs/pull/1013)
 - The remote operations now use the WEBKNOSSOS API version 6. [#1018](https://github.com/scalableminds/webknossos-libs/pull/1018)
 - The conversion of 4D Tiff files to a Zarr3 Dataset is possible. NDBoundingBoxes and VecInt classes are introduced to support working with more than 3 dimensions. [#966](https://github.com/scalableminds/webknossos-libs/pull/966)
-
-### Fixed
 
 
 ## [0.14.15](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.15) - 2024-02-07
