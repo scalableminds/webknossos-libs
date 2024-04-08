@@ -50,7 +50,6 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
         layer_name="color",
         category="color",
         topleft=(100, 100, 55),
-        use_bioformats=True,
         data_format="zarr3",
         chunk_shape=(8, 8, 8),
         chunks_per_shard=(8, 8, 8),
