@@ -90,6 +90,7 @@ nav:
           - Dataset Examples:
               - webknossos-py/examples/dataset_usage.md
               - webknossos-py/examples/upload_tiff_stack.md
+              - webknossos-py/examples/upload_dicom_stack.md
               - webknossos-py/examples/upload_image_data.md
               - webknossos-py/examples/create_dataset_from_images.md
               - webknossos-py/examples/image_stack_to_dataset.md
@@ -97,6 +98,7 @@ nav:
               - webknossos-py/examples/download_tiff_stack.md
               - webknossos-py/examples/remote_datasets.md
               - webknossos-py/examples/zarr_and_dask.md
+              - webknossos-py/examples/convert_4d_tiff.md
           - Annotation Examples:
               - webknossos-py/examples/apply_merger_mode.md
               - webknossos-py/examples/learned_segmenter.md
@@ -112,8 +114,10 @@ nav:
           - Overview: api/webknossos.md
           - Geometry:
               - BoundingBox: api/webknossos/geometry/bounding_box.md
+              - NDBoundingBox: api/webknossos/geometry/nd_bounding_box.md
               - Mag: api/webknossos/geometry/mag.md
               - Vec3Int: api/webknossos/geometry/vec3_int.md
+              - VecInt: api/webknossos/geometry/vec_int.md
           - Dataset:
               - Dataset: api/webknossos/dataset/dataset.md
               - Layer: api/webknossos/dataset/layer.md
