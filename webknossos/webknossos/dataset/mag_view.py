@@ -445,7 +445,7 @@ class MagView(View):
         bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
 
         logging.info("Grouping %s bboxes according to output shards.", len(bboxes))
-        shards_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(
+        shards_with_bboxes = NDBoundingBox.group_boxes_with_aligned_mag(
             bboxes, Mag(self.info.shard_shape * self.mag)
         )
 
@@ -455,7 +455,7 @@ class MagView(View):
         executor.map(self.merge_chunk, args)
 
     def merge_chunk(
-        self, args: Tuple["MagView", BoundingBox, List[BoundingBox]]
+        self, args: Tuple["MagView", NDBoundingBox, List[NDBoundingBox]]
     ) -> None:
         other, shard, bboxes = args
         data_buffer = self.read(absolute_bounding_box=shard)[0]
