@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- The characters `@` and `$` are allowed within layer names now. [#1034](https://github.com/scalableminds/webknossos-libs/pull/1034)
 
 ### Fixed
 
