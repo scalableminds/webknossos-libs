@@ -109,9 +109,9 @@ _DATASET_URL_REGEX = re.compile(
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.
-_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_\-]+[A-Za-z0-9_\-\.]*$")
+_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$")
 # This regex matches any character that is not allowed in a layer name.
-_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_\-\.]")
+_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
