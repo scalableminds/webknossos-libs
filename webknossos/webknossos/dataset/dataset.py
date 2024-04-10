@@ -1264,43 +1264,26 @@ class Dataset:
             )
 
             args = []
-            bbox = layer.bounding_box
-            additional_axes = [
-                axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")
-            ]
-            additional_axes_shapes = tuple(
-                product(
-                    *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
+            if (
+                additional_axes := set(layer.bounding_box.axes).difference(
+                    "x", "y", "z"
                 )
-            )
-            if additional_axes and layer.data_format != DataFormat.Zarr3:
-                assert (
-                    len(additional_axes_shapes) == 1
+            ) and layer.data_format != DataFormat.Zarr3:
+                assert all(
+                    layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes
                 ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
 
                 # Convert NDBoundingBox to 3D BoundingBox
-                bbox = BoundingBox(
-                    bbox.topleft_xyz,
-                    bbox.size_xyz,
+                layer.bounding_box = BoundingBox(
+                    layer.bounding_box.topleft_xyz,
+                    layer.bounding_box.topleft_xyz,
                 )
-                expected_bbox = bbox
-                additional_axes = []
 
-            z_shape = bbox.get_shape("z")
-            bbox = bbox.with_topleft(VecInt.zeros(bbox.axes))
-            for z_start in range(0, z_shape, batch_size):
-                z_size = min(batch_size, z_shape - z_start)
-                z_bbox = bbox.with_bounds("z", z_start, z_size)
-                if not additional_axes:
-                    args.append(z_bbox)
-                else:
-                    for shape in additional_axes_shapes:
-                        reduced_bbox = z_bbox
-                        for index, axis in enumerate(additional_axes):
-                            reduced_bbox = reduced_bbox.with_bounds(
-                                axis, shape[index], 1
-                            )
-                        args.append(reduced_bbox)
+            layer_chunk_size = layer.bounding_box.size_xyz.with_z(batch_size)
+            for bbox in layer.bounding_box.chunk(
+                layer_chunk_size, Vec3Int(1, 1, batch_size)
+            ):
+                args.append(bbox)
 
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
