@@ -35,7 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.geometry.vec_int import VecInt, VecIntLike
+from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -1243,11 +1243,17 @@ class Dataset:
             )
 
             if batch_size is None:
-                if compress:
+                if compress or (
+                    layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
+                ):
+                    # if data is compressed or dataformat is zarr, parallel write access
+                    # to a shard leads to corrupted data, the batch size must be aligned
+                    # with the shard size
                     batch_size = mag_view.info.shard_shape.z
                 else:
+                    # in uncompressed wkw only writing to the same chunk is problematic
                     batch_size = mag_view.info.chunk_shape.z
-            elif compress:
+            elif compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
                 assert (
                     batch_size % mag_view.info.shard_shape.z == 0
                 ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
@@ -1263,7 +1269,6 @@ class Dataset:
                 dtype=current_dtype,
             )
 
-            args = []
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
                     "x", "y", "z"
@@ -1279,11 +1284,13 @@ class Dataset:
                     layer.bounding_box.topleft_xyz,
                 )
 
-            layer_chunk_size = layer.bounding_box.size_xyz.with_z(batch_size)
-            for bbox in layer.bounding_box.chunk(
-                layer_chunk_size, Vec3Int(1, 1, batch_size)
-            ):
-                args.append(bbox)
+            buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
+            args = list(
+                layer.bounding_box.chunk(
+                    buffered_slice_writer_shape,
+                    Vec3Int(1, 1, batch_size),
+                )
+            )
 
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
