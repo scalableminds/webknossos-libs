@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug, where using an unaligned topleft value for `add_layer_from_images` leads to corrupted data. [#1036](https://github.com/scalableminds/webknossos-libs/pull/1036)
 
 
 ## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
