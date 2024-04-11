@@ -1364,7 +1364,7 @@ class Dataset:
                                 **(
                                     attr.asdict(layer._properties, recurse=False)
                                 ),  # use all attributes from LayerProperties
-                                largest_segment_id=max(max_ids),
+                                largest_segment_id=int(max(max_ids)),
                             )
                             segmentation_layer_properties.category = (
                                 SEGMENTATION_CATEGORY
