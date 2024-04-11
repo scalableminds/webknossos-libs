@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,17 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.16...v0.14.17)
+
+
+## [0.14.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.16) - 2024-04-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...v0.14.16)
+
+### Changed
+- Replaced black+isort formatters and pylint linter with ruff. [#1023](https://github.com/scalableminds/webknossos-libs/pull/1023)
 
 
 ## [0.14.15](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.15) - 2024-02-07

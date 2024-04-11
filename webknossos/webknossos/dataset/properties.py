@@ -1,3 +1,4 @@
+import copy
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
@@ -6,7 +7,7 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from ..geometry import BoundingBox, Mag, Vec3Int
+from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
 from .layer_categories import LayerCategoryType
@@ -95,11 +96,11 @@ class LayerViewConfiguration:
     """Min and max data value range (dependent on the layer's data type). Can be used to threshold the value range.
     The WEBKNOSSOS default is the full value range."""
 
-    min: Optional[float] = None  # pylint: disable=redefined-builtin
+    min: Optional[float] = None
     """Minimum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the min value of the `intensityRange` (if that is lower)."""
 
-    max: Optional[float] = None  # pylint: disable=redefined-builtin
+    max: Optional[float] = None
     """Maximum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the max value of the `intensityRange` (if that is higher)."""
 
@@ -119,6 +120,7 @@ class LayerViewConfiguration:
 @attr.define
 class MagViewProperties:
     mag: Mag
+    path: Optional[str] = None
     cube_length: Optional[int] = None
     axis_order: Optional[Dict[str, int]] = None
 
@@ -129,10 +131,17 @@ class MagViewProperties:
 
 
 @attr.define
+class AxisProperties:
+    name: str
+    bounds: Tuple[int, int]
+    index: int
+
+
+@attr.define
 class LayerProperties:
     name: str
     category: LayerCategoryType
-    bounding_box: BoundingBox
+    bounding_box: NDBoundingBox
     element_class: str
     data_format: DataFormat
     mags: List[MagViewProperties]
@@ -169,10 +178,10 @@ class DatasetProperties:
 dataset_converter = cattr.Converter()
 
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()
-dataset_converter.register_unstructure_hook(BoundingBox, bbox_to_wkw)
+bbox_to_wkw: Callable[[NDBoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
+dataset_converter.register_unstructure_hook(NDBoundingBox, bbox_to_wkw)
 dataset_converter.register_structure_hook(
-    BoundingBox, lambda d, _: BoundingBox.from_wkw_dict(d)
+    NDBoundingBox, lambda d, _: NDBoundingBox.from_wkw_dict(d)
 )
 
 
@@ -183,14 +192,15 @@ def mag_unstructure(mag: Mag) -> List[int]:
 dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
-vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()
+vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()  # noqa: E731
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
 dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
 )
 
 dataset_converter.register_structure_hook_func(
-    lambda d: d == LayerCategoryType, lambda d, _: str(d)  # type: ignore[comparison-overlap]
+    lambda d: d == LayerCategoryType,  # type: ignore[comparison-overlap]
+    lambda d, _: str(d),
 )
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
@@ -233,13 +243,13 @@ for cls in [
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
-def mag_view_properties_post_structure(d: Dict[str, Any]) -> Dict[str, Any]:
+def mag_view_properties_post_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
     d["resolution"] = d["mag"]
     del d["mag"]
     return d
 
 
-def mag_view_properties_pre_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
+def mag_view_properties_pre_structure(d: Dict[str, Any]) -> Dict[str, Any]:
     d["mag"] = d["resolution"]
     del d["resolution"]
     return d
@@ -248,17 +258,22 @@ def mag_view_properties_pre_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
 def layer_properties_post_unstructure(
     converter_fn: Callable[
         [Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]
-    ]
+    ],
 ) -> Callable[[Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]]:
     def __layer_properties_post_unstructure(
-        obj: Union[LayerProperties, SegmentationLayerProperties]
+        obj: Union[LayerProperties, SegmentationLayerProperties],
     ) -> Dict[str, Any]:
         d = converter_fn(obj)
         if d["dataFormat"] == "wkw":
             d["wkwResolutions"] = [
-                mag_view_properties_post_structure(m) for m in d["mags"]
+                mag_view_properties_post_unstructure(m) for m in d["mags"]
             ]
             del d["mags"]
+
+        # json expects nd_bounding_box to be represented as bounding_box and additional_axes
+        if "additionalAxes" in d["boundingBox"]:
+            d["additionalAxes"] = d["boundingBox"]["additionalAxes"]
+            del d["boundingBox"]["additionalAxes"]
         return d
 
     return __layer_properties_post_unstructure
@@ -268,7 +283,7 @@ def layer_properties_pre_structure(
     converter_fn: Callable[
         [Dict[str, Any], Type[Union[LayerProperties, SegmentationLayerProperties]]],
         Union[LayerProperties, SegmentationLayerProperties],
-    ]
+    ],
 ) -> Callable[
     [Any, Type[Union[LayerProperties, SegmentationLayerProperties]]],
     Union[LayerProperties, SegmentationLayerProperties],
@@ -279,9 +294,25 @@ def layer_properties_pre_structure(
     ) -> Union[LayerProperties, SegmentationLayerProperties]:
         if d["dataFormat"] == "wkw":
             d["mags"] = [
-                mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
+                mag_view_properties_pre_structure(m) for m in d["wkwResolutions"]
             ]
             del d["wkwResolutions"]
+        # bounding_box and additional_axes are internally handled as nd_bounding_box
+        if "additionalAxes" in d:
+            d["boundingBox"]["additionalAxes"] = copy.deepcopy(d["additionalAxes"])
+            del d["additionalAxes"]
+        if len(d["mags"]) > 0:
+            first_mag = d["mags"][0]
+            if "axisOrder" in first_mag:
+                assert (
+                    first_mag["axisOrder"]["c"] == 0
+                ), "The channels c must have index 0 in axis order."
+                assert all(
+                    first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
+                )
+                d["boundingBox"]["axisOrder"] = copy.deepcopy(first_mag["axisOrder"])
+                del d["boundingBox"]["axisOrder"]["c"]
+
         obj = converter_fn(d, type_value)
         return obj
 

@@ -44,7 +44,7 @@ def main(path_to_datasets: Path) -> None:
                         correctly_predicted.append(
                             f"{color_layer.path}: correct as color. Score = {score}."
                         )
-                except Exception as e:  # pylint: disable=bare-except
+                except Exception as e:  # pylint: disable=bare-except # noqa: PERF203
                     failures.append(f"Failed to analyze {color_layer.path}: {e}")
             for segmentation_layer in dataset.get_segmentation_layers():
                 try:
@@ -62,7 +62,7 @@ def main(path_to_datasets: Path) -> None:
                         wrongly_predicted.append(
                             f"{segmentation_layer.path} guessed color, but is segmentation. Score = {score}."
                         )
-                except Exception as e:  # pylint: disable=bare-except
+                except Exception as e:  # pylint: disable=bare-except # noqa: PERF203
                     failures.append(f"Failed to analyze {segmentation_layer.path}: {e}")
         except Exception as e:  # pylint: disable=bare-except
             failures.append(f"Failed to analyze dataset at {dataset_path}: {e}")

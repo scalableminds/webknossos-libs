@@ -12,7 +12,6 @@ import httpx
 from ..dataset import Dataset, Layer, RemoteDataset
 from ..utils import get_rich_progress
 from ._resumable import Resumable
-from .api_client import ApiClientError
 from .api_client.models import (
     ApiDatasetUploadInformation,
     ApiLinkedLayerIdentifier,
@@ -28,9 +27,9 @@ class LayerToLink(NamedTuple):
     dataset_name: str
     layer_name: str
     new_layer_name: Optional[str] = None
-    organization_id: Optional[
-        str
-    ] = None  # defaults to the user's organization before uploading
+    organization_id: Optional[str] = (
+        None  # defaults to the user's organization before uploading
+    )
 
     @classmethod
     def from_remote_layer(
@@ -116,14 +115,16 @@ def upload_dataset(
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
-    try:
-        context.api_client_with_auth.dataset_assert_new_name_is_valid(
-            context.organization_id, new_dataset_name
-        )
-    except ApiClientError as e:
+    is_valid_new_name_response = context.api_client_with_auth.dataset_is_valid_new_name(
+        context.organization_id, new_dataset_name
+    )
+    if not is_valid_new_name_response.is_valid:
+        problems_str = ""
+        if is_valid_new_name_response.errors is not None:
+            problems_str = f" Problems: {is_valid_new_name_response.errors}"
         raise Exception(
-            f"Dataset name {context.organization_id}/{new_dataset_name} does not seem to be valid."
-        ) from e
+            f"Dataset name {context.organization_id}/{new_dataset_name} is not a valid new dataset name.{problems_str}"
+        )
 
     datastore_api_client.dataset_reserve_upload(
         ApiReserveDatasetUploadInformation(
@@ -150,7 +151,8 @@ def upload_dataset(
                 "totalFileCount": len(file_infos),
             },
             chunk_size=100 * 1024 * 1024,  # 100 MiB
-            generate_unique_identifier=lambda _, relative_path: f"{upload_id}/{relative_path}",
+            generate_unique_identifier=lambda _,
+            relative_path: f"{upload_id}/{relative_path}",
             test_chunks=False,
             permanent_errors=[400, 403, 404, 409, 415, 500, 501],
             client=httpx.Client(timeout=None),

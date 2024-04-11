@@ -9,7 +9,7 @@ import numpy as np
 from scipy.ndimage import zoom
 
 if TYPE_CHECKING:
-    from .dataset import Dataset, Layer
+    from .dataset import Dataset
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayInfo
@@ -313,8 +313,8 @@ def downsample_cube_job(
 
         tiles = product(
             *(
-                list(range(0, math.ceil(len / buffer_edge_len)))
-                for len, buffer_edge_len in zip(shape[-3:], buffer_shape)
+                list(range(0, math.ceil(length / buffer_edge_len)))
+                for length, buffer_edge_len in zip(shape[-3:], buffer_shape)
             )
         )
 

@@ -35,6 +35,8 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.geometry.vec_int import VecInt, VecIntLike
+
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
@@ -56,10 +58,11 @@ from .sampling_modes import SamplingModes
 
 if TYPE_CHECKING:
     import pims
-    from ..client._upload_dataset import LayerToLink
-    from ..administration.user import Team
 
-from ..geometry import BoundingBox, Mag
+    from ..administration.user import Team
+    from ..client._upload_dataset import LayerToLink
+
+from ..geometry import BoundingBox, Mag, NDBoundingBox
 from ..utils import (
     copy_directory_with_symlinks,
     copytree,
@@ -106,6 +109,12 @@ _DATASET_URL_REGEX = re.compile(
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
+# A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
+# As the begin and the end are anchored, all of the name must match the regex.
+# The first regex group ensures that the name does not start with a dot.
+_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$")
+# This regex matches any character that is not allowed in a layer name.
+_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
@@ -188,7 +197,7 @@ class Dataset:
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
                 return lambda p: p.as_posix().replace("/", "_")
             elif self == ConversionLayerMapping.ENFORCE_SINGLE_LAYER:
-                return lambda p: input_path.name
+                return lambda _p: input_path.name
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
                 return lambda p: (
                     input_path.name
@@ -342,8 +351,8 @@ class Dataset:
             elif voxel_size == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
-                assert self.voxel_size == tuple(
-                    voxel_size
+                assert (
+                    self.voxel_size == tuple(voxel_size)
                 ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size} != {voxel_size})"
             if name is not None:
                 assert (
@@ -398,7 +407,7 @@ class Dataset:
 
         dataset_name_or_url = resolve_short_link(dataset_name_or_url)
 
-        match = re.match(_DATASET_URL_REGEX, dataset_name_or_url)
+        match = _DATASET_URL_REGEX.match(dataset_name_or_url)
         if match is not None:
             assert (
                 organization_id is None
@@ -597,11 +606,16 @@ class Dataset:
         For more fine-grained control, please create an empty dataset and use
         `add_layer_from_images`.
         """
-        from ._utils.pims_images import get_valid_pims_suffixes
+        from ._utils.pims_images import (
+            get_valid_bioformats_suffixes,
+            get_valid_pims_suffixes,
+        )
 
         input_upath = UPath(input_path)
 
         valid_suffixes = get_valid_pims_suffixes()
+        if use_bioformats is not False:
+            valid_suffixes.update(get_valid_bioformats_suffixes())
 
         input_files = [
             i.relative_to(input_upath)
@@ -624,6 +638,15 @@ class Dataset:
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
             layer_name = map_filepath_to_layer_name(input_file)
+            # Remove characters from layer name that are not allowed
+            layer_name = _UNALLOWED_LAYER_NAME_CHARS.sub("", layer_name)
+            # Ensure layer name does not start with a dot
+            layer_name = layer_name.lstrip(".")
+
+            assert (
+                layer_name != ""
+            ), f"Could not determine a layer name for {input_file}."
+
             filepaths_per_layer.setdefault(layer_name, []).append(
                 input_path / input_file
             )
@@ -757,7 +780,7 @@ class Dataset:
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
-        bounding_box: Optional[BoundingBox] = None,
+        bounding_box: Optional[NDBoundingBox] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -776,6 +799,10 @@ class Dataset:
 
         self._ensure_writable()
 
+        assert _ALLOWED_LAYER_NAME_REGEX.match(
+            layer_name
+        ), f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+
         if "dtype" in kwargs:
             raise ValueError(
                 f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
@@ -789,12 +816,14 @@ class Dataset:
             )
         elif dtype_per_channel is not None:
             dtype_per_channel = _properties_floating_type_to_python_type.get(
-                dtype_per_channel, dtype_per_channel  # type: ignore[arg-type]
+                dtype_per_channel,  # type: ignore[arg-type]
+                dtype_per_channel,  # type: ignore[arg-type]
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
             dtype_per_layer = _properties_floating_type_to_python_type.get(
-                dtype_per_layer, dtype_per_layer  # type: ignore[arg-type]
+                dtype_per_layer,  # type: ignore[arg-type]
+                dtype_per_layer,  # type: ignore[arg-type]
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
             dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
@@ -1020,7 +1049,7 @@ class Dataset:
         compress: bool = False,
         *,
         ## other arguments
-        topleft: Vec3IntLike = Vec3Int.zeros(),  # in Mag(1)
+        topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -1202,8 +1231,12 @@ class Dataset:
                 num_channels=pims_images.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
+
+            expected_bbox = pims_images.expected_bbox
+
+            # When the expected bbox is 2D the chunk_shape is set to 2D too.
             if (
-                pims_images.expected_shape.z == 1
+                expected_bbox.get_shape("z") == 1
                 and layer.data_format == DataFormat.Zarr
             ):
                 if chunk_shape is None:
@@ -1214,17 +1247,13 @@ class Dataset:
             if chunks_per_shard is None and layer.data_format == DataFormat.Zarr3:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
 
+            mag = Mag(mag)
+            layer.bounding_box = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
-            )
-            mag = mag_view.mag
-            layer.bounding_box = (
-                BoundingBox((0, 0, 0), pims_images.expected_shape)
-                .from_mag_to_mag1(mag)
-                .offset(topleft)
             )
 
             if batch_size is None:
@@ -1248,10 +1277,44 @@ class Dataset:
             )
 
             args = []
-            for z_start in range(0, pims_images.expected_shape.z, batch_size):
-                z_end = min(z_start + batch_size, pims_images.expected_shape.z)
-                # return shapes and set to union when using --pad
-                args.append((z_start, z_end))
+            bbox = layer.bounding_box
+            additional_axes = [
+                axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")
+            ]
+            additional_axes_shapes = tuple(
+                product(
+                    *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
+                )
+            )
+            if additional_axes and layer.data_format != DataFormat.Zarr3:
+                assert (
+                    len(additional_axes_shapes) == 1
+                ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
+
+                # Convert NDBoundingBox to 3D BoundingBox
+                bbox = BoundingBox(
+                    bbox.topleft_xyz,
+                    bbox.size_xyz,
+                )
+                expected_bbox = bbox
+                additional_axes = []
+
+            z_shape = bbox.get_shape("z")
+            bbox = bbox.with_topleft(VecInt.zeros(bbox.axes))
+            for z_start in range(0, z_shape, batch_size):
+                z_size = min(batch_size, z_shape - z_start)
+                z_bbox = bbox.with_bounds("z", z_start, z_size)
+                if not additional_axes:
+                    args.append(z_bbox)
+                else:
+                    for shape in additional_axes_shapes:
+                        reduced_bbox = z_bbox
+                        for index, axis in enumerate(additional_axes):
+                            reduced_bbox = reduced_bbox.with_bounds(
+                                axis, shape[index], 1
+                            )
+                        args.append(reduced_bbox)
+
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
                 # However, dataset borders might change between different parallelized writes, when sizes differ.
@@ -1280,18 +1343,14 @@ class Dataset:
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                actual_size = Vec3Int(
-                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
+                layer.bounding_box = layer.bounding_box.with_size_xyz(
+                    Vec3Int(dimwise_max(shapes) + (layer.bounding_box.get_shape("z"),))
+                    * mag.to_vec3_int().with_z(1)
                 )
-                layer.bounding_box = (
-                    BoundingBox((0, 0, 0), actual_size)
-                    .from_mag_to_mag1(mag)
-                    .offset(topleft)
-                )
-            if pims_images.expected_shape != actual_size:
+            if expected_bbox != layer.bounding_box:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
-                    + f"New size is {actual_size}, expected {pims_images.expected_shape}."
+                    + f"New bbox is {layer.bounding_box}, expected {expected_bbox}."
                 )
 
             # Check if category of layer is set correctly
@@ -1301,9 +1360,7 @@ class Dataset:
                     if guessed_category != layer.category:
                         if guessed_category == SEGMENTATION_CATEGORY:
                             logging.info("The layer category is set to segmentation.")
-                            segmentation_layer_properties: (
-                                SegmentationLayerProperties
-                            ) = SegmentationLayerProperties(
+                            segmentation_layer_properties: SegmentationLayerProperties = SegmentationLayerProperties(
                                 **(
                                     attr.asdict(layer._properties, recurse=False)
                                 ),  # use all attributes from LayerProperties
@@ -1559,7 +1616,7 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
-    def calculate_bounding_box(self) -> BoundingBox:
+    def calculate_bounding_box(self) -> NDBoundingBox:
         """
         Calculates and returns the enclosing bounding box of all data layers of the dataset.
         """
@@ -1780,12 +1837,19 @@ class Dataset:
         self._ensure_writable()
 
         properties_on_disk = self._load_properties()
-
-        if properties_on_disk != self._last_read_properties:
+        try:
+            if properties_on_disk != self._last_read_properties:
+                warnings.warn(
+                    "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
+                    + "newer than the ones that were seen last time. The properties will be overwritten. This is "
+                    + "likely happening because multiple processes changed the metadata of this dataset."
+                )
+        except ValueError:
+            # the __eq__ operator raises a ValueError when two bboxes are not comparable. This is the case when the
+            # axes are not the same. During initialization axes are added or moved sometimes.
             warnings.warn(
-                "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
-                + "newer than the ones that were seen last time. The properties will be overwritten. This is "
-                + "likely happening because multiple processes changed the metadata of this dataset."
+                "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
+                + "the bounding box naming or axis order changed."
             )
 
         with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:
@@ -1878,7 +1942,7 @@ class RemoteDataset(Dataset):
         self._context = context
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
+    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":  # noqa: ARG003 Unused class method argument: `dataset_path`
         """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 

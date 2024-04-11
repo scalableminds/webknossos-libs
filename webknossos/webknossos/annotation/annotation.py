@@ -60,7 +60,7 @@ from ..dataset import (
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.properties import DatasetProperties, dataset_converter
-from ..geometry import BoundingBox, Vec3Int
+from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
 from ..utils import time_since_epoch_in_ms, warn_deprecated
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
@@ -124,8 +124,8 @@ class Annotation:
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     metadata: Dict[str, str] = attr.Factory(dict)
-    task_bounding_box: Optional[BoundingBox] = None
-    user_bounding_boxes: List[BoundingBox] = attr.Factory(list)
+    task_bounding_box: Optional[NDBoundingBox] = None
+    user_bounding_boxes: List[NDBoundingBox] = attr.Factory(list)
     _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
@@ -255,8 +255,7 @@ class Annotation:
         webknossos_url: Optional[str] = None,
         *,
         skip_volume_data: bool = False,
-    ) -> "Annotation":
-        ...
+    ) -> "Annotation": ...
 
     @overload
     @classmethod
@@ -268,8 +267,7 @@ class Annotation:
         *,
         skip_volume_data: bool = False,
         _return_context: bool,
-    ) -> Tuple["Annotation", ContextManager[None]]:
-        ...
+    ) -> Tuple["Annotation", ContextManager[None]]: ...
 
     @classmethod
     def download(
@@ -353,7 +351,7 @@ class Annotation:
         annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
     ) -> Dataset:
-        (  # pylint: disable=unpacking-non-sequence
+        (
             annotation,
             context,
         ) = Annotation.download(
@@ -476,7 +474,7 @@ class Annotation:
         assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
         assert (
             len(nml_paths) == 1
-        ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
+        ), f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
@@ -623,9 +621,9 @@ class Annotation:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
-            assert volume_layer_id not in [
-                i.id for i in self._volume_layers
-            ], f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
+            assert (
+                volume_layer_id not in [i.id for i in self._volume_layers]
+            ), f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
         fallback_layer_name: Optional[str]
         if isinstance(fallback_layer, Layer):
             assert (

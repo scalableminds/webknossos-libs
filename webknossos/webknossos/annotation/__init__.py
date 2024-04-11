@@ -1,3 +1,4 @@
+# ruff: noqa: F401 imported but unused
 from .annotation import (
     Annotation,
     AnnotationState,

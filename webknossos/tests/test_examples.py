@@ -44,7 +44,7 @@ def exec_main_and_get_vars(
     new_source = source.replace(
         def_main_needle, "def main() -> None:\n" + global_statements + "\n"
     )
-    exec(new_source, module.__dict__)  # pylint: disable=exec-used
+    exec(new_source, module.__dict__)
     cm_raises: ContextManager[Any]
     cm_warns: ContextManager[Any]
     if raises is None:
@@ -296,6 +296,17 @@ def test_upload_tiff_stack() -> None:
 
         assert remote_dataset.url.startswith(
             "http://localhost:9000/datasets/Organization_X/tiff_dataset"
+        )
+
+
+def test_upload_dicom_stack() -> None:
+    import examples.upload_dicom_stack as example
+
+    with tmp_cwd():
+        (remote_dataset,) = exec_main_and_get_vars(example, "remote_dataset")
+
+        assert remote_dataset.url.startswith(
+            "http://localhost:9000/datasets/Organization_X/dicom_dataset"
         )
 
 

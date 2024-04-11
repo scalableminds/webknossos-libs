@@ -73,7 +73,7 @@ def test_slurm_cfut_dir() -> None:
     if os.path.exists(cfut_dir):
         shutil.rmtree(cfut_dir)
 
-    exc = cluster_tools.get_executor("slurm", debug=True, cfut_dir=cfut_dir)
+    exc = cluster_tools.get_executor("slurm", debug=True, cfut_dir=cfut_dir)  # type: ignore[attr-defined]
     with exc:
         future = exc.submit(square, 2)
         assert future.result() == 4
@@ -413,7 +413,7 @@ def test_pickled_logging() -> None:
     assert test_output_str in debug_out
 
     info_out = execute_with_log_level(logging.INFO)
-    assert not (test_output_str in info_out)
+    assert test_output_str not in info_out
 
 
 def test_tailed_logging() -> None:
@@ -434,7 +434,7 @@ def test_tailed_logging() -> None:
         assert "jid" in f.getvalue()
 
 
-def fail(val: Any) -> None:
+def fail(_val: Any) -> None:
     raise Exception("Fail()")
 
 
@@ -536,9 +536,9 @@ def test_preliminary_file_map() -> None:
 
 
 def test_cpu_bind_regression() -> None:
-    os.environ[
-        "SLURM_CPU_BIND"
-    ] = "quiet,mask_cpu:0x000000000000040000000000000000040000"
+    os.environ["SLURM_CPU_BIND"] = (
+        "quiet,mask_cpu:0x000000000000040000000000000000040000"
+    )
 
     stdout, _ = chcall("scontrol show config | sed -n '/^TaskPlugin/s/.*= *//p'")
     assert (

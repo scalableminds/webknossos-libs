@@ -3,7 +3,7 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
-from ..geometry import BoundingBox
+from ..geometry import BoundingBox, NDBoundingBox
 from ..geometry.bounding_box import _DEFAULT_BBOX_NAME
 from .utils import Vector3, enforce_not_null, filter_none_values
 
@@ -16,28 +16,30 @@ class Parameters(NamedTuple):
     description: Optional[str] = None
     organization: Optional[str] = None
     offset: Optional[Vector3] = None  # deprecated. Kept for backward compatibility.
-    time: Optional[
-        int
-    ] = None  # UNIX timestamp marking the creation time & date of an annotation.
+    time: Optional[int] = (
+        None  # UNIX timestamp marking the creation time & date of an annotation.
+    )
     editPosition: Optional[Vector3] = None
     editRotation: Optional[Vector3] = None
     zoomLevel: Optional[float] = None
-    taskBoundingBox: Optional[BoundingBox] = None
-    userBoundingBoxes: Optional[List[BoundingBox]] = None
+    taskBoundingBox: Optional[NDBoundingBox] = None
+    userBoundingBoxes: Optional[List[NDBoundingBox]] = None
 
     def _dump_bounding_box(
         self,
         xf: XmlWriter,
-        bounding_box: BoundingBox,
+        bounding_box: NDBoundingBox,
         tag_name: str,
         bbox_id: Optional[int],  # user bounding boxes need an id
     ) -> None:
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
 
         attributes = {
-            "name": _DEFAULT_BBOX_NAME
-            if bounding_box.name is None
-            else str(bounding_box.name),
+            "name": (
+                _DEFAULT_BBOX_NAME
+                if bounding_box.name is None
+                else str(bounding_box.name)
+            ),
             "isVisible": "true" if bounding_box.is_visible else "false",
             "color.r": str(color[0]),
             "color.g": str(color[1]),
@@ -67,8 +69,6 @@ class Parameters(NamedTuple):
         user_bounding_boxes = getattr(self, "userBoundingBoxes")
 
         if user_bounding_boxes is not None:
-            # pylint: disable=not-an-iterable
-
             # User bounding boxes need an id to be recognized
             # when uploaded to webknossos, which is added by bbox_idx:
             for bbox_idx, user_bounding_box in enumerate(
@@ -100,7 +100,6 @@ class Parameters(NamedTuple):
         )
 
         if self.offset is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "offset",
                 {
@@ -113,7 +112,6 @@ class Parameters(NamedTuple):
         if self.time is not None:
             xf.tag("time", {"ms": str(self.time)})
         if self.editPosition is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "editPosition",
                 {
@@ -123,7 +121,6 @@ class Parameters(NamedTuple):
                 },
             )
         if self.editRotation is not None:
-            # pylint: disable=unsubscriptable-object
             xf.tag(
                 "editRotation",
                 {
@@ -141,7 +138,7 @@ class Parameters(NamedTuple):
         xf.endTag()  # parameters
 
     @classmethod
-    def _parse_bounding_box(cls, bounding_box_element: Element) -> BoundingBox:
+    def _parse_bounding_box(cls, bounding_box_element: Element) -> NDBoundingBox:
         topleft = (
             int(bounding_box_element.get("topLeftX", 0)),
             int(bounding_box_element.get("topLeftY", 0)),
@@ -170,14 +167,16 @@ class Parameters(NamedTuple):
         )
 
     @classmethod
-    def _parse_user_bounding_boxes(cls, nml_parameters: Element) -> List[BoundingBox]:
+    def _parse_user_bounding_boxes(cls, nml_parameters: Element) -> List[NDBoundingBox]:
         if nml_parameters.find("userBoundingBox") is None:
             return []
         bb_elements = nml_parameters.findall("userBoundingBox")
         return [cls._parse_bounding_box(bb_element) for bb_element in bb_elements]
 
     @classmethod
-    def _parse_task_bounding_box(cls, nml_parameters: Element) -> Optional[BoundingBox]:
+    def _parse_task_bounding_box(
+        cls, nml_parameters: Element
+    ) -> Optional[NDBoundingBox]:
         bb_element = nml_parameters.find("taskBoundingBox")
         if bb_element is not None:
             return cls._parse_bounding_box(bb_element)
