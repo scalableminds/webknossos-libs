@@ -6,8 +6,8 @@ COPY pyproject.toml /cluster_tools
 
 WORKDIR /cluster_tools
 
-RUN pip install poetry && poetry install
+RUN pip install poetry && poetry install --all-extras
 
 COPY . /cluster_tools
 
-RUN poetry install
+RUN poetry install --all-extras
