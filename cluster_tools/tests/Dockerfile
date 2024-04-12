@@ -6,7 +6,7 @@ COPY pyproject.toml /cluster_tools
 
 WORKDIR /cluster_tools
 
-RUN pip install poetry && poetry config virtualenvs.create false && poetry install
+RUN pip install poetry && poetry install
 
 COPY . /cluster_tools
 
