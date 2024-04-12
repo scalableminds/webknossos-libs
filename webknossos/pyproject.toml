@@ -39,7 +39,6 @@ httpx = ">=0.20.0,<=0.24.1"
 loxun = "^2.0"
 natsort = "^6.2.0"
 networkx = "^2.6.2"
-nibabel = "^5.0.1"
 numcodecs = "^0.11"
 numpy = "^1.21.0"  # see https://numpy.org/neps/nep-0029-deprecation_policy.html#support-table
 psutil = "^5.6.7"
@@ -68,7 +67,7 @@ pims = ["pims"]
 tifffile = ["pims", "tifffile"]
 imagecodecs = ["pims", "imagecodecs"]
 bioformats = ["pims","JPype1"]
-czi = ["pims","pylibCZIrw"]
+czi = ["pims", "pylibCZIrw"]
 all = ["pims","tifffile","imagecodecs","JPype1","pylibCZIrw"]
 
 [tool.poetry.group.dev]
