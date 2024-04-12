@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependcies into optional groups which are not installed by default. Install with poetry install --with dev --with examples. [1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
 
 ### Fixed
 
