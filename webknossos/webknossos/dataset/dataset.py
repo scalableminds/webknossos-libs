@@ -1270,18 +1270,10 @@ class Dataset:
             )
 
             if (
-                additional_axes := set(layer.bounding_box.axes).difference(
-                    "x", "y", "z"
-                )
+                set(layer.bounding_box.axes).difference("x", "y", "z")
             ) and layer.data_format != DataFormat.Zarr3:
-                assert all(
-                    layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes
-                ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
-
-                # Convert NDBoundingBox to 3D BoundingBox
-                layer.bounding_box = BoundingBox(
-                    layer.bounding_box.topleft_xyz,
-                    layer.bounding_box.topleft_xyz,
+                raise RuntimeError(
+                    "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
                 )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
