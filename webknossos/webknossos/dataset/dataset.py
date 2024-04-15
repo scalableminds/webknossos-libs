@@ -1273,7 +1273,7 @@ class Dataset:
                 set(layer.bounding_box.axes).difference("x", "y", "z")
             ) and layer.data_format != DataFormat.Zarr3:
                 raise RuntimeError(
-                    "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
+                    "The data stores additional axes other than x, y and z."
                 )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
