@@ -505,6 +505,7 @@ class PimsImages:
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
         absolute_bbox = args
+        relative_bbox = absolute_bbox.offset(-mag_view.bounding_box.topleft)
 
         assert all(
             size == 1
@@ -514,9 +515,7 @@ class PimsImages:
 
         # z_start and z_end are relative to the bounding box of the mag_view
         # to access the correct data from the images
-        z_start, z_end = absolute_bbox.offset(
-            -mag_view.bounding_box.topleft
-        ).get_bounds("z")
+        z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
         max_id: Optional[int]
         if is_segmentation:
@@ -529,7 +528,7 @@ class PimsImages:
                 # select the range of images that represents one xyz combination in the mag_view
                 lower_bounds = sum(
                     self._iter_loop_size[axis_name]
-                    * absolute_bbox.get_bounds(axis_name)[0]
+                    * relative_bbox.get_bounds(axis_name)[0]
                     for axis_name in self._iter_axes[:-1]
                 )
                 upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
