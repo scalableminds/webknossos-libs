@@ -28,9 +28,9 @@ def guess_category_from_view(view: MagView) -> LayerCategoryType:
 
 
 def sample_distinct_values_per_vx(view: MagView) -> float:
-    sample_size_for_view = view.size.pairmin(SAMPLE_SIZE * view.mag)
-    min_offset = view.bounding_box.topleft
-    max_offset = view.bounding_box.bottomright - sample_size_for_view
+    sample_size_for_view = view.bounding_box.size_xyz.pairmin(SAMPLE_SIZE * view.mag)
+    min_offset = view.bounding_box.topleft_xyz
+    max_offset = view.bounding_box.bottomright_xyz - sample_size_for_view
 
     distinct_color_values = 0
     valid_sample_count = 0
@@ -45,9 +45,10 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
             random.randint(min_offset.y, max_offset.y),
             random.randint(min_offset.z, max_offset.z),
         )
-        bbox_to_read = BoundingBox(
-            topleft=offset, size=sample_size_for_view
-        ).align_with_mag(view.mag)
+        bbox_to_read = view.bounding_box.with_topleft_xyz(offset).with_size_xyz(
+            sample_size_for_view
+        )
+
         data = view.read(absolute_bounding_box=bbox_to_read)
         data = data[data != 0]
         try:
