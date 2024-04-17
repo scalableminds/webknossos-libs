@@ -70,9 +70,9 @@ jobs:
           docker logs c2
 
           # Run setup.py on all three nodes
-          docker exec -w /cluster_tools slurmctld bash -c "poetry install --all-extras" &
-          docker exec -w /cluster_tools c1 bash -c "poetry install --all-extras" &
-          docker exec -w /cluster_tools c2 bash -c "poetry install --all-extras" &
+          docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
+          docker exec -w /cluster_tools c1 bash -c "poetry install" &
+          docker exec -w /cluster_tools c2 bash -c "poetry install" &
           wait
 
       - name: Setup Kubernetes-in-Docker
@@ -88,7 +88,13 @@ jobs:
           ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
-        if: ${{ matrix.executors != 'slurm' }}
+        if: ${{ matrix.executors == 'multiprocessing' }}
+        run: |
+          pip install -r ../requirements.txt
+          poetry install
+
+      - name: Install dependencies (without docker)
+        if: ${{ matrix.executors == 'kubernetes' || matrix.executors == 'dask' }}
         run: |
           pip install -r ../requirements.txt
           poetry install --all-extras
