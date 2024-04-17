@@ -49,14 +49,14 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
         "testdata/4D/4D_series/4D-series.ome.tif",
         layer_name="color",
         category="color",
-        topleft=(100, 100, 55),
+        topleft=(2, 55, 100, 100),
         use_bioformats=True,
         data_format="zarr3",
         chunk_shape=(8, 8, 8),
         chunks_per_shard=(8, 8, 8),
     )
     assert layer.bounding_box.topleft == wk.VecInt(
-        0, 55, 100, 100, axes=("t", "z", "y", "x")
+        2, 55, 100, 100, axes=("t", "z", "y", "x")
     )
     assert layer.bounding_box.size == wk.VecInt(
         7, 5, 167, 439, axes=("t", "z", "y", "x")
