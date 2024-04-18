@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependcies into optional groups which are not installed by default. Install with `poetry install --with dev --with examples`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
 
 ### Fixed
+
+
+## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...v0.14.19)
+
+### Changed
+- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependcies into optional groups which are not installed by default. Install with `poetry install --with dev --with examples`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
 
 
 ## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
