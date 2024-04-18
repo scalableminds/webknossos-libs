@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...v0.14.18)
+
+### Fixed
 - Fixed a bug, where using an unaligned topleft value for `add_layer_from_images` leads to corrupted data. [#1036](https://github.com/scalableminds/webknossos-libs/pull/1036)
+
 
 
 ## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
