@@ -49,6 +49,11 @@ try:
 except ImportError:
     pass
 
+try:
+    from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
+except ImportError:
+    pass
+
 
 from ...geometry.vec_int import VecInt
 from ..mag_view import MagView
@@ -69,11 +74,6 @@ pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
 def _assume_color_channel(
     image: Any, index: int, allow_channels_first: bool = True
 ) -> bool:
-    if hasattr(image, "_tiff"):
-        if (
-            image._tiff.axes[index] == "C" or image._tiff.axes[index] == "S"
-        ) and image._tiff.shape[index] <= 3:
-            return True
     return allow_channels_first and (
         image.shape[index] == 1
         or (image.shape[index] == 3 and image.dtype == np.dtype("uint8"))
@@ -215,38 +215,6 @@ class PimsImages:
                         self._iter_loop_size[other_axis] = (
                             iter_size := iter_size * images.sizes[axis]
                         )
-
-            elif hasattr(images, "_tiff"):
-                # This is a TiffStack, which is a pims.Frames sequence
-                # but does not have the axes information set.
-
-                _allow_channels_first = not is_segmentation
-                if isinstance(images, (pims.ImageSequence, pims.ReaderSequence)):
-                    _allow_channels_first = False
-
-                axes = images._tiff.axes.lower()
-                n_bundle_axes: int
-                if axes.endswith("cyx") or axes.endswith("syx"):
-                    n_bundle_axes = 3
-                    self._bundle_axes = ["c", "y", "x"]
-                    self._iter_axes = list(axes[:-3])
-                elif axes.endswith("yxc") or axes.endswith("yxs"):
-                    n_bundle_axes = 3
-                    self._bundle_axes = ["y", "x", "c"]
-                    self._iter_axes = list(axes[:-3])
-                elif axes.endswith("yx"):
-                    n_bundle_axes = 2
-                    self._bundle_axes = ["y", "x"]
-                    self._iter_axes = list(axes[:-2])
-
-                iter_size = 1
-                self._iter_loop_size = {}
-                for index, axis in enumerate(self._iter_axes[-2::-1]):
-                    self._iter_loop_size[axis] = (
-                        iter_size := iter_size
-                        * images._tiff.shape[-(index + n_bundle_axes)]
-                    )
-
             else:
                 # Fallback for generic pims classes that do not name their
                 # dimensions as pims.FramesSequenceND does:
@@ -291,7 +259,7 @@ class PimsImages:
                             + "Zarr3 and set use_bioformats=True."
                         )
 
-                    if _assume_color_channel(images.shape[2], images.dtype):
+                    if _assume_color_channel(images, -3):
                         self._bundle_axes = ["c", "y", "x"]
                     else:
                         self._bundle_axes = ["y", "x", "c"]
@@ -695,23 +663,6 @@ class PimsImages:
                         VecInt(axes_sizes, axes=axes_names),
                         axes_names,
                         VecInt(axes_index, axes=axes_names),
-                    )
-                if hasattr(images, "_tiff"):
-                    axes = []
-                    shape = []
-                    for axis, shape_element in zip(
-                        self._iter_axes + self._bundle_axes, images._tiff.shape
-                    ):
-                        if axis != "c":
-                            axes.append(axis)
-                            shape.append(shape_element)
-                    topleft = VecInt.zeros(tuple(axes))
-                    index = tuple(range(1, len(axes) + 1))
-                    return NDBoundingBox(
-                        topleft,
-                        shape,
-                        axes,
-                        index,
                     )
 
                 raise ValueError(
