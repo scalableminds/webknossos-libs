@@ -68,7 +68,7 @@ def worker(
 
         if isinstance(fun_and_metadata, str):
             with open(fun_and_metadata, "rb") as function_file:
-                fun, metadata = pickling.load(function_file, custom_main_path)
+                fun, meta_data = pickling.load(function_file, custom_main_path)
         else:
             fun, meta_data = fun_and_metadata
 
