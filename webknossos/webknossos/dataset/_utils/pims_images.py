@@ -4,7 +4,6 @@ from itertools import chain
 from os import PathLike
 from pathlib import Path
 from typing import (
-    Any,
     ContextManager,
     Dict,
     Iterable,
@@ -71,13 +70,8 @@ except ImportError as import_error:
 pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
 
 
-def _assume_color_channel(
-    image: Any, index: int, allow_channels_first: bool = True
-) -> bool:
-    return allow_channels_first and (
-        image.shape[index] == 1
-        or (image.shape[index] == 3 and image.dtype == np.dtype("uint8"))
-    )
+def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
+    return dim_size == 1 or (dim_size == 3 and dtype == np.dtype("uint8"))
 
 
 class PimsImages:
@@ -215,6 +209,7 @@ class PimsImages:
                         self._iter_loop_size[other_axis] = (
                             iter_size := iter_size * images.sizes[axis]
                         )
+
             else:
                 # Fallback for generic pims classes that do not name their
                 # dimensions as pims.FramesSequenceND does:
@@ -229,10 +224,13 @@ class PimsImages:
                     self._iter_axes = []
                 elif len(images.shape) == 3:
                     # Assume yxc, cyx or zyx
-                    if _assume_color_channel(images, -1):
+                    if _assume_color_channel(images.shape[2], images.dtype):
                         self._bundle_axes = ["y", "x", "c"]
                         self._iter_axes = []
-                    elif _assume_color_channel(images, -3, _allow_channels_first):
+                    elif images.shape[0] == 1 or (
+                        _allow_channels_first
+                        and _assume_color_channel(images.shape[0], images.dtype)
+                    ):
                         self._bundle_axes = ["c", "y", "x"]
                         self._iter_axes = []
                     else:
@@ -240,7 +238,9 @@ class PimsImages:
                         self._iter_axes = ["z"]
                 elif len(images.shape) == 4:
                     # Assume zcyx or zyxc
-                    if _assume_color_channel(images, -3):
+                    if images.shape[1] == 1 or _assume_color_channel(
+                        images.shape[1], images.dtype
+                    ):
                         self._bundle_axes = ["c", "y", "x"]
                     else:
                         self._bundle_axes = ["y", "x", "c"]
@@ -259,7 +259,7 @@ class PimsImages:
                             + "Zarr3 and set use_bioformats=True."
                         )
 
-                    if _assume_color_channel(images, -3):
+                    if _assume_color_channel(images.shape[2], images.dtype):
                         self._bundle_axes = ["c", "y", "x"]
                     else:
                         self._bundle_axes = ["y", "x", "c"]
@@ -641,7 +641,7 @@ class PimsImages:
                 )
             else:
                 if isinstance(images, pims.FramesSequenceND):
-                    axes_names = (self._iter_axes) + [
+                    axes_names = self._iter_axes + [
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
                     axes_sizes = [
