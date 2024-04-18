@@ -411,7 +411,6 @@ class ClusterExecutor(futures.Executor):
         self.ensure_not_shutdown()
 
         # Start the job.
-        # todo: used to have 5 elements (now 4)
         serialized_function_info = pickling.dumps(
             ((__fn, self.meta_data), args, kwargs, output_pickle_path)
         )
@@ -514,7 +513,6 @@ class ClusterExecutor(futures.Executor):
                 )
                 os.unlink(preliminary_output_pickle_path)
 
-            # todo: used to have 5 elements (now 4)
             serialized_function_info = pickling.dumps(
                 (
                     pickled_function_and_metadata_path,
