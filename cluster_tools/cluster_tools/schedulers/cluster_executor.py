@@ -148,14 +148,14 @@ class ClusterExecutor(futures.Executor):
             partial(_handle_kill_through_weakref, ref(self), existing_sigint_handler),
         )
 
-        self.meta_data = {}
+        self.metadata = {}
         assert not (
             "logging_config" in kwargs and "logging_setup_fn" in kwargs
         ), "Specify either logging_config OR logging_setup_fn but not both at once"
         if "logging_config" in kwargs:
-            self.meta_data["logging_config"] = kwargs["logging_config"]
+            self.metadata["logging_config"] = kwargs["logging_config"]
         if "logging_setup_fn" in kwargs:
-            self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
+            self.metadata["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
     @classmethod
     def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
@@ -412,7 +412,7 @@ class ClusterExecutor(futures.Executor):
 
         # Start the job.
         serialized_function_info = pickling.dumps(
-            ((__fn, self.meta_data), args, kwargs, output_pickle_path)
+            ((__fn, self.metadata), args, kwargs, output_pickle_path)
         )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
@@ -490,7 +490,7 @@ class ClusterExecutor(futures.Executor):
         )
         self.files_to_clean_up.append(pickled_function_and_metadata_path)
         with open(pickled_function_and_metadata_path, "wb") as file:
-            pickling.dump((fn, self.meta_data), file)
+            pickling.dump((fn, self.metadata), file)
         self.store_main_path_to_meta_file(workerid)
 
         for index, arg in enumerate(args):
