@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Moved the dependencies for Kubernetes and Dask support into optional extras that need to be installed separately. Either with `poetry install --all-extras or pip install -e "all"`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
 
 ### Fixed
 
