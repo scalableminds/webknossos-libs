@@ -1,5 +1,6 @@
 """Abstracts access to a Kubernetes cluster via its Python library."""
 
+import logging
 import os
 import re
 import sys
@@ -8,10 +9,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple
 from uuid import uuid4
 
-import kubernetes
-import kubernetes.client.models as kubernetes_models
-
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+
+logger = logging.getLogger()
 
 
 def _volume_name_from_path(path: Path) -> str:
@@ -30,6 +30,8 @@ def _deduplicate_mounts(mounts: List[Path]) -> List[Path]:
 
 class KubernetesClient:
     def __init__(self) -> None:
+        import kubernetes
+
         kubernetes.config.load_kube_config()
         self.core = kubernetes.client.api.core_v1_api.CoreV1Api()
         self.batch = kubernetes.client.api.batch_v1_api.BatchV1Api()
@@ -48,6 +50,14 @@ class KubernetesExecutor(ClusterExecutor):
         additional_setup_lines: Optional[List[str]] = None,
         **kwargs: Any,
     ):
+        try:
+            import kubernetes  # noqa: F401 unused import
+        except ModuleNotFoundError:
+            logger.error(
+                'The Kubernetes Python package is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[kubernetes]` or `poetry install --extras "kubernetes"` to install Kubernetes support.'
+            )
+            exit()
+
         super().__init__(
             debug=debug,
             keep_logs=keep_logs,
@@ -117,6 +127,9 @@ class KubernetesExecutor(ClusterExecutor):
         )
 
     def ensure_kubernetes_namespace(self) -> None:
+        import kubernetes
+        import kubernetes.client.models as kubernetes_models
+
         kubernetes_client = KubernetesClient()
         try:
             kubernetes_client.core.read_namespace(self.job_resources["namespace"])
@@ -144,6 +157,8 @@ class KubernetesExecutor(ClusterExecutor):
         job_count: Optional[int] = None,
     ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
+
+        import kubernetes.client.models as kubernetes_models
 
         kubernetes_client = KubernetesClient()
         self.ensure_kubernetes_namespace()

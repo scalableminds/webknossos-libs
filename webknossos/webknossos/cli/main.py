@@ -7,7 +7,6 @@ from . import (
     compress,
     convert,
     convert_knossos,
-    convert_nifti,
     convert_raw,
     convert_zarr,
     download,
@@ -24,7 +23,6 @@ app.command("check-equality")(check_equality.main)
 app.command("compress")(compress.main)
 app.command("convert")(convert.main)
 app.command("convert-knossos")(convert_knossos.main)
-app.command("convert-nifti")(convert_nifti.main)
 app.command("convert-raw")(convert_raw.main)
 app.command("convert-zarr")(convert_zarr.main)
 app.command("download")(download.main)

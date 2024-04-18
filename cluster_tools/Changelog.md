@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,17 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...v0.14.19)
+
+### Changed
+- Moved the dependencies for Kubernetes and Dask support into optional extras that need to be installed separately. Either with `poetry install --all-extras or pip install -e "all"`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
+
+
+## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...v0.14.18)
 
 
 ## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
