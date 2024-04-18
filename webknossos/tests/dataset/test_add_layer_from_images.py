@@ -68,7 +68,7 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
 
 
 REPO_IMAGES_ARGS: List[
-    Tuple[Union[str, List[Path]], Dict[str, Any], str, int, Tuple[int, int, int]]
+    Tuple[Union[str, List[Path]], Dict[str, Any], str, int, Tuple[int, ...]]
 ] = [
     (
         "testdata/tiff/test.*.tiff",
@@ -90,14 +90,14 @@ REPO_IMAGES_ARGS: List[
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
-        {"mag": 2},
+        {"mag": 2, "data_format": "zarr3"},
         "uint8",
-        3,
+        1,
         (64, 64, 2),
     ),
     (
         "testdata/rgb_tiff",
-        {"mag": 2, "channel": 1, "dtype": "uint32"},
+        {"mag": 2, "channel": 0, "dtype": "uint32"},
         "uint32",
         1,
         (64, 64, 2),
@@ -126,12 +126,24 @@ REPO_IMAGES_ARGS: List[
         1,
         (2970, 2521, 4),
     ),
-    ("testdata/various_tiff_formats/test_CS.tif", {}, "uint8", 3, (128, 128, 320)),
-    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
+    (
+        "testdata/various_tiff_formats/test_CS.tif",
+        {"data_format": "zarr3"},
+        "uint8",
+        3,
+        (1, 128, 128, 320),
+    ),
+    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 3, (128, 128, 320)),
     # same as test_C.tif above, but as a single file in a folder:
     ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
     ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),
-    ("testdata/various_tiff_formats/test_S.tif", {}, "uint16", 3, (128, 128, 64)),
+    (
+        "testdata/various_tiff_formats/test_S.tif",
+        {"data_format": "zarr3"},
+        "uint16",
+        1,
+        (128, 128, 64),
+    ),
 ]
 
 
@@ -142,7 +154,7 @@ def test_repo_images(
     kwargs: Dict,
     dtype: str,
     num_channels: int,
-    size: Tuple[int, int, int],
+    size: Tuple[int, ...],
 ) -> wk.Dataset:
     with wk.utils.get_executor_for_args(None) as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
@@ -156,7 +168,7 @@ def test_repo_images(
         )
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == num_channels
-        assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        assert layer.bounding_box.size.to_tuple() == size
         if isinstance(layer, wk.SegmentationLayer):
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0

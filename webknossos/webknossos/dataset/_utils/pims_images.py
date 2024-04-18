@@ -125,7 +125,7 @@ class PimsImages:
 
         ## attributes that will be set in __init__()
         # _bundle_axes
-        self._iter_axes = []
+        self._iter_axes: List[str] = []
         self._iter_loop_size = None
         self._possible_layers = {}
 
@@ -221,18 +221,15 @@ class PimsImages:
                 if len(images.shape) == 2:
                     # Assume yx
                     self._bundle_axes = ["y", "x"]
-                    self._iter_axes = []
                 elif len(images.shape) == 3:
                     # Assume yxc, cyx or zyx
                     if _assume_color_channel(images.shape[2], images.dtype):
                         self._bundle_axes = ["y", "x", "c"]
-                        self._iter_axes = []
                     elif images.shape[0] == 1 or (
                         _allow_channels_first
                         and _assume_color_channel(images.shape[0], images.dtype)
                     ):
                         self._bundle_axes = ["c", "y", "x"]
-                        self._iter_axes = []
                     else:
                         self._bundle_axes = ["y", "x"]
                         self._iter_axes = ["z"]
