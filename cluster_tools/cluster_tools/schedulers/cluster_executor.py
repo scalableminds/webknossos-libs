@@ -411,8 +411,9 @@ class ClusterExecutor(futures.Executor):
         self.ensure_not_shutdown()
 
         # Start the job.
+        # todo: used to have 5 elements (now 4)
         serialized_function_info = pickling.dumps(
-            (__fn, args, kwargs, self.meta_data, output_pickle_path)
+            ((__fn, self.meta_data), args, kwargs, output_pickle_path)
         )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
@@ -451,9 +452,10 @@ class ClusterExecutor(futures.Executor):
     def get_jobid_with_index(cls, jobid: Union[str, int], index: int) -> str:
         return f"{jobid}_{index}"
 
-    def get_function_pickle_path(self, workerid: str) -> str:
+    def get_function_and_metadata_pickle_path(self, workerid: str) -> str:
         return self.format_infile_name(
-            self.cfut_dir, self.get_workerid_with_index(workerid, "function")
+            self.cfut_dir,
+            self.get_workerid_with_index(workerid, "function-and-metadata"),
         )
 
     @staticmethod
@@ -484,10 +486,12 @@ class ClusterExecutor(futures.Executor):
         futs_with_output_paths = []
         workerid = random_string()
 
-        pickled_function_path = self.get_function_pickle_path(workerid)
-        self.files_to_clean_up.append(pickled_function_path)
-        with open(pickled_function_path, "wb") as file:
-            pickling.dump(fn, file)
+        pickled_function_and_metadata_path = self.get_function_and_metadata_pickle_path(
+            workerid
+        )
+        self.files_to_clean_up.append(pickled_function_and_metadata_path)
+        with open(pickled_function_and_metadata_path, "wb") as file:
+            pickling.dump((fn, self.meta_data), file)
         self.store_main_path_to_meta_file(workerid)
 
         for index, arg in enumerate(args):
@@ -510,8 +514,14 @@ class ClusterExecutor(futures.Executor):
                 )
                 os.unlink(preliminary_output_pickle_path)
 
+            # todo: used to have 5 elements (now 4)
             serialized_function_info = pickling.dumps(
-                (pickled_function_path, [arg], {}, self.meta_data, output_pickle_path)
+                (
+                    pickled_function_and_metadata_path,
+                    [arg],
+                    {},
+                    output_pickle_path,
+                )
             )
             infile_name = self.format_infile_name(self.cfut_dir, workerid_with_index)
 
