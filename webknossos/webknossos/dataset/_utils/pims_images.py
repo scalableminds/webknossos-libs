@@ -484,6 +484,10 @@ class PimsImages:
                             self._bundle_axes.append("c")
                         images.bundle_axes = self._bundle_axes
                         images.iter_axes = self._iter_axes
+                        if hasattr(images, "_get_frame"):
+                            images._register_get_frame(
+                                images._get_frame, "".join(self._iter_axes)
+                            )
                 else:
                     if hasattr(self, "_bundle_axes"):
                         # first part of __init__() has happened

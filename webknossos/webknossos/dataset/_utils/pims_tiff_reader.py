@@ -37,13 +37,11 @@ class PimsTiffReader(FramesSequenceND):
         tiff = tifffile.TiffFile(path)
         self.memmap = tiff.asarray(out="memmap")
 
+        self._init_axis("z", 1)
         for axis, shape in zip(tiff.series[0].get_axes(), tiff.series[0].get_shape()):
             self._init_axis(axis.lower(), shape)
 
-        if "c" in self.axes:
-            self._register_get_frame(self._get_frame, "cyx")
-        else:
-            self._register_get_frame(self._get_frame, "yx")
+        self._register_get_frame(self._get_frame, tiff.pages[0].axes.lower())
 
     @property
     def pixel_type(self) -> np.dtype:
