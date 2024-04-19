@@ -148,14 +148,14 @@ class ClusterExecutor(futures.Executor):
             partial(_handle_kill_through_weakref, ref(self), existing_sigint_handler),
         )
 
-        self.meta_data = {}
+        self.metadata = {}
         assert not (
             "logging_config" in kwargs and "logging_setup_fn" in kwargs
         ), "Specify either logging_config OR logging_setup_fn but not both at once"
         if "logging_config" in kwargs:
-            self.meta_data["logging_config"] = kwargs["logging_config"]
+            self.metadata["logging_config"] = kwargs["logging_config"]
         if "logging_setup_fn" in kwargs:
-            self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
+            self.metadata["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
     @classmethod
     def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
@@ -412,7 +412,7 @@ class ClusterExecutor(futures.Executor):
 
         # Start the job.
         serialized_function_info = pickling.dumps(
-            (__fn, args, kwargs, self.meta_data, output_pickle_path)
+            ((__fn, self.metadata), args, kwargs, output_pickle_path)
         )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
@@ -451,9 +451,10 @@ class ClusterExecutor(futures.Executor):
     def get_jobid_with_index(cls, jobid: Union[str, int], index: int) -> str:
         return f"{jobid}_{index}"
 
-    def get_function_pickle_path(self, workerid: str) -> str:
+    def get_function_and_metadata_pickle_path(self, workerid: str) -> str:
         return self.format_infile_name(
-            self.cfut_dir, self.get_workerid_with_index(workerid, "function")
+            self.cfut_dir,
+            self.get_workerid_with_index(workerid, "function-and-metadata"),
         )
 
     @staticmethod
@@ -484,10 +485,12 @@ class ClusterExecutor(futures.Executor):
         futs_with_output_paths = []
         workerid = random_string()
 
-        pickled_function_path = self.get_function_pickle_path(workerid)
-        self.files_to_clean_up.append(pickled_function_path)
-        with open(pickled_function_path, "wb") as file:
-            pickling.dump(fn, file)
+        pickled_function_and_metadata_path = self.get_function_and_metadata_pickle_path(
+            workerid
+        )
+        self.files_to_clean_up.append(pickled_function_and_metadata_path)
+        with open(pickled_function_and_metadata_path, "wb") as file:
+            pickling.dump((fn, self.metadata), file)
         self.store_main_path_to_meta_file(workerid)
 
         for index, arg in enumerate(args):
@@ -511,7 +514,12 @@ class ClusterExecutor(futures.Executor):
                 os.unlink(preliminary_output_pickle_path)
 
             serialized_function_info = pickling.dumps(
-                (pickled_function_path, [arg], {}, self.meta_data, output_pickle_path)
+                (
+                    pickled_function_and_metadata_path,
+                    [arg],
+                    {},
+                    output_pickle_path,
+                )
             )
             infile_name = self.format_infile_name(self.cfut_dir, workerid_with_index)
 

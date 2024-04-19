@@ -63,18 +63,14 @@ def worker(
         custom_main_path = get_custom_main_path(workerid, executor)
         with open(input_file_name, "rb") as f:
             unpickled_tuple = pickling.load(f, custom_main_path)
-            if len(unpickled_tuple) == 4:
-                fun, args, kwargs, meta_data = unpickled_tuple
-                output_pickle_path = executor.format_outfile_name(
-                    cfut_dir, workerid_with_idx
-                )
-            else:
-                assert len(unpickled_tuple) == 5, "Unexpected encoding"
-                fun, args, kwargs, meta_data, output_pickle_path = unpickled_tuple
+            assert len(unpickled_tuple) == 4, "Unexpected encoding"
+            fun_and_metadata, args, kwargs, output_pickle_path = unpickled_tuple
 
-        if isinstance(fun, str):
-            with open(fun, "rb") as function_file:
-                fun = pickling.load(function_file, custom_main_path)
+        if isinstance(fun_and_metadata, str):
+            with open(fun_and_metadata, "rb") as function_file:
+                fun, meta_data = pickling.load(function_file, custom_main_path)
+        else:
+            fun, meta_data = fun_and_metadata
 
         setup_logging(meta_data, executor, cfut_dir)
 

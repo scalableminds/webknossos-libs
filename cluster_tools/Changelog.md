@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Array jobs are spawned faster now, because common meta data is not serialized for each subjob. The performance improvement is especially big, when custom logging code is configured for array jobs. [#1042](https://github.com/scalableminds/webknossos-libs/pull/1042)
 - Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
 
 ### Fixed

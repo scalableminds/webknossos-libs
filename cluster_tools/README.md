@@ -74,6 +74,7 @@ If you would like to configure these limits independently, you can do so by sett
 ## Dev Setup
 
 ```
+# See ./dockered-slurm/README.md for troubleshooting
 cd dockered-slurm
 docker-compose up -d
 docker exec -it slurmctld bash
