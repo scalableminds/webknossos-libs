@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
 
 ### Fixed
 
