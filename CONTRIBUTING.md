@@ -147,15 +147,6 @@ The tests also contain functionality for the WEBKNOSSOS client. There a two mode
 [`pytest-split`](https://jerry-git.github.io/pytest-split),
 which is used in the CI to split the tests for different runners.
 
-The code under `webknossos/client/_generated` is auto-generated! Please don't adapt anything in the `generated` folder manually, but re-run the code generation.
-
-The client code is generated using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) and [InducOapi](https://github.com/TheWall89/inducoapi).
-
-To re-generate the code, run
-```bash
-./generate_client.sh
-```
-
 #### `cluster_tools` package
 
 For testing the `slurm` setup a docker-compose setup is available. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
