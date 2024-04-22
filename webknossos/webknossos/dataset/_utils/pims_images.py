@@ -725,6 +725,7 @@ def get_valid_bioformats_suffixes() -> Set[str]:
         "raw",
         "xml",
         "gif",
+        "nii",
     }
 
 
