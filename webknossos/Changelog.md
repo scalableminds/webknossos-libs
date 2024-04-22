@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
+- Added NIfTI suffix .nii to list of supported bioformats suffixes. [#1048](https://github.com/scalableminds/webknossos-libs/pull/1048) 
 
 ### Fixed
 
