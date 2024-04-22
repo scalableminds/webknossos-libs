@@ -483,7 +483,11 @@ class PimsImages:
                             self._bundle_axes.remove("c")
                             self._bundle_axes.append("c")
                         images.bundle_axes = self._bundle_axes
-                        images.iter_axes = self._iter_axes
+                        if "z" in self._iter_axes:
+                            images.iter_axes = self._iter_axes
+                        else:  # for 2D images
+                            images._init_axis("z", 1)
+                            images.iter_axes = self._iter_axes + ["z"]
                         if hasattr(images, "_get_frame"):
                             images._register_get_frame(
                                 images._get_frame, "".join(self._iter_axes)
@@ -621,8 +625,41 @@ class PimsImages:
                 else:
                     axes = ("z", "c", "y", "x")
 
-            if self._iter_loop_size is None:
-                # There is no or only one element in self._iter_axes, so a 3D bounding box is sufficient.
+            if isinstance(images, pims.FramesSequenceND):
+                iter_axes = (
+                    self._iter_axes
+                    if "z" in self._iter_axes
+                    else self._iter_axes + ["z"]
+                )
+                axes_names = iter_axes + [
+                    axis for axis in self._bundle_axes if axis != "c"
+                ]
+                assert "y" in axes_names and "x" in axes_names, (
+                    "The axes 'y' and 'x' have to be part of the axes_names. "
+                    + f"Got {axes_names} instead."
+                )
+                axes_sizes = [
+                    images.sizes.get(axis, 1)  # pylint: disable=no-member
+                    for axis in axes_names
+                ]
+                axes_index = list(range(1, len(axes_names) + 1))
+                topleft = VecInt.zeros(tuple(axes_names))
+
+                if self._swap_xy:
+                    x_index, y_index = axes_names.index("x"), axes_names.index("y")
+                    axes_sizes[x_index], axes_sizes[y_index] = (
+                        axes_sizes[y_index],
+                        axes_sizes[x_index],
+                    )
+
+                return NDBoundingBox(
+                    topleft,
+                    VecInt(axes_sizes, axes=axes_names),
+                    axes_names,
+                    VecInt(axes_index, axes=axes_names),
+                )
+            else:
+                # This is a fallback for pims classes that do not provide axes information
                 x_index, y_index = (
                     axes.index("x"),
                     axes.index("y"),
@@ -642,35 +679,6 @@ class PimsImages:
                 return BoundingBox(
                     (0, 0, 0),
                     (images_shape[x_index], images_shape[y_index], z_shape),
-                )
-            else:
-                if isinstance(images, pims.FramesSequenceND):
-                    axes_names = self._iter_axes + [
-                        axis for axis in self._bundle_axes if axis != "c"
-                    ]
-                    axes_sizes = [
-                        images.sizes[axis]  # pylint: disable=no-member
-                        for axis in axes_names
-                    ]
-                    axes_index = list(range(1, len(axes_names) + 1))
-                    topleft = VecInt.zeros(tuple(axes_names))
-
-                    if self._swap_xy:
-                        x_index, y_index = axes_names.index("x"), axes_names.index("y")
-                        axes_sizes[x_index], axes_sizes[y_index] = (
-                            axes_sizes[y_index],
-                            axes_sizes[x_index],
-                        )
-
-                    return NDBoundingBox(
-                        topleft,
-                        VecInt(axes_sizes, axes=axes_names),
-                        axes_names,
-                        VecInt(axes_index, axes=axes_names),
-                    )
-
-                raise ValueError(
-                    "It seems as if you try to load an N-dimensional image from 2D images. This is currently not supported."
                 )
 
 

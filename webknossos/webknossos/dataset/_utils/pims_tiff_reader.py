@@ -37,7 +37,6 @@ class PimsTiffReader(FramesSequenceND):
         tiff = tifffile.TiffFile(path)
         self.memmap = tiff.asarray(out="memmap")
 
-        self._init_axis("z", 1)
         for axis, shape in zip(tiff.series[0].get_axes(), tiff.series[0].get_shape()):
             self._init_axis(axis.lower(), shape)
 
