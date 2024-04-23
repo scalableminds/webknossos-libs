@@ -293,3 +293,30 @@ def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -
     written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape[1:])
 
     assert np.all(data == written_data)
+
+
+def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+
+    # Allocate some data (~ 8 MB)
+    shape = (512, 512, 32)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+
+        # Write some slices
+        with mag1.get_buffered_slice_writer() as writer:
+            writer.reset_offset(absolute_offset=(8, 16, 8))
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
+
+    written_data = mag1.read(absolute_offset=(8, 16, 8), size=shape)
+
+    assert np.all(data == written_data)
