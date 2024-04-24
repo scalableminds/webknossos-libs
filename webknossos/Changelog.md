@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.16...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,36 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...v0.14.20)
+
+### Changed
+- Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
+- Added NIfTI suffix .nii to list of supported bioformats suffixes. [#1048](https://github.com/scalableminds/webknossos-libs/pull/1048)
+
+
+## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...v0.14.19)
+
+### Changed
+- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependcies into optional groups which are not installed by default. Install with `poetry install --with dev --with examples`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
+
+
+## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...v0.14.18)
+
+### Fixed
+- Fixed a bug, where using an unaligned topleft value for `add_layer_from_images` leads to corrupted data. [#1036](https://github.com/scalableminds/webknossos-libs/pull/1036)
+
+
+
+## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.16...v0.14.17)
+
+### Changed
+- The characters `@` and `$` are allowed within layer names now. [#1034](https://github.com/scalableminds/webknossos-libs/pull/1034)
 
 
 ## [0.14.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.16) - 2024-04-04
@@ -236,7 +266,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `python -m wkcuber`, `python -m wkcuber.convert_image_stack_to_wkw` -> `webknossos convert`
     - `python -m wkcuber.export_wkw_as_tiff` -> `webknossos export-wkw-as-tiff`
     - `python -m wkcuber.convert_knossos` -> `webknossos convert-knossos`
-    - `python -m wkcuber.convert_nifti` -> `webknossos convert-nifti`
     - `python -m wkcuber.convert_raw` -> `webknossos convert-raw`
     - `python -m wkcuber.downsampling` -> `webknossos downsample`
     - `python -m wkcuber.compress` -> `webknossos compress`

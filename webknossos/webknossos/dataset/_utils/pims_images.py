@@ -504,14 +504,17 @@ class PimsImages:
         copy_to_view returns an iterable of image shapes and largest segment ids. When using this
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
-        relative_bbox = args
+        absolute_bbox = args
+        relative_bbox = absolute_bbox.offset(-mag_view.bounding_box.topleft)
 
         assert all(
             size == 1
-            for size, axis in zip(relative_bbox.size, relative_bbox.axes)
+            for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
             if axis not in ("x", "y", "z")
         ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
 
+        # z_start and z_end are relative to the bounding box of the mag_view
+        # to access the correct data from the images
         z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
         max_id: Optional[int]
@@ -522,13 +525,13 @@ class PimsImages:
 
         with self._open_images() as images:
             if self._iter_axes is not None and self._iter_loop_size is not None:
-                # select the range of images that represents one xyz combination
+                # select the range of images that represents one xyz combination in the mag_view
                 lower_bounds = sum(
                     self._iter_loop_size[axis_name]
                     * relative_bbox.get_bounds(axis_name)[0]
                     for axis_name in self._iter_axes[:-1]
                 )
-                upper_bounds = lower_bounds + relative_bbox.get_shape("z")
+                upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
                 images = images[lower_bounds:upper_bounds]
             if self._flip_z:
                 images = images[::-1]  # pylint: disable=unsubscriptable-object
@@ -536,8 +539,8 @@ class PimsImages:
             with mag_view.get_buffered_slice_writer(
                 # Previously only z_start and its end were important, now the slice writer needs to know
                 # which axis is currently written.
-                relative_bounding_box=relative_bbox,
-                buffer_size=mag_view.info.chunk_shape.z,
+                absolute_bounding_box=absolute_bbox,
+                buffer_size=absolute_bbox.get_shape("z"),
                 # copy_to_view is typically used in a multiprocessing-context. Therefore the
                 # buffered slice writer should not update the json file to avoid race conditions.
                 json_update_allowed=False,
@@ -722,6 +725,7 @@ def get_valid_bioformats_suffixes() -> Set[str]:
         "raw",
         "xml",
         "gif",
+        "nii",
     }
 
 

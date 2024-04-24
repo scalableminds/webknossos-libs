@@ -115,8 +115,8 @@ See below for specifics of the different packages. Let's have a look at the comm
   To install the dependencies for all sub-projects, run `make install`.
   
 * **Tooling** we use across the sub-projects to enforce coding styles and tests:
-    * `./format.sh`: black and isort
-    * `./lint.sh`: pylint
+    * `./format.sh`: ruff
+    * `./lint.sh`: ruff
     * `./typecheck.sh`: mypy
     * `./test.sh`: pytest and custom scripts
 
@@ -146,15 +146,6 @@ The tests also contain functionality for the WEBKNOSSOS client. There a two mode
 `./test.sh --store-durations` updates the durations for
 [`pytest-split`](https://jerry-git.github.io/pytest-split),
 which is used in the CI to split the tests for different runners.
-
-The code under `webknossos/client/_generated` is auto-generated! Please don't adapt anything in the `generated` folder manually, but re-run the code generation.
-
-The client code is generated using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) and [InducOapi](https://github.com/TheWall89/inducoapi).
-
-To re-generate the code, run
-```bash
-./generate_client.sh
-```
 
 #### `cluster_tools` package
 

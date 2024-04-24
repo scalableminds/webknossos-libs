@@ -35,7 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.geometry.vec_int import VecInt, VecIntLike
+from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -109,9 +109,9 @@ _DATASET_URL_REGEX = re.compile(
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.
-_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_\-]+[A-Za-z0-9_\-\.]*$")
+_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$")
 # This regex matches any character that is not allowed in a layer name.
-_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_\-\.]")
+_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
@@ -1243,11 +1243,17 @@ class Dataset:
             )
 
             if batch_size is None:
-                if compress:
+                if compress or (
+                    layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
+                ):
+                    # if data is compressed or dataformat is zarr, parallel write access
+                    # to a shard leads to corrupted data, the batch size must be aligned
+                    # with the shard size
                     batch_size = mag_view.info.shard_shape.z
                 else:
+                    # in uncompressed wkw only writing to the same chunk is problematic
                     batch_size = mag_view.info.chunk_shape.z
-            elif compress:
+            elif compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
                 assert (
                     batch_size % mag_view.info.shard_shape.z == 0
                 ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
@@ -1263,44 +1269,20 @@ class Dataset:
                 dtype=current_dtype,
             )
 
-            args = []
-            bbox = layer.bounding_box
-            additional_axes = [
-                axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")
-            ]
-            additional_axes_shapes = tuple(
-                product(
-                    *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
+            if (
+                set(layer.bounding_box.axes).difference("x", "y", "z")
+            ) and layer.data_format != DataFormat.Zarr3:
+                raise RuntimeError(
+                    "The data stores additional axes other than x, y and z."
+                )
+
+            buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
+            args = list(
+                layer.bounding_box.chunk(
+                    buffered_slice_writer_shape,
+                    Vec3Int(1, 1, batch_size),
                 )
             )
-            if additional_axes and layer.data_format != DataFormat.Zarr3:
-                assert (
-                    len(additional_axes_shapes) == 1
-                ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
-
-                # Convert NDBoundingBox to 3D BoundingBox
-                bbox = BoundingBox(
-                    bbox.topleft_xyz,
-                    bbox.size_xyz,
-                )
-                expected_bbox = bbox
-                additional_axes = []
-
-            z_shape = bbox.get_shape("z")
-            bbox = bbox.with_topleft(VecInt.zeros(bbox.axes))
-            for z_start in range(0, z_shape, batch_size):
-                z_size = min(batch_size, z_shape - z_start)
-                z_bbox = bbox.with_bounds("z", z_start, z_size)
-                if not additional_axes:
-                    args.append(z_bbox)
-                else:
-                    for shape in additional_axes_shapes:
-                        reduced_bbox = z_bbox
-                        for index, axis in enumerate(additional_axes):
-                            reduced_bbox = reduced_bbox.with_bounds(
-                                axis, shape[index], 1
-                            )
-                        args.append(reduced_bbox)
 
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
