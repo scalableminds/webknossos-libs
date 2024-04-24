@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Added `layer_name` as optional argument to `Dataset.from_images` method. If the created dataset contains only a single layer, `layer_name` is used, otherwise the given `layer_name` is a common prefix for all layers. [1054](https://github.com/scalableminds/webknossos-libs/pull/1054)
 
 ### Fixed
 
