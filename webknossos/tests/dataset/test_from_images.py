@@ -25,13 +25,14 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         tmp_path,
         (1, 1, 1),
         compress=True,
+        layer_name="tiff_stack",
         layer_category="segmentation",
         chunks_per_shard=(8, 8, 8),
         map_filepath_to_layer_name=wk.Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
     )
     assert len(ds.layers) == 1
-    assert "tiff" in ds.layers
-    data = ds.layers["tiff"].get_finest_mag().read()[0, :, :]
+    assert "tiff_stack" in ds.layers
+    data = ds.layers["tiff_stack"].get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
         with TiffFile(TESTDATA_DIR / "tiff" / "test.0000.tiff") as tif_file:
             comparison_slice = tif_file.asarray().T
@@ -43,14 +44,15 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         TESTDATA_DIR / "various_tiff_formats",
         tmp_path,
         (1, 1, 1),
+        layer_name="tiffs",
     )
     assert len(ds.layers) == 4
 
     expected_dtype_channels_size_per_layer = {
-        "test_CS.tif": ("uint8", 3, (128, 128, 320)),
-        "test_C.tif": ("uint8", 1, (128, 128, 320)),
-        "test_I.tif": ("uint32", 1, (64, 128, 64)),
-        "test_S.tif": ("uint16", 3, (128, 128, 64)),
+        "tiffs_test_CS.tif": ("uint8", 3, (128, 128, 320)),
+        "tiffs_test_C.tif": ("uint8", 1, (128, 128, 320)),
+        "tiffs_test_I.tif": ("uint32", 1, (64, 128, 64)),
+        "tiffs_test_S.tif": ("uint16", 3, (128, 128, 64)),
     }
 
     for layer_name, layer in ds.layers.items():
