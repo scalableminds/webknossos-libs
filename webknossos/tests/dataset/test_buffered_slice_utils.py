@@ -312,11 +312,14 @@ def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
 
         # Write some slices
         with mag1.get_buffered_slice_writer() as writer:
-            writer.reset_offset(absolute_offset=(8, 16, 8))
-            for z in range(0, shape[2]):
+            for z in range(0, shape[2] - 8):
+                section = data[:, :, z]
+                writer.send(section)
+            writer.reset_offset(absolute_offset=(0, 0, shape[2] - 8))
+            for z in range(shape[2] - 8, shape[2]):
                 section = data[:, :, z]
                 writer.send(section)
 
-    written_data = mag1.read(absolute_offset=(8, 16, 8), size=shape)
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
 
     assert np.all(data == written_data)

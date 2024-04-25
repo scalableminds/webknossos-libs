@@ -57,21 +57,9 @@ class BufferedSliceWriter:
         self._use_logging = use_logging
         self._json_update_allowed = json_update_allowed
         self._bbox: NDBoundingBox
-
-        if (
-            offset is None
-            and relative_offset is None
-            and absolute_offset is None
-            and relative_bounding_box is None
-            and absolute_bounding_box is None
-        ):
-            relative_offset = Vec3Int.zeros()
-        if offset is not None:
-            warnings.warn(
-                "[DEPRECATION] Using offset for a buffered slice writer is deprecated. "
-                + "Please use the parameter relative_offset or absolute_offset in Mag(1) instead.",
-                DeprecationWarning,
-            )
+        self._slices_to_write: List[np.ndarray] = []
+        self._current_slice: Optional[int] = None
+        self._buffer_start_slice: Optional[int] = None
 
         self.reset_offset(
             offset,
@@ -98,10 +86,6 @@ class BufferedSliceWriter:
                 "[WARNING] Using a buffer size that doesn't align with the datataset's chunk size, "
                 + "will slow down the buffered slice writer.",
             )
-
-        self._slices_to_write: List[np.ndarray] = []
-        self._current_slice: Optional[int] = None
-        self._buffer_start_slice: Optional[int] = None
 
     def _flush_buffer(self) -> None:
         if len(self._slices_to_write) == 0:
@@ -260,8 +244,12 @@ class BufferedSliceWriter:
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
-        if getattr(self, "_slices_to_write", False):
+        if self._slices_to_write:
             self._flush_buffer()
+
+        # Reset the generator
+        self._generator = self._get_slice_generator()
+        next(self._generator)
 
         if (
             offset is None
