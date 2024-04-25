@@ -595,7 +595,7 @@ class Dataset:
         `z_slices_sort_key`.
 
         If a layer_name is set, this name is used if a single layer is created.
-        Otherwise the layername is used as a common prefix for all layers.
+        Otherwise the layer_name is used as a common prefix for all layers.
 
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
