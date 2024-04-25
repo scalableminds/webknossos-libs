@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...v0.14.20)
+
+### Changed
+- Array jobs are spawned faster now, because common meta data is not serialized for each subjob. The performance improvement is especially big, when custom logging code is configured for array jobs. [#1042](https://github.com/scalableminds/webknossos-libs/pull/1042)
+- Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
 
 
 ## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18

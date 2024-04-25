@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...v0.14.20)
+
+### Changed
+- Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
+- Added NIfTI suffix .nii to list of supported bioformats suffixes. [#1048](https://github.com/scalableminds/webknossos-libs/pull/1048)
 
 
 ## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18
