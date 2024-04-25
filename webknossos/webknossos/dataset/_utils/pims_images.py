@@ -25,6 +25,7 @@ from natsort import natsorted
 from numpy.typing import DTypeLike
 
 from webknossos.geometry.bounding_box import BoundingBox
+from webknossos.geometry.mag import Mag
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
 # pylint: disable=unused-import
@@ -605,32 +606,16 @@ class PimsImages:
         else:
             return self._possible_layers
 
-    @property
-    def expected_bbox(self) -> NDBoundingBox:
+    def expected_mag1_bbox(self, mag: Mag) -> NDBoundingBox:
         # replaces the previous expected_shape to enable n-dimensional input files
+        _add_z_to_iter_axes = False
         with self._open_images() as images:
             if isinstance(images, pims.FramesSequenceND):
-                axes = images.axes
-                images_shape = tuple(images.sizes[axis] for axis in axes)
-            else:
-                if isinstance(images, list):
-                    images_shape = (len(images),) + cast(
-                        pims.FramesSequence, images[0]
-                    ).shape
-
+                if "z" in self._iter_axes:
+                    iter_axes = self._iter_axes
                 else:
-                    images_shape = images.shape  # pylint: disable=no-member
-                if len(images_shape) == 3:
-                    axes = ("z", "y", "x")
-                else:
-                    axes = ("z", "c", "y", "x")
-
-            if isinstance(images, pims.FramesSequenceND):
-                iter_axes = (
-                    self._iter_axes
-                    if "z" in self._iter_axes
-                    else self._iter_axes + ["z"]
-                )
+                    iter_axes = self._iter_axes + ["z"]
+                    _add_z_to_iter_axes = True
                 axes_names = iter_axes + [
                     axis for axis in self._bundle_axes if axis != "c"
                 ]
@@ -652,14 +637,35 @@ class PimsImages:
                         axes_sizes[x_index],
                     )
 
-                return NDBoundingBox(
+                nd_bbox = NDBoundingBox(
                     topleft,
                     VecInt(axes_sizes, axes=axes_names),
                     axes_names,
                     VecInt(axes_index, axes=axes_names),
-                )
+                ).from_mag_to_mag1(mag)
+
+                if _add_z_to_iter_axes:
+                    nd_bbox = nd_bbox.with_bounds("z", None, 1)
+
+                if set(axes_names) == {"z", "y", "x"}:
+                    # A 3D dataset is expected, a 3D bounding box is sufficient
+                    return BoundingBox.from_ndbbox(nd_bbox)
+                else:
+                    return nd_bbox
             else:
                 # This is a fallback for pims classes that do not provide axes information
+                if isinstance(images, list):
+                    images_shape = (len(images),) + cast(
+                        pims.FramesSequence, images[0]
+                    ).shape
+
+                else:
+                    images_shape = images.shape  # pylint: disable=no-member
+                if len(images_shape) == 3:
+                    axes = ("z", "y", "x")
+                else:
+                    axes = ("z", "c", "y", "x")
+
                 x_index, y_index = (
                     axes.index("x"),
                     axes.index("y"),
@@ -679,7 +685,7 @@ class PimsImages:
                 return BoundingBox(
                     (0, 0, 0),
                     (images_shape[x_index], images_shape[y_index], z_shape),
-                )
+                ).from_mag_to_mag1(mag)
 
 
 T = TypeVar("T", bound=Tuple[int, ...])
@@ -764,4 +770,4 @@ def has_image_z_dimension(
         flip_z=False,
     )
 
-    return pims_images.expected_bbox.get_shape("z") > 1
+    return pims_images.expected_mag1_bbox(Mag(1)).get_shape("z") > 1
