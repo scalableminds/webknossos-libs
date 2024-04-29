@@ -45,6 +45,12 @@ def main(
             metavar="VOXEL_SIZE",
         ),
     ],
+    layer_name: Annotated[
+        Optional[str],
+        typer.Option(
+            help="This name is used if only one layer is created. Otherwise this name is used as a common prefix for all layers.",
+        ),
+    ] = None,
     category: Annotated[
         Optional[LayerCategory],
         typer.Option(
@@ -107,5 +113,6 @@ def main(
             data_format=data_format,
             executor=executor,
             compress=compress,
+            layer_name=layer_name,
             layer_category=category.value if category else None,
         )
