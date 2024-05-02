@@ -1218,7 +1218,7 @@ class Dataset:
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
 
-            expected_bbox = pims_images.expected_mag1_bbox(Mag(mag))
+            expected_bbox = pims_images.expected_bbox
 
             # When the expected bbox is 2D the chunk_shape is set to 2D too.
             if (
@@ -1234,7 +1234,7 @@ class Dataset:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
 
             mag = Mag(mag)
-            layer.bounding_box = expected_bbox.offset(topleft)
+            layer.bounding_box = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,

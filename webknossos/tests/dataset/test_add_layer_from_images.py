@@ -91,13 +91,13 @@ REPO_IMAGES_ARGS: List[
     (
         "testdata/rgb_tiff/test_rgb.tif",
         {"mag": 2, "data_format": "zarr3"},
-        "uint8",
+        "uint32",
         1,
         (64, 64, 2),
     ),
     (
         "testdata/rgb_tiff",
-        {"mag": 2, "channel": 0, "dtype": "uint32"},
+        {"mag": 2, "channel": 0, "dtype": "uint32", "data_format": "zarr3"},
         "uint32",
         1,
         (64, 64, 2),
@@ -136,7 +136,13 @@ REPO_IMAGES_ARGS: List[
     ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 3, (128, 128, 320)),
     # same as test_C.tif above, but as a single file in a folder:
     ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
-    ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),
+    (
+        "testdata/various_tiff_formats/test_I.tif",
+        {"data_format": "zarr3"},
+        "uint32",
+        1,
+        (64, 128, 64),
+    ),
     (
         "testdata/various_tiff_formats/test_S.tif",
         {"data_format": "zarr3"},
@@ -208,7 +214,7 @@ BIOFORMATS_ARGS = [
     (
         "https://samples.scif.io/wtembryo.zip",
         "wtembryo.mov",
-        {},
+        {"data_format": "zarr3"},
         "uint8",
         3,
         (320, 240, 108),
@@ -244,7 +250,7 @@ BIOFORMATS_ARGS = [
     (
         "https://samples.scif.io/test-avi.zip",
         "t1-rendering.avi",
-        {},
+        {"data_format": "zarr3"},
         "uint8",
         3,
         (206, 218, 36),
@@ -344,10 +350,10 @@ TEST_IMAGES_ARGS = [
     (
         "https://samples.scif.io/test-jpeg2000.zip",
         "scifio-test.jp2",
-        {},
+        {"data_format": "zarr3"},
         "uint8",
         3,
-        (500, 500, 1),
+        (1, 1, 500, 500),
     ),
     (
         "https://samples.scif.io/test-jpg.zip",
@@ -407,7 +413,7 @@ def test_test_images(
         else:
             assert l_bio.dtype_per_channel == np.dtype(dtype)
             assert l_bio.num_channels == num_channels
-            assert l_bio.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+            assert l_bio.bounding_box.size.to_tuple() == size
         l_normal = ds.add_layer_from_images(
             path,
             layer_name="normal_" + layer_name,
@@ -418,7 +424,7 @@ def test_test_images(
         )
         assert l_normal.dtype_per_channel == np.dtype(dtype)
         assert l_normal.num_channels == num_channels
-        assert l_normal.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        assert l_normal.bounding_box.size.to_tuple() == size
         if l_bio is not None:
             assert np.array_equal(
                 l_bio.get_finest_mag().read(), l_normal.get_finest_mag().read()

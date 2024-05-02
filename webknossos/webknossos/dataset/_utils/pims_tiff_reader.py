@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Set
+from typing import Set, Tuple
 
 import numpy as np
 
@@ -34,17 +34,27 @@ class PimsTiffReader(FramesSequenceND):
     def __init__(self, path: PathLike) -> None:
         super().__init__()
         path = Path(path)
-        tiff = tifffile.TiffFile(path)
-        self.memmap = tiff.asarray(out="memmap")
+        self._tiff = tifffile.TiffFile(path).series[0]
 
-        for axis, shape in zip(tiff.series[0].get_axes(), tiff.series[0].get_shape()):
+        for axis, shape in zip(self._tiff.get_axes(), self._tiff.get_shape()):
             self._init_axis(axis.lower(), shape)
 
-        self._register_get_frame(self._get_frame, tiff.pages[0].axes.lower())
+        if hasattr(self._tiff, "pages"):
+            tmp = self._tiff.pages[0]
+        else:
+            tmp = self._tiff["pages"][0]
+        self._dtype = tmp.dtype
+        self._shape = tmp.shape
+        self._register_get_frame(self.get_frame, tmp.axes.lower())
 
     @property
     def pixel_type(self) -> np.dtype:
-        return self.memmap.dtype
+        return self._dtype
 
-    def _get_frame(self, **ind: int) -> np.ndarray:
-        return self.memmap[tuple(ind[axis] for axis in self._iter_axes)]
+    def get_frame(self, ind: int) -> np.ndarray:
+        data = self._tiff.asarray(key=ind)
+        return data
+
+    @property
+    def frame_shape(self) -> Tuple[int, ...]:
+        return self._shape
