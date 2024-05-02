@@ -90,17 +90,17 @@ REPO_IMAGES_ARGS: List[
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
-        {"mag": 2, "data_format": "zarr3"},
-        "uint32",
+        {"mag": 2},
+        "uint8",
         1,
-        (64, 64, 2),
+        (64, 64, 6),
     ),
     (
         "testdata/rgb_tiff",
-        {"mag": 2, "channel": 0, "dtype": "uint32", "data_format": "zarr3"},
+        {"mag": 2, "channel": 0, "dtype": "uint32"},
         "uint32",
         1,
-        (64, 64, 2),
+        (64, 64, 6),
     ),
     (
         "testdata/temca2/*/*/*.jpg",
@@ -126,30 +126,12 @@ REPO_IMAGES_ARGS: List[
         1,
         (2970, 2521, 4),
     ),
-    (
-        "testdata/various_tiff_formats/test_CS.tif",
-        {"data_format": "zarr3"},
-        "uint8",
-        3,
-        (1, 128, 128, 320),
-    ),
-    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 3, (128, 128, 320)),
+    ("testdata/various_tiff_formats/test_CS.tif", {}, "uint8", 3, (128, 128, 320)),
+    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
     # same as test_C.tif above, but as a single file in a folder:
     ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
-    (
-        "testdata/various_tiff_formats/test_I.tif",
-        {"data_format": "zarr3"},
-        "uint32",
-        1,
-        (64, 128, 64),
-    ),
-    (
-        "testdata/various_tiff_formats/test_S.tif",
-        {"data_format": "zarr3"},
-        "uint16",
-        1,
-        (128, 128, 64),
-    ),
+    ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),
+    ("testdata/various_tiff_formats/test_S.tif", {}, "uint16", 3, (128, 128, 64)),
 ]
 
 
@@ -214,7 +196,7 @@ BIOFORMATS_ARGS = [
     (
         "https://samples.scif.io/wtembryo.zip",
         "wtembryo.mov",
-        {"data_format": "zarr3"},
+        {},
         "uint8",
         3,
         (320, 240, 108),
@@ -250,7 +232,7 @@ BIOFORMATS_ARGS = [
     (
         "https://samples.scif.io/test-avi.zip",
         "t1-rendering.avi",
-        {"data_format": "zarr3"},
+        {},
         "uint8",
         3,
         (206, 218, 36),
@@ -350,10 +332,10 @@ TEST_IMAGES_ARGS = [
     (
         "https://samples.scif.io/test-jpeg2000.zip",
         "scifio-test.jp2",
-        {"data_format": "zarr3"},
+        {},
         "uint8",
         3,
-        (1, 1, 500, 500),
+        (500, 500, 1),
     ),
     (
         "https://samples.scif.io/test-jpg.zip",

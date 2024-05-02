@@ -170,6 +170,7 @@ class PimsImages:
                 # An image slice should always consist of a 2D image. If there are multiple channels
                 # the data of each channel is part of the image slices. Possible shapes of an image
                 # slice are (#y_shape, #x_shape), (1, #y_shape, #x_shape) or (3, #y_shape, #x_shape).
+                # self._bundle_axes = list(images.bundle_axes)
                 if images.sizes.get("c", 1) > 1:
                     self._bundle_axes = ["c", "y", "x"]
                 else:
@@ -183,9 +184,8 @@ class PimsImages:
                 self._iter_axes = list(
                     set(images.axes).difference({*self._bundle_axes, "c", "z"})
                 )
-                if "z" not in images.axes:
-                    images._init_axis("z", 1)
-                self._iter_axes.append("z")
+                if "z" in images.axes:
+                    self._iter_axes.append("z")
 
                 if self._timepoint is not None:
                     # if a timepoint is given, PimsImages should only generate image slices for that timepoint
@@ -484,8 +484,6 @@ class PimsImages:
                             self._bundle_axes.remove("c")
                             self._bundle_axes.append("c")
                         images.bundle_axes = self._bundle_axes
-                        if "z" not in images.axes:
-                            images._init_axis("z", 1)
                         images.iter_axes = self._iter_axes
                 else:
                     if hasattr(self, "_bundle_axes"):
@@ -605,41 +603,9 @@ class PimsImages:
         # replaces the previous expected_shape to enable n-dimensional input files
         with self._open_images() as images:
             if isinstance(images, pims.FramesSequenceND):
-                axes_names = self._iter_axes + [
-                    axis for axis in self._bundle_axes if axis != "c"
-                ]
-                assert "y" in axes_names and "x" in axes_names, (
-                    "The axes 'y' and 'x' have to be part of the axes_names. "
-                    + f"Got {axes_names} instead."
-                )
-                axes_sizes = [
-                    images.sizes[axis]  # pylint: disable=no-member
-                    for axis in axes_names
-                ]
-                axes_index = list(range(1, len(axes_names) + 1))
-                topleft = VecInt.zeros(tuple(axes_names))
-
-                if self._swap_xy:
-                    x_index, y_index = axes_names.index("x"), axes_names.index("y")
-                    axes_sizes[x_index], axes_sizes[y_index] = (
-                        axes_sizes[y_index],
-                        axes_sizes[x_index],
-                    )
-
-                nd_bbox = NDBoundingBox(
-                    topleft,
-                    VecInt(axes_sizes, axes=axes_names),
-                    axes_names,
-                    VecInt(axes_index, axes=axes_names),
-                )
-
-                if set(axes_names) == {"z", "y", "x"}:
-                    # A 3D dataset is expected, a 3D bounding box is sufficient
-                    return BoundingBox.from_ndbbox(nd_bbox)
-                else:
-                    return nd_bbox
+                axes = images.axes
+                images_shape = tuple(images.sizes[axis] for axis in axes)
             else:
-                # This is a fallback for pims classes that do not provide axes information
                 if isinstance(images, list):
                     images_shape = (len(images),) + cast(
                         pims.FramesSequence, images[0]
@@ -647,10 +613,13 @@ class PimsImages:
 
                 else:
                     images_shape = images.shape  # pylint: disable=no-member
-                axes: Tuple[str, ...] = ("z", "y", "x")
-                if len(images_shape) == 4:
+                if len(images_shape) == 3:
+                    axes = ("z", "y", "x")
+                else:
                     axes = ("z", "c", "y", "x")
 
+            if self._iter_loop_size is None:
+                # There is no or only one element in self._iter_axes, so a 3D bounding box is sufficient.
                 x_index, y_index = (
                     axes.index("x"),
                     axes.index("y"),
@@ -670,6 +639,35 @@ class PimsImages:
                 return BoundingBox(
                     (0, 0, 0),
                     (images_shape[x_index], images_shape[y_index], z_shape),
+                )
+            else:
+                if isinstance(images, pims.FramesSequenceND):
+                    axes_names = (self._iter_axes or []) + [
+                        axis for axis in self._bundle_axes if axis != "c"
+                    ]
+                    axes_sizes = [
+                        images.sizes[axis]  # pylint: disable=no-member
+                        for axis in axes_names
+                    ]
+                    axes_index = list(range(1, len(axes_names) + 1))
+                    topleft = VecInt.zeros(tuple(axes_names))
+
+                    if self._swap_xy:
+                        x_index, y_index = axes_names.index("x"), axes_names.index("y")
+                        axes_sizes[x_index], axes_sizes[y_index] = (
+                            axes_sizes[y_index],
+                            axes_sizes[x_index],
+                        )
+
+                    return NDBoundingBox(
+                        topleft,
+                        VecInt(axes_sizes, axes=axes_names),
+                        axes_names,
+                        VecInt(axes_index, axes=axes_names),
+                    )
+
+                raise ValueError(
+                    "It seems as if you try to load an N-dimensional image from 2D images. This is currently not supported."
                 )
 
 
