@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Performing `webknossos upload` on a windows machine leaded to loss of directory structure due to backslashes in the relative paths. This was fixed by [1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
 
 
 ## [0.14.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.21) - 2024-05-07
