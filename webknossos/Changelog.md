@@ -10,17 +10,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Added `layer_name` as optional argument to `Dataset.from_images` method. If the created dataset contains only a single layer, `layer_name` is used, otherwise the given `layer_name` is a common prefix for all layers. [1054](https://github.com/scalableminds/webknossos-libs/pull/1054)
-- The context variable of View.get_buffered_slice_writer() is a BufferedSliceWriter now instead of a Generator. Interaction with the SliceWriter does not change, but updating the offset after first initialization is possible now. [1052](https://github.com/scalableminds/webknossos-libs/pull/1052)
 
 ### Fixed
+
+
+## [0.14.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.21) - 2024-05-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...v0.14.21)
+
+### Changed
+- Added `layer_name` as optional argument to `Dataset.from_images` method. If the created dataset contains only a single layer, `layer_name` is used, otherwise the given `layer_name` is a common prefix for all layers. [1054](https://github.com/scalableminds/webknossos-libs/pull/1054)
+- The context variable of View.get_buffered_slice_writer() is a BufferedSliceWriter now instead of a Generator. Interaction with the SliceWriter does not change, but updating the offset after first initialization is possible now. [1052](https://github.com/scalableminds/webknossos-libs/pull/1052)
 
 
 ## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
