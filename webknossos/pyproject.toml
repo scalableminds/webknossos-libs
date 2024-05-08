@@ -44,7 +44,6 @@ numpy = "^1.21.0"  # see https://numpy.org/neps/nep-0029-deprecation_policy.html
 psutil = "^5.6.7"
 python-dateutil = "^2.8.0"
 python-dotenv = "^0.19.0"
-requests = "^2.31.0"
 rich = "^10.9.0"
 scipy = "^1.9.0"
 typer = "0.12.3"
