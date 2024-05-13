@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Set, Tuple
+from typing import Iterable, Set, Tuple
 
 import numpy as np
 
@@ -40,19 +40,66 @@ class PimsTiffReader(FramesSequenceND):
             self._init_axis(axis.lower(), shape)
 
         if hasattr(self._tiff, "pages"):
+            # Selecting the first page to get the dtype and shape
             tmp = self._tiff.pages[0]
         else:
             tmp = self._tiff["pages"][0]
+        # Updating the bundle axes of FramesSequenceND to match the metadata of the tiff file
         self._dtype = tmp.dtype
         self._shape = tmp.shape
-        self._register_get_frame(self.get_frame, tmp.axes.lower())
+        self._bundle_axes_page = tmp.axes.lower()
+        # if len(self._tiff.axes) <= 3 or (
+        #     len(self._tiff.axes) == 4 and "c" in self._tiff.axes
+        # ):
+        #     raise RuntimeError(
+        #         "This reader is not suitable for 2D or 3D images. Use the default tiff reader."
+        #     )
+        self._register_get_frame(self.get_frame_2D, self._bundle_axes_page)
 
     @property
     def pixel_type(self) -> np.dtype:
         return self._dtype
 
-    def get_frame(self, ind: int) -> np.ndarray:
-        data = self._tiff.asarray(key=ind)
+    def _extract_from_tiff_page(self, **ind: int) -> np.ndarray:
+        # A frame of the tiff file might have more axes than the desired shape of a frame in the FramesSequenceND.
+        # To reduce the axes of the tiff file to the desired shape we need to iterate over the axes of the tiff file and extract the data.
+        index_slice = tuple(
+            slice(ind[axis], ind[axis] + 1)
+            if axis not in self.bundle_axes
+            else slice(None)
+            for axis in self._bundle_axes_page
+        )
+        key = 0
+        iter_size = 1
+        for axis, other_axis in zip(self.iter_axes[-1:0:-1], self._iter_axes[-2::-1]):
+            # Calculate the key for the tiff file to get the correct frame
+            key += (
+                ind[other_axis] * (iter_size := iter_size * self.sizes[axis])
+                + ind[axis]
+            )
+        data = self._tiff.asarray(key=key)[index_slice]
+        return data
+
+    def get_frame_2D(self, **ind: int) -> np.ndarray:
+        # A frame of the tiff file might have less axes than the desired shape of a frame in the FramesSequenceND.
+        # To get the desired axes we need to iterate over the axes of the FramesSequenceND and extract the data from the tiff file.
+        desired_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
+        data = np.zeros(desired_shape, dtype=self.pixel_type)
+
+        for current_axis in self.bundle_axes:
+            if current_axis not in self._bundle_axes_page:
+                for i in range(self.sizes[current_axis]):
+                    ind[current_axis] = i
+                    tiff_page_data = self._extract_from_tiff_page(**ind).squeeze()
+                    data[
+                        tuple(
+                            slice(i, i + 1) if current_axis == axis else slice(None)
+                            for axis in self.bundle_axes
+                        )
+                    ] = tiff_page_data
+            else:
+                data = self._extract_from_tiff_page(**ind).squeeze()
+
         return data
 
     @property

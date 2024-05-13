@@ -126,7 +126,13 @@ REPO_IMAGES_ARGS: List[
         1,
         (2970, 2521, 4),
     ),
-    ("testdata/various_tiff_formats/test_CS.tif", {}, "uint8", 3, (128, 128, 320)),
+    (
+        "testdata/various_tiff_formats/test_CS.tif",
+        {"data_format": "zarr3"},
+        "uint8",
+        3,
+        (3, 64, 128, 128),
+    ),
     ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
     # same as test_C.tif above, but as a single file in a folder:
     ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
