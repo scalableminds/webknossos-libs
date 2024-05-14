@@ -293,9 +293,9 @@ def test_slurm_max_array_size() -> None:
             job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
 
             # Count how often each job_id occurs which corresponds to the array size of the job
-            occurences = list(Counter(job_ids).values())
+            occurrences = list(Counter(job_ids).values())
 
-            assert all(array_size <= max_array_size for array_size in occurences)
+            assert all(array_size <= max_array_size for array_size in occurrences)
     finally:
         search_and_replace_in_slurm_config(command, "")
         reset_max_array_size = executor.get_max_array_size()
@@ -376,9 +376,9 @@ def test_slurm_max_array_size_env() -> None:
             job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
 
             # Count how often each job_id occurs which corresponds to the array size of the job
-            occurences = list(Counter(job_ids).values())
+            occurrences = list(Counter(job_ids).values())
 
-            assert all(array_size <= max_array_size for array_size in occurences)
+            assert all(array_size <= max_array_size for array_size in occurrences)
     finally:
         del os.environ["SLURM_MAX_ARRAY_SIZE"]
         reset_max_array_size = executor.get_max_array_size()

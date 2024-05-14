@@ -822,7 +822,7 @@ class Layer:
         of multiple layers while avoiding parallel writes with outdated updates
         to the datasource-properties.json file.
 
-        `executor` can be passed to allow distrubuted computation, parallelizing
+        `executor` can be passed to allow distributed computation, parallelizing
         across chunks. `args` is deprecated.
         """
         self._dataset._ensure_writable()

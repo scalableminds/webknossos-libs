@@ -133,7 +133,7 @@ def execute_floodfill(
         global_seed = current_cube + relative_seed
 
         # Only reading one voxel for the seed can be up to 30,000 times faster
-        # which is very relevent, since the chunk doesn't need to be traversed
+        # which is very relevant, since the chunk doesn't need to be traversed
         # if the seed voxel was already covered.
         value_at_seed_position = data_mag.read(current_cube + relative_seed, (1, 1, 1))
 

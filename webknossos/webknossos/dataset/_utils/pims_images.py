@@ -195,7 +195,7 @@ class PimsImages:
                     ):
                         # Creates a dict that contains the size of the loop for each axis
                         # the axes are identified by their index in the _iter_axes list
-                        # the last axis is the fastest iterating axis, therfore the size of the loop
+                        # the last axis is the fastest iterating axis, therefore the size of the loop
                         # for the last axis is 1. For all other axes it is the product of all previous axes sizes.
                         # self._iter_axes[-1:0:-1] is a reversed copy of self._iter_axes without the last element
                         # e.g. [1,2,3,4] -> [4,3,2]
@@ -394,7 +394,7 @@ class PimsImages:
                     "Using bioformats is not allowed (use_bioformats is False)."
                 )
 
-            # There is a wrong warning about jpype, supressing it here.
+            # There is a wrong warning about jpype, suppressing it here.
             # See issue https://github.com/soft-matter/pims/issues/384
             warnings.filterwarnings(
                 "ignore",
@@ -461,7 +461,7 @@ class PimsImages:
                         )
                         raise ValueError(
                             f"Tried to open the images {self._original_images} with different methods, "
-                            + f"none succeded. The following errors were raised:\n{exceptions_str}"
+                            + f"none succeeded. The following errors were raised:\n{exceptions_str}"
                         )
 
             with images_context_manager as images:
