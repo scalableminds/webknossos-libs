@@ -133,7 +133,7 @@ REPO_IMAGES_ARGS: List[
         3,
         (3, 64, 128, 128),
     ),
-    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
+    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 3, (64, 128, 320)),
     # same as test_C.tif above, but as a single file in a folder:
     ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
     ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),

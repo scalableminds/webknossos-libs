@@ -27,7 +27,6 @@ from numpy.typing import DTypeLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
-# pylint: disable=unused-import
 try:
     from .pims_czi_reader import PimsCziReader
 except ImportError:
@@ -287,7 +286,7 @@ class PimsImages:
                         pims.FramesSequence, images[0]
                     ).shape
                 else:
-                    images_shape = images.shape  # pylint: disable=no-member
+                    images_shape = images.shape
 
                 self.num_channels = images_shape[c_index + 1]
 
@@ -539,7 +538,7 @@ class PimsImages:
                 upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
                 images = images[lower_bounds:upper_bounds]
             if self._flip_z:
-                images = images[::-1]  # pylint: disable=unsubscriptable-object
+                images = images[::-1]
 
             with mag_view.get_buffered_slice_writer(
                 # Previously only z_start and its end were important, now the slice writer needs to know
@@ -612,7 +611,7 @@ class PimsImages:
                     ).shape
 
                 else:
-                    images_shape = images.shape  # pylint: disable=no-member
+                    images_shape = images.shape
                 if len(images_shape) == 3:
                     axes = ("z", "y", "x")
                 else:
@@ -645,10 +644,7 @@ class PimsImages:
                     axes_names = (self._iter_axes or []) + [
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
-                    axes_sizes = [
-                        images.sizes[axis]  # pylint: disable=no-member
-                        for axis in axes_names
-                    ]
+                    axes_sizes = [images.sizes[axis] for axis in axes_names]
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(tuple(axes_names))
 
