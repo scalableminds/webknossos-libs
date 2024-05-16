@@ -1,3 +1,4 @@
+import tempfile
 from os import PathLike
 from pathlib import Path
 from typing import Set, Tuple
@@ -37,19 +38,48 @@ class PimsTiffReader(FramesSequenceND):
         path = Path(path)
 
         _tiff = tifffile.TiffFile(path).series[0]
+        self._tiff_axes = tuple(_tiff.axes.lower())
+        for axis, shape in zip(self._tiff_axes, _tiff.shape):
+            self._init_axis(axis, shape)
+
         # Selecting the first page to get the dtype and shape
         if hasattr(_tiff, "pages"):
             _tmp = _tiff.pages[0]
         else:
             _tmp = _tiff["pages"][0]
-        self._dtype = _tmp.dtype
+        assert _tmp is not None, "No pages found in tiff file."
+        self._dtype = _tmp.dtype or np.dtype("uint8")
         self._shape = _tmp.shape
-        self._tiff_axes = tuple(_tiff.axes.lower())
+        with tempfile.TemporaryFile() as tmp:
+            self._memmap = np.memmap(
+                tmp,
+                dtype=self._dtype,
+                shape=_tiff.shape,
+                mode="w+",
+            )
+        # The axes per page are a subset of the axes of the tifffile. We copy the data from the tifffile to the memmap with correct axes.
+        # While the actual axes are e.g. ["t", "z", "y", "x"], with a shape like (3, 5, 100, 200), the axes of the tifffile consist of the axes of a singe page, e.g. ["y", "x"]. And the number of pages is 15.
+        # We have to iterate over the pages and copy the data to the correct position in the memmap.
+        for i in range(len(_tiff.pages)):
+            other_axes = tuple(
+                axis for axis in self._tiff_axes if axis not in _tmp.axes.lower()
+            )
+            slices = []
+            for j, axis in enumerate(other_axes):
+                size = self.sizes[axis]
+                index = (
+                    i
+                    // (
+                        np.prod(
+                            [self.sizes[axis] for axis in other_axes[j + 1 :]],
+                            dtype=int,
+                        )
+                    )
+                    % size
+                )
+                slices.append(slice(index, index + 1))
 
-        self._memmap = tifffile.memmap(
-            path,
-            mode="r",
-        )
+            _tiff.asarray(key=i, out=self._memmap[tuple(slices)])
 
         self._register_get_frame(self.get_frame_2D, _tmp.axes.lower())
 
@@ -68,6 +98,10 @@ class PimsTiffReader(FramesSequenceND):
             range(len(self.bundle_axes)),
         )
         return data.squeeze(axis=tuple(range(len(self.bundle_axes), len(data.shape))))
+
+    @property
+    def pixel_type(self) -> np.dtype:
+        return self._dtype
 
     @property
     def frame_shape(self) -> Tuple[int, ...]:
