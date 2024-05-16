@@ -130,14 +130,32 @@ REPO_IMAGES_ARGS: List[
         "testdata/various_tiff_formats/test_CS.tif",
         {"data_format": "zarr3"},
         "uint8",
-        3,
+        3,  # actually 5 channels, but currently the first 3 are selected
         (3, 64, 128, 128),
     ),
-    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 3, (64, 128, 320)),
+    (
+        "testdata/various_tiff_formats/test_C.tif",
+        {},
+        "uint8",
+        3,  # actually 5 channels, but currently the first 3 are selected
+        (128, 128, 64),
+    ),
     # same as test_C.tif above, but as a single file in a folder:
-    ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
+    (
+        "testdata/single_multipage_tiff_folder",
+        {},
+        "uint8",
+        3,  # actually 5 channels, but currently the first 3 are selected
+        (128, 128, 64),
+    ),
     ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),
-    ("testdata/various_tiff_formats/test_S.tif", {}, "uint16", 3, (128, 128, 64)),
+    (
+        "testdata/various_tiff_formats/test_S.tif",
+        {"data_format": "zarr3"},
+        "uint16",
+        1,
+        (3, 64, 128, 128),
+    ),
 ]
 
 

@@ -279,18 +279,16 @@ class PimsImages:
         #########################
 
         with self._open_images() as images:
-            try:
-                c_index = self._bundle_axes.index("c")
-                if isinstance(images, list):
-                    images_shape = (len(images),) + cast(
-                        pims.FramesSequence, images[0]
-                    ).shape
+            if "c" in self._bundle_axes:
+                if isinstance(images, pims.FramesSequenceND):
+                    self.num_channels = images.sizes.get("c", 1)
+                elif isinstance(images, list):
+                    self.num_channels = cast(pims.FramesSequence, images[0]).shape[
+                        self._bundle_axes.index("c")
+                    ]
                 else:
-                    images_shape = images.shape
-
-                self.num_channels = images_shape[c_index + 1]
-
-            except ValueError:
+                    self.num_channels = images.shape[self._bundle_axes.index("c") + 1]
+            else:
                 self.num_channels = 1
 
         self._first_n_channels = None

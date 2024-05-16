@@ -1,7 +1,7 @@
 import tempfile
 from os import PathLike
 from pathlib import Path
-from typing import Set, Tuple
+from typing import Iterable, Set, Tuple
 
 import numpy as np
 
@@ -42,6 +42,8 @@ class PimsTiffReader(FramesSequenceND):
         for axis, shape in zip(self._tiff_axes, _tiff.shape):
             self._init_axis(axis, shape)
 
+        self._tiff_shape = _tiff.shape
+
         # Selecting the first page to get the dtype and shape
         if hasattr(_tiff, "pages"):
             _tmp = _tiff.pages[0]
@@ -80,8 +82,10 @@ class PimsTiffReader(FramesSequenceND):
                 slices.append(slice(index, index + 1))
 
             _tiff.asarray(key=i, out=self._memmap[tuple(slices)])
-
-        self._register_get_frame(self.get_frame_2D, _tmp.axes.lower())
+        if "c" in self._tiff_axes:
+            self._register_get_frame(self.get_frame_2D, "cyx")
+        else:
+            self._register_get_frame(self.get_frame_2D, "yx")
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
         # A frame of the tiff file might have less axes than the desired shape of a frame in the FramesSequenceND.
@@ -102,6 +106,10 @@ class PimsTiffReader(FramesSequenceND):
     @property
     def pixel_type(self) -> np.dtype:
         return self._dtype
+
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        return self._tiff_shape
 
     @property
     def frame_shape(self) -> Tuple[int, ...]:
