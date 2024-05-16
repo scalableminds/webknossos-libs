@@ -566,6 +566,7 @@ class Dataset:
             ConversionLayerMapping, Callable[[Path], str]
         ] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
         z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
+        layer_name: Optional[str] = None,
         layer_category: Optional[LayerCategoryType] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
@@ -592,6 +593,9 @@ class Dataset:
         multiple files per layer, those are usually mapped to the z-dimension.
         The order of the z-slices can be customized by setting
         `z_slices_sort_key`.
+
+        If a layer_name is set, this name is used if a single layer is created.
+        Otherwise the layer_name is used as a common prefix for all layers.
 
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
@@ -634,19 +638,31 @@ class Dataset:
 
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
-            layer_name = map_filepath_to_layer_name(input_file)
+            layer_name_from_mapping = map_filepath_to_layer_name(input_file)
             # Remove characters from layer name that are not allowed
-            layer_name = _UNALLOWED_LAYER_NAME_CHARS.sub("", layer_name)
+            layer_name_from_mapping = _UNALLOWED_LAYER_NAME_CHARS.sub(
+                "", layer_name_from_mapping
+            )
             # Ensure layer name does not start with a dot
-            layer_name = layer_name.lstrip(".")
+            layer_name_from_mapping = layer_name_from_mapping.lstrip(".")
 
             assert (
-                layer_name != ""
+                layer_name_from_mapping != ""
             ), f"Could not determine a layer name for {input_file}."
 
-            filepaths_per_layer.setdefault(layer_name, []).append(
+            filepaths_per_layer.setdefault(layer_name_from_mapping, []).append(
                 input_path / input_file
             )
+
+        if layer_name is not None:
+            if len(filepaths_per_layer) == 1:
+                filepaths_per_layer[layer_name] = filepaths_per_layer.pop(
+                    layer_name_from_mapping
+                )
+            else:
+                filepaths_per_layer = {
+                    f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
+                }
 
         for layer_name, filepaths in filepaths_per_layer.items():
             filepaths.sort(key=z_slices_sort_key)
