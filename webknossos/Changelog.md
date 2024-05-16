@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.22...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.22) - 2024-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...v0.14.22)
+
+### Fixed
+- Performing `webknossos upload` on a windows machine leaded to loss of directory structure due to backslashes in the relative paths. This was fixed by [1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
+
 
 
 ## [0.14.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.21) - 2024-05-07

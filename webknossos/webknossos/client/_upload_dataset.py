@@ -152,7 +152,7 @@ def upload_dataset(
             },
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _,
-            relative_path: f"{upload_id}/{relative_path}",
+            relative_path: f"{upload_id}/{relative_path.as_posix()}",
             test_chunks=False,
             permanent_errors=[400, 403, 404, 409, 415, 500, 501],
             client=httpx.Client(timeout=None),
