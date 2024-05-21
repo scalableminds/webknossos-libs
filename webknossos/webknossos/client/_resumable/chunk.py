@@ -114,7 +114,7 @@ def _file_type(path: Path) -> str:
     """Mimic the type parameter of a JS File object.
 
     Resumable.js uses the File object's type attribute to guess mime type,
-    which is guessed from file extention accoring to
+    which is guessed from file extension according to
     https://developer.mozilla.org/en-US/docs/Web/API/File/type.
 
     Parameters

@@ -40,7 +40,7 @@ def main(
         VoxelSize,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VOXEL_SIZE",
         ),
