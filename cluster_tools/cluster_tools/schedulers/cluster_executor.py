@@ -248,15 +248,15 @@ class ClusterExecutor(futures.Executor):
     ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         pass
 
-    def _cleanup(self, jobid: str) -> None:
+    def _maybe_mark_logs_for_cleanup(self, jobid: str) -> None:
         """Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
         """
         if self.keep_logs:
             return
 
-        outf = self.format_log_file_path(self.cfut_dir, jobid)
-        self.files_to_clean_up.append(outf)
+        log_path = self.format_log_file_path(self.cfut_dir, jobid)
+        self.files_to_clean_up.append(log_path)
 
     @staticmethod
     @abstractmethod
@@ -367,7 +367,7 @@ class ClusterExecutor(futures.Executor):
         if not should_keep_output:
             self.files_to_clean_up.append(outfile_name)
 
-        self._cleanup(jobid)
+        self._maybe_mark_logs_for_cleanup(jobid)
 
     def ensure_not_shutdown(self) -> None:
         if self.was_requested_to_shutdown:
@@ -462,10 +462,10 @@ class ClusterExecutor(futures.Executor):
         return os.path.join(cfut_dir, f"cfut.main_path.{workerid}.txt")
 
     def store_main_path_to_meta_file(self, workerid: str) -> None:
-        with open(
-            self.get_main_meta_path(self.cfut_dir, workerid), "w", encoding="utf-8"
-        ) as file:
+        main_meta_path = self.get_main_meta_path(self.cfut_dir, workerid)
+        with open(main_meta_path, "w", encoding="utf-8") as file:
             file.write(file_path_to_absolute_module(sys.argv[0]))
+        self.files_to_clean_up.append(main_meta_path)
 
     def map_to_futures(
         self,
@@ -618,8 +618,10 @@ class ClusterExecutor(futures.Executor):
         for file_to_clean_up in self.files_to_clean_up:
             try:
                 os.unlink(file_to_clean_up)
-            except OSError:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
-                pass
+            except OSError as exc:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
+                logging.warning(
+                    f"Could not delete file during clean up. Path: {file_to_clean_up} Exception: {exc}"
+                )
         self.files_to_clean_up = []
 
     def map(  # type: ignore[override]
