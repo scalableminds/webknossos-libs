@@ -1289,7 +1289,7 @@ class Dataset:
                 set(layer.bounding_box.axes).difference("x", "y", "z")
             ) and layer.data_format != DataFormat.Zarr3:
                 raise RuntimeError(
-                    "The data stores additional axes other than x, y and z."
+                    "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
                 )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
