@@ -2,7 +2,7 @@
 Example application:
 Finding synapse candidates with a threshold in a skeleton
 annotation where each neuron is represented/reconstructed as one long tree
-of many nodes placed reguarly along its axon/dendrite paths.
+of many nodes placed regularly along its axon/dendrite paths.
 
 Method:
 Load an NML file and consider all pairs of trees.

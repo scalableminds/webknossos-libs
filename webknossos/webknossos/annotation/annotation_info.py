@@ -21,7 +21,7 @@ class AnnotationInfo:
     modified: Optional[int]
 
     def download_annotation(self) -> Annotation:
-        """Downloads and returns the annotation that is discribed by this AnnotationInfo object"""
+        """Downloads and returns the annotation that is described by this AnnotationInfo object"""
         return Annotation.download(self.id)
 
     @classmethod

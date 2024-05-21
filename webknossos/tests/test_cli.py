@@ -1,4 +1,4 @@
-"""This module containes tests for the WEBKNOSSOS CLI."""
+"""This module contains tests for the WEBKNOSSOS CLI."""
 
 import json
 import os
