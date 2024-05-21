@@ -1362,50 +1362,33 @@ class Dataset:
                     if guessed_category != layer.category:
                         if guessed_category == SEGMENTATION_CATEGORY:
                             logging.info("The layer category is set to segmentation.")
-                            segmentation_layer_properties: SegmentationLayerProperties = SegmentationLayerProperties(
-                                **(
-                                    attr.asdict(layer._properties, recurse=False)
-                                ),  # use all attributes from LayerProperties
-                                largest_segment_id=int(max(max_ids)),
-                            )
-                            segmentation_layer_properties.category = (
-                                SEGMENTATION_CATEGORY
-                            )
-                            self._properties.data_layers = [
-                                (
-                                    layer_properties
-                                    if layer_properties.name != layer.name
-                                    else segmentation_layer_properties
+                            new_layer_properties: LayerProperties = (
+                                SegmentationLayerProperties(
+                                    **(
+                                        attr.asdict(layer._properties, recurse=False)
+                                    ),  # use all attributes from LayerProperties
+                                    largest_segment_id=int(max(max_ids)),
                                 )
-                                for layer_properties in self._properties.data_layers
-                            ]
-                            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
-                            self._layers[layer_name] = SegmentationLayer(
-                                self, segmentation_layer_properties
                             )
-                            self._export_as_json()
+                            new_layer_properties.category = SEGMENTATION_CATEGORY
+                            self._layers[layer_name] = SegmentationLayer(
+                                self, new_layer_properties
+                            )
                         else:
                             logging.info("The layer category is set to color.")
                             _properties = attr.asdict(layer._properties, recurse=False)
                             _properties.pop("largest_segment_id", None)
                             _properties.pop("mappings", None)
 
-                            color_layer_properties: LayerProperties = LayerProperties(
+                            new_layer_properties: LayerProperties = LayerProperties(
                                 **_properties
                             )
-                            color_layer_properties.category = COLOR_CATEGORY
-                            self._properties.data_layers = [
-                                (
-                                    layer_properties
-                                    if layer_properties.name != layer.name
-                                    else color_layer_properties
-                                )
-                                for layer_properties in self._properties.data_layers
-                            ]
-                            self._layers[layer_name] = Layer(
-                                self, color_layer_properties
-                            )
-                            self._export_as_json()
+                            new_layer_properties.category = COLOR_CATEGORY
+                            self._layers[layer_name] = Layer(self, new_layer_properties)
+                        self._properties.update_for_layer(
+                            layer.name, new_layer_properties
+                        )
+                        self._export_as_json()
 
             except Exception:
                 # The used heuristic was not able to guess the layer category, the previous value is kept
