@@ -14,7 +14,6 @@ Run `webknossos --help` to get an overview of the currently available commands. 
   - `python -m wkcuber`, `python -m wkcuber.convert_image_stack_to_wkw` → `webknossos convert`
   - `python -m wkcuber.export_wkw_as_tiff` → `webknossos export-wkw-as-tiff`
   - `python -m wkcuber.convert_knossos` → `webknossos convert-knossos`
-  - `python -m wkcuber.convert_nifti` → `webknossos convert-nifti`
   - `python -m wkcuber.convert_raw` → `webknossos convert-raw`
   - `python -m wkcuber.downsampling` → `webknossos downsample`
   - `python -m wkcuber.compress` → `webknossos compress`

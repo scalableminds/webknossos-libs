@@ -35,7 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.geometry.vec_int import VecInt, VecIntLike
+from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -469,7 +469,7 @@ class Dataset:
           You can find your `organization_id` [here](https://webknossos.org/auth/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specifiy in which webknossos instance to search for the dataset.
+          and allows to specify in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         """
         from ..client.context import _get_context
@@ -523,7 +523,7 @@ class Dataset:
           You can find your `organization_id` [here](https://webknossos.org/auth/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specifiy in which webknossos instance to search for the dataset.
+          and allows to specify in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
           If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
@@ -569,6 +569,7 @@ class Dataset:
             ConversionLayerMapping, Callable[[Path], str]
         ] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
         z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
+        layer_name: Optional[str] = None,
         layer_category: Optional[LayerCategoryType] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
@@ -595,6 +596,9 @@ class Dataset:
         multiple files per layer, those are usually mapped to the z-dimension.
         The order of the z-slices can be customized by setting
         `z_slices_sort_key`.
+
+        If a layer_name is set, this name is used if a single layer is created.
+        Otherwise the layer_name is used as a common prefix for all layers.
 
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
@@ -637,19 +641,31 @@ class Dataset:
 
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
-            layer_name = map_filepath_to_layer_name(input_file)
+            layer_name_from_mapping = map_filepath_to_layer_name(input_file)
             # Remove characters from layer name that are not allowed
-            layer_name = _UNALLOWED_LAYER_NAME_CHARS.sub("", layer_name)
+            layer_name_from_mapping = _UNALLOWED_LAYER_NAME_CHARS.sub(
+                "", layer_name_from_mapping
+            )
             # Ensure layer name does not start with a dot
-            layer_name = layer_name.lstrip(".")
+            layer_name_from_mapping = layer_name_from_mapping.lstrip(".")
 
             assert (
-                layer_name != ""
+                layer_name_from_mapping != ""
             ), f"Could not determine a layer name for {input_file}."
 
-            filepaths_per_layer.setdefault(layer_name, []).append(
+            filepaths_per_layer.setdefault(layer_name_from_mapping, []).append(
                 input_path / input_file
             )
+
+        if layer_name is not None:
+            if len(filepaths_per_layer) == 1:
+                filepaths_per_layer[layer_name] = filepaths_per_layer.pop(
+                    layer_name_from_mapping
+                )
+            else:
+                filepaths_per_layer = {
+                    f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
+                }
 
         for layer_name, filepaths in filepaths_per_layer.items():
             filepaths.sort(key=z_slices_sort_key)
@@ -1257,11 +1273,17 @@ class Dataset:
             )
 
             if batch_size is None:
-                if compress:
+                if compress or (
+                    layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
+                ):
+                    # if data is compressed or dataformat is zarr, parallel write access
+                    # to a shard leads to corrupted data, the batch size must be aligned
+                    # with the shard size
                     batch_size = mag_view.info.shard_shape.z
                 else:
+                    # in uncompressed wkw only writing to the same chunk is problematic
                     batch_size = mag_view.info.chunk_shape.z
-            elif compress:
+            elif compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
                 assert (
                     batch_size % mag_view.info.shard_shape.z == 0
                 ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
@@ -1276,44 +1298,20 @@ class Dataset:
                 dtype=current_dtype,
             )
 
-            args = []
-            bbox = layer.bounding_box
-            additional_axes = [
-                axis_name for axis_name in bbox.axes if axis_name not in ("x", "y", "z")
-            ]
-            additional_axes_shapes = tuple(
-                product(
-                    *[range(bbox.get_shape(axis_name)) for axis_name in additional_axes]
+            if (
+                set(layer.bounding_box.axes).difference("x", "y", "z")
+            ) and layer.data_format != DataFormat.Zarr3:
+                raise RuntimeError(
+                    "The data stores additional axes other than x, y and z."
+                )
+
+            buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
+            args = list(
+                layer.bounding_box.chunk(
+                    buffered_slice_writer_shape,
+                    Vec3Int(1, 1, batch_size),
                 )
             )
-            if additional_axes and layer.data_format != DataFormat.Zarr3:
-                assert (
-                    len(additional_axes_shapes) == 1
-                ), "The data stores additional axes with shape bigger than 1. These are only supported by data format Zarr3."
-
-                # Convert NDBoundingBox to 3D BoundingBox
-                bbox = BoundingBox(
-                    bbox.topleft_xyz,
-                    bbox.size_xyz,
-                )
-                expected_bbox = bbox
-                additional_axes = []
-
-            z_shape = bbox.get_shape("z")
-            bbox = bbox.with_topleft(VecInt.zeros(bbox.axes))
-            for z_start in range(0, z_shape, batch_size):
-                z_size = min(batch_size, z_shape - z_start)
-                z_bbox = bbox.with_bounds("z", z_start, z_size)
-                if not additional_axes:
-                    args.append(z_bbox)
-                else:
-                    for shape in additional_axes_shapes:
-                        reduced_bbox = z_bbox
-                        for index, axis in enumerate(additional_axes):
-                            reduced_bbox = reduced_bbox.with_bounds(
-                                axis, shape[index], 1
-                            )
-                        args.append(reduced_bbox)
 
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.

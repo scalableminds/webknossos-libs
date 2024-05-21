@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.22...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,45 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.22) - 2024-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...v0.14.22)
+
+### Fixed
+- Performing `webknossos upload` on a windows machine led to loss of directory structure due to backslashes in the relative paths. This was fixed by [1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
+
+
+
+## [0.14.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.21) - 2024-05-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...v0.14.21)
+
+### Changed
+- Added `layer_name` as optional argument to `Dataset.from_images` method. If the created dataset contains only a single layer, `layer_name` is used, otherwise the given `layer_name` is a common prefix for all layers. [1054](https://github.com/scalableminds/webknossos-libs/pull/1054)
+- The context variable of View.get_buffered_slice_writer() is a BufferedSliceWriter now instead of a Generator. Interaction with the SliceWriter does not change, but updating the offset after first initialization is possible now. [1052](https://github.com/scalableminds/webknossos-libs/pull/1052)
+
+
+## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...v0.14.20)
+
+### Changed
+- Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
+- Added NIfTI suffix .nii to list of supported bioformats suffixes. [#1048](https://github.com/scalableminds/webknossos-libs/pull/1048)
+
+
+## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...v0.14.19)
+
+### Changed
+- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependencies into optional groups which are not installed by default. Install with `poetry install --with dev --with examples`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
+
+
+## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...v0.14.18)
+
+### Fixed
+- Fixed a bug, where using an unaligned topleft value for `add_layer_from_images` leads to corrupted data. [#1036](https://github.com/scalableminds/webknossos-libs/pull/1036)
+
 
 
 ## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
@@ -243,7 +282,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `python -m wkcuber`, `python -m wkcuber.convert_image_stack_to_wkw` -> `webknossos convert`
     - `python -m wkcuber.export_wkw_as_tiff` -> `webknossos export-wkw-as-tiff`
     - `python -m wkcuber.convert_knossos` -> `webknossos convert-knossos`
-    - `python -m wkcuber.convert_nifti` -> `webknossos convert-nifti`
     - `python -m wkcuber.convert_raw` -> `webknossos convert-raw`
     - `python -m wkcuber.downsampling` -> `webknossos downsample`
     - `python -m wkcuber.compress` -> `webknossos compress`
@@ -842,7 +880,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     attributes that are proxies for the skeleton attributes: `dataset_name`, `scale`, `organization_id`, `description`
   - `Annotation`s can now be initialized from their attributes and an optional skeleton.
   - New methods on `Annotation`: `upload`, `add_volume_layer`, `delete_volume_layer`
-  - `Annotation.load()` and `annoation.save()` also works with `.nml` files.
+  - `Annotation.load()` and `annotation.save()` also works with `.nml` files.
 - Added `MagView.get_views_on_disk()` as a shortcut to turning `get_bounding_boxes_on_disk` into views.
   [#621](https://github.com/scalableminds/webknossos-libs/pull/621)
 
@@ -865,7 +903,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 - Added `only_setup_mag` parameter to downsample-related methods in `Layer`. This parameter allows creating output magnifications before parallelizing downsampling invocations to avoid outdated writes to datasource-properties.json. [#610](https://github.com/scalableminds/webknossos-libs/pull/610)
-- Added `Task.create()` method to create tasks by prodiving a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
+- Added `Task.create()` method to create tasks by providing a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
 
 ## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
 

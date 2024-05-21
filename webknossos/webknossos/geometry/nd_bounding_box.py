@@ -644,7 +644,7 @@ class NDBoundingBox:
     def _align_with_mag_slow(self: _T, mag: Mag, ceil: bool = False) -> _T:
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
+        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
         """
         np_mag = mag.to_np()
 
@@ -667,7 +667,7 @@ class NDBoundingBox:
 
         Args:
         - mag (Union[Mag, Vec3Int]): The magnification to align the bounding box to.
-        - ceil (bool): If True, the bounding box is enlarged when necessary. If False, it's shrinked when necessary.
+        - ceil (bool): If True, the bounding box is enlarged when necessary. If False, it's shrunk when necessary.
 
         Returns:
         - NDBoundingBox: The aligned bounding box.

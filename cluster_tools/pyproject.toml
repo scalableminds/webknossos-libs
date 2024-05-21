@@ -7,17 +7,22 @@ readme = "README.md"
 license = "MIT"
 repository = "https://github.com/scalableminds/webknossos-libs"
 
+[tool.poetry.extras]
+kubernetes = ["kubernetes"]
+dask = ["distributed"]
+all = ["kubernetes", "distributed"]
+
 [tool.poetry.dependencies]
 python = ">=3.8"
-distributed = { version = "^2023.9.1", python = ">=3.9" }
-kubernetes = "^27.2.0"
+distributed = { version = "^2023.9.1", python = ">=3.9", optional = true }
+kubernetes = {version = "^27.2.0", optional = true }
 typing-extensions = "^4.4.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 icecream = "^2.1.1"
 mypy = "^1.0.0"
 pytest = "^7.2.1"
-ruff = "^0.3.4"
+ruff = "^0.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
