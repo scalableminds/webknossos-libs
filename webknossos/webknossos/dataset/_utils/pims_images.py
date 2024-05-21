@@ -516,7 +516,7 @@ class PimsImages:
         # to access the correct data from the images
         z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
-        max_id = 0
+        max_value = 0
 
         with self._open_images() as images:
             if self._iter_axes is not None and self._iter_loop_size is not None:
@@ -571,14 +571,14 @@ class PimsImages:
                     if dtype is not None:
                         image_slice = image_slice.astype(dtype, order="F")
 
-                    max_id = max(max_id, image_slice.max())
+                    max_value = max(max_value, image_slice.max())
                     if self._swap_xy is False:
                         image_slice = np.moveaxis(image_slice, -1, -2)
 
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
 
-            return dimwise_max(shapes), max_id
+            return dimwise_max(shapes), max_value
 
     def get_possible_layers(self) -> Optional[Dict["str", List[int]]]:
         if len(self._possible_layers) == 0:

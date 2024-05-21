@@ -5,7 +5,6 @@ import numpy as np
 
 from webknossos.dataset.layer_categories import LayerCategoryType
 from webknossos.dataset.mag_view import MagView
-from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.geometry.vec3_int import Vec3Int
 
 NUM_SAMPLES = 20
@@ -14,6 +13,7 @@ THRESHOLD = (
 )  # more unique values per voxel than this value means color, less segmentation
 SAMPLE_SIZE = Vec3Int(16, 16, 16)
 MAX_FAILS = 200
+MIN_INSPECTED_VOXELS = 1000
 
 
 def guess_if_segmentation_path(filepath: Path) -> bool:
@@ -50,6 +50,10 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
         )
 
         data = view.read(absolute_bounding_box=bbox_to_read)
+        # The heuristic should avoid checking "empty" areas.
+        # As empty, we consider areas that contain only zeros or max values.
+        # These values are removed from the data before calculating the distinct values.
+        data = data[(data != 0) & (data != np.iinfo(data.dtype).max)]
         data = data[data != 0]
         try:
             data = data[data != np.iinfo(data.dtype).max]
@@ -65,7 +69,7 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
             valid_sample_count += 1
             inspected_voxel_count += data.size
 
-    if inspected_voxel_count < 1000:
+    if inspected_voxel_count < MIN_INSPECTED_VOXELS:
         raise RuntimeError(
             f"Failed to find enough valid samples (saw {inspected_voxel_count} voxels)."
         )

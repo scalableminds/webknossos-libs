@@ -1354,6 +1354,10 @@ class Dataset:
             # Check if category of layer is set correctly
             try:
                 if not user_set_category:
+                    # When the category is not set by the user, we use a very simple heuristic to guess the category
+                    # based on the file name of the input images. After loading the images, we check if the guessed
+                    # category might be wrong and adjust it if necessary. This second heuristic is based on the
+                    # pixel data of the images
                     guessed_category = guess_category_from_view(layer.get_finest_mag())
                     if guessed_category != layer.category:
                         if guessed_category == SEGMENTATION_CATEGORY:
