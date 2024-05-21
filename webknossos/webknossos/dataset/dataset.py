@@ -663,38 +663,38 @@ class Dataset:
                 filepaths_per_layer = {
                     f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
                 }
-
-        for layer_name, filepaths in filepaths_per_layer.items():
-            filepaths.sort(key=z_slices_sort_key)
-            category: LayerCategoryType
-            if layer_category is None:
-                category = (
-                    "segmentation"
-                    if guess_if_segmentation_path(filepaths[0])
-                    else "color"
+        with get_executor_for_args(None, executor) as executor:
+            for layer_name, filepaths in filepaths_per_layer.items():
+                filepaths.sort(key=z_slices_sort_key)
+                category: LayerCategoryType
+                if layer_category is None:
+                    category = (
+                        "segmentation"
+                        if guess_if_segmentation_path(filepaths[0])
+                        else "color"
+                    )
+                else:
+                    category = layer_category
+                ds.add_layer_from_images(
+                    filepaths[0] if len(filepaths) == 1 else filepaths,
+                    layer_name,
+                    category=category,
+                    data_format=data_format,
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    compress=compress,
+                    swap_xy=swap_xy,
+                    flip_x=flip_x,
+                    flip_y=flip_y,
+                    flip_z=flip_z,
+                    use_bioformats=use_bioformats,
+                    batch_size=batch_size,
+                    allow_multiple_layers=True,
+                    max_layers=max_layers - len(ds.layers),
+                    executor=executor,
                 )
-            else:
-                category = layer_category
-            ds.add_layer_from_images(
-                filepaths[0] if len(filepaths) == 1 else filepaths,
-                layer_name,
-                category=category,
-                data_format=data_format,
-                chunk_shape=chunk_shape,
-                chunks_per_shard=chunks_per_shard,
-                compress=compress,
-                swap_xy=swap_xy,
-                flip_x=flip_x,
-                flip_y=flip_y,
-                flip_z=flip_z,
-                use_bioformats=use_bioformats,
-                batch_size=batch_size,
-                allow_multiple_layers=True,
-                max_layers=max_layers - len(ds.layers),
-                executor=executor,
-            )
 
-        return ds
+            return ds
 
     @property
     def layers(self) -> Dict[str, Layer]:

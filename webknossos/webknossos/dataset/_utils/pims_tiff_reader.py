@@ -1,7 +1,7 @@
 import tempfile
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, Set, Tuple
+from typing import Set, Tuple
 
 import numpy as np
 
