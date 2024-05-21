@@ -14,7 +14,7 @@ def main() -> None:
     # Set the bounding box which should be downloaded
     bbox = wk.BoundingBox([50, 50, 50], [50, 50, 50])
 
-    # Download the datset
+    # Download the dataset
     ds = wk.Dataset.download(
         dataset_name_or_url=name,
         organization_id=organization_id,

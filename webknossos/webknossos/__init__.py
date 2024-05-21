@@ -13,7 +13,7 @@ The core classes and can be created and saved as shown:
 </div>
 </div>
 
-[^ds-save]: Since the state of a dataset is continously persisted it cannot be saved.
+[^ds-save]: Since the state of a dataset is continuously persisted it cannot be saved.
 [^anno-down]: Downloaded annotations are not persisted on disk automatically.
 
 Additionally, we provide the geometrical primitives `Vec3Int`, `BoundingBox` and `Mag`.

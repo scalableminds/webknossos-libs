@@ -67,7 +67,7 @@ def _cached_ask_for_token(webknossos_url: str) -> str:
     # -validate token and ask again if necessary
     # -ask if the token should be saved in some .env file
     # -reset invalid tokens
-    #  (e.g. use cachetools for explicit cache managment:
+    #  (e.g. use cachetools for explicit cache management:
     #  https://cachetools.readthedocs.io/en/stable/#memoizing-decorators)
     return Prompt.ask(
         f"\nPlease enter your webknossos token as shown on {webknossos_url}/auth/token ",

@@ -284,7 +284,7 @@ class Annotation:
           `https://webknossos.org/annotations/6114d9410100009f0096c640`
         * `annotation_type` is no longer required and therefore deprecated and ignored
         * `webknossos_url` may be supplied if an annotation id was used
-          and allows to specifiy in which webknossos instance to search for the annotation.
+          and allows to specify in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         * `skip_volume_data` can be set to `True` to omit downloading annotated volume data.
           They can still be streamed from WEBKNOSSOS using `annotation.get_remote_annotation_dataset()`.
@@ -336,7 +336,7 @@ class Annotation:
         else:
             assert filename.endswith(
                 ".zip"
-            ), f"Downloaded annoation should have the suffix .zip or .nml, but has filename {filename}"
+            ), f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
             annotation = Annotation._load_from_zip(BytesIO(file_body))
 
         if _return_context:
