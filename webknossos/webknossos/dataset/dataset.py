@@ -1360,15 +1360,14 @@ class Dataset:
                     # pixel data of the images
                     guessed_category = guess_category_from_view(layer.get_finest_mag())
                     if guessed_category != layer.category:
+                        new_layer_properties: LayerProperties
                         if guessed_category == SEGMENTATION_CATEGORY:
                             logging.info("The layer category is set to segmentation.")
-                            new_layer_properties: LayerProperties = (
-                                SegmentationLayerProperties(
-                                    **(
-                                        attr.asdict(layer._properties, recurse=False)
-                                    ),  # use all attributes from LayerProperties
-                                    largest_segment_id=int(max(max_ids)),
-                                )
+                            new_layer_properties = SegmentationLayerProperties(
+                                **(
+                                    attr.asdict(layer._properties, recurse=False)
+                                ),  # use all attributes from LayerProperties
+                                largest_segment_id=int(max(max_ids)),
                             )
                             new_layer_properties.category = SEGMENTATION_CATEGORY
                             self._layers[layer_name] = SegmentationLayer(
@@ -1380,9 +1379,7 @@ class Dataset:
                             _properties.pop("largest_segment_id", None)
                             _properties.pop("mappings", None)
 
-                            new_layer_properties: LayerProperties = LayerProperties(
-                                **_properties
-                            )
+                            new_layer_properties = LayerProperties(**_properties)
                             new_layer_properties.category = COLOR_CATEGORY
                             self._layers[layer_name] = Layer(self, new_layer_properties)
                         self._properties.update_for_layer(
