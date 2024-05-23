@@ -595,4 +595,4 @@ def test_merge_fallback_no_fallback_layer(tmp_path: Path) -> None:
         .squeeze(0)
     )
 
-    assert np.array_equal(merged_data, expected_data)
+    assert (merged_data == expected_data).all()

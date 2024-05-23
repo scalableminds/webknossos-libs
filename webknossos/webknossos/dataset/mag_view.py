@@ -452,7 +452,11 @@ class MagView(View):
         args = [(other, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
 
         logging.info("Merging %s shards.", len(args))
-        executor.map(self.merge_chunk, args)
+        wait_and_ensure_success(
+            executor.map_to_futures(self.merge_chunk, args),
+            executor,
+            "Merging chunks with fallback layer",
+        )
 
     def merge_chunk(
         self, args: Tuple["MagView", NDBoundingBox, List[NDBoundingBox]]
