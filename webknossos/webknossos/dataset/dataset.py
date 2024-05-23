@@ -1286,11 +1286,22 @@ class Dataset:
             )
 
             if (
-                set(layer.bounding_box.axes).difference("x", "y", "z")
-            ) and layer.data_format != DataFormat.Zarr3:
-                raise RuntimeError(
-                    "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
+                additional_axes := set(layer.bounding_box.axes).difference(
+                    "x", "y", "z"
                 )
+            ) and layer.data_format != DataFormat.Zarr3:
+                if all(
+                    layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes
+                ):
+                    warnings.warn(
+                        f"[INFO] The data has additional axes {additional_axes}, but they are all of size 1. "
+                        + "These axes are not stored in the layer."
+                    )
+                    layer.bounding_box = BoundingBox.from_ndbbox(layer.bounding_box)
+                else:
+                    raise RuntimeError(
+                        "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
+                    )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
             args = list(

@@ -13,7 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.22...HEAD)
 
 ### Breaking Changes
-- Preferring a custom tiff reader over the default PIMS reader to convert tiff files. This enables the recognition of axis information and the support of tifffiles with more than 3 dimensions. Nonetheless this leads to changed behavior when converting tiff files. Tiffs with axes other than c, x, y and z are no longer supported for conversion to WKW, please convert these to Zarr3 Datasets. [1043](https://github.com/scalableminds/webknossos-libs/pull/1043)
+- Preferring a custom tiff reader over the default PIMS reader to convert tiff files. This change enables the recognition of axis information and the support of tifffiles with more than 3 dimensions. However, it also leads to changed behavior when converting tiff files. Tiffs with axes other than c, x, y, and z, with a shape bigger than 1, are no longer supported for conversion to WKW. Please convert these files to Zarr3 Datasets instead. [1043](https://github.com/scalableminds/webknossos-libs/pull/1043)
 
 ### Added
 

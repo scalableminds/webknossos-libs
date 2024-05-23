@@ -52,36 +52,40 @@ class PimsTiffReader(FramesSequenceND):
         assert _tmp is not None, "No pages found in tiff file."
         self._dtype = _tmp.dtype or np.dtype("uint8")
         self._shape = _tmp.shape
-        with tempfile.TemporaryFile() as tmp:
-            self._memmap = np.memmap(
-                tmp,
-                dtype=self._dtype,
-                shape=_tiff.shape,
-                mode="w+",
-            )
-        # The axes per page are a subset of the axes of the tifffile. We copy the data from the tifffile to the memmap with correct axes.
-        # While the actual axes are e.g. ["t", "z", "y", "x"], with a shape like (3, 5, 100, 200), the axes of the tifffile consist of the axes of a singe page, e.g. ["y", "x"]. And the number of pages is 15.
-        # We have to iterate over the pages and copy the data to the correct position in the memmap.
-        for i in range(len(_tiff.pages)):
-            other_axes = tuple(
-                axis for axis in self._tiff_axes if axis not in _tmp.axes.lower()
-            )
-            slices = []
-            for j, axis in enumerate(other_axes):
-                size = self.sizes[axis]
-                index = (
-                    i
-                    // (
-                        np.prod(
-                            [self.sizes[axis] for axis in other_axes[j + 1 :]],
-                            dtype=int,
-                        )
-                    )
-                    % size
+        try:
+            self._memmap = tifffile.memmap(path, mode="r")
+        except ValueError:
+            # If the tiff file is not memory-mappable, we create a temporary file and copy the data to it.
+            with tempfile.TemporaryFile() as tmp:
+                self._memmap = np.memmap(
+                    tmp,
+                    dtype=self._dtype,
+                    shape=_tiff.shape,
+                    mode="w+",
                 )
-                slices.append(slice(index, index + 1))
+            # The axes per page are a subset of the axes of the tifffile. We copy the data from the tifffile to the memmap with correct axes.
+            # While the actual axes are e.g. ["t", "z", "y", "x"], with a shape like (3, 5, 100, 200), the axes of the tifffile consist of the axes of a singe page, e.g. ["y", "x"]. And the number of pages is 15.
+            # We have to iterate over the pages and copy the data to the correct position in the memmap.
+            for i in range(len(_tiff.pages)):
+                other_axes = tuple(
+                    axis for axis in self._tiff_axes if axis not in _tmp.axes.lower()
+                )
+                slices = []
+                for j, axis in enumerate(other_axes):
+                    size = self.sizes[axis]
+                    index = (
+                        i
+                        // (
+                            np.prod(
+                                [self.sizes[axis] for axis in other_axes[j + 1 :]],
+                                dtype=int,
+                            )
+                        )
+                        % size
+                    )
+                    slices.append(slice(index, index + 1))
 
-            _tiff.asarray(key=i, out=self._memmap[tuple(slices)])
+                _tiff.asarray(key=i, out=self._memmap[tuple(slices)])
         if "c" in self._tiff_axes:
             self._register_get_frame(self.get_frame_2D, "cyx")
         else:
