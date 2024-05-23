@@ -43,7 +43,7 @@ def main(
             rich_help_panel="Partial download",
             help="Bounding box that should be downloaded. "
             "The input format is x,y,z,width,height,depth. "
-            "Should be a comma seperated string (e.g. 0,0,0,10,10,10).",
+            "Should be a comma separated string (e.g. 0,0,0,10,10,10).",
             parser=parse_bbox,
             metavar="BBOX",
         ),
@@ -61,7 +61,7 @@ def main(
         typer.Option(
             rich_help_panel="Partial download",
             help="Mags that should be downloaded. "
-            "Should be number or minus seperated string (e.g. 2 or 2-2-2). "
+            "Should be number or minus separated string (e.g. 2 or 2-2-2). "
             "For multiple mags type: --mag 1 --mag 2",
             parser=parse_mag,
             metavar="MAG",

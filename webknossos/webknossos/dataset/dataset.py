@@ -466,7 +466,7 @@ class Dataset:
           You can find your `organization_id` [here](https://webknossos.org/auth/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specifiy in which webknossos instance to search for the dataset.
+          and allows to specify in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         """
         from ..client.context import _get_context
@@ -520,7 +520,7 @@ class Dataset:
           You can find your `organization_id` [here](https://webknossos.org/auth/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specifiy in which webknossos instance to search for the dataset.
+          and allows to specify in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
           If nothing is specified the whole image, all layers, and all mags are downloaded respectively.

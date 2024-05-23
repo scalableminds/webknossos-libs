@@ -25,7 +25,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...v0.14.22)
 
 ### Fixed
-- Performing `webknossos upload` on a windows machine leaded to loss of directory structure due to backslashes in the relative paths. This was fixed by [1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
+- Performing `webknossos upload` on a windows machine led to loss of directory structure due to backslashes in the relative paths. This was fixed by [1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
 
 
 
@@ -49,7 +49,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...v0.14.19)
 
 ### Changed
-- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependcies into optional groups which are not installed by default. Install with `poetry install --with dev --with examples`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
+- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependencies into optional groups which are not installed by default. Install with `poetry install --with dev --with examples`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
 
 
 ## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
@@ -880,7 +880,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     attributes that are proxies for the skeleton attributes: `dataset_name`, `scale`, `organization_id`, `description`
   - `Annotation`s can now be initialized from their attributes and an optional skeleton.
   - New methods on `Annotation`: `upload`, `add_volume_layer`, `delete_volume_layer`
-  - `Annotation.load()` and `annoation.save()` also works with `.nml` files.
+  - `Annotation.load()` and `annotation.save()` also works with `.nml` files.
 - Added `MagView.get_views_on_disk()` as a shortcut to turning `get_bounding_boxes_on_disk` into views.
   [#621](https://github.com/scalableminds/webknossos-libs/pull/621)
 
@@ -903,7 +903,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 - Added `only_setup_mag` parameter to downsample-related methods in `Layer`. This parameter allows creating output magnifications before parallelizing downsampling invocations to avoid outdated writes to datasource-properties.json. [#610](https://github.com/scalableminds/webknossos-libs/pull/610)
-- Added `Task.create()` method to create tasks by prodiving a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
+- Added `Task.create()` method to create tasks by providing a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
 
 ## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
 
