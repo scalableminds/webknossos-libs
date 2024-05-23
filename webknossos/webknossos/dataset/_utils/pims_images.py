@@ -169,7 +169,6 @@ class PimsImages:
                 # An image slice should always consist of a 2D image. If there are multiple channels
                 # the data of each channel is part of the image slices. Possible shapes of an image
                 # slice are (#y_shape, #x_shape), (1, #y_shape, #x_shape) or (3, #y_shape, #x_shape).
-                # self._bundle_axes = list(images.bundle_axes)
                 if images.sizes.get("c", 1) > 1:
                     self._bundle_axes = ["c", "y", "x"]
                 else:
