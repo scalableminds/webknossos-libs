@@ -9,7 +9,7 @@ from ..annotation import Annotation
 from ..client import webknossos_context
 from ..dataset import Dataset
 from ..geometry import BoundingBox, Mag
-from ._utils import parse_bbox, parse_mag, parse_path
+from ._utils import parse_bbox, parse_mag, parse_path, url_is_dataset
 
 
 def main(
@@ -75,6 +75,12 @@ def main(
 
     with webknossos_context(token=token):
         try:
+            is_dataset = url_is_dataset(url)
+        except ValueError as err:
+            print(f"The value could not be parsed to URL: {err}")
+            return
+
+        if is_dataset:
             Dataset.download(
                 dataset_name_or_url=url,
                 path=target,
@@ -82,5 +88,9 @@ def main(
                 layers=layers,
                 mags=mags,
             )
-        except AssertionError:
+        else:
             Annotation.download(annotation_id_or_url=url).save(target)
+
+
+if __name__ == "__main__":
+    typer.run(main)

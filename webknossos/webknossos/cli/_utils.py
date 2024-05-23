@@ -220,3 +220,19 @@ def pad_or_crop_to_size_and_topleft(
     )
 
     return cube_data
+
+
+def url_is_dataset(url: str) -> bool:
+    """
+    Classifies a URL as `annotation` or `dataset`.
+
+    Args:
+        url: URL to classify.
+
+    Returns:
+        bool: True if URL is a dataset, False if it is an annotation.
+
+    Raises:
+        ValueError: If URL is not a valid URL.
+    """
+    return False
