@@ -13,6 +13,7 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 - `webknossos convert-zarr`: Converts a Zarr dataset to a WEBKNOSSOS dataset 
 - `webknossos download`: Download a dataset from a WEBKNOSSOS server as WKW format
 - `webknossos downsample`: Downsample a WEBKNOSSOS dataset
+- `webknossos merge-fallback`: Merge a volume layer of a WEBKNOSSOS dataset with an annotation
 - `webknossos upload`: Upload a local WEBKNOSSOS dataset to a remote location
 - `webknossos upsample`: Upsample a WEBKNOSSOS dataset
 
