@@ -176,6 +176,7 @@ class ClusterExecutor(futures.Executor):
 
         self.inner_handle_kill(signum, frame)
         self.wait_thread.stop()
+        self.clean_up()
 
         if (
             existing_sigint_handler != signal.default_int_handler
@@ -615,12 +616,15 @@ class ClusterExecutor(futures.Executor):
         self.wait_thread.stop()
         self.wait_thread.join()
 
+        self.clean_up()
+
+    def clean_up(self) -> None:
         for file_to_clean_up in self.files_to_clean_up:
             try:
                 os.unlink(file_to_clean_up)
             except OSError as exc:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 logging.warning(
-                    f"Could not delete file during clean up. Path: {file_to_clean_up} Exception: {exc}"
+                    f"Could not delete file during clean up. Path: {file_to_clean_up} Exception: {exc}. Continuing..."
                 )
         self.files_to_clean_up = []
 
