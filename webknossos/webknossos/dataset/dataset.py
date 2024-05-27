@@ -1346,7 +1346,7 @@ class Dataset:
                     shapes_and_max_ids = wait_and_ensure_success(
                         executor.map_to_futures(func_per_chunk, args),
                         executor=executor,
-                        progress_desc="Creating layer from images",
+                        progress_desc=f"Creating layer [bold blue]{layer.name}[/bold blue] from images",
                     )
                 shapes, max_ids = zip(*shapes_and_max_ids)
                 if category == "segmentation":
@@ -1381,7 +1381,7 @@ class Dataset:
                                 largest_segment_id=int(max(max_ids)),
                             )
                             new_layer_properties.category = SEGMENTATION_CATEGORY
-                            self._layers[layer_name] = SegmentationLayer(
+                            self._layers[layer.name] = SegmentationLayer(
                                 self, new_layer_properties
                             )
                         else:
@@ -1392,7 +1392,7 @@ class Dataset:
 
                             new_layer_properties = LayerProperties(**_properties)
                             new_layer_properties.category = COLOR_CATEGORY
-                            self._layers[layer_name] = Layer(self, new_layer_properties)
+                            self._layers[layer.name] = Layer(self, new_layer_properties)
                         self._properties.update_for_layer(
                             layer.name, new_layer_properties
                         )

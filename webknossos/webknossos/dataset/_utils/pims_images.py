@@ -301,7 +301,7 @@ class PimsImages:
                 self._possible_layers["channel"] = [0, 1]
                 self.num_channels = 1
                 self._channel = 0
-            elif self.num_channels > 3:
+            elif self.num_channels >= 3:
                 self._possible_layers["channel"] = list(range(0, self.num_channels))
                 self.num_channels = 3
                 self._first_n_channels = 3
@@ -352,7 +352,9 @@ class PimsImages:
 
         # try normal pims.open
         def strategy_0() -> pims.FramesSequence:
-            result = pims.open(original_images, **open_kwargs)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=UserWarning, module="pims")
+                result = pims.open(original_images, **open_kwargs)
             self._ensure_correct_bioformats_usage(original_images)
             return result
 
