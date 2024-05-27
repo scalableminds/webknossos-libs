@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
 
 ### Fixed
 
