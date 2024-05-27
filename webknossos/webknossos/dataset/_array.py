@@ -593,7 +593,11 @@ class ZarritaArray(BaseArray):
             ArrayV2.create(
                 store=path,
                 shape=(array_info.shape),
-                chunks=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
+                chunks=(array_info.num_channels,)
+                + tuple(
+                    getattr(array_info.chunk_shape, axis, 1)
+                    for axis in array_info.dimension_names[1:]
+                ),
                 dtype=array_info.voxel_type,
                 compressor=(
                     {"id": "blosc", "cname": "zstd", "clevel": 5}

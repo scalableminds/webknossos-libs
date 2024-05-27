@@ -1289,7 +1289,7 @@ class Dataset:
                 additional_axes := set(layer.bounding_box.axes).difference(
                     "x", "y", "z"
                 )
-            ) and layer.data_format != DataFormat.Zarr3:
+            ) and layer.data_format == DataFormat.WKW:
                 if all(
                     layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes
                 ):
