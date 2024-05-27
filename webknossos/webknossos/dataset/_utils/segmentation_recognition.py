@@ -53,7 +53,6 @@ def sample_distinct_values_per_vx(view: MagView) -> float:
         # The heuristic should avoid checking "empty" areas.
         # As empty, we consider areas that contain only zeros or max values.
         # These values are removed from the data before calculating the distinct values.
-        data = data[(data != 0) & (data != np.iinfo(data.dtype).max)]
         data = data[data != 0]
         try:
             data = data[data != np.iinfo(data.dtype).max]
