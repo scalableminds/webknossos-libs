@@ -74,8 +74,11 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._utils.from_images import guess_if_segmentation_path
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
+from ._utils.segmentation_recognition import (
+    guess_category_from_view,
+    guess_if_segmentation_path,
+)
 from .data_format import DataFormat
 from .layer import (
     Layer,
@@ -666,19 +669,11 @@ class Dataset:
         with get_executor_for_args(None, executor) as executor:
             for layer_name, filepaths in filepaths_per_layer.items():
                 filepaths.sort(key=z_slices_sort_key)
-                category: LayerCategoryType
-                if layer_category is None:
-                    category = (
-                        "segmentation"
-                        if guess_if_segmentation_path(filepaths[0])
-                        else "color"
-                    )
-                else:
-                    category = layer_category
+
                 ds.add_layer_from_images(
                     filepaths[0] if len(filepaths) == 1 else filepaths,
                     layer_name,
-                    category=category,
+                    category=layer_category,
                     data_format=data_format,
                     chunk_shape=chunk_shape,
                     chunks_per_shard=chunks_per_shard,
@@ -694,7 +689,7 @@ class Dataset:
                     executor=executor,
                 )
 
-            return ds
+        return ds
 
     @property
     def layers(self) -> Dict[str, Layer]:
@@ -878,6 +873,7 @@ class Dataset:
 
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif category == SEGMENTATION_CATEGORY:
             segmentation_layer_properties: SegmentationLayerProperties = (
@@ -891,6 +887,7 @@ class Dataset:
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
             self._properties.data_layers += [segmentation_layer_properties]
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
                 self, segmentation_layer_properties
             )
@@ -986,8 +983,10 @@ class Dataset:
 
         self._properties.data_layers += [layer_properties]
         if layer_properties.category == COLOR_CATEGORY:
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif layer_properties.category == SEGMENTATION_CATEGORY:
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(self, layer_properties)
         else:
             raise RuntimeError(
@@ -1057,7 +1056,7 @@ class Dataset:
         images: Union[str, "pims.FramesSequence", List[Union[str, PathLike]]],
         ## add_layer arguments
         layer_name: str,
-        category: LayerCategoryType = "color",
+        category: Optional[LayerCategoryType] = "color",
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
         mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
@@ -1125,6 +1124,21 @@ class Dataset:
             block_len=None,
             file_len=None,
         )
+
+        if category is None:
+            image_path_for_category_guess: Path
+            if isinstance(images, str) or isinstance(images, PathLike):
+                image_path_for_category_guess = Path(images)
+            else:
+                image_path_for_category_guess = Path(images[0])
+            category = (
+                "segmentation"
+                if guess_if_segmentation_path(image_path_for_category_guess)
+                else "color"
+            )
+            user_set_category = False
+        else:
+            user_set_category = True
 
         pims_images = PimsImages(
             images,
@@ -1281,7 +1295,6 @@ class Dataset:
             func_per_chunk = named_partial(
                 pims_images.copy_to_view,
                 mag_view=mag_view,
-                is_segmentation=category == "segmentation",
                 dtype=current_dtype,
             )
 
@@ -1348,6 +1361,46 @@ class Dataset:
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
                     + f"New bbox is {layer.bounding_box}, expected {expected_bbox}."
                 )
+
+            # Check if category of layer is set correctly
+            try:
+                if not user_set_category:
+                    # When the category is not set by the user, we use a very simple heuristic to guess the category
+                    # based on the file name of the input images. After loading the images, we check if the guessed
+                    # category might be wrong and adjust it if necessary. This second heuristic is based on the
+                    # pixel data of the images
+                    guessed_category = guess_category_from_view(layer.get_finest_mag())
+                    if guessed_category != layer.category:
+                        new_layer_properties: LayerProperties
+                        if guessed_category == SEGMENTATION_CATEGORY:
+                            logging.info("The layer category is set to segmentation.")
+                            new_layer_properties = SegmentationLayerProperties(
+                                **(
+                                    attr.asdict(layer._properties, recurse=False)
+                                ),  # use all attributes from LayerProperties
+                                largest_segment_id=int(max(max_ids)),
+                            )
+                            new_layer_properties.category = SEGMENTATION_CATEGORY
+                            self._layers[layer_name] = SegmentationLayer(
+                                self, new_layer_properties
+                            )
+                        else:
+                            logging.info("The layer category is set to color.")
+                            _properties = attr.asdict(layer._properties, recurse=False)
+                            _properties.pop("largest_segment_id", None)
+                            _properties.pop("mappings", None)
+
+                            new_layer_properties = LayerProperties(**_properties)
+                            new_layer_properties.category = COLOR_CATEGORY
+                            self._layers[layer_name] = Layer(self, new_layer_properties)
+                        self._properties.update_for_layer(
+                            layer.name, new_layer_properties
+                        )
+                        self._export_as_json()
+
+            except Exception:
+                # The used heuristic was not able to guess the layer category, the previous value is kept
+                pass
             if first_layer is None:
                 first_layer = layer
         assert first_layer is not None

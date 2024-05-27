@@ -172,6 +172,15 @@ class DatasetProperties:
     ]
     default_view_configuration: Optional[DatasetViewConfiguration] = None
 
+    def update_for_layer(
+        self, layer_name: str, layer_properties: LayerProperties
+    ) -> None:
+        for i, layer in enumerate(self.data_layers):
+            if layer.name == layer_name:
+                self.data_layers[i] = layer_properties
+                return
+        raise KeyError(f"Layer {layer_name} not found in the dataset properties.")
+
 
 # --- Converter --------------------
 

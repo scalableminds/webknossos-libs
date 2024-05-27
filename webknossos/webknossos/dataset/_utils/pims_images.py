@@ -497,7 +497,6 @@ class PimsImages:
         self,
         args: Union[BoundingBox, NDBoundingBox],
         mag_view: MagView,
-        is_segmentation: bool,
         dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
@@ -518,11 +517,7 @@ class PimsImages:
         # to access the correct data from the images
         z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
-        max_id: Optional[int]
-        if is_segmentation:
-            max_id = 0
-        else:
-            max_id = None
+        max_value = 0
 
         with self._open_images() as images:
             if self._iter_axes and self._iter_loop_size is not None:
@@ -577,16 +572,14 @@ class PimsImages:
                     if dtype is not None:
                         image_slice = image_slice.astype(dtype, order="F")
 
-                    if max_id is not None:
-                        max_id = max(max_id, image_slice.max())
-
+                    max_value = max(max_value, image_slice.max())
                     if self._swap_xy is False:
                         image_slice = np.moveaxis(image_slice, -1, -2)
 
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
 
-            return dimwise_max(shapes), None if max_id is None else int(max_id)
+            return dimwise_max(shapes), max_value
 
     def get_possible_layers(self) -> Optional[Dict["str", List[int]]]:
         if len(self._possible_layers) == 0:

@@ -3,28 +3,15 @@
     "name": "test_dataset",
     "team": "<unknown>"
   },
+  "scale": [
+    11.24,
+    11.24,
+    25.0
+  ],
   "dataLayers": [
     {
-      "dataFormat": "zarr",
       "name": "tiff",
-      "category": "color",
-      "elementClass": "uint8",
-      "mags": [
-        {
-          "mag": [
-            1,
-            1,
-            1
-          ],
-          "axisOrder": {
-            "x": 1,
-            "y": 2,
-            "z": 3,
-            "c": 0
-          }
-        }
-      ],
-      "numChannels": 1,
+      "category": "segmentation",
       "boundingBox": {
         "topLeft": [
           0,
@@ -34,12 +21,26 @@
         "width": 265,
         "height": 265,
         "depth": 257
-      }
+      },
+      "elementClass": "uint8",
+      "dataFormat": "zarr",
+      "mags": [
+        {
+          "mag": [
+            1,
+            1,
+            1
+          ],
+          "axisOrder": {
+            "c": 0,
+            "x": 1,
+            "y": 2,
+            "z": 3
+          }
+        }
+      ],
+      "numChannels": 1,
+      "largestSegmentId": 255
     }
-  ],
-  "scale": [
-    11.24,
-    11.24,
-    25.0
   ]
 }
