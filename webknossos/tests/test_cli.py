@@ -211,21 +211,22 @@ def test_convert_with_all_params(origin_path: Path) -> None:
 
     with tmp_cwd():
         wkw_path = Path(f"wkw_from_{origin_path.name}")
-        result = runner.invoke(
-            app,
-            [
-                "convert",
-                "--voxel-size",
-                "11.0,11.0,11.0",
-                "--data-format",
-                "wkw",
-                "--name",
-                "wkw_from_tiff",
-                "--compress",
-                str(origin_path),
-                str(wkw_path),
-            ],
-        )
+        with pytest.warns():
+            result = runner.invoke(
+                app,
+                [
+                    "convert",
+                    "--voxel-size",
+                    "11.0,11.0,11.0",
+                    "--data-format",
+                    "wkw",
+                    "--name",
+                    "wkw_from_tiff",
+                    "--compress",
+                    str(origin_path),
+                    str(wkw_path),
+                ],
+            )
 
         assert result.exit_code == 0
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
