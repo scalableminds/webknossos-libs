@@ -15,8 +15,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added a pixel level heuristic for distinguishing color and segmentation layers when importing image data with the `from_images` or `add_layer_from_images` method. [1007](https://github.com/scalableminds/webknossos-libs/pull/1007)
 
 ### Changed
+- Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
 
 ### Fixed
 
