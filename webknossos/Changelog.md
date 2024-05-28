@@ -21,6 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
 
 ### Fixed
+- We've resolved an issue that was affecting the download of annotations through the Command Line Interface (CLI). Additionally, we've improved the CLI to better differentiate between dataset URLs and annotation URLs before initiating different download methods. [1083](https://github.com/scalableminds/webknossos-libs/pull/1083)
 
 
 ## [0.14.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.22) - 2024-05-13
