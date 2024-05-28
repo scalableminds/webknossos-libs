@@ -79,7 +79,7 @@ def test_slurm_cfut_dir() -> None:
         assert future.result() == 4
 
     assert os.path.exists(cfut_dir)
-    assert len(os.listdir(cfut_dir)) == 2
+    assert len(os.listdir(cfut_dir)) == 1  # only the log file should still exist
 
 
 def test_slurm_max_submit_user() -> None:
