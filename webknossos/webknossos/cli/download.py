@@ -1,15 +1,17 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
+import re
 from typing import Any, List, Optional
 
 import typer
 from typing_extensions import Annotated
 
-from ..annotation import Annotation
+from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
-from ..dataset import Dataset
+from ..client._resolve_short_link import resolve_short_link
+from ..dataset.dataset import _DATASET_URL_REGEX, Dataset
 from ..geometry import BoundingBox, Mag
-from ._utils import parse_bbox, parse_mag, parse_path, url_is_dataset
+from ._utils import parse_bbox, parse_mag, parse_path
 
 
 def main(
@@ -72,24 +74,27 @@ def main(
 
     layers = layer if layer else None
     mags = mag if mag else None
+    url = resolve_short_link(url)
 
     with webknossos_context(token=token):
-        try:
-            is_dataset = url_is_dataset(url)
-        except ValueError as err:
-            print(f"The value could not be parsed to URL: {err}")
-            return
-
-        if is_dataset:
-            Dataset.download(
-                dataset_name_or_url=url,
-                path=target,
-                bbox=bbox,
-                layers=layers,
-                mags=mags,
-            )
+        if re.match(_DATASET_URL_REGEX, url):
+            try:
+                Dataset.download(
+                    dataset_name_or_url=url,
+                    path=target,
+                    bbox=bbox,
+                    layers=layers,
+                    mags=mags,
+                )
+            except RuntimeError as err:
+                print(f"Dataset could not be downloaded: {err}")
+        elif re.match(_ANNOTATION_URL_REGEX, url):
+            try:
+                Annotation.download(annotation_id_or_url=url).save(target)
+            except AssertionError as err:
+                print(f"Annotation could not be downloaded: {err}")
         else:
-            Annotation.download(annotation_id_or_url=url).save(target)
+            print("The provided URL does not lead to a dataset or annotation.")
 
 
 if __name__ == "__main__":
