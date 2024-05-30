@@ -593,7 +593,11 @@ class ZarritaArray(BaseArray):
             ArrayV2.create(
                 store=path,
                 shape=(array_info.shape),
-                chunks=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
+                chunks=(array_info.num_channels,)
+                + tuple(
+                    getattr(array_info.chunk_shape, axis, 1)
+                    for axis in array_info.dimension_names[1:]
+                ),  # The chunk shape consists of the number of channels, the x, y, and z dimensions of a chunk, and 1 for all other dimensions.
                 dtype=array_info.voxel_type,
                 compressor=(
                     {"id": "blosc", "cname": "zstd", "clevel": 5}
