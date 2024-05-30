@@ -8,9 +8,16 @@ import numpy as np
 try:
     from pims import FramesSequenceND
 except ImportError as e:
-    raise RuntimeError(
-        "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-    ) from e
+    try:
+        import tifffile
+
+        raise RuntimeError(
+            "Cannot import pims, please install it e.g. using 'webknossos[all]'"
+        ) from e
+    except ImportError as e:
+        raise RuntimeError(
+            "Cannot import pims and tifffile, please install them e.g. using 'webknossos[pims, tifffile]'"
+        ) from e
 
 try:
     import tifffile

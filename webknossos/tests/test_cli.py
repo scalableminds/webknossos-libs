@@ -211,7 +211,7 @@ def test_convert_with_all_params(origin_path: Path) -> None:
 
     with tmp_cwd():
         wkw_path = Path(f"wkw_from_{origin_path.name}")
-        with pytest.warns():
+        with pytest.warns(UserWarning):
             result = runner.invoke(
                 app,
                 [

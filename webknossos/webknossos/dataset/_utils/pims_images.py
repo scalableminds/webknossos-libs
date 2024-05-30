@@ -352,9 +352,7 @@ class PimsImages:
 
         # try normal pims.open
         def strategy_0() -> pims.FramesSequence:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=UserWarning, module="pims")
-                result = pims.open(original_images, **open_kwargs)
+            result = pims.open(original_images, **open_kwargs)
             self._ensure_correct_bioformats_usage(original_images)
             return result
 

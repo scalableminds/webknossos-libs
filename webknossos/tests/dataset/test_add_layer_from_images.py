@@ -1,7 +1,8 @@
 import warnings
 from pathlib import Path
 from shutil import copy
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from time import gmtime, strftime
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 from zipfile import BadZipFile, ZipFile
 
@@ -196,7 +197,7 @@ def test_repo_images(
     num_channels: int,
     num_layers: int,
     size: Tuple[int, ...],
-) -> None:
+) -> wk.Dataset:
     with wk.utils.get_executor_for_args(None) as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
         layer = ds.add_layer_from_images(
@@ -214,6 +215,7 @@ def test_repo_images(
         if isinstance(layer, wk.SegmentationLayer):
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0
+    return ds
 
 
 def download_and_unpack(
@@ -306,7 +308,7 @@ def test_bioformats(
     num_channels: int,
     size: Tuple[int, int, int],
     num_layers: int,
-) -> None:
+) -> wk.Dataset:
     unzip_path = tmp_path / "unzip"
     download_and_unpack(url, unzip_path, filename)
     ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
@@ -323,6 +325,7 @@ def test_bioformats(
         assert layer.num_channels == num_channels
         assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
     assert len(ds.layers) == num_layers
+    return ds
 
 
 # All scif images used here are published with CC0 license,
@@ -419,7 +422,7 @@ def test_test_images(
     dtype: str,
     num_channels: int,
     size: Tuple[int, int, int],
-) -> None:
+) -> wk.Dataset:
     unzip_path = tmp_path / "unzip"
     download_and_unpack(url, unzip_path, filename)
     path: Union[Path, List[Path]]
@@ -462,4 +465,42 @@ def test_test_images(
         if l_bio is not None:
             assert np.array_equal(
                 l_bio.get_finest_mag().read(), l_normal.get_finest_mag().read()
+            )
+    return ds
+
+
+if __name__ == "__main__":
+    time = lambda: strftime("%Y-%m-%d_%H-%M-%S", gmtime())  # noqa: E731
+
+    for repo_images_args in REPO_IMAGES_ARGS:
+        with TemporaryDirectory() as tempdir:
+            image_path = repo_images_args[0]
+            if isinstance(image_path, list):
+                image_path = str(image_path[0])
+            name = "".join(filter(str.isalnum, image_path))
+            print(*repo_images_args)
+            print(
+                test_repo_images(Path(tempdir), *repo_images_args)
+                .upload(f"test_repo_images_{name}_{time()}")
+                .url
+            )
+
+    for bioformats_args in BIOFORMATS_ARGS:
+        with TemporaryDirectory() as tempdir:
+            name = "".join(filter(str.isalnum, bioformats_args[1]))
+            print(*bioformats_args)
+            print(
+                test_bioformats(Path(tempdir), *bioformats_args)
+                .upload(f"test_bioformats_{name}_{time()}")
+                .url
+            )
+
+    for test_images_args in TEST_IMAGES_ARGS:
+        with TemporaryDirectory() as tempdir:
+            name = "".join(filter(str.isalnum, test_images_args[1]))
+            print(*test_images_args)
+            print(
+                test_test_images(Path(tempdir), *test_images_args)
+                .upload(f"test_test_images_{name}_{time()}")
+                .url
             )
