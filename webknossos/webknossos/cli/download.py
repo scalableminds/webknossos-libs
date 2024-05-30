@@ -78,23 +78,19 @@ def main(
 
     with webknossos_context(token=token):
         if re.match(_DATASET_URL_REGEX, url):
-            try:
-                Dataset.download(
-                    dataset_name_or_url=url,
-                    path=target,
-                    bbox=bbox,
-                    layers=layers,
-                    mags=mags,
-                )
-            except RuntimeError as err:
-                print(f"Dataset could not be downloaded: {err}")
+            Dataset.download(
+                dataset_name_or_url=url,
+                path=target,
+                bbox=bbox,
+                layers=layers,
+                mags=mags,
+            )
         elif re.match(_ANNOTATION_URL_REGEX, url):
-            try:
-                Annotation.download(annotation_id_or_url=url).save(target)
-            except AssertionError as err:
-                print(f"Annotation could not be downloaded: {err}")
+            Annotation.download(annotation_id_or_url=url).save(target)
         else:
-            print("The provided URL does not lead to a dataset or annotation.")
+            raise RuntimeError(
+                "The provided URL does not lead to a dataset or annotation."
+            )
 
 
 if __name__ == "__main__":
