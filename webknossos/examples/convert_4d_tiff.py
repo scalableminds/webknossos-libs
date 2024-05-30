@@ -10,7 +10,6 @@ def main() -> None:
         "testoutput/4D_series",
         voxel_size=(10, 10, 10),
         data_format="zarr3",
-        use_bioformats=True,
     )
 
     # Access the first color layer and the Mag 1 view of this layer

@@ -666,28 +666,28 @@ class Dataset:
                 filepaths_per_layer = {
                     f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
                 }
+        with get_executor_for_args(None, executor) as executor:
+            for layer_name, filepaths in filepaths_per_layer.items():
+                filepaths.sort(key=z_slices_sort_key)
 
-        for layer_name, filepaths in filepaths_per_layer.items():
-            filepaths.sort(key=z_slices_sort_key)
-
-            ds.add_layer_from_images(
-                filepaths[0] if len(filepaths) == 1 else filepaths,
-                layer_name,
-                category=layer_category,
-                data_format=data_format,
-                chunk_shape=chunk_shape,
-                chunks_per_shard=chunks_per_shard,
-                compress=compress,
-                swap_xy=swap_xy,
-                flip_x=flip_x,
-                flip_y=flip_y,
-                flip_z=flip_z,
-                use_bioformats=use_bioformats,
-                batch_size=batch_size,
-                allow_multiple_layers=True,
-                max_layers=max_layers - len(ds.layers),
-                executor=executor,
-            )
+                ds.add_layer_from_images(
+                    filepaths[0] if len(filepaths) == 1 else filepaths,
+                    layer_name,
+                    category=layer_category,
+                    data_format=data_format,
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    compress=compress,
+                    swap_xy=swap_xy,
+                    flip_x=flip_x,
+                    flip_y=flip_y,
+                    flip_z=flip_z,
+                    use_bioformats=use_bioformats,
+                    batch_size=batch_size,
+                    allow_multiple_layers=True,
+                    max_layers=max_layers - len(ds.layers),
+                    executor=executor,
+                )
 
         return ds
 
@@ -1299,11 +1299,22 @@ class Dataset:
             )
 
             if (
-                set(layer.bounding_box.axes).difference("x", "y", "z")
-            ) and layer.data_format != DataFormat.Zarr3:
-                raise RuntimeError(
-                    "The data stores additional axes other than x, y and z."
+                additional_axes := set(layer.bounding_box.axes).difference(
+                    "x", "y", "z"
                 )
+            ) and layer.data_format == DataFormat.WKW:
+                if all(
+                    layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes
+                ):
+                    warnings.warn(
+                        f"[INFO] The data has additional axes {additional_axes}, but they are all of size 1. "
+                        + "These axes are not stored in the layer."
+                    )
+                    layer.bounding_box = BoundingBox.from_ndbbox(layer.bounding_box)
+                else:
+                    raise RuntimeError(
+                        "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
+                    )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
             args = list(
@@ -1335,7 +1346,7 @@ class Dataset:
                     shapes_and_max_ids = wait_and_ensure_success(
                         executor.map_to_futures(func_per_chunk, args),
                         executor=executor,
-                        progress_desc="Creating layer from images",
+                        progress_desc=f"Creating layer [bold blue]{layer.name}[/bold blue] from images",
                     )
                 shapes, max_ids = zip(*shapes_and_max_ids)
                 if category == "segmentation":
@@ -1370,7 +1381,7 @@ class Dataset:
                                 largest_segment_id=int(max(max_ids)),
                             )
                             new_layer_properties.category = SEGMENTATION_CATEGORY
-                            self._layers[layer_name] = SegmentationLayer(
+                            self._layers[layer.name] = SegmentationLayer(
                                 self, new_layer_properties
                             )
                         else:
@@ -1381,7 +1392,7 @@ class Dataset:
 
                             new_layer_properties = LayerProperties(**_properties)
                             new_layer_properties.category = COLOR_CATEGORY
-                            self._layers[layer_name] = Layer(self, new_layer_properties)
+                            self._layers[layer.name] = Layer(self, new_layer_properties)
                         self._properties.update_for_layer(
                             layer.name, new_layer_properties
                         )
