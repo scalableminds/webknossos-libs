@@ -699,26 +699,27 @@ def get_valid_pims_suffixes() -> Set[str]:
 def get_valid_bioformats_suffixes() -> Set[str]:
     # Added the most present suffixes that are implemented in bioformats
     return {
+        "btf",
         "dcm",
         "dicom",
+        "gif",
         "ics",
         "ids",
+        "ims",
         "lei",
-        "tif",
         "lif",
-        "stk",
         "nd",
         "nd2",
+        "nii",
         "png",
-        "tiff",
+        "pic",
+        "stk",
         "tf2",
         "tf8",
-        "btf",
-        "pic",
+        "tif",
+        "tiff",
         "raw",
         "xml",
-        "gif",
-        "nii",
     }
 
 
