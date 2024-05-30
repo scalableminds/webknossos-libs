@@ -1,13 +1,15 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
+import re
 from typing import Any, List, Optional
 
 import typer
 from typing_extensions import Annotated
 
-from ..annotation import Annotation
+from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
-from ..dataset import Dataset
+from ..client._resolve_short_link import resolve_short_link
+from ..dataset.dataset import _DATASET_URL_REGEX, Dataset
 from ..geometry import BoundingBox, Mag
 from ._utils import parse_bbox, parse_mag, parse_path
 
@@ -72,9 +74,10 @@ def main(
 
     layers = layer if layer else None
     mags = mag if mag else None
+    url = resolve_short_link(url)
 
     with webknossos_context(token=token):
-        try:
+        if re.match(_DATASET_URL_REGEX, url):
             Dataset.download(
                 dataset_name_or_url=url,
                 path=target,
@@ -82,5 +85,13 @@ def main(
                 layers=layers,
                 mags=mags,
             )
-        except AssertionError:
+        elif re.match(_ANNOTATION_URL_REGEX, url):
             Annotation.download(annotation_id_or_url=url).save(target)
+        else:
+            raise RuntimeError(
+                "The provided URL does not lead to a dataset or annotation."
+            )
+
+
+if __name__ == "__main__":
+    typer.run(main)
