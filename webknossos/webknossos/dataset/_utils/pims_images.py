@@ -27,7 +27,6 @@ from numpy.typing import DTypeLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.geometry.nd_bounding_box import NDBoundingBox
 
-# pylint: disable=unused-import
 try:
     from .pims_czi_reader import PimsCziReader
 except ImportError:
@@ -45,6 +44,11 @@ try:
     from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
         PimsImagejTiffReader,
     )
+except ImportError:
+    pass
+
+try:
+    from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
 except ImportError:
     pass
 
@@ -120,7 +124,7 @@ class PimsImages:
 
         ## attributes that will be set in __init__()
         # _bundle_axes
-        self._iter_axes = None
+        self._iter_axes: List[str] = []
         self._iter_loop_size = None
         self._possible_layers = {}
 
@@ -216,18 +220,15 @@ class PimsImages:
                 if len(images.shape) == 2:
                     # Assume yx
                     self._bundle_axes = ["y", "x"]
-                    self._iter_axes = []
                 elif len(images.shape) == 3:
                     # Assume yxc, cyx or zyx
                     if _assume_color_channel(images.shape[2], images.dtype):
                         self._bundle_axes = ["y", "x", "c"]
-                        self._iter_axes = []
                     elif images.shape[0] == 1 or (
                         _allow_channels_first
                         and _assume_color_channel(images.shape[0], images.dtype)
                     ):
                         self._bundle_axes = ["c", "y", "x"]
-                        self._iter_axes = []
                     else:
                         self._bundle_axes = ["y", "x"]
                         self._iter_axes = ["z"]
@@ -277,18 +278,16 @@ class PimsImages:
         #########################
 
         with self._open_images() as images:
-            try:
-                c_index = self._bundle_axes.index("c")
-                if isinstance(images, list):
-                    images_shape = (len(images),) + cast(
-                        pims.FramesSequence, images[0]
-                    ).shape
+            if "c" in self._bundle_axes:
+                if isinstance(images, pims.FramesSequenceND):
+                    self.num_channels = images.sizes.get("c", 1)
+                elif isinstance(images, list):
+                    self.num_channels = cast(pims.FramesSequence, images[0]).shape[
+                        self._bundle_axes.index("c")
+                    ]
                 else:
-                    images_shape = images.shape  # pylint: disable=no-member
-
-                self.num_channels = images_shape[c_index + 1]
-
-            except ValueError:
+                    self.num_channels = images.shape[self._bundle_axes.index("c") + 1]
+            else:
                 self.num_channels = 1
 
         self._first_n_channels = None
@@ -302,7 +301,7 @@ class PimsImages:
                 self._possible_layers["channel"] = [0, 1]
                 self.num_channels = 1
                 self._channel = 0
-            elif self.num_channels > 3:
+            elif self.num_channels >= 3:
                 self._possible_layers["channel"] = list(range(0, self.num_channels))
                 self.num_channels = 3
                 self._first_n_channels = 3
@@ -483,20 +482,21 @@ class PimsImages:
                         images.bundle_axes = self._bundle_axes
                         images.iter_axes = self._iter_axes
                 else:
-                    if self._timepoint is not None:
-                        images = images[self._timepoint]
-                        if self._iter_axes and "t" in self._iter_axes:
-                            self._iter_axes.remove("t")
-                    if self._iter_axes == []:
-                        # add outer list to wrap 2D images as 3D-like structure
-                        images = [images]
+                    if hasattr(self, "_bundle_axes"):
+                        # first part of __init__() has happened
+                        if self._timepoint is not None:
+                            images = images[self._timepoint]
+                            if "t" in self._iter_axes:
+                                self._iter_axes.remove("t")
+                        if not self._iter_axes:
+                            # add outer list to wrap 2D images as 3D-like structure
+                            images = [images]
                 yield images
 
     def copy_to_view(
         self,
         args: Union[BoundingBox, NDBoundingBox],
         mag_view: MagView,
-        is_segmentation: bool,
         dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
@@ -517,14 +517,10 @@ class PimsImages:
         # to access the correct data from the images
         z_start, z_end = relative_bbox.get_bounds("z")
         shapes = []
-        max_id: Optional[int]
-        if is_segmentation:
-            max_id = 0
-        else:
-            max_id = None
+        max_value = 0
 
         with self._open_images() as images:
-            if self._iter_axes is not None and self._iter_loop_size is not None:
+            if self._iter_axes and self._iter_loop_size is not None:
                 # select the range of images that represents one xyz combination in the mag_view
                 lower_bounds = sum(
                     self._iter_loop_size[axis_name]
@@ -534,7 +530,7 @@ class PimsImages:
                 upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
                 images = images[lower_bounds:upper_bounds]
             if self._flip_z:
-                images = images[::-1]  # pylint: disable=unsubscriptable-object
+                images = images[::-1]
 
             with mag_view.get_buffered_slice_writer(
                 # Previously only z_start and its end were important, now the slice writer needs to know
@@ -576,16 +572,14 @@ class PimsImages:
                     if dtype is not None:
                         image_slice = image_slice.astype(dtype, order="F")
 
-                    if max_id is not None:
-                        max_id = max(max_id, image_slice.max())
-
+                    max_value = max(max_value, image_slice.max())
                     if self._swap_xy is False:
                         image_slice = np.moveaxis(image_slice, -1, -2)
 
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
 
-            return dimwise_max(shapes), None if max_id is None else int(max_id)
+            return dimwise_max(shapes), max_value
 
     def get_possible_layers(self) -> Optional[Dict["str", List[int]]]:
         if len(self._possible_layers) == 0:
@@ -607,7 +601,7 @@ class PimsImages:
                     ).shape
 
                 else:
-                    images_shape = images.shape  # pylint: disable=no-member
+                    images_shape = images.shape
                 if len(images_shape) == 3:
                     axes = ("z", "y", "x")
                 else:
@@ -640,10 +634,7 @@ class PimsImages:
                     axes_names = (self._iter_axes or []) + [
                         axis for axis in self._bundle_axes if axis != "c"
                     ]
-                    axes_sizes = [
-                        images.sizes[axis]  # pylint: disable=no-member
-                        for axis in axes_names
-                    ]
+                    axes_sizes = [images.sizes[axis] for axis in axes_names]
                     axes_index = list(range(1, len(axes_names) + 1))
                     topleft = VecInt.zeros(tuple(axes_names))
 
@@ -706,26 +697,37 @@ def get_valid_pims_suffixes() -> Set[str]:
 def get_valid_bioformats_suffixes() -> Set[str]:
     # Added the most present suffixes that are implemented in bioformats
     return {
+        "bmp",
+        "btf",
+        "ch5",
+        "czi",
         "dcm",
         "dicom",
+        "fli",
+        "gif",
         "ics",
         "ids",
+        "ims",
         "lei",
-        "tif",
         "lif",
-        "stk",
+        "lof",
+        "lsm",
+        "mdb",
         "nd",
         "nd2",
+        "nii",
+        "ome",
         "png",
-        "tiff",
+        "pic",
+        "stk",
         "tf2",
         "tf8",
-        "btf",
-        "pic",
+        "tif",
+        "tiff",
         "raw",
         "xml",
-        "gif",
-        "nii",
+        "xlef",
+        "zvi",
     }
 
 

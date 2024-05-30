@@ -85,7 +85,9 @@ def test_align_with_mag_against_numpy_implementation(
         bb.align_with_mag(mag, ceil)
     else:
         # The slower numpy implementation is wrong for very large numbers:
-        if all(i < 12e15 for i in bb.bottomright):
+        # Floating point precision for 64 bit floats is not capable of representing
+        # numbers larger than 2**53 accurately.
+        if all(i < 2**53 for i in bb.bottomright):
             assert bb.align_with_mag(mag, ceil) == slow_np_result
 
 

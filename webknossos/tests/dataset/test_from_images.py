@@ -44,15 +44,24 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         TESTDATA_DIR / "various_tiff_formats",
         tmp_path,
         (1, 1, 1),
+        data_format="zarr3",
         layer_name="tiffs",
     )
-    assert len(ds.layers) == 4
+    assert len(ds.layers) == 12
 
     expected_dtype_channels_size_per_layer = {
-        "tiffs_test_CS.tif": ("uint8", 3, (128, 128, 320)),
-        "tiffs_test_C.tif": ("uint8", 1, (128, 128, 320)),
+        "tiffs_test_CS.tif__channel0": ("uint8", 1, (3, 64, 128, 128)),
+        "tiffs_test_CS.tif__channel1": ("uint8", 1, (3, 64, 128, 128)),
+        "tiffs_test_CS.tif__channel2": ("uint8", 1, (3, 64, 128, 128)),
+        "tiffs_test_CS.tif__channel3": ("uint8", 1, (3, 64, 128, 128)),
+        "tiffs_test_CS.tif__channel4": ("uint8", 1, (3, 64, 128, 128)),
+        "tiffs_test_C.tif__channel0": ("uint8", 1, (128, 128, 64)),
+        "tiffs_test_C.tif__channel1": ("uint8", 1, (128, 128, 64)),
+        "tiffs_test_C.tif__channel2": ("uint8", 1, (128, 128, 64)),
+        "tiffs_test_C.tif__channel3": ("uint8", 1, (128, 128, 64)),
+        "tiffs_test_C.tif__channel4": ("uint8", 1, (128, 128, 64)),
         "tiffs_test_I.tif": ("uint32", 1, (64, 128, 64)),
-        "tiffs_test_S.tif": ("uint16", 3, (128, 128, 64)),
+        "tiffs_test_S.tif": ("uint16", 1, (3, 64, 128, 128)),
     }
 
     for layer_name, layer in ds.layers.items():
