@@ -50,7 +50,6 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
         layer_name="color",
         category="color",
         topleft=(2, 55, 100, 100),
-        use_bioformats=True,
         data_format="zarr3",
         chunk_shape=(8, 8, 8),
         chunks_per_shard=(8, 8, 8),
@@ -69,12 +68,13 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
 
 
 REPO_IMAGES_ARGS: List[
-    Tuple[Union[str, List[Path]], Dict[str, Any], str, int, Tuple[int, int, int]]
+    Tuple[Union[str, List[Path]], Dict[str, Any], str, int, int, Tuple[int, ...]]
 ] = [
     (
         "testdata/tiff/test.*.tiff",
         {"category": "segmentation"},
         "uint8",
+        1,
         1,
         (265, 265, 257),
     ),
@@ -87,26 +87,30 @@ REPO_IMAGES_ARGS: List[
         {},
         "uint8",
         1,
+        1,
         (265, 265, 3),
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
         {"mag": 2},
         "uint8",
-        3,
-        (64, 64, 2),
+        1,
+        1,
+        (64, 64, 6),
     ),
     (
         "testdata/rgb_tiff",
-        {"mag": 2, "channel": 1, "dtype": "uint32"},
+        {"mag": 2, "channel": 0, "dtype": "uint32"},
         "uint32",
         1,
-        (64, 64, 2),
+        1,
+        (64, 64, 6),
     ),
     (
         "testdata/temca2/*/*/*.jpg",
         {"flip_x": True, "batch_size": 2048},
         "uint8",
+        1,
         1,
         (1024, 1024, 12),
     ),
@@ -114,6 +118,7 @@ REPO_IMAGES_ARGS: List[
         "testdata/temca2",
         {"flip_z": True, "batch_size": 2048},
         "uint8",
+        1,
         1,
         # The topmost folder contains an extra image,
         # which is included here as well, but not in
@@ -125,25 +130,73 @@ REPO_IMAGES_ARGS: List[
         {"flip_y": True},
         "uint8",
         1,
+        1,
         (2970, 2521, 4),
     ),
-    ("testdata/various_tiff_formats/test_CS.tif", {}, "uint8", 3, (128, 128, 320)),
-    ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
+    (
+        "testdata/various_tiff_formats/test_CS.tif",
+        {"data_format": "zarr3", "allow_multiple_layers": True},
+        "uint8",
+        1,
+        5,
+        (3, 64, 128, 128),
+    ),
+    (
+        "testdata/various_tiff_formats/test_C.tif",
+        {"allow_multiple_layers": True},
+        "uint8",
+        1,
+        5,
+        (128, 128, 64),
+    ),
     # same as test_C.tif above, but as a single file in a folder:
-    ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
-    ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),
-    ("testdata/various_tiff_formats/test_S.tif", {}, "uint16", 3, (128, 128, 64)),
+    (
+        "testdata/single_multipage_tiff_folder",
+        {"allow_multiple_layers": True},
+        "uint8",
+        1,
+        5,
+        (128, 128, 64),
+    ),
+    ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, 1, (64, 128, 64)),
+    (
+        "testdata/various_tiff_formats/test_S.tif",
+        {"data_format": "zarr3"},
+        "uint16",
+        1,
+        1,
+        (3, 64, 128, 128),
+    ),
+    (
+        "testdata/4D/single_channel/single-channel.ome.tiff",
+        {},
+        "int8",
+        1,
+        1,
+        (439, 167, 1),
+    ),
+    (
+        "testdata/4D/multi_channel_z_series/multi-channel-z-series.ome.tif",
+        {"allow_multiple_layers": True},
+        "int8",
+        1,
+        3,
+        (439, 167, 5),
+    ),
 ]
 
 
-@pytest.mark.parametrize("path, kwargs, dtype, num_channels, size", REPO_IMAGES_ARGS)
+@pytest.mark.parametrize(
+    "path, kwargs, dtype, num_channels, num_layers, size", REPO_IMAGES_ARGS
+)
 def test_repo_images(
     tmp_path: Path,
     path: str,
     kwargs: Dict,
     dtype: str,
     num_channels: int,
-    size: Tuple[int, int, int],
+    num_layers: int,
+    size: Tuple[int, ...],
 ) -> wk.Dataset:
     with wk.utils.get_executor_for_args(None) as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
@@ -157,7 +210,8 @@ def test_repo_images(
         )
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == num_channels
-        assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        assert len(ds.layers) == num_layers
+        assert layer.bounding_box.size.to_tuple() == size
         if isinstance(layer, wk.SegmentationLayer):
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0
@@ -396,7 +450,7 @@ def test_test_images(
         else:
             assert l_bio.dtype_per_channel == np.dtype(dtype)
             assert l_bio.num_channels == num_channels
-            assert l_bio.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+            assert l_bio.bounding_box.size.to_tuple() == size
         l_normal = ds.add_layer_from_images(
             path,
             layer_name="normal_" + layer_name,
@@ -407,7 +461,7 @@ def test_test_images(
         )
         assert l_normal.dtype_per_channel == np.dtype(dtype)
         assert l_normal.num_channels == num_channels
-        assert l_normal.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        assert l_normal.bounding_box.size.to_tuple() == size
         if l_bio is not None:
             assert np.array_equal(
                 l_bio.get_finest_mag().read(), l_normal.get_finest_mag().read()
