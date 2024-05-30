@@ -15,10 +15,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
-- Added a pixel level heuristic for distinguishing color and segmentation layers when importing image data with the `from_images` or `add_layer_from_images` method. [1007](https://github.com/scalableminds/webknossos-libs/pull/1007)
+- Added a pixel level heuristic for distinguishing color and segmentation layers when importing image data with the `from_images` or `add_layer_from_images` method. [#1007](https://github.com/scalableminds/webknossos-libs/pull/1007)
+- Added .ims as supported suffix. [#1085](https://github.com/scalableminds/webknossos-libs/pull/1085)
 
 ### Changed
-- Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
+- Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [#1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
 
 ### Fixed
 - Fixed an issue with downloading annotations through the Command Line Interface. [#1083](https://github.com/scalableminds/webknossos-libs/pull/1083)
@@ -28,7 +29,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...v0.14.22)
 
 ### Fixed
-- Performing `webknossos upload` on a windows machine led to loss of directory structure due to backslashes in the relative paths. This was fixed by [1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
+- Performing `webknossos upload` on a windows machine led to loss of directory structure due to backslashes in the relative paths. This was fixed by [#1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
 
 
 
@@ -36,15 +37,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...v0.14.21)
 
 ### Changed
-- Added `layer_name` as optional argument to `Dataset.from_images` method. If the created dataset contains only a single layer, `layer_name` is used, otherwise the given `layer_name` is a common prefix for all layers. [1054](https://github.com/scalableminds/webknossos-libs/pull/1054)
-- The context variable of View.get_buffered_slice_writer() is a BufferedSliceWriter now instead of a Generator. Interaction with the SliceWriter does not change, but updating the offset after first initialization is possible now. [1052](https://github.com/scalableminds/webknossos-libs/pull/1052)
+- Added `layer_name` as optional argument to `Dataset.from_images` method. If the created dataset contains only a single layer, `layer_name` is used, otherwise the given `layer_name` is a common prefix for all layers. [#1054](https://github.com/scalableminds/webknossos-libs/pull/1054)
+- The context variable of View.get_buffered_slice_writer() is a BufferedSliceWriter now instead of a Generator. Interaction with the SliceWriter does not change, but updating the offset after first initialization is possible now. [#1052](https://github.com/scalableminds/webknossos-libs/pull/1052)
 
 
 ## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...v0.14.20)
 
 ### Changed
-- Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
+- Updated ruff to v0.4.0 [#1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
 - Added NIfTI suffix .nii to list of supported bioformats suffixes. [#1048](https://github.com/scalableminds/webknossos-libs/pull/1048)
 
 
