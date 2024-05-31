@@ -1,5 +1,5 @@
-"""Abstracts access to a PBS cluster via its command-line tools.
-"""
+"""Abstracts access to a PBS cluster via its command-line tools."""
+
 import logging
 import os
 import re
@@ -20,7 +20,7 @@ PBS_STATES: Dict[str, List[str]] = {
     "Ignore": [
         "E",  # Job is exiting after having run
         "H",  # Job is held.
-        "Q",  # job is queued, eligable to run or routed.
+        "Q",  # job is queued, eligible to run or routed.
         "R",  # job is running.
         "T",  # job is being moved to new location.
         "W",  # job is waiting for its execution time
@@ -56,7 +56,7 @@ class PBSExecutor(ClusterExecutor):
     def get_job_id_string(cls) -> str:
         return cls.get_current_job_id()
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
+    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002 Unused method argument: `args`, kwargs
         scheduled_job_ids: List[Union[int, str]] = list(self.jobs.keys())
 
         if len(scheduled_job_ids):

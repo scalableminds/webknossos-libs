@@ -84,14 +84,21 @@ jobs:
           ./kind create cluster --config=tests/cluster-config.yaml
           ./kind export kubeconfig
 
+          cp ../requirements.txt .
           docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
           ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
-        if: ${{ matrix.executors != 'slurm' }}
+        if: ${{ matrix.executors == 'multiprocessing' }}
         run: |
           pip install -r ../requirements.txt
           poetry install
+
+      - name: Install dependencies (without docker)
+        if: ${{ matrix.executors == 'kubernetes' || matrix.executors == 'dask' }}
+        run: |
+          pip install -r ../requirements.txt
+          poetry install --all-extras
 
       - name: Check typing
         if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version == '3.11' }}
@@ -163,7 +170,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r ../requirements.txt
-          poetry install --extras all --with examples
+          poetry install --extras all --with examples --with dev
 
       - name: Check formatting
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}

@@ -70,7 +70,7 @@ def parse_voxel_size(voxel_size_str: str) -> Tuple[float, float, float]:
         if len(result) == 3:
             return VoxelSize(*result)
         raise ValueError(
-            f"Expected three values formated like: 1.0,1.0,2.0 but got: {voxel_size_str}"
+            f"Expected three values formatted like: 1.0,1.0,2.0 but got: {voxel_size_str}"
         )
     except Exception as err:
         raise ValueError(
@@ -90,7 +90,7 @@ def parse_vec3int(vec3int_like: Union[str, Vec3Int]) -> Vec3Int:
         if len(result) == 3:
             return Vec3Int(result)
         raise ValueError(
-            f"Expected three values formated like: 1,1,2 but got: {vec3int_like}"
+            f"Expected three values formatted like: 1,1,2 but got: {vec3int_like}"
         )
     except Exception as err:
         raise ValueError(
@@ -106,7 +106,7 @@ def parse_vec2int(vec2int_str: str) -> Vec2Int:
         if len(result) == 2:
             return Vec2Int(*result)
         raise ValueError(
-            f"Expected three values formated like: 1,2 but got: {vec2int_str}"
+            f"Expected three values formatted like: 1,2 but got: {vec2int_str}"
         )
     except Exception as err:
         raise ValueError(
@@ -125,7 +125,7 @@ def parse_bbox(bbox_str: str) -> BoundingBox:
                 (result[0], result[1], result[2], result[3], result[4], result[5])
             )
         raise ValueError(
-            f"Expected six values formated like: 0,0,0,5,5,5 but got: {bbox_str}"
+            f"Expected six values formatted like: 0,0,0,5,5,5 but got: {bbox_str}"
         )
     except Exception as err:
         raise ValueError(
@@ -175,7 +175,7 @@ def pad_or_crop_to_size_and_topleft(
 ) -> np.ndarray:
     """
     Given an numpy array and a target_size/target_topleft, the array
-    will be padded so that it is within the bounding box descriped by topleft and size.
+    will be padded so that it is within the bounding box described by topleft and size.
     If the input data is too large, the data will be cropped (evenly from opposite sides
     with the assumption that the most important data is in the center).
     """

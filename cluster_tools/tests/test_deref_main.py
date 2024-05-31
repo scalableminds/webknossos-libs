@@ -1,4 +1,4 @@
-from typing import Literal, Tuple, Type
+from typing import Tuple, Type
 
 import cluster_tools
 

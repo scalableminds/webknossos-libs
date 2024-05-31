@@ -46,7 +46,5 @@ class _RenameUnpickler(pickle.Unpickler):
 @warn_after("pickle.load", WARNING_TIMEOUT)
 def load(f: BinaryIO, custom_main_path: Optional[str] = None) -> Any:
     unpickler = _RenameUnpickler(f)
-    unpickler.custom_main_path = (  # pylint: disable=attribute-defined-outside-init
-        custom_main_path
-    )
+    unpickler.custom_main_path = custom_main_path
     return unpickler.load()

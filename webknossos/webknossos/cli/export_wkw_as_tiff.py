@@ -205,7 +205,7 @@ def main(
         Mag,
         typer.Option(
             help="Max resolution to be downsampled. "
-            "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
             metavar="MAG",
         ),
@@ -262,7 +262,7 @@ def main(
 
     mag_view = Dataset.open(source).get_layer(layer_name).get_mag(mag)
 
-    bbox = mag_view.bounding_box if bbox is None else bbox
+    bbox = BoundingBox.from_ndbbox(mag_view.bounding_box) if bbox is None else bbox
 
     logging.info("Starting tiff export for bounding box: %s", bbox)
     executor_args = Namespace(

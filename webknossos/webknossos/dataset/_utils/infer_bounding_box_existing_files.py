@@ -10,7 +10,7 @@ def infer_bounding_box_existing_files(mag_view: MagView) -> BoundingBox:
     The returned bounding box is measured in Mag(1) voxels."""
 
     return reduce(
-        lambda acc, bbox: acc.extended_by(bbox),
+        lambda acc, bbox: acc.extended_by(BoundingBox.from_ndbbox(bbox)),
         mag_view.get_bounding_boxes_on_disk(),
         BoundingBox.empty(),
     )

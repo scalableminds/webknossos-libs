@@ -40,11 +40,17 @@ def main(
         VoxelSize,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VOXEL_SIZE",
         ),
     ],
+    layer_name: Annotated[
+        Optional[str],
+        typer.Option(
+            help="This name is used if only one layer is created. Otherwise this name is used as a common prefix for all layers.",
+        ),
+    ] = None,
     category: Annotated[
         Optional[LayerCategory],
         typer.Option(
@@ -107,5 +113,6 @@ def main(
             data_format=data_format,
             executor=executor,
             compress=compress,
+            layer_name=layer_name,
             layer_category=category.value if category else None,
         )

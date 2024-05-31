@@ -7,10 +7,10 @@ from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 from cluster_tools.executors.pickle_ import PickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
 from cluster_tools.schedulers.cluster_executor import (
-    ClusterExecutor,
-    RemoteOutOfMemoryException,
-    RemoteResourceLimitException,
-    RemoteTimeLimitException,
+    ClusterExecutor,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
+    RemoteOutOfMemoryException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
+    RemoteResourceLimitException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
+    RemoteTimeLimitException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
 )
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
@@ -54,53 +54,45 @@ def _test_valid_multiprocessing() -> None:
 
 
 @overload
-def get_executor(environment: Literal["slurm"], **kwargs: Any) -> SlurmExecutor:
-    ...
+def get_executor(environment: Literal["slurm"], **kwargs: Any) -> SlurmExecutor: ...
 
 
 @overload
-def get_executor(environment: Literal["pbs"], **kwargs: Any) -> PBSExecutor:
-    ...
+def get_executor(environment: Literal["pbs"], **kwargs: Any) -> PBSExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["kubernetes"], **kwargs: Any
-) -> KubernetesExecutor:
-    ...
+) -> KubernetesExecutor: ...
 
 
 @overload
-def get_executor(environment: Literal["dask"], **kwargs: Any) -> DaskExecutor:
-    ...
+def get_executor(environment: Literal["dask"], **kwargs: Any) -> DaskExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["multiprocessing"], **kwargs: Any
-) -> MultiprocessingExecutor:
-    ...
+) -> MultiprocessingExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["sequential"], **kwargs: Any
-) -> SequentialExecutor:
-    ...
+) -> SequentialExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["debug_sequential"], **kwargs: Any
-) -> DebugSequentialExecutor:
-    ...
+) -> DebugSequentialExecutor: ...
 
 
 @overload
 def get_executor(
     environment: Literal["test_pickling"], **kwargs: Any
-) -> PickleExecutor:
-    ...
+) -> PickleExecutor: ...
 
 
 def get_executor(environment: str, **kwargs: Any) -> "Executor":

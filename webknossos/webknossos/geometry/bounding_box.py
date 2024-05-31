@@ -1,6 +1,5 @@
 import json
 import re
-from collections import defaultdict
 from typing import (
     Callable,
     Dict,
@@ -17,13 +16,14 @@ import attr
 import numpy as np
 
 from .mag import Mag
+from .nd_bounding_box import NDBoundingBox
 from .vec3_int import Vec3Int, Vec3IntLike
 
 _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 
 
 @attr.frozen
-class BoundingBox:
+class BoundingBox(NDBoundingBox):
     """
     This class is used to represent an axis-aligned cuboid in 3D.
     The top-left coordinate is inclusive and the bottom-right coordinate is exclusive.
@@ -42,6 +42,8 @@ class BoundingBox:
 
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
+    axes: Tuple[str, str, str] = attr.field(default=("x", "y", "z"))
+    index: Vec3Int = attr.field(default=Vec3Int(1, 2, 3))
     bottomright: Vec3Int = attr.field(init=False)
     name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
@@ -61,61 +63,26 @@ class BoundingBox:
         # it is needed.
         object.__setattr__(self, "bottomright", self.topleft + self.size)
 
-    def with_topleft(self, new_topleft: Vec3IntLike) -> "BoundingBox":
-        return attr.evolve(self, topleft=new_topleft)
-
-    def with_size(self, new_size: Vec3IntLike) -> "BoundingBox":
-        return attr.evolve(self, size=new_size)
-
-    def with_name(self, name: Optional[str]) -> "BoundingBox":
-        return attr.evolve(self, name=name)
-
-    def with_is_visible(self, is_visible: bool) -> "BoundingBox":
-        return attr.evolve(self, is_visible=is_visible)
-
-    def with_color(
-        self, color: Optional[Tuple[float, float, float, float]]
-    ) -> "BoundingBox":
-        return attr.evolve(self, color=color)
-
     def with_bounds_x(
         self, new_topleft_x: Optional[int] = None, new_size_x: Optional[int] = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.x optionally replaced and size.x optionally replaced."""
 
-        new_topleft = (
-            self.topleft.with_x(new_topleft_x)
-            if new_topleft_x is not None
-            else self.topleft
-        )
-        new_size = self.size.with_x(new_size_x) if new_size_x is not None else self.size
-        return attr.evolve(self, topleft=new_topleft, size=new_size)
+        return cast(BoundingBox, self.with_bounds("x", new_topleft_x, new_size_x))
 
     def with_bounds_y(
         self, new_topleft_y: Optional[int] = None, new_size_y: Optional[int] = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.y optionally replaced and size.y optionally replaced."""
 
-        new_topleft = (
-            self.topleft.with_y(new_topleft_y)
-            if new_topleft_y is not None
-            else self.topleft
-        )
-        new_size = self.size.with_y(new_size_y) if new_size_y is not None else self.size
-        return attr.evolve(self, topleft=new_topleft, size=new_size)
+        return cast(BoundingBox, self.with_bounds("y", new_topleft_y, new_size_y))
 
     def with_bounds_z(
         self, new_topleft_z: Optional[int] = None, new_size_z: Optional[int] = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
 
-        new_topleft = (
-            self.topleft.with_z(new_topleft_z)
-            if new_topleft_z is not None
-            else self.topleft
-        )
-        new_size = self.size.with_z(new_size_z) if new_size_z is not None else self.size
-        return attr.evolve(self, topleft=new_topleft, size=new_size)
+        return cast(BoundingBox, self.with_bounds("z", new_topleft_z, new_size_z))
 
     @classmethod
     def from_wkw_dict(cls, bbox: Dict) -> "BoundingBox":
@@ -163,6 +130,10 @@ class BoundingBox:
         return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
 
     @classmethod
+    def from_ndbbox(cls, bbox: NDBoundingBox) -> "BoundingBox":
+        return cls(bbox.topleft_xyz, bbox.size_xyz)
+
+    @classmethod
     def from_auto(
         cls, obj: Union["BoundingBox", str, Dict, List, Tuple]
     ) -> "BoundingBox":
@@ -184,25 +155,6 @@ class BoundingBox:
                 return cls.from_tuple6(obj)  # type: ignore
 
         raise Exception("Unknown bounding box format.")
-
-    @classmethod
-    def group_boxes_with_aligned_mag(
-        cls, bounding_boxes: Iterable["BoundingBox"], aligning_mag: Mag
-    ) -> Dict["BoundingBox", List["BoundingBox"]]:
-        """
-        Groups the given BoundingBox instances by aligning each
-        bbox to the given mag and using that as the key.
-        For example, bounding boxes of size 256**3 could be grouped
-        into the corresponding 1024**3 chunks to which they belong
-        by using aligning_mag = Mag(1024).
-        """
-
-        chunks_with_bboxes = defaultdict(list)
-        for bbox in bounding_boxes:
-            chunk_key = bbox.align_with_mag(aligning_mag, ceil=True)
-            chunks_with_bboxes[chunk_key].append(bbox)
-
-        return chunks_with_bboxes
 
     @classmethod
     def empty(
@@ -240,19 +192,15 @@ class BoundingBox:
     def to_csv(self) -> str:
         return ",".join(map(str, self.to_tuple6()))
 
-    def __repr__(self) -> str:
-        return "BoundingBox(topleft={}, size={})".format(
-            str(tuple(self.topleft)), str(tuple(self.size))
-        )
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, BoundingBox):
+        if isinstance(other, NDBoundingBox):
+            self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
-        else:
-            raise NotImplementedError()
+
+        raise NotImplementedError()
+
+    def __repr__(self) -> str:
+        return f"BoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()})"
 
     def padded_with_margins(
         self, margins_left: Vec3IntLike, margins_right: Optional[Vec3IntLike] = None
@@ -268,36 +216,6 @@ class BoundingBox:
             topleft=self.topleft - margins_left,
             size=self.size + (margins_left + margins_right),
         )
-
-    def intersected_with(
-        self, other: "BoundingBox", dont_assert: bool = False
-    ) -> "BoundingBox":
-        """If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))"""
-
-        topleft = self.topleft.pairmax(other.topleft)
-        bottomright = self.bottomright.pairmin(other.bottomright)
-        size = (bottomright - topleft).pairmax(Vec3Int.zeros())
-
-        intersection = attr.evolve(self, topleft=topleft, size=size)
-
-        if not dont_assert:
-            assert (
-                not intersection.is_empty()
-            ), f"No intersection between bounding boxes {self} and {other}."
-
-        return intersection
-
-    def extended_by(self, other: "BoundingBox") -> "BoundingBox":
-        if self.is_empty():
-            return other
-        if other.is_empty():
-            return self
-
-        topleft = self.topleft.pairmin(other.topleft)
-        bottomright = self.bottomright.pairmax(other.bottomright)
-        size = bottomright - topleft
-
-        return attr.evolve(self, topleft=topleft, size=size)
 
     def is_empty(self) -> bool:
         return not self.size.is_positive(strictly_positive=True)
@@ -318,18 +236,10 @@ class BoundingBox:
             size=(self.size // mag_vec),
         )
 
-    def from_mag_to_mag1(self, from_mag: Mag) -> "BoundingBox":
-        mag_vec = from_mag.to_vec3_int()
-        return attr.evolve(
-            self,
-            topleft=(self.topleft * mag_vec),
-            size=(self.size * mag_vec),
-        )
-
     def _align_with_mag_slow(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
+        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
         """
         np_mag = mag.to_np()
 
@@ -349,7 +259,7 @@ class BoundingBox:
     ) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
+        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
         """
         # This does the same as _align_with_mag_slow, which is more readable.
         # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
@@ -394,9 +304,6 @@ class BoundingBox:
                 and self.topleft[2] <= coord[2] < self.bottomright[2]
             )
 
-    def contains_bbox(self, inner_bbox: "BoundingBox") -> bool:
-        return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
-
     def chunk(
         self,
         chunk_shape: Vec3IntLike,
@@ -433,24 +340,10 @@ class BoundingBox:
                 for z in range(
                     start[2] - start_adjust[2], start[2] + self.size[2], chunk_shape[2]
                 ):
-                    yield BoundingBox([x, y, z], chunk_shape).intersected_with(self)
-
-    def volume(self) -> int:
-        return self.size.prod()
-
-    def slice_array(self, array: np.ndarray) -> np.ndarray:
-        return array[
-            self.topleft.x : self.bottomright.x,
-            self.topleft.y : self.bottomright.y,
-            self.topleft.z : self.bottomright.z,
-        ]
-
-    def to_slices(self) -> Tuple[slice, slice, slice]:
-        return np.index_exp[
-            self.topleft.x : self.bottomright.x,
-            self.topleft.y : self.bottomright.y,
-            self.topleft.z : self.bottomright.z,
-        ]
+                    yield cast(
+                        BoundingBox,
+                        BoundingBox([x, y, z], chunk_shape).intersected_with(self),
+                    )
 
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
         return attr.evolve(self, topleft=self.topleft + Vec3Int(vector))

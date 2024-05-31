@@ -26,7 +26,7 @@ def calculate_path_length(annotation_url: str, auth_token: str) -> None:
 def calculate_path_length_for_tree(
     tree: wk.Tree, voxel_size: Tuple[float, float, float]
 ) -> float:
-    # Auxillary method calculate the maximum path length of a given tree
+    # Auxiliary method calculate the maximum path length of a given tree
     # Assumes that the annotation does not contain any cycles
 
     assert (

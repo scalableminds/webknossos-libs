@@ -1,4 +1,6 @@
 """Abstracts access to a Kubernetes cluster via its Python library."""
+
+import logging
 import os
 import re
 import sys
@@ -7,10 +9,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple
 from uuid import uuid4
 
-import kubernetes
-import kubernetes.client.models as kubernetes_models
-
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+
+logger = logging.getLogger()
 
 
 def _volume_name_from_path(path: Path) -> str:
@@ -18,16 +19,19 @@ def _volume_name_from_path(path: Path) -> str:
 
 
 def _deduplicate_mounts(mounts: List[Path]) -> List[Path]:
-    output = []
     unique_mounts = set(mounts)
-    for mount in unique_mounts:
-        if not any(m in mount.parents for m in unique_mounts):
-            output.append(mount)
+    output = [
+        mount
+        for mount in unique_mounts
+        if not any(m in mount.parents for m in unique_mounts)
+    ]
     return output
 
 
 class KubernetesClient:
     def __init__(self) -> None:
+        import kubernetes
+
         kubernetes.config.load_kube_config()
         self.core = kubernetes.client.api.core_v1_api.CoreV1Api()
         self.batch = kubernetes.client.api.batch_v1_api.BatchV1Api()
@@ -46,6 +50,14 @@ class KubernetesExecutor(ClusterExecutor):
         additional_setup_lines: Optional[List[str]] = None,
         **kwargs: Any,
     ):
+        try:
+            import kubernetes  # noqa: F401 unused import
+        except ModuleNotFoundError:
+            logger.error(
+                'The Kubernetes Python package is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[kubernetes]` or `poetry install --extras "kubernetes"` to install Kubernetes support.'
+            )
+            exit()
+
         super().__init__(
             debug=debug,
             keep_logs=keep_logs,
@@ -101,7 +113,11 @@ class KubernetesExecutor(ClusterExecutor):
             return job_id
         return cls.get_jobid_with_index(job_id, job_index)
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
+    def inner_handle_kill(
+        self,
+        *args: Any,  # noqa: ARG002 Unused method argument: `args`
+        **kwargs: Any,  # noqa: ARG002 Unused method argument: `kwargs`
+    ) -> None:
         job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
         print(
@@ -111,6 +127,9 @@ class KubernetesExecutor(ClusterExecutor):
         )
 
     def ensure_kubernetes_namespace(self) -> None:
+        import kubernetes
+        import kubernetes.client.models as kubernetes_models
+
         kubernetes_client = KubernetesClient()
         try:
             kubernetes_client.core.read_namespace(self.job_resources["namespace"])
@@ -134,10 +153,12 @@ class KubernetesExecutor(ClusterExecutor):
         self,
         cmdline: str,
         job_name: Optional[str] = None,
-        additional_setup_lines: Optional[List[str]] = None,
+        additional_setup_lines: Optional[List[str]] = None,  # noqa:  ARG002 Unused method argument: `additional_setup_lines`
         job_count: Optional[int] = None,
     ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
+
+        import kubernetes.client.models as kubernetes_models
 
         kubernetes_client = KubernetesClient()
         self.ensure_kubernetes_namespace()
@@ -187,9 +208,9 @@ class KubernetesExecutor(ClusterExecutor):
                             "cluster-tools.scalableminds.com/job-is-array-job": str(
                                 is_array_job
                             ),
-                            "cluster-tools.scalableminds.com/job-name": job_name
-                            if job_name is not None
-                            else "",
+                            "cluster-tools.scalableminds.com/job-name": (
+                                job_name if job_name is not None else ""
+                            ),
                         }
                     ),
                     spec=kubernetes_models.V1PodSpec(

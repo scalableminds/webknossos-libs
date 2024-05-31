@@ -148,14 +148,14 @@ class ClusterExecutor(futures.Executor):
             partial(_handle_kill_through_weakref, ref(self), existing_sigint_handler),
         )
 
-        self.meta_data = {}
+        self.metadata = {}
         assert not (
             "logging_config" in kwargs and "logging_setup_fn" in kwargs
         ), "Specify either logging_config OR logging_setup_fn but not both at once"
         if "logging_config" in kwargs:
-            self.meta_data["logging_config"] = kwargs["logging_config"]
+            self.metadata["logging_config"] = kwargs["logging_config"]
         if "logging_setup_fn" in kwargs:
-            self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
+            self.metadata["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
     @classmethod
     def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
@@ -176,10 +176,10 @@ class ClusterExecutor(futures.Executor):
 
         self.inner_handle_kill(signum, frame)
         self.wait_thread.stop()
+        self.clean_up()
 
         if (
-            existing_sigint_handler  # pylint: disable=comparison-with-callable
-            != signal.default_int_handler
+            existing_sigint_handler != signal.default_int_handler
             and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
         ):
             existing_sigint_handler(signum, frame)
@@ -200,7 +200,8 @@ class ClusterExecutor(futures.Executor):
         pass
 
     def investigate_failed_job(
-        self, job_id_with_index: str  # pylint: disable=unused-argument
+        self,
+        job_id_with_index: str,  # noqa: ARG002 Unused method argument: `job_id_with_index`
     ) -> Optional[Tuple[str, Type[RemoteException]]]:
         """
         When a job fails, this method is called to investigate why. If a tuple is returned,
@@ -248,15 +249,15 @@ class ClusterExecutor(futures.Executor):
     ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         pass
 
-    def _cleanup(self, jobid: str) -> None:
+    def _maybe_mark_logs_for_cleanup(self, jobid: str) -> None:
         """Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
         """
         if self.keep_logs:
             return
 
-        outf = self.format_log_file_path(self.cfut_dir, jobid)
-        self.files_to_clean_up.append(outf)
+        log_path = self.format_log_file_path(self.cfut_dir, jobid)
+        self.files_to_clean_up.append(log_path)
 
     @staticmethod
     @abstractmethod
@@ -330,9 +331,7 @@ class ClusterExecutor(futures.Executor):
             # We don't try to deserialize pickling output, because it won't exist.
             success = False
 
-            opt_reason_and_exception_cls = (  # pylint: disable=assignment-from-none
-                self.investigate_failed_job(jobid)
-            )
+            opt_reason_and_exception_cls = self.investigate_failed_job(jobid)
             reason = None
             if opt_reason_and_exception_cls is not None:
                 reason, wrapping_exception_cls = opt_reason_and_exception_cls
@@ -369,7 +368,7 @@ class ClusterExecutor(futures.Executor):
         if not should_keep_output:
             self.files_to_clean_up.append(outfile_name)
 
-        self._cleanup(jobid)
+        self._maybe_mark_logs_for_cleanup(jobid)
 
     def ensure_not_shutdown(self) -> None:
         if self.was_requested_to_shutdown:
@@ -414,7 +413,7 @@ class ClusterExecutor(futures.Executor):
 
         # Start the job.
         serialized_function_info = pickling.dumps(
-            (__fn, args, kwargs, self.meta_data, output_pickle_path)
+            ((__fn, self.metadata), args, kwargs, output_pickle_path)
         )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
@@ -453,9 +452,10 @@ class ClusterExecutor(futures.Executor):
     def get_jobid_with_index(cls, jobid: Union[str, int], index: int) -> str:
         return f"{jobid}_{index}"
 
-    def get_function_pickle_path(self, workerid: str) -> str:
+    def get_function_and_metadata_pickle_path(self, workerid: str) -> str:
         return self.format_infile_name(
-            self.cfut_dir, self.get_workerid_with_index(workerid, "function")
+            self.cfut_dir,
+            self.get_workerid_with_index(workerid, "function-and-metadata"),
         )
 
     @staticmethod
@@ -463,15 +463,17 @@ class ClusterExecutor(futures.Executor):
         return os.path.join(cfut_dir, f"cfut.main_path.{workerid}.txt")
 
     def store_main_path_to_meta_file(self, workerid: str) -> None:
-        with open(
-            self.get_main_meta_path(self.cfut_dir, workerid), "w", encoding="utf-8"
-        ) as file:
+        main_meta_path = self.get_main_meta_path(self.cfut_dir, workerid)
+        with open(main_meta_path, "w", encoding="utf-8") as file:
             file.write(file_path_to_absolute_module(sys.argv[0]))
+        self.files_to_clean_up.append(main_meta_path)
 
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
-        args: Iterable[_S],  # TODO change: allow more than one arg per call
+        args: Iterable[
+            _S
+        ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
     ) -> List["Future[_T]"]:
         self.ensure_not_shutdown()
@@ -484,10 +486,12 @@ class ClusterExecutor(futures.Executor):
         futs_with_output_paths = []
         workerid = random_string()
 
-        pickled_function_path = self.get_function_pickle_path(workerid)
-        self.files_to_clean_up.append(pickled_function_path)
-        with open(pickled_function_path, "wb") as file:
-            pickling.dump(fn, file)
+        pickled_function_and_metadata_path = self.get_function_and_metadata_pickle_path(
+            workerid
+        )
+        self.files_to_clean_up.append(pickled_function_and_metadata_path)
+        with open(pickled_function_and_metadata_path, "wb") as file:
+            pickling.dump((fn, self.metadata), file)
         self.store_main_path_to_meta_file(workerid)
 
         for index, arg in enumerate(args):
@@ -511,7 +515,12 @@ class ClusterExecutor(futures.Executor):
                 os.unlink(preliminary_output_pickle_path)
 
             serialized_function_info = pickling.dumps(
-                (pickled_function_path, [arg], {}, self.meta_data, output_pickle_path)
+                (
+                    pickled_function_and_metadata_path,
+                    [arg],
+                    {},
+                    output_pickle_path,
+                )
             )
             infile_name = self.format_infile_name(self.cfut_dir, workerid_with_index)
 
@@ -607,11 +616,16 @@ class ClusterExecutor(futures.Executor):
         self.wait_thread.stop()
         self.wait_thread.join()
 
+        self.clean_up()
+
+    def clean_up(self) -> None:
         for file_to_clean_up in self.files_to_clean_up:
             try:
                 os.unlink(file_to_clean_up)
-            except OSError:
-                pass
+            except OSError as exc:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
+                logging.warning(
+                    f"Could not delete file during clean up. Path: {file_to_clean_up} Exception: {exc}. Continuing..."
+                )
         self.files_to_clean_up = []
 
     def map(  # type: ignore[override]
@@ -661,9 +675,12 @@ class ClusterExecutor(futures.Executor):
         """
 
         log_path = self.format_log_file_path(self.cfut_dir, fut.cluster_jobid)  # type: ignore[attr-defined]
+
         # Don't use a logger instance here, since the child process
         # probably already used a logger.
-        log_callback = lambda s: sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")  # type: ignore[attr-defined]
+        def log_callback(s: str) -> None:
+            sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")  # type: ignore[attr-defined]
+
         tailer = Tail(log_path, log_callback)
         fut.add_done_callback(lambda _: tailer.cancel())
 

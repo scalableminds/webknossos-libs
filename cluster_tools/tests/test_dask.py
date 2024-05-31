@@ -1,5 +1,5 @@
 import os
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from distributed import LocalCluster
@@ -23,7 +23,7 @@ def test_pass_cwd() -> None:
         )
     with cluster_tools.get_executor(
         "dask", job_resources={"address": _dask_cluster}
-    ) as exec:
+    ) as executor:
         tmp_path = os.path.realpath("/tmp")  # macOS redirects `/tmp` to `/private/tmp`
         os.chdir(tmp_path)
-        assert list(exec.map(job, [None])) == [tmp_path]
+        assert list(executor.map(job, [None])) == [tmp_path]

@@ -1,0 +1,6 @@
+[codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = *.lock,./webknossos/tests/cassettes,./webknossos/tests/dataset/cassettes,./webknossos/webknossos/dataset/_utils/vendor
+# some names and camelCased variables etc
+ignore-regex = \b([a-z]+[A-Z][a-zA-Z]*)\b
+ignore-words-list = nd,ND

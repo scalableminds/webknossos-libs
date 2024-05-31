@@ -7,26 +7,84 @@ readme = "README.md"
 license = "MIT"
 repository = "https://github.com/scalableminds/webknossos-libs"
 
+[tool.poetry.extras]
+kubernetes = ["kubernetes"]
+dask = ["distributed"]
+all = ["kubernetes", "distributed"]
+
 [tool.poetry.dependencies]
 python = ">=3.8"
-distributed = { version = "^2023.9.1", python = ">=3.9" }
-kubernetes = "^27.2.0"
+distributed = { version = "^2023.9.1", python = ">=3.9", optional = true }
+kubernetes = {version = "^27.2.0", optional = true }
 typing-extensions = "^4.4.0"
 
-[tool.poetry.dev-dependencies]
-black = "^23.1.0"
+[tool.poetry.group.dev.dependencies]
 icecream = "^2.1.1"
-isort = "^5.9.3"
 mypy = "^1.0.0"
-pylint = "^2.16.2"
 pytest = "^7.2.1"
+ruff = "^0.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".pyenv",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "webknossos/dataset/_utils/vendor"
+]
+
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+# Assume Python 3.8 for automatic linting fixes
+target-version = "py38"
+
+[tool.ruff.lint]
+# F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
+# E, W = pycodestyle https://docs.astral.sh/ruff/rules/#pycodestyle-e-w
+# I = iSort https://docs.astral.sh/ruff/rules/#isort-i
+# A  = Flake8 Builtins https://docs.astral.sh/ruff/rules/#flake8-builtins-a
+# PERF = Perflint https://docs.astral.sh/ruff/rules/#perflint-perf
+# FIX = Flake8 fixme https://docs.astral.sh/ruff/rules/#flake8-fixme-fix
+# ARG = Flake8 unused-arguments https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
+select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+
+# E501 Line too long https://docs.astral.sh/ruff/rules/line-too-long/
+# E712 true-false-comparison https://docs.astral.sh/ruff/rules/true-false-comparison/
+ignore = ["E501", "E712"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
 
 [tool.mypy]
 disallow_untyped_defs = true
@@ -35,6 +93,3 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
-
-[tool.pylint."MESSAGES CONTROL"]
-disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","broad-exception-raised","protected-access","R","C","fixme","global-statement","redefined-outer-name","arguments-differ","unused-argument"]

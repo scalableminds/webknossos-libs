@@ -13,7 +13,7 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
@@ -192,7 +192,7 @@ class Layer:
         self.path.mkdir(parents=True, exist_ok=True)
 
         for mag in properties.mags:
-            self._setup_mag(Mag(mag.mag))
+            self._setup_mag(Mag(mag.mag), mag.path)
         # Only keep the properties of mags that were initialized.
         # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
         self._properties.mags = [
@@ -251,11 +251,11 @@ class Layer:
         return self._dataset
 
     @property
-    def bounding_box(self) -> BoundingBox:
+    def bounding_box(self) -> NDBoundingBox:
         return self._properties.bounding_box
 
     @bounding_box.setter
-    def bounding_box(self, bbox: BoundingBox) -> None:
+    def bounding_box(self, bbox: NDBoundingBox) -> None:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
@@ -264,9 +264,7 @@ class Layer:
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
-            )
+            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property
     def category(self) -> LayerCategoryType:
@@ -399,9 +397,7 @@ class Layer:
             create=True,
         )
 
-        mag_view._array.ensure_size(
-            self.bounding_box.align_with_mag(mag).in_mag(mag).bottomright
-        )
+        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
@@ -414,7 +410,12 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    dict(
+                        zip(
+                            ("c", "x", "y", "z"),
+                            (0, *self.bounding_box.index_xyz),
+                        )
+                    )
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
@@ -451,7 +452,13 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    {
+                        key: value
+                        for key, value in zip(
+                            ("c", *self.bounding_box.axes),
+                            (0, *self.bounding_box.index),
+                        )
+                    }
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
@@ -473,7 +480,7 @@ class Layer:
         file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
-        Creates a new mag called and adds it to the dataset, in case it did not exist before.
+        Creates a new mag and adds it to the dataset, in case it did not exist before.
         Then, returns the mag.
 
         See `add_mag` for more information.
@@ -559,9 +566,11 @@ class Layer:
             chunk_shape=chunk_shape or foreign_mag_view._array_info.chunk_shape,
             chunks_per_shard=chunks_per_shard
             or foreign_mag_view._array_info.chunks_per_shard,
-            compress=compress
-            if compress is not None
-            else foreign_mag_view._array_info.compression_mode,
+            compress=(
+                compress
+                if compress is not None
+                else foreign_mag_view._array_info.compression_mode
+            ),
         )
 
         if extend_layer_bounding_box:
@@ -813,7 +822,7 @@ class Layer:
         of multiple layers while avoiding parallel writes with outdated updates
         to the datasource-properties.json file.
 
-        `executor` can be passed to allow distrubuted computation, parallelizing
+        `executor` can be passed to allow distributed computation, parallelizing
         across chunks. `args` is deprecated.
         """
         self._dataset._ensure_writable()
@@ -1075,7 +1084,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag) -> None:
+    def _setup_mag(self, mag: Mag, path: Optional[str] = None) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         mag_name = mag.to_layer_name()
@@ -1085,7 +1094,7 @@ class Layer:
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
             info = cls_array.open(
-                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
+                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name, path)
             ).info
             self._mags[mag] = MagView(
                 self,

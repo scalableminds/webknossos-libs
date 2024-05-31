@@ -25,9 +25,7 @@ def call(command: str, stdin: Optional[str] = None) -> Tuple[str, str, int]:
 class CommandError(Exception):
     """Raised when a shell command exits abnormally."""
 
-    def __init__(
-        self, command: str, code: int, stderr: str
-    ):  # pylint: disable=super-init-not-called
+    def __init__(self, command: str, code: int, stderr: str):
         self.command = command
         self.code = code
         self.stderr = stderr

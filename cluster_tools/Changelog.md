@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.22...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,44 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.22) - 2024-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...v0.14.22)
+
+
+## [0.14.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.21) - 2024-05-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...v0.14.21)
+
+
+## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...v0.14.20)
+
+### Changed
+- Array jobs are spawned faster now, because common meta data is not serialized for each subjob. The performance improvement is especially big, when custom logging code is configured for array jobs. [#1042](https://github.com/scalableminds/webknossos-libs/pull/1042)
+- Updated ruff to v0.4.0 [1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
+
+
+## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...v0.14.19)
+
+### Changed
+- Moved the dependencies for Kubernetes and Dask support into optional extras that need to be installed separately. Either with `poetry install --all-extras or pip install -e "all"`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
+
+
+## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...v0.14.18)
+
+
+## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.16...v0.14.17)
+
+
+## [0.14.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.16) - 2024-04-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...v0.14.16)
+
+### Changed
+- Replaced black+isort formatters and pylint linter with ruff. [#1023](https://github.com/scalableminds/webknossos-libs/pull/1023)
 
 
 ## [0.14.15](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.15) - 2024-02-07

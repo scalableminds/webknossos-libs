@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import signal
@@ -27,6 +28,9 @@ from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingEx
 
 if TYPE_CHECKING:
     from distributed import Client
+
+logger = logging.getLogger()
+
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
@@ -110,6 +114,14 @@ class DaskExecutor(futures.Executor):
     def __init__(
         self, client: "Client", job_resources: Optional[Dict[str, Any]] = None
     ) -> None:
+        try:
+            import distributed  # noqa: F401 unused import
+        except ModuleNotFoundError:
+            logger.error(
+                'The distributed Python package for Dask is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[dask]` or `poetry install --extras "dask"` to install Dask support.'
+            )
+            exit()
+
         self.client = client
         self.pending_futures = set()
         self.job_resources = job_resources
@@ -239,7 +251,9 @@ class DaskExecutor(futures.Executor):
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
-        args: Iterable[_S],  # TODO change: allow more than one arg per call
+        args: Iterable[
+            _S
+        ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
     ) -> List["Future[_T]"]:
         if output_pickle_path_getter is not None:
@@ -286,13 +300,12 @@ class DaskExecutor(futures.Executor):
         self.client.cancel(list(self.pending_futures))
 
         if (
-            existing_sigint_handler  # pylint: disable=comparison-with-callable
-            != signal.default_int_handler
+            existing_sigint_handler != signal.default_int_handler
             and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
         ):
             existing_sigint_handler(signum, frame)
 
-    def shutdown(self, wait: bool = True, *, cancel_futures: bool = False) -> None:
+    def shutdown(self, wait: bool = True, *, cancel_futures: bool = False) -> None:  # noqa: ARG002 Unused method argument: `cancel_futures`
         if wait:
             for fut in list(self.pending_futures):
                 fut.result()
