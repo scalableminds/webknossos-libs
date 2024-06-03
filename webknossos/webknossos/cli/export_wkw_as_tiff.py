@@ -35,7 +35,7 @@ def _make_tiff_name(name: str, slice_index: int) -> str:
         return f"{name}_{slice_index:06d}.tiff"
 
 
-def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image:
+def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
     if data_slice.shape[0] == 1:
         # discard greyscale dimension
         data_slice = data_slice.squeeze(axis=0)
