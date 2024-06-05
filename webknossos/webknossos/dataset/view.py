@@ -255,7 +255,7 @@ class View:
                 relative_bounding_box,
             ]
         ):
-            relative_offset = Vec3Int.zeros()
+            absolute_bounding_box = self.bounding_box
 
         if (absolute_bounding_box or relative_bounding_box) is not None:
             data_shape = None

@@ -371,20 +371,21 @@ class MagView(View):
             voxel_size=self.layer.dataset.voxel_size,
             exist_ok=True,
         )
-        compressed_mag = compressed_dataset.get_or_add_layer(
+        compressed_layer = compressed_dataset.get_or_add_layer(
             layer_name=self.layer.name,
             category=self.layer.category,
             dtype_per_channel=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
             data_format=self.layer.data_format,
             largest_segment_id=self.layer._get_largest_segment_id_maybe(),
-        ).get_or_add_mag(
+        )
+        compressed_layer.bounding_box = self.layer.bounding_box
+        compressed_mag = compressed_layer.get_or_add_mag(
             mag=self.mag,
             chunk_shape=self.info.chunk_shape,
             chunks_per_shard=self.info.chunks_per_shard,
             compress=True,
         )
-        compressed_mag.layer.bounding_box = self.layer.bounding_box
 
         logging.info(
             "Compressing mag {0} in '{1}'".format(
@@ -397,12 +398,8 @@ class MagView(View):
                 bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
                 if not bbox.is_empty():
                     bbox = bbox.align_with_mag(self.mag, ceil=True)
-                    source_view = self.get_view(
-                        absolute_offset=bbox.topleft, size=bbox.size
-                    )
-                    target_view = compressed_mag.get_view(
-                        absolute_offset=bbox.topleft, size=bbox.size
-                    )
+                    source_view = self.get_view(absolute_bbox=bbox)
+                    target_view = compressed_mag.get_view(absolute_bbox=bbox)
                     job_args.append((source_view, target_view))
 
             wait_and_ensure_success(
