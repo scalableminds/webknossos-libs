@@ -8,9 +8,11 @@ def main() -> None:
     dataset = wk.Dataset.from_images(
         Path(__file__).parent.parent / "testdata" / "4D" / "4D_series",
         "testoutput/4D_series",
-        voxel_size=(10, 10, 10),
         data_format="zarr3",
+        voxel_size=(10, 10, 10),
     )
+    dataset.compress()
+    dataset.downsample()
 
     # Access the first color layer and the Mag 1 view of this layer
     layer = dataset.get_color_layers()[0]

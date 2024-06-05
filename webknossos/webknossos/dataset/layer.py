@@ -13,6 +13,8 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.geometry.vec_int import VecInt
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
@@ -732,7 +734,7 @@ class Layer:
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if coarsest_mag is None:
-            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size)
+            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -864,14 +866,10 @@ class Layer:
         bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
         # Get target view
-        target_view = target_mag_view.get_view(
-            absolute_offset=bb_mag1.topleft,
-            size=bb_mag1.size,
-        )
+        target_view = target_mag_view.get_view(absolute_bbox=bb_mag1)
 
         source_view = prev_mag_view.get_view(
-            absolute_offset=bb_mag1.topleft,
-            size=bb_mag1.size,
+            absolute_bbox=bb_mag1,
             read_only=True,
         )
 

@@ -306,27 +306,29 @@ def downsample_cube_job(
 
     try:
         num_channels = target_view.info.num_channels
-        shape = (num_channels,) + target_view.bounding_box.in_mag(
-            target_view.mag
-        ).size.to_tuple()
+        target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
+        shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
+        shape_xyz = target_bbox_in_mag.size_xyz
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
             *(
                 list(range(0, math.ceil(length / buffer_edge_len)))
-                for length, buffer_edge_len in zip(shape[-3:], buffer_shape)
+                for length, buffer_edge_len in zip(shape_xyz[-3:], buffer_shape)
             )
         )
 
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_shape
             source_offset = mag_factors * target_offset
-            source_size = source_view.bounding_box.in_mag(source_view.mag).size
+            source_size = source_view.bounding_box.in_mag(source_view.mag).size_xyz
             source_size = (mag_factors * buffer_shape).pairmin(
                 source_size - source_offset
             )
 
-            bbox = BoundingBox(source_offset, source_size)
+            bbox = source_view.bounding_box.with_topleft_xyz(
+                source_offset
+            ).with_size_xyz(source_size)
 
             cube_buffer_channels = source_view.read(
                 relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
@@ -334,6 +336,23 @@ def downsample_cube_job(
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
+                slice_tuple = tuple(
+                    slice(topleft, topleft + size)
+                    if axis in ("x", "y", "z")
+                    else slice(0, size)
+                    for topleft, size, axis in zip(bbox.topleft, bbox.size, bbox.axes)
+                )
+                cube_buffer = cube_buffer[slice_tuple]
+                cube_buffer = np.moveaxis(
+                    cube_buffer,
+                    (
+                        bbox.axes.index("x"),
+                        bbox.axes.index("y"),
+                        bbox.axes.index("z"),
+                    ),
+                    (0, 1, 2),
+                )
+                cube_buffer = cube_buffer.squeeze(axis=tuple(range(3, len(bbox))))
 
                 if not np.all(cube_buffer == 0):
                     # Downsample the buffer
@@ -343,13 +362,31 @@ def downsample_cube_job(
                         interpolation_mode,
                     )
 
-                    buffer_bbox = BoundingBox(target_offset, data_cube.shape)
+                    buffer_bbox = target_view.bounding_box.with_topleft_xyz(
+                        target_offset
+                    ).with_size_xyz(data_cube.shape)
+
+                    # Add missing axes to the data_cube if bbox is nd
+                    data_cube = np.expand_dims(
+                        data_cube, axis=tuple(range(3, len(buffer_bbox)))
+                    )
+                    data_cube = np.moveaxis(
+                        data_cube,
+                        (0, 1, 2),
+                        (
+                            buffer_bbox.axes.index("x"),
+                            buffer_bbox.axes.index("y"),
+                            buffer_bbox.axes.index("z"),
+                        ),
+                    )
                     file_buffer[(channel_index,) + buffer_bbox.to_slices()] = data_cube
 
         # Write the downsampled buffer to target
         if source_view.info.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(file_buffer)
+        target_view.write(
+            absolute_bounding_box=target_view.bounding_box, data=file_buffer
+        )
 
     except Exception as exc:
         logging.error(
