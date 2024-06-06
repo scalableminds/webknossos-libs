@@ -24,6 +24,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [#1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
 - Set a new max value for test_align_with_mag_against_numpy_implementation to avoid failures due to high numbers. [#1082](https://github.com/scalableminds/webknossos-libs/pull/1082)
 - Updated dependabot.yml [#1087](https://github.com/scalableminds/webknossos-libs/pull/1087)
+- Make lookup for supported suffixes case-insensitive. [#1100](https://github.com/scalableminds/webknossos-libs/pull/1100)
 
 ### Fixed
 - Fixed an issue with downloading annotations through the Command Line Interface. [#1083](https://github.com/scalableminds/webknossos-libs/pull/1083)
