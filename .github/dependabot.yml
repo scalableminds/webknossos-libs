@@ -22,7 +22,7 @@ updates:
     - dependency-name: "scikit-image"
   reviewers:
   - markbader
-- package-exosystem: pip
+- package-ecosystem: pip
   directory: "/docs"
   schedule:
     interval: daily
