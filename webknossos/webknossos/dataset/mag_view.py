@@ -45,8 +45,8 @@ def _find_mag_path_on_disk(
         return long_mag_file_path
 
 
-def _compress_cube_job(args: Tuple[View, View]) -> None:
-    source_view, target_view = args
+def _compress_cube_job(args: Tuple[View, View, int]) -> None:
+    source_view, target_view, _i = args
     target_view.write(source_view.read())
 
 
@@ -393,20 +393,33 @@ class MagView(View):
             )
         )
         with get_executor_for_args(args, executor) as executor:
-            job_args = []
-            for bbox in self.get_bounding_boxes_on_disk():
-                bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
-                if not bbox.is_empty():
-                    bbox = bbox.align_with_mag(self.mag, ceil=True)
-                    source_view = self.get_view(absolute_bbox=bbox)
-                    target_view = compressed_mag.get_view(absolute_bbox=bbox)
-                    job_args.append((source_view, target_view))
-
-            wait_and_ensure_success(
-                executor.map_to_futures(_compress_cube_job, job_args),
+            self.for_zipped_chunks(
+                target_view=compressed_mag,
+                source_chunk_shape=self.info.shard_shape,
+                target_chunk_shape=self.info.shard_shape,
                 executor=executor,
-                progress_desc="Compressing",
+                func_per_chunk=_compress_cube_job,
+                progress_desc=f"Compressing {self.layer.name} {self.name}",
             )
+            # job_args = []
+            # for bbox in self.get_bounding_boxes_on_disk():
+            #     bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
+            #     if not bbox.is_empty():
+            #         bbox = bbox.align_with_mag(self.mag, ceil=True)
+            #         source_view = self.get_view(absolute_bbox=bbox)
+            #         target_view = compressed_mag.get_view(absolute_bbox=bbox)
+            #         job_args.append((source_view, target_view))
+
+            # wait_and_ensure_success(
+            #     executor.map_to_futures(_compress_cube_job, job_args),
+            #     executor=executor,
+            #     progress_desc="Compressing",
+            # )
+        logging.warn(
+            "Compressed mag {0} in '{1}' done, {2}".format(
+                self.name, self.path, compressed_mag._is_compressed()
+            )
+        )
 
         if target_path is None:
             rmtree(self.path)

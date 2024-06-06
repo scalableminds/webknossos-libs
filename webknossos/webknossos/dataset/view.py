@@ -515,6 +515,37 @@ class View:
 
         return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
+    def read_xyz(
+        self,
+        relative_bounding_box: Optional[NDBoundingBox] = None,
+        absolute_bounding_box: Optional[NDBoundingBox] = None,
+    ) -> np.ndarray:
+        """
+        The user can specify the bounding box in the dataset's coordinate system.
+        The default is to read all data of the view's bounding box.
+        Alternatively, one can supply one of the following keyword arguments:
+        * `relative_bounding_box` in Mag(1)
+        * `absolute_bounding_box` in Mag(1)
+
+        Returns the specified data as a `np.array`.
+        """
+        mag1_bbox = self._get_mag1_bbox(
+            rel_mag1_bbox=relative_bounding_box,
+            abs_mag1_bbox=absolute_bounding_box,
+        )
+        if isinstance(mag1_bbox, BoundingBox):
+            return self._read_without_checks(mag1_bbox.in_mag(self._mag))
+
+        data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
+        # transform data to xyz order
+        data = np.moveaxis(
+            data,
+            mag1_bbox.index_xyz,
+            [1, 2, 3],
+        )
+        data = data.squeeze(axis=tuple(range(4, len(data.shape))))
+        return data
+
     def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
         """
         ⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.

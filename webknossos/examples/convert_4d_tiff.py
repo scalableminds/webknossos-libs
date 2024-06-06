@@ -9,6 +9,7 @@ def main() -> None:
         Path(__file__).parent.parent / "testdata" / "4D" / "4D_series",
         "testoutput/4D_series",
         layer_category="color",
+        data_format="zarr3",
         voxel_size=(10, 10, 10),
     )
     dataset.downsample()

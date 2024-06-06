@@ -735,6 +735,15 @@ class NDBoundingBox:
         self._check_compatibility(inner_bbox)
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
 
+    def chunk_full_xyz(self: _T) -> Generator[_T, None, None]:
+        """
+        Decompose the bounding box into smaller chunks of size 1 along all axes.
+
+        Yields:
+        - Generator[NDBoundingBox]: A generator of the chunks.
+        """
+        yield from self.chunk(self.size_xyz)
+
     def chunk(
         self: _T,
         chunk_shape: VecIntLike,

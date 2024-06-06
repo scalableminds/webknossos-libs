@@ -11,7 +11,7 @@ from scipy.ndimage import zoom
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..geometry import Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayInfo
 from .layer_categories import LayerCategoryType
 from .view import View
@@ -330,29 +330,12 @@ def downsample_cube_job(
                 source_offset
             ).with_size_xyz(source_size)
 
-            cube_buffer_channels = source_view.read(
+            cube_buffer_channels = source_view.read_xyz(
                 relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
             )
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
-                slice_tuple = tuple(
-                    slice(topleft, topleft + size)
-                    if axis in ("x", "y", "z")
-                    else slice(0, size)
-                    for topleft, size, axis in zip(bbox.topleft, bbox.size, bbox.axes)
-                )
-                cube_buffer = cube_buffer[slice_tuple]
-                cube_buffer = np.moveaxis(
-                    cube_buffer,
-                    (
-                        bbox.axes.index("x"),
-                        bbox.axes.index("y"),
-                        bbox.axes.index("z"),
-                    ),
-                    (0, 1, 2),
-                )
-                cube_buffer = cube_buffer.squeeze(axis=tuple(range(3, len(bbox))))
 
                 if not np.all(cube_buffer == 0):
                     # Downsample the buffer
