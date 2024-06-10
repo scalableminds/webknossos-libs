@@ -4,17 +4,11 @@ from pathlib import Path
 from typing import Iterator, Set
 
 import numpy as np
+from pims import FramesSequenceND
 
 from .vendor.dm3 import DM3  # type: ignore[attr-defined]
 from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING  # type: ignore[attr-defined]
 from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
-
-try:
-    from pims import FramesSequenceND
-except ImportError as e:
-    raise RuntimeError(
-        "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-    ) from e
 
 
 class PimsDm3Reader(FramesSequenceND):
