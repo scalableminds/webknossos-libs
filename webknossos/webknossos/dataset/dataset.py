@@ -624,7 +624,7 @@ class Dataset:
         input_files = [
             i.relative_to(input_upath)
             for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
+            if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
         ]
         if len(input_files) == 0:
             raise ValueError(
