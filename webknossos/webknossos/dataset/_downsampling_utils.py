@@ -333,7 +333,7 @@ def downsample_cube_job(
             ).with_size_xyz(source_size)
 
             cube_buffer_channels = source_view.read_xyz(
-                relative_bounding_box=bbox,
+                absolute_bounding_box=bbox,
             )
 
             for channel_index in range(num_channels):
