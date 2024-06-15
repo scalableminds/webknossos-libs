@@ -886,6 +886,8 @@ class Layer:
                 # this view is restricted to the bounding box specified in the properties
                 func,
                 target_view=target_view,
+                target_chunk_shape=target_view.info.shard_shape * target_view.mag,
+                source_chunk_shape=source_view.info.shard_shape * target_view.mag,
                 executor=executor,
                 progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
             )

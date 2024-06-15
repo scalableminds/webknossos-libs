@@ -13,6 +13,10 @@ def main() -> None:
         voxel_size=(10, 10, 10),
     )
     dataset.downsample()
+    layer = dataset.get_color_layers()[0]
+    mag2 = layer.get_mag(2)
+    array = mag2.read()
+    print(array.shape)
     dataset.compress()
 
     # Access the first color layer and the Mag 1 view of this layer

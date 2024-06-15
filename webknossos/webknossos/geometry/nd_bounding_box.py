@@ -833,6 +833,25 @@ class NDBoundingBox:
         """
         return array[self.to_slices()]
 
+    def xyz_array_to_bbox_shape(self, data: np.ndarray) -> np.ndarray:
+        """
+        Transforms data array with xyz axes to the shape of the bounding box.
+        This is only possible for bboxes that are flat in all dimensions except xyz.
+        """
+        assert all(
+            size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
+        ), "The view's bounding box must be flat in all dimensions except xyz."
+        data = np.expand_dims(data, axis=tuple(range(3, len(self))))
+        return np.moveaxis(
+            data,
+            [0, 1, 2],
+            (
+                self.axes.index("x"),
+                self.axes.index("y"),
+                self.axes.index("z"),
+            ),
+        )
+
     def to_slices(self) -> Tuple[slice, ...]:
         """
         Returns a tuple of slices that corresponds to the bounding box.
@@ -840,6 +859,19 @@ class NDBoundingBox:
         return tuple(
             slice(topleft, topleft + size)
             for topleft, size in zip(self.topleft, self.size)
+        )
+
+    def to_slices_xyz(self) -> Tuple[slice, ...]:
+        """
+        Returns a tuple of slices that corresponds to the bounding box in x, y, z and leaves all other axes one dimensional without offset.
+        """
+        assert all(
+            size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
+        ), "The view's bounding box must be flat in all dimensions except xyz."
+        return (
+            NDBoundingBox(VecInt.zeros(self.axes), self.size, self.axes, self.index)
+            .with_topleft_xyz(self.topleft_xyz)
+            .to_slices()
         )
 
     def offset(self: _T, vector: VecIntLike) -> _T:

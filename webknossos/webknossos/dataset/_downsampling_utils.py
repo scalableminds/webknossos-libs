@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 import numpy as np
 from scipy.ndimage import zoom
 
+from webknossos.geometry.vec_int import VecInt
+
 if TYPE_CHECKING:
     from .dataset import Dataset
 
@@ -31,7 +33,7 @@ DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
 
 
 def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
-    return min(DEFAULT_BUFFER_SHAPE, array_info.shard_shape)
+    return DEFAULT_BUFFER_SHAPE.pairmin(array_info.shard_shape)
 
 
 def calculate_mags_to_downsample(
@@ -321,7 +323,7 @@ def downsample_cube_job(
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_shape
             source_offset = mag_factors * target_offset
-            source_size = source_view.bounding_box.in_mag(source_view.mag).size_xyz
+            source_size = source_view.bounding_box.size_xyz
             source_size = (mag_factors * buffer_shape).pairmin(
                 source_size - source_offset
             )
@@ -331,7 +333,7 @@ def downsample_cube_job(
             ).with_size_xyz(source_size)
 
             cube_buffer_channels = source_view.read_xyz(
-                relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
+                relative_bounding_box=bbox,
             )
 
             for channel_index in range(num_channels):
@@ -350,26 +352,14 @@ def downsample_cube_job(
                     ).with_size_xyz(data_cube.shape)
 
                     # Add missing axes to the data_cube if bbox is nd
-                    data_cube = np.expand_dims(
-                        data_cube, axis=tuple(range(3, len(buffer_bbox)))
+                    data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
+
+                    file_buffer[(channel_index,) + buffer_bbox.to_slices_xyz()] = (
+                        data_cube
                     )
-                    data_cube = np.moveaxis(
-                        data_cube,
-                        (0, 1, 2),
-                        (
-                            buffer_bbox.axes.index("x"),
-                            buffer_bbox.axes.index("y"),
-                            buffer_bbox.axes.index("z"),
-                        ),
-                    )
-                    file_buffer[(channel_index,) + buffer_bbox.to_slices()] = data_cube
 
         # Write the downsampled buffer to target
-        if source_view.info.num_channels == 1:
-            file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(
-            absolute_bounding_box=target_view.bounding_box, data=file_buffer
-        )
+        target_view.write(file_buffer)
 
     except Exception as exc:
         logging.error(

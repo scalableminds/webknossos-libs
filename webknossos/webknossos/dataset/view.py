@@ -279,7 +279,7 @@ class View:
             )
 
         num_channels = self._array_info.num_channels
-        if len(data.shape) == 3:
+        if len(data.shape) == len(self.bounding_box):
             assert (
                 num_channels == 1
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
