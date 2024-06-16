@@ -321,7 +321,7 @@ def downsample_cube_job(
         )
 
         for tile in tiles:
-            target_offset = Vec3Int(tile) * buffer_shape
+            target_offset = Vec3Int(tile) * buffer_shape // mag_factors
             source_offset = mag_factors * target_offset
             source_size = source_view.bounding_box.size_xyz
             source_size = (mag_factors * buffer_shape).pairmin(
@@ -359,7 +359,7 @@ def downsample_cube_job(
                     )
 
         # Write the downsampled buffer to target
-        target_view.write(file_buffer)
+        target_view.write(file_buffer, absolute_bounding_box=target_view.bounding_box)
 
     except Exception as exc:
         logging.error(
