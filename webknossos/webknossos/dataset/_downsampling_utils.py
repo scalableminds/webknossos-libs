@@ -8,8 +8,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 import numpy as np
 from scipy.ndimage import zoom
 
-from webknossos.geometry.vec_int import VecInt
-
 if TYPE_CHECKING:
     from .dataset import Dataset
 
@@ -321,16 +319,16 @@ def downsample_cube_job(
         )
 
         for tile in tiles:
-            target_offset = Vec3Int(tile) * buffer_shape // mag_factors
+            target_offset = Vec3Int(tile) * buffer_shape
             source_offset = mag_factors * target_offset
             source_size = source_view.bounding_box.size_xyz
             source_size = (mag_factors * buffer_shape).pairmin(
                 source_size - source_offset
             )
 
-            bbox = source_view.bounding_box.with_topleft_xyz(
-                source_offset
-            ).with_size_xyz(source_size)
+            bbox = source_view.bounding_box.offset(source_offset).with_size_xyz(
+                source_size
+            )
 
             cube_buffer_channels = source_view.read_xyz(
                 absolute_bounding_box=bbox,
