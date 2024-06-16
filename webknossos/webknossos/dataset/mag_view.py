@@ -10,6 +10,8 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
+from webknossos.dataset.data_format import DataFormat
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     NDArrayLike,
@@ -395,12 +397,38 @@ class MagView(View):
             )
         )
         with get_executor_for_args(args, executor) as executor:
-            self.for_zipped_chunks(
-                target_view=compressed_mag,
-                executor=executor,
-                func_per_chunk=_compress_cube_job,
-                progress_desc=f"Compressing {self.layer.name} {self.name}",
-            )
+            if self.layer.data_format == DataFormat.WKW:
+                job_args = []
+                for i, bbox in enumerate(self._array.list_bounding_boxes()):
+                    bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
+                        self.layer.bounding_box, dont_assert=True
+                    )
+                    if not bbox.is_empty():
+                        bbox = bbox.align_with_mag(self.mag, ceil=True)
+                        source_view = self.get_view(
+                            absolute_offset=bbox.topleft, size=bbox.size
+                        )
+                        target_view = compressed_mag.get_view(
+                            absolute_offset=bbox.topleft, size=bbox.size
+                        )
+                        job_args.append((source_view, target_view, i))
+
+                wait_and_ensure_success(
+                    executor.map_to_futures(_compress_cube_job, job_args),
+                    executor=executor,
+                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                )
+            else:
+                warnings.warn(
+                    "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
+                    + "Instead all bounding boxes are iterated, which can be slow."
+                )
+                self.for_zipped_chunks(
+                    target_view=compressed_mag,
+                    executor=executor,
+                    func_per_chunk=_compress_cube_job,
+                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                )
 
         if target_path is None:
             rmtree(self.path)
