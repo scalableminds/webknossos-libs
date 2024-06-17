@@ -320,9 +320,9 @@ def downsample_cube_job(
 
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_shape
-            source_offset = mag_factors * target_offset
+            source_offset = target_offset * target_view.mag
             source_size = source_view.bounding_box.size_xyz
-            source_size = (mag_factors * buffer_shape).pairmin(
+            source_size = (buffer_shape * target_view.mag).pairmin(
                 source_size - source_offset
             )
 
