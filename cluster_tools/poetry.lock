@@ -395,13 +395,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "kubernetes"
-version = "27.2.0"
+version = "30.1.0"
 description = "Kubernetes python client"
 optional = true
 python-versions = ">=3.6"
 files = [
-    {file = "kubernetes-27.2.0-py2.py3-none-any.whl", hash = "sha256:0f9376329c85cf07615ed6886bf9bf21eb1cbfc05e14ec7b0f74ed8153cd2815"},
-    {file = "kubernetes-27.2.0.tar.gz", hash = "sha256:d479931c6f37561dbfdf28fc5f46384b1cb8b28f9db344ed4a232ce91990825a"},
+    {file = "kubernetes-30.1.0-py2.py3-none-any.whl", hash = "sha256:e212e8b7579031dd2e512168b617373bc1e03888d41ac4e04039240a292d478d"},
+    {file = "kubernetes-30.1.0.tar.gz", hash = "sha256:41e4c77af9f28e7a6c314e3bd06a8c6229ddd787cad684e0ab9f69b498e98ebc"},
 ]
 
 [package.dependencies]
@@ -1077,4 +1077,4 @@ kubernetes = ["kubernetes"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8"
-content-hash = "20e727c7aa50541d216fca8db95a7f9897a1cb591f56bc9af55832ae1b86ff35"
+content-hash = "54bd93e59c5722a624b8b9c6de8426468fec472cf7abdf991aec43be4315ff98"
