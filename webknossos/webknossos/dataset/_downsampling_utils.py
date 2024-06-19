@@ -314,7 +314,7 @@ def downsample_cube_job(
         tiles = product(
             *(
                 list(range(0, math.ceil(length / buffer_edge_len)))
-                for length, buffer_edge_len in zip(shape_xyz[-3:], buffer_shape)
+                for length, buffer_edge_len in zip(shape_xyz, buffer_shape)
             )
         )
 
