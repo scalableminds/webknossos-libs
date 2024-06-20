@@ -27,6 +27,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Make lookup for supported suffixes case-insensitive. [#1100](https://github.com/scalableminds/webknossos-libs/pull/1100)
 
 ### Fixed
+- Fixed an issue where cube jobs upsampling, downsampling and compress failed when performed on more than 3 dimensions. [#1095](https://github.com/scalableminds/webknossos-libs/pull/1095)
 - Fixed an issue with downloading annotations through the Command Line Interface. [#1083](https://github.com/scalableminds/webknossos-libs/pull/1083)
 
 
