@@ -166,23 +166,30 @@ def test_upsampling_non_aligned(tmp_path: Path) -> None:
 
 
 def test_upsample_nd_dataset(tmp_path: Path) -> None:
-    pass
-    # source_path = (
-    #     Path(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
-    # )
-    # target_path = tmp_path / "upsample_test"
+    source_path = (
+        Path(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
+    )
+    target_path = tmp_path / "upsample_test"
 
-    # source_ds = Dataset.open(source_path)
-    # target_ds = source_ds.copy_dataset(target_path, data_format="zarr3")
+    source_ds = Dataset.open(source_path)
+    target_ds = Dataset(target_path, voxel_size=(10, 10, 10))
+    source_layer = source_ds.get_layer("color")
+    target_layer = target_ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        bounding_box=source_layer.bounding_box,
+        data_format="zarr3",
+    )
 
-    # source_layer = source_ds.get_layer("color")
-    # target_layer = target_ds.get_layer("color")
+    source_mag = source_layer.get_mag("2")
 
-    # target_layer.delete_mag("1")
-    # target_layer.upsample(from_mag=Mag(2), finest_mag=Mag(1))
+    target_layer.add_fs_copy_mag(source_mag)
+    target_layer.upsample(
+        from_mag=Mag(2),
+        finest_mag=Mag(1),
+    )
 
-    # source_data = source_layer.get_mag("1").read()
-    # target_data = target_layer.get_mag("1").read()
+    source_data = source_layer.get_mag("1").read()
+    target_data = target_layer.get_mag("1").read()
 
-    # assert source_data.shape == target_data.shape
-    # assert np.all(source_data == target_data)
+    assert source_data.shape == target_data.shape
