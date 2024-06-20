@@ -4,16 +4,27 @@ updates:
   directory: "/wkcuber"
   schedule:
     interval: daily
-  open-pull-requests-limit: 10
-  reviewers:
-  - philippotto
-  allow:
-  - dependency-name: cluster_tools
-  - dependency-name: wkw
+  ignore:
+    - dependency-name: "*"
 - package-ecosystem: pip
   directory: "/cluster_tools"
   schedule:
     interval: daily
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 3
   reviewers:
   - philippotto
+- package-ecosystem: pip
+  directory: "/webknossos"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 3
+  ignore:
+    - dependency-name: "scikit-image"
+  reviewers:
+  - markbader
+- package-ecosystem: pip
+  directory: "/docs"
+  schedule:
+    interval: daily
+  ignore:
+    - dependency-name: "*"
