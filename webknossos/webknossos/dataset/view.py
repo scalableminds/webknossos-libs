@@ -255,8 +255,16 @@ class View:
                 relative_bounding_box,
             ]
         ):
-            relative_offset = Vec3Int.zeros()
-            # absolute_bounding_box = self.bounding_box
+            if len(data.shape) == len(self.bounding_box) + 1:
+                data_shape = data.shape[1:]
+            else:
+                data_shape = data.shape
+
+            absolute_bounding_box = (
+                self.bounding_box.with_size(data_shape)
+                .from_mag_to_mag1(self._mag)
+                .with_topleft(self.bounding_box.topleft)
+            )
 
         if (absolute_bounding_box or relative_bounding_box) is not None:
             data_shape = None
