@@ -9,12 +9,6 @@ from ..geometry import Vec3Int
 from .view import View
 
 
-def _vec3int_mulf(vec: Vec3Int, factors: List[float]) -> Vec3Int:
-    return Vec3Int(
-        int(vec.x * factors[0]), int(vec.y * factors[1]), int(vec.z * factors[2])
-    )
-
-
 def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
     ds = cube_buffer.shape
     out_buf = np.zeros(tuple(s * f for s, f in zip(ds, factors)), cube_buffer.dtype)
@@ -58,9 +52,9 @@ def upsample_cube_job(
 
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_shape
-            source_offset = target_offset * target_view.mag
+            source_offset = target_offset * source_view.mag
             source_size = source_view.bounding_box.size_xyz
-            source_size = (buffer_shape * target_view.mag).pairmin(
+            source_size = (buffer_shape * source_view.mag).pairmin(
                 source_size - source_offset
             )
 

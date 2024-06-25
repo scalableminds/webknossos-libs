@@ -256,12 +256,12 @@ class View:
             ]
         ):
             if len(data.shape) == len(self.bounding_box) + 1:
-                data_shape = data.shape[1:]
+                shape_in_current_mag = data.shape[1:]
             else:
-                data_shape = data.shape
+                shape_in_current_mag = data.shape
 
             absolute_bounding_box = (
-                self.bounding_box.with_size(data_shape)
+                self.bounding_box.with_size(shape_in_current_mag)
                 .from_mag_to_mag1(self._mag)
                 .with_topleft(self.bounding_box.topleft)
             )
@@ -1094,19 +1094,7 @@ class View:
             job_args.append((source_chunk_view, target_chunk_view, i))
 
         # execute the work for each pair of chunks
-        if executor is None:
-            if progress_desc is None:
-                for args in job_args:
-                    func_per_chunk(args)
-            else:
-                with get_rich_progress() as progress:
-                    task = progress.add_task(
-                        progress_desc, total=self.bounding_box.volume()
-                    )
-                    for args in job_args:
-                        func_per_chunk(args)
-                        progress.update(task, advance=args[0].bounding_box.volume())
-        else:
+        with get_executor_for_args(args=None, executor=executor) as executor:
             wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args),
                 executor=executor,

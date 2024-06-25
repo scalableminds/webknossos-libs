@@ -183,7 +183,7 @@ def test_upsample_nd_dataset(tmp_path: Path) -> None:
 
     source_mag = source_layer.get_mag("2")
 
-    target_layer.add_fs_copy_mag(source_mag)
+    target_layer.add_copy_mag(source_mag)
     target_layer.upsample(
         from_mag=Mag(2),
         finest_mag=Mag(1),
