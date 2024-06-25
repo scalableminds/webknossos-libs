@@ -95,7 +95,6 @@ optional = true
 
 [tool.poetry.group.examples.dependencies]
 # packages for examples:
-optional = true
 fastremap = "^1.13.3"
 pandas = "^1.3.4"
 pooch = "^1.5.2"
