@@ -17,6 +17,7 @@ from webknossos.dataset._downsampling_utils import (
     non_linear_filter_3d,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.utils import get_executor_for_args
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
@@ -476,8 +477,9 @@ def test_downsample_nd_dataset(tmp_path: Path) -> None:
     source_mag = source_layer.get_mag("1")
 
     with pytest.warns(UserWarning):
-        target_layer.add_copy_mag(source_mag)
-        target_layer.downsample(coarsest_mag=Mag(2))
+        with get_executor_for_args(None) as executor:
+            target_layer.add_copy_mag(source_mag, executor=executor)
+    target_layer.downsample(coarsest_mag=Mag(2))
 
     for chunk_bbox in source_layer.bounding_box.chunk(
         source_layer.bounding_box.size_xyz
