@@ -233,7 +233,7 @@ for cls in [
                 a.name: override(
                     omit_if_default=True, rename=snake_to_camel_case(a.name)
                 )
-                for a in attr.fields(cls)  # type: ignore[misc]
+                for a in attr.fields(cls)  # type: ignore
             },
         ),
     )
@@ -244,7 +244,7 @@ for cls in [
             dataset_converter,
             **{
                 a.name: override(rename=snake_to_camel_case(a.name))
-                for a in attr.fields(cls)  # type: ignore[misc]
+                for a in attr.fields(cls)  # type: ignore
             },
         ),
     )
@@ -342,7 +342,7 @@ for cls in [
                     a.name: override(
                         omit_if_default=True, rename=snake_to_camel_case(a.name)
                     )
-                    for a in attr.fields(cls)  # type: ignore[misc]
+                    for a in attr.fields(cls)  # type: ignore
                 },
             )
         ),
@@ -355,7 +355,7 @@ for cls in [
                 dataset_converter,
                 **{
                     a.name: override(rename=snake_to_camel_case(a.name))
-                    for a in attr.fields(cls)  # type: ignore[misc]
+                    for a in attr.fields(cls)  # type: ignore
                 },
             )
         ),
