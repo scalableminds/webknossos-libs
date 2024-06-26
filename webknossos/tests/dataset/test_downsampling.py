@@ -476,7 +476,7 @@ def test_downsample_nd_dataset(tmp_path: Path) -> None:
     source_mag = source_layer.get_mag("1")
 
     with pytest.warns(UserWarning):
-        target_layer.add_fs_copy_mag(source_mag)
+        target_layer.add_copy_mag(source_mag)
         target_layer.downsample(coarsest_mag=Mag(2))
 
     for chunk_bbox in source_layer.bounding_box.chunk_full_xyz():

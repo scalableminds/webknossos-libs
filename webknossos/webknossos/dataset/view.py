@@ -1094,7 +1094,19 @@ class View:
             job_args.append((source_chunk_view, target_chunk_view, i))
 
         # execute the work for each pair of chunks
-        with get_executor_for_args(args=None, executor=executor) as executor:
+        if executor is None:
+            if progress_desc is None:
+                for args in job_args:
+                    func_per_chunk(args)
+            else:
+                with get_rich_progress() as progress:
+                    task = progress.add_task(
+                        progress_desc, total=self.bounding_box.volume()
+                    )
+                    for args in job_args:
+                        func_per_chunk(args)
+                        progress.update(task, advance=args[0].bounding_box.volume())
+        else:
             wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args),
                 executor=executor,
