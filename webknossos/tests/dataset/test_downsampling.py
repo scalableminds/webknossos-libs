@@ -477,16 +477,10 @@ def test_downsample_nd_dataset(tmp_path: Path) -> None:
     source_mag = source_layer.get_mag("1")
 
     with pytest.warns(UserWarning):
-        with get_executor_for_args(None) as executor:
-            target_layer.add_copy_mag(source_mag, executor=executor)
-    target_layer.downsample(coarsest_mag=Mag(2))
+        target_layer.add_copy_mag(source_mag)
+        target_layer.downsample(coarsest_mag=Mag(2))
 
-    for chunk_bbox in source_layer.bounding_box.chunk(
-        source_layer.bounding_box.size_xyz
-    ):
-        chunk_bbox = chunk_bbox.align_with_mag(Mag(2))
-        source_data = source_layer.get_mag("2").read(absolute_bounding_box=chunk_bbox)
-        target_data = target_layer.get_mag("2").read(absolute_bounding_box=chunk_bbox)
+    source_data = source_layer.get_mag("2").read()
+    target_data = target_layer.get_mag("2").read()
 
-        assert source_data.shape == target_data.shape
-        assert np.all(source_data == target_data), f"Chunk {chunk_bbox} is not equal."
+    assert np.all(source_data == target_data)

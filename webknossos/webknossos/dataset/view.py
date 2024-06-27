@@ -7,6 +7,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generator,
     Iterable,
     Iterator,
     List,
@@ -19,7 +20,7 @@ import numpy as np
 import wkw
 from cluster_tools import Executor
 
-from webknossos.geometry.vec_int import VecInt
+from webknossos.geometry.vec_int import VecInt, VecIntLike
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -1002,6 +1003,28 @@ class View:
 
         return results
 
+    def chunk(
+        self,
+        chunk_shape: VecIntLike,
+        chunk_border_alignments: Optional[VecIntLike] = None,
+        read_only: bool = False,
+    ) -> Generator["View", None, None]:
+        """
+        This method chunks the view into multiple sub-views of size `chunk_shape` (in Mag(1)).
+        The `chunk_border_alignments` parameter specifies the alignment of the chunks.
+        The default is to align the chunks to the origin (0, 0, 0).
+
+        Example:
+        ```python
+        # ...
+        # let 'mag1' be a `MagView`
+        chunks = mag1.chunk(chunk_shape=(100, 100, 100), chunk_border_alignments=(50, 50, 50))
+        ```
+        """
+
+        for chunk in self.bounding_box.chunk(chunk_shape, chunk_border_alignments):
+            yield self.get_view(absolute_bbox=chunk, read_only=read_only)
+
     def for_zipped_chunks(
         self,
         func_per_chunk: Callable[[Tuple["View", "View", int]], None],
@@ -1075,23 +1098,17 @@ class View:
         )
 
         job_args = []
-        source_chunks = self.bounding_box.chunk(source_chunk_shape, source_chunk_shape)
-        target_chunks = target_view.bounding_box.chunk(
-            target_chunk_shape, target_chunk_shape
+        source_views = self.chunk(
+            source_chunk_shape, source_chunk_shape, read_only=True
         )
+        target_views = target_view.chunk(target_chunk_shape, target_chunk_shape)
 
-        for i, (source_chunk, target_chunk) in enumerate(
-            zip(source_chunks, target_chunks)
-        ):
-            source_chunk_view = self.get_view(
-                absolute_bbox=source_chunk,
-                read_only=True,
+        job_args = tuple(
+            (source_view, target_view, i)
+            for i, (source_view, target_view) in enumerate(
+                zip(source_views, target_views)
             )
-            target_chunk_view = target_view.get_view(
-                absolute_bbox=target_chunk,
-            )
-
-            job_args.append((source_chunk_view, target_chunk_view, i))
+        )
 
         # execute the work for each pair of chunks
         if executor is None:
