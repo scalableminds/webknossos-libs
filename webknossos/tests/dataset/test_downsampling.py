@@ -17,7 +17,6 @@ from webknossos.dataset._downsampling_utils import (
     non_linear_filter_3d,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.utils import get_executor_for_args
 
 BUFFER_SHAPE = Vec3Int.full(256)
 

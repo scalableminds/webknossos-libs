@@ -1097,13 +1097,12 @@ class View:
             + f"(source_chunk_shape in Mag(1) = {source_chunk_shape}, target_chunk_shape in Mag(1) = {target_chunk_shape})"
         )
 
-        job_args = []
         source_views = self.chunk(
             source_chunk_shape, source_chunk_shape, read_only=True
         )
         target_views = target_view.chunk(target_chunk_shape, target_chunk_shape)
 
-        job_args = tuple(
+        job_args = (
             (source_view, target_view, i)
             for i, (source_view, target_view) in enumerate(
                 zip(source_views, target_views)
