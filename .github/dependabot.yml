@@ -10,14 +10,22 @@ updates:
   directory: "/cluster_tools"
   schedule:
     interval: daily
-  open-pull-requests-limit: 3
+  open-pull-requests-limit: 1
+  groups:
+    cluster-tools-updates:
+      patterns:
+        - "*"
   reviewers:
   - philippotto
 - package-ecosystem: pip
   directory: "/webknossos"
   schedule:
     interval: daily
-  open-pull-requests-limit: 3
+  open-pull-requests-limit: 1
+  groups:
+    webknossos-updates:
+      patterns:
+        - "*"
   ignore:
     - dependency-name: "scikit-image"
   reviewers:
