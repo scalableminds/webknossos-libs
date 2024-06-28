@@ -14,15 +14,15 @@ all = ["kubernetes", "distributed"]
 
 [tool.poetry.dependencies]
 python = ">=3.8"
-distributed = { version = "^2023.9.1", python = ">=3.9", optional = true }
-kubernetes = {version = "^27.2.0", optional = true }
+distributed = { version = ">=2023.9.1,<2025.0.0", python = ">=3.9", optional = true }
+kubernetes = {version = ">=27.2,<31.0", optional = true }
 typing-extensions = "^4.4.0"
 
 [tool.poetry.group.dev.dependencies]
 icecream = "^2.1.1"
 mypy = "^1.0.0"
-pytest = "^7.2.1"
-ruff = "^0.4.0"
+pytest = ">=7.2.1,<9.0.0"
+ruff = ">=0.4,<0.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
