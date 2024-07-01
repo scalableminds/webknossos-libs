@@ -202,21 +202,6 @@ class BoundingBox(NDBoundingBox):
     def __repr__(self) -> str:
         return f"BoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()})"
 
-    def padded_with_margins(
-        self, margins_left: Vec3IntLike, margins_right: Optional[Vec3IntLike] = None
-    ) -> "BoundingBox":
-        if margins_right is None:
-            margins_right = margins_left
-
-        margins_left = Vec3Int(margins_left)
-        margins_right = Vec3Int(margins_right)
-
-        return attr.evolve(
-            self,
-            topleft=self.topleft - margins_left,
-            size=self.size + (margins_left + margins_right),
-        )
-
     def is_empty(self) -> bool:
         return not self.size.is_positive(strictly_positive=True)
 
