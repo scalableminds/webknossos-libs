@@ -8,7 +8,7 @@ def main() -> None:
     dataset = wk.Dataset.from_images(
         Path(__file__).parent.parent / "testdata" / "4D" / "4D_series",
         "testoutput/4D_series",
-        layer_category="color",
+        layer_category=wk.COLOR_CATEGORY,
         data_format="zarr3",
         voxel_size=(10, 10, 10),
     )

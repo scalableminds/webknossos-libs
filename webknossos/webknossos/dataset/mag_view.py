@@ -273,8 +273,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bbox: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bbox: Optional[NDBoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
@@ -291,8 +291,8 @@ class MagView(View):
             size,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
-            relative_bbox=relative_bbox,
-            absolute_bbox=absolute_bbox,
+            relative_bounding_box=relative_bounding_box,
+            absolute_bounding_box=absolute_bounding_box,
             read_only=read_only,
         )
 

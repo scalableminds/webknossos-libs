@@ -601,8 +601,8 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bbox: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bbox: Optional[NDBoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> "View":
         """
@@ -612,8 +612,8 @@ class View:
         The default is to return the same view as the current bounding box,
         in case of a `MagView` that's the layer bounding box.
         One can supply one of the following keyword argument combinations:
-        * `relative_bbox`in Mag(1)
-        * `absolute_bbox` in Mag(1)
+        * `relative_bounding_box`in Mag(1)
+        * `absolute_bounding_box` in Mag(1)
         * `relative_offset` and `size`, both in Mag(1)
         * `absolute_offset` and `size`, both in Mag(1)
         * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
@@ -644,7 +644,7 @@ class View:
 
         current_mag_size: Optional[Vec3IntLike]
         mag1_size: Optional[Vec3IntLike]
-        if relative_bbox is None and absolute_bbox is None:
+        if relative_bounding_box is None and absolute_bounding_box is None:
             if offset is None:
                 if size is None:
                     assert (
@@ -707,8 +707,8 @@ class View:
             mag1_size = None
 
         mag1_bbox = self._get_mag1_bbox(
-            abs_mag1_bbox=absolute_bbox,
-            rel_mag1_bbox=relative_bbox,
+            abs_mag1_bbox=absolute_bounding_box,
+            rel_mag1_bbox=relative_bounding_box,
             rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
@@ -1023,7 +1023,7 @@ class View:
         """
 
         for chunk in self.bounding_box.chunk(chunk_shape, chunk_border_alignments):
-            yield self.get_view(absolute_bbox=chunk, read_only=read_only)
+            yield self.get_view(absolute_bounding_box=chunk, read_only=read_only)
 
     def for_zipped_chunks(
         self,

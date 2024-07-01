@@ -864,10 +864,10 @@ class Layer:
         bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
         # Get target view
-        target_view = target_mag_view.get_view(absolute_bbox=bb_mag1)
+        target_view = target_mag_view.get_view(absolute_bounding_box=bb_mag1)
 
         source_view = prev_mag_view.get_view(
-            absolute_bbox=bb_mag1,
+            absolute_bounding_box=bb_mag1,
             read_only=True,
         )
 
@@ -1060,7 +1060,7 @@ class Layer:
             self.bounding_box = prev_mag_view.bounding_box
             bbox_mag1 = self.bounding_box.align_with_mag(prev_mag, ceil=True)
             # Get target view
-            target_view = target_mag_view.get_view(absolute_bbox=bbox_mag1)
+            target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
             with get_executor_for_args(args, executor) as actual_executor:
@@ -1071,7 +1071,9 @@ class Layer:
                     mag_factors=mag_factors,
                     buffer_shape=buffer_shape,
                 )
-                prev_mag_view.get_view(absolute_bbox=bbox_mag1).for_zipped_chunks(
+                prev_mag_view.get_view(
+                    absolute_bounding_box=bbox_mag1
+                ).for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
