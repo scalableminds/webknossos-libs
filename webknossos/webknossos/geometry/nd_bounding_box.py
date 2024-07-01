@@ -539,9 +539,17 @@ class NDBoundingBox:
             )
 
     def padded_with_margins(
-        self, margins_left: VecIntLike, margins_right: Optional[VecIntLike] = None
-    ) -> "NDBoundingBox":
-        raise NotImplementedError()
+        self: _T, margins_left: Vec3IntLike, margins_right: Optional[Vec3IntLike] = None
+    ) -> _T:
+        if margins_right is None:
+            margins_right = margins_left
+
+        margins_left = Vec3Int(margins_left)
+        margins_right = Vec3Int(margins_right)
+
+        return self.with_topleft_xyz(self.topleft_xyz - margins_left).with_size_xyz(
+            self.size_xyz + (margins_left + margins_right)
+        )
 
     def intersected_with(self: _T, other: _T, dont_assert: bool = False) -> _T:
         """
