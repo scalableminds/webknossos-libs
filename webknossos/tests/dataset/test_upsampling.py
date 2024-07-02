@@ -15,6 +15,7 @@ from webknossos import (
 )
 from webknossos.dataset._upsampling_utils import upsample_cube, upsample_cube_job
 from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.utils import get_executor_for_args
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
@@ -163,3 +164,34 @@ def test_upsampling_non_aligned(tmp_path: Path) -> None:
     assert layer.bounding_box == BoundingBox(
         topleft=(0, 0, 0), size=(8409, 10267, 5271)
     )
+
+
+def test_upsample_nd_dataset(tmp_path: Path) -> None:
+    source_path = (
+        Path(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
+    )
+    target_path = tmp_path / "upsample_test"
+
+    source_ds = Dataset.open(source_path)
+    target_ds = Dataset(target_path, voxel_size=(10, 10, 10))
+    source_layer = source_ds.get_layer("color")
+    target_layer = target_ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        bounding_box=source_layer.bounding_box,
+        data_format="zarr3",
+    )
+
+    source_mag = source_layer.get_mag("2")
+    with get_executor_for_args(None) as executor:
+        target_layer.add_copy_mag(source_mag, executor=executor)
+        target_layer.upsample(
+            from_mag=Mag(2),
+            finest_mag=Mag(1),
+            executor=executor,
+        )
+
+    source_data = source_layer.get_mag("1").read()
+    target_data = target_layer.get_mag("1").read()
+
+    assert source_data.shape == target_data.shape
