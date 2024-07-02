@@ -374,7 +374,11 @@ class PimsImages:
 
         for strategy in [strategy_0, strategy_1, strategy_2]:
             try:
-                images_context_manager = strategy()
+                with warnings.catch_warnings(record=True):
+                    warnings.filterwarnings(
+                        "ignore", category=UserWarning, module="pims"
+                    )
+                    images_context_manager = strategy()
             except Exception as e:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 exceptions.append(e)
             else:

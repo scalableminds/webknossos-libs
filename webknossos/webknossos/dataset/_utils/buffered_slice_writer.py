@@ -137,7 +137,8 @@ class BufferedSliceWriter:
                 buffer_depth,
             ).moveaxis(-1, self.dimension)
             for chunk_bbox in bbox.chunk(chunk_size):
-                info(f"Writing chunk {chunk_bbox}.")
+                if self._use_logging:
+                    info(f"Writing chunk {chunk_bbox}.")
 
                 data = np.zeros(
                     (channel_count, *chunk_bbox.size),
