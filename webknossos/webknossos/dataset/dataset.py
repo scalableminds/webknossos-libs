@@ -662,11 +662,14 @@ class Dataset:
                     f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
                 }
         with get_executor_for_args(None, executor) as executor:
-            for layer_name, filepaths in filepaths_per_layer.items():
-                filepaths.sort(key=z_slices_sort_key)
-
-                with warnings.catch_warnings():
-                    warnings.filterwarnings("ignore", category=UserWarning)
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    message="Not all pims readers could be imported",
+                )
+                for layer_name, filepaths in filepaths_per_layer.items():
+                    filepaths.sort(key=z_slices_sort_key)
 
                     ds.add_layer_from_images(
                         filepaths[0] if len(filepaths) == 1 else filepaths,
@@ -1113,7 +1116,6 @@ class Dataset:
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,

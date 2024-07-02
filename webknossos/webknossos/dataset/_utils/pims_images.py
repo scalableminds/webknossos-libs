@@ -439,34 +439,33 @@ class PimsImages:
         For a 2D image this is achieved by wrapping it in a list.
         """
         images_context_manager: Optional[ContextManager]
-        with warnings.catch_warnings():
-            if isinstance(self._original_images, pims.FramesSequenceND):
-                images_context_manager = nullcontext(enter_result=self._original_images)
-            else:
-                exceptions: List[Exception] = []
-                original_images = self._normalize_original_images()
-                images_context_manager = None
+        if isinstance(self._original_images, pims.FramesSequenceND):
+            images_context_manager = nullcontext(enter_result=self._original_images)
+        else:
+            exceptions: List[Exception] = []
+            original_images = self._normalize_original_images()
+            images_context_manager = None
 
-                images_context_manager = self._try_open_pims_images(
+            images_context_manager = self._try_open_pims_images(
+                original_images, exceptions
+            )
+
+            if images_context_manager is None:
+                images_context_manager = self._try_open_bioformats_images_raw(
                     original_images, exceptions
                 )
 
-                if images_context_manager is None:
-                    images_context_manager = self._try_open_bioformats_images_raw(
-                        original_images, exceptions
+            if images_context_manager is None:
+                if len(exceptions) == 1:
+                    raise exceptions[0]
+                else:
+                    exceptions_str = "\n".join(
+                        f"{type(e).__name__}: {str(e)}" for e in exceptions
                     )
-
-                if images_context_manager is None:
-                    if len(exceptions) == 1:
-                        raise exceptions[0]
-                    else:
-                        exceptions_str = "\n".join(
-                            f"{type(e).__name__}: {str(e)}" for e in exceptions
-                        )
-                        raise ValueError(
-                            f"Tried to open the images {self._original_images} with different methods, "
-                            + f"none succeeded. The following errors were raised:\n{exceptions_str}"
-                        )
+                    raise ValueError(
+                        f"Tried to open the images {self._original_images} with different methods, "
+                        + f"none succeeded. The following errors were raised:\n{exceptions_str}"
+                    )
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
