@@ -3,6 +3,7 @@ from os import PathLike
 from pathlib import Path
 from typing import List, Optional
 
+import networkx as nx
 import pytest
 
 import webknossos as wk
@@ -49,6 +50,15 @@ def create_dummy_skeleton() -> wk.Skeleton:
     )
 
     return nml
+
+
+def create_dummy_nx_graph() -> nx.Graph:
+    nx_graph = nx.Graph()
+    nx_graph.add_node(1, position=(0, 1, 2), comment="node 1 nx")
+    nx_graph.add_node(2, position=(3, 1, 2), comment="node 2 nx")
+    nx_graph.add_edge(1, 2)
+
+    return nx_graph
 
 
 def test_doc_example() -> None:
@@ -106,6 +116,44 @@ def test_skeleton_creation() -> None:
     ]
     assert len(grand_children) == 1
     assert grand_children[0].group == groups[0]
+
+
+def test_add_nx_graph() -> None:
+    skeleton = create_dummy_skeleton()
+    node_count = skeleton.get_total_node_count()
+    tree_count = len(list(skeleton.flattened_trees()))
+    group_count = len(list(skeleton.flattened_groups()))
+    max_node_id = skeleton.get_max_node_id()
+
+    nx_graph = create_dummy_nx_graph()
+    skeleton.add_nx_graphs(
+        {"first_group": [nx_graph, nx_graph], "second_group": [nx_graph]}
+    )
+
+    # check number of groups, nodes and trees
+    assert len(list(skeleton.flattened_groups())) == group_count + 2
+    assert skeleton.get_total_node_count() == node_count + 6
+    assert len(list(skeleton.flattened_trees())) == tree_count + 3
+
+    # check group names
+    for group in skeleton.flattened_groups():
+        assert group.name in [
+            "first_group",
+            "second_group",
+            "Example Group",
+            "Nested Group",
+        ]
+
+    # check node attributes
+    max_node_id = skeleton.get_max_node_id()
+    assert skeleton.get_node_by_id(max_node_id).comment == "node 2 nx"
+    assert skeleton.get_node_by_id(max_node_id).position == (3, 1, 2)
+    assert skeleton.get_node_by_id(max_node_id - 1).comment == "node 1 nx"
+    assert skeleton.get_node_by_id(max_node_id - 1).position == (0, 1, 2)
+
+    # check if edge was added
+    for edge in skeleton.get_tree_by_id(max_node_id - 2).edges:
+        assert (edge[0].id, edge[1].id) == (max_node_id - 1, max_node_id)
 
 
 def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:

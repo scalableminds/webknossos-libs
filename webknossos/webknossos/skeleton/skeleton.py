@@ -6,7 +6,7 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 import attr
 import networkx as nx
 
-from ..utils import warn_deprecated
+from ..utils import random_color_rgba, warn_deprecated
 from .group import Group
 
 Vector3 = Tuple[float, float, float]
@@ -121,26 +121,28 @@ class Skeleton(Group):
         for group_name, trees in tree_dict.items():
             group = self.add_group(group_name)
             for tree in trees:
-                tree_group = group.add_tree("tree")
+                tree_name = tree.graph.get("name", f"tree_{len(list(group.trees))}")
+                wk_tree = group.add_tree(tree_name)
+                wk_tree.color = tree.graph.get("color", random_color_rgba())
                 id_node_dict = {}
-                for node in tree.nodes(data=True):
-                    old_id = node[0]
-                    node = tree_group.add_node(
-                        position=node[1].get("position"),
-                        comment=node[1].get("comment", None),
-                        radius=node[1].get("radius", None),
-                        rotation=node[1].get("rotation", None),
-                        inVp=node[1].get("inVp", None),
-                        inMag=node[1].get("inMag", None),
-                        bitDepth=node[1].get("bitDepth", None),
-                        interpolation=node[1].get("interpolation", None),
-                        time=node[1].get("time", None),
-                        is_branchpoint=node[1].get("is_branchpoint", False),
-                        branchpoint_time=node[1].get("branchpoint_time", None),
+                for id_with_node in tree.nodes(data=True):
+                    old_id, node = id_with_node
+                    node = wk_tree.add_node(
+                        position=node.get("position"),
+                        comment=node.get("comment", None),
+                        radius=node.get("radius", None),
+                        rotation=node.get("rotation", None),
+                        inVp=node.get("inVp", None),
+                        inMag=node.get("inMag", None),
+                        bitDepth=node.get("bitDepth", None),
+                        interpolation=node.get("interpolation", None),
+                        time=node.get("time", None),
+                        is_branchpoint=node.get("is_branchpoint", False),
+                        branchpoint_time=node.get("branchpoint_time", None),
                     )
                     id_node_dict[old_id] = node
                 for edge in tree.edges():
-                    tree_group.add_edge(id_node_dict[edge[0]], id_node_dict[edge[1]])
+                    wk_tree.add_edge(id_node_dict[edge[0]], id_node_dict[edge[1]])
 
     @staticmethod
     def from_path(file_path: Union[PathLike, str]) -> "Skeleton":

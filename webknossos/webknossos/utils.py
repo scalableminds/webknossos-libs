@@ -1,5 +1,6 @@
 import argparse
 import calendar
+import colorsys
 import functools
 import json
 import logging
@@ -148,6 +149,21 @@ def snake_to_camel_case(snake_case_name: str) -> str:
 def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
     for i in range(0, len(arr), chunk_size):
         yield arr[i : i + chunk_size]
+
+
+def random_color_rgba() -> Tuple[float, float, float, float]:
+    """
+    A utility to generate a new random RGBA color.
+    """
+    # https://stackoverflow.com/a/43437435/783758
+
+    hue, sat, light = (
+        np.random.random(),
+        0.5 + np.random.random() / 2.0,
+        0.4 + np.random.random() / 5.0,
+    )
+    r, g, b = colorsys.hls_to_rgb(hue, light, sat)
+    return (r, g, b, 1.0)
 
 
 def time_since_epoch_in_ms() -> int:
