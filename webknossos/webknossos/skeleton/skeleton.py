@@ -6,7 +6,7 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 import attr
 import networkx as nx
 
-from ..utils import random_color_rgba, warn_deprecated
+from ..utils import warn_deprecated
 from .group import Group
 
 Vector3 = Tuple[float, float, float]
@@ -123,7 +123,7 @@ class Skeleton(Group):
             for tree in trees:
                 tree_name = tree.graph.get("name", f"tree_{len(list(group.trees))}")
                 wk_tree = group.add_tree(tree_name)
-                wk_tree.color = tree.graph.get("color", random_color_rgba())
+                wk_tree.color = tree.graph.get("color", None)
                 id_node_dict = {}
                 for id_with_node in tree.nodes(data=True):
                     old_id, node = id_with_node

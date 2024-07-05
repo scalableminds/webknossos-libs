@@ -156,6 +156,52 @@ def test_add_nx_graph() -> None:
         assert (edge[0].id, edge[1].id) == (max_node_id - 1, max_node_id)
 
 
+def test_nml_generation(tmp_path: Path) -> None:
+    OLD_NML_PATH = TESTDATA_DIR / "nmls" / "generate_nml_snapshot.nml"
+
+    tree1 = create_dummy_nx_graph()
+    tree2 = create_dummy_nx_graph()
+    tree2.add_node(3, position=(3, 3, 3), comment="node 3 nx")
+
+    tree_dict = {"first_group": [tree1], "second_group": [tree2]}
+
+    # old_nml was generated with the old wknml library as follows:
+    # params_wknml = {"name": "MyDataset", "scale": (1, 1, 1), "zoomLevel": 0.4}
+    # old_nml = generate_nml(tree_dict=tree_dict, parameters=params_wknml)
+    # with open(tmp_path / "annotation_old.nml", "wb") as f:
+    #     write_nml(f, old_nml)
+
+    params_annotation = {
+        "name": "MyAnnotation",
+        "dataset_name": "MyDataset",
+        "voxel_size": (1, 1, 1),
+        "zoom_level": 0.4,
+    }
+
+    tree_dict = {"first_group": [tree1], "second_group": [tree2]}
+
+    annotation = wk.Annotation(**params_annotation)
+
+    annotation.skeleton.add_nx_graphs(tree_dict)
+
+    annotation.save(tmp_path / "annotation_new.nml")
+
+    old_skeleton = wk.Skeleton.load(OLD_NML_PATH)
+    new_skeleton = wk.Skeleton.load(tmp_path / "annotation_new.nml")
+
+    for old_group, new_group in zip(
+        old_skeleton.flattened_groups(), new_skeleton.flattened_groups()
+    ):
+        assert old_group.name == new_group.name
+        for old_tree, new_tree in zip(old_group.children, new_group.children):
+            for old_node, new_node in zip(old_tree.nodes, new_tree.nodes):
+                assert old_node.comment == new_node.comment
+                assert old_node.position == new_node.position
+            for old_edge, new_edge in zip(old_tree.edges, new_tree.edges):
+                assert old_edge[0].position == new_edge[0].position
+                assert old_edge[1].position == new_edge[1].position
+
+
 def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:
     diff = list(
         difflib.unified_diff(
