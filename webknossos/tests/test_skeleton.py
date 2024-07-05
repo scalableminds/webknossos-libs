@@ -171,16 +171,14 @@ def test_nml_generation(tmp_path: Path) -> None:
     # with open(tmp_path / "annotation_old.nml", "wb") as f:
     #     write_nml(f, old_nml)
 
-    params_annotation = {
-        "name": "MyAnnotation",
-        "dataset_name": "MyDataset",
-        "voxel_size": (1, 1, 1),
-        "zoom_level": 0.4,
-    }
-
     tree_dict = {"first_group": [tree1], "second_group": [tree2]}
 
-    annotation = wk.Annotation(**params_annotation)
+    annotation = wk.Annotation(
+        name="MyAnnotation",
+        dataset_name="MyDataset",
+        voxel_size=(1, 1, 1),
+        zoom_level=0.4,
+    )
 
     annotation.skeleton.add_nx_graphs(tree_dict)
 
@@ -193,13 +191,15 @@ def test_nml_generation(tmp_path: Path) -> None:
         old_skeleton.flattened_groups(), new_skeleton.flattened_groups()
     ):
         assert old_group.name == new_group.name
-        for old_tree, new_tree in zip(old_group.children, new_group.children):
-            for old_node, new_node in zip(old_tree.nodes, new_tree.nodes):
-                assert old_node.comment == new_node.comment
-                assert old_node.position == new_node.position
-            for old_edge, new_edge in zip(old_tree.edges, new_tree.edges):
-                assert old_edge[0].position == new_edge[0].position
-                assert old_edge[1].position == new_edge[1].position
+        for old_child, new_child in zip(old_group.children, new_group.children):
+            if isinstance(old_child, wk.Tree) and isinstance(new_child, wk.Tree):
+                for old_node, new_node in zip(old_child.nodes, new_child.nodes):
+                    assert old_node.comment == new_node.comment
+                    assert old_node.position == new_node.position
+                    assert old_node.radius == new_node.radius
+                for old_edge, new_edge in zip(old_child.edges, new_child.edges):
+                    assert old_edge[0].position == new_edge[0].position
+                    assert old_edge[1].position == new_edge[1].position
 
 
 def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:

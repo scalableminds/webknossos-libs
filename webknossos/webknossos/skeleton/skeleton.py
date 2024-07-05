@@ -130,7 +130,7 @@ class Skeleton(Group):
                     node = wk_tree.add_node(
                         position=node.get("position"),
                         comment=node.get("comment", None),
-                        radius=node.get("radius", None),
+                        radius=node.get("radius", 1.0),
                         rotation=node.get("rotation", None),
                         inVp=node.get("inVp", None),
                         inMag=node.get("inMag", None),

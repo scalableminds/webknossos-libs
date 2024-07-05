@@ -1,6 +1,5 @@
 import argparse
 import calendar
-import colorsys
 import functools
 import json
 import logging
