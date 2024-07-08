@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added an implementation of padded_with_margins for NDBoundingBox class. [#1120](https://github.com/scalableminds/webknossos-libs/pull/1120)
 
 ### Changed
+- Removed additional logging messages during image conversion. [#1124](https://github.com/scalableminds/webknossos-libs/pull/1124)
 
 ### Fixed
 - Fixed an issue where cube jobs upsampling, downsampling and compress failed when performed on more than 3 dimensions. [#1095](https://github.com/scalableminds/webknossos-libs/pull/1095)
@@ -41,7 +42,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Set a new max value for test_align_with_mag_against_numpy_implementation to avoid failures due to high numbers. [#1082](https://github.com/scalableminds/webknossos-libs/pull/1082)
 - Updated dependabot.yml [#1087](https://github.com/scalableminds/webknossos-libs/pull/1087)
 - Make lookup for supported suffixes case-insensitive. [#1100](https://github.com/scalableminds/webknossos-libs/pull/1100)
-- Removed additional logging messages during image conversion. [#1124](https://github.com/scalableminds/webknossos-libs/pull/1124)
 
 ### Fixed
 - Fixed an issue with downloading annotations through the Command Line Interface. [#1083](https://github.com/scalableminds/webknossos-libs/pull/1083)
