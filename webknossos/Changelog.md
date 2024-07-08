@@ -10,7 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.22...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.23...HEAD)
+
+### Breaking Changes
+
+### Added
+- Added an implementation of padded_with_margins for NDBoundingBox class. [#1120](https://github.com/scalableminds/webknossos-libs/pull/1120)
+
+### Changed
+
+### Fixed
+- Fixed an issue where cube jobs upsampling, downsampling and compress failed when performed on more than 3 dimensions. [#1095](https://github.com/scalableminds/webknossos-libs/pull/1095)
+- Fixed an issue where webknossos libs crash when installed with minimal dependencies. [#1104](https://github.com/scalableminds/webknossos-libs/pull/1104)
+
+
+## [0.14.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.23) - 2024-06-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.22...v0.14.23)
 
 ### Breaking Changes
 - Preferring a custom tiff reader over the default PIMS reader to convert tiff files. This change enables the recognition of axis information and the support of tifffiles with more than 3 dimensions. However, it also leads to changed behavior when converting tiff files. Tiffs with axes other than c, x, y, and z, with a shape bigger than 1, are no longer supported for conversion to WKW. Please convert these files to Zarr or Zarr3 Datasets instead. [#1043](https://github.com/scalableminds/webknossos-libs/pull/1043)
@@ -19,7 +34,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a pixel level heuristic for distinguishing color and segmentation layers when importing image data with the `from_images` or `add_layer_from_images` method. [#1007](https://github.com/scalableminds/webknossos-libs/pull/1007)
 - Added .ims as supported suffix. [#1085](https://github.com/scalableminds/webknossos-libs/pull/1085)
 - Added suffixes supported by bioformats for Zeiss CZI, Leica LOF, Zeiss LSM (laser scanning microscope), Zeiss LSM (Laser Scanning Microscope) 510/710, Leica XLEF and Zeiss AxioVision ZVI (Zeiss Vision Image). [#1086](https://github.com/scalableminds/webknossos-libs/pull/1086)
-- Added suport for setting a default ID mapping for segmentation layers. [1118](https://github.com/scalableminds/webknossos-libs/pull/1118)
+- Added suport for setting a default ID mapping for segmentation layers. [#1118](https://github.com/scalableminds/webknossos-libs/pull/1118)
 
 ### Changed
 - Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [#1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
@@ -30,6 +45,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue with downloading annotations through the Command Line Interface. [#1083](https://github.com/scalableminds/webknossos-libs/pull/1083)
+
 
 
 ## [0.14.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.22) - 2024-05-13

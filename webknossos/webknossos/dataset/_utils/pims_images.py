@@ -21,48 +21,14 @@ from typing import (
 from urllib.error import HTTPError
 
 import numpy as np
+import pims
 from natsort import natsorted
 from numpy.typing import DTypeLike
 
-from webknossos.geometry.bounding_box import BoundingBox
-from webknossos.geometry.nd_bounding_box import NDBoundingBox
-
-try:
-    from .pims_czi_reader import PimsCziReader
-except ImportError:
-    PimsCziReader = type(None)  # type: ignore[misc,assignment]
-
-try:
-    from .pims_dm_readers import (  # noqa: F401 unused-import
-        PimsDm3Reader,
-        PimsDm4Reader,
-    )
-except ImportError:
-    pass
-
-try:
-    from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
-        PimsImagejTiffReader,
-    )
-except ImportError:
-    pass
-
-try:
-    from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
-except ImportError:
-    pass
-
-
+from ...geometry.bounding_box import BoundingBox
+from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
 from ..mag_view import MagView
-
-try:
-    import pims
-except ImportError as import_error:
-    raise RuntimeError(
-        "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-    ) from import_error
-
 
 # Fix ImageIOReader not handling channels correctly. This might get fixed via
 # https://github.com/soft-matter/pims/pull/430
@@ -107,6 +73,11 @@ class PimsImages:
         The part "IDENTIFY SHAPE & CHANNELS" uses this information and the well-defined
         images to figure out the shape & num_channels.
         """
+        try:
+            from .pims_czi_reader import PimsCziReader
+        except ImportError:
+            PimsCziReader = type(None)  # type: ignore[misc,assignment]
+
         ## we use images as the name for the entered contextmanager,
         ## the `del` prevents any confusion with the passed argument.
         self._original_images = images
@@ -343,6 +314,40 @@ class PimsImages:
     def _try_open_pims_images(
         self, original_images: Union[str, List[str]], exceptions: List[Exception]
     ) -> Optional[pims.FramesSequence]:
+        import_exceptions = []
+
+        try:
+            from .pims_czi_reader import PimsCziReader  # noqa: F401 unused-import
+        except ImportError as import_error:
+            import_exceptions.append(f"PimsCziReader: {import_error.msg}")
+
+        try:
+            from .pims_dm_readers import (  # noqa: F401 unused-import
+                PimsDm3Reader,
+                PimsDm4Reader,
+            )
+        except ImportError as import_error:
+            import_exceptions.append(f"PimsDmReaders: {import_error.msg}")
+
+        try:
+            from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
+                PimsImagejTiffReader,
+            )
+        except ImportError as import_error:
+            import_exceptions.append(f"PimsImagejTiffReader: {import_error.msg}")
+
+        try:
+            from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
+        except ImportError as import_error:
+            import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
+
+        if import_exceptions:
+            import_exception_string = "\n\t" + "\n\t".join(import_exceptions)
+            warnings.warn(
+                f"Not all pims readers could be imported: {import_exception_string}\nInstall the readers you need or use 'webknossos[all]' to install all readers.",
+                category=UserWarning,
+            )
+
         if self._use_bioformats:
             return None
 
@@ -438,34 +443,33 @@ class PimsImages:
         For a 2D image this is achieved by wrapping it in a list.
         """
         images_context_manager: Optional[ContextManager]
-        with warnings.catch_warnings():
-            if isinstance(self._original_images, pims.FramesSequenceND):
-                images_context_manager = nullcontext(enter_result=self._original_images)
-            else:
-                exceptions: List[Exception] = []
-                original_images = self._normalize_original_images()
-                images_context_manager = None
+        if isinstance(self._original_images, pims.FramesSequenceND):
+            images_context_manager = nullcontext(enter_result=self._original_images)
+        else:
+            exceptions: List[Exception] = []
+            original_images = self._normalize_original_images()
+            images_context_manager = None
 
-                images_context_manager = self._try_open_pims_images(
+            images_context_manager = self._try_open_pims_images(
+                original_images, exceptions
+            )
+
+            if images_context_manager is None:
+                images_context_manager = self._try_open_bioformats_images_raw(
                     original_images, exceptions
                 )
 
-                if images_context_manager is None:
-                    images_context_manager = self._try_open_bioformats_images_raw(
-                        original_images, exceptions
+            if images_context_manager is None:
+                if len(exceptions) == 1:
+                    raise exceptions[0]
+                else:
+                    exceptions_str = "\n".join(
+                        f"{type(e).__name__}: {str(e)}" for e in exceptions
                     )
-
-                if images_context_manager is None:
-                    if len(exceptions) == 1:
-                        raise exceptions[0]
-                    else:
-                        exceptions_str = "\n".join(
-                            f"{type(e).__name__}: {str(e)}" for e in exceptions
-                        )
-                        raise ValueError(
-                            f"Tried to open the images {self._original_images} with different methods, "
-                            + f"none succeeded. The following errors were raised:\n{exceptions_str}"
-                        )
+                    raise ValueError(
+                        f"Tried to open the images {self._original_images} with different methods, "
+                        + f"none succeeded. The following errors were raised:\n{exceptions_str}"
+                    )
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):

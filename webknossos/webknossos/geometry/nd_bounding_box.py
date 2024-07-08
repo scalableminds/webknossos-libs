@@ -539,9 +539,17 @@ class NDBoundingBox:
             )
 
     def padded_with_margins(
-        self, margins_left: VecIntLike, margins_right: Optional[VecIntLike] = None
-    ) -> "NDBoundingBox":
-        raise NotImplementedError()
+        self: _T, margins_left: Vec3IntLike, margins_right: Optional[Vec3IntLike] = None
+    ) -> _T:
+        if margins_right is None:
+            margins_right = margins_left
+
+        margins_left = Vec3Int(margins_left)
+        margins_right = Vec3Int(margins_right)
+
+        return self.with_topleft_xyz(self.topleft_xyz - margins_left).with_size_xyz(
+            self.size_xyz + (margins_left + margins_right)
+        )
 
     def intersected_with(self: _T, other: _T, dont_assert: bool = False) -> _T:
         """
@@ -824,6 +832,25 @@ class NDBoundingBox:
         """
         return array[self.to_slices()]
 
+    def xyz_array_to_bbox_shape(self, data: np.ndarray) -> np.ndarray:
+        """
+        Transforms data array with xyz axes to the shape of the bounding box.
+        This is only possible for bboxes that are flat in all dimensions except xyz.
+        """
+        assert all(
+            size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
+        ), "The view's bounding box must be flat in all dimensions except xyz."
+        data = np.expand_dims(data, axis=tuple(range(3, len(self))))
+        return np.moveaxis(
+            data,
+            [0, 1, 2],
+            (
+                self.axes.index("x"),
+                self.axes.index("y"),
+                self.axes.index("z"),
+            ),
+        )
+
     def to_slices(self) -> Tuple[slice, ...]:
         """
         Returns a tuple of slices that corresponds to the bounding box.
@@ -831,6 +858,19 @@ class NDBoundingBox:
         return tuple(
             slice(topleft, topleft + size)
             for topleft, size in zip(self.topleft, self.size)
+        )
+
+    def to_slices_xyz(self) -> Tuple[slice, ...]:
+        """
+        Returns a tuple of slices that corresponds to the bounding box in x, y, z and leaves all other axes one dimensional without offset.
+        """
+        assert all(
+            size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
+        ), "The view's bounding box must be flat in all dimensions except xyz."
+        return (
+            NDBoundingBox(VecInt.zeros(self.axes), self.size, self.axes, self.index)
+            .with_topleft_xyz(self.topleft_xyz)
+            .to_slices()
         )
 
     def offset(self: _T, vector: VecIntLike) -> _T:
