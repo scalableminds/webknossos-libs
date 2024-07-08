@@ -223,16 +223,21 @@ class Dataset:
                 )
             elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
                 # As before, but only a single image is inspected to determine 2D vs 3D.
-                if pims_images.has_image_z_dimension(
-                    input_path / input_files[0],
-                    use_bioformats=use_bioformats,
-                    is_segmentation=guess_if_segmentation_path(input_files[0]),
-                ):
-                    return str
-                else:
-                    return lambda p: (
-                        input_path.name if p.parent == Path() else p.parts[-2]
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=UserWarning,
                     )
+                    if pims_images.has_image_z_dimension(
+                        input_path / input_files[0],
+                        use_bioformats=use_bioformats,
+                        is_segmentation=guess_if_segmentation_path(input_files[0]),
+                    ):
+                        return str
+                    else:
+                        return lambda p: (
+                            input_path.name if p.parent == Path() else p.parts[-2]
+                        )
             else:
                 raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
 
