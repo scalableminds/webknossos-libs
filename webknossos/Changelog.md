@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.23...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.24...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.14.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.24) - 2024-07-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.23...v0.14.24)
 
 ### Added
 - Added an implementation of padded_with_margins for NDBoundingBox class. [#1120](https://github.com/scalableminds/webknossos-libs/pull/1120)
@@ -24,6 +34,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed an issue where cube jobs upsampling, downsampling and compress failed when performed on more than 3 dimensions. [#1095](https://github.com/scalableminds/webknossos-libs/pull/1095)
 - Fixed an issue where webknossos libs crash when installed with minimal dependencies. [#1104](https://github.com/scalableminds/webknossos-libs/pull/1104)
+
 
 
 ## [0.14.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.23) - 2024-06-28
