@@ -113,6 +113,9 @@ class LayerViewConfiguration:
     is_in_edit_mode: Optional[bool] = None
     """Enable the histogram edit mode. The WEBKNOSSOS default is False."""
 
+    mapping: Optional[Dict[str, str]] = None
+    """Enables ID mapping for a segmentation layer and applies the selected mapping by default. The default WK behavior is to disable ID mapping. Expected values is a Dict with {"name": my_mapping_name, "type": "HDF5"}."""
+
 
 # --- Property --------------------
 

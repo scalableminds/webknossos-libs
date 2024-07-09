@@ -1,0 +1,68 @@
+{
+    "id": {
+        "name": "4D_series_zarr3",
+        "team": ""
+    },
+    "scale": [
+        10.0,
+        10.0,
+        10.0
+    ],
+    "dataLayers": [
+        {
+            "name": "color",
+            "category": "color",
+            "boundingBox": {
+                "topLeft": [
+                    0,
+                    0,
+                    0
+                ],
+                "width": 439,
+                "height": 167,
+                "depth": 5
+            },
+            "elementClass": "int8",
+            "dataFormat": "zarr3",
+            "mags": [
+                {
+                    "mag": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "axisOrder": {
+                        "c": 0,
+                        "x": 4,
+                        "y": 3,
+                        "z": 2
+                    }
+                },
+                {
+                    "mag": [
+                        2,
+                        2,
+                        2
+                    ],
+                    "axisOrder": {
+                        "c": 0,
+                        "x": 4,
+                        "y": 3,
+                        "z": 2
+                    }
+                }
+            ],
+            "numChannels": 1,
+            "additionalAxes": [
+                {
+                    "name": "t",
+                    "bounds": [
+                        0,
+                        7
+                    ],
+                    "index": 1
+                }
+            ]
+        }
+    ]
+}

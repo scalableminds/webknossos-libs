@@ -454,3 +454,32 @@ def test_downsample_2d(tmp_path: Path) -> None:
         )
     assert Mag("2-2-1") in layer.mags
     assert np.all(layer.get_mag(Mag("2-2-1")).read() == 123)  # The data is not darkened
+
+
+def test_downsample_nd_dataset(tmp_path: Path) -> None:
+    source_path = (
+        Path(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
+    )
+    target_path = tmp_path / "downsample_test"
+
+    source_ds = Dataset.open(source_path)
+    target_ds = Dataset(target_path, voxel_size=(10, 10, 10))
+    source_layer = source_ds.get_layer("color")
+    target_layer = target_ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        bounding_box=source_layer.bounding_box,
+        data_format="zarr3",
+        dtype_per_channel="int8",
+    )
+
+    source_mag = source_layer.get_mag("1")
+
+    with pytest.warns(UserWarning):
+        target_layer.add_copy_mag(source_mag)
+        target_layer.downsample(coarsest_mag=Mag(2))
+
+    source_data = source_layer.get_mag("2").read()
+    target_data = target_layer.get_mag("2").read()
+
+    assert np.all(source_data == target_data)

@@ -455,8 +455,8 @@ class Layer:
                     {
                         key: value
                         for key, value in zip(
-                            ("c", *self.bounding_box.axes),
-                            (0, *self.bounding_box.index),
+                            ("c", "x", "y", "z"),
+                            (0, *self.bounding_box.index_xyz),
                         )
                     }
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
@@ -732,7 +732,7 @@ class Layer:
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if coarsest_mag is None:
-            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size)
+            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -864,14 +864,10 @@ class Layer:
         bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
         # Get target view
-        target_view = target_mag_view.get_view(
-            absolute_offset=bb_mag1.topleft,
-            size=bb_mag1.size,
-        )
+        target_view = target_mag_view.get_view(absolute_bounding_box=bb_mag1)
 
         source_view = prev_mag_view.get_view(
-            absolute_offset=bb_mag1.topleft,
-            size=bb_mag1.size,
+            absolute_bounding_box=bb_mag1,
             read_only=True,
         )
 
@@ -1062,8 +1058,9 @@ class Layer:
             # Saving the original layer bbox for later restore
             old_layer_bbox = self.bounding_box
             self.bounding_box = prev_mag_view.bounding_box
+            bbox_mag1 = self.bounding_box.align_with_mag(prev_mag, ceil=True)
             # Get target view
-            target_view = target_mag_view.get_view()
+            target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
             with get_executor_for_args(args, executor) as actual_executor:
@@ -1074,7 +1071,9 @@ class Layer:
                     mag_factors=mag_factors,
                     buffer_shape=buffer_shape,
                 )
-                prev_mag_view.get_view().for_zipped_chunks(
+                prev_mag_view.get_view(
+                    absolute_bounding_box=bbox_mag1
+                ).for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,

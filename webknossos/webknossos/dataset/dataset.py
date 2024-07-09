@@ -40,6 +40,7 @@ from webknossos.geometry.vec_int import VecIntLike
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
+from ._utils import pims_images
 from .defaults import (
     DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
@@ -190,8 +191,6 @@ class Dataset:
             input_files: Sequence[Path],
             use_bioformats: Optional[bool],
         ) -> Callable[[Path], str]:
-            from ._utils.pims_images import has_image_z_dimension
-
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
@@ -211,7 +210,7 @@ class Dataset:
                 # if it's 2D, the folder becomes a layer.
                 return lambda p: (
                     str(p)
-                    if has_image_z_dimension(
+                    if pims_images.has_image_z_dimension(
                         input_path / p,
                         use_bioformats=use_bioformats,
                         is_segmentation=guess_if_segmentation_path(p),
@@ -224,7 +223,7 @@ class Dataset:
                 )
             elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
                 # As before, but only a single image is inspected to determine 2D vs 3D.
-                if has_image_z_dimension(
+                if pims_images.has_image_z_dimension(
                     input_path / input_files[0],
                     use_bioformats=use_bioformats,
                     is_segmentation=guess_if_segmentation_path(input_files[0]),
@@ -610,16 +609,12 @@ class Dataset:
         For more fine-grained control, please create an empty dataset and use
         `add_layer_from_images`.
         """
-        from ._utils.pims_images import (
-            get_valid_bioformats_suffixes,
-            get_valid_pims_suffixes,
-        )
 
         input_upath = UPath(input_path)
 
-        valid_suffixes = get_valid_pims_suffixes()
+        valid_suffixes = pims_images.get_valid_pims_suffixes()
         if use_bioformats is not False:
-            valid_suffixes.update(get_valid_bioformats_suffixes())
+            valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
         input_files = [
             i.relative_to(input_upath)
@@ -633,9 +628,20 @@ class Dataset:
             )
 
         if isinstance(map_filepath_to_layer_name, Dataset.ConversionLayerMapping):
-            map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
-                input_upath, input_files=input_files, use_bioformats=use_bioformats
-            )
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims",
+                )
+                warnings.filterwarnings(
+                    "once",
+                    category=UserWarning,
+                    module="pims_images",
+                )
+                map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
+                    input_upath, input_files=input_files, use_bioformats=use_bioformats
+                )
 
         ds = cls(output_path, voxel_size=voxel_size, name=name)
 
@@ -667,27 +673,38 @@ class Dataset:
                     f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
                 }
         with get_executor_for_args(None, executor) as executor:
-            for layer_name, filepaths in filepaths_per_layer.items():
-                filepaths.sort(key=z_slices_sort_key)
-
-                ds.add_layer_from_images(
-                    filepaths[0] if len(filepaths) == 1 else filepaths,
-                    layer_name,
-                    category=layer_category,
-                    data_format=data_format,
-                    chunk_shape=chunk_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    compress=compress,
-                    swap_xy=swap_xy,
-                    flip_x=flip_x,
-                    flip_y=flip_y,
-                    flip_z=flip_z,
-                    use_bioformats=use_bioformats,
-                    batch_size=batch_size,
-                    allow_multiple_layers=True,
-                    max_layers=max_layers - len(ds.layers),
-                    executor=executor,
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims_images",
                 )
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims",
+                )
+                for layer_name, filepaths in filepaths_per_layer.items():
+                    filepaths.sort(key=z_slices_sort_key)
+
+                    ds.add_layer_from_images(
+                        filepaths[0] if len(filepaths) == 1 else filepaths,
+                        layer_name,
+                        category=layer_category,
+                        data_format=data_format,
+                        chunk_shape=chunk_shape,
+                        chunks_per_shard=chunks_per_shard,
+                        compress=compress,
+                        swap_xy=swap_xy,
+                        flip_x=flip_x,
+                        flip_y=flip_y,
+                        flip_z=flip_z,
+                        use_bioformats=use_bioformats,
+                        batch_size=batch_size,
+                        allow_multiple_layers=True,
+                        max_layers=max_layers - len(ds.layers),
+                        executor=executor,
+                    )
 
         return ds
 
@@ -1091,7 +1108,7 @@ class Dataset:
 
         Please see the [pims docs](http://soft-matter.github.io/pims/v0.6.1/opening_files.html) for more information.
 
-        This method needs extra packages such as pims. Please install the respective extras,
+        This method needs extra packages like tifffile or pylibczirw. Please install the respective extras,
         e.g. using `python -m pip install "webknossos[all]"`.
 
         Further Arguments:
@@ -1115,8 +1132,6 @@ class Dataset:
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-        from ._utils.pims_images import PimsImages, dimwise_max
-
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
@@ -1140,7 +1155,7 @@ class Dataset:
         else:
             user_set_category = True
 
-        pims_images = PimsImages(
+        pims_image_sequence = pims_images.PimsImages(
             images,
             channel=channel,
             timepoint=timepoint,
@@ -1152,7 +1167,7 @@ class Dataset:
             use_bioformats=use_bioformats,
             is_segmentation=category == "segmentation",
         )
-        possible_layers = pims_images.get_possible_layers()
+        possible_layers = pims_image_sequence.get_possible_layers()
         # Check if 4 color channels should be converted to
         # 3 color channels (rbg)
         if (
@@ -1223,7 +1238,7 @@ class Dataset:
                 pims_open_kwargs.setdefault("timepoint", timepoint)  # type: ignore
                 pims_open_kwargs.setdefault("channel", channel)  # type: ignore
                 pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
-                pims_images = PimsImages(
+                pims_image_sequence = pims_images.PimsImages(
                     images,
                     swap_xy=swap_xy,
                     flip_x=flip_x,
@@ -1234,7 +1249,7 @@ class Dataset:
                     **pims_open_kwargs,
                 )
             if dtype is None:
-                current_dtype = np.dtype(pims_images.dtype)
+                current_dtype = np.dtype(pims_image_sequence.dtype)
                 if current_dtype.byteorder == ">":
                     current_dtype = current_dtype.newbyteorder("<")
             else:
@@ -1244,11 +1259,11 @@ class Dataset:
                 category=category,
                 data_format=data_format,
                 dtype_per_channel=current_dtype,
-                num_channels=pims_images.num_channels,
+                num_channels=pims_image_sequence.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
 
-            expected_bbox = pims_images.expected_bbox
+            expected_bbox = pims_image_sequence.expected_bbox
 
             # When the expected bbox is 2D the chunk_shape is set to 2D too.
             if (
@@ -1293,7 +1308,7 @@ class Dataset:
                 ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
 
             func_per_chunk = named_partial(
-                pims_images.copy_to_view,
+                pims_image_sequence.copy_to_view,
                 mag_view=mag_view,
                 dtype=current_dtype,
             )
@@ -1353,7 +1368,10 @@ class Dataset:
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
                 layer.bounding_box = layer.bounding_box.with_size_xyz(
-                    Vec3Int(dimwise_max(shapes) + (layer.bounding_box.get_shape("z"),))
+                    Vec3Int(
+                        pims_images.dimwise_max(shapes)
+                        + (layer.bounding_box.get_shape("z"),)
+                    )
                     * mag.to_vec3_int().with_z(1)
                 )
             if expected_bbox != layer.bounding_box:

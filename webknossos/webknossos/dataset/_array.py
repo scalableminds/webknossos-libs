@@ -502,6 +502,11 @@ class ZarritaArray(BaseArray):
             dimension_names = ("c", "x", "y", "z")
         else:
             dimension_names = names
+        x_index, y_index, z_index = (
+            dimension_names.index("x"),
+            dimension_names.index("y"),
+            dimension_names.index("z"),
+        )
         if isinstance(zarray, Array):
             if len(zarray.codec_pipeline.codecs) == 1 and isinstance(
                 zarray.codec_pipeline.codecs[0], ShardingCodec
@@ -516,12 +521,24 @@ class ZarritaArray(BaseArray):
                     compression_mode=self._has_compression_codecs(
                         sharding_codec.codec_pipeline.codecs
                     ),
-                    chunk_shape=Vec3Int(chunk_shape[1:4]),
+                    chunk_shape=Vec3Int(
+                        chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
+                    ),
                     chunks_per_shard=Vec3Int(
-                        Vec3Int(shard_shape[1:4]) // Vec3Int(chunk_shape[1:4])
+                        Vec3Int(
+                            shard_shape[x_index],
+                            shard_shape[y_index],
+                            shard_shape[z_index],
+                        )
+                        // Vec3Int(
+                            chunk_shape[x_index],
+                            chunk_shape[y_index],
+                            chunk_shape[z_index],
+                        )
                     ),
                     dimension_names=dimension_names,
                 )
+            chunk_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
             return ArrayInfo(
                 data_format=DataFormat.Zarr3,
                 num_channels=zarray.metadata.shape[0],
@@ -530,7 +547,7 @@ class ZarritaArray(BaseArray):
                     zarray.codec_pipeline.codecs
                 ),
                 chunk_shape=Vec3Int(
-                    zarray.metadata.chunk_grid.configuration.chunk_shape[1:4]
+                    chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
                 )
                 or Vec3Int.full(1),
                 chunks_per_shard=Vec3Int.full(1),
@@ -542,7 +559,12 @@ class ZarritaArray(BaseArray):
                 num_channels=zarray.metadata.shape[0],
                 voxel_type=zarray.metadata.dtype,
                 compression_mode=zarray.metadata.compressor is not None,
-                chunk_shape=Vec3Int(*zarray.metadata.chunks[1:4]) or Vec3Int.full(1),
+                chunk_shape=Vec3Int(
+                    zarray.metadata.chunks[x_index],
+                    zarray.metadata.chunks[y_index],
+                    zarray.metadata.chunks[z_index],
+                )
+                or Vec3Int.full(1),
                 chunks_per_shard=Vec3Int.full(1),
                 dimension_names=dimension_names,
             )
