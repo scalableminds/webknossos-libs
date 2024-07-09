@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added an implementation of padded_with_margins for NDBoundingBox class. [#1120](https://github.com/scalableminds/webknossos-libs/pull/1120)
+- Added a new method add_nx_graphs to skeleton.py which supports to add nx.Graphs to the Skeleton object. [#1130](https://github.com/scalableminds/webknossos-libs/pull/1130)
 
 ### Changed
 - Removed additional logging messages during image conversion. [#1124](https://github.com/scalableminds/webknossos-libs/pull/1124)
