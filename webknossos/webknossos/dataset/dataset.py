@@ -223,21 +223,16 @@ class Dataset:
                 )
             elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
                 # As before, but only a single image is inspected to determine 2D vs 3D.
-                with warnings.catch_warnings():
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=UserWarning,
+                if pims_images.has_image_z_dimension(
+                    input_path / input_files[0],
+                    use_bioformats=use_bioformats,
+                    is_segmentation=guess_if_segmentation_path(input_files[0]),
+                ):
+                    return str
+                else:
+                    return lambda p: (
+                        input_path.name if p.parent == Path() else p.parts[-2]
                     )
-                    if pims_images.has_image_z_dimension(
-                        input_path / input_files[0],
-                        use_bioformats=use_bioformats,
-                        is_segmentation=guess_if_segmentation_path(input_files[0]),
-                    ):
-                        return str
-                    else:
-                        return lambda p: (
-                            input_path.name if p.parent == Path() else p.parts[-2]
-                        )
             else:
                 raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
 
@@ -633,9 +628,20 @@ class Dataset:
             )
 
         if isinstance(map_filepath_to_layer_name, Dataset.ConversionLayerMapping):
-            map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
-                input_upath, input_files=input_files, use_bioformats=use_bioformats
-            )
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims",
+                )
+                warnings.filterwarnings(
+                    "once",
+                    category=UserWarning,
+                    module="pims_images",
+                )
+                map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
+                    input_upath, input_files=input_files, use_bioformats=use_bioformats
+                )
 
         ds = cls(output_path, voxel_size=voxel_size, name=name)
 
@@ -671,7 +677,12 @@ class Dataset:
                 warnings.filterwarnings(
                     "ignore",
                     category=UserWarning,
-                    message="Not all pims readers could be imported",
+                    module="pims_images",
+                )
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims",
                 )
                 for layer_name, filepaths in filepaths_per_layer.items():
                     filepaths.sort(key=z_slices_sort_key)
