@@ -1,9 +1,10 @@
 import itertools
 from os import PathLike
 from pathlib import Path
-from typing import Iterator, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import attr
+import networkx as nx
 
 from ..utils import warn_deprecated
 from .group import Group
@@ -103,6 +104,45 @@ class Skeleton(Group):
         ], f"The suffix if the file must be .nml or .zip, not {out_path.suffix}"
         annotation = Annotation(name=out_path.stem, skeleton=self, time=None)
         annotation.save(out_path)
+
+    def add_nx_graphs(
+        self, tree_dict: Union[List[nx.Graph], Dict[str, List[nx.Graph]]]
+    ) -> None:
+        """
+        A utility to add nx graphs [NetworkX graph object](https://networkx.org/) to a wk skeleton object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
+
+        Arguments:
+        tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): A list of wK tree-like structures as NetworkX graphs or a dictionary of group names and same lists of NetworkX tree objects.
+        """
+
+        if not isinstance(tree_dict, dict):
+            tree_dict = {"main_group": tree_dict}
+
+        for group_name, trees in tree_dict.items():
+            group = self.add_group(group_name)
+            for tree in trees:
+                tree_name = tree.graph.get("name", f"tree_{len(list(group.trees))}")
+                wk_tree = group.add_tree(tree_name)
+                wk_tree.color = tree.graph.get("color", None)
+                id_node_dict = {}
+                for id_with_node in tree.nodes(data=True):
+                    old_id, node = id_with_node
+                    node = wk_tree.add_node(
+                        position=node.get("position"),
+                        comment=node.get("comment", None),
+                        radius=node.get("radius", 1.0),
+                        rotation=node.get("rotation", None),
+                        inVp=node.get("inVp", None),
+                        inMag=node.get("inMag", None),
+                        bitDepth=node.get("bitDepth", None),
+                        interpolation=node.get("interpolation", None),
+                        time=node.get("time", None),
+                        is_branchpoint=node.get("is_branchpoint", False),
+                        branchpoint_time=node.get("branchpoint_time", None),
+                    )
+                    id_node_dict[old_id] = node
+                for edge in tree.edges():
+                    wk_tree.add_edge(id_node_dict[edge[0]], id_node_dict[edge[1]])
 
     @staticmethod
     def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
