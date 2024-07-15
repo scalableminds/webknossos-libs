@@ -45,13 +45,17 @@ def download_dataset(
         return Dataset.open(actual_path)
 
     api_data_layers = api_dataset.data_source.data_layers
-    voxel_size = api_dataset.data_source.scale
-    if api_data_layers is None or len(api_data_layers) == 0 or voxel_size is None:
+    scale = api_dataset.data_source.scale
+    if api_data_layers is None or len(api_data_layers) == 0 or scale is None:
         raise RuntimeError(
             f"Could not download dataset {dataset_name}: {api_dataset.data_source.status or 'Unknown error.'}"
         )
     dataset = Dataset(
-        actual_path, name=api_dataset.name, voxel_size=voxel_size, exist_ok=exist_ok
+        actual_path,
+        name=api_dataset.name,
+        voxel_size=scale.factor,
+        voxel_unit=scale.unit,
+        exist_ok=exist_ok,
     )
     for layer_name in layers or [i.name for i in api_data_layers]:
         matching_api_data_layers = [i for i in api_data_layers if i.name == layer_name]

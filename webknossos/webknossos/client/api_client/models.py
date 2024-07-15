@@ -61,10 +61,16 @@ class ApiDataLayer:
 
 
 @attr.s(auto_attribs=True)
+class ApiScaleWithUnit:
+    unit: str
+    factor: Tuple[float, float, float]
+
+
+@attr.s(auto_attribs=True)
 class ApiDataSource:
     data_layers: Optional[List[ApiDataLayer]] = None
     status: Optional[str] = None
-    scale: Optional[Tuple[float, float, float]] = None
+    scale: Optional[ApiScaleWithUnit] = None
 
 
 @attr.s(auto_attribs=True)

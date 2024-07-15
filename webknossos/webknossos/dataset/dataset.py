@@ -95,6 +95,7 @@ from .properties import (
     DatasetProperties,
     DatasetViewConfiguration,
     LayerProperties,
+    ScaleWithUnit,
     SegmentationLayerProperties,
     _extract_num_channels,
     _properties_floating_type_to_python_type,
@@ -117,6 +118,61 @@ _ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$"
 # This regex matches any character that is not allowed in a layer name.
 _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
+_VOXEL_UNITS = {
+    "ym": "yoctometer",
+    "yoctometer": "yoctometer",
+    "zm": "zeptometer",
+    "zeptometer": "zeptometer",
+    "am": "attometer",
+    "attometer": "attometer",
+    "fm": "femtometer",
+    "femtometer": "femtometer",
+    "pm": "picometer",
+    "picometer": "picometer",
+    "nm": "nanometer",
+    "nanometer": "nanometer",
+    "µm": "micrometer",
+    "micrometer": "micrometer",
+    "mm": "millimeter",
+    "millimeter": "millimeter",
+    "cm": "centimeter",
+    "centimeter": "centimeter",
+    "dm": "decimeter",
+    "decimeter": "decimeter",
+    "m": "meter",
+    "meter": "meter",
+    "hm": "hectometer",
+    "hectometer": "hectometer",
+    "km": "kilometer",
+    "kilometer": "kilometer",
+    "Mm": "megameter",
+    "megameter": "megameter",
+    "Gm": "gigameter",
+    "gigameter": "gigameter",
+    "Tm": "terameter",
+    "terameter": "terameter",
+    "Pm": "petameter",
+    "petameter": "petameter",
+    "Em": "exameter",
+    "exameter": "exameter",
+    "Zm": "zettameter",
+    "zettameter": "zettameter",
+    "Ym": "yottameter",
+    "yottameter": "yottameter",
+    "Å": "angstrom",
+    "angstrom": "angstrom",
+    "in": "inch",
+    "inch": "inch",
+    "ft": "foot",
+    "foot": "foot",
+    "yd": "yard",
+    "yard": "yard",
+    "mi": "mile",
+    "mile": "mile",
+    "pc": "parsec",
+    "parsec": "parsec",
+}
+
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
     for f in layer_path.iterdir():
@@ -127,6 +183,12 @@ def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
             except ArrayException:
                 pass
     return None
+
+
+def _get_full_voxel_unit(voxel_unit: str) -> str:
+    if voxel_unit not in _VOXEL_UNITS:
+        raise ValueError(f"Unknown voxel unit: {voxel_unit}")
+    return _VOXEL_UNITS[voxel_unit]
 
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
@@ -243,6 +305,7 @@ class Dataset:
         name: Optional[str] = None,
         exist_ok: bool = _UNSET,
         *,
+        voxel_unit: str = "nanometer",
         scale: Optional[Tuple[float, float, float]] = None,
         read_only: bool = False,
     ) -> None:
@@ -307,9 +370,12 @@ class Dataset:
             assert (
                 voxel_size is not None
             ), "When creating a new dataset, the voxel_size must be given, e.g. as Dataset(path, voxel_size=(10, 10, 16.8))"
+            voxel_unit = _get_full_voxel_unit(voxel_unit)
             name = name or dataset_path.absolute().name
             dataset_properties = DatasetProperties(
-                id={"name": name, "team": ""}, scale=voxel_size, data_layers=[]
+                id={"name": name, "team": ""},
+                scale=ScaleWithUnit(unit=voxel_unit, factor=voxel_size),
+                data_layers=[],
             )
             with (dataset_path / PROPERTIES_FILE_NAME).open(
                 "w", encoding="utf-8"
@@ -564,6 +630,7 @@ class Dataset:
         voxel_size: Tuple[float, float, float],
         name: Optional[str] = None,
         *,
+        voxel_unit: str = "nanometer",
         map_filepath_to_layer_name: Union[
             ConversionLayerMapping, Callable[[Path], str]
         ] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
@@ -643,7 +710,7 @@ class Dataset:
                     input_upath, input_files=input_files, use_bioformats=use_bioformats
                 )
 
-        ds = cls(output_path, voxel_size=voxel_size, name=name)
+        ds = cls(output_path, voxel_size=voxel_size, voxel_unit=voxel_unit, name=name)
 
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
@@ -717,13 +784,17 @@ class Dataset:
 
     @property
     def voxel_size(self) -> Tuple[float, float, float]:
-        return self._properties.scale
+        return self._properties.scale.factor
+
+    @property
+    def voxel_unit(self) -> str:
+        return self._properties.scale.unit
 
     @property
     def scale(self) -> Tuple[float, float, float]:
         """Deprecated, use `voxel_size` instead."""
         warn_deprecated("scale", "voxel_size")
-        return self._properties.scale
+        return self._properties.scale.factor
 
     @property
     def name(self) -> str:
@@ -1651,6 +1722,7 @@ class Dataset:
         args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
         *,
+        voxel_unit: Optional[str] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -1691,7 +1763,14 @@ class Dataset:
 
         if voxel_size is None:
             voxel_size = self.voxel_size
-        new_ds = Dataset(new_dataset_path, voxel_size=voxel_size, exist_ok=False)
+        if voxel_unit is None:
+            voxel_unit = self.voxel_unit
+        new_ds = Dataset(
+            new_dataset_path,
+            voxel_size=voxel_size,
+            voxel_unit=voxel_unit,
+            exist_ok=False,
+        )
 
         with get_executor_for_args(args, executor) as executor:
             for layer in self.layers.values():
@@ -1730,6 +1809,7 @@ class Dataset:
         new_dataset = Dataset(
             new_dataset_path,
             voxel_size=self.voxel_size,
+            voxel_unit=self.voxel_unit,
             name=name or self.name,
             exist_ok=False,
         )
@@ -1804,6 +1884,8 @@ class Dataset:
         dataset_path: Union[str, PathLike],
         voxel_size: Tuple[float, float, float],
         name: Optional[str] = None,
+        *,
+        voxel_unit: str = "nanometer",
     ) -> "Dataset":
         """
         **Deprecated**, please use the constructor `Dataset()` instead.
@@ -1812,7 +1894,9 @@ class Dataset:
             "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset().",
             DeprecationWarning,
         )
-        return cls(dataset_path, voxel_size, name, exist_ok=False)
+        return cls(
+            dataset_path, voxel_size, name, exist_ok=False, voxel_unit=voxel_unit
+        )
 
     @classmethod
     def get_or_create(
@@ -1820,6 +1904,8 @@ class Dataset:
         dataset_path: Union[str, Path],
         voxel_size: Tuple[float, float, float],
         name: Optional[str] = None,
+        *,
+        voxel_unit: str = "nanometer",
     ) -> "Dataset":
         """
         **Deprecated**, please use the constructor `Dataset()` instead.
@@ -1828,7 +1914,7 @@ class Dataset:
             "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True).",
             DeprecationWarning,
         )
-        return cls(dataset_path, voxel_size, name, exist_ok=True)
+        return cls(dataset_path, voxel_size, name, exist_ok=True, voxel_unit=voxel_unit)
 
     def __repr__(self) -> str:
         return f"Dataset({repr(self.path)})"
@@ -1935,6 +2021,7 @@ class RemoteDataset(Dataset):
             super().__init__(
                 dataset_path,
                 voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN,
+                voxel_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
                 exist_ok=True,
                 read_only=True,
             )

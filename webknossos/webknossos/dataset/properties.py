@@ -1,6 +1,15 @@
 import copy
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import attr
 import cattr
@@ -164,9 +173,15 @@ class SegmentationLayerProperties(LayerProperties):
 
 
 @attr.define
+class ScaleWithUnit:
+    factor: Tuple[float, float, float]
+    unit: str
+
+
+@attr.define
 class DatasetProperties:
     id: Dict[str, str]
-    scale: Tuple[float, float, float]
+    scale: ScaleWithUnit
     data_layers: List[
         Union[
             SegmentationLayerProperties,
@@ -222,7 +237,6 @@ dataset_converter.register_structure_hook_func(
 # Additionally we only want to unstructure attributes which don't have the default value
 # (e.g. Layer.default_view_configuration has many attributes which are all optionally).
 for cls in [
-    DatasetProperties,
     MagViewProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
@@ -251,6 +265,44 @@ for cls in [
             },
         ),
     )
+
+
+def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
+    def __dataset_properties_pre_structure(
+        d: Dict[str, Any], type_value: Type[DatasetProperties]
+    ) -> Dict[str, Any]:
+        if isinstance(d["scale"], list):
+            d["scale"] = {"unit": "nanometer", "factor": d["scale"]}
+        obj = converter_fn(d, type_value)
+        return obj
+
+    return __dataset_properties_pre_structure
+
+
+dataset_converter.register_unstructure_hook(
+    DatasetProperties,
+    make_dict_unstructure_fn(
+        DatasetProperties,
+        dataset_converter,
+        **{
+            a.name: override(omit_if_default=True, rename=snake_to_camel_case(a.name))
+            for a in attr.fields(DatasetProperties)  # type: ignore[misc]
+        },
+    ),
+)
+dataset_converter.register_structure_hook(
+    DatasetProperties,
+    dataset_properties_pre_structure(
+        make_dict_structure_fn(
+            DatasetProperties,
+            dataset_converter,
+            **{
+                a.name: override(rename=snake_to_camel_case(a.name))
+                for a in attr.fields(DatasetProperties)  # type: ignore[misc]
+            },
+        )
+    ),
+)
 
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.

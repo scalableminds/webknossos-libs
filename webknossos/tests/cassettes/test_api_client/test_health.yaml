@@ -13,7 +13,7 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: http://localhost:9000/api/v6/health
+    uri: http://localhost:9000/api/v7/health
   response:
     content: Ok
     headers:
