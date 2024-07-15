@@ -17,4 +17,5 @@ from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCatego
 from .mag_view import MagView
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
+from .unit import Unit
 from .view import View

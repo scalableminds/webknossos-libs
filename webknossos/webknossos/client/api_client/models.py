@@ -61,7 +61,7 @@ class ApiDataLayer:
 
 
 @attr.s(auto_attribs=True)
-class ApiScaleWithUnit:
+class ApiVoxelSize:
     unit: str
     factor: Tuple[float, float, float]
 
@@ -70,7 +70,7 @@ class ApiScaleWithUnit:
 class ApiDataSource:
     data_layers: Optional[List[ApiDataLayer]] = None
     status: Optional[str] = None
-    scale: Optional[ApiScaleWithUnit] = None
+    scale: Optional[ApiVoxelSize] = None
 
 
 @attr.s(auto_attribs=True)

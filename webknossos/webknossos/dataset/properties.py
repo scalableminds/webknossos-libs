@@ -16,6 +16,8 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from webknossos.dataset.unit import Unit
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
@@ -173,15 +175,15 @@ class SegmentationLayerProperties(LayerProperties):
 
 
 @attr.define
-class ScaleWithUnit:
+class VoxelSize:
     factor: Tuple[float, float, float]
-    unit: str
+    unit: Unit = Unit.NANOMETER
 
 
 @attr.define
 class DatasetProperties:
     id: Dict[str, str]
-    scale: ScaleWithUnit
+    scale: VoxelSize
     data_layers: List[
         Union[
             SegmentationLayerProperties,

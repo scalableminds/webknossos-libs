@@ -235,6 +235,10 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
     )
 
 
+def count_defined_values(values: Iterable[Optional[Any]]) -> int:
+    return sum(i is not None for i in values)
+
+
 def is_fs_path(path: Path) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
