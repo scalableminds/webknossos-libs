@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
 
 
 ## [0.14.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.24) - 2024-07-09
