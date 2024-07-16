@@ -52,11 +52,11 @@ from .defaults import (
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
+from .length_unit import get_conversion_factor
 from .ome_metadata import write_ome_0_4_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
-from .unit import get_conversion_factor
 
 if TYPE_CHECKING:
     import pims

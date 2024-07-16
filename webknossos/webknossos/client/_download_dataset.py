@@ -6,7 +6,7 @@ from typing import List, Optional, TypeVar, Union, cast
 import numpy as np
 from rich.progress import track
 
-from webknossos.dataset.unit import get_unit_from_str
+from webknossos.dataset.length_unit import get_unit_from_str
 
 from ..dataset import Dataset, LayerCategoryType
 from ..dataset.properties import LayerViewConfiguration, VoxelSize, dataset_converter

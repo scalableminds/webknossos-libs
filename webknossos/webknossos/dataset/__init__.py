@@ -14,8 +14,8 @@ from .data_format import DataFormat
 from .dataset import Dataset, RemoteDataset
 from .layer import Layer, SegmentationLayer
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
+from .length_unit import LengthUnit
 from .mag_view import MagView
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
-from .unit import Unit
 from .view import View

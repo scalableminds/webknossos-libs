@@ -16,7 +16,7 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from webknossos.dataset.unit import Unit, get_unit_from_str
+from webknossos.dataset.length_unit import LengthUnit, get_unit_from_str
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
@@ -177,7 +177,7 @@ class SegmentationLayerProperties(LayerProperties):
 @attr.define
 class VoxelSize:
     factor: Tuple[float, float, float]
-    unit: Unit = Unit.NANOMETER
+    unit: LengthUnit = LengthUnit.NANOMETER
 
 
 @attr.define
@@ -221,7 +221,7 @@ def mag_unstructure(mag: Mag) -> List[int]:
 dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
-dataset_converter.register_structure_hook(Unit, lambda d, _: get_unit_from_str(d))
+dataset_converter.register_structure_hook(LengthUnit, lambda d, _: get_unit_from_str(d))
 
 vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()  # noqa: E731
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
