@@ -1854,7 +1854,7 @@ class Dataset:
     def get_or_create(
         cls,
         dataset_path: Union[str, Path],
-        voxel_size: Optional[Tuple[float, float, float]] = None,
+        voxel_size: Tuple[float, float, float],
         name: Optional[str] = None,
     ) -> "Dataset":
         """
