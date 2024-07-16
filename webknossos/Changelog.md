@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added support for new voxel size that stores unit and updated to WEBKNOSSOS API version 7. [#1136](https://github.com/scalableminds/webknossos-libs/pull/1136)
 
 ### Changed
 
