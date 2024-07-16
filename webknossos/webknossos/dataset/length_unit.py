@@ -85,7 +85,7 @@ _STR_TO_UNIT_MAP = {
     "parsec": LengthUnit.PARSEC,
 }
 
-_LENGTH_UNIT_TO_CONVERSION_FACTOR = {
+_LENGTH_UNIT_TO_NANOMETER = {
     LengthUnit.YOCTOMETER: 1e-15,
     LengthUnit.ZEPTOMETER: 1e-12,
     LengthUnit.ATTOMETER: 1e-9,
@@ -115,11 +115,7 @@ _LENGTH_UNIT_TO_CONVERSION_FACTOR = {
 }
 
 
-def get_unit_from_str(unit: str) -> LengthUnit:
+def length_unit_from_str(unit: str) -> LengthUnit:
     if unit in _STR_TO_UNIT_MAP:
         return _STR_TO_UNIT_MAP[unit]
     raise ValueError(f"Unknown unit: {unit}")
-
-
-def get_conversion_factor(unit: LengthUnit) -> float:
-    return _LENGTH_UNIT_TO_CONVERSION_FACTOR[unit]

@@ -52,7 +52,6 @@ from .defaults import (
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
-from .length_unit import get_conversion_factor
 from .ome_metadata import write_ome_0_4_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
@@ -573,7 +572,7 @@ class Dataset:
         cls,
         input_path: Union[str, PathLike],
         output_path: Union[str, PathLike],
-        voxel_size: Optional[Tuple[float, float, float]],
+        voxel_size: Optional[Tuple[float, float, float]] = None,
         name: Optional[str] = None,
         *,
         map_filepath_to_layer_name: Union[
@@ -739,9 +738,7 @@ class Dataset:
 
     @property
     def voxel_size(self) -> Tuple[float, float, float]:
-        conversion_factor = get_conversion_factor(self._properties.scale.unit)
-        factor = self._properties.scale.factor
-        return (factor[0] * conversion_factor, factor[1] * conversion_factor, factor[2])
+        return self._properties.scale.to_nanometer()
 
     @property
     def scale(self) -> Tuple[float, float, float]:

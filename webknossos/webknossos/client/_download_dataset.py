@@ -6,7 +6,7 @@ from typing import List, Optional, TypeVar, Union, cast
 import numpy as np
 from rich.progress import track
 
-from webknossos.dataset.length_unit import get_unit_from_str
+from webknossos.dataset.length_unit import length_unit_from_str
 
 from ..dataset import Dataset, LayerCategoryType
 from ..dataset.properties import LayerViewConfiguration, VoxelSize, dataset_converter
@@ -55,7 +55,7 @@ def download_dataset(
     dataset = Dataset(
         actual_path,
         name=api_dataset.name,
-        voxel_size_with_unit=VoxelSize(scale.factor, get_unit_from_str(scale.unit)),
+        voxel_size_with_unit=VoxelSize(scale.factor, length_unit_from_str(scale.unit)),
         exist_ok=exist_ok,
     )
     for layer_name in layers or [i.name for i in api_data_layers]:

@@ -15,13 +15,16 @@ import numpy as np
 import typer
 from typing_extensions import Annotated
 
+from webknossos.dataset.length_unit import LengthUnit
+from webknossos.dataset.properties import VoxelSize
+
 from ..dataset import COLOR_CATEGORY, DataFormat, Dataset, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, time_start, time_stop
 from ._utils import (
     DistributionStrategy,
-    VoxelSize,
+    VoxelSizeTuple,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -176,7 +179,7 @@ def convert_knossos(
     target_path: Path,
     layer_name: str,
     dtype: str,
-    voxel_size: Tuple[float, float, float],
+    voxel_size_with_unit: VoxelSize,
     data_format: DataFormat,
     chunk_shape: Vec3Int,  # in target-mag
     chunks_per_shard: Vec3Int,
@@ -187,7 +190,9 @@ def convert_knossos(
 
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
 
-    target_dataset = Dataset(target_path, voxel_size, exist_ok=True)
+    target_dataset = Dataset(
+        target_path, voxel_size_with_unit=voxel_size_with_unit, exist_ok=True
+    )
     target_layer = target_dataset.get_or_add_layer(
         layer_name,
         COLOR_CATEGORY,
@@ -246,15 +251,21 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: Annotated[
-        VoxelSize,
+        VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
             "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
-            metavar="VOXEL_SIZE",
+            metavar="VoxelSize",
             show_default=False,
         ),
     ],
+    length_unit: Annotated[
+        LengthUnit,
+        typer.Option(
+            help="The unit of the voxel size.",
+        ),
+    ] = LengthUnit.NANOMETER,
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",
@@ -321,13 +332,14 @@ def main(
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
+    voxel_size_with_unit = VoxelSize(voxel_size, length_unit)
 
     convert_knossos(
         source,
         target,
         layer_name,
         dtype,
-        voxel_size,
+        voxel_size_with_unit,
         data_format,
         chunk_shape,
         chunks_per_shard,
