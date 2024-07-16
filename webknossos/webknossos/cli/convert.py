@@ -54,7 +54,7 @@ def main(
         typer.Option(
             help="The unit of the voxel size.",
         ),
-    ] = LengthUnit.NANOMETER,
+    ] = "nanometer",  # type:ignore
     layer_name: Annotated[
         Optional[str],
         typer.Option(

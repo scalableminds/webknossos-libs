@@ -265,7 +265,7 @@ def main(
         typer.Option(
             help="The unit of the voxel size.",
         ),
-    ] = LengthUnit.NANOMETER,
+    ] = "nanometer",  # type:ignore
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",
