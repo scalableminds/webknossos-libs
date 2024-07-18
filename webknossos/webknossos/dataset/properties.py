@@ -27,6 +27,9 @@ from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
 from .layer_categories import LayerCategoryType
 
+DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
+DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
+
 
 def _extract_num_channels(
     num_channels_in_properties: Optional[int],
@@ -181,7 +184,7 @@ class SegmentationLayerProperties(LayerProperties):
 @attr.define
 class VoxelSize:
     factor: Tuple[float, float, float]
-    unit: LengthUnit = LengthUnit.NANOMETER
+    unit: LengthUnit = DEFAULT_LENGTH_UNIT
 
     def to_nanometer(self) -> Tuple[float, float, float]:
         conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self.unit]
@@ -290,7 +293,7 @@ def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
         d: Dict[str, Any], type_value: Type[DatasetProperties]
     ) -> Dict[str, Any]:
         if isinstance(d["scale"], list):
-            d["scale"] = {"unit": "nanometer", "factor": d["scale"]}
+            d["scale"] = {"unit": DEFAULT_LENGTH_UNIT_STR, "factor": d["scale"]}
         obj = converter_fn(d, type_value)
         return obj
 

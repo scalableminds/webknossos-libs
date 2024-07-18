@@ -14,7 +14,7 @@ import zarr
 from typing_extensions import Annotated
 
 from webknossos.dataset.length_unit import LengthUnit
-from webknossos.dataset.properties import VoxelSize
+from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 
 from ..dataset import DataFormat, Dataset, MagView, SegmentationLayer
 from ..dataset._array import _fsstore_from_path
@@ -151,12 +151,12 @@ def main(
             show_default=False,
         ),
     ],
-    length_unit: Annotated[
+    unit: Annotated[
         LengthUnit,
         typer.Option(
             help="The unit of the voxel size.",
         ),
-    ] = "nanometer",  # type:ignore
+    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     data_format: Annotated[
         DataFormat,
         typer.Option(
@@ -253,7 +253,7 @@ When converting a folder, this option is ignored."
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
-    voxel_size_with_unit = VoxelSize(voxel_size, length_unit)
+    voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     mag_view = convert_zarr(
         source,

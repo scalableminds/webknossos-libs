@@ -16,7 +16,7 @@ import typer
 from typing_extensions import Annotated
 
 from webknossos.dataset.length_unit import LengthUnit
-from webknossos.dataset.properties import VoxelSize
+from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 
 from ..dataset import COLOR_CATEGORY, DataFormat, Dataset, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
@@ -260,12 +260,12 @@ def main(
             show_default=False,
         ),
     ],
-    length_unit: Annotated[
+    unit: Annotated[
         LengthUnit,
         typer.Option(
             help="The unit of the voxel size.",
         ),
-    ] = "nanometer",  # type:ignore
+    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",
@@ -332,7 +332,7 @@ def main(
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
-    voxel_size_with_unit = VoxelSize(voxel_size, length_unit)
+    voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     convert_knossos(
         source,
