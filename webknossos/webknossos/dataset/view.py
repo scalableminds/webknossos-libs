@@ -8,7 +8,6 @@ from typing import (
     Callable,
     Dict,
     Generator,
-    Iterable,
     Iterator,
     List,
     Optional,
@@ -24,6 +23,7 @@ from webknossos.geometry.vec_int import VecInt, VecIntLike
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..utils import (
+    count_defined_values,
     get_executor_for_args,
     get_rich_progress,
     wait_and_ensure_success,
@@ -141,8 +141,8 @@ class View:
         rel_current_mag_offset: Optional[Vec3IntLike] = None,
         current_mag_size: Optional[Vec3IntLike] = None,
     ) -> NDBoundingBox:
-        num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
-        num_offsets = _count_defined_values(
+        num_bboxes = count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
+        num_offsets = count_defined_values(
             [
                 abs_mag1_offset,
                 rel_mag1_offset,
@@ -150,7 +150,7 @@ class View:
                 rel_current_mag_offset,
             ]
         )
-        num_sizes = _count_defined_values([mag1_size, current_mag_size])
+        num_sizes = count_defined_values([mag1_size, current_mag_size])
         if num_bboxes == 0:
             assert num_offsets != 0, "You must supply an offset or a bounding box."
             assert (
@@ -1227,10 +1227,6 @@ class View:
     def __setstate__(self, d: Dict[str, Any]) -> None:
         d["_cached_array"] = None
         self.__dict__ = d
-
-
-def _count_defined_values(values: Iterable[Optional[Any]]) -> int:
-    return sum(i is not None for i in values)
 
 
 def _copy_job(args: Tuple[View, View, int]) -> None:

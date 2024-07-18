@@ -7,12 +7,15 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
+from webknossos.dataset.length_unit import LengthUnit
+from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
+
 from ..dataset import DataFormat, Dataset
 from ..utils import get_executor_for_args
 from ._utils import (
     DistributionStrategy,
     LayerCategory,
-    VoxelSize,
+    VoxelSizeTuple,
     parse_path,
     parse_voxel_size,
 )
@@ -37,14 +40,21 @@ def main(
         ),
     ],
     voxel_size: Annotated[
-        VoxelSize,
+        VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
             "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
-            metavar="VOXEL_SIZE",
+            metavar="VoxelSize",
+            show_default=False,
         ),
     ],
+    unit: Annotated[
+        LengthUnit,
+        typer.Option(
+            help="The unit of the voxel size.",
+        ),
+    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     layer_name: Annotated[
         Optional[str],
         typer.Option(
@@ -103,13 +113,14 @@ def main(
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
+    voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     with get_executor_for_args(args=executor_args) as executor:
         Dataset.from_images(
             source,
             target,
-            voxel_size,
-            name,
+            name=name,
+            voxel_size_with_unit=voxel_size_with_unit,
             data_format=data_format,
             executor=executor,
             compress=compress,
