@@ -7,7 +7,6 @@ from os import makedirs
 from pathlib import Path
 from shutil import rmtree, unpack_archive
 from typing import Any, Dict, Generator, List
-from unittest.mock import MagicMock, patch
 from zipfile import ZipFile
 
 import httpx
@@ -294,16 +293,6 @@ def _make_vcr_request(httpx_request: httpx.Request, **_kwargs: Any) -> VcrReques
 httpx_stubs._make_vcr_request = _make_vcr_request
 
 
-def _to_serialized_response(httpx_reponse: httpx.Response) -> Dict[str, Any]:
-    return {
-        "status_code": httpx_reponse.status_code,
-        "http_version": httpx_reponse.http_version,
-        "headers": httpx_stubs._transform_headers(httpx_reponse),
-        "content": _handle_special_formats(httpx_reponse.content),
-    }
-
-
-httpx_stubs._to_serialized_response = _to_serialized_response
 
 
 def _from_special_formats(value: Any) -> bytes:
@@ -324,30 +313,6 @@ def _from_special_formats(value: Any) -> bytes:
             pass
 
     return value
-
-
-@patch("httpx.Response.close", MagicMock())
-@patch("httpx.Response.read", MagicMock())
-def _from_serialized_response(
-    request: httpx.Request, serialized_response: Any, history: Any = None
-) -> httpx.Response:
-    content = serialized_response.get("content")
-    content = _from_special_formats(content)
-
-    response = httpx.Response(
-        status_code=serialized_response.get("status_code"),
-        request=request,
-        headers=httpx_stubs._from_serialized_headers(
-            serialized_response.get("headers")
-        ),
-        content=content,
-        history=history or [],
-    )
-    response._content = content
-    return response
-
-
-httpx_stubs._from_serialized_response = _from_serialized_response
 
 
 def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:

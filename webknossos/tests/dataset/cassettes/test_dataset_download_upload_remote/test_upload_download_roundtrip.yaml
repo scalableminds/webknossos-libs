@@ -13,11 +13,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/api/v7/userToken/generate
   response:
-    content: '{"token":"xxxsecrettokenxxx"}'
+    body:
+      string: '{"token":"ltyyjJmtGuLGhEWk8bCw1Q"}'
     headers:
       cache-control:
       - no-cache
@@ -30,8 +31,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -44,11 +46,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datastores
   response:
-    content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
+    body:
+      string: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
     headers:
       cache-control:
       - no-cache
@@ -61,8 +64,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -75,11 +79,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
+    body:
+      string: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
       cache-control:
       - no-cache
@@ -92,8 +97,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -106,11 +112,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/isValidNewName
   response:
-    content: '{"isValid":true}'
+    body:
+      string: '{"isValid":true}'
     headers:
       cache-control:
       - no-cache
@@ -123,8 +130,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '{"uploadId": "2000-01-01T00-00-00__0011", "name": "test_upload_download_roundtrip_2000-01-01_00-00-00",
       "organization": "Organization_X", "totalFileCount": 13, "initialTeams": [],
@@ -143,11 +151,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets/reserveUpload
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -162,8 +171,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
@@ -190,11 +200,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -209,8 +220,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '--
 
@@ -314,11 +326,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -333,8 +346,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
@@ -361,11 +375,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -380,8 +395,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '--
 
@@ -485,11 +501,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -504,8 +521,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
@@ -532,11 +550,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -551,8 +570,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '--
 
@@ -656,11 +676,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -675,8 +696,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
@@ -703,11 +725,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -722,8 +745,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '--
 
@@ -827,11 +851,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -846,8 +871,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
@@ -874,11 +900,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -893,8 +920,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '--
 
@@ -998,11 +1026,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -1017,8 +1046,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
@@ -1045,11 +1075,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -1064,8 +1095,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '--
 
@@ -1169,11 +1201,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -1188,8 +1221,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n2852\n--\nContent-Disposition: form-data;
@@ -1253,11 +1287,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -1272,8 +1307,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: '{"uploadId": "2000-01-01T00-00-00__0011"}'
     headers:
@@ -1290,11 +1326,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets/finishUpload
   response:
-    content: ''
+    body:
+      string: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -1309,8 +1346,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -1323,11 +1361,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2024-07-15_11-27-29","dataSource":{"id":{"name":"test_upload_download_roundtrip_2024-07-15_11-27-29","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721042850148,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721042850148,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    body:
+      string: '{"name":"test_upload_download_roundtrip_2024-07-18_15-10-59","dataSource":{"id":{"name":"test_upload_download_roundtrip_2024-07-18_15-10-59","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721315459952,"isEditable":true,"lastUsedByUser":1721315460517,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721315459952,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
@@ -1340,8 +1379,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: null
     headers: {}
@@ -1362,7 +1402,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1407,7 +1447,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1452,7 +1492,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1484,34 +1524,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2024-07-15_11-27-29","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '886'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
-  response:
-    body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2024-07-15_11-27-29","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2024-07-18_15-10-59","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1569,7 +1582,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2024-07-15_11-27-29","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2024-07-18_15-10-59","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1609,7 +1622,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1818,7 +1831,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1861,7 +1874,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2070,7 +2083,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2113,7 +2126,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2322,7 +2335,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2365,7 +2378,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2574,7 +2587,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2617,7 +2630,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2826,7 +2839,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2869,7 +2882,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -3078,7 +3091,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-15_11-27-29/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_upload_download_roundtrip_2024-07-18_15-10-59/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -3113,11 +3126,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2024-07-15_11-27-29","dataSource":{"id":{"name":"test_upload_download_roundtrip_2024-07-15_11-27-29","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721042850148,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721042850148,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    body:
+      string: '{"name":"test_upload_download_roundtrip_2024-07-18_15-10-59","dataSource":{"id":{"name":"test_upload_download_roundtrip_2024-07-18_15-10-59","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721315459952,"isEditable":true,"lastUsedByUser":1721315460893,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721315459952,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
@@ -3130,8 +3144,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -3144,29 +3159,30 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
-    content: !!binary |
-      g5GThpWTi4l+gY6UkpCKh5h9k4qNmZGZepaTjn6Dk4qOg4qFgIyGl4OBkZqakH2ThIKPjYaUkJyC
-      c4l8fYyDaYWVjX95dXx1fqGCfox2cW5ucHhvcm5paWhXY2lrYm5dYXJpYZOalZWPipeKf4aKkIyG
-      i4+bdYZlgIiQi4+LipWJfo2Klo6PfZGUhXiPiZihipeBh4uCkX6OjIuGhXt7b3Z+hIaGcXtpaWd6
-      c3ttgWpsam9hX3BpbFloaXppWnVscm1rZGhjcW6QgY+MkISChXFvmYeQh4iKjXtxaH+NhYKTlnSA
-      W26Mk4Z/jI99gmlpi32Ei4mPkX1tdX1tiYB7hntzbGJ0eGZ9dHmBUmxbY1l1dW9xWGJtc19xYml3
-      enRZenR/cGJqcHGDeIODeYptf2pnbXRniI2DcXJ1Z1VnYmd9i4F1cmJpYGtpiIx3dnFUYGpvZnl+
-      hH9vdV5iZmtzZWlqalleaHhuYV9QYXJYWGlibVZyXWpwb3ZsX3Vxh2tlhIN6hIJ1d314f4OEgYmP
-      j2NzZGBtb313fIRxdnhiaVhtgWpzZV52Y1JhZG5ramZoZ2ZoYVtrbWhyZmlsYXJoZ2ZiV09obnly
-      cH95dmFaY2mScWyBeICIgneTf392i4eIh5KNh5KVjoeVk5yPk5OGf5SNg5JqXmV0aGyH1ZGJaGJV
-      eXNohVSJgW5oZ21hZ22KcoJaUmRecGFwSWJxZmViZkVvaHRoZXFZcmuUb4J/Znd/d252eIaAgop9
-      kJKPiZ6Sfol+hKeSi5WOkoqAhIyNlI+Vh5+Ji4ugb2qAgpCEgouNimJqcYZ8kpKKhJl0aG5ue4GL
-      hYF+YnJsY2Brg3h1b2JbamZiYWZnfXB6cW5+ZWl1YWtrrHKDhYx4h3Nva3aIkpKHeoWUg5S6nHyU
-      hZyPkoiNe3yPhoZ/koeVkGqLh49+lIeHd4d2bHx7f4uJmIyZYndzcXZojHh1gXhpdGNwWV9vc3F8
-      fnR7e2FrZ2JnioKDgHp8ZmRgd4mOhYeAgn1wd3aSnYiWhYR1f3p5mIGOlIeRgI6TiYmKj5iQlYWL
-      k5BlgIh2oYuFhZGCbWJranZ6i4GHhmlaZ3VhdICAfYJqaHN6lGVyhXyGhoOIbmhgb1x6XYuckIuX
-      g3VmX2aAhpCTh3V5d3NwiZGEknKIipJ3eIaMhZSkjXB8i5eEfYyDhJaWkpiYb2pocXWIkYuTiWhw
-      Y2d5aoGMeoVmTmNecHd7hHmCb1hsZGxoZXV0f3pxY1ZNc2d1c2R9g3NoV2toXk5wg3qRem1nbXB2
-      bX90h4Z8eW93anJ5f4+WfHqAcHV5e4mQinN/eoaBgA==
+    body:
+      string: !!binary |
+        g5GThpWTi4l+gY6UkpCKh5h9k4qNmZGZepaTjn6Dk4qOg4qFgIyGl4OBkZqakH2ThIKPjYaUkJyC
+        c4l8fYyDaYWVjX95dXx1fqGCfox2cW5ucHhvcm5paWhXY2lrYm5dYXJpYZOalZWPipeKf4aKkIyG
+        i4+bdYZlgIiQi4+LipWJfo2Klo6PfZGUhXiPiZihipeBh4uCkX6OjIuGhXt7b3Z+hIaGcXtpaWd6
+        c3ttgWpsam9hX3BpbFloaXppWnVscm1rZGhjcW6QgY+MkISChXFvmYeQh4iKjXtxaH+NhYKTlnSA
+        W26Mk4Z/jI99gmlpi32Ei4mPkX1tdX1tiYB7hntzbGJ0eGZ9dHmBUmxbY1l1dW9xWGJtc19xYml3
+        enRZenR/cGJqcHGDeIODeYptf2pnbXRniI2DcXJ1Z1VnYmd9i4F1cmJpYGtpiIx3dnFUYGpvZnl+
+        hH9vdV5iZmtzZWlqalleaHhuYV9QYXJYWGlibVZyXWpwb3ZsX3Vxh2tlhIN6hIJ1d314f4OEgYmP
+        j2NzZGBtb313fIRxdnhiaVhtgWpzZV52Y1JhZG5ramZoZ2ZoYVtrbWhyZmlsYXJoZ2ZiV09obnly
+        cH95dmFaY2mScWyBeICIgneTf392i4eIh5KNh5KVjoeVk5yPk5OGf5SNg5JqXmV0aGyH1ZGJaGJV
+        eXNohVSJgW5oZ21hZ22KcoJaUmRecGFwSWJxZmViZkVvaHRoZXFZcmuUb4J/Znd/d252eIaAgop9
+        kJKPiZ6Sfol+hKeSi5WOkoqAhIyNlI+Vh5+Ji4ugb2qAgpCEgouNimJqcYZ8kpKKhJl0aG5ue4GL
+        hYF+YnJsY2Brg3h1b2JbamZiYWZnfXB6cW5+ZWl1YWtrrHKDhYx4h3Nva3aIkpKHeoWUg5S6nHyU
+        hZyPkoiNe3yPhoZ/koeVkGqLh49+lIeHd4d2bHx7f4uJmIyZYndzcXZojHh1gXhpdGNwWV9vc3F8
+        fnR7e2FrZ2JnioKDgHp8ZmRgd4mOhYeAgn1wd3aSnYiWhYR1f3p5mIGOlIeRgI6TiYmKj5iQlYWL
+        k5BlgIh2oYuFhZGCbWJranZ6i4GHhmlaZ3VhdICAfYJqaHN6lGVyhXyGhoOIbmhgb1x6XYuckIuX
+        g3VmX2aAhpCTh3V5d3NwiZGEknKIipJ3eIaMhZSkjXB8i5eEfYyDhJaWkpiYb2pocXWIkYuTiWhw
+        Y2d5aoGMeoVmTmNecHd7hHmCb1hsZGxoZXV0f3pxY1ZNc2d1c2R9g3NoV2toXk5wg3qRem1nbXB2
+        bX90h4Z8eW93anJ5f4+WfHqAcHV5e4mQinN/eoaBgA==
     headers:
       access-control-allow-origin:
       - '*'
@@ -3187,8 +3203,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -3201,17 +3218,18 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&height=5&mag=2-2-1&width=6&x=2806&y=4352&z=1794
   response:
-    content: !!binary |
-      iJKNj4OGkY+GjImGg4mXiYZ2doCDjHduaW1uZWlojpKNk4J6hY2Oio57iouLhYFrd3yDbmlkcG5r
-      aG1jlIuKh3Zrg4mHhnRrhICEinBlbm10dWdsb2ltd3l7fnpzZ2eDiYZzYWpseXNsXmdsY15tY2Vw
-      eXqBgoZ5a3Rlbnl7Z2dkYWxsaGdtcXByeW2Ic4SCipCMkYqSY2BzeI2FXmVnampvbWNob25yiIOA
-      g4WHlZCRjoeOa22Ei4qNYW1ognx6cGxlZ2ltgoWJf3t/i4WGkI2OcoF+iomVdHNwY3R9iIB7aGNs
-      j4uGf3h3jYySi5CQaXV2iIaJcGd3c36EiIx8cmJohYuMgHd3joiMkY6RY2lzhIuHb11ob3eAgHJW
-      aWhqfYB7bnNvfIyDfHt/
+    body:
+      string: !!binary |
+        iJKNj4OGkY+GjImGg4mXiYZ2doCDjHduaW1uZWlojpKNk4J6hY2Oio57iouLhYFrd3yDbmlkcG5r
+        aG1jlIuKh3Zrg4mHhnRrhICEinBlbm10dWdsb2ltd3l7fnpzZ2eDiYZzYWpseXNsXmdsY15tY2Vw
+        eXqBgoZ5a3Rlbnl7Z2dkYWxsaGdtcXByeW2Ic4SCipCMkYqSY2BzeI2FXmVnampvbWNob25yiIOA
+        g4WHlZCRjoeOa22Ei4qNYW1ognx6cGxlZ2ltgoWJf3t/i4WGkI2OcoF+iomVdHNwY3R9iIB7aGNs
+        j4uGf3h3jYySi5CQaXV2iIaJcGd3c36EiIx8cmJohYuMgHd3joiMkY6RY2lzhIuHb11ob3eAgHJW
+        aWhqfYB7bnNvfIyDfHt/
     headers:
       access-control-allow-origin:
       - '*'
@@ -3232,8 +3250,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -3246,13 +3265,14 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=5&height=3&mag=4-4-2&width=4&x=2804&y=4352&z=1794
   response:
-    content: !!binary |
-      iI2Ld3SGg2pzb2pogYZva3JwZ2qIgoh6ZWZteHptcnmSkI+Qa3GFgYaCcHKSj46Lb26BhYZ+cGqF
-      io2E
+    body:
+      string: !!binary |
+        iI2Ld3SGg2pzb2pogYZva3JwZ2qIgoh6ZWZteHptcnmSkI+Qa3GFgYaCcHKSj46Lb26BhYZ+cGqF
+        io2E
     headers:
       access-control-allow-origin:
       - '*'
@@ -3273,8 +3293,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -3287,82 +3308,83 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
-    content: !!binary |
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
-      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
-      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
-      TwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RP
-      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
-      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
-      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
-      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
-      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
-      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAG7mTwBu5k8AbuZPAG7m
-      TwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
-      AHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAG7mTwBu5k8A
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
-      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAHbSTwB20k8AdtJPAHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbS
-      TwB20k8AdtJPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZP
-      AG7mTwBu5k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
-      AB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
-      dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB2
-      0k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
-      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
-      AHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
-      dtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf
-      1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
-      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbS
-      TwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
-      AHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
-      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB2
-      0k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbS
-      TwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RP
-      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
-      AB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
-      dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB2
-      0k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RP
-      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAA==
+    body:
+      string: !!binary |
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+        TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+        AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+        TwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RP
+        AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+        TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+        AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+        AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+        TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+        AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAG7mTwBu5k8AbuZPAG7m
+        TwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+        AHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAG7mTwBu5k8A
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+        AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAHbSTwB20k8AdtJPAHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbS
+        TwB20k8AdtJPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZP
+        AG7mTwBu5k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+        AB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+        dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB2
+        0k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+        AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
+        AHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+        dtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf
+        1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+        AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbS
+        TwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
+        AHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+        AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB2
+        0k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbS
+        TwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RP
+        AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+        AB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+        dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB2
+        0k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+        AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAA==
     headers:
       access-control-allow-origin:
       - '*'
@@ -3383,8 +3405,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -3397,33 +3420,34 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&height=5&mag=2-2-1&width=6&x=2806&y=4352&z=1794
   response:
-    content: !!binary |
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7m
-      TwBL308AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
-      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
-      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AbuZPAG7mTwBu5k8AbuZP
-      AHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAB/UTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AdtJPAHbSTwB20k8AbuZPAG7mTwBu
-      5k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RP
-      AHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB2
-      0k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AH9RPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJP
-      AHbSTwB20k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8A
-      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB2
-      0k8AdtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbS
-      TwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJP
-      AHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8A
-      H9RPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
-      1E8A
+    body:
+      string: !!binary |
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7m
+        TwBL308AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+        AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+        5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AbuZPAG7mTwBu5k8AbuZP
+        AHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAB/UTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AdtJPAHbSTwB20k8AbuZPAG7mTwBu
+        5k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RP
+        AHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB2
+        0k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AH9RPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJP
+        AHbSTwB20k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8A
+        H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB2
+        0k8AdtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbS
+        TwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJP
+        AHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8A
+        H9RPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+        1E8A
     headers:
       access-control-allow-origin:
       - '*'
@@ -3444,8 +3468,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -3458,16 +3483,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=5&height=3&mag=4-4-2&width=4&x=2804&y=4352&z=1794
   response:
-    content: !!binary |
-      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu
-      5k8AdtJPAG7mTwBu5k8AbuZPAB/UTwAf1E8AH9RPAB/UTwAf1E8AbuZPAHbSTwB20k8AdtJPAB/U
-      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RP
-      AHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAHbSTwAf1E8A
-      H9RPAB/UTwAf1E8A
+    body:
+      string: !!binary |
+        buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu
+        5k8AdtJPAG7mTwBu5k8AbuZPAB/UTwAf1E8AH9RPAB/UTwAf1E8AbuZPAHbSTwB20k8AdtJPAB/U
+        TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RP
+        AHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAHbSTwAf1E8A
+        H9RPAB/UTwAf1E8A
     headers:
       access-control-allow-origin:
       - '*'
@@ -3488,6 +3514,7 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 version: 1

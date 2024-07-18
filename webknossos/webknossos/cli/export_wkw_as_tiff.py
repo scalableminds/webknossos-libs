@@ -11,7 +11,7 @@ from typing import Any, Optional, Tuple, Union
 import numpy as np
 import typer
 from PIL import Image
-from scipy.ndimage.interpolation import zoom
+from scipy.ndimage import zoom
 from typing_extensions import Annotated
 
 from ..dataset import Dataset, MagView, View

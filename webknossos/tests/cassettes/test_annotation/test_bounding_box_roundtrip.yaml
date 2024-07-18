@@ -11,11 +11,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
+    body:
+      string: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
       cache-control:
       - no-cache
@@ -28,8 +29,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -42,11 +44,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/l4_sample
   response:
-    content: '{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}'
+    body:
+      string: '{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1721315490782,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}'
     headers:
       cache-control:
       - no-cache
@@ -59,8 +62,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -75,11 +79,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/api/v7/userToken/generate
   response:
-    content: '{"token":"xxxsecrettokenxxx"}'
+    body:
+      string: '{"token":"dYjOiqsctcGcd-0m2uziUA"}'
     headers:
       cache-control:
       - no-cache
@@ -92,50 +97,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // forward to path with trailing slash\n
-        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/l4_sample\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
-        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
-        href=\"color\">color</a></li>\n      \n        <li><a href=\"segmentation\">segmentation</a></li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '1487'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
     status:
       code: 200
       message: OK
@@ -233,10 +194,28 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/datasource-properties.json
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample
   response:
     body:
-      string: '{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/l4_sample\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n        <li><a href=\"segmentation\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -245,9 +224,9 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1075'
+      - '1487'
       content-type:
-      - application/json
+      - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
@@ -416,6 +395,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zattrs
   response:
     body:
@@ -440,33 +446,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -2866,15 +2845,15 @@ interactions:
       zip:
         test_bounding_box_roundtrip.nml: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<things>\n
           \ <parameters>\n    <experiment name=\"l4_sample\" />\n    <scale x=\"11.239999771118164\"
-          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1721042721000\" />\n
+          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1721315491000\" />\n
           \   <taskBoundingBox color.a=\"1\" color.b=\"0.2\" color.g=\"0\" color.r=\"0.5\"
           depth=\"5\" height=\"5\" isVisible=\"true\" name=\"task_bbox\" topLeftX=\"10\"
           topLeftY=\"10\" topLeftZ=\"10\" width=\"5\" />\n    <userBoundingBox color.a=\"1\"
           color.b=\"0.1\" color.g=\"0.5\" color.r=\"0.2\" depth=\"64\" height=\"64\"
           id=\"0\" isVisible=\"true\" name=\"Unnamed Bounding Box\" topLeftX=\"1024\"
           topLeftY=\"512\" topLeftZ=\"128\" width=\"64\" />\n  </parameters>\n  <thing
-          color.a=\"1.0\" color.b=\"0.8699112147575878\" color.g=\"0.7904050036686372\"
-          color.r=\"0.2055703058855518\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
+          color.a=\"1.0\" color.b=\"0.1341244804006455\" color.g=\"0.8614812310162677\"
+          color.r=\"0.9433442248842708\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
           \   <nodes>\n      <node id=\"3\" x=\"0.0\" y=\"0.0\" z=\"0.0\" />\n    </nodes>\n
           \   <edges />\n  </thing>\n  <branchpoints />\n  <comments>\n    <comment
           content=\"node 1\" node=\"3\" />\n  </comments>\n  <groups>\n    <group
@@ -2887,18 +2866,19 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '972'
+      - '971'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/api/v7/annotations/upload
   response:
-    content: '{"annotation":{"typ":"Explorational","id":"66950722010000b000905e23"},"messages":[{"success":"Successfully
-      uploaded file"}]}'
+    body:
+      string: '{"annotation":{"typ":"Explorational","id":"669930a30100009f001c1b66"},"messages":[{"success":"Successfully
+        uploaded file"}]}'
     headers:
       cache-control:
       - no-cache
@@ -2911,8 +2891,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -2925,40 +2906,41 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v7/annotations/66950722010000b000905e23/download?skipVolumeData=false
+    uri: http://localhost:9000/api/v7/annotations/669930a30100009f001c1b66/download?skipVolumeData=false
   response:
-    content: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\"/>\n  <meta
-      name=\"writerGitCommit\" content=\"e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b\"/>\n
-      \ <meta name=\"timestamp\" content=\"1721042722353\"/>\n  <meta name=\"annotationId\"
-      content=\"66950722010000b000905e23\"/>\n  <meta name=\"username\" content=\"user_A
-      BoyA\"/>\n  <parameters>\n    <experiment name=\"l4_sample\" organization=\"Organization_X\"
-      description=\"\" wkUrl=\"http://localhost:9000\"/>\n    <scale x=\"11.239999771118164\"
-      y=\"11.239999771118164\" z=\"28.0\" unit=\"nanometer\"/>\n    <offset x=\"0\"
-      y=\"0\" z=\"0\"/>\n    <time ms=\"1721042722008\"/>\n    <editPosition x=\"0\"
-      y=\"0\" z=\"0\"/>\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"/>\n
-      \   <zoomLevel zoom=\"2.0\"/>\n    <userBoundingBox id=\"0\" name=\"Unnamed
-      Bounding Box\" isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\"
-      color.b=\"0.10000000149011612\" color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\"
-      topLeftZ=\"128\" width=\"64\" height=\"64\" depth=\"64\"/>\n    <userBoundingBox
-      id=\"1\" name=\"task bounding box\" color.r=\"0.12451035602668081\" color.g=\"0.04033680521511296\"
-      color.b=\"0.7531504538819093\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
-      topLeftZ=\"10\" width=\"5\" height=\"5\" depth=\"5\"/>\n  </parameters>\n  <thing
-      id=\"2\" color.r=\"0.2055703103542328\" color.g=\"0.7904049754142761\" color.b=\"0.8699111938476562\"
-      color.a=\"1.0\" name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\"
-      radius=\"1.0\" x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\"
-      inVp=\"0\" inMag=\"0\" bitDepth=\"0\" interpolation=\"false\" time=\"0\"/>\n
-      \   </nodes>\n    <edges/>\n  </thing>\n  <branchpoints/>\n  <comments>\n    <comment
-      node=\"3\" content=\"node 1\"/>\n  </comments>\n  <groups>\n    <group name=\"a
-      group\" id=\"1\"/>\n  </groups>\n</things>"
+    body:
+      string: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\"/>\n  <meta
+        name=\"writerGitCommit\" content=\"e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b\"/>\n
+        \ <meta name=\"timestamp\" content=\"1721315491754\"/>\n  <meta name=\"annotationId\"
+        content=\"669930a30100009f001c1b66\"/>\n  <meta name=\"username\" content=\"user_A
+        BoyA\"/>\n  <parameters>\n    <experiment name=\"l4_sample\" organization=\"Organization_X\"
+        description=\"\" wkUrl=\"http://localhost:9000\"/>\n    <scale x=\"11.239999771118164\"
+        y=\"11.239999771118164\" z=\"28.0\" unit=\"nanometer\"/>\n    <offset x=\"0\"
+        y=\"0\" z=\"0\"/>\n    <time ms=\"1721315491495\"/>\n    <editPosition x=\"0\"
+        y=\"0\" z=\"0\"/>\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"/>\n
+        \   <zoomLevel zoom=\"2.0\"/>\n    <userBoundingBox id=\"0\" name=\"Unnamed
+        Bounding Box\" isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\"
+        color.b=\"0.10000000149011612\" color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\"
+        topLeftZ=\"128\" width=\"64\" height=\"64\" depth=\"64\"/>\n    <userBoundingBox
+        id=\"1\" name=\"task bounding box\" color.r=\"0.12916610672608875\" color.g=\"0.612044977494864\"
+        color.b=\"0.2527649576769496\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
+        topLeftZ=\"10\" width=\"5\" height=\"5\" depth=\"5\"/>\n  </parameters>\n
+        \ <thing id=\"2\" color.r=\"0.943344235420227\" color.g=\"0.861481249332428\"
+        color.b=\"0.1341244876384735\" color.a=\"1.0\" name=\"a tree\" groupId=\"1\">\n
+        \   <nodes>\n      <node id=\"3\" radius=\"1.0\" x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\"
+        rotY=\"0.0\" rotZ=\"0.0\" inVp=\"0\" inMag=\"0\" bitDepth=\"0\" interpolation=\"false\"
+        time=\"0\"/>\n    </nodes>\n    <edges/>\n  </thing>\n  <branchpoints/>\n
+        \ <comments>\n    <comment node=\"3\" content=\"node 1\"/>\n  </comments>\n
+        \ <groups>\n    <group name=\"a group\" id=\"1\"/>\n  </groups>\n</things>"
     headers:
       cache-control:
       - no-cache
       content-disposition:
       - attachment;filename="test_bounding_box_roundtrip.nml"
       content-length:
-      - '1683'
+      - '1679'
       content-type:
       - application/xml
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2966,6 +2948,7 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 version: 1

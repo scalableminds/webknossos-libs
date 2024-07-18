@@ -13,11 +13,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/api/v7/userToken/generate
   response:
-    content: '{"token":"xxxsecrettokenxxx"}'
+    body:
+      string: '{"token":"mmfagDH15pF5fXaolvM2uw"}'
     headers:
       cache-control:
       - no-cache
@@ -30,6 +31,7 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 version: 1

@@ -11,11 +11,12 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: https://webknossos.org/api/v7/datasets/scalable_minds/l4_sample_dev
   response:
-    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
+    body:
+      string: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":0,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
     headers:
       cache-control:
       - no-cache
@@ -32,58 +33,6 @@ interactions:
       - max-age=31536000; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // forward to path with trailing slash\n
-        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
-        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
-        href=\"color\">color</a></li>\n      \n        <li><a href=\"segmentation\">segmentation</a></li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '1491'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=31536000; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
     status:
       code: 200
       message: OK
@@ -197,10 +146,28 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/datasource-properties.json
+    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev
   response:
     body:
-      string: '{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201Cscalable_minds/l4_sample_dev\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n        <li><a href=\"segmentation\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -211,9 +178,9 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '855'
+      - '1491'
       content-type:
-      - application/json
+      - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin

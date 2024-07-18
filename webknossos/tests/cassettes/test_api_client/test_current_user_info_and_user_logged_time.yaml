@@ -11,11 +11,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
+    body:
+      string: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
       cache-control:
       - no-cache
@@ -28,8 +29,9 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 - request:
     body: ''
     headers:
@@ -42,17 +44,12 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/users/570b9f4d2a7c0e4d008da6ef/loggedTime
   response:
-    content: '{"loggedTime": [{"paymentInterval": {"month": 4, "year": 2016}, "durationInSeconds":
-      58}, {"paymentInterval": {"month": 8, "year": 2018}, "durationInSeconds": 265},
-      {"paymentInterval": {"month": 1, "year": 2021}, "durationInSeconds": 112}, {"paymentInterval":
-      {"month": 3, "year": 2021}, "durationInSeconds": 24}, {"paymentInterval": {"month":
-      5, "year": 2021}, "durationInSeconds": 158}, {"paymentInterval": {"month": 8,
-      "year": 2021}, "durationInSeconds": 14}, {"paymentInterval": {"month": 11, "year":
-      2021}, "durationInSeconds": 12}]}'
+    body:
+      string: '{"loggedTime":[{"paymentInterval":{"month":4,"year":2016},"durationInSeconds":58},{"paymentInterval":{"month":8,"year":2018},"durationInSeconds":265},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":112},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":24},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":158},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":14},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":12},{"paymentInterval":{"month":2,"year":2024},"durationInSeconds":114},{"paymentInterval":{"month":3,"year":2024},"durationInSeconds":200},{"paymentInterval":{"month":7,"year":2024},"durationInSeconds":0}]}'
     headers:
       cache-control:
       - no-cache
@@ -65,6 +62,7 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    http_version: HTTP/1.1
-    status_code: 200
+    status:
+      code: 200
+      message: OK
 version: 1
