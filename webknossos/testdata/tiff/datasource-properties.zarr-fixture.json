@@ -3,11 +3,14 @@
     "name": "test_dataset",
     "team": "<unknown>"
   },
-  "scale": [
-    11.24,
-    11.24,
-    25.0
-  ],
+  "scale": {
+    "unit": "nanometer",
+    "factor": [
+      11.24,
+      11.24,
+      25.0
+    ]
+  },
   "dataLayers": [
     {
       "name": "tiff",

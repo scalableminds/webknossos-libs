@@ -67,6 +67,7 @@ from ..geometry import BoundingBox, Mag, NDBoundingBox
 from ..utils import (
     copy_directory_with_symlinks,
     copytree,
+    count_defined_values,
     get_executor_for_args,
     is_fs_path,
     named_partial,
@@ -96,6 +97,7 @@ from .properties import (
     DatasetViewConfiguration,
     LayerProperties,
     SegmentationLayerProperties,
+    VoxelSize,
     _extract_num_channels,
     _properties_floating_type_to_python_type,
     dataset_converter,
@@ -239,10 +241,11 @@ class Dataset:
     def __init__(
         self,
         dataset_path: Union[str, PathLike],
-        voxel_size: Optional[Tuple[float, float, float]] = None,
+        voxel_size: Optional[Tuple[float, float, float]] = None,  # in nanometers
         name: Optional[str] = None,
         exist_ok: bool = _UNSET,
         *,
+        voxel_size_with_unit: Optional[VoxelSize] = None,
         scale: Optional[Tuple[float, float, float]] = None,
         read_only: bool = False,
     ) -> None:
@@ -254,12 +257,14 @@ class Dataset:
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         `scale` is deprecated, please use `voxel_size` instead.
         """
+        assert (
+            count_defined_values((voxel_size, voxel_size_with_unit, scale)) <= 1
+        ), "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
         if scale is not None:
-            assert (
-                voxel_size is None
-            ), "Cannot use scale and voxel_size, please use only voxel_size."
             warn_deprecated("scale", "voxel_size")
-            voxel_size = scale
+            voxel_size_with_unit = VoxelSize(scale)
+        elif voxel_size is not None:
+            voxel_size_with_unit = VoxelSize(voxel_size)
 
         self._read_only = read_only
 
@@ -305,11 +310,13 @@ class Dataset:
 
             # Write empty properties to disk
             assert (
-                voxel_size is not None
-            ), "When creating a new dataset, the voxel_size must be given, e.g. as Dataset(path, voxel_size=(10, 10, 16.8))"
+                voxel_size_with_unit is not None
+            ), "When creating a new dataset, voxel_size or voxel_size_with_unit must be set, e.g. Dataset(path, voxel_size=(1, 1, 4.2))."
             name = name or dataset_path.absolute().name
             dataset_properties = DatasetProperties(
-                id={"name": name, "team": ""}, scale=voxel_size, data_layers=[]
+                id={"name": name, "team": ""},
+                scale=voxel_size_with_unit,
+                data_layers=[],
             )
             with (dataset_path / PROPERTIES_FILE_NAME).open(
                 "w", encoding="utf-8"
@@ -341,17 +348,17 @@ class Dataset:
             self._layers[layer_properties.name] = layer
 
         if dataset_existed_already:
-            if voxel_size is None:
+            if voxel_size_with_unit is None:
                 warnings.warn(
-                    "[DEPRECATION] Please always supply the voxel_size when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
+                    "[DEPRECATION] Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
                     + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
                     DeprecationWarning,
                 )
-            elif voxel_size == _UNSPECIFIED_SCALE_FROM_OPEN:
+            elif voxel_size_with_unit == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
                 assert (
-                    self.voxel_size == tuple(voxel_size)
+                    self.voxel_size_with_unit == voxel_size_with_unit
                 ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size} != {voxel_size})"
             if name is not None:
                 assert (
@@ -383,7 +390,11 @@ class Dataset:
             f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
         )
 
-        return cls(dataset_path, voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
+        return cls(
+            dataset_path,
+            voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
+            exist_ok=True,
+        )
 
     @classmethod
     def _parse_remote(
@@ -561,13 +572,14 @@ class Dataset:
         cls,
         input_path: Union[str, PathLike],
         output_path: Union[str, PathLike],
-        voxel_size: Tuple[float, float, float],
+        voxel_size: Optional[Tuple[float, float, float]] = None,
         name: Optional[str] = None,
         *,
         map_filepath_to_layer_name: Union[
             ConversionLayerMapping, Callable[[Path], str]
         ] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
         z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
+        voxel_size_with_unit: Optional[VoxelSize] = None,
         layer_name: Optional[str] = None,
         layer_category: Optional[LayerCategoryType] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
@@ -642,8 +654,17 @@ class Dataset:
                 map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
                     input_upath, input_files=input_files, use_bioformats=use_bioformats
                 )
+        if voxel_size_with_unit is None:
+            assert (
+                voxel_size is not None
+            ), "Please supply either voxel_size or voxel_size_with_unit."
+            voxel_size_with_unit = VoxelSize(voxel_size)
+        else:
+            assert (
+                voxel_size is None
+            ), "Please supply either voxel_size or voxel_size_with_unit not both."
 
-        ds = cls(output_path, voxel_size=voxel_size, name=name)
+        ds = cls(output_path, voxel_size_with_unit=voxel_size_with_unit, name=name)
 
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
@@ -717,12 +738,16 @@ class Dataset:
 
     @property
     def voxel_size(self) -> Tuple[float, float, float]:
-        return self._properties.scale
+        return self._properties.scale.to_nanometer()
 
     @property
     def scale(self) -> Tuple[float, float, float]:
         """Deprecated, use `voxel_size` instead."""
         warn_deprecated("scale", "voxel_size")
+        return self.voxel_size
+
+    @property
+    def voxel_size_with_unit(self) -> VoxelSize:
         return self._properties.scale
 
     @property
@@ -1651,6 +1676,7 @@ class Dataset:
         args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
         *,
+        voxel_size_with_unit: Optional[VoxelSize] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -1689,9 +1715,16 @@ class Dataset:
                 new_dataset_path
             ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr'`."
 
-        if voxel_size is None:
-            voxel_size = self.voxel_size
-        new_ds = Dataset(new_dataset_path, voxel_size=voxel_size, exist_ok=False)
+        if voxel_size_with_unit is None:
+            if voxel_size is None:
+                voxel_size_with_unit = self.voxel_size_with_unit
+            else:
+                voxel_size_with_unit = VoxelSize(voxel_size)
+        new_ds = Dataset(
+            new_dataset_path,
+            voxel_size_with_unit=voxel_size_with_unit,
+            exist_ok=False,
+        )
 
         with get_executor_for_args(args, executor) as executor:
             for layer in self.layers.values():
@@ -1729,7 +1762,7 @@ class Dataset:
         ), f"Cannot create symlink in remote path {new_dataset_path}"
         new_dataset = Dataset(
             new_dataset_path,
-            voxel_size=self.voxel_size,
+            voxel_size_with_unit=self.voxel_size_with_unit,
             name=name or self.name,
             exist_ok=False,
         )
@@ -1934,7 +1967,7 @@ class RemoteDataset(Dataset):
         try:
             super().__init__(
                 dataset_path,
-                voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN,
+                voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
                 exist_ok=True,
                 read_only=True,
             )
