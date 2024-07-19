@@ -14,26 +14,15 @@ from multiprocessing import cpu_count
 from os.path import relpath
 from pathlib import Path
 from shutil import copyfileobj
-from typing import (
-    Any,
-    Callable,
-    ContextManager,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Protocol,
-    Tuple,
-    TypeVar,
-)
+from typing import (Any, Callable, ContextManager, Dict, Iterable, Iterator,
+                    List, Mapping, Optional, Protocol, Tuple, TypeVar)
 
 import numpy as np
 import rich
-from cluster_tools import Executor, get_executor
 from rich.progress import Progress
 from upath import UPath
+
+from cluster_tools import Executor, get_executor
 
 times = {}
 

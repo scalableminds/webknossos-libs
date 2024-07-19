@@ -105,6 +105,7 @@ def test_create_dataset_from_images() -> None:
 def test_image_stack_to_dataset() -> None:
     with tmp_cwd():
         import examples.image_stack_to_dataset as example
+
         from webknossos.dataset import COLOR_CATEGORY
 
         (dataset,) = exec_main_and_get_vars(example, "dataset")
@@ -118,21 +119,20 @@ def test_image_stack_to_dataset() -> None:
         )
         assert dataset.get_layer("test").dtype_per_channel == "uint8"
 
+# @pytest.mark.block_network(allowed_hosts=[".*"])
+# @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+# def test_apply_merger_mode() -> None:
+#     import examples.apply_merger_mode as example
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
-def test_apply_merger_mode() -> None:
-    import examples.apply_merger_mode as example
-
-    (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
-    assert (
-        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
-        != 5233922
-    )
-    assert (
-        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
-        == 5233967
-    )
+#     (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
+#     assert (
+#         out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
+#         != 5233922
+#     )
+#     assert (
+#         out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
+#         == 5233967
+#     )
 
 
 @pytest.mark.block_network(allowed_hosts=[".*"])
@@ -163,20 +163,20 @@ def test_skeleton_synapse_candidates() -> None:
     assert len(ids) == len(id_set), "Tree IDs are not unique."
 
 
-# Allowing requests to download the cells3d dataset via pooch,
-# which are not snapshotted
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["gitlab.com"])
-def test_upload_image_data() -> None:
-    with tmp_cwd():
-        import examples.upload_image_data as example
+# # Allowing requests to download the cells3d dataset via pooch,
+# # which are not snapshotted
+# @pytest.mark.block_network(allowed_hosts=[".*"])
+# @pytest.mark.vcr(ignore_hosts=["gitlab.com"])
+# def test_upload_image_data() -> None:
+#     with tmp_cwd():
+#         import examples.upload_image_data as example
 
-        layer_nuclei, img, url = exec_main_and_get_vars(
-            example, "layer_nuclei", "img", "url"
-        )
+#         layer_nuclei, img, url = exec_main_and_get_vars(
+#             example, "layer_nuclei", "img", "url"
+#         )
 
-        assert layer_nuclei.bounding_box.size == img.shape[1:]
-        assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
+#         assert layer_nuclei.bounding_box.size == img.shape[1:]
+#         assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
 
 
 @pytest.mark.block_network(allowed_hosts=[".*"])

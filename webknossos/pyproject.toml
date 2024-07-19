@@ -28,7 +28,7 @@ classifiers = [
 include = ["webknossos/version.py"]  # included explicitly since it's in .gitignore
 
 [tool.poetry.dependencies]
-python = ">=3.9,<=3.12"
+python = ">=3.9,<3.13"
 aiohttp = "^3.8.1"
 attrs = ">=22.0.0"
 boltons = ">=21.0.0"
@@ -94,13 +94,13 @@ optional = true
 
 [tool.poetry.group.examples.dependencies]
 # packages for examples:
-fastremap = "^1.13.3"
+fastremap = "^1.15.0"
 pandas = "^2"
 pooch = "^1.5.2"
 s3fs = ">=2023.9.0"
 tabulate = "^0.9"
 scikit-learn = "^1.0.1"
-scikit-image = ">=0.23.0"
+scikit-image = "^0.24.0"
 
 [[tool.poetry.source]]
 name = "PyPI"
