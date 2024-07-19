@@ -15,8 +15,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/v7/datasets/scalable_minds/l4_sample_dev_sharing?sharingToken=ilDXmfQa2G8e719vb1U9YQ
   response:
-    body:
-      string: '{"name":"l4_sample_dev_sharing","dataSource":{"id":{"name":"l4_sample_dev_sharing","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8"},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1647612907522,"isEditable":false,"lastUsedByUser":0,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1647612907522,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
+    content: '{"name":"l4_sample_dev_sharing","dataSource":{"id":{"name":"l4_sample_dev_sharing","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8"},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1647612907522,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1647612907522,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
     headers:
       cache-control:
       - no-cache
@@ -33,9 +32,8 @@ interactions:
       - max-age=31536000; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: null
     headers: {}
@@ -2240,41 +2238,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/color/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=31536000; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/color/1/.zattrs
   response:
     body:
@@ -2307,6 +2270,41 @@ interactions:
     status:
       code: 404
       message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev_sharing/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
 - request:
     body: null
     headers: {}

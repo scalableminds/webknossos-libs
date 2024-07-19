@@ -17,8 +17,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/api/v7/userToken/generate
   response:
-    body:
-      string: '{"token":"7ezvaZwJXvrnqk4DgFCUbA"}'
+    content: '{"token":"xxxsecrettokenxxx"}'
     headers:
       cache-control:
       - no-cache
@@ -31,9 +30,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: ''
     headers:
@@ -50,8 +48,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/datastores
   response:
-    body:
-      string: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
+    content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
     headers:
       cache-control:
       - no-cache
@@ -64,9 +61,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: ''
     headers:
@@ -83,8 +79,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/user
   response:
-    body:
-      string: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1721389426206,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
       cache-control:
       - no-cache
@@ -97,9 +92,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: ''
     headers:
@@ -116,8 +110,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/dicom_dataset_2000-01-01_00-00-00/isValidNewName
   response:
-    body:
-      string: '{"isValid":true}'
+    content: '{"isValid":true}'
     headers:
       cache-control:
       - no-cache
@@ -130,9 +123,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: '{"uploadId": "2000-01-01T00-00-00__0011", "name": "dicom_dataset_2000-01-01_00-00-00",
       "organization": "Organization_X", "totalFileCount": 3, "initialTeams": [], "layersToLink":
@@ -155,8 +147,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/data/datasets/reserveUpload
   response:
-    body:
-      string: ''
+    content: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -171,21 +162,33 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/dicoms/1/header.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ndicoms/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n945\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
+      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n945\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ndicom_dataset_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n3\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\a\x01\0\0\0\0\0\0\0\0\n----\n"
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
+      \   \"id\": {\n        \"name\": \"dicom_dataset_2000-01-01_00-00-00\",\n        \"team\":
+      \"\"\n    },\n    \"scale\": {\n        \"factor\": [\n            12.0,\n            12.0,\n
+      \           12.0\n        ],\n        \"unit\": \"nanometer\"\n    },\n    \"dataLayers\":
+      [\n        {\n            \"name\": \"dicoms\",\n            \"category\": \"color\",\n
+      \           \"boundingBox\": {\n                \"topLeft\": [\n                    0,\n
+      \                   0,\n                    0\n                ],\n                \"width\":
+      274,\n                \"height\": 384,\n                \"depth\": 10\n            },\n
+      \           \"elementClass\": \"int8\",\n            \"dataFormat\": \"wkw\",\n
+      \           \"numChannels\": 1,\n            \"wkwResolutions\": [\n                {\n
+      \                   \"cubeLength\": 1024,\n                    \"resolution\":
+      [\n                        1,\n                        1,\n                        1\n
+      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
     headers:
       accept:
       - '*/*'
@@ -194,7 +197,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1546'
+      - '2523'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -204,8 +207,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    body:
-      string: ''
+    content: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -220,9 +222,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: '--
 
@@ -330,8 +331,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    body:
-      string: ''
+    content: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -346,34 +346,20 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n945\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
-      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/dicoms/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ndicoms/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n945\n--\nContent-Disposition:
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ndicom_dataset_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n3\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
-      \   \"id\": {\n        \"name\": \"dicom_dataset_2000-01-01_00-00-00\",\n        \"team\":
-      \"\"\n    },\n    \"scale\": {\n        \"factor\": [\n            12.0,\n            12.0,\n
-      \           12.0\n        ],\n        \"unit\": \"nanometer\"\n    },\n    \"dataLayers\":
-      [\n        {\n            \"name\": \"dicoms\",\n            \"category\": \"color\",\n
-      \           \"boundingBox\": {\n                \"topLeft\": [\n                    0,\n
-      \                   0,\n                    0\n                ],\n                \"width\":
-      274,\n                \"height\": 384,\n                \"depth\": 10\n            },\n
-      \           \"elementClass\": \"int8\",\n            \"dataFormat\": \"wkw\",\n
-      \           \"numChannels\": 1,\n            \"wkwResolutions\": [\n                {\n
-      \                   \"cubeLength\": 1024,\n                    \"resolution\":
-      [\n                        1,\n                        1,\n                        1\n
-      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\a\x01\0\0\0\0\0\0\0\0\n----\n"
     headers:
       accept:
       - '*/*'
@@ -382,7 +368,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '2523'
+      - '1546'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -392,8 +378,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
-    body:
-      string: ''
+    content: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -408,9 +393,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: '{"uploadId": "2000-01-01T00-00-00__0011"}'
     headers:
@@ -431,8 +415,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/data/datasets/finishUpload
   response:
-    body:
-      string: ''
+    content: ''
     headers:
       access-control-allow-origin:
       - '*'
@@ -447,9 +430,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: ''
     headers:
@@ -466,8 +448,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/dicom_dataset_2000-01-01_00-00-00
   response:
-    body:
-      string: '{"name":"dicom_dataset_2024-07-18_15-12-51","dataSource":{"id":{"name":"dicom_dataset_2024-07-18_15-12-51","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"resolutions":[[1,1,1]],"elementClass":"int8"}],"scale":{"factor":[12,12,12],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721315576802,"isEditable":true,"lastUsedByUser":1721315577102,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721315576802,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":5248507}'
+    content: '{"name":"dicom_dataset_2024-07-19_11-52-42","dataSource":{"id":{"name":"dicom_dataset_2024-07-19_11-52-42","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"resolutions":[[1,1,1]],"elementClass":"int8"}],"scale":{"factor":[12,12,12],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721389970186,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721389970186,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":5248507}'
     headers:
       cache-control:
       - no-cache
@@ -480,9 +461,8 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: null
     headers: {}
@@ -503,7 +483,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-18_15-12-51\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-19_11-52-42\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -547,7 +527,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-18_15-12-51\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-19_11-52-42\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -591,7 +571,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-18_15-12-51\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-19_11-52-42\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -622,7 +602,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"dicom_dataset_2024-07-18_15-12-51","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"dicom_dataset_2024-07-19_11-52-42","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -680,7 +660,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"dicom_dataset_2024-07-18_15-12-51","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"dicom_dataset_2024-07-19_11-52-42","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -720,7 +700,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-18_15-12-51/dicoms/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-19_11-52-42/dicoms/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -858,33 +838,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/dicoms/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|i1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,274,384,10],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '162'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/dicoms/1/.zattrs
   response:
     body:
@@ -913,6 +866,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/dicoms/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|i1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,274,384,10],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '162'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/dicoms/1
   response:
     body:
@@ -929,7 +909,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-18_15-12-51/dicoms/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-19_11-52-42/dicoms/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"

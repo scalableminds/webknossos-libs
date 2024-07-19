@@ -15,8 +15,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/health
   response:
-    body:
-      string: Ok
+    content: Ok
     headers:
       cache-control:
       - no-cache
@@ -29,7 +28,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 version: 1

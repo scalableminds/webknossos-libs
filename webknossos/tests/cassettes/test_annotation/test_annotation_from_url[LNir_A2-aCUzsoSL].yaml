@@ -15,8 +15,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/v7/shortLinks/byKey/LNir_A2-aCUzsoSL
   response:
-    body:
-      string: '{"_id":"638f5df40100006301d8ac1e","key":"LNir_A2-aCUzsoSL","longLink":"https://webknossos.org/annotations/61c20205010000cc004a6356#%7B%22position%22:%5B2830,4356,1792%5D,%22mode%22:%22orthogonal%22,%22zoomStep%22:1,%22activeNode%22:3,%22stateByLayer%22:%7B%22color%22:%7B%22isDisabled%22:false%7D,%22predictions%22:%7B%22isDisabled%22:true%7D,%223301cf7c-5efd-454b-87b8-0137d6056f9b%22:%7B%22isDisabled%22:false%7D,%22Skeleton%22:%7B%22isDisabled%22:false%7D%7D%7D"}'
+    content: '{"_id":"638f5df40100006301d8ac1e","key":"LNir_A2-aCUzsoSL","longLink":"https://webknossos.org/annotations/61c20205010000cc004a6356#%7B%22position%22:%5B2830,4356,1792%5D,%22mode%22:%22orthogonal%22,%22zoomStep%22:1,%22activeNode%22:3,%22stateByLayer%22:%7B%22color%22:%7B%22isDisabled%22:false%7D,%22predictions%22:%7B%22isDisabled%22:true%7D,%223301cf7c-5efd-454b-87b8-0137d6056f9b%22:%7B%22isDisabled%22:false%7D,%22Skeleton%22:%7B%22isDisabled%22:false%7D%7D%7D"}'
     headers:
       cache-control:
       - no-cache
@@ -33,9 +32,8 @@ interactions:
       - max-age=31536000; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: ''
     headers:
@@ -52,27 +50,36 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/v7/annotations/61c20205010000cc004a6356/download?skipVolumeData=true
   response:
-    body:
-      string: !!binary |
-        UEsDBBQACAgIAGh58lgAAAAAAAAAAAAAAAA9AAAAbDRkZW5zZV9tb3R0YV9ldF9hbF9kZW1vX3Yy
-        X19leHBsb3JhdGlvbmFsX19wb3R0b19fNGE2MzU2Lm5tbL1VTY/bNhC951ewutvil74Cey8pUARI
-        t0GLpmkuAiXRNrESKZD0end/fYYSLXt3fY5OwyHn8c3MG2rjD0rv3d0HhDaD9AJpMchtcrLKS5ug
-        1mgvtd8m90P/3+Rbu1b0IklvR/yh/CczDMpfhYpdw3dl2WHaVBntaNvkmImsxLuGFiVheZZRQiry
-        HtOrQTovhvEKjRSUMJLxoiCEvQ8RWhsvvDL6c3cVlZOWYoozTDB8bYsxFznL8vcARydtsK6Cvx5U
-        r8YR/eW9iQGjsHAGEp4qBw75NEoLdLWPOD3vpHayHoz3opa+Fn3dycHUjzRBxu6FVi8Tz20yVbTp
-        4azSnUtQJ11r1ThvJuj08K/tt8nB+9F9TNOTbB60cc64NcDMfIBAAJHoCQpE1pRV8IUKkZLkPEHP
-        t90v24SWa5ygo1aQpxbaTEktoGa3c9IHVDyB4CkGL/uhQWhwgJ5zKC3nGSt4vmzLTvmvxqmQSQCh
-        JZtxeCh9gCJFRV8d/zt2Dz2BBVcFds8X82Uxz0Evxgxf5KPsUbAA8WpPtF49ynvTSaS6bXKWS/q6
-        e5tpBKYTJHS9N3ZtwyV5UXJGWEUKkmPM+HlzHzYJJ6TIQYYYMqZsiWwmehmuSswqCgC85GV53hUz
-        wagREA04RSBZgzzJitAVJXXUWx30VmNMkpiOhkSi3uLqTNqKTh1dxA6FLqpyLjTl1aXQyBr/PVYS
-        zP8v5o9oKv1tnNqs9J9iP1mN8r/L0R+2SRncULXR9FG53h5hUIIKLhIoMIzzuQXXPOkNnmWVRZ5Z
-        9qt5koxlt3iyWzxvCvfX8KSsYIuk0ysRwMDsrwQRVsiZo23lVGwv7F76Rfbvz5DLmcsQpgvoJp0G
-        YzIbK3R7GA3wdfMQtfDMy2W1t+Y4RvvR9MdhLuWi9G+TL0E70feNaB++iGcJM+bkPoBM2SeoD2Sc
-        /2d2fg6SyTDPQcp3m99Wq3vjJfIH4VG8oRPwap+EQwZ+OF526HSQGnXmpHsDDYSZhgQcuvwS1qvV
-        +bWc77gULzpmocZbUWulANxLL3LMM/CHWhh7ftm+h3krs7duUAPnlL11/3jz6KWvqbyqZDonevch
-        tsLd/QRQSwcItqkS9joDAACvBwAAUEsBAhQAFAAICAgAaHnyWLapEvY6AwAArwcAAD0AAAAAAAAA
-        AAAAAAAAAAAAAGw0ZGVuc2VfbW90dGFfZXRfYWxfZGVtb192Ml9fZXhwbG9yYXRpb25hbF9fcG90
-        dG9fXzRhNjM1Ni5ubWxQSwUGAAAAAAEAAQBrAAAApQMAAAAA
+    content:
+      zip:
+        l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
+          \ <meta name=\"writer\" content=\"NmlWriter.scala\"/>\n  <meta name=\"writerGitCommit\"
+          content=\"afb4f88d02b952d2cb603a580fb2781365521191\"/>\n  <meta name=\"timestamp\"
+          content=\"1721389412919\"/>\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"/>\n
+          \ <meta name=\"username\" content=\"Philipp Otto\"/>\n  <parameters>\n    <experiment
+          name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\" description=\"\"
+          wkUrl=\"https://webknossos.org\"/>\n    <scale x=\"11.239999771118164\"
+          y=\"11.239999771118164\" z=\"28.0\" unit=\"nanometer\"/>\n    <offset x=\"0\"
+          y=\"0\" z=\"0\"/>\n    <time ms=\"1640104453746\"/>\n    <editPosition x=\"2830\"
+          y=\"4356\" z=\"1792\"/>\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"/>\n
+          \   <zoomLevel zoom=\"1.0\"/>\n    <activeNode id=\"3\"/>\n  </parameters>\n
+          \ <thing id=\"1\" color.r=\"0.6784313917160034\" color.g=\"0.1411764770746231\"
+          color.b=\"0.05098039284348488\" color.a=\"1.0\" name=\"explorative_2021-12-21_Philipp_Otto_001\">\n
+          \   <nodes>\n      <node id=\"1\" radius=\"1.0\" x=\"2798\" y=\"4249\" z=\"1792\"
+          rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\" inVp=\"0\" inMag=\"0\" bitDepth=\"8\"
+          interpolation=\"true\" time=\"1640104470521\"/>\n      <node id=\"2\" radius=\"1.0\"
+          x=\"2895\" y=\"4255\" z=\"1792\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\"
+          inVp=\"0\" inMag=\"0\" bitDepth=\"8\" interpolation=\"true\" time=\"1640104471535\"/>\n
+          \     <node id=\"3\" radius=\"1.0\" x=\"2830\" y=\"4356\" z=\"1792\" rotX=\"0.0\"
+          rotY=\"0.0\" rotZ=\"0.0\" inVp=\"0\" inMag=\"0\" bitDepth=\"8\" interpolation=\"true\"
+          time=\"1640104472373\"/>\n    </nodes>\n    <edges>\n      <edge source=\"2\"
+          target=\"3\"/>\n      <edge source=\"1\" target=\"2\"/>\n    </edges>\n
+          \ </thing>\n  <branchpoints/>\n  <comments/>\n  <groups/>\n  <volume id=\"0\"
+          name=\"Volume\" fallbackLayer=\"segmentation\" largestSegmentId=\"2504698\"><!--Note
+          that volume data was omitted when downloading this annotation.-->\n    <segments>\n
+          \     <segment id=\"2504698\" created=\"1640104460458\" anchorPositionX=\"2785\"
+          anchorPositionY=\"4423\" anchorPositionZ=\"1792\"/>\n    </segments>\n    <groups/>\n
+          \ </volume>\n</things>"
     headers:
       cache-control:
       - no-cache
@@ -81,7 +88,7 @@ interactions:
       content-disposition:
       - attachment;filename="l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.zip"
       content-length:
-      - '1062'
+      - '1063'
       content-type:
       - application/zip
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -91,9 +98,8 @@ interactions:
       - max-age=31536000; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: ''
     headers:
@@ -110,15 +116,14 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/v7/datasets/scalable_minds/l4dense_motta_et_al_demo_v2
   response:
-    body:
-      string: '{"name":"l4dense_motta_et_al_demo_v2","dataSource":{"id":{"name":"l4dense_motta_et_al_demo_v2","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint8","adminViewConfiguration":{"max":159,"min":63}},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint24","adminViewConfiguration":{"isDisabled":true}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint32","largestSegmentId":2504697,"adminViewConfiguration":{}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":"Segmentation
-        created with [Voxelytics](https://scalableminds.com/voxelytics) by [scalable
-        minds](https://scalableminds.com).\n\nRaw SBEM data and segmentation ground
-        truth by Max Planck Institute for Brain Research. As published in Dense connectomic
-        reconstruction in layer 4 of the somatosensory cortex by A Motta, M Berning,
-        KM Boergens, B Staffler, M Beining, S Loomba, P Hennig, H Wissler, M Helmstaedter
-        in Science on 24 October 2019. [10.1126/science.aay3134](https://science.sciencemag.org/content/early/2019/10/23/science.aay3134)","displayName":"L4
-        Mouse Cortex Segmentation","created":1627390556195,"isEditable":false,"lastUsedByUser":0,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1627390556195,"details":null,"isUnreported":false,"tags":["demo"],"folderId":"63889e760100005801712441","publication":null,"usedStorageBytes":null}'
+    content: '{"name":"l4dense_motta_et_al_demo_v2","dataSource":{"id":{"name":"l4dense_motta_et_al_demo_v2","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint8","adminViewConfiguration":{"max":159,"min":63}},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint24","adminViewConfiguration":{"isDisabled":true}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint32","largestSegmentId":2504697,"adminViewConfiguration":{}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":"Segmentation
+      created with [Voxelytics](https://scalableminds.com/voxelytics) by [scalable
+      minds](https://scalableminds.com).\n\nRaw SBEM data and segmentation ground
+      truth by Max Planck Institute for Brain Research. As published in Dense connectomic
+      reconstruction in layer 4 of the somatosensory cortex by A Motta, M Berning,
+      KM Boergens, B Staffler, M Beining, S Loomba, P Hennig, H Wissler, M Helmstaedter
+      in Science on 24 October 2019. [10.1126/science.aay3134](https://science.sciencemag.org/content/early/2019/10/23/science.aay3134)","displayName":"L4
+      Mouse Cortex Segmentation","created":1627390556195,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1627390556195,"details":null,"isUnreported":false,"tags":["demo"],"folderId":"63889e760100005801712441","publication":null,"usedStorageBytes":null}'
     headers:
       cache-control:
       - no-cache
@@ -135,9 +140,8 @@ interactions:
       - max-age=31536000; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: null
     headers: {}
@@ -1076,41 +1080,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2786,4254,3413],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=31536000; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/.zattrs
   response:
     body:
@@ -1143,6 +1112,41 @@ interactions:
     status:
       code: 404
       message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2786,4254,3413],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
 - request:
     body: null
     headers: {}

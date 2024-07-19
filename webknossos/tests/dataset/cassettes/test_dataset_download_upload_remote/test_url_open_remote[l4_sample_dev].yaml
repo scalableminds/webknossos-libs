@@ -15,8 +15,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/v7/datasets/scalable_minds/l4_sample_dev
   response:
-    body:
-      string: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":0,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
+    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
     headers:
       cache-control:
       - no-cache
@@ -33,9 +32,8 @@ interactions:
       - max-age=31536000; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 - request:
     body: null
     headers: {}

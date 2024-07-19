@@ -15,16 +15,15 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/buildinfo
   response:
-    body:
-      string: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b","ciBuild":"28678","scalaVersion":"2.13.11","version":"28678","sbtVersion":"1.9.6","datastoreApiVersion":"2.0","commitDate":"Thu
-        Jul 11 15:58:32 2024 +0200"},"schemaVersion":117,"httpApiVersioning":{"currentApiVersion":7,"oldestSupportedApiVersion":3},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
+    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b","ciBuild":"","scalaVersion":"2.13.11","version":"dev","sbtVersion":"1.9.6","datastoreApiVersion":"2.0","commitDate":"Thu
+      Jul 11 15:58:32 2024 +0200"},"schemaVersion":117,"httpApiVersioning":{"currentApiVersion":7,"oldestSupportedApiVersion":3},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '414'
+      - '407'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -32,7 +31,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
       - master-only
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
 version: 1
