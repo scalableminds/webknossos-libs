@@ -183,7 +183,7 @@ class SegmentationLayerProperties(LayerProperties):
 
 @attr.define
 class VoxelSize:
-    factor: Tuple[float, float, float]
+    factor: Tuple[float, float, float] = attr.field(converter=tuple)
     unit: LengthUnit = DEFAULT_LENGTH_UNIT
 
     def to_nanometer(self) -> Tuple[float, float, float]:
