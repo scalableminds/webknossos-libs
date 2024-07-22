@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Add a converter to the VoxelSize field `factor`, to ensure it is a tuple.
 
 
 ## [0.14.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.25) - 2024-07-18

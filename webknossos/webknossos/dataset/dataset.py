@@ -359,7 +359,7 @@ class Dataset:
             else:
                 assert (
                     self.voxel_size_with_unit == voxel_size_with_unit
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size} != {voxel_size})"
+                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
             if name is not None:
                 assert (
                     self.name == name
