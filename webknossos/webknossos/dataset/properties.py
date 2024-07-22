@@ -4,6 +4,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
     List,
     Optional,
     Tuple,
@@ -63,6 +64,18 @@ def _extract_num_channels(
             f"If the layer does not contain any data, you can also delete the layer and add it again.",
         ) from e
     return array.info.num_channels
+
+
+def float_tpl(voxel_size: Union[List, Tuple]) -> Iterable:
+    # Fix for mypy bug https://github.com/python/mypy/issues/5313.
+    # Solution based on other issue for the same bug: https://github.com/python/mypy/issues/8389.
+    return tuple(
+        (
+            voxel_size[0],
+            voxel_size[1],
+            voxel_size[2],
+        )
+    )
 
 
 _properties_floating_type_to_python_type: Dict[Union[str, type], np.dtype] = {
@@ -183,7 +196,7 @@ class SegmentationLayerProperties(LayerProperties):
 
 @attr.define
 class VoxelSize:
-    factor: Tuple[float, float, float] = attr.field(converter=tuple)
+    factor: Tuple[float, float, float] = attr.field(converter=float_tpl)
     unit: LengthUnit = DEFAULT_LENGTH_UNIT
 
     def to_nanometer(self) -> Tuple[float, float, float]:
