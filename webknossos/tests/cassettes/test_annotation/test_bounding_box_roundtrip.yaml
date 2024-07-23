@@ -1397,6 +1397,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
   response:
     body:
@@ -1421,33 +1448,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -1480,6 +1480,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
   response:
     body:
@@ -1504,33 +1531,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -1732,6 +1732,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
   response:
     body:
@@ -1756,33 +1783,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -2153,6 +2153,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
   response:
     body:
@@ -2177,33 +2204,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -2236,6 +2236,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
   response:
     body:
@@ -2260,33 +2287,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -2405,6 +2405,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
   response:
     body:
@@ -2429,33 +2456,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -2657,6 +2657,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
   response:
     body:
@@ -2681,33 +2708,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -2839,15 +2839,15 @@ interactions:
       zip:
         test_bounding_box_roundtrip.nml: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<things>\n
           \ <parameters>\n    <experiment name=\"l4_sample\" />\n    <scale x=\"11.239999771118164\"
-          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1721389424000\" />\n
+          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1721720641000\" />\n
           \   <taskBoundingBox color.a=\"1\" color.b=\"0.2\" color.g=\"0\" color.r=\"0.5\"
           depth=\"5\" height=\"5\" isVisible=\"true\" name=\"task_bbox\" topLeftX=\"10\"
           topLeftY=\"10\" topLeftZ=\"10\" width=\"5\" />\n    <userBoundingBox color.a=\"1\"
           color.b=\"0.1\" color.g=\"0.5\" color.r=\"0.2\" depth=\"64\" height=\"64\"
           id=\"0\" isVisible=\"true\" name=\"Unnamed Bounding Box\" topLeftX=\"1024\"
           topLeftY=\"512\" topLeftZ=\"128\" width=\"64\" />\n  </parameters>\n  <thing
-          color.a=\"1.0\" color.b=\"0.03741008746508889\" color.g=\"0.8163972305573544\"
-          color.r=\"0.928643197158662\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
+          color.a=\"1.0\" color.b=\"0.7751759449309874\" color.g=\"0.32504098729719666\"
+          color.r=\"0.6822800473781976\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
           \   <nodes>\n      <node id=\"3\" x=\"0.0\" y=\"0.0\" z=\"0.0\" />\n    </nodes>\n
           \   <edges />\n  </thing>\n  <branchpoints />\n  <comments>\n    <comment
           content=\"node 1\" node=\"3\" />\n  </comments>\n  <groups>\n    <group
@@ -2860,7 +2860,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '970'
+      - '972'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -2870,7 +2870,7 @@ interactions:
     method: POST
     uri: http://localhost:9000/api/v7/annotations/upload
   response:
-    content: '{"annotation":{"typ":"Explorational","id":"669a5171e600003c609a6ce6"},"messages":[{"success":"Successfully
+    content: '{"annotation":{"typ":"Explorational","id":"669f5f41010000b300bd3374"},"messages":[{"success":"Successfully
       uploaded file"}]}'
     headers:
       cache-control:
@@ -2900,25 +2900,25 @@ interactions:
       user-agent:
       - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v7/annotations/669a5171e600003c609a6ce6/download?skipVolumeData=false
+    uri: http://localhost:9000/api/v7/annotations/669f5f41010000b300bd3374/download?skipVolumeData=false
   response:
     content: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\"/>\n  <meta
       name=\"writerGitCommit\" content=\"e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b\"/>\n
-      \ <meta name=\"timestamp\" content=\"1721389425309\"/>\n  <meta name=\"annotationId\"
-      content=\"669a5171e600003c609a6ce6\"/>\n  <meta name=\"username\" content=\"user_A
+      \ <meta name=\"timestamp\" content=\"1721720641877\"/>\n  <meta name=\"annotationId\"
+      content=\"669f5f41010000b300bd3374\"/>\n  <meta name=\"username\" content=\"user_A
       BoyA\"/>\n  <parameters>\n    <experiment name=\"l4_sample\" organization=\"Organization_X\"
       description=\"\" wkUrl=\"http://localhost:9000\"/>\n    <scale x=\"11.239999771118164\"
       y=\"11.239999771118164\" z=\"28.0\" unit=\"nanometer\"/>\n    <offset x=\"0\"
-      y=\"0\" z=\"0\"/>\n    <time ms=\"1721389424894\"/>\n    <editPosition x=\"0\"
+      y=\"0\" z=\"0\"/>\n    <time ms=\"1721720641332\"/>\n    <editPosition x=\"0\"
       y=\"0\" z=\"0\"/>\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"/>\n
       \   <zoomLevel zoom=\"2.0\"/>\n    <userBoundingBox id=\"0\" name=\"Unnamed
       Bounding Box\" isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\"
       color.b=\"0.10000000149011612\" color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\"
       topLeftZ=\"128\" width=\"64\" height=\"64\" depth=\"64\"/>\n    <userBoundingBox
-      id=\"1\" name=\"task bounding box\" color.r=\"0.3432571763503842\" color.g=\"0.13523596020034423\"
-      color.b=\"0.8870759302866906\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
+      id=\"1\" name=\"task bounding box\" color.r=\"0.8340721319363305\" color.g=\"0.18529907669592283\"
+      color.b=\"0.4297086682487933\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
       topLeftZ=\"10\" width=\"5\" height=\"5\" depth=\"5\"/>\n  </parameters>\n  <thing
-      id=\"2\" color.r=\"0.9286432266235352\" color.g=\"0.8163972496986389\" color.b=\"0.03741008788347244\"
+      id=\"2\" color.r=\"0.6822800636291504\" color.g=\"0.3250409960746765\" color.b=\"0.775175929069519\"
       color.a=\"1.0\" name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\"
       radius=\"1.0\" x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\"
       inVp=\"0\" inMag=\"0\" bitDepth=\"0\" interpolation=\"false\" time=\"0\"/>\n
@@ -2931,7 +2931,7 @@ interactions:
       content-disposition:
       - attachment;filename="test_bounding_box_roundtrip.nml"
       content-length:
-      - '1683'
+      - '1681'
       content-type:
       - application/xml
       date: Mon, 01 Jan 2000 00:00:00 GMT
