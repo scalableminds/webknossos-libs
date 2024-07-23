@@ -448,7 +448,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/dicom_dataset_2000-01-01_00-00-00
   response:
-    content: '{"name":"dicom_dataset_2024-07-23_07-45-35","dataSource":{"id":{"name":"dicom_dataset_2024-07-23_07-45-35","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"resolutions":[[1,1,1]],"elementClass":"int8"}],"scale":{"factor":[12,12,12],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721720740815,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721720740815,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":5248507}'
+    content: '{"name":"dicom_dataset_2024-07-23_09-10-26","dataSource":{"id":{"name":"dicom_dataset_2024-07-23_09-10-26","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"resolutions":[[1,1,1]],"elementClass":"int8"}],"scale":{"factor":[12,12,12],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721725831257,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721725831257,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":5248507}'
     headers:
       cache-control:
       - no-cache
@@ -483,7 +483,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_07-45-35\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_09-10-26\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -527,7 +527,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_07-45-35\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_09-10-26\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -571,7 +571,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_07-45-35\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_09-10-26\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -602,7 +602,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"dicom_dataset_2024-07-23_07-45-35","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"dicom_dataset_2024-07-23_09-10-26","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -660,7 +660,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/dicom_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"dicom_dataset_2024-07-23_07-45-35","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"dicom_dataset_2024-07-23_09-10-26","team":"Organization_X"},"dataLayers":[{"name":"dicoms","category":"color","boundingBox":{"topLeft":[0,0,0],"width":274,"height":384,"depth":10},"elementClass":"int8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -700,7 +700,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_07-45-35/dicoms/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_09-10-26/dicoms/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -909,7 +909,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_07-45-35/dicoms/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/dicom_dataset_2024-07-23_09-10-26/dicoms/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"

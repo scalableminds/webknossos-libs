@@ -34,7 +34,7 @@ attrs = ">=22.0.0"
 boltons = ">=21.0.0"
 cattrs = ">=22.0.0"
 cluster_tools = { path = "../cluster_tools/", develop = true }
-fsspec = "^2023.9.0"
+fsspec = "^2024.6.0"
 httpx = "^0.27.0"
 loxun = "^2.0"
 natsort = "^8.4.0"
