@@ -11,18 +11,33 @@
       "elementClass": "uint8",
       "wkwResolutions": [
         {
-          "resolution": [1, 1, 1],
+          "resolution": [
+            1,
+            1,
+            1
+          ],
           "cubeLength": 1024
         }
       ],
       "numChannels": 1,
       "boundingBox": {
-        "topLeft": [0, 0, 0],
+        "topLeft": [
+          0,
+          0,
+          0
+        ],
         "width": 265,
         "height": 265,
         "depth": 257
       }
     }
   ],
-  "scale": [11.24, 11.24, 25.0]
+  "scale": {
+    "unit": "nanometer",
+    "factor": [
+      11.24,
+      11.24,
+      25.0
+    ]
+  }
 }

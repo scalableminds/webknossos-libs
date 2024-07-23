@@ -1,16 +1,35 @@
 import copy
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import attr
 import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from webknossos.dataset.length_unit import (
+    _LENGTH_UNIT_TO_NANOMETER,
+    LengthUnit,
+    length_unit_from_str,
+)
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
 from ._array import ArrayException, BaseArray, DataFormat
 from .layer_categories import LayerCategoryType
+
+DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
+DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
 
 
 def _extract_num_channels(
@@ -45,6 +64,18 @@ def _extract_num_channels(
             f"If the layer does not contain any data, you can also delete the layer and add it again.",
         ) from e
     return array.info.num_channels
+
+
+def float_tpl(voxel_size: Union[List, Tuple]) -> Iterable:
+    # Fix for mypy bug https://github.com/python/mypy/issues/5313.
+    # Solution based on other issue for the same bug: https://github.com/python/mypy/issues/8389.
+    return tuple(
+        (
+            voxel_size[0],
+            voxel_size[1],
+            voxel_size[2],
+        )
+    )
 
 
 _properties_floating_type_to_python_type: Dict[Union[str, type], np.dtype] = {
@@ -164,9 +195,23 @@ class SegmentationLayerProperties(LayerProperties):
 
 
 @attr.define
+class VoxelSize:
+    factor: Tuple[float, float, float] = attr.field(converter=float_tpl)
+    unit: LengthUnit = DEFAULT_LENGTH_UNIT
+
+    def to_nanometer(self) -> Tuple[float, float, float]:
+        conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self.unit]
+        return (
+            self.factor[0] * conversion_factor,
+            self.factor[1] * conversion_factor,
+            self.factor[2] * conversion_factor,
+        )
+
+
+@attr.define
 class DatasetProperties:
     id: Dict[str, str]
-    scale: Tuple[float, float, float]
+    scale: VoxelSize
     data_layers: List[
         Union[
             SegmentationLayerProperties,
@@ -204,6 +249,10 @@ def mag_unstructure(mag: Mag) -> List[int]:
 dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
+dataset_converter.register_structure_hook(
+    LengthUnit, lambda d, _: length_unit_from_str(d)
+)
+
 vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()  # noqa: E731
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
 dataset_converter.register_structure_hook(
@@ -222,7 +271,6 @@ dataset_converter.register_structure_hook_func(
 # Additionally we only want to unstructure attributes which don't have the default value
 # (e.g. Layer.default_view_configuration has many attributes which are all optionally).
 for cls in [
-    DatasetProperties,
     MagViewProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
@@ -251,6 +299,44 @@ for cls in [
             },
         ),
     )
+
+
+def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
+    def __dataset_properties_pre_structure(
+        d: Dict[str, Any], type_value: Type[DatasetProperties]
+    ) -> Dict[str, Any]:
+        if isinstance(d["scale"], list):
+            d["scale"] = {"unit": DEFAULT_LENGTH_UNIT_STR, "factor": d["scale"]}
+        obj = converter_fn(d, type_value)
+        return obj
+
+    return __dataset_properties_pre_structure
+
+
+dataset_converter.register_unstructure_hook(
+    DatasetProperties,
+    make_dict_unstructure_fn(
+        DatasetProperties,
+        dataset_converter,
+        **{
+            a.name: override(omit_if_default=True, rename=snake_to_camel_case(a.name))
+            for a in attr.fields(DatasetProperties)  # type: ignore[misc]
+        },
+    ),
+)
+dataset_converter.register_structure_hook(
+    DatasetProperties,
+    dataset_properties_pre_structure(
+        make_dict_structure_fn(
+            DatasetProperties,
+            dataset_converter,
+            **{
+                a.name: override(rename=snake_to_camel_case(a.name))
+                for a in attr.fields(DatasetProperties)  # type: ignore[misc]
+            },
+        )
+    ),
+)
 
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.

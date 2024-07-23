@@ -39,7 +39,7 @@ class WkApiClient(AbstractApiClient):
         base_wk_url: str,
         timeout_seconds: float,
         headers: Optional[Dict[str, str]] = None,
-        webknossos_api_version: int = 6,
+        webknossos_api_version: int = 7,
     ):
         super().__init__(timeout_seconds, headers)
         self.webknossos_api_version = webknossos_api_version

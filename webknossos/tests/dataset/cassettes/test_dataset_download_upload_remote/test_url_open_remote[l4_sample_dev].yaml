@@ -13,16 +13,16 @@ interactions:
       user-agent:
       - python-httpx/0.24.1
     method: GET
-    uri: https://webknossos.org/api/v6/datasets/scalable_minds/l4_sample_dev
+    uri: https://webknossos.org/api/v7/datasets/scalable_minds/l4_sample_dev
   response:
-    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","compute_segment_index_file","infer_nuclei","render_animation","convert_to_wkw","infer_neurons","export_tiff","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
+    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":["compute_mesh_file","infer_mitochondria","compute_segment_index_file","infer_nuclei","render_animation","infer_with_model","convert_to_wkw","train_model","infer_neurons","export_tiff","align_sections","materialize_volume_annotation","find_largest_segment_id"],"jobsEnabled":true},"owningOrganization":"scalable_minds","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"tags":[],"folderId":"638727a60b62b016daeaa60e","publication":null,"usedStorageBytes":null}'
     headers:
       cache-control:
       - no-cache
       connection:
       - keep-alive
       content-length:
-      - '1491'
+      - '1592'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -44,8 +44,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -70,7 +70,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1490'
+      - '1491'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -97,8 +97,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -123,7 +123,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1490'
+      - '1491'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -150,8 +150,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -176,7 +176,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1490'
+      - '1491'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -347,8 +347,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -371,7 +371,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -612,8 +612,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -636,7 +636,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -663,8 +663,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -687,7 +687,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1296'
+      - '1297'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -928,8 +928,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -952,7 +952,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1296'
+      - '1297'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -979,8 +979,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1003,7 +1003,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1296'
+      - '1297'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1244,8 +1244,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1268,7 +1268,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1296'
+      - '1297'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1295,8 +1295,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1319,7 +1319,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1560,8 +1560,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1584,7 +1584,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1611,8 +1611,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1635,7 +1635,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1303'
+      - '1304'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1876,8 +1876,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1900,7 +1900,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1303'
+      - '1304'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1927,8 +1927,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1951,7 +1951,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1303'
+      - '1304'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2192,8 +2192,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2216,7 +2216,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1303'
+      - '1304'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT

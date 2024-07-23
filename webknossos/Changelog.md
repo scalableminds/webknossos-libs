@@ -10,16 +10,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.24...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+- Added options `--layer-name` and `--mag` for compress command of the CLI. [#1141](https://github.com/scalableminds/webknossos-libs/pull/1141)
 
 ### Fixed
 - Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
+
+
+## [0.14.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.26) - 2024-07-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.25...v0.14.26)
+
+### Fixed
+- Add a converter to the VoxelSize field `factor`, to ensure it is a tuple.
+
+
+
+## [0.14.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.25) - 2024-07-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.24...v0.14.25)
+
+### Added
+- Added support for new voxel size that stores unit and updated to WEBKNOSSOS API version 7. [#1136](https://github.com/scalableminds/webknossos-libs/pull/1136)
 
 
 ## [0.14.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.24) - 2024-07-09
