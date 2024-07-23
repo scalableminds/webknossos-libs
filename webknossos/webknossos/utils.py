@@ -249,7 +249,7 @@ def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath):
         return UPath(
             str(path).rstrip("/"),
-            **path.storage_options.copy(),
+            **path.storage_options,
         )
     else:
         return Path(str(path).rstrip("/"))

@@ -28,8 +28,8 @@ class PimsImagejTiffReader(FramesSequenceND):
         path = Path(path)
         tiff = tifffile.TiffFile(path)
         assert tiff.is_imagej, f"{path} is not an ImageJ Tiff"
-        channels = tiff.imagej_metadata["channels"]
-        z = tiff.imagej_metadata["images"] / channels
+        channels = tiff.imagej_metadata["channels"]  # type: ignore
+        z = tiff.imagej_metadata["images"] / channels  # type: ignore
 
         self.memmap = tifffile.memmap(path)
         # shape should be zcyx

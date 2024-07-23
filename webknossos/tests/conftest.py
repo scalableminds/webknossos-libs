@@ -369,7 +369,6 @@ def _from_serialized_response(
 httpx_stubs._from_serialized_response = _from_serialized_response
 
 
-
 def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
     # Automatically add the vcr marker to all tests
     # which don't already have it.

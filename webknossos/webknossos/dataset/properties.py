@@ -320,8 +320,8 @@ dataset_converter.register_unstructure_hook(
         dataset_converter,
         **{
             a.name: override(omit_if_default=True, rename=snake_to_camel_case(a.name))
-            for a in attr.fields(DatasetProperties)  # type: ignore[misc]
-        },
+            for a in attr.fields(DatasetProperties)
+        },  # type: ignore[arg-type]
     ),
 )
 dataset_converter.register_structure_hook(
@@ -332,8 +332,8 @@ dataset_converter.register_structure_hook(
             dataset_converter,
             **{
                 a.name: override(rename=snake_to_camel_case(a.name))
-                for a in attr.fields(DatasetProperties)  # type: ignore[misc]
-            },
+                for a in attr.fields(DatasetProperties)
+            },  # type: ignore[arg-type]
         )
     ),
 )
