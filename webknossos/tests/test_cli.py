@@ -176,6 +176,42 @@ def test_compress() -> None:
         assert result.exit_code == 0
 
 
+def test_compress_with_args() -> None:
+    """Tests the functionality of compress subcommand."""
+
+    with tmp_cwd():
+        wkw_path = TESTDATA_DIR / "simple_wkw_dataset"
+        copytree(wkw_path, Path("testdata") / "simple_wkw_dataset")
+
+        result = runner.invoke(
+            app,
+            [
+                "compress",
+                "--layer-name",
+                "color",
+                "--mag",
+                "1",
+                "testdata/simple_wkw_dataset",
+            ],
+        )
+
+        assert result.exit_code == 0
+
+        result_with_wrong_mag = runner.invoke(
+            app,
+            [
+                "compress",
+                "--layer-name",
+                "color",
+                "--mag",
+                "2",
+                "testdata/simple_wkw_dataset",
+            ],
+        )
+
+        assert result_with_wrong_mag.exit_code == 1
+
+
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_convert() -> None:
     """Tests the functionality of convert subcommand."""
