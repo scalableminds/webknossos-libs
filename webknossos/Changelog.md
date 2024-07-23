@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.25...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.14.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.26) - 2024-07-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.25...v0.14.26)
+
+### Fixed
+- Add a converter to the VoxelSize field `factor`, to ensure it is a tuple.
+
 
 
 ## [0.14.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.25) - 2024-07-18
