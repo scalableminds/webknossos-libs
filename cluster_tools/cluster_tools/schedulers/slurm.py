@@ -61,7 +61,7 @@ SLURM_STATES = {
     "Unclear": ["SUSPENDED", "REVOKED", "SIGNALING", "SPECIAL_EXIT", "STAGE_OUT"],
 }
 
-SLURM_QUEUE_CHECK_INTERVAL = 1 if "pytest" in sys.modules else 60
+SLURM_QUEUE_CHECK_INTERVAL = 1 if "pytest" in sys.modules else os.environ.get("SLURM_QUEUE_CHECK_INTERVAL", 60)
 
 T = TypeVar("T")
 
@@ -84,6 +84,7 @@ class SlurmExecutor(ClusterExecutor):
         job_resources: Optional[Dict[str, Any]] = None,
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
+        interval: Optional[int] = None,
         **kwargs: Any,
     ):
         super().__init__(
@@ -93,6 +94,7 @@ class SlurmExecutor(ClusterExecutor):
             job_resources=job_resources,
             job_name=job_name,
             additional_setup_lines=additional_setup_lines,
+            interval=interval if interval else SLURM_QUEUE_CHECK_INTERVAL, 
             **kwargs,
         )
         self.submit_threads: List["_JobSubmitThread"] = []

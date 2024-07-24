@@ -95,6 +95,7 @@ class ClusterExecutor(futures.Executor):
         job_resources: Optional[Dict[str, Any]] = None,
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
+        interval: Optional[int] = 2,  
         **kwargs: Any,
     ):
         """
@@ -133,7 +134,7 @@ class ClusterExecutor(futures.Executor):
         self.keep_logs = keep_logs
         self.is_shutting_down = False
 
-        self.wait_thread = FileWaitThread(self._completion, self)
+        self.wait_thread = FileWaitThread(self._completion, self, interval)
         self.wait_thread.start()
 
         os.makedirs(self.cfut_dir, exist_ok=True)
