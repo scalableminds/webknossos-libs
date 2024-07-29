@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Added options `--layer-name` and `--mag` for compress command of the CLI. [#1141](https://github.com/scalableminds/webknossos-libs/pull/1141)
+- Added options `--chunk-shape` and `--chunks-per-shard` for convert command of the CLI. [#1150](https://github.com/scalableminds/webknossos-libs/pull/1150)
 
 ### Fixed
 
