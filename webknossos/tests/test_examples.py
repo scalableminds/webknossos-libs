@@ -364,3 +364,12 @@ def test_load_annotation_file() -> None:
 
     with tmp_cwd():
         load_annotation(annotation_file)
+
+
+def test_upsample_skeleton() -> None:
+    import examples.upsample_skeleton as example
+
+    with tmp_cwd():
+        (skeleton,) = exec_main_and_get_vars(example, "skeleton")
+
+        assert skeleton.voxel_size == (16, 16, 35)
