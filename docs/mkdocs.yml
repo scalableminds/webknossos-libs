@@ -107,6 +107,7 @@ nav:
               - webknossos-py/examples/download_segments.md
               - webknossos-py/examples/load_annotation_from_file.md
               - webknossos-py/examples/skeleton_path_length.md
+              - webknossos-py/examples/upsample_skeleton.md
           - Administration Examples:
               - webknossos-py/examples/user_times.md
               - webknossos-py/examples/annotation_project_administration.md
