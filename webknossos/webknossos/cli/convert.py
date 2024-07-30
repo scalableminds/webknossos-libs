@@ -9,6 +9,7 @@ from typing_extensions import Annotated
 
 from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
+from webknossos.geometry.vec3_int import Vec3Int
 
 from ..dataset import DataFormat, Dataset
 from ..utils import get_executor_for_args
@@ -80,6 +81,24 @@ def main(
             "(if not provided, final component of target path is used)"
         ),
     ] = None,
+    chunk_shape: Annotated[
+        Optional[str],
+        typer.Option(
+            help="Chunk shape of the target dataset. Should be a comma separated string "
+            "(e.g. 64,64,64).",
+            parser=Vec3Int.from_str,
+            metavar="Vec3Int",
+        ),
+    ] = None,
+    chunks_per_shard: Annotated[
+        Optional[str],
+        typer.Option(
+            help="Shard shape of the target dataset. Should be a comma separated string "
+            "(e.g. 64,64,64).",
+            parser=Vec3Int.from_str,
+            metavar="Vec3Int",
+        ),
+    ] = None,
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
     ] = False,
@@ -121,6 +140,8 @@ def main(
             target,
             name=name,
             voxel_size_with_unit=voxel_size_with_unit,
+            chunk_shape=chunk_shape,  # type: ignore
+            chunks_per_shard=chunks_per_shard,  # type: ignore
             data_format=data_format,
             executor=executor,
             compress=compress,

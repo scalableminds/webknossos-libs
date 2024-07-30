@@ -13,7 +13,7 @@ def main() -> None:
     """
     Scales a skeleton by a given factor. The factor is applied to the voxel size and the node positions.
 
-    This can be usefull when the skeletons are created in a downsampled version and need to be scaled back to the finest mag.
+    This can be useful when the skeletons are created in a downsampled version and need to be scaled back to the finest mag.
     """
     skeleton = wk.Skeleton.load(INPUT_PATH)
 
