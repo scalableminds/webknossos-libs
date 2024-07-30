@@ -110,9 +110,11 @@ class Vec3Int(VecInt):
 
     @staticmethod
     def from_str(string: str) -> "Vec3Int":
-        if re.match(r"\(\d+,\d+,\d+\)", string):
+        if re.match(r"^\(\d+,\d+,\d+\)$", string):
+            # matches a string that consists of three comma-separated digits in parentheses
             return Vec3Int(tuple(map(int, re.findall(r"\d+", string))))
         elif re.match(r"^\d+,\d+,\d+$", string):
+            # matches a string that consists of three digits separated by commas
             return Vec3Int(tuple(map(int, string.split(","))))
 
         return Vec3Int.full(int(string))
