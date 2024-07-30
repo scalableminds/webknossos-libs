@@ -598,12 +598,12 @@ class Dataset:
         executor: Optional[Executor] = None,
     ) -> "Dataset":
         """
-        This method imports image data in a folder as a WEBKNOSSOS dataset. The
-        image data can be 3D images (such as multipage tiffs) or stacks of 2D
-        images. In case of multiple 3D images or image stacks, those are mapped
-        to different layers. The exact mapping is handled by the argument
-        `map_filepath_to_layer_name`, which can be a pre-defined strategy from
-        the enum `ConversionLayerMapping`, or a custom callable, taking
+        This method imports image data in a folder or from a file as a
+        WEBKNOSSOS dataset. The image data can be 3D images (such as multipage
+        tiffs) or stacks of 2D images. In case of multiple 3D images or image
+        stacks, those are mapped to different layers. The exact mapping is handled
+        by the argument `map_filepath_to_layer_name`, which can be a pre-defined
+        strategy from the enum `ConversionLayerMapping`, or a custom callable, taking
         a path of an image file and returning the corresponding layer name. All
         files belonging to the same layer name are then grouped. In case of
         multiple files per layer, those are usually mapped to the z-dimension.
@@ -615,7 +615,9 @@ class Dataset:
 
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
-        Alternatively, a category can be enforced by passing `layer_category`.
+        The category decision is evaluated and corrected after data import with a
+        data driven approach. Alternatively, a category can be enforced by passing
+        `layer_category`.
 
         Further arguments behave as in `add_layer_from_images`, please also
         refer to its documentation.
