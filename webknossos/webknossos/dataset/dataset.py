@@ -598,12 +598,12 @@ class Dataset:
         executor: Optional[Executor] = None,
     ) -> "Dataset":
         """
-        This method imports image data in a folder as a WEBKNOSSOS dataset. The
-        image data can be 3D images (such as multipage tiffs) or stacks of 2D
-        images. In case of multiple 3D images or image stacks, those are mapped
-        to different layers. The exact mapping is handled by the argument
-        `map_filepath_to_layer_name`, which can be a pre-defined strategy from
-        the enum `ConversionLayerMapping`, or a custom callable, taking
+        This method imports image data in a folder or from a file as a
+        WEBKNOSSOS dataset. The image data can be 3D images (such as multipage
+        tiffs) or stacks of 2D images. In case of multiple 3D images or image
+        stacks, those are mapped to different layers. The exact mapping is handled
+        by the argument `map_filepath_to_layer_name`, which can be a pre-defined
+        strategy from the enum `ConversionLayerMapping`, or a custom callable, taking
         a path of an image file and returning the corresponding layer name. All
         files belonging to the same layer name are then grouped. In case of
         multiple files per layer, those are usually mapped to the z-dimension.
@@ -615,7 +615,9 @@ class Dataset:
 
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
-        Alternatively, a category can be enforced by passing `layer_category`.
+        The category decision is evaluated and corrected after data import with a
+        data driven approach. Alternatively, a category can be enforced by passing
+        `layer_category`.
 
         Further arguments behave as in `add_layer_from_images`, please also
         refer to its documentation.
@@ -630,11 +632,17 @@ class Dataset:
         if use_bioformats is not False:
             valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
-        input_files = [
-            i.relative_to(input_upath)
-            for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
-        ]
+        if input_upath.is_dir():
+            input_files = [
+                i.relative_to(input_upath)
+                for i in input_upath.glob("**/*")
+                if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
+            ]
+        else:
+            if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
+                input_files = [UPath(input_upath.name)]
+                input_upath = input_upath.parent
+
         if len(input_files) == 0:
             raise ValueError(
                 "Could not find any supported image data. "
@@ -683,7 +691,7 @@ class Dataset:
             ), f"Could not determine a layer name for {input_file}."
 
             filepaths_per_layer.setdefault(layer_name_from_mapping, []).append(
-                input_path / input_file
+                input_upath / input_file
             )
 
         if layer_name is not None:
