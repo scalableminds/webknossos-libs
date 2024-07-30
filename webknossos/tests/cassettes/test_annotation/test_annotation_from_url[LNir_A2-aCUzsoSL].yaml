@@ -54,8 +54,8 @@ interactions:
       zip:
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\"/>\n  <meta name=\"writerGitCommit\"
-          content=\"d08affc7720cad3b986c2e6426696b024055cfd6\"/>\n  <meta name=\"timestamp\"
-          content=\"1721725728919\"/>\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"/>\n
+          content=\"1333f7e57e93b9f906ec4ed8d9c1ec4b5d70aeeb\"/>\n  <meta name=\"timestamp\"
+          content=\"1722350959352\"/>\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"/>\n
           \ <meta name=\"username\" content=\"Philipp Otto\"/>\n  <parameters>\n    <experiment
           name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\" description=\"\"
           wkUrl=\"https://webknossos.org\"/>\n    <scale x=\"11.239999771118164\"
@@ -88,7 +88,7 @@ interactions:
       content-disposition:
       - attachment;filename="l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.zip"
       content-length:
-      - '1064'
+      - '1062'
       content-type:
       - application/zip
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -293,31 +293,10 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356
+    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
   response:
     body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
-        Combined datastore and tracingstore directory</title>\n    <meta name=\"robot\"
-        content=\"noindex\" />\n    <script type=\"text/javascript\">\n      // forward
-        to path with trailing slash\n      if (!window.location.pathname.endsWith('/'))
-        {\n        var url = window.location.protocol + '//' + \n                  window.location.host
-        + \n                  window.location.pathname + '/' + \n                  window.location.search;\n
-        \       window.location.replace(url);\n      }\n    </script>\n    \n    <style>\n
-        \     * {\n        font-family: \"Monospaced Number\", -apple-system, BlinkMacSystemFont,
-        \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft
-        YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align:
-        center\n      }\n      \n      ul {\n        list-style: none;\n      }\n\n
-        \     p#hint {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Combined datastore
-        and tracingstore directory \u201C61c20205010000cc004a6356\u201D folder.</p>\n
-        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
-        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
-        href=\"Volume\">Volume</a></li>\n      \n        <li><a href=\"color\">color</a></li>\n
-        \     \n        <li><a href=\"predictions\">predictions</a></li>\n      \n
-        \       <li><a href=\"segmentation\">segmentation</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
+      string: '{"id":{"name":"l4dense_motta_et_al_demo_v2","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"elementClass":"uint24","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":3,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"},{"name":"Volume","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504698,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -328,9 +307,9 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1673'
+      - '3452'
       content-type:
-      - text/html; charset=UTF-8
+      - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
@@ -443,6 +422,97 @@ interactions:
       - '1673'
       content-type:
       - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
+        Combined datastore and tracingstore directory</title>\n    <meta name=\"robot\"
+        content=\"noindex\" />\n    <script type=\"text/javascript\">\n      // forward
+        to path with trailing slash\n      if (!window.location.pathname.endsWith('/'))
+        {\n        var url = window.location.protocol + '//' + \n                  window.location.host
+        + \n                  window.location.pathname + '/' + \n                  window.location.search;\n
+        \       window.location.replace(url);\n      }\n    </script>\n    \n    <style>\n
+        \     * {\n        font-family: \"Monospaced Number\", -apple-system, BlinkMacSystemFont,
+        \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft
+        YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align:
+        center\n      }\n      \n      ul {\n        list-style: none;\n      }\n\n
+        \     p#hint {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Combined datastore
+        and tracingstore directory \u201C61c20205010000cc004a6356\u201D folder.</p>\n
+        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
+        \       <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"Volume\">Volume</a></li>\n      \n        <li><a href=\"color\">color</a></li>\n
+        \     \n        <li><a href=\"predictions\">predictions</a></li>\n      \n
+        \       <li><a href=\"segmentation\">segmentation</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '1673'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/datasource-properties.json
+  response:
+    body:
+      string: '{"id":{"name":"l4dense_motta_et_al_demo_v2","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"elementClass":"uint24","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":3,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"},{"name":"Volume","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,8],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[32,32,16],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[64,64,32],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[128,128,64],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[256,256,128],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[512,512,256],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[1024,1024,512],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504698,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '3452'
+      content-type:
+      - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
@@ -2237,41 +2307,6 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,174,265,213],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '163'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      strict-transport-security:
-      - max-age=31536000; includeSubDomains
-      x-frame-options:
-      - DENY
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zattrs
   response:
     body:
@@ -2304,6 +2339,41 @@ interactions:
     status:
       code: 404
       message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/annotations/zarr/61c20205010000cc004a6356/color/32-32-16/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,174,265,213],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
 - request:
     body: null
     headers: {}

@@ -1267,7 +1267,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/skin_segmented_2000-01-01_00-00-00
   response:
-    content: '{"name":"skin_segmented_2024-07-23_09-09-30","dataSource":{"id":{"name":"skin_segmented_2024-07-23_09-09-30","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":{"factor":[550,550,550],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721725793875,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721725793875,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":29005336}'
+    content: '{"name":"skin_segmented_2024-07-30_14-49-59","dataSource":{"id":{"name":"skin_segmented_2024-07-30_14-49-59","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":{"factor":[550,550,550],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722351023696,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722351023696,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":29005336}'
     headers:
       cache-control:
       - no-cache
@@ -1302,7 +1302,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1346,7 +1346,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1390,7 +1390,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1421,7 +1421,34 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"skin_segmented_2024-07-23_09-09-30","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+      string: '{"id":{"name":"skin_segmented_2024-07-30_14-49-59","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '594'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
+  response:
+    body:
+      string: '{"id":{"name":"skin_segmented_2024-07-30_14-49-59","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1479,7 +1506,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"skin_segmented_2024-07-23_09-09-30","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+      string: '{"id":{"name":"skin_segmented_2024-07-30_14-49-59","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1519,7 +1546,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1728,7 +1755,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1771,7 +1798,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1980,7 +2007,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2023,7 +2050,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/4-4-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/4-4-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2232,7 +2259,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/4-4-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/4-4-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2275,7 +2302,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/8-8-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/8-8-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2484,7 +2511,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/8-8-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/8-8-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2527,7 +2554,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/16-16-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/16-16-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2736,7 +2763,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-23_09-09-30/segmentation/16-16-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/skin_segmented_2024-07-30_14-49-59/segmentation/16-16-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
