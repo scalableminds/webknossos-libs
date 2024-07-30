@@ -240,10 +240,7 @@ def test_convert() -> None:
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_convert_single_file() -> None:
-    """Tests the functionality of convert subcommand."""
-
-    result_without_args = runner.invoke(app, ["convert"])
-    assert result_without_args.exit_code == 2
+    """Tests the functionality of convert subcommand when given single file instead of directory."""
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff" / "test.0000.tiff"
