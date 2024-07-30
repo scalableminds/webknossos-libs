@@ -21,6 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added options `--layer-name` and `--mag` for compress command of the CLI. [#1141](https://github.com/scalableminds/webknossos-libs/pull/1141)
 
 ### Fixed
+- Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
 
 
 ## [0.14.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.26) - 2024-07-22

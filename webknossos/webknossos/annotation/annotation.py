@@ -316,7 +316,8 @@ class Annotation:
                 "[DEPRECATION] `annotation_type` is deprecated for Annotation.download(), it should be omitted.",
                 DeprecationWarning,
             )
-
+        if webknossos_url is not None:
+            webknossos_url = webknossos_url.rstrip("/")
         if webknossos_url is not None and webknossos_url != _get_context().url:
             warnings.warn(
                 f"[INFO] The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
