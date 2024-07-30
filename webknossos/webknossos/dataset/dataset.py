@@ -638,7 +638,7 @@ class Dataset:
             ]
         else:
             if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
-                input_files = [input_upath.name]
+                input_files = [UPath(input_upath.name)]
                 input_upath = input_upath.parent
 
         if len(input_files) == 0:
