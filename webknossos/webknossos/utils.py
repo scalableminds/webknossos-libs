@@ -13,7 +13,7 @@ from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
 from pathlib import Path
-from shutil import copyfileobj
+from shutil import copyfileobj, move
 from typing import (
     Any,
     Callable,
@@ -291,6 +291,10 @@ def copytree(in_path: Path, out_path: Path) -> None:
                 "wb"
             ) as out_file:
                 copyfileobj(in_file, out_file)
+
+
+def movetree(in_path: Path, out_path: Path) -> None:
+    move(in_path, out_path)
 
 
 K = TypeVar("K")  # key
