@@ -15,11 +15,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added example for scaling a skeleton. [#1147](https://github.com/scalableminds/webknossos-libs/pull/1147)
 
 ### Changed
 - Added options `--layer-name` and `--mag` for compress command of the CLI. [#1141](https://github.com/scalableminds/webknossos-libs/pull/1141)
+- Added options `--chunk-shape` and `--chunks-per-shard` for convert command of the CLI. [#1150](https://github.com/scalableminds/webknossos-libs/pull/1150)
+- The `from_images` method of the `Dataset` supports directories and single files as `input_path` now. [#1152](https://github.com/scalableminds/webknossos-libs/pull/1152)
 
 ### Fixed
+- Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
 
 
 ## [0.14.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.26) - 2024-07-22
