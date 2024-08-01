@@ -102,6 +102,15 @@ def main(
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
     ] = False,
+    batch_size: Annotated[
+        Optional[int],
+        typer.Option(
+            help="Number of images to be processed in one batch (influences RAM consumption). "
+            "When creating a WKW dataset, batch-size must be a multiple of chunk-shape's z dimension. "
+            "When converting to Zarr, batch-size must be a multiple of the z dimension of the "
+            "shard shape (chunk-shape x chunks-per-shard).",
+        ),
+    ] = None,
     jobs: Annotated[
         int,
         typer.Option(
@@ -146,5 +155,6 @@ def main(
             executor=executor,
             compress=compress,
             layer_name=layer_name,
+            batch_size=batch_size,
             layer_category=category.value if category else None,
         )
