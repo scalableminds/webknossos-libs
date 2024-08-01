@@ -54,8 +54,8 @@ jobs:
         run: |
           cd ./dockered-slurm
 
-          echo docker-compose up
-          docker-compose up -d
+          echo docker compose up
+          docker compose up -d
 
           # Register cluster (with retry)
           for i in {1..5}; do
