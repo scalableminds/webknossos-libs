@@ -105,10 +105,10 @@ def main(
     batch_size: Annotated[
         Optional[int],
         typer.Option(
-            help="Number of images to be processed in one batch. "
-            "When creating a WKW dataset, batch_size must be a multiple of chunk_sizes z dimension. "
-            "When converting to Zarr, batch_size must be a multiple of the z dimension of the "
-            "shard_shape (chunk_shape x chunks-per-shard).",
+            help="Number of images to be processed in one batch (influences RAM consumption). "
+            "When creating a WKW dataset, batch-size must be a multiple of chunk-shape's z dimension. "
+            "When converting to Zarr, batch-size must be a multiple of the z dimension of the "
+            "shard shape (chunk-shape x chunks-per-shard).",
         ),
     ] = None,
     jobs: Annotated[
