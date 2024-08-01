@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added options `--chunk-shape` and `--chunks-per-shard` for convert command of the CLI. [#1150](https://github.com/scalableminds/webknossos-libs/pull/1150)
 - The `from_images` method of the `Dataset` supports directories and single files as `input_path` now. [#1152](https://github.com/scalableminds/webknossos-libs/pull/1152)
 - The number of pixel limit for JPG conversion is disabled now. [#1154](https://github.com/scalableminds/webknossos-libs/pull/1154)
+- Added option `--batch-size` to the convert command of the CLI. [#1158](https://github.com/scalableminds/webknossos-libs/pull/1158)
 
 ### Fixed
 - Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
