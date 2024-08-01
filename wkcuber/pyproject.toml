@@ -7,7 +7,7 @@ readme = "README.md"
 license = "AGPL-3.0"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
+python = ">=3.9,<=3.12"
 webknossos = { path = "../webknossos/", develop = true }
 
 [build-system]
