@@ -51,6 +51,7 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
+from webknossos.client.context import _get_context
 
 from ..dataset import (
     SEGMENTATION_CATEGORY,
@@ -149,6 +150,11 @@ class Annotation:
             assert (
                 self._voxel_size is not None
             ), "Please supply a voxel_size for Annotation()."
+            if self._organization_id is None:
+                self._organization_id = _get_context().organization_id
+            assert (
+                self._organization_id is not None
+            ), "Please supply an organization_id for Annotation()."
             self.skeleton = Skeleton(
                 dataset_name=self._dataset_name,
                 voxel_size=self._voxel_size,
