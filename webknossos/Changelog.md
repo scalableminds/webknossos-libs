@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...HEAD)
 
 ### Breaking Changes
+- Python version 3.8 is no longer officially supported. [#1068](https://github.com/scalableminds/webknossos-libs/pull/1068)
 
 ### Added
 - Added example for scaling a skeleton. [#1147](https://github.com/scalableminds/webknossos-libs/pull/1147)
