@@ -632,16 +632,16 @@ class Dataset:
         if use_bioformats is not False:
             valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
-        if input_upath.is_dir():
+        if input_upath.is_file():
+            if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
+                input_files = [UPath(input_upath.name)]
+                input_upath = input_upath.parent
+        else:
             input_files = [
                 i.relative_to(input_upath)
                 for i in input_upath.glob("**/*")
                 if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
             ]
-        else:
-            if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
-                input_files = [UPath(input_upath.name)]
-                input_upath = input_upath.parent
 
         if len(input_files) == 0:
             raise ValueError(
