@@ -11,7 +11,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: https://webknossos.org/api/v7/shortLinks/byKey/93zLg9U9vJ3c_UWp
   response:
@@ -46,7 +46,7 @@ interactions:
       host:
       - webknossos.org
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: https://webknossos.org/api/v7/datasets/scalable_minds/l4_sample_dev_sharing?sharingToken=ilDXmfQa2G8e719vb1U9YQ
   response:

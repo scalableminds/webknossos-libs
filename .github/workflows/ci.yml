@@ -38,7 +38,7 @@ jobs:
       max-parallel: 4
       matrix:
         executors: [multiprocessing, slurm, kubernetes, dask]
-        python-version: ["3.11", "3.10", "3.9", "3.8"]
+        python-version: ["3.12", "3.11", "3.10", "3.9"]
     defaults:
       run:
         working-directory: cluster_tools
@@ -54,8 +54,8 @@ jobs:
         run: |
           cd ./dockered-slurm
 
-          echo docker-compose up
-          docker-compose up -d
+          echo docker compose up
+          docker compose up -d
 
           # Register cluster (with retry)
           for i in {1..5}; do
@@ -138,7 +138,7 @@ jobs:
           PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
 
       - name: Run dask tests
-        if: ${{ matrix.executors == 'dask' && matrix.python-version != '3.8' }}
+        if: ${{ matrix.executors == 'dask' }}
         run: |
           cd tests
           PYTEST_EXECUTORS=dask poetry run python -m pytest -sv test_all.py test_dask.py
@@ -152,7 +152,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ["3.11", "3.10", "3.9", "3.8"]
+        python-version: ["3.12", "3.11", "3.10", "3.9"]
         group: [1, 2, 3]
       fail-fast: false
     defaults:

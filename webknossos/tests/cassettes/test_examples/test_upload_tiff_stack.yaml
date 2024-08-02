@@ -13,7 +13,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/api/v7/userToken/generate
   response:
@@ -44,7 +44,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datastores
   response:
@@ -75,7 +75,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/user
   response:
@@ -106,7 +106,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/tiff_dataset_2000-01-01_00-00-00/isValidNewName
   response:
@@ -143,7 +143,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets/reserveUpload
   response:
@@ -190,7 +190,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -314,7 +314,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -361,7 +361,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -485,7 +485,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -532,7 +532,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -656,7 +656,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -721,7 +721,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -758,7 +758,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets/finishUpload
   response:
@@ -791,11 +791,11 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/tiff_dataset_2000-01-01_00-00-00
   response:
-    content: '{"name":"tiff_dataset_2024-07-15_11-26-36","dataSource":{"id":{"name":"tiff_dataset_2024-07-15_11-26-36","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"resolutions":[[1,1,1],[2,2,2],[4,4,4]],"elementClass":"uint8","largestSegmentId":255}],"scale":{"factor":[12,12,12],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1721042809664,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1721042809664,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":15053503}'
+    content: '{"name":"tiff_dataset_2024-07-30_14-50-45","dataSource":{"id":{"name":"tiff_dataset_2024-07-30_14-50-45","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"resolutions":[[1,1,1],[2,2,2],[4,4,4]],"elementClass":"uint8","largestSegmentId":255}],"scale":{"factor":[12,12,12],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722351058910,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722351058910,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":15053503}'
     headers:
       cache-control:
       - no-cache
@@ -830,7 +830,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -874,7 +874,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -918,7 +918,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -949,7 +949,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2024-07-15_11-26-36","team":"Organization_X"},"dataLayers":[{"name":"tiff","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":255,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2024-07-30_14-50-45","team":"Organization_X"},"dataLayers":[{"name":"tiff","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":255,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -976,7 +976,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2024-07-15_11-26-36","team":"Organization_X"},"dataLayers":[{"name":"tiff","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":255,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2024-07-30_14-50-45","team":"Organization_X"},"dataLayers":[{"name":"tiff","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":255,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1034,7 +1034,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2024-07-15_11-26-36","team":"Organization_X"},"dataLayers":[{"name":"tiff","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":255,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2024-07-30_14-50-45","team":"Organization_X"},"dataLayers":[{"name":"tiff","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":255,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1074,7 +1074,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36/tiff/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45/tiff/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1283,7 +1283,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36/tiff/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45/tiff/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1326,7 +1326,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36/tiff/2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45/tiff/2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1535,7 +1535,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36/tiff/2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45/tiff/2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1578,7 +1578,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36/tiff/4\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45/tiff/4\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1787,7 +1787,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-15_11-26-36/tiff/4\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2024-07-30_14-50-45/tiff/4\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"

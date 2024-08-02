@@ -1270,9 +1270,9 @@ class Dataset:
             if len(pims_open_kwargs) > 0:
                 # Set parameters from this method as default
                 # if they are not part of the kwargs per layer:
-                pims_open_kwargs.setdefault("timepoint", timepoint)
-                pims_open_kwargs.setdefault("channel", channel)
-                pims_open_kwargs.setdefault("czi_channel", czi_channel)
+                pims_open_kwargs.setdefault("timepoint", timepoint)  # type: ignore
+                pims_open_kwargs.setdefault("channel", channel)  # type: ignore
+                pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
                 pims_image_sequence = pims_images.PimsImages(
                     images,
                     swap_xy=swap_xy,

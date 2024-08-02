@@ -294,13 +294,32 @@ def _make_vcr_request(httpx_request: httpx.Request, **_kwargs: Any) -> VcrReques
 httpx_stubs._make_vcr_request = _make_vcr_request
 
 
-def _to_serialized_response(httpx_reponse: httpx.Response) -> Dict[str, Any]:
-    return {
+async def _to_serialized_response(
+    httpx_reponse: httpx.Response, aread: bool
+) -> Dict[str, Any]:
+    # The content shouldn't already have been read in by HTTPX.
+    assert not hasattr(httpx_reponse, "_decoder")
+
+    # Retrieve the content, but without decoding it.
+    with patch.dict(httpx_reponse.headers, {"Content-Encoding": ""}):
+        if aread:
+            await httpx_reponse.aread()
+        else:
+            httpx_reponse.read()
+
+    result = {
         "status_code": httpx_reponse.status_code,
         "http_version": httpx_reponse.http_version,
         "headers": httpx_stubs._transform_headers(httpx_reponse),
         "content": _handle_special_formats(httpx_reponse.content),
     }
+    # As the content wasn't decoded, we restore the response to a state which
+    # will be capable of decoding the content for the consumer.
+    del httpx_reponse._decoder
+    httpx_reponse._content = httpx_reponse._get_content_decoder().decode(
+        httpx_reponse.content
+    )
+    return result
 
 
 httpx_stubs._to_serialized_response = _to_serialized_response

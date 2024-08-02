@@ -22,7 +22,7 @@ if __name__ == '__main__':
 ```
 
 ## Installation
-The `cluster_tools` package requires at least Python 3.8.
+The `cluster_tools` package requires at least Python 3.9.
 
 You can install it from [pypi](https://pypi.org/project/cluster_tools/), e.g. via pip:
 
