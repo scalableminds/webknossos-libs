@@ -14,7 +14,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
-from ._array import ArrayException, BaseArray, DataFormat
+from ._array import ArrayException, BaseArray, DataFormat, ZarritaArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -43,6 +43,7 @@ from ..utils import (
     copytree,
     get_executor_for_args,
     is_fs_path,
+    movetree,
     named_partial,
     rmtree,
     warn_deprecated,
@@ -654,6 +655,50 @@ class Layer:
             )
 
         return mag
+
+    def add_mag_from_zarrarray(
+        self,
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        path: PathLike,
+        move: bool = False,
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView:
+        """
+        Copies the data at `path` to the current layer of the dataset
+        via the filesystem and adds it as `mag`. When `move` flag is set
+        the array is moved, otherwise a copy of the zarrarray is created.
+        """
+        self.dataset._ensure_writable()
+        source_path = Path(path)
+
+        try:
+            ZarritaArray.open(source_path)
+        except ArrayException as e:
+            raise ValueError(
+                "The given path does not lead to a valid Zarr Array: "
+            ) from e
+        else:
+            mag = Mag(mag)
+            self._assert_mag_does_not_exist_yet(mag)
+            if move:
+                movetree(source_path, self.path / str(mag))
+            else:
+                copytree(source_path, self.path / str(mag))
+
+            mag_view = self.add_mag_for_existing_files(mag)
+
+            if extend_layer_bounding_box:
+                # assumption: the topleft of the bounding box is still the same, the size might differ
+                # axes of the layer and the zarr array provided are the same
+                zarray_size = (
+                    mag_view.info.shape[mag_view.info.dimension_names.index(axis)]
+                    for axis in self.bounding_box.axes
+                    if axis != "c"
+                )
+                size = self.bounding_box.size.pairmax(zarray_size)
+                self.bounding_box = self.bounding_box.with_size(size)
+
+            return mag_view
 
     def _create_dir_for_mag(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
