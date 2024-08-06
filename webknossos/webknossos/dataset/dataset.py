@@ -598,12 +598,12 @@ class Dataset:
         executor: Optional[Executor] = None,
     ) -> "Dataset":
         """
-        This method imports image data in a folder as a WEBKNOSSOS dataset. The
-        image data can be 3D images (such as multipage tiffs) or stacks of 2D
-        images. In case of multiple 3D images or image stacks, those are mapped
-        to different layers. The exact mapping is handled by the argument
-        `map_filepath_to_layer_name`, which can be a pre-defined strategy from
-        the enum `ConversionLayerMapping`, or a custom callable, taking
+        This method imports image data in a folder or from a file as a
+        WEBKNOSSOS dataset. The image data can be 3D images (such as multipage
+        tiffs) or stacks of 2D images. In case of multiple 3D images or image
+        stacks, those are mapped to different layers. The exact mapping is handled
+        by the argument `map_filepath_to_layer_name`, which can be a pre-defined
+        strategy from the enum `ConversionLayerMapping`, or a custom callable, taking
         a path of an image file and returning the corresponding layer name. All
         files belonging to the same layer name are then grouped. In case of
         multiple files per layer, those are usually mapped to the z-dimension.
@@ -615,7 +615,9 @@ class Dataset:
 
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
-        Alternatively, a category can be enforced by passing `layer_category`.
+        The category decision is evaluated and corrected after data import with a
+        data driven approach. Alternatively, a category can be enforced by passing
+        `layer_category`.
 
         Further arguments behave as in `add_layer_from_images`, please also
         refer to its documentation.
@@ -630,11 +632,17 @@ class Dataset:
         if use_bioformats is not False:
             valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
-        input_files = [
-            i.relative_to(input_upath)
-            for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
-        ]
+        if input_upath.is_file():
+            if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
+                input_files = [UPath(input_upath.name)]
+                input_upath = input_upath.parent
+        else:
+            input_files = [
+                i.relative_to(input_upath)
+                for i in input_upath.glob("**/*")
+                if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
+            ]
+
         if len(input_files) == 0:
             raise ValueError(
                 "Could not find any supported image data. "
@@ -683,7 +691,7 @@ class Dataset:
             ), f"Could not determine a layer name for {input_file}."
 
             filepaths_per_layer.setdefault(layer_name_from_mapping, []).append(
-                input_path / input_file
+                input_upath / input_file
             )
 
         if layer_name is not None:
@@ -1153,7 +1161,7 @@ class Dataset:
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
-        * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
+        * `batch_size`: size to process the images (influences RAM consumption), must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels or timepoints
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
@@ -1262,9 +1270,9 @@ class Dataset:
             if len(pims_open_kwargs) > 0:
                 # Set parameters from this method as default
                 # if they are not part of the kwargs per layer:
-                pims_open_kwargs.setdefault("timepoint", timepoint)
-                pims_open_kwargs.setdefault("channel", channel)
-                pims_open_kwargs.setdefault("czi_channel", czi_channel)
+                pims_open_kwargs.setdefault("timepoint", timepoint)  # type: ignore
+                pims_open_kwargs.setdefault("channel", channel)  # type: ignore
+                pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
                 pims_image_sequence = pims_images.PimsImages(
                     images,
                     swap_xy=swap_xy,

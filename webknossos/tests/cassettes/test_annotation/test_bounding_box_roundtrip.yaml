@@ -11,7 +11,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/user
   response:
@@ -42,7 +42,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
     uri: http://localhost:9000/api/v7/datasets/Organization_X/l4_sample
   response:
@@ -75,7 +75,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/api/v7/userToken/generate
   response:
@@ -416,6 +416,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zattrs
   response:
     body:
@@ -440,33 +467,6 @@ interactions:
     status:
       code: 404
       message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
 - request:
     body: null
     headers: {}
@@ -2866,15 +2866,15 @@ interactions:
       zip:
         test_bounding_box_roundtrip.nml: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<things>\n
           \ <parameters>\n    <experiment name=\"l4_sample\" />\n    <scale x=\"11.239999771118164\"
-          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1721042721000\" />\n
+          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1722350972000\" />\n
           \   <taskBoundingBox color.a=\"1\" color.b=\"0.2\" color.g=\"0\" color.r=\"0.5\"
           depth=\"5\" height=\"5\" isVisible=\"true\" name=\"task_bbox\" topLeftX=\"10\"
           topLeftY=\"10\" topLeftZ=\"10\" width=\"5\" />\n    <userBoundingBox color.a=\"1\"
           color.b=\"0.1\" color.g=\"0.5\" color.r=\"0.2\" depth=\"64\" height=\"64\"
           id=\"0\" isVisible=\"true\" name=\"Unnamed Bounding Box\" topLeftX=\"1024\"
           topLeftY=\"512\" topLeftZ=\"128\" width=\"64\" />\n  </parameters>\n  <thing
-          color.a=\"1.0\" color.b=\"0.8699112147575878\" color.g=\"0.7904050036686372\"
-          color.r=\"0.2055703058855518\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
+          color.a=\"1.0\" color.b=\"0.16875389843477318\" color.g=\"0.2087269466796553\"
+          color.r=\"0.9000952827746309\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
           \   <nodes>\n      <node id=\"3\" x=\"0.0\" y=\"0.0\" z=\"0.0\" />\n    </nodes>\n
           \   <edges />\n  </thing>\n  <branchpoints />\n  <comments>\n    <comment
           content=\"node 1\" node=\"3\" />\n  </comments>\n  <groups>\n    <group
@@ -2887,17 +2887,17 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '972'
+      - '974'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/api/v7/annotations/upload
   response:
-    content: '{"annotation":{"typ":"Explorational","id":"66950722010000b000905e23"},"messages":[{"success":"Successfully
+    content: '{"annotation":{"typ":"Explorational","id":"66a8fd7c010000ad00032756"},"messages":[{"success":"Successfully
       uploaded file"}]}'
     headers:
       cache-control:
@@ -2925,27 +2925,27 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v7/annotations/66950722010000b000905e23/download?skipVolumeData=false
+    uri: http://localhost:9000/api/v7/annotations/66a8fd7c010000ad00032756/download?skipVolumeData=false
   response:
     content: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\"/>\n  <meta
       name=\"writerGitCommit\" content=\"e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b\"/>\n
-      \ <meta name=\"timestamp\" content=\"1721042722353\"/>\n  <meta name=\"annotationId\"
-      content=\"66950722010000b000905e23\"/>\n  <meta name=\"username\" content=\"user_A
+      \ <meta name=\"timestamp\" content=\"1722350972809\"/>\n  <meta name=\"annotationId\"
+      content=\"66a8fd7c010000ad00032756\"/>\n  <meta name=\"username\" content=\"user_A
       BoyA\"/>\n  <parameters>\n    <experiment name=\"l4_sample\" organization=\"Organization_X\"
       description=\"\" wkUrl=\"http://localhost:9000\"/>\n    <scale x=\"11.239999771118164\"
       y=\"11.239999771118164\" z=\"28.0\" unit=\"nanometer\"/>\n    <offset x=\"0\"
-      y=\"0\" z=\"0\"/>\n    <time ms=\"1721042722008\"/>\n    <editPosition x=\"0\"
+      y=\"0\" z=\"0\"/>\n    <time ms=\"1722350972499\"/>\n    <editPosition x=\"0\"
       y=\"0\" z=\"0\"/>\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"/>\n
       \   <zoomLevel zoom=\"2.0\"/>\n    <userBoundingBox id=\"0\" name=\"Unnamed
       Bounding Box\" isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\"
       color.b=\"0.10000000149011612\" color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\"
       topLeftZ=\"128\" width=\"64\" height=\"64\" depth=\"64\"/>\n    <userBoundingBox
-      id=\"1\" name=\"task bounding box\" color.r=\"0.12451035602668081\" color.g=\"0.04033680521511296\"
-      color.b=\"0.7531504538819093\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
+      id=\"1\" name=\"task bounding box\" color.r=\"0.09494502605202915\" color.g=\"0.8815665145729926\"
+      color.b=\"0.8832161116246047\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
       topLeftZ=\"10\" width=\"5\" height=\"5\" depth=\"5\"/>\n  </parameters>\n  <thing
-      id=\"2\" color.r=\"0.2055703103542328\" color.g=\"0.7904049754142761\" color.b=\"0.8699111938476562\"
+      id=\"2\" color.r=\"0.9000952839851379\" color.g=\"0.2087269425392151\" color.b=\"0.16875389218330383\"
       color.a=\"1.0\" name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\"
       radius=\"1.0\" x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\"
       inVp=\"0\" inMag=\"0\" bitDepth=\"0\" interpolation=\"false\" time=\"0\"/>\n

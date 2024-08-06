@@ -249,7 +249,7 @@ def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath):
         return UPath(
             str(path).rstrip("/"),
-            **path._kwargs.copy(),
+            **path.storage_options,
         )
     else:
         return Path(str(path).rstrip("/"))
@@ -277,19 +277,24 @@ def rmtree(path: Path) -> None:
 
 
 def copytree(in_path: Path, out_path: Path) -> None:
-    def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Path]]:
-        yield (path, path.relative_to(base_path))
+    def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Tuple[str, ...]]]:
+        yield (path, tuple(p for p in path.parts if p not in base_path.parts))
         if path.is_dir():
             for p in path.iterdir():
                 yield from _walk(p, base_path)
 
+    def _append(path: Path, parts: Tuple[str, ...]) -> Path:
+        for p in parts:
+            path = path / p
+        return path
+
     for in_sub_path, sub_path in _walk(in_path, in_path):
         if in_sub_path.is_dir():
-            (out_path / sub_path).mkdir(parents=True, exist_ok=True)
+            _append(out_path, sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with (in_path / sub_path).open("rb") as in_file, (out_path / sub_path).open(
-                "wb"
-            ) as out_file:
+            with _append(in_path, sub_path).open("rb") as in_file, _append(
+                out_path, sub_path
+            ).open("wb") as out_file:
                 copyfileobj(in_file, out_file)
 
 

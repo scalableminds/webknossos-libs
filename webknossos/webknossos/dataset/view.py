@@ -443,7 +443,7 @@ class View:
                     mag1_size = None
                 else:
                     if relative_offset is None and absolute_offset is None:
-                        if type(self) == View:
+                        if type(self) is View:
                             offset_param = "relative_offset"
                         else:
                             offset_param = "absolute_offset"
@@ -459,7 +459,7 @@ class View:
                         mag1_size = size
             else:
                 view_class = type(self).__name__
-                if type(self) == View:
+                if type(self) is View:
                     offset_param = "relative_offset"
                 else:
                     offset_param = "absolute_offset"
@@ -564,7 +564,7 @@ class View:
         """
 
         view_class = type(self).__name__
-        if type(self) == View:
+        if type(self) is View:
             offset_param = "relative_bounding_box"
         else:
             offset_param = "absolute_bounding_box"
@@ -654,7 +654,7 @@ class View:
                     mag1_size = self.bounding_box.size
                 else:
                     if relative_offset is None and absolute_offset is None:
-                        if type(self) == View:
+                        if type(self) is View:
                             offset_param = "relative_offset"
                         else:
                             offset_param = "absolute_offset"
@@ -670,7 +670,7 @@ class View:
                         mag1_size = size
             else:
                 view_class = type(self).__name__
-                if type(self) == View:
+                if type(self) is View:
                     offset_param = "relative_offset"
                 else:
                     offset_param = "absolute_offset"

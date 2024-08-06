@@ -42,7 +42,7 @@ class PimsTiffReader(FramesSequenceND):
         if hasattr(_tiff, "pages"):
             _tmp = _tiff.pages[0]
         else:
-            _tmp = _tiff["pages"][0]
+            _tmp = _tiff["pages"][0]  # type: ignore
         assert _tmp is not None, "No pages found in tiff file."
         self._dtype = _tmp.dtype or np.dtype("uint8")
         self._shape = _tmp.shape
