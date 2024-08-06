@@ -50,12 +50,20 @@ class ApiBoundingBox:
 
 
 @attr.s(auto_attribs=True)
+class ApiAdditionalAxes:
+    name: str
+    bounds: Tuple[int, int]
+    index: int
+
+
+@attr.s(auto_attribs=True)
 class ApiDataLayer:
     name: str
     category: str
     element_class: str
     bounding_box: ApiBoundingBox
     resolutions: List[Tuple[int, int, int]]
+    additional_axes: Optional[List[ApiAdditionalAxes]] = None
     largest_segment_id: Optional[int] = None
     default_view_configuration: Optional[Dict[str, Any]] = None
 
@@ -74,6 +82,13 @@ class ApiDataSource:
 
 
 @attr.s(auto_attribs=True)
+class ApiMetadata:
+    key: str
+    type: str
+    value: Any
+
+
+@attr.s(auto_attribs=True)
 class ApiDataset:
     name: str
     is_public: bool
@@ -82,6 +97,7 @@ class ApiDataset:
     tags: List[str]
     data_store: ApiDataStore
     data_source: ApiDataSource
+    metadata: Optional[List[ApiMetadata]] = None
     display_name: Optional[str] = None
     description: Optional[str] = None
 
@@ -283,3 +299,4 @@ class ApiFolderWithParent:
     id: str
     name: str
     parent: Optional[str] = None
+    metadata: Optional[List[ApiMetadata]] = None

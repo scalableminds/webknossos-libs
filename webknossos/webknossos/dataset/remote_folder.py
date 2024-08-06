@@ -1,8 +1,8 @@
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import attr
 
-from ..client.api_client.models import ApiFolderWithParent
+from ..client.api_client.models import ApiFolderWithParent, ApiMetadata
 
 
 def _get_folder_path(
@@ -46,3 +46,18 @@ class RemoteFolder:
                 return cls(name=folder_info.name, id=folder_info.id)
 
         raise KeyError(f"Could not find folder {path}.")
+
+    @property
+    def metadata(self) -> Optional[List[ApiMetadata]]:
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        return client._get_json(f"/folders/{self.id}", ApiFolderWithParent).metadata
+
+    def set_metadata(self, metadata: Optional[List[ApiMetadata]]) -> None:
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        folder = client._get_json(f"/folders/{self.id}", ApiFolderWithParent)
+        folder.metadata = metadata
+        client._put_json(f"/folders/{self.id}", folder)
