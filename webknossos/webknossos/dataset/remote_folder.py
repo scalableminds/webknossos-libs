@@ -37,6 +37,7 @@ class RemoteFolder:
     def get_by_path(cls, path: str) -> "RemoteFolder":
         from ..client.context import _get_api_client
 
+        path = path.rstrip("/")
         client = _get_api_client(enforce_auth=True)
         folder_tree_response: List[ApiFolderWithParent] = client.folder_tree()
 
