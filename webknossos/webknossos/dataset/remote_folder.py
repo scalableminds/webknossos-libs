@@ -15,7 +15,7 @@ def _get_folder_path(
         return f"{_get_folder_path(next(f for f in all_folders if f.id == folder.parent), all_folders)}/{folder.name}"
 
 
-@attr.s(auto_attribs=True)
+@attr.define
 class RemoteFolder:
     id: str
     name: str
@@ -51,7 +51,7 @@ class RemoteFolder:
     def metadata(self) -> List[ApiMetadata]:
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         if metadata := client._get_json(f"/folders/{self.id}", ApiFolder).metadata:
             return metadata
         else:
