@@ -12,7 +12,7 @@ from .group import Group
 Vector3 = Tuple[float, float, float]
 
 
-@attr.define()
+@attr.define
 class Skeleton(Group):
     """
     Representation of the [skeleton](/webknossos/skeleton_annotation.html) of an `Annotation`.
