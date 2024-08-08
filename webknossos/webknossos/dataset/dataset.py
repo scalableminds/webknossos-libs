@@ -2054,8 +2054,10 @@ class RemoteDataset(Dataset):
             )
 
     @property
-    def metadata(self) -> Optional[List[ApiMetadata]]:
-        return self._get_dataset_info().metadata
+    def metadata(self) -> List[ApiMetadata]:
+        if metadata := self._get_dataset_info().metadata:
+            return metadata
+        return []
 
     @metadata.setter
     def metadata(self, metadata: Optional[List[ApiMetadata]]) -> None:

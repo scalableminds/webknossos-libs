@@ -299,4 +299,13 @@ class ApiFolderWithParent:
     id: str
     name: str
     parent: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiFolder:
+    id: str
+    name: str
+    allowed_teams: List[ApiTeam]
+    allowed_teams_cumulative: List[ApiTeam]
+    is_editable: bool
     metadata: Optional[List[ApiMetadata]] = None

@@ -8,21 +8,24 @@ def main() -> None:
     ):
         l4_sample_dataset = wk.Dataset.open_remote("l4_sample")
         # Access the metadata of the dataset
-        metadata = l4_sample_dataset.metadata
-        print(metadata)
+        dataset_metadata = l4_sample_dataset.metadata
+        print(dataset_metadata)
 
         # Edit the metadata of the dataset
-        assert metadata is not None
-        metadata.append(ApiMetadata(key="new_key", type="string", value="new_value"))
-        l4_sample_dataset.metadata = metadata
+        dataset_metadata.append(
+            ApiMetadata(key="new_key", type="string", value="new_value")
+        )
+        l4_sample_dataset.metadata = dataset_metadata
 
         # Access metadata of a folder
-        folder = l4_sample_dataset.folder
-        folder_metadata = folder.metadata
+        folder_metadata = l4_sample_dataset.folder.metadata
         print(folder_metadata)
 
         # Edit the metadata of the folder
-        folder.set_metadata(metadata=folder_metadata)
+        folder_metadata.append(
+            ApiMetadata(key="new_folder_key", type="string", value="new_folder_value")
+        )
+        l4_sample_dataset.folder.metadata = folder_metadata
 
 
 if __name__ == "__main__":
