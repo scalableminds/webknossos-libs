@@ -207,3 +207,14 @@ class WkApiClient(AbstractApiClient):
         return self.post_multipart_with_json_response(
             route, ApiTaskCreationResult, multipart_data=data, files=files
         )
+
+    def trigger_reload(
+        self,
+        organization_name: str,
+        dataset_name: str,
+        sharing_token: Optional[str] = None,
+    ):
+        route = (
+            f"/triggers/reload/{organization_name}/{dataset_name}?token={sharing_token}"
+        )
+        self._post(route)
