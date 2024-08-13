@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.15.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.0) - 2024-08-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...v0.15.0)
 
 ### Breaking Changes
 - Python version 3.8 is no longer officially supported. [#1068](https://github.com/scalableminds/webknossos-libs/pull/1068)
@@ -28,6 +40,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
+- Fix an issue where the remote folder was not found when the folder path query includes a trailing slash. [#1164](https://github.com/scalableminds/webknossos-libs/pull/1164)
+
 
 
 ## [0.14.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.26) - 2024-07-22
