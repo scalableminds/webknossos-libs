@@ -17,7 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
-- Updates zarrita to 0.2.6. [#1169](https://github.com/scalableminds/webknossos-libs/pull/1169)
+- Updates zarrita to 0.2.7. [#1169](https://github.com/scalableminds/webknossos-libs/pull/1169)
 
 ### Fixed
 
