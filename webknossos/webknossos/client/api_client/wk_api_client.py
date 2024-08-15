@@ -7,6 +7,7 @@ from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetAnnounceUpload,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
     ApiDataStoreToken,
@@ -103,6 +104,25 @@ class WkApiClient(AbstractApiClient):
     ) -> ApiDatasetIsValidNewNameResponse:
         route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
         return self._get_json(route, ApiDatasetIsValidNewNameResponse)
+
+    def dataset_trigger_reload(
+        self,
+        organization_name: str,
+        dataset_name: str,
+        sharing_token: Optional[str] = None,
+    ) -> None:
+        route = (
+            f"/triggers/reload/{organization_name}/{dataset_name}?token={sharing_token}"
+        )
+        self._post(route)
+
+    def dataset_reserve_manual_upload(
+        self,
+        dataset_announce: ApiDatasetAnnounceUpload,
+        sharing_token: Optional[str] = None,
+    ) -> None:
+        route = f"/data/datasets/reserveManualUpload?token={sharing_token}"
+        return self._post_json(route, dataset_announce)
 
     def datastore_list(self) -> List[ApiDataStore]:
         route = "/datastores"
@@ -207,14 +227,3 @@ class WkApiClient(AbstractApiClient):
         return self.post_multipart_with_json_response(
             route, ApiTaskCreationResult, multipart_data=data, files=files
         )
-
-    def trigger_reload(
-        self,
-        organization_name: str,
-        dataset_name: str,
-        sharing_token: Optional[str] = None,
-    ):
-        route = (
-            f"/triggers/reload/{organization_name}/{dataset_name}?token={sharing_token}"
-        )
-        self._post(route)
