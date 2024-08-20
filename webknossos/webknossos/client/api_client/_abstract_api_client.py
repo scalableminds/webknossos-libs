@@ -67,9 +67,9 @@ class AbstractApiClient(ABC):
         query: Optional[Query] = None,
         retry_count: int = 0,
         timeout_seconds: Optional[float] = None,
-    ) -> httpx.Response:
+    ) -> None:
         body_json = self._prepare_for_json(body_structured)
-        return self._post(
+        self._post(
             route,
             body_json=body_json,
             query=query,
