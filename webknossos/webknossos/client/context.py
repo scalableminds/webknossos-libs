@@ -194,6 +194,7 @@ class webknossos_context(ContextDecorator):
         ```
 
         You can specify the following arguments:
+        
         * `url`, by default [https://webknossos.org](https://www.webknossos.org),
         * `token`, as displayed on [https://webknossos.org/auth/token](https://webknossos.org/auth/token),
         * `timeout` to specify a custom network request timeout in seconds, `1800` (30min) by default.

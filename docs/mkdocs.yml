@@ -114,15 +114,15 @@ nav:
       - API Reference:
           - Overview: api/webknossos.md
           - Geometry:
-              - BoundingBox: api/webknossos/geometry/bounding_box.md
-              - NDBoundingBox: api/webknossos/geometry/nd_bounding_box.md
+              - BoundingBox: api/webknossos/geometry/boundingbox.md
+              - NDBoundingBox: api/webknossos/geometry/ndboundingbox.md
               - Mag: api/webknossos/geometry/mag.md
-              - Vec3Int: api/webknossos/geometry/vec3_int.md
-              - VecInt: api/webknossos/geometry/vec_int.md
+              - Vec3Int: api/webknossos/geometry/vec3int.md
+              - VecInt: api/webknossos/geometry/vecint.md
           - Dataset:
               - Dataset: api/webknossos/dataset/dataset.md
               - Layer: api/webknossos/dataset/layer.md
-              - MagView: api/webknossos/dataset/mag_view.md
+              - MagView: api/webknossos/dataset/magview.md
               - View: api/webknossos/dataset/view.md
           - Annotation: api/webknossos/annotation/annotation.md
           - Skeleton:
@@ -130,7 +130,7 @@ nav:
               - Group: api/webknossos/skeleton/group.md
               - Tree: api/webknossos/skeleton/tree.md
               - Node: api/webknossos/skeleton/node.md
-          - Authentication & Server Context: api/webknossos/client/context.md
+          - Authentication & Server Context: api/webknossos/client/webknossos_context.md
           - Administration:
               - User: api/webknossos/administration/user.md
               - Project: api/webknossos/administration/project.md
@@ -162,12 +162,43 @@ plugins:
       is_video: False
       mark: "youtube-video"
   - glightbox
+  - gen-files:
+      scripts:
+        - generate_api_doc_pages.py
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+            python:
+                options:
+                    show_source: false
+                    docstring_style: null
+                    docstring_section_style: list
+                    heading_level: 2
+                    inherited_members: true
+                    merge_init_into_class: true
+                    parameter_headings: true
+                    preload_modules: [webknossos]
+                    separate_signature: true
+                    show_root_heading: true
+                    show_root_full_path: true
+                    show_signature_annotations: true
+                    show_symbol_type_heading: true
+                    show_symbol_type_toc: true
+                    show_if_no_docstring: true
+                    signature_crossrefs: true
+                    summary: true
+                    unwrap_annotated: true
+                    line_length: 60
+                    filters:
+                        - "!^_"
+                        - "!^__"
+                        - "!RE$"
+                        - "!logger"
 
 markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
-  - md_extensions.pdoc_toc_extension
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.superfences
