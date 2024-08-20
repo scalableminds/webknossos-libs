@@ -1,6 +1,9 @@
 from typing import Dict, Optional, Tuple
 
+import httpx
+
 from webknossos.client.api_client.models import (
+    ApiDatasetAnnounceUpload,
     ApiDatasetUploadInformation,
     ApiReserveDatasetUploadInformation,
 )
@@ -32,7 +35,7 @@ class DatastoreApiClient(AbstractApiClient):
         upload_information: ApiDatasetUploadInformation,
         token: Optional[str],
         retry_count: int,
-    ) -> None:
+    ) -> httpx.Response:
         route = "/datasets/finishUpload"
         return self._post_json(
             route,
@@ -47,7 +50,7 @@ class DatastoreApiClient(AbstractApiClient):
         reserve_upload_information: ApiReserveDatasetUploadInformation,
         token: Optional[str],
         retry_count: int,
-    ) -> None:
+    ) -> httpx.Response:
         route = "/datasets/reserveUpload"
         return self._post_json(
             route,
@@ -55,6 +58,25 @@ class DatastoreApiClient(AbstractApiClient):
             query={"token": token},
             retry_count=retry_count,
         )
+
+    def dataset_trigger_reload(
+        self,
+        organization_name: str,
+        dataset_name: str,
+        token: Optional[str] = None,
+    ) -> httpx.Response:
+        route = f"/triggers/reload/{organization_name}/{dataset_name}"
+        query: Query = {"token": token}
+        return self._post(route, query=query)
+
+    def dataset_reserve_manual_upload(
+        self,
+        dataset_announce: ApiDatasetAnnounceUpload,
+        token: Optional[str],
+    ) -> httpx.Response:
+        route = "/datasets/reserveManualUpload"
+        query: Query = {"token": token}
+        return self._post_json(route, dataset_announce, query)
 
     def dataset_get_raw_data(
         self,

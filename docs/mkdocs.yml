@@ -99,6 +99,7 @@ nav:
               - webknossos-py/examples/remote_datasets.md
               - webknossos-py/examples/zarr_and_dask.md
               - webknossos-py/examples/convert_4d_tiff.md
+              - webknossos-py/examples/announce_dataset_upload.md
           - Annotation Examples:
               - webknossos-py/examples/apply_merger_mode.md
               - webknossos-py/examples/learned_segmenter.md

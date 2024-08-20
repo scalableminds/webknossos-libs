@@ -397,6 +397,37 @@ class Dataset:
         )
 
     @classmethod
+    def announce_manual_upload(
+        cls,
+        dataset_name: str,
+        organization: str,
+        initial_team_ids: List[str],
+        folder_id: str,
+        token: Optional[str] = None,
+    ) -> None:
+        """
+        Announces a manual dataset upload to webknossos. This is useful when users with access
+        to the file system of the datastore want to upload a dataset manually. It creates an entry
+        in the database and sets the access rights accordingly.
+        """
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.api_client.models import ApiDatasetAnnounceUpload
+        from ..client.context import _get_context
+
+        context = _get_context()
+        dataset_announce = ApiDatasetAnnounceUpload(
+            dataset_name=dataset_name,
+            organization=organization,
+            initial_team_ids=initial_team_ids,
+            folder_id=folder_id,
+        )
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
+        datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
+
+    @classmethod
     def _parse_remote(
         cls,
         dataset_name_or_url: str,
