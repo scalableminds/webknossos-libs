@@ -13,9 +13,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
-    uri: http://localhost:9000/api/v6/userToken/generate
+    uri: http://localhost:9000/api/v7/userToken/generate
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
@@ -44,9 +44,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datastores
+    uri: http://localhost:9000/api/v7/datastores
   response:
     content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
     headers:
@@ -75,9 +75,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/user
+    uri: http://localhost:9000/api/v7/user
   response:
     content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
@@ -106,9 +106,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/isValidNewName
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/isValidNewName
   response:
     content: '{"isValid":true}'
     headers:
@@ -143,7 +143,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets/reserveUpload
   response:
@@ -166,217 +166,10 @@ interactions:
     status_code: 200
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n2781\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
-      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2781\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
-      form-data; name=\"name\"\n\ntest_remote_metadata_2000-01-01_00-00-00\n--\nContent-Disposition:
-      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
-      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
-      \   \"id\": {\n        \"name\": \"l4_sample_dev\",\n        \"team\": \"\"\n
-      \   },\n    \"scale\": [\n        11.239999771118164,\n        11.239999771118164,\n
-      \       28.0\n    ],\n    \"dataLayers\": [\n        {\n            \"name\":
-      \"color\",\n            \"category\": \"color\",\n            \"boundingBox\":
-      {\n                \"topLeft\": [\n                    2807,\n                    4352,\n
-      \                   1794\n                ],\n                \"width\": 10,\n
-      \               \"height\": 10,\n                \"depth\": 10\n            },\n
-      \           \"elementClass\": \"uint8\",\n            \"dataFormat\": \"wkw\",\n
-      \           \"numChannels\": 1,\n            \"defaultViewConfiguration\": {\n
-      \               \"color\": [\n                    255,\n                    219,\n
-      \                   219\n                ],\n                \"intensityRange\":
-      [\n                    70.0,\n                    180.0\n                ]\n
-      \           },\n            \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
-      512,\n                    \"resolution\": [\n                        1,\n                        1,\n
-      \                       1\n                    ]\n                },\n                {\n
-      \                   \"cubeLength\": 512,\n                    \"resolution\":
-      [\n                        2,\n                        2,\n                        1\n
-      \                   ]\n                },\n                {\n                    \"cubeLength\":
-      512,\n                    \"resolution\": [\n                        4,\n                        4,\n
-      \                       2\n                    ]\n                }\n            ]\n
-      \       },\n        {\n            \"name\": \"segmentation\",\n            \"category\":
-      \"segmentation\",\n            \"boundingBox\": {\n                \"topLeft\":
-      [\n                    2807,\n                    4352,\n                    1794\n
-      \               ],\n                \"width\": 10,\n                \"height\":
-      10,\n                \"depth\": 10\n            },\n            \"elementClass\":
-      \"uint32\",\n            \"dataFormat\": \"wkw\",\n            \"numChannels\":
-      1,\n            \"largestSegmentId\": 5238529,\n            \"wkwResolutions\":
-      [\n                {\n                    \"cubeLength\": 512,\n                    \"resolution\":
-      [\n                        1,\n                        1,\n                        1\n
-      \                   ]\n                },\n                {\n                    \"cubeLength\":
-      512,\n                    \"resolution\": [\n                        2,\n                        2,\n
-      \                       1\n                    ]\n                },\n                {\n
-      \                   \"cubeLength\": 512,\n                    \"resolution\":
-      [\n                        4,\n                        4,\n                        2\n
-      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '4369'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.24.1
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: '--
-
-      Content-Disposition: form-data; name="resumableChunkSize"
-
-
-      104857600
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalSize"
-
-
-      603665
-
-      --
-
-      Content-Disposition: form-data; name="resumableType"
-
-
-
-      --
-
-      Content-Disposition: form-data; name="resumableIdentifier"
-
-
-      2000-01-01T00-00-00__0011/color/1/z3/y8/x5.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableFilename"
-
-
-      x5.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableRelativePath"
-
-
-      color/1/z3/y8/x5.wkw
-
-      --
-
-      Content-Disposition: form-data; name="resumableTotalChunks"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableChunkNumber"
-
-
-      1
-
-      --
-
-      Content-Disposition: form-data; name="resumableCurrentChunkSize"
-
-
-      603665
-
-      --
-
-      Content-Disposition: form-data; name="owningOrganization"
-
-
-      Organization_X
-
-      --
-
-      Content-Disposition: form-data; name="name"
-
-
-      test_remote_metadata_2000-01-01_00-00-00
-
-      --
-
-      Content-Disposition: form-data; name="totalFileCount"
-
-
-      13
-
-      --
-
-      Content-Disposition: form-data; name="file"; filename="upload"
-
-      Content-Type: application/octet-stream<omitted> --'
-    headers:
-      accept:
-      - '*/*'
-      accept-encoding:
-      - gzip, deflate
-      connection:
-      - keep-alive
-      content-length:
-      - '605209'
-      content-type:
-      - multipart/form-data; boundary=fffffff0000000
-      host:
-      - localhost:9000
-      user-agent:
-      - python-httpx/0.24.1
-    method: POST
-    uri: http://localhost:9000/data/datasets
-  response:
-    content: ''
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '0'
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    http_version: HTTP/1.1
-    status_code: 200
-- request:
-    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ncolor/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -391,13 +184,13 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1552'
+      - '1560'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -521,7 +314,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -545,9 +338,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/4-4-2/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ncolor/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -568,7 +361,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -692,7 +485,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -716,9 +509,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/2-2-1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\ncolor/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -733,13 +526,13 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1560'
+      - '1552'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -773,7 +566,7 @@ interactions:
       Content-Disposition: form-data; name="resumableTotalSize"
 
 
-      2179295
+      603665
 
       --
 
@@ -786,7 +579,7 @@ interactions:
       Content-Disposition: form-data; name="resumableIdentifier"
 
 
-      2000-01-01T00-00-00__0011/segmentation/1/z3/y8/x5.wkw
+      2000-01-01T00-00-00__0011/color/1/z3/y8/x5.wkw
 
       --
 
@@ -800,7 +593,7 @@ interactions:
       Content-Disposition: form-data; name="resumableRelativePath"
 
 
-      segmentation/1/z3/y8/x5.wkw
+      color/1/z3/y8/x5.wkw
 
       --
 
@@ -821,7 +614,7 @@ interactions:
       Content-Disposition: form-data; name="resumableCurrentChunkSize"
 
 
-      2179295
+      603665
 
       --
 
@@ -857,13 +650,13 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '2180855'
+      - '605209'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -887,9 +680,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -904,13 +697,13 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1566'
+      - '1574'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -1034,7 +827,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -1058,9 +851,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-2/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -1081,7 +874,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -1205,7 +998,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -1229,9 +1022,9 @@ interactions:
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
       form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
-      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
-      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
@@ -1246,13 +1039,221 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1574'
+      - '1566'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      2179295
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      2179295
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_remote_metadata_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2180855'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.27.0
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n2852\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
+      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2852\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_remote_metadata_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
+      \   \"id\": {\n        \"name\": \"l4_sample_dev\",\n        \"team\": \"\"\n
+      \   },\n    \"scale\": {\n        \"factor\": [\n            11.239999771118164,\n
+      \           11.239999771118164,\n            28.0\n        ],\n        \"unit\":
+      \"nanometer\"\n    },\n    \"dataLayers\": [\n        {\n            \"name\":
+      \"color\",\n            \"category\": \"color\",\n            \"boundingBox\":
+      {\n                \"topLeft\": [\n                    2807,\n                    4352,\n
+      \                   1794\n                ],\n                \"width\": 10,\n
+      \               \"height\": 10,\n                \"depth\": 10\n            },\n
+      \           \"elementClass\": \"uint8\",\n            \"dataFormat\": \"wkw\",\n
+      \           \"numChannels\": 1,\n            \"defaultViewConfiguration\": {\n
+      \               \"color\": [\n                    255,\n                    219,\n
+      \                   219\n                ],\n                \"intensityRange\":
+      [\n                    70.0,\n                    180.0\n                ]\n
+      \           },\n            \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        1,\n                        1,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        2,\n                        2,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        4,\n                        4,\n
+      \                       2\n                    ]\n                }\n            ]\n
+      \       },\n        {\n            \"name\": \"segmentation\",\n            \"category\":
+      \"segmentation\",\n            \"boundingBox\": {\n                \"topLeft\":
+      [\n                    2807,\n                    4352,\n                    1794\n
+      \               ],\n                \"width\": 10,\n                \"height\":
+      10,\n                \"depth\": 10\n            },\n            \"elementClass\":
+      \"uint32\",\n            \"dataFormat\": \"wkw\",\n            \"numChannels\":
+      1,\n            \"largestSegmentId\": 5238529,\n            \"wkwResolutions\":
+      [\n                {\n                    \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        1,\n                        1,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        2,\n                        2,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        4,\n                        4,\n                        2\n
+      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4440'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets
   response:
@@ -1289,7 +1290,7 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
     uri: http://localhost:9000/data/datasets/finishUpload
   response:
@@ -1322,16 +1323,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1351,8 +1352,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1361,7 +1362,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1375,7 +1376,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1517'
+      - '1518'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1396,8 +1397,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1406,7 +1407,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1420,7 +1421,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1517'
+      - '1518'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1441,8 +1442,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1451,7 +1452,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -1465,7 +1466,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1517'
+      - '1518'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1483,7 +1484,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_remote_metadata_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1510,7 +1511,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_remote_metadata_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1568,7 +1569,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_remote_metadata_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1598,8 +1599,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1608,7 +1609,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1620,7 +1621,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1319'
+      - '1320'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1636,6 +1637,34 @@ interactions:
     headers: {}
     method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/test_remote_metadata_2000-01-01_00-00-00/color/1/zarr.json
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/test_remote_metadata_2000-01-01_00-00-00/color/1/.zattrs
   response:
     body:
       string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
@@ -1686,34 +1715,6 @@ interactions:
     status:
       code: 200
       message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/test_remote_metadata_2000-01-01_00-00-00/color/1/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 404
-      message: Not Found
 - request:
     body: null
     headers: {}
@@ -1807,8 +1808,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1817,7 +1818,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1829,7 +1830,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1319'
+      - '1320'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1850,8 +1851,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1860,7 +1861,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1872,7 +1873,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1323'
+      - '1324'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2059,8 +2060,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2069,7 +2070,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2081,7 +2082,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1323'
+      - '1324'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2102,8 +2103,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2112,7 +2113,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2124,7 +2125,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1323'
+      - '1324'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2311,8 +2312,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2321,7 +2322,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2333,7 +2334,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1323'
+      - '1324'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2354,8 +2355,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2364,7 +2365,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2376,7 +2377,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1326'
+      - '1327'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2563,8 +2564,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2573,7 +2574,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2585,7 +2586,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1326'
+      - '1327'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2606,8 +2607,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2616,7 +2617,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2628,7 +2629,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1330'
+      - '1331'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2815,8 +2816,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2825,7 +2826,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2837,7 +2838,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1330'
+      - '1331'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2858,8 +2859,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2868,7 +2869,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -2880,7 +2881,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1330'
+      - '1331'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3067,8 +3068,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -3077,7 +3078,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-03-14_12-25-08/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/test_remote_metadata_2024-07-30_14-48-56/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -3089,7 +3090,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1330'
+      - '1331'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4399,16 +4400,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4430,16 +4431,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4460,9 +4461,9 @@ interactions:
       [70, 180]}}, {"name": "segmentation", "category": "segmentation", "elementClass":
       "uint32", "boundingBox": {"topLeft": [2807, 4352, 1794], "width": 10, "height":
       10, "depth": 10}, "resolutions": [[1, 1, 1], [2, 2, 1], [4, 4, 2]], "largestSegmentId":
-      5238529, "defaultViewConfiguration": null}], "status": null, "scale": [11.239999771118164,
-      11.239999771118164, 28.0]}, "displayName": "Test Remote Dataset", "description":
-      null}'
+      5238529, "defaultViewConfiguration": null}], "status": null, "scale": {"unit":
+      "nanometer", "factor": [11.239999771118164, 11.239999771118164, 28.0]}}, "displayName":
+      "Test Remote Dataset", "description": null}'
     headers:
       accept:
       - '*/*'
@@ -4471,23 +4472,23 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '992'
+      - '1025'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":"Test
-      Remote Dataset","created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":"Test
+      Remote Dataset","created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1285'
+      - '1315'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4509,17 +4510,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":"Test
-      Remote Dataset","created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":"Test
+      Remote Dataset","created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1285'
+      - '1315'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4541,17 +4542,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":"Test
-      Remote Dataset","created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":"Test
+      Remote Dataset","created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1285'
+      - '1315'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4572,8 +4573,9 @@ interactions:
       [70, 180]}}, {"name": "segmentation", "category": "segmentation", "elementClass":
       "uint32", "boundingBox": {"topLeft": [2807, 4352, 1794], "width": 10, "height":
       10, "depth": 10}, "resolutions": [[1, 1, 1], [2, 2, 1], [4, 4, 2]], "largestSegmentId":
-      5238529, "defaultViewConfiguration": null}], "status": null, "scale": [11.239999771118164,
-      11.239999771118164, 28.0]}, "displayName": null, "description": null}'
+      5238529, "defaultViewConfiguration": null}], "status": null, "scale": {"unit":
+      "nanometer", "factor": [11.239999771118164, 11.239999771118164, 28.0]}}, "displayName":
+      null, "description": null}'
     headers:
       accept:
       - '*/*'
@@ -4582,22 +4584,22 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '975'
+      - '1008'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4619,16 +4621,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4650,16 +4652,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4681,16 +4683,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4711,9 +4713,9 @@ interactions:
       [70, 180]}}, {"name": "segmentation", "category": "segmentation", "elementClass":
       "uint32", "boundingBox": {"topLeft": [2807, 4352, 1794], "width": 10, "height":
       10, "depth": 10}, "resolutions": [[1, 1, 1], [2, 2, 1], [4, 4, 2]], "largestSegmentId":
-      5238529, "defaultViewConfiguration": null}], "status": null, "scale": [11.239999771118164,
-      11.239999771118164, 28.0]}, "displayName": null, "description": "My awesome
-      test description"}'
+      5238529, "defaultViewConfiguration": null}], "status": null, "scale": {"unit":
+      "nanometer", "factor": [11.239999771118164, 11.239999771118164, 28.0]}}, "displayName":
+      null, "description": "My awesome test description"}'
     headers:
       accept:
       - '*/*'
@@ -4722,23 +4724,23 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1000'
+      - '1033'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":"My
-      awesome test description","displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":"My
+      awesome test description","displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1293'
+      - '1323'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4760,17 +4762,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":"My
-      awesome test description","displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":"My
+      awesome test description","displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1293'
+      - '1323'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4792,17 +4794,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":"My
-      awesome test description","displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":"My
+      awesome test description","displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1293'
+      - '1323'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4823,8 +4825,9 @@ interactions:
       [70, 180]}}, {"name": "segmentation", "category": "segmentation", "elementClass":
       "uint32", "boundingBox": {"topLeft": [2807, 4352, 1794], "width": 10, "height":
       10, "depth": 10}, "resolutions": [[1, 1, 1], [2, 2, 1], [4, 4, 2]], "largestSegmentId":
-      5238529, "defaultViewConfiguration": null}], "status": null, "scale": [11.239999771118164,
-      11.239999771118164, 28.0]}, "displayName": null, "description": null}'
+      5238529, "defaultViewConfiguration": null}], "status": null, "scale": {"unit":
+      "nanometer", "factor": [11.239999771118164, 11.239999771118164, 28.0]}}, "displayName":
+      null, "description": null}'
     headers:
       accept:
       - '*/*'
@@ -4833,22 +4836,22 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '975'
+      - '1008'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4870,16 +4873,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4901,16 +4904,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4932,16 +4935,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1268'
+      - '1298'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -4962,8 +4965,9 @@ interactions:
       [70, 180]}}, {"name": "segmentation", "category": "segmentation", "elementClass":
       "uint32", "boundingBox": {"topLeft": [2807, 4352, 1794], "width": 10, "height":
       10, "depth": 10}, "resolutions": [[1, 1, 1], [2, 2, 1], [4, 4, 2]], "largestSegmentId":
-      5238529, "defaultViewConfiguration": null}], "status": null, "scale": [11.239999771118164,
-      11.239999771118164, 28.0]}, "displayName": null, "description": null}'
+      5238529, "defaultViewConfiguration": null}], "status": null, "scale": {"unit":
+      "nanometer", "factor": [11.239999771118164, 11.239999771118164, 28.0]}}, "displayName":
+      null, "description": null}'
     headers:
       accept:
       - '*/*'
@@ -4972,22 +4976,22 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '974'
+      - '1007'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1267'
+      - '1297'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5009,16 +5013,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1267'
+      - '1297'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5040,16 +5044,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1267'
+      - '1297'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5071,16 +5075,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1267'
+      - '1297'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5102,16 +5106,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1267'
+      - '1297'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5133,8 +5137,8 @@ interactions:
       "elementClass": "uint32", "boundingBox": {"topLeft": [2807, 4352, 1794], "width":
       10, "height": 10, "depth": 10}, "resolutions": [[1, 1, 1], [2, 2, 1], [4, 4,
       2]], "largestSegmentId": 5238529, "defaultViewConfiguration": null}], "status":
-      null, "scale": [11.239999771118164, 11.239999771118164, 28.0]}, "displayName":
-      null, "description": null}'
+      null, "scale": {"unit": "nanometer", "factor": [11.239999771118164, 11.239999771118164,
+      28.0]}}, "displayName": null, "description": null}'
     headers:
       accept:
       - '*/*'
@@ -5143,23 +5147,23 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '986'
+      - '1019'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1279'
+      - '1309'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5181,17 +5185,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1279'
+      - '1309'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5213,17 +5217,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1279'
+      - '1309'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5245,8 +5249,8 @@ interactions:
       "segmentation", "elementClass": "uint32", "boundingBox": {"topLeft": [2807,
       4352, 1794], "width": 10, "height": 10, "depth": 10}, "resolutions": [[1, 1,
       1], [2, 2, 1], [4, 4, 2]], "largestSegmentId": 5238529, "defaultViewConfiguration":
-      null}], "status": null, "scale": [11.239999771118164, 11.239999771118164, 28.0]},
-      "displayName": null, "description": null}'
+      null}], "status": null, "scale": {"unit": "nanometer", "factor": [11.239999771118164,
+      11.239999771118164, 28.0]}}, "displayName": null, "description": null}'
     headers:
       accept:
       - '*/*'
@@ -5255,23 +5259,23 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1000'
+      - '1033'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1322'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5293,17 +5297,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1322'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5325,17 +5329,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1322'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5357,8 +5361,8 @@ interactions:
       "category": "segmentation", "elementClass": "uint32", "boundingBox": {"topLeft":
       [2807, 4352, 1794], "width": 10, "height": 10, "depth": 10}, "resolutions":
       [[1, 1, 1], [2, 2, 1], [4, 4, 2]], "largestSegmentId": 5238529, "defaultViewConfiguration":
-      null}], "status": null, "scale": [11.239999771118164, 11.239999771118164, 28.0]},
-      "displayName": null, "description": null}'
+      null}], "status": null, "scale": {"unit": "nanometer", "factor": [11.239999771118164,
+      11.239999771118164, 28.0]}}, "displayName": null, "description": null}'
     headers:
       accept:
       - '*/*'
@@ -5367,23 +5371,23 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1014'
+      - '1047'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1305'
+      - '1335'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5405,17 +5409,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1305'
+      - '1335'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5437,11 +5441,11 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/sharingToken
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/sharingToken
   response:
-    content: '{"sharingToken":"VEwIEJilcWyzrETwqIwhmQ"}'
+    content: '{"sharingToken":"s38NuEh8Lq54uawPfF5TDA"}'
     headers:
       cache-control:
       - no-cache
@@ -5468,17 +5472,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1305'
+      - '1335'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5500,9 +5504,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/teams
+    uri: http://localhost:9000/api/v7/teams
   response:
     content: '[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X"},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X"},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X"}]'
     headers:
@@ -5535,9 +5539,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/teams
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/teams
   response:
     content: '["570b9f4b2a7c0e3b008da6ec"]'
     headers:
@@ -5566,17 +5570,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1469'
+      - '1499'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5602,9 +5606,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/teams
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00/teams
   response:
     content: '["570b9f4b2a7c0e3b008da6ec"]'
     headers:
@@ -5633,17 +5637,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1469'
+      - '1499'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5665,9 +5669,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/folders/tree
+    uri: http://localhost:9000/api/v7/folders/tree
   response:
     content: '[{"id":"570b9f4e4bb848d08880712a","name":"A subfolder!","parent":"570b9f4e4bb848d0885ea917","isEditable":true},{"id":"570b9f4e4bb848d08880712b","name":"Another
       subfolder!","parent":"570b9f4e4bb848d0885ea917","isEditable":true},{"id":"570b9f4e4bb848d0885ea917","name":"Organization_X","parent":null,"isEditable":true}]'
@@ -5697,17 +5701,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1469'
+      - '1499'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5730,8 +5734,8 @@ interactions:
       "category": "segmentation", "elementClass": "uint32", "boundingBox": {"topLeft":
       [2807, 4352, 1794], "width": 10, "height": 10, "depth": 10}, "resolutions":
       [[1, 1, 1], [2, 2, 1], [4, 4, 2]], "largestSegmentId": 5238529, "defaultViewConfiguration":
-      null}], "status": null, "scale": [11.239999771118164, 11.239999771118164, 28.0]},
-      "displayName": null, "description": null}'
+      null}], "status": null, "scale": {"unit": "nanometer", "factor": [11.239999771118164,
+      11.239999771118164, 28.0]}}, "displayName": null, "description": null}'
     headers:
       accept:
       - '*/*'
@@ -5740,23 +5744,23 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1101'
+      - '1134'
       content-type:
       - application/json
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: PATCH
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d08880712a","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1469'
+      - '1499'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5778,17 +5782,17 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/test_remote_metadata_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_remote_metadata_2024-03-14_12-25-08","dataSource":{"id":{"name":"test_remote_metadata_2024-03-14_12-25-08","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1710419109142,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1710419109142,"details":null,"isUnreported":false,"tags":["category
+    content: '{"name":"test_remote_metadata_2024-07-30_14-48-56","dataSource":{"id":{"name":"test_remote_metadata_2024-07-30_14-48-56","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1722350937274,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1722350937274,"details":null,"isUnreported":false,"tags":["category
       0","category 1","category 2"],"folderId":"570b9f4e4bb848d08880712a","publication":null,"usedStorageBytes":8346451}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1469'
+      - '1499'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -5810,9 +5814,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/folders/tree
+    uri: http://localhost:9000/api/v7/folders/tree
   response:
     content: '[{"id":"570b9f4e4bb848d08880712a","name":"A subfolder!","parent":"570b9f4e4bb848d0885ea917","isEditable":true},{"id":"570b9f4e4bb848d08880712b","name":"Another
       subfolder!","parent":"570b9f4e4bb848d0885ea917","isEditable":true},{"id":"570b9f4e4bb848d0885ea917","name":"Organization_X","parent":null,"isEditable":true}]'

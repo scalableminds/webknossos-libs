@@ -10,6 +10,8 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
+from webknossos.dataset.data_format import DataFormat
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     NDArrayLike,
@@ -45,9 +47,11 @@ def _find_mag_path_on_disk(
         return long_mag_file_path
 
 
-def _compress_cube_job(args: Tuple[View, View]) -> None:
-    source_view, target_view = args
-    target_view.write(source_view.read())
+def _compress_cube_job(args: Tuple[View, View, int]) -> None:
+    source_view, target_view, _i = args
+    target_view.write(
+        source_view.read(), absolute_bounding_box=target_view.bounding_box
+    )
 
 
 class MagView(View):
@@ -269,8 +273,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bbox: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bbox: Optional[NDBoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
@@ -287,8 +291,8 @@ class MagView(View):
             size,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
-            relative_bbox=relative_bbox,
-            absolute_bbox=absolute_bbox,
+            relative_bounding_box=relative_bounding_box,
+            absolute_bounding_box=absolute_bounding_box,
             read_only=read_only,
         )
 
@@ -371,20 +375,21 @@ class MagView(View):
             voxel_size=self.layer.dataset.voxel_size,
             exist_ok=True,
         )
-        compressed_mag = compressed_dataset.get_or_add_layer(
+        compressed_layer = compressed_dataset.get_or_add_layer(
             layer_name=self.layer.name,
             category=self.layer.category,
             dtype_per_channel=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
             data_format=self.layer.data_format,
             largest_segment_id=self.layer._get_largest_segment_id_maybe(),
-        ).get_or_add_mag(
+        )
+        compressed_layer.bounding_box = self.layer.bounding_box
+        compressed_mag = compressed_layer.get_or_add_mag(
             mag=self.mag,
             chunk_shape=self.info.chunk_shape,
             chunks_per_shard=self.info.chunks_per_shard,
             compress=True,
         )
-        compressed_mag.layer.bounding_box = self.layer.bounding_box
 
         logging.info(
             "Compressing mag {0} in '{1}'".format(
@@ -392,24 +397,38 @@ class MagView(View):
             )
         )
         with get_executor_for_args(args, executor) as executor:
-            job_args = []
-            for bbox in self.get_bounding_boxes_on_disk():
-                bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
-                if not bbox.is_empty():
-                    bbox = bbox.align_with_mag(self.mag, ceil=True)
-                    source_view = self.get_view(
-                        absolute_offset=bbox.topleft, size=bbox.size
+            if self.layer.data_format == DataFormat.WKW:
+                job_args = []
+                for i, bbox in enumerate(self._array.list_bounding_boxes()):
+                    bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
+                        self.layer.bounding_box, dont_assert=True
                     )
-                    target_view = compressed_mag.get_view(
-                        absolute_offset=bbox.topleft, size=bbox.size
-                    )
-                    job_args.append((source_view, target_view))
+                    if not bbox.is_empty():
+                        bbox = bbox.align_with_mag(self.mag, ceil=True)
+                        source_view = self.get_view(
+                            absolute_offset=bbox.topleft, size=bbox.size
+                        )
+                        target_view = compressed_mag.get_view(
+                            absolute_offset=bbox.topleft, size=bbox.size
+                        )
+                        job_args.append((source_view, target_view, i))
 
-            wait_and_ensure_success(
-                executor.map_to_futures(_compress_cube_job, job_args),
-                executor=executor,
-                progress_desc="Compressing",
-            )
+                wait_and_ensure_success(
+                    executor.map_to_futures(_compress_cube_job, job_args),
+                    executor=executor,
+                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                )
+            else:
+                warnings.warn(
+                    "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
+                    + "Instead all bounding boxes are iterated, which can be slow."
+                )
+                self.for_zipped_chunks(
+                    target_view=compressed_mag,
+                    executor=executor,
+                    func_per_chunk=_compress_cube_job,
+                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                )
 
         if target_path is None:
             rmtree(self.path)

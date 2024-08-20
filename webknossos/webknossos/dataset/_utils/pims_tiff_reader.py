@@ -4,25 +4,12 @@ from pathlib import Path
 from typing import Set, Tuple
 
 import numpy as np
-
-try:
-    from pims import FramesSequenceND
-except ImportError as e:
-    try:
-        import tifffile
-
-        raise RuntimeError(
-            "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-        ) from e
-    except ImportError as e:
-        raise RuntimeError(
-            "Cannot import pims and tifffile, please install them e.g. using 'webknossos[pims, tifffile]'"
-        ) from e
+from pims import FramesSequenceND
 
 try:
     import tifffile
 except ImportError as e:
-    raise RuntimeError(
+    raise ImportError(
         "Cannot import tifffile, please install it e.g. using 'webknossos[tifffile]'"
     ) from e
 
@@ -55,7 +42,7 @@ class PimsTiffReader(FramesSequenceND):
         if hasattr(_tiff, "pages"):
             _tmp = _tiff.pages[0]
         else:
-            _tmp = _tiff["pages"][0]
+            _tmp = _tiff["pages"][0]  # type: ignore
         assert _tmp is not None, "No pages found in tiff file."
         self._dtype = _tmp.dtype or np.dtype("uint8")
         self._shape = _tmp.shape

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<things>
+  <parameters>
+    <experiment name="MyDataset" />
+    <scale x="1" y="1" z="1" />
+    <zoomLevel zoom="0.4" />
+  </parameters>
+  <thing color.a="1.0" color.b="0.2060804781374328" color.g="0.7841773537104477" color.r="0.8354155362332778" groupId="1" id="1" name="tree1">
+    <nodes>
+      <node id="1" radius="1.0" x="0" y="1" z="2" />
+      <node id="2" radius="1.0" x="3" y="1" z="2" />
+    </nodes>
+    <edges>
+      <edge source="1" target="2" />
+    </edges>
+  </thing>
+  <thing color.a="1.0" color.b="0.4725954567221092" color.g="0.8764923182291839" color.r="0.27071931551375283" groupId="2" id="2" name="tree2">
+    <nodes>
+      <node id="3" radius="1.0" x="0" y="1" z="2" />
+      <node id="4" radius="1.0" x="3" y="1" z="2" />
+      <node id="5" radius="1.0" x="3" y="3" z="3" />
+    </nodes>
+    <edges>
+      <edge source="3" target="4" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments>
+    <comment content="node 1 nx" node="1" />
+    <comment content="node 2 nx" node="2" />
+    <comment content="node 1 nx" node="3" />
+    <comment content="node 2 nx" node="4" />
+    <comment content="node 3 nx" node="5" />
+  </comments>
+  <groups>
+    <group id="1" name="first_group" />
+    <group id="2" name="second_group" />
+  </groups>
+</things>

@@ -3,18 +3,12 @@ from pathlib import Path
 from typing import Set
 
 import numpy as np
-
-try:
-    from pims import FramesSequenceND
-except ImportError as e:
-    raise RuntimeError(
-        "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-    ) from e
+from pims import FramesSequenceND
 
 try:
     import tifffile
 except ImportError as e:
-    raise RuntimeError(
+    raise ImportError(
         "Cannot import tifffile, please install it e.g. using 'webknossos[tifffile]'"
     ) from e
 
@@ -34,8 +28,8 @@ class PimsImagejTiffReader(FramesSequenceND):
         path = Path(path)
         tiff = tifffile.TiffFile(path)
         assert tiff.is_imagej, f"{path} is not an ImageJ Tiff"
-        channels = tiff.imagej_metadata["channels"]
-        z = tiff.imagej_metadata["images"] / channels
+        channels = tiff.imagej_metadata["channels"]  # type: ignore
+        z = tiff.imagej_metadata["images"] / channels  # type: ignore
 
         self.memmap = tifffile.memmap(path)
         # shape should be zcyx

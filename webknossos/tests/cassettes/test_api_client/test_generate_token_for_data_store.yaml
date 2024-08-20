@@ -13,9 +13,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
-    uri: http://localhost:9000/api/v6/userToken/generate
+    uri: http://localhost:9000/api/v7/userToken/generate
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:

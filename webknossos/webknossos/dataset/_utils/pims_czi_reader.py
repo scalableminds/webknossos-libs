@@ -4,18 +4,12 @@ from pathlib import Path
 from typing import Dict, Iterator, List, Set
 
 import numpy as np
-
-try:
-    from pims import FramesSequenceND
-except ImportError as e:
-    raise RuntimeError(
-        "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-    ) from e
+from pims import FramesSequenceND
 
 try:
     from pylibCZIrw import czi as pyczi
 except ImportError as e:
-    raise RuntimeError(
+    raise ImportError(
         "Cannot import pylibCZIrw, please install it e.g. using 'webknossos[czi]'"
     ) from e
 

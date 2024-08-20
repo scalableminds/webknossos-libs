@@ -11,7 +11,7 @@ from scipy.ndimage import zoom
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..geometry import Mag, Vec3Int, Vec3IntLike
 from ._array import ArrayInfo
 from .layer_categories import LayerCategoryType
 from .view import View
@@ -31,7 +31,7 @@ DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
 
 
 def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
-    return min(DEFAULT_BUFFER_SHAPE, array_info.shard_shape)
+    return DEFAULT_BUFFER_SHAPE.pairmin(array_info.shard_shape)
 
 
 def calculate_mags_to_downsample(
@@ -248,7 +248,7 @@ def _mode(x: np.ndarray) -> np.ndarray:
     # Find maximum counts and return modals/counts
     slices = [slice(None, i) for i in sort.shape]
     del slices[axis]
-    index = np.ogrid[slices]
+    index = list(np.ogrid[slices])
     index.insert(axis, np.argmax(counts, axis=axis))
     return sort[tuple(index)]
 
@@ -306,30 +306,32 @@ def downsample_cube_job(
 
     try:
         num_channels = target_view.info.num_channels
-        shape = (num_channels,) + target_view.bounding_box.in_mag(
-            target_view.mag
-        ).size.to_tuple()
+        target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
+        shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
+        shape_xyz = target_bbox_in_mag.size_xyz
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
             *(
                 list(range(0, math.ceil(length / buffer_edge_len)))
-                for length, buffer_edge_len in zip(shape[-3:], buffer_shape)
+                for length, buffer_edge_len in zip(shape_xyz, buffer_shape)
             )
         )
 
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_shape
-            source_offset = mag_factors * target_offset
-            source_size = source_view.bounding_box.in_mag(source_view.mag).size
-            source_size = (mag_factors * buffer_shape).pairmin(
+            source_offset = target_offset * target_view.mag
+            source_size = source_view.bounding_box.size_xyz
+            source_size = (buffer_shape * target_view.mag).pairmin(
                 source_size - source_offset
             )
 
-            bbox = BoundingBox(source_offset, source_size)
+            bbox = source_view.bounding_box.offset(source_offset).with_size_xyz(
+                source_size
+            )
 
-            cube_buffer_channels = source_view.read(
-                relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
+            cube_buffer_channels = source_view.read_xyz(
+                absolute_bounding_box=bbox,
             )
 
             for channel_index in range(num_channels):
@@ -343,13 +345,19 @@ def downsample_cube_job(
                         interpolation_mode,
                     )
 
-                    buffer_bbox = BoundingBox(target_offset, data_cube.shape)
-                    file_buffer[(channel_index,) + buffer_bbox.to_slices()] = data_cube
+                    buffer_bbox = target_view.bounding_box.with_topleft_xyz(
+                        target_offset
+                    ).with_size_xyz(data_cube.shape)
+
+                    # Add missing axes to the data_cube if bbox is nd
+                    data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
+
+                    file_buffer[(channel_index,) + buffer_bbox.to_slices_xyz()] = (
+                        data_cube
+                    )
 
         # Write the downsampled buffer to target
-        if source_view.info.num_channels == 1:
-            file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(file_buffer)
+        target_view.write(file_buffer, absolute_bounding_box=target_view.bounding_box)
 
     except Exception as exc:
         logging.error(

@@ -10,7 +10,7 @@ from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int
 
-VoxelSize = namedtuple("VoxelSize", ("x", "y", "z"))
+VoxelSizeTuple = namedtuple("VoxelSizeTuple", ("x", "y", "z"))
 Vec2Int = namedtuple("Vec2Int", ("x", "y"))
 
 
@@ -68,7 +68,7 @@ def parse_voxel_size(voxel_size_str: str) -> Tuple[float, float, float]:
     try:
         result = tuple(float(x) for x in voxel_size_str.split(","))
         if len(result) == 3:
-            return VoxelSize(*result)
+            return VoxelSizeTuple(*result)
         raise ValueError(
             f"Expected three values formatted like: 1.0,1.0,2.0 but got: {voxel_size_str}"
         )

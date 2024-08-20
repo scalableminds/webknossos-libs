@@ -5,14 +5,8 @@ from typing import List, Tuple
 
 import numpy as np
 
-from ..geometry import BoundingBox, Vec3Int
+from ..geometry import Vec3Int
 from .view import View
-
-
-def _vec3int_mulf(vec: Vec3Int, factors: List[float]) -> Vec3Int:
-    return Vec3Int(
-        int(vec.x * factors[0]), int(vec.y * factors[1]), int(vec.z * factors[2])
-    )
 
 
 def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
@@ -42,30 +36,33 @@ def upsample_cube_job(
 
     try:
         num_channels = target_view.info.num_channels
-        target_size = target_view.bounding_box.in_mag(target_view.mag).size
-        shape = (num_channels,) + target_size.to_tuple()
+        target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
+        shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
+        shape_xyz = target_bbox_in_mag.size_xyz
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
             *list(
                 [
                     list(range(0, math.ceil(length)))
-                    for length in target_size.to_np() / buffer_shape.to_np()
+                    for length in shape_xyz.to_np() / buffer_shape.to_np()
                 ]
             )
         )
 
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_shape
-            source_offset = _vec3int_mulf(target_offset, mag_factors)
-            source_size = source_view.bounding_box.in_mag(source_view.mag).size
-            source_size = _vec3int_mulf(buffer_shape, mag_factors).pairmin(
+            source_offset = target_offset * source_view.mag
+            source_size = source_view.bounding_box.size_xyz
+            source_size = (buffer_shape * source_view.mag).pairmin(
                 source_size - source_offset
             )
 
-            bbox = BoundingBox(source_offset, source_size)
-            cube_buffer_channels = source_view.read(
-                relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
+            bbox = source_view.bounding_box.offset(source_offset).with_size_xyz(
+                source_size
+            )
+            cube_buffer_channels = source_view.read_xyz(
+                absolute_bounding_box=bbox,
             )
 
             for channel_index in range(num_channels):
@@ -76,20 +73,15 @@ def upsample_cube_job(
                     inverse_factors = [int(1 / f) for f in mag_factors]
                     data_cube = upsample_cube(cube_buffer, inverse_factors)
 
-                    buffer_offset = target_offset
-                    buffer_end = buffer_offset + data_cube.shape
+                    buffer_bbox = target_view.bounding_box.with_topleft_xyz(
+                        target_offset
+                    ).with_size_xyz(data_cube.shape)
+                    data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
+                    file_buffer[(channel_index,) + buffer_bbox.to_slices_xyz()] = (
+                        data_cube
+                    )
 
-                    file_buffer[
-                        channel_index,
-                        buffer_offset[0] : buffer_end[0],
-                        buffer_offset[1] : buffer_end[1],
-                        buffer_offset[2] : buffer_end[2],
-                    ] = data_cube
-
-        # Write the upsampled buffer to target
-        if source_view.info.num_channels == 1:
-            file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(file_buffer)
+        target_view.write(file_buffer, absolute_bounding_box=target_view.bounding_box)
 
     except Exception as exc:
         logging.error(
