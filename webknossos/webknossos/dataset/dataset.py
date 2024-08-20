@@ -425,6 +425,25 @@ class Dataset:
         upload_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
+
+    @classmethod
+    def trigger_reload(
+        cls,
+        dataset_name: str,
+        organization: str,
+        token: Optional[str] = None,
+    ) -> None:
+        """
+        After a manual upload of a dataset, the dataset list is updated automatically after a few minutes.
+        To trigger a reload of the dataset list manually, use this method.
+        """
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.context import _get_context
+
+        context = _get_context()
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
     @classmethod
