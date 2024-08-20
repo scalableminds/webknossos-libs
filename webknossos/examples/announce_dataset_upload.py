@@ -21,7 +21,7 @@ def main() -> None:
     # users that are part of one team defined in initial_team_ids.
     # To trigger a reload of the dataset properties manually, use:
 
-    wk.Dataset.trigger_reload(
+    wk.Dataset.trigger_reload_in_datastore(
         dataset_name="my_new_dataset_name", organization="sample_organization"
     )
 
