@@ -427,15 +427,18 @@ class Dataset:
         datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
 
     @classmethod
-    def trigger_reload(
+    def trigger_reload_in_datastore(
         cls,
         dataset_name: str,
         organization: str,
         token: Optional[str] = None,
     ) -> None:
         """
-        After a manual upload of a dataset, the dataset list is updated automatically after a few minutes.
-        To trigger a reload of the dataset list manually, use this method.
+        This method is used for datasets that were uploaded manually
+        to a webknossos datastore. It can not be used for local datasets.
+        After a manual upload of a dataset, the datasets properties are
+        updated automatically after a few minutes. To trigger a reload
+        of the datasets properties manually, use this method.
         """
         from ..client._upload_dataset import _cached_get_upload_datastore
         from ..client.context import _get_context
