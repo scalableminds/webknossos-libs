@@ -1,9 +1,6 @@
 #! /usr/bin/env bash
 set -Eeo pipefail
 
-PROJECT_DIR="$(dirname "$(dirname "$0")")"
-
-
 poetry install
 
 if [ ! -d "wk-repo" ]; then
@@ -13,7 +10,6 @@ if [ ! -d "wk-repo" ]; then
     echo 'git clone --depth 1 git@github.com:scalableminds/webknossos.git docs/wk-repo'
     exit 1
 fi
-
 
 rm -rf src/api
 
