@@ -10,7 +10,7 @@ export_vars
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports
 # refer to the checked out (and potentially modified) code.
-PYTEST="poetry run python -m pytest --suppress-no-test-exit-code"
+PYTEST="poetry run python -m pytest -s --suppress-no-test-exit-code"
 
 
 if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
