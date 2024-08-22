@@ -100,7 +100,6 @@ class BaseArray(ABC):
     def ensure_size(
         self,
         new_bbox: NDBoundingBox,
-        align_with_shards: bool = True,
         warn: bool = False,
     ) -> None:
         pass
@@ -206,7 +205,6 @@ class WKWArray(BaseArray):
     def ensure_size(
         self,
         new_bbox: NDBoundingBox,
-        align_with_shards: bool = True,
         warn: bool = False,
     ) -> None:
         pass
@@ -275,9 +273,10 @@ def _aws_credential_file() -> Path:
     temp_dir_path = Path(temp_dir.name)
     credentials_file_path = Path(temp_dir_path / "aws_credentials")
     credentials_file_path.touch()
-
+    return credentials_file_path
 
 class AWSCredentialManager:
+
     entries: Dict[int, Tuple[str, str]]
     credentials_file_path: Path
 
@@ -324,7 +323,7 @@ class TensorStoreArray(BaseArray):
         self._cached_array = _cached_array
 
     @staticmethod
-    def _make_kvstore(path: Path) -> Union[str, Dict[str, Union[str, List[str]]]]:
+    def _make_kvstore(path: Path) -> Union[str, Dict[str, Union[str, List[str], Dict[str, str], None]]]:
         if is_fs_path(path):
             return {"driver": "file", "path": str(path)}
         elif isinstance(path, UPath) and path.protocol in ("http", "https"):
@@ -398,20 +397,22 @@ class TensorStoreArray(BaseArray):
             return out
         return array[requested_domain].read(order="F").result()
 
-    def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
+    def ensure_size(self,
+        new_bbox: NDBoundingBox,
+        warn: bool = False) -> None:
         array = self._array
 
         bbox_domain = tensorstore.IndexDomain(
             [
                 tensorstore.Dim(0, self.info.num_channels, implicit_upper=True),
                 tensorstore.Dim(
-                    bbox.topleft.x, bbox.bottomright.x, implicit_upper=True
+                    new_bbox.topleft.x, new_bbox.bottomright.x, implicit_upper=True
                 ),
                 tensorstore.Dim(
-                    bbox.topleft.y, bbox.bottomright.y, implicit_upper=True
+                    new_bbox.topleft.y, new_bbox.bottomright.y, implicit_upper=True
                 ),
                 tensorstore.Dim(
-                    bbox.topleft.z, bbox.bottomright.z, implicit_upper=True
+                    new_bbox.topleft.z, new_bbox.bottomright.z, implicit_upper=True
                 ),
             ]
         )
@@ -608,9 +609,13 @@ class Zarr3Array(TensorStoreArray):
         ).result()
         return cls(path, _array)
 
-    def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
+    def ensure_size(
+            self,
+            new_bbox: NDBoundingBox,
+            warn: bool = False) -> None:
+
         super().ensure_size(
-            bbox.align_with_mag(self.info.shard_shape, ceil=True), warn=warn
+            new_bbox.align_with_mag(self.info.shard_shape, ceil=True), warn=warn
         )
 
 

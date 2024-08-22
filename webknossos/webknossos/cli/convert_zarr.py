@@ -56,7 +56,6 @@ def _zarr_chunk_converter(
         }
     ).result()
     source_data: Any = zarr_file[slices].read().result()[None, ...]
-    source_data: Any = zarr_file[slices][None, ...]
 
     if flip_axes:
         source_data = np.flip(source_data, flip_axes)
