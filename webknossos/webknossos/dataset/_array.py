@@ -6,14 +6,13 @@ from functools import lru_cache
 from os.path import relpath
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, Iterator, List, Optional, Self, Tuple, Type, Union
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     Iterator,
     List,
     Optional,
+    Self,
     Tuple,
     Type,
     Union,
@@ -372,7 +371,6 @@ class TensorStoreArray(BaseArray):
         except Exception as exc:
             raise ArrayException(f"Could not open array at {uri}.") from exc
 
-
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
         array = self._array
 
@@ -399,7 +397,6 @@ class TensorStoreArray(BaseArray):
             ] = data
             return out
         return array[requested_domain].read(order="F").result()
-
 
     def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
         array = self._array
@@ -452,15 +449,13 @@ class TensorStoreArray(BaseArray):
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        self.ensure_size(
-            bbox, warn=True
-        )
+        self.ensure_size(bbox, warn=True)
         array = self._array
         array[
             :,
-        bbox.topleft.x: bbox.bottomright.x,
-        bbox.topleft.y: bbox.bottomright.y,
-        bbox.topleft.z: bbox.bottomright.z,
+            bbox.topleft.x : bbox.bottomright.x,
+            bbox.topleft.y : bbox.bottomright.y,
+            bbox.topleft.z : bbox.bottomright.z,
         ].write(data).result()
 
     def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
