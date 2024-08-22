@@ -10,11 +10,11 @@ if [ ! -d "wk-repo" ]; then
     echo 'git clone --depth 1 git@github.com:scalableminds/webknossos.git docs/wk-repo'
     exit 1
 fi
-
 rm -rf src/api
+PYTHONPATH=$PYTHONPATH poetry run python generate_api_doc_pages.py
 
 if [ $# -eq 1 ] && [ "$1" = "--persist" ]; then
-    PYTHONPATH=$PYTHONPATH:. poetry run mkdocs build
+    PYTHONPATH=$PYTHONPATH poetry run mkdocs build
 else
-    PYTHONPATH=$PYTHONPATH:. poetry run mkdocs serve -a localhost:8197 --watch-theme
+    PYTHONPATH=$PYTHONPATH poetry run mkdocs serve -a localhost:8197 --watch-theme
 fi

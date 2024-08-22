@@ -152,6 +152,9 @@ nav:
           - Blog: https://medium.com/scalableminds" target="_blank
 
 plugins:
+  - gen-files:
+      scripts:
+        - generate_api_doc_pages.py
   - search
   - redirects:
       redirect_maps:
@@ -162,9 +165,6 @@ plugins:
       is_video: False
       mark: "youtube-video"
   - glightbox
-  - gen-files:
-      scripts:
-        - generate_api_doc_pages.py
   - mkdocstrings:
       default_handler: python
       handlers:

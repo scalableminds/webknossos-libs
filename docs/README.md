@@ -1,17 +1,17 @@
 # Documentation
 
-Run `docs/generate.sh` to open a server rendering the documentation.
-To update docstrings restart the server, manually written pages in `src` are auto-reloaded.
+## Development
+Run `./generate.sh` to open a live-reloading server rendering the documentation.
 
-To get a live-reloading server for the docstrings, run `docs/generate.sh --api`. This opens pdoc, which looks differently than the final result, but the actual contents are the same.
+## Production
 
-To produce the html in `out`, run `docs/generate.sh --persist`.
+Run `./generate.sh --persist` to produce the production website/HTML in `out`. Use GitHub Actions for building and deploying the website.
 
 
 ## Further links
 
 * https://www.mkdocs.org
-* https://pdoc.dev
 * https://squidfunk.github.io/mkdocs-material
 * https://facelessuser.github.io/pymdown-extensions
 * https://python-markdown.github.io/extensions/#officially-supported-extensions
+* https://mkdocstrings.github.io/

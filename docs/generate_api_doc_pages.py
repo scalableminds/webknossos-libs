@@ -15,9 +15,6 @@ logger = getLogger(__name__)
 
 OUT_PATH = Path("src/api")
 
-if OUT_PATH.exists():
-    shutil.rmtree(OUT_PATH)
-
 for key, value in webknossos.__dict__.items():
     if getattr(value, "__module__", "").startswith("webknossos"):
 
@@ -49,5 +46,5 @@ for key, value in webknossos.__dict__.items():
         out_path=OUT_PATH.joinpath(module_path)
         out_path.mkdir(exist_ok=True, parents=True)
 
-        logger.debug(f"Writing API docs to{out_path.joinpath(file_name)}")
+        logger.debug(f"Writing API docs to {out_path.joinpath(file_name)}")
         out_path.joinpath(file_name).write_text(file_content)
