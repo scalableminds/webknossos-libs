@@ -46,7 +46,7 @@ def _import_mag(mag_like: Any) -> Vec3Int:
 class Mag:
     """
     Represents the magnification level of a data layer. For example, the finest
-    quality is usally not downsampled and is represented by Mag(1).
+    quality is usually not downsampled and is represented by Mag(1).
     When data is downsampled by a factor of 4 in all dimensions, this is referred
     to as Mag(4).
     When data is downsampled anisotropically by 2 in x and y and not downsampled in

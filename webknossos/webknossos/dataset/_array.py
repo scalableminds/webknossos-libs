@@ -7,13 +7,24 @@ from os.path import relpath
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, Iterator, List, Optional, Self, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import numpy as np
 import tensorstore
 import wkw
 from upath import UPath
 
-from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
 from ..utils import is_fs_path, warn_deprecated
 from .data_format import DataFormat
 
@@ -33,6 +44,9 @@ class ArrayInfo:
     voxel_type: np.dtype
     chunk_shape: Vec3Int
     chunks_per_shard: Vec3Int
+    shape: VecInt = VecInt(c=1, x=1, y=1, z=1)
+    dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
+    axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
     compression_mode: bool = False
 
     @property
@@ -76,19 +90,24 @@ class BaseArray(ABC):
         pass
 
     @abstractmethod
-    def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
+    def read(self, bbox: NDBoundingBox) -> np.ndarray:
         pass
 
     @abstractmethod
-    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
+    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
         pass
 
     @abstractmethod
-    def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
+    def ensure_size(
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
+    ) -> None:
         pass
 
     @abstractmethod
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
         "The bounding boxes are measured in voxels of the current mag."
 
     @abstractmethod
@@ -179,13 +198,18 @@ class WKWArray(BaseArray):
             raise ArrayException(f"Exception while creating array {path}") from e
         return WKWArray(path)
 
-    def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
-        return self._wkw_dataset.read(Vec3Int(offset), Vec3Int(shape))
+    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+        return self._wkw_dataset.read(Vec3Int(bbox.topleft), Vec3Int(bbox.size))
 
-    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
-        self._wkw_dataset.write(Vec3Int(offset), data)
+    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+        self._wkw_dataset.write(Vec3Int(bbox.topleft), data)
 
-    def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
+    def ensure_size(
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
+    ) -> None:
         pass
 
     def _list_files(self) -> Iterator[Path]:
@@ -194,7 +218,7 @@ class WKWArray(BaseArray):
             for filename in self._wkw_dataset.list_files()
         )
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
         def _extract_num(s: str) -> int:
             match = re.search("[0-9]+", s)
             assert match is not None
@@ -348,17 +372,16 @@ class TensorStoreArray(BaseArray):
         except Exception as exc:
             raise ArrayException(f"Could not open array at {uri}.") from exc
 
-    def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
-        offset = Vec3Int(offset)
-        shape = Vec3Int(shape)
+
+    def read(self, bbox: NDBoundingBox) -> np.ndarray:
         array = self._array
 
         requested_domain = tensorstore.IndexDomain(
             [
                 tensorstore.Dim(0, self.info.num_channels),
-                tensorstore.Dim(offset.x, offset.x + shape.x),
-                tensorstore.Dim(offset.y, offset.y + shape.y),
-                tensorstore.Dim(offset.z, offset.z + shape.z),
+                tensorstore.Dim(bbox.topleft.x, bbox.bottomright.x),
+                tensorstore.Dim(bbox.topleft.y, bbox.bottomright.y),
+                tensorstore.Dim(bbox.topleft.z, bbox.bottomright.z),
             ]
         )
         available_domain = requested_domain.intersect(array.domain)
@@ -375,8 +398,8 @@ class TensorStoreArray(BaseArray):
                 : data.shape[3],
             ] = data
             return out
-
         return array[requested_domain].read(order="F").result()
+
 
     def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
         array = self._array
@@ -421,25 +444,26 @@ class TensorStoreArray(BaseArray):
                 resize_metadata_only=True,
             ).result()
 
-    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
-        offset = Vec3Int(offset)
+    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+        """Writes a ZarrArray. If offset and bbox are given, the bbox is preferred to enable writing of n-dimensional data."""
 
+        # If data is 3-dimensional, it is assumed that num_channels=1.
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
         self.ensure_size(
-            BoundingBox(topleft=offset, size=Vec3Int(data.shape[1:4])), warn=True
+            bbox, warn=True
         )
         array = self._array
         array[
             :,
-            offset.x : (offset.x + data.shape[1]),
-            offset.y : (offset.y + data.shape[2]),
-            offset.z : (offset.z + data.shape[3]),
+        bbox.topleft.x: bbox.bottomright.x,
+        bbox.topleft.y: bbox.bottomright.y,
+        bbox.topleft.z: bbox.bottomright.z,
         ].write(data).result()
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
         raise NotImplementedError
 
     def close(self) -> None:
@@ -534,7 +558,7 @@ class Zarr3Array(TensorStoreArray):
                         "configuration": {"separator": "/"},
                     },
                     "fill_value": 0,
-                    "dimension_names": ["c", "x", "y", "z"],
+                    "dimension_names": array_info.dimension_names,
                     "codecs": [
                         {
                             "name": "sharding_indexed",

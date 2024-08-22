@@ -35,9 +35,12 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.geometry.vec_int import VecIntLike
+
 from ..client.api_client.models import ApiDataset
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
+from ._utils import pims_images
 from .defaults import (
     DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
@@ -60,10 +63,11 @@ if TYPE_CHECKING:
     from ..administration.user import Team
     from ..client._upload_dataset import LayerToLink
 
-from ..geometry import BoundingBox, Mag
+from ..geometry import BoundingBox, Mag, NDBoundingBox
 from ..utils import (
     copy_directory_with_symlinks,
     copytree,
+    count_defined_values,
     get_executor_for_args,
     is_fs_path,
     named_partial,
@@ -72,8 +76,11 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._utils.from_images import guess_if_segmentation_path
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
+from ._utils.segmentation_recognition import (
+    guess_category_from_view,
+    guess_if_segmentation_path,
+)
 from .data_format import DataFormat
 from .layer import (
     Layer,
@@ -90,6 +97,7 @@ from .properties import (
     DatasetViewConfiguration,
     LayerProperties,
     SegmentationLayerProperties,
+    VoxelSize,
     _extract_num_channels,
     _properties_floating_type_to_python_type,
     dataset_converter,
@@ -107,9 +115,9 @@ _DATASET_URL_REGEX = re.compile(
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.
-_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_\-]+[A-Za-z0-9_\-\.]*$")
+_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$")
 # This regex matches any character that is not allowed in a layer name.
-_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_\-\.]")
+_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
@@ -185,8 +193,6 @@ class Dataset:
             input_files: Sequence[Path],
             use_bioformats: Optional[bool],
         ) -> Callable[[Path], str]:
-            from ._utils.pims_images import has_image_z_dimension
-
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
@@ -206,7 +212,7 @@ class Dataset:
                 # if it's 2D, the folder becomes a layer.
                 return lambda p: (
                     str(p)
-                    if has_image_z_dimension(
+                    if pims_images.has_image_z_dimension(
                         input_path / p,
                         use_bioformats=use_bioformats,
                         is_segmentation=guess_if_segmentation_path(p),
@@ -219,7 +225,7 @@ class Dataset:
                 )
             elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
                 # As before, but only a single image is inspected to determine 2D vs 3D.
-                if has_image_z_dimension(
+                if pims_images.has_image_z_dimension(
                     input_path / input_files[0],
                     use_bioformats=use_bioformats,
                     is_segmentation=guess_if_segmentation_path(input_files[0]),
@@ -235,10 +241,11 @@ class Dataset:
     def __init__(
         self,
         dataset_path: Union[str, PathLike],
-        voxel_size: Optional[Tuple[float, float, float]] = None,
+        voxel_size: Optional[Tuple[float, float, float]] = None,  # in nanometers
         name: Optional[str] = None,
         exist_ok: bool = _UNSET,
         *,
+        voxel_size_with_unit: Optional[VoxelSize] = None,
         scale: Optional[Tuple[float, float, float]] = None,
         read_only: bool = False,
     ) -> None:
@@ -250,12 +257,14 @@ class Dataset:
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         `scale` is deprecated, please use `voxel_size` instead.
         """
+        assert (
+            count_defined_values((voxel_size, voxel_size_with_unit, scale)) <= 1
+        ), "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
         if scale is not None:
-            assert (
-                voxel_size is None
-            ), "Cannot use scale and voxel_size, please use only voxel_size."
             warn_deprecated("scale", "voxel_size")
-            voxel_size = scale
+            voxel_size_with_unit = VoxelSize(scale)
+        elif voxel_size is not None:
+            voxel_size_with_unit = VoxelSize(voxel_size)
 
         self._read_only = read_only
 
@@ -301,11 +310,13 @@ class Dataset:
 
             # Write empty properties to disk
             assert (
-                voxel_size is not None
-            ), "When creating a new dataset, the voxel_size must be given, e.g. as Dataset(path, voxel_size=(10, 10, 16.8))"
+                voxel_size_with_unit is not None
+            ), "When creating a new dataset, voxel_size or voxel_size_with_unit must be set, e.g. Dataset(path, voxel_size=(1, 1, 4.2))."
             name = name or dataset_path.absolute().name
             dataset_properties = DatasetProperties(
-                id={"name": name, "team": ""}, scale=voxel_size, data_layers=[]
+                id={"name": name, "team": ""},
+                scale=voxel_size_with_unit,
+                data_layers=[],
             )
             with (dataset_path / PROPERTIES_FILE_NAME).open(
                 "w", encoding="utf-8"
@@ -337,18 +348,18 @@ class Dataset:
             self._layers[layer_properties.name] = layer
 
         if dataset_existed_already:
-            if voxel_size is None:
+            if voxel_size_with_unit is None:
                 warnings.warn(
-                    "[DEPRECATION] Please always supply the voxel_size when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
+                    "[DEPRECATION] Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
                     + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
                     DeprecationWarning,
                 )
-            elif voxel_size == _UNSPECIFIED_SCALE_FROM_OPEN:
+            elif voxel_size_with_unit == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
                 assert (
-                    self.voxel_size == tuple(voxel_size)
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size} != {voxel_size})"
+                    self.voxel_size_with_unit == voxel_size_with_unit
+                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
             if name is not None:
                 assert (
                     self.name == name
@@ -379,7 +390,64 @@ class Dataset:
             f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
         )
 
-        return cls(dataset_path, voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
+        return cls(
+            dataset_path,
+            voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
+            exist_ok=True,
+        )
+
+    @classmethod
+    def announce_manual_upload(
+        cls,
+        dataset_name: str,
+        organization: str,
+        initial_team_ids: List[str],
+        folder_id: str,
+        token: Optional[str] = None,
+    ) -> None:
+        """
+        Announces a manual dataset upload to webknossos. This is useful when users with access
+        to the file system of the datastore want to upload a dataset manually. It creates an entry
+        in the database and sets the access rights accordingly.
+        """
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.api_client.models import ApiDatasetAnnounceUpload
+        from ..client.context import _get_context
+
+        context = _get_context()
+        dataset_announce = ApiDatasetAnnounceUpload(
+            dataset_name=dataset_name,
+            organization=organization,
+            initial_team_ids=initial_team_ids,
+            folder_id=folder_id,
+        )
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
+
+    @classmethod
+    def trigger_reload_in_datastore(
+        cls,
+        dataset_name: str,
+        organization: str,
+        token: Optional[str] = None,
+    ) -> None:
+        """
+        This method is used for datasets that were uploaded manually
+        to a webknossos datastore. It can not be used for local datasets.
+        After a manual upload of a dataset, the datasets properties are
+        updated automatically after a few minutes. To trigger a reload
+        of the datasets properties manually, use this method.
+        """
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.context import _get_context
+
+        context = _get_context()
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
     @classmethod
     def _parse_remote(
@@ -421,6 +489,8 @@ class Dataset:
             dataset_name = dataset_name_or_url
 
         current_context = _get_context()
+        if webknossos_url is not None:
+            webknossos_url = webknossos_url.rstrip("/")
         if webknossos_url is not None and webknossos_url != current_context.url:
             if sharing_token is None:
                 warnings.warn(
@@ -464,7 +534,7 @@ class Dataset:
           You can find your `organization_id` [here](https://webknossos.org/auth/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specifiy in which webknossos instance to search for the dataset.
+          and allows to specify in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         """
         from ..client.context import _get_context
@@ -518,7 +588,7 @@ class Dataset:
           You can find your `organization_id` [here](https://webknossos.org/auth/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specifiy in which webknossos instance to search for the dataset.
+          and allows to specify in which webknossos instance to search for the dataset.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
           If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
@@ -557,13 +627,15 @@ class Dataset:
         cls,
         input_path: Union[str, PathLike],
         output_path: Union[str, PathLike],
-        voxel_size: Tuple[float, float, float],
+        voxel_size: Optional[Tuple[float, float, float]] = None,
         name: Optional[str] = None,
         *,
         map_filepath_to_layer_name: Union[
             ConversionLayerMapping, Callable[[Path], str]
         ] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
         z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
+        voxel_size_with_unit: Optional[VoxelSize] = None,
+        layer_name: Optional[str] = None,
         layer_category: Optional[LayerCategoryType] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
@@ -579,21 +651,26 @@ class Dataset:
         executor: Optional[Executor] = None,
     ) -> "Dataset":
         """
-        This method imports image data in a folder as a WEBKNOSSOS dataset. The
-        image data can be 3D images (such as multipage tiffs) or stacks of 2D
-        images. In case of multiple 3D images or image stacks, those are mapped
-        to different layers. The exact mapping is handled by the argument
-        `map_filepath_to_layer_name`, which can be a pre-defined strategy from
-        the enum `ConversionLayerMapping`, or a custom callable, taking
+        This method imports image data in a folder or from a file as a
+        WEBKNOSSOS dataset. The image data can be 3D images (such as multipage
+        tiffs) or stacks of 2D images. In case of multiple 3D images or image
+        stacks, those are mapped to different layers. The exact mapping is handled
+        by the argument `map_filepath_to_layer_name`, which can be a pre-defined
+        strategy from the enum `ConversionLayerMapping`, or a custom callable, taking
         a path of an image file and returning the corresponding layer name. All
         files belonging to the same layer name are then grouped. In case of
         multiple files per layer, those are usually mapped to the z-dimension.
         The order of the z-slices can be customized by setting
         `z_slices_sort_key`.
 
+        If a layer_name is set, this name is used if a single layer is created.
+        Otherwise the layer_name is used as a common prefix for all layers.
+
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
-        Alternatively, a category can be enforced by passing `layer_category`.
+        The category decision is evaluated and corrected after data import with a
+        data driven approach. Alternatively, a category can be enforced by passing
+        `layer_category`.
 
         Further arguments behave as in `add_layer_from_images`, please also
         refer to its documentation.
@@ -601,17 +678,24 @@ class Dataset:
         For more fine-grained control, please create an empty dataset and use
         `add_layer_from_images`.
         """
-        from ._utils.pims_images import get_valid_pims_suffixes
 
         input_upath = UPath(input_path)
 
-        valid_suffixes = get_valid_pims_suffixes()
+        valid_suffixes = pims_images.get_valid_pims_suffixes()
+        if use_bioformats is not False:
+            valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
-        input_files = [
-            i.relative_to(input_upath)
-            for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
-        ]
+        if input_upath.is_file():
+            if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
+                input_files = [UPath(input_upath.name)]
+                input_upath = input_upath.parent
+        else:
+            input_files = [
+                i.relative_to(input_upath)
+                for i in input_upath.glob("**/*")
+                if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
+            ]
+
         if len(input_files) == 0:
             raise ValueError(
                 "Could not find any supported image data. "
@@ -619,57 +703,92 @@ class Dataset:
             )
 
         if isinstance(map_filepath_to_layer_name, Dataset.ConversionLayerMapping):
-            map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
-                input_upath, input_files=input_files, use_bioformats=use_bioformats
-            )
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims",
+                )
+                warnings.filterwarnings(
+                    "once",
+                    category=UserWarning,
+                    module="pims_images",
+                )
+                map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
+                    input_upath, input_files=input_files, use_bioformats=use_bioformats
+                )
+        if voxel_size_with_unit is None:
+            assert (
+                voxel_size is not None
+            ), "Please supply either voxel_size or voxel_size_with_unit."
+            voxel_size_with_unit = VoxelSize(voxel_size)
+        else:
+            assert (
+                voxel_size is None
+            ), "Please supply either voxel_size or voxel_size_with_unit not both."
 
-        ds = cls(output_path, voxel_size=voxel_size, name=name)
+        ds = cls(output_path, voxel_size_with_unit=voxel_size_with_unit, name=name)
 
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
-            layer_name = map_filepath_to_layer_name(input_file)
+            layer_name_from_mapping = map_filepath_to_layer_name(input_file)
             # Remove characters from layer name that are not allowed
-            layer_name = _UNALLOWED_LAYER_NAME_CHARS.sub("", layer_name)
+            layer_name_from_mapping = _UNALLOWED_LAYER_NAME_CHARS.sub(
+                "", layer_name_from_mapping
+            )
             # Ensure layer name does not start with a dot
-            layer_name = layer_name.lstrip(".")
+            layer_name_from_mapping = layer_name_from_mapping.lstrip(".")
 
             assert (
-                layer_name != ""
+                layer_name_from_mapping != ""
             ), f"Could not determine a layer name for {input_file}."
 
-            filepaths_per_layer.setdefault(layer_name, []).append(
-                input_path / input_file
+            filepaths_per_layer.setdefault(layer_name_from_mapping, []).append(
+                input_upath / input_file
             )
 
-        for layer_name, filepaths in filepaths_per_layer.items():
-            filepaths.sort(key=z_slices_sort_key)
-            category: LayerCategoryType
-            if layer_category is None:
-                category = (
-                    "segmentation"
-                    if guess_if_segmentation_path(filepaths[0])
-                    else "color"
+        if layer_name is not None:
+            if len(filepaths_per_layer) == 1:
+                filepaths_per_layer[layer_name] = filepaths_per_layer.pop(
+                    layer_name_from_mapping
                 )
             else:
-                category = layer_category
-            ds.add_layer_from_images(
-                filepaths[0] if len(filepaths) == 1 else filepaths,
-                layer_name,
-                category=category,
-                data_format=data_format,
-                chunk_shape=chunk_shape,
-                chunks_per_shard=chunks_per_shard,
-                compress=compress,
-                swap_xy=swap_xy,
-                flip_x=flip_x,
-                flip_y=flip_y,
-                flip_z=flip_z,
-                use_bioformats=use_bioformats,
-                batch_size=batch_size,
-                allow_multiple_layers=True,
-                max_layers=max_layers - len(ds.layers),
-                executor=executor,
-            )
+                filepaths_per_layer = {
+                    f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
+                }
+        with get_executor_for_args(None, executor) as executor:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims_images",
+                )
+                warnings.filterwarnings(
+                    "ignore",
+                    category=UserWarning,
+                    module="pims",
+                )
+                for layer_name, filepaths in filepaths_per_layer.items():
+                    filepaths.sort(key=z_slices_sort_key)
+
+                    ds.add_layer_from_images(
+                        filepaths[0] if len(filepaths) == 1 else filepaths,
+                        layer_name,
+                        category=layer_category,
+                        data_format=data_format,
+                        chunk_shape=chunk_shape,
+                        chunks_per_shard=chunks_per_shard,
+                        compress=compress,
+                        swap_xy=swap_xy,
+                        flip_x=flip_x,
+                        flip_y=flip_y,
+                        flip_z=flip_z,
+                        use_bioformats=use_bioformats,
+                        batch_size=batch_size,
+                        allow_multiple_layers=True,
+                        max_layers=max_layers - len(ds.layers),
+                        executor=executor,
+                    )
 
         return ds
 
@@ -682,12 +801,16 @@ class Dataset:
 
     @property
     def voxel_size(self) -> Tuple[float, float, float]:
-        return self._properties.scale
+        return self._properties.scale.to_nanometer()
 
     @property
     def scale(self) -> Tuple[float, float, float]:
         """Deprecated, use `voxel_size` instead."""
         warn_deprecated("scale", "voxel_size")
+        return self.voxel_size
+
+    @property
+    def voxel_size_with_unit(self) -> VoxelSize:
         return self._properties.scale
 
     @property
@@ -778,7 +901,7 @@ class Dataset:
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
-        bounding_box: Optional[BoundingBox] = None,
+        bounding_box: Optional[NDBoundingBox] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -855,6 +978,7 @@ class Dataset:
 
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif category == SEGMENTATION_CATEGORY:
             segmentation_layer_properties: SegmentationLayerProperties = (
@@ -868,6 +992,7 @@ class Dataset:
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
             self._properties.data_layers += [segmentation_layer_properties]
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
                 self, segmentation_layer_properties
             )
@@ -963,8 +1088,10 @@ class Dataset:
 
         self._properties.data_layers += [layer_properties]
         if layer_properties.category == COLOR_CATEGORY:
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif layer_properties.category == SEGMENTATION_CATEGORY:
+            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(self, layer_properties)
         else:
             raise RuntimeError(
@@ -1034,7 +1161,7 @@ class Dataset:
         images: Union[str, "pims.FramesSequence", List[Union[str, PathLike]]],
         ## add_layer arguments
         layer_name: str,
-        category: LayerCategoryType = "color",
+        category: Optional[LayerCategoryType] = "color",
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
         mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
@@ -1043,7 +1170,7 @@ class Dataset:
         compress: bool = False,
         *,
         ## other arguments
-        topleft: Vec3IntLike = Vec3Int.zeros(),  # in Mag(1)
+        topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -1069,7 +1196,7 @@ class Dataset:
 
         Please see the [pims docs](http://soft-matter.github.io/pims/v0.6.1/opening_files.html) for more information.
 
-        This method needs extra packages such as pims. Please install the respective extras,
+        This method needs extra packages like tifffile or pylibczirw. Please install the respective extras,
         e.g. using `python -m pip install "webknossos[all]"`.
 
         Further Arguments:
@@ -1087,14 +1214,12 @@ class Dataset:
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
-        * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
+        * `batch_size`: size to process the images (influences RAM consumption), must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels or timepoints
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-        from ._utils.pims_images import PimsImages, dimwise_max
-
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
@@ -1103,7 +1228,22 @@ class Dataset:
             file_len=None,
         )
 
-        pims_images = PimsImages(
+        if category is None:
+            image_path_for_category_guess: Path
+            if isinstance(images, str) or isinstance(images, PathLike):
+                image_path_for_category_guess = Path(images)
+            else:
+                image_path_for_category_guess = Path(images[0])
+            category = (
+                "segmentation"
+                if guess_if_segmentation_path(image_path_for_category_guess)
+                else "color"
+            )
+            user_set_category = False
+        else:
+            user_set_category = True
+
+        pims_image_sequence = pims_images.PimsImages(
             images,
             channel=channel,
             timepoint=timepoint,
@@ -1115,7 +1255,7 @@ class Dataset:
             use_bioformats=use_bioformats,
             is_segmentation=category == "segmentation",
         )
-        possible_layers = pims_images.get_possible_layers()
+        possible_layers = pims_image_sequence.get_possible_layers()
         # Check if 4 color channels should be converted to
         # 3 color channels (rbg)
         if (
@@ -1183,10 +1323,10 @@ class Dataset:
             if len(pims_open_kwargs) > 0:
                 # Set parameters from this method as default
                 # if they are not part of the kwargs per layer:
-                pims_open_kwargs.setdefault("timepoint", timepoint)
-                pims_open_kwargs.setdefault("channel", channel)
-                pims_open_kwargs.setdefault("czi_channel", czi_channel)
-                pims_images = PimsImages(
+                pims_open_kwargs.setdefault("timepoint", timepoint)  # type: ignore
+                pims_open_kwargs.setdefault("channel", channel)  # type: ignore
+                pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
+                pims_image_sequence = pims_images.PimsImages(
                     images,
                     swap_xy=swap_xy,
                     flip_x=flip_x,
@@ -1197,7 +1337,7 @@ class Dataset:
                     **pims_open_kwargs,
                 )
             if dtype is None:
-                current_dtype = np.dtype(pims_images.dtype)
+                current_dtype = np.dtype(pims_image_sequence.dtype)
                 if current_dtype.byteorder == ">":
                     current_dtype = current_dtype.newbyteorder("<")
             else:
@@ -1207,11 +1347,15 @@ class Dataset:
                 category=category,
                 data_format=data_format,
                 dtype_per_channel=current_dtype,
-                num_channels=pims_images.num_channels,
+                num_channels=pims_image_sequence.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
+
+            expected_bbox = pims_image_sequence.expected_bbox
+
+            # When the expected bbox is 2D the chunk_shape is set to 2D too.
             if (
-                pims_images.expected_shape.z == 1
+                expected_bbox.get_shape("z") == 1
                 and layer.data_format == DataFormat.Zarr
             ):
                 if chunk_shape is None:
@@ -1222,25 +1366,27 @@ class Dataset:
             if chunks_per_shard is None and layer.data_format == DataFormat.Zarr3:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
 
+            mag = Mag(mag)
+            layer.bounding_box = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
             )
-            mag = mag_view.mag
-            layer.bounding_box = (
-                BoundingBox((0, 0, 0), pims_images.expected_shape)
-                .from_mag_to_mag1(mag)
-                .offset(topleft)
-            )
 
             if batch_size is None:
-                if compress:
+                if compress or (
+                    layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
+                ):
+                    # if data is compressed or dataformat is zarr, parallel write access
+                    # to a shard leads to corrupted data, the batch size must be aligned
+                    # with the shard size
                     batch_size = mag_view.info.shard_shape.z
                 else:
+                    # in uncompressed wkw only writing to the same chunk is problematic
                     batch_size = mag_view.info.chunk_shape.z
-            elif compress:
+            elif compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
                 assert (
                     batch_size % mag_view.info.shard_shape.z == 0
                 ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
@@ -1250,17 +1396,37 @@ class Dataset:
                 ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
 
             func_per_chunk = named_partial(
-                pims_images.copy_to_view,
+                pims_image_sequence.copy_to_view,
                 mag_view=mag_view,
-                is_segmentation=category == "segmentation",
                 dtype=current_dtype,
             )
 
-            args = []
-            for z_start in range(0, pims_images.expected_shape.z, batch_size):
-                z_end = min(z_start + batch_size, pims_images.expected_shape.z)
-                # return shapes and set to union when using --pad
-                args.append((z_start, z_end))
+            if (
+                additional_axes := set(layer.bounding_box.axes).difference(
+                    "x", "y", "z"
+                )
+            ) and layer.data_format == DataFormat.WKW:
+                if all(
+                    layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes
+                ):
+                    warnings.warn(
+                        f"[INFO] The data has additional axes {additional_axes}, but they are all of size 1. "
+                        + "These axes are not stored in the layer."
+                    )
+                    layer.bounding_box = BoundingBox.from_ndbbox(layer.bounding_box)
+                else:
+                    raise RuntimeError(
+                        "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
+                    )
+
+            buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
+            args = list(
+                layer.bounding_box.chunk(
+                    buffered_slice_writer_shape,
+                    Vec3Int(1, 1, batch_size),
+                )
+            )
+
             with warnings.catch_warnings():
                 # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
                 # However, dataset borders might change between different parallelized writes, when sizes differ.
@@ -1283,25 +1449,64 @@ class Dataset:
                     shapes_and_max_ids = wait_and_ensure_success(
                         executor.map_to_futures(func_per_chunk, args),
                         executor=executor,
-                        progress_desc="Creating layer from images",
+                        progress_desc=f"Creating layer [bold blue]{layer.name}[/bold blue] from images",
                     )
                 shapes, max_ids = zip(*shapes_and_max_ids)
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                actual_size = Vec3Int(
-                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
+                layer.bounding_box = layer.bounding_box.with_size_xyz(
+                    Vec3Int(
+                        pims_images.dimwise_max(shapes)
+                        + (layer.bounding_box.get_shape("z"),)
+                    )
+                    * mag.to_vec3_int().with_z(1)
                 )
-                layer.bounding_box = (
-                    BoundingBox((0, 0, 0), actual_size)
-                    .from_mag_to_mag1(mag)
-                    .offset(topleft)
-                )
-            if pims_images.expected_shape != actual_size:
+            if expected_bbox != layer.bounding_box:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "
-                    + f"New size is {actual_size}, expected {pims_images.expected_shape}."
+                    + f"New bbox is {layer.bounding_box}, expected {expected_bbox}."
                 )
+
+            # Check if category of layer is set correctly
+            try:
+                if not user_set_category:
+                    # When the category is not set by the user, we use a very simple heuristic to guess the category
+                    # based on the file name of the input images. After loading the images, we check if the guessed
+                    # category might be wrong and adjust it if necessary. This second heuristic is based on the
+                    # pixel data of the images
+                    guessed_category = guess_category_from_view(layer.get_finest_mag())
+                    if guessed_category != layer.category:
+                        new_layer_properties: LayerProperties
+                        if guessed_category == SEGMENTATION_CATEGORY:
+                            logging.info("The layer category is set to segmentation.")
+                            new_layer_properties = SegmentationLayerProperties(
+                                **(
+                                    attr.asdict(layer._properties, recurse=False)
+                                ),  # use all attributes from LayerProperties
+                                largest_segment_id=int(max(max_ids)),
+                            )
+                            new_layer_properties.category = SEGMENTATION_CATEGORY
+                            self._layers[layer.name] = SegmentationLayer(
+                                self, new_layer_properties
+                            )
+                        else:
+                            logging.info("The layer category is set to color.")
+                            _properties = attr.asdict(layer._properties, recurse=False)
+                            _properties.pop("largest_segment_id", None)
+                            _properties.pop("mappings", None)
+
+                            new_layer_properties = LayerProperties(**_properties)
+                            new_layer_properties.category = COLOR_CATEGORY
+                            self._layers[layer.name] = Layer(self, new_layer_properties)
+                        self._properties.update_for_layer(
+                            layer.name, new_layer_properties
+                        )
+                        self._export_as_json()
+
+            except Exception:
+                # The used heuristic was not able to guess the layer category, the previous value is kept
+                pass
             if first_layer is None:
                 first_layer = layer
         assert first_layer is not None
@@ -1510,7 +1715,7 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
-    def calculate_bounding_box(self) -> BoundingBox:
+    def calculate_bounding_box(self) -> NDBoundingBox:
         """
         Calculates and returns the enclosing bounding box of all data layers of the dataset.
         """
@@ -1534,6 +1739,7 @@ class Dataset:
         args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
         *,
+        voxel_size_with_unit: Optional[VoxelSize] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -1572,9 +1778,16 @@ class Dataset:
                 new_dataset_path
             ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr'`."
 
-        if voxel_size is None:
-            voxel_size = self.voxel_size
-        new_ds = Dataset(new_dataset_path, voxel_size=voxel_size, exist_ok=False)
+        if voxel_size_with_unit is None:
+            if voxel_size is None:
+                voxel_size_with_unit = self.voxel_size_with_unit
+            else:
+                voxel_size_with_unit = VoxelSize(voxel_size)
+        new_ds = Dataset(
+            new_dataset_path,
+            voxel_size_with_unit=voxel_size_with_unit,
+            exist_ok=False,
+        )
 
         with get_executor_for_args(args, executor) as executor:
             for layer in self.layers.values():
@@ -1612,7 +1825,7 @@ class Dataset:
         ), f"Cannot create symlink in remote path {new_dataset_path}"
         new_dataset = Dataset(
             new_dataset_path,
-            voxel_size=self.voxel_size,
+            voxel_size_with_unit=self.voxel_size_with_unit,
             name=name or self.name,
             exist_ok=False,
         )
@@ -1731,12 +1944,19 @@ class Dataset:
         self._ensure_writable()
 
         properties_on_disk = self._load_properties()
-
-        if properties_on_disk != self._last_read_properties:
+        try:
+            if properties_on_disk != self._last_read_properties:
+                warnings.warn(
+                    "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
+                    + "newer than the ones that were seen last time. The properties will be overwritten. This is "
+                    + "likely happening because multiple processes changed the metadata of this dataset."
+                )
+        except ValueError:
+            # the __eq__ operator raises a ValueError when two bboxes are not comparable. This is the case when the
+            # axes are not the same. During initialization axes are added or moved sometimes.
             warnings.warn(
-                "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
-                + "newer than the ones that were seen last time. The properties will be overwritten. This is "
-                + "likely happening because multiple processes changed the metadata of this dataset."
+                "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
+                + "the bounding box naming or axis order changed."
             )
 
         with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:
@@ -1810,7 +2030,7 @@ class RemoteDataset(Dataset):
         try:
             super().__init__(
                 dataset_path,
-                voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN,
+                voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
                 exist_ok=True,
                 read_only=True,
             )

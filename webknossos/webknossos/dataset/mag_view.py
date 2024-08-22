@@ -3,14 +3,16 @@ import warnings
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from webknossos.dataset.data_format import DataFormat
+
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     NDArrayLike,
     get_executor_for_args,
@@ -30,7 +32,12 @@ if TYPE_CHECKING:
 from .view import View
 
 
-def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
+def _find_mag_path_on_disk(
+    dataset_path: Path, layer_name: str, mag_name: str, path: Optional[str] = None
+) -> Path:
+    if path is not None:
+        return dataset_path / path
+
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
@@ -40,9 +47,11 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
         return long_mag_file_path
 
 
-def _compress_cube_job(args: Tuple[View, View]) -> None:
-    source_view, target_view = args
-    target_view.write(source_view.read())
+def _compress_cube_job(args: Tuple[View, View, int]) -> None:
+    source_view, target_view, _i = args
+    target_view.write(
+        source_view.read(), absolute_bounding_box=target_view.bounding_box
+    )
 
 
 class MagView(View):
@@ -73,6 +82,15 @@ class MagView(View):
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
+            axis_order=VecInt(
+                0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
+            ),
+            shape=VecInt(
+                layer.num_channels,
+                *VecInt.ones(layer.bounding_box.axes),
+                axes=("c",) + layer.bounding_box.axes,
+            ),
+            dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
             self_path = layer.dataset.path / layer.name / mag.to_layer_name()
@@ -81,14 +99,14 @@ class MagView(View):
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
             array_info,
-            bounding_box=None,
+            bounding_box=layer.bounding_box,
             mag=mag,
         )
         self._layer = layer
 
     # Overwrites of View methods:
     @property
-    def bounding_box(self) -> BoundingBox:
+    def bounding_box(self) -> NDBoundingBox:
         # Overwrites View's method since no extra bbox is stored for a MagView,
         # but the Layer's bbox is used:
         return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
@@ -105,7 +123,7 @@ class MagView(View):
         return Vec3Int.zeros()
 
     @property
-    def size(self) -> Vec3Int:
+    def size(self) -> VecInt:
         """⚠️ Deprecated, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright` instead."""
         warnings.warn(
             "[DEPRECATION] mag_view.size is deprecated. "
@@ -147,6 +165,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
         if offset is not None:
             if self._mag == Mag(1):
@@ -164,14 +184,30 @@ class MagView(View):
                 DeprecationWarning,
             )
 
-        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+        if all(
+            i is None
+            for i in [
+                offset,
+                absolute_offset,
+                relative_offset,
+                absolute_bounding_box,
+                relative_bounding_box,
+            ]
+        ):
             relative_offset = Vec3Int.zeros()
+
+        if (absolute_bounding_box or relative_bounding_box) is not None:
+            data_shape = None
+        else:
+            data_shape = Vec3Int(data.shape[-3:])
 
         mag1_bbox = self._get_mag1_bbox(
             abs_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
-            current_mag_size=Vec3Int(data.shape[-3:]),
+            abs_mag1_bbox=absolute_bounding_box,
+            rel_mag1_bbox=relative_bounding_box,
+            current_mag_size=data_shape,
         )
 
         # Only update the layer's bbox if we are actually larger
@@ -181,8 +217,8 @@ class MagView(View):
 
         super().write(
             data,
-            absolute_offset=mag1_bbox.topleft,
             json_update_allowed=json_update_allowed,
+            absolute_bounding_box=mag1_bbox,
         )
 
     def read(
@@ -194,8 +230,8 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> np.ndarray:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
@@ -235,12 +271,14 @@ class MagView(View):
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
         # This has other defaults than the View implementation
-        # (all deprecations are handled in the subsclass)
+        # (all deprecations are handled in the superclass)
         bb = self.bounding_box.in_mag(self._mag)
         if offset is not None and size is None:
             offset = Vec3Int(offset)
@@ -251,12 +289,14 @@ class MagView(View):
             size,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
+            relative_bounding_box=relative_bounding_box,
+            absolute_bounding_box=absolute_bounding_box,
             read_only=read_only,
         )
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Iterator[BoundingBox]:
+    ) -> Iterator[NDBoundingBox]:
         """
         Returns a Mag(1) bounding box for each file on disk.
 
@@ -333,20 +373,21 @@ class MagView(View):
             voxel_size=self.layer.dataset.voxel_size,
             exist_ok=True,
         )
-        compressed_mag = compressed_dataset.get_or_add_layer(
+        compressed_layer = compressed_dataset.get_or_add_layer(
             layer_name=self.layer.name,
             category=self.layer.category,
             dtype_per_channel=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
             data_format=self.layer.data_format,
             largest_segment_id=self.layer._get_largest_segment_id_maybe(),
-        ).get_or_add_mag(
+        )
+        compressed_layer.bounding_box = self.layer.bounding_box
+        compressed_mag = compressed_layer.get_or_add_mag(
             mag=self.mag,
             chunk_shape=self.info.chunk_shape,
             chunks_per_shard=self.info.chunks_per_shard,
             compress=True,
         )
-        compressed_mag.layer.bounding_box = self.layer.bounding_box
 
         logging.info(
             "Compressing mag {0} in '{1}'".format(
@@ -354,24 +395,38 @@ class MagView(View):
             )
         )
         with get_executor_for_args(args, executor) as executor:
-            job_args = []
-            for bbox in self.get_bounding_boxes_on_disk():
-                bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
-                if not bbox.is_empty():
-                    bbox = bbox.align_with_mag(self.mag, ceil=True)
-                    source_view = self.get_view(
-                        absolute_offset=bbox.topleft, size=bbox.size
+            if self.layer.data_format == DataFormat.WKW:
+                job_args = []
+                for i, bbox in enumerate(self._array.list_bounding_boxes()):
+                    bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
+                        self.layer.bounding_box, dont_assert=True
                     )
-                    target_view = compressed_mag.get_view(
-                        absolute_offset=bbox.topleft, size=bbox.size
-                    )
-                    job_args.append((source_view, target_view))
+                    if not bbox.is_empty():
+                        bbox = bbox.align_with_mag(self.mag, ceil=True)
+                        source_view = self.get_view(
+                            absolute_offset=bbox.topleft, size=bbox.size
+                        )
+                        target_view = compressed_mag.get_view(
+                            absolute_offset=bbox.topleft, size=bbox.size
+                        )
+                        job_args.append((source_view, target_view, i))
 
-            wait_and_ensure_success(
-                executor.map_to_futures(_compress_cube_job, job_args),
-                executor=executor,
-                progress_desc="Compressing",
-            )
+                wait_and_ensure_success(
+                    executor.map_to_futures(_compress_cube_job, job_args),
+                    executor=executor,
+                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                )
+            else:
+                warnings.warn(
+                    "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
+                    + "Instead all bounding boxes are iterated, which can be slow."
+                )
+                self.for_zipped_chunks(
+                    target_view=compressed_mag,
+                    executor=executor,
+                    func_per_chunk=_compress_cube_job,
+                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                )
 
         if target_path is None:
             rmtree(self.path)
@@ -387,6 +442,52 @@ class MagView(View):
                 self.info.chunks_per_shard,
                 True,
             )
+
+    def merge_with_view(
+        self,
+        other: "MagView",
+        executor: Executor,
+    ) -> None:
+        assert all(
+            other.info.chunks_per_shard.to_np() == 1
+        ), "volume annotation must have file_len=1"
+        assert (
+            self.info.voxel_type == other.info.voxel_type
+        ), "Volume annotation must have same dtype as fallback layer"
+        assert (
+            self.mag == other.mag
+        ), f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+
+        logging.info("Scan disk for annotation shards.")
+        bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
+
+        logging.info("Grouping %s bboxes according to output shards.", len(bboxes))
+        shards_with_bboxes = NDBoundingBox.group_boxes_with_aligned_mag(
+            bboxes, Mag(self.info.shard_shape * self.mag)
+        )
+
+        args = [(other, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
+
+        logging.info("Merging %s shards.", len(args))
+        wait_and_ensure_success(
+            executor.map_to_futures(self.merge_chunk, args),
+            executor,
+            "Merging chunks with fallback layer",
+        )
+
+    def merge_chunk(
+        self, args: Tuple["MagView", NDBoundingBox, List[NDBoundingBox]]
+    ) -> None:
+        other, shard, bboxes = args
+        data_buffer = self.read(absolute_bounding_box=shard)[0]
+
+        for bbox in bboxes:
+            read_data = other.read(absolute_bounding_box=bbox)[0]
+            data_buffer[bbox.offset(-shard.topleft).in_mag(other.mag).to_slices()] = (
+                read_data
+            )
+
+        self.write(data_buffer, absolute_offset=shard.topleft)
 
     @property
     def _properties(self) -> MagViewProperties:

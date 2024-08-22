@@ -11,6 +11,9 @@ import numpy as np
 import typer
 from typing_extensions import Annotated
 
+from webknossos.dataset.length_unit import LengthUnit
+from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
+
 from ..dataset import DataFormat, Dataset, MagView, SamplingModes
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from ..geometry import BoundingBox, Mag, Vec3Int
@@ -24,7 +27,7 @@ from ._utils import (
     DistributionStrategy,
     Order,
     SamplingMode,
-    VoxelSize,
+    VoxelSizeTuple,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -71,7 +74,7 @@ def convert_raw(
     chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
     order: Literal["C", "F"] = "F",
-    voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
+    voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
     executor_args: Optional[Namespace] = None,
@@ -79,9 +82,9 @@ def convert_raw(
     """Performs the conversion step from RAW file to WEBKNOSSOS"""
     time_start(f"Conversion of {source_raw_path}")
 
-    if voxel_size is None:
-        voxel_size = 1.0, 1.0, 1.0
-    wk_ds = Dataset(target_path, voxel_size=voxel_size, exist_ok=True)
+    wk_ds = Dataset(
+        target_path, voxel_size_with_unit=voxel_size_with_unit, exist_ok=True
+    )
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
         "color",
@@ -140,8 +143,8 @@ def main(
     shape: Annotated[
         Vec3Int,
         typer.Option(
-            help="Shape of the source dataset. Should be a comma seperated "
-            "sting (e.g. 1024,1024,512).",
+            help="Shape of the source dataset. Should be a comma separated "
+            "string (e.g. 1024,1024,512).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
@@ -160,14 +163,21 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: Annotated[
-        Optional[VoxelSize],
+        VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
-            metavar="VOXEL_SIZE",
+            metavar="VoxelSize",
+            show_default=False,
         ),
-    ] = None,
+    ],
+    unit: Annotated[
+        LengthUnit,
+        typer.Option(
+            help="The unit of the voxel size.",
+        ),
+    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",
@@ -199,7 +209,7 @@ def main(
         Optional[Mag],
         typer.Option(
             help="Max resolution to be downsampled. "
-            "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ] = None,
@@ -244,7 +254,7 @@ def main(
         Optional[str],
         typer.Option(
             help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-(e.g., --job_resources=\'{"mem": "10M"}\')\'',
+(e.g., --job-resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
@@ -267,6 +277,7 @@ def main(
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
+    voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     mag_view = convert_raw(
         source,
@@ -278,7 +289,7 @@ def main(
         chunk_shape,
         chunks_per_shard,
         order.value,
-        voxel_size,
+        voxel_size_with_unit,
         flip_axes,
         compress,
         executor_args,

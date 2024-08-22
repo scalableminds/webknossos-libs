@@ -19,6 +19,7 @@ annotation data programmatically is discouraged therefore.
 """
 
 import json
+import logging
 import re
 import warnings
 from contextlib import contextmanager, nullcontext
@@ -45,6 +46,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
 import attr
+from cluster_tools.executor_protocol import Executor
 from upath import UPath
 from zipp import Path as ZipPath
 
@@ -60,10 +62,12 @@ from ..dataset import (
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.properties import DatasetProperties, dataset_converter
-from ..geometry import BoundingBox, Vec3Int
+from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
-from ..utils import time_since_epoch_in_ms, warn_deprecated
+from ..utils import get_executor_for_args, time_since_epoch_in_ms, warn_deprecated
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
+
+logger = logging.getLogger(__name__)
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
@@ -124,8 +128,8 @@ class Annotation:
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     metadata: Dict[str, str] = attr.Factory(dict)
-    task_bounding_box: Optional[BoundingBox] = None
-    user_bounding_boxes: List[BoundingBox] = attr.Factory(list)
+    task_bounding_box: Optional[NDBoundingBox] = None
+    user_bounding_boxes: List[NDBoundingBox] = attr.Factory(list)
     _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
@@ -284,7 +288,7 @@ class Annotation:
           `https://webknossos.org/annotations/6114d9410100009f0096c640`
         * `annotation_type` is no longer required and therefore deprecated and ignored
         * `webknossos_url` may be supplied if an annotation id was used
-          and allows to specifiy in which webknossos instance to search for the annotation.
+          and allows to specify in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         * `skip_volume_data` can be set to `True` to omit downloading annotated volume data.
           They can still be streamed from WEBKNOSSOS using `annotation.get_remote_annotation_dataset()`.
@@ -312,7 +316,8 @@ class Annotation:
                 "[DEPRECATION] `annotation_type` is deprecated for Annotation.download(), it should be omitted.",
                 DeprecationWarning,
             )
-
+        if webknossos_url is not None:
+            webknossos_url = webknossos_url.rstrip("/")
         if webknossos_url is not None and webknossos_url != _get_context().url:
             warnings.warn(
                 f"[INFO] The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
@@ -336,7 +341,7 @@ class Annotation:
         else:
             assert filename.endswith(
                 ".zip"
-            ), f"Downloaded annoation should have the suffix .zip or .nml, but has filename {filename}"
+            ), f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
             annotation = Annotation._load_from_zip(BytesIO(file_body))
 
         if _return_context:
@@ -440,9 +445,11 @@ class Annotation:
                     id=volume.id,
                     name="Volume" if volume.name is None else volume.name,
                     fallback_layer_name=volume.fallback_layer,
-                    data_format=DataFormat(volume.format)
-                    if volume.format is not None
-                    else DataFormat.WKW,
+                    data_format=(
+                        DataFormat(volume.format)
+                        if volume.format is not None
+                        else DataFormat.WKW
+                    ),
                     zip=volume_path,
                     segments=segments,
                     largest_segment_id=volume.largest_segment_id,
@@ -474,7 +481,7 @@ class Annotation:
         assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
         assert (
             len(nml_paths) == 1
-        ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
+        ), f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
@@ -501,6 +508,103 @@ class Annotation:
             nml = annotation_to_nml(self)
             with open(path, "wb") as f:
                 nml.write(f)
+
+    def merge_fallback_layer(
+        self,
+        target: Path,
+        dataset_directory: Path,
+        volume_layer_name: Optional[str] = None,
+        executor: Optional[Executor] = None,
+    ) -> None:
+        """
+        Merge the volume annotation with the fallback layer.
+        """
+        annotation_volumes = list(self.get_volume_layer_names())
+
+        output_dataset = Dataset(
+            target,
+            voxel_size=self.voxel_size,
+        )
+        assert (
+            len(annotation_volumes) > 0
+        ), "Annotation does not contain any volume layers!"
+
+        if volume_layer_name is not None:
+            assert (
+                volume_layer_name in annotation_volumes
+            ), f'Volume layer name "{volume_layer_name}" not found in annotation'
+        else:
+            assert (
+                len(annotation_volumes) == 1
+            ), "Volume layer name was not provided and more than one volume layer found in annotation"
+            volume_layer_name = annotation_volumes[0]
+
+        volume_layer = self._get_volume_layer(volume_layer_name=volume_layer_name)
+        fallback_layer_name = volume_layer.fallback_layer_name
+
+        if fallback_layer_name is None:
+            logging.info("No fallback layer found, save annotation as dataset.")
+            self.export_volume_layer_to_dataset(output_dataset)
+
+        else:
+            fallback_dataset_path = dataset_directory / self.dataset_name
+            fallback_layer = Dataset.open(fallback_dataset_path).get_layer(
+                fallback_layer_name
+            )
+
+            if volume_layer.zip is None:
+                logger.info("No volume annotation found. Copy fallback layer.")
+                with get_executor_for_args(args=None, executor=executor) as executor:
+                    output_dataset.add_copy_layer(
+                        fallback_layer, compress=True, executor=executor
+                    )
+
+            else:
+                tmp_annotation_layer_name = f"{self.name}-TMP"
+                logger.info(
+                    "Unpack annotation layer %s temporarily in %s as %s",
+                    volume_layer_name,
+                    output_dataset.name,
+                    tmp_annotation_layer_name,
+                )
+                # NOTE(erjel): Cannot use "temporary_volume_layer_copy" here, since tmp folders
+                # might not be accessible from slurm compute nodes.
+                input_annotation_layer = self.export_volume_layer_to_dataset(
+                    output_dataset,
+                    layer_name=tmp_annotation_layer_name,
+                    volume_layer_name=volume_layer_name,
+                )
+
+                input_annotation_mag = input_annotation_layer.get_finest_mag()
+                fallback_mag = fallback_layer.get_mag(input_annotation_mag.mag)
+
+                logger.info(
+                    "Create layer %s in %s",
+                    fallback_layer.name,
+                    output_dataset.path,
+                )
+                output_layer = output_dataset.add_layer_like(
+                    fallback_layer, fallback_layer.name
+                )
+
+                with get_executor_for_args(args=None, executor=executor) as executor:
+                    logger.info(
+                        "Copy Mag %s from %s to %s",
+                        fallback_mag.mag,
+                        fallback_layer.path,
+                        output_layer.path,
+                    )
+                    output_mag = output_layer.add_copy_mag(
+                        fallback_mag,
+                        compress=True,
+                        executor=executor,
+                    )
+
+                    output_mag.merge_with_view(input_annotation_mag, executor)
+
+                logging.info("Delete temporary annotation layer")
+                output_dataset.delete_layer(tmp_annotation_layer_name)
+                logging.info("Done.")
 
     def upload(self) -> str:
         """Uploads the annotation to your current `webknossos_context`."""

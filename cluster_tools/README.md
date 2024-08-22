@@ -4,7 +4,7 @@
 [![Code Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 
 
-This package provides python `Executor` classes for distributing tasks on a slurm cluster or via multi processing.
+This package provides python `Executor` classes for distributing tasks on a Slurm cluster, Kubernetes, Dask or via multi processing.
 
 ## Example
 
@@ -19,6 +19,23 @@ if __name__ == '__main__':
   with cluster_tools.get_executor(strategy) as executor:
     result = list(executor.map(square, [2, 3, 4]))
     assert result == [4, 9, 16]
+```
+
+## Installation
+The `cluster_tools` package requires at least Python 3.9.
+
+You can install it from [pypi](https://pypi.org/project/cluster_tools/), e.g. via pip:
+
+```bash
+pip install cluster_tools
+```
+
+By default only the dependencies for running jobs on Slurm and via multiprocessing are installed. 
+For Kubernetes and Dask run:
+
+```bash
+pip install cluster_tools[kubernetes]
+pip install cluster_tools[dask]
 ```
 
 ## Configuration
@@ -57,11 +74,14 @@ If you would like to configure these limits independently, you can do so by sett
 ## Dev Setup
 
 ```
+# See ./dockered-slurm/README.md for troubleshooting
 cd dockered-slurm
 docker-compose up -d
 docker exec -it slurmctld bash
 docker exec -it c1 bash
 ```
+
+Make sure to install all extra dependencies, such as Kubernetes, with `poetry install --all-extras`.
 
 Tests can be executed with `cd tests && poetry run pytest -s tests.py` after entering the container.
 Linting can be run with `./lint.sh`.

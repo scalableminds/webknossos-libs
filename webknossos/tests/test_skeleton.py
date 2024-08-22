@@ -3,6 +3,7 @@ from os import PathLike
 from pathlib import Path
 from typing import List, Optional
 
+import networkx as nx
 import pytest
 
 import webknossos as wk
@@ -49,6 +50,15 @@ def create_dummy_skeleton() -> wk.Skeleton:
     )
 
     return nml
+
+
+def create_dummy_nx_graph() -> nx.Graph:
+    nx_graph = nx.Graph()
+    nx_graph.add_node(1, position=(0, 1, 2), comment="node 1 nx")
+    nx_graph.add_node(2, position=(3, 1, 2), comment="node 2 nx")
+    nx_graph.add_edge(1, 2)
+
+    return nx_graph
 
 
 def test_doc_example() -> None:
@@ -106,6 +116,90 @@ def test_skeleton_creation() -> None:
     ]
     assert len(grand_children) == 1
     assert grand_children[0].group == groups[0]
+
+
+def test_add_nx_graph() -> None:
+    skeleton = create_dummy_skeleton()
+    node_count = skeleton.get_total_node_count()
+    tree_count = len(list(skeleton.flattened_trees()))
+    group_count = len(list(skeleton.flattened_groups()))
+    max_node_id = skeleton.get_max_node_id()
+
+    nx_graph = create_dummy_nx_graph()
+    skeleton.add_nx_graphs(
+        {"first_group": [nx_graph, nx_graph], "second_group": [nx_graph]}
+    )
+
+    # check number of groups, nodes and trees
+    assert len(list(skeleton.flattened_groups())) == group_count + 2
+    assert skeleton.get_total_node_count() == node_count + 6
+    assert len(list(skeleton.flattened_trees())) == tree_count + 3
+
+    # check group names
+    for group in skeleton.flattened_groups():
+        assert group.name in [
+            "first_group",
+            "second_group",
+            "Example Group",
+            "Nested Group",
+        ]
+
+    # check node attributes
+    max_node_id = skeleton.get_max_node_id()
+    assert skeleton.get_node_by_id(max_node_id).comment == "node 2 nx"
+    assert skeleton.get_node_by_id(max_node_id).position == (3, 1, 2)
+    assert skeleton.get_node_by_id(max_node_id - 1).comment == "node 1 nx"
+    assert skeleton.get_node_by_id(max_node_id - 1).position == (0, 1, 2)
+
+    # check if edge was added
+    for edge in skeleton.get_tree_by_id(max_node_id - 2).edges:
+        assert (edge[0].id, edge[1].id) == (max_node_id - 1, max_node_id)
+
+
+def test_nml_generation(tmp_path: Path) -> None:
+    OLD_NML_PATH = TESTDATA_DIR / "nmls" / "generate_nml_snapshot.nml"
+
+    tree1 = create_dummy_nx_graph()
+    tree2 = create_dummy_nx_graph()
+    tree2.add_node(3, position=(3, 3, 3), comment="node 3 nx")
+
+    tree_dict = {"first_group": [tree1], "second_group": [tree2]}
+
+    # old_nml was generated with the old wknml library as follows:
+    # params_wknml = {"name": "MyDataset", "scale": (1, 1, 1), "zoomLevel": 0.4}
+    # old_nml = generate_nml(tree_dict=tree_dict, parameters=params_wknml)
+    # with open(tmp_path / "annotation_old.nml", "wb") as f:
+    #     write_nml(f, old_nml)
+
+    tree_dict = {"first_group": [tree1], "second_group": [tree2]}
+
+    annotation = wk.Annotation(
+        name="MyAnnotation",
+        dataset_name="MyDataset",
+        voxel_size=(1, 1, 1),
+        zoom_level=0.4,
+    )
+
+    annotation.skeleton.add_nx_graphs(tree_dict)
+
+    annotation.save(tmp_path / "annotation_new.nml")
+
+    old_skeleton = wk.Skeleton.load(OLD_NML_PATH)
+    new_skeleton = wk.Skeleton.load(tmp_path / "annotation_new.nml")
+
+    for old_group, new_group in zip(
+        old_skeleton.flattened_groups(), new_skeleton.flattened_groups()
+    ):
+        assert old_group.name == new_group.name
+        for old_child, new_child in zip(old_group.children, new_group.children):
+            if isinstance(old_child, wk.Tree) and isinstance(new_child, wk.Tree):
+                for old_node, new_node in zip(old_child.nodes, new_child.nodes):
+                    assert old_node.comment == new_node.comment
+                    assert old_node.position == new_node.position
+                    assert old_node.radius == new_node.radius
+                for old_edge, new_edge in zip(old_child.edges, new_child.edges):
+                    assert old_edge[0].position == new_edge[0].position
+                    assert old_edge[1].position == new_edge[1].position
 
 
 def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:

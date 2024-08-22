@@ -1,18 +1,19 @@
 import re
-from operator import add, floordiv, mod, mul, sub
-from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
+from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 
-value_error = "Vector components must be three integers or a Vec3IntLike object."
+from .vec_int import VecInt
+
+_VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object."
 
 
-class Vec3Int(tuple):
+class Vec3Int(VecInt):
     def __new__(
         cls,
-        vec: Union[int, "Vec3IntLike"],
-        y: Optional[int] = None,
-        z: Optional[int] = None,
+        *args: Union["Vec3IntLike", Iterable[str], int],
+        axes: Optional[Iterable[str]] = ("x", "y", "z"),
+        **kwargs: int,
     ) -> "Vec3Int":
         """
         Class to represent a 3D vector. Inherits from tuple and provides useful
@@ -31,54 +32,36 @@ class Vec3Int(tuple):
         ```
         """
 
-        if isinstance(vec, Vec3Int):
-            return vec
+        if args:
+            if isinstance(args[0], Vec3Int):
+                return args[0]
 
-        as_tuple: Optional[Tuple[int, int, int]] = None
+            assert axes is not None, _VALUE_ERROR
 
-        if isinstance(vec, int):
-            assert y is not None and z is not None, value_error
-            assert isinstance(y, int) and isinstance(z, int), value_error
-            as_tuple = vec, y, z
+            if isinstance(args[0], Iterable):
+                self = super().__new__(cls, *args[0], axes=("x", "y", "z"))
+                assert self is not None and len(self) == 3, _VALUE_ERROR
+
+                return cast(Vec3Int, self)
+
+            assert len(args) == 3 and len(tuple(axes)) == 3, _VALUE_ERROR
+            assert kwargs is None or len(kwargs) == 0, _VALUE_ERROR
+            assert "x" in axes and "y" in axes and "z" in axes, _VALUE_ERROR
+            values, _ = zip(*sorted(zip(args, axes), key=lambda x: x[1]))
         else:
-            assert y is None and z is None, value_error
-            if isinstance(vec, np.ndarray):
-                assert np.count_nonzero(vec % 1) == 0, value_error
-                assert vec.shape == (
-                    3,
-                ), "Numpy array for Vec3Int must have shape (3,)."
-            if isinstance(vec, Iterable):
-                as_tuple = cast(Tuple[int, int, int], tuple(int(item) for item in vec))
-                assert len(as_tuple) == 3, value_error
-        assert as_tuple is not None and len(as_tuple) == 3, value_error
+            assert "x" in kwargs and "y" in kwargs and "z" in kwargs, _VALUE_ERROR
+            assert len(kwargs) == 3, _VALUE_ERROR
+            values = kwargs["x"], kwargs["y"], kwargs["z"]
 
-        return super().__new__(cls, cast(Iterable, as_tuple))
+        self = super().__new__(cls, *values, axes=("x", "y", "z"))
+        self.axes = ("x", "y", "z")
 
-    @staticmethod
-    def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
-        """Use Vec3Int.from_xyz for fast construction."""
+        assert self is not None and len(self) == 3, _VALUE_ERROR
 
-        # By calling __new__ of tuple directly, we circumvent
-        # the tolerant (and potentially) slow Vec3Int.__new__ method.
-        return tuple.__new__(Vec3Int, (x, y, z))
+        return cast(Vec3Int, self)
 
-    @staticmethod
-    def from_vec3_float(vec: Tuple[float, float, float]) -> "Vec3Int":
-        return Vec3Int(int(vec[0]), int(vec[1]), int(vec[2]))
-
-    @staticmethod
-    def from_vec_or_int(vec_or_int: Union["Vec3IntLike", int]) -> "Vec3Int":
-        if isinstance(vec_or_int, int):
-            return Vec3Int.full(vec_or_int)
-        else:
-            return Vec3Int(vec_or_int)
-
-    @staticmethod
-    def from_str(string: str) -> "Vec3Int":
-        if re.match(r"\(\d+,\d+,\d+\)", string):
-            return Vec3Int(tuple(map(int, re.findall(r"\d+", string))))
-        else:
-            return Vec3Int.full(int(string))
+    def __getnewargs__(self) -> Tuple[Tuple[int, ...], Tuple[str, ...]]:
+        return (self.to_tuple(), self.axes)
 
     @property
     def x(self) -> int:
@@ -101,104 +84,51 @@ class Vec3Int(tuple):
     def with_z(self, new_z: int) -> "Vec3Int":
         return Vec3Int.from_xyz(self.x, self.y, new_z)
 
-    def to_np(self) -> np.ndarray:
-        return np.array((self.x, self.y, self.z))
-
-    def to_list(self) -> List[int]:
-        return [self.x, self.y, self.z]
-
     def to_tuple(self) -> Tuple[int, int, int]:
-        return self.x, self.y, self.z
+        return (self.x, self.y, self.z)
 
-    def contains(self, needle: int) -> bool:
-        return self.x == needle or self.y == needle or self.z == needle
+    @staticmethod
+    def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
+        """Use Vec3Int.from_xyz for fast construction."""
 
-    def is_positive(self, strictly_positive: bool = False) -> bool:
-        if strictly_positive:
-            return all(i > 0 for i in self)
-        else:
-            return all(i >= 0 for i in self)
+        # By calling __new__ of tuple directly, we circumvent
+        # the tolerant (and potentially) slow Vec3Int.__new__ method.
+        vec3int = tuple.__new__(Vec3Int, (x, y, z))
+        vec3int.axes = ("x", "y", "z")
+        return vec3int
 
-    def is_uniform(self) -> bool:
-        return self.x == self.y == self.z
+    @staticmethod
+    def from_vec3_float(vec: Tuple[float, float, float]) -> "Vec3Int":
+        return Vec3Int(int(vec[0]), int(vec[1]), int(vec[2]))
 
-    def _element_wise(
-        self, other: Union[int, "Vec3IntLike"], fn: Callable[[int, Any], int]
-    ) -> "Vec3Int":
-        if isinstance(other, int):
-            other_imported = Vec3Int.from_xyz(other, other, other)
-        else:
-            other_imported = Vec3Int(other)
-        return Vec3Int.from_xyz(
-            fn(self.x, other_imported.x),
-            fn(self.y, other_imported.y),
-            fn(self.z, other_imported.z),
-        )
+    @staticmethod
+    def from_vec_or_int(vec_or_int: Union["Vec3IntLike", int]) -> "Vec3Int":
+        if isinstance(vec_or_int, int):
+            return Vec3Int.full(vec_or_int)
 
-    # note: (arguments incompatible with superclass, do not add Vec3Int to plain tuple! Hence the type:ignore)
-    def __add__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":  # type: ignore[override]
-        return self._element_wise(other, add)
+        return Vec3Int(vec_or_int)
 
-    def __sub__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
-        return self._element_wise(other, sub)
+    @staticmethod
+    def from_str(string: str) -> "Vec3Int":
+        if re.match(r"^\(\d+,\d+,\d+\)$", string):
+            # matches a string that consists of three comma-separated digits in parentheses
+            return Vec3Int(tuple(map(int, re.findall(r"\d+", string))))
+        elif re.match(r"^\d+,\d+,\d+$", string):
+            # matches a string that consists of three digits separated by commas
+            return Vec3Int(tuple(map(int, string.split(","))))
 
-    # Note: When multiplying regular tuples with an int those are repeated,
-    # which is a different behavior in the superclass! Hence the type:ignore.
-    def __mul__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":  # type: ignore[override]
-        return self._element_wise(other, mul)
-
-    def __floordiv__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
-        return self._element_wise(other, floordiv)
-
-    def __mod__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
-        return self._element_wise(other, mod)
-
-    def __neg__(self) -> "Vec3Int":
-        return Vec3Int.from_xyz(-self.x, -self.y, -self.z)
-
-    def ceildiv(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
-        return (self + other - 1) // other
-
-    def pairmax(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
-        return self._element_wise(other, max)
-
-    def pairmin(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
-        return self._element_wise(other, min)
-
-    def prod(self) -> int:
-        return self.x * self.y * self.z
-
-    def __repr__(self) -> str:
-        return f"Vec3Int({self.x},{self.y},{self.z})"
-
-    def add_or_none(self, other: Optional["Vec3Int"]) -> Optional["Vec3Int"]:
-        return None if other is None else self + other
-
-    def moveaxis(
-        self, source: Union[int, List[int]], target: Union[int, List[int]]
-    ) -> "Vec3Int":
-        """
-        Allows to move one element at index `source` to another index `target`. Similar to
-        np.moveaxis, this is *not* a swap operation but instead it moves the specified
-        source so that the other elements move when necessary.
-        """
-
-        # Piggy-back on np.moveaxis by creating an auxiliary array where the indices 0, 1 and
-        # 2 appear in the shape.
-        indices = np.moveaxis(np.zeros((0, 1, 2)), source, target).shape
-        arr = self.to_np()[np.array(indices)]
-        return Vec3Int(arr)
+        return Vec3Int.full(int(string))
 
     @classmethod
-    def zeros(cls) -> "Vec3Int":
+    def zeros(cls, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(0, 0, 0)
 
     @classmethod
-    def ones(cls) -> "Vec3Int":
+    def ones(cls, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(1, 1, 1)
 
     @classmethod
-    def full(cls, an_int: int) -> "Vec3Int":
+    def full(cls, an_int: int, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(an_int, an_int, an_int)
 
 

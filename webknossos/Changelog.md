@@ -10,19 +10,159 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.1...HEAD)
 
 ### Breaking Changes
 
 ### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.15.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.1) - 2024-08-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.0...v0.15.1)
+
+### Changed
+- Updates zarrita to 0.2.7. [#1169](https://github.com/scalableminds/webknossos-libs/pull/1169)
+
+
+## [0.15.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.0) - 2024-08-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...v0.15.0)
+
+### Breaking Changes
+- Python version 3.8 is no longer officially supported. [#1068](https://github.com/scalableminds/webknossos-libs/pull/1068)
+
+### Added
+- Added example for scaling a skeleton. [#1147](https://github.com/scalableminds/webknossos-libs/pull/1147)
+
+### Changed
+- Added options `--layer-name` and `--mag` for compress command of the CLI. [#1141](https://github.com/scalableminds/webknossos-libs/pull/1141)
+- Added options `--chunk-shape` and `--chunks-per-shard` for convert command of the CLI. [#1150](https://github.com/scalableminds/webknossos-libs/pull/1150)
+- The `from_images` method of the `Dataset` supports directories and single files as `input_path` now. [#1152](https://github.com/scalableminds/webknossos-libs/pull/1152)
+- Added support for python version 3.12. [#1068](https://github.com/scalableminds/webknossos-libs/pull/1068)
+- The number of pixel limit for JPG conversion is disabled now. [#1154](https://github.com/scalableminds/webknossos-libs/pull/1154)
+- Added option `--batch-size` to the convert command of the CLI. [#1158](https://github.com/scalableminds/webknossos-libs/pull/1158)
+
+### Fixed
+- Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
+- Fix an issue where the remote folder was not found when the folder path query includes a trailing slash. [#1164](https://github.com/scalableminds/webknossos-libs/pull/1164)
+
+
+
+## [0.14.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.26) - 2024-07-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.25...v0.14.26)
+
+### Fixed
+- Add a converter to the VoxelSize field `factor`, to ensure it is a tuple.
+
+
+
+## [0.14.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.25) - 2024-07-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.24...v0.14.25)
+
+### Added
+- Added support for new voxel size that stores unit and updated to WEBKNOSSOS API version 7. [#1136](https://github.com/scalableminds/webknossos-libs/pull/1136)
+
+
+## [0.14.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.24) - 2024-07-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.23...v0.14.24)
+
+### Added
+- Added an implementation of padded_with_margins for NDBoundingBox class. [#1120](https://github.com/scalableminds/webknossos-libs/pull/1120)
+- Added a new method add_nx_graphs to skeleton.py which supports to add nx.Graphs to the Skeleton object. [#1130](https://github.com/scalableminds/webknossos-libs/pull/1130)
+
+### Changed
+- Removed additional logging messages during image conversion. [#1124](https://github.com/scalableminds/webknossos-libs/pull/1124)
+
+### Fixed
+- Fixed an issue where cube jobs upsampling, downsampling and compress failed when performed on more than 3 dimensions. [#1095](https://github.com/scalableminds/webknossos-libs/pull/1095)
+- Fixed an issue where webknossos libs crash when installed with minimal dependencies. [#1104](https://github.com/scalableminds/webknossos-libs/pull/1104)
+
+
+
+## [0.14.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.23) - 2024-06-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.22...v0.14.23)
+
+### Breaking Changes
+- Preferring a custom tiff reader over the default PIMS reader to convert tiff files. This change enables the recognition of axis information and the support of tifffiles with more than 3 dimensions. However, it also leads to changed behavior when converting tiff files. Tiffs with axes other than c, x, y, and z, with a shape bigger than 1, are no longer supported for conversion to WKW. Please convert these files to Zarr or Zarr3 Datasets instead. [#1043](https://github.com/scalableminds/webknossos-libs/pull/1043)
+
+### Added
+- Added a pixel level heuristic for distinguishing color and segmentation layers when importing image data with the `from_images` or `add_layer_from_images` method. [#1007](https://github.com/scalableminds/webknossos-libs/pull/1007)
+- Added .ims as supported suffix. [#1085](https://github.com/scalableminds/webknossos-libs/pull/1085)
+- Added suffixes supported by bioformats for Zeiss CZI, Leica LOF, Zeiss LSM (laser scanning microscope), Zeiss LSM (Laser Scanning Microscope) 510/710, Leica XLEF and Zeiss AxioVision ZVI (Zeiss Vision Image). [#1086](https://github.com/scalableminds/webknossos-libs/pull/1086)
+- Added suport for setting a default ID mapping for segmentation layers. [#1118](https://github.com/scalableminds/webknossos-libs/pull/1118)
+
+### Changed
+- Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [#1055](https://github.com/scalableminds/webknossos-libs/pull/1055)
+- Set a new max value for test_align_with_mag_against_numpy_implementation to avoid failures due to high numbers. [#1082](https://github.com/scalableminds/webknossos-libs/pull/1082)
+- Updated dependabot.yml [#1087](https://github.com/scalableminds/webknossos-libs/pull/1087)
+- Make lookup for supported suffixes case-insensitive. [#1100](https://github.com/scalableminds/webknossos-libs/pull/1100)
+
+### Fixed
+- Fixed an issue with downloading annotations through the Command Line Interface. [#1083](https://github.com/scalableminds/webknossos-libs/pull/1083)
+
+
+
+## [0.14.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.22) - 2024-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.21...v0.14.22)
+
+### Fixed
+- Performing `webknossos upload` on a windows machine led to loss of directory structure due to backslashes in the relative paths. This was fixed by [#1067](https://github.com/scalableminds/webknossos-libs/pull/1067)
+
+
+
+## [0.14.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.21) - 2024-05-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.20...v0.14.21)
+
+### Changed
+- Added `layer_name` as optional argument to `Dataset.from_images` method. If the created dataset contains only a single layer, `layer_name` is used, otherwise the given `layer_name` is a common prefix for all layers. [#1054](https://github.com/scalableminds/webknossos-libs/pull/1054)
+- The context variable of View.get_buffered_slice_writer() is a BufferedSliceWriter now instead of a Generator. Interaction with the SliceWriter does not change, but updating the offset after first initialization is possible now. [#1052](https://github.com/scalableminds/webknossos-libs/pull/1052)
+
+
+## [0.14.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.20) - 2024-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.19...v0.14.20)
+
+### Changed
+- Updated ruff to v0.4.0 [#1047](https://github.com/scalableminds/webknossos-libs/pull/1047)
+- Added NIfTI suffix .nii to list of supported bioformats suffixes. [#1048](https://github.com/scalableminds/webknossos-libs/pull/1048)
+
+
+## [0.14.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.19) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.18...v0.14.19)
+
+### Changed
+- Removed special CLI command for cubing Nifti files. Use regular conversion command instead. Further, moved Python dependencies for examples and dev dependencies into optional groups which are not installed by default. Install with `poetry install --with dev --with examples`. [#1024](https://github.com/scalableminds/webknossos-libs/pull/1024)
+
+
+## [0.14.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.18) - 2024-04-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.17...v0.14.18)
+
+### Fixed
+- Fixed a bug, where using an unaligned topleft value for `add_layer_from_images` leads to corrupted data. [#1036](https://github.com/scalableminds/webknossos-libs/pull/1036)
+
+
+
+## [0.14.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.17) - 2024-04-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.16...v0.14.17)
+
+### Changed
+- The characters `@` and `$` are allowed within layer names now. [#1034](https://github.com/scalableminds/webknossos-libs/pull/1034)
+
+
+## [0.14.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.16) - 2024-04-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.15...v0.14.16)
+
+### Added
 - Add CLI tool for offline merging of zip annotations with fallback datasets. [#996](https://github.com/scalableminds/webknossos-libs/pull/996)
+- Added support for converting new file formats such as DICOM, using the bioformats reader. [#1014](https://github.com/scalableminds/webknossos-libs/pull/1014)
 
 ### Changed
 - The rules for naming the layers have been tightened to match the allowed layer names on webknossos. [#1016](https://github.com/scalableminds/webknossos-libs/pull/1016)
 - Replaced PyLint linter + black formatter with Ruff for development. [#1013](https://github.com/scalableminds/webknossos-libs/pull/1013)
 - The remote operations now use the WEBKNOSSOS API version 6. [#1018](https://github.com/scalableminds/webknossos-libs/pull/1018)
-
-### Fixed
+- The conversion of 4D Tiff files to a Zarr3 Dataset is possible. NDBoundingBoxes and VecInt classes are introduced to support working with more than 3 dimensions. [#966](https://github.com/scalableminds/webknossos-libs/pull/966)
 
 
 ## [0.14.15](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.15) - 2024-02-07
@@ -226,7 +366,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `python -m wkcuber`, `python -m wkcuber.convert_image_stack_to_wkw` -> `webknossos convert`
     - `python -m wkcuber.export_wkw_as_tiff` -> `webknossos export-wkw-as-tiff`
     - `python -m wkcuber.convert_knossos` -> `webknossos convert-knossos`
-    - `python -m wkcuber.convert_nifti` -> `webknossos convert-nifti`
     - `python -m wkcuber.convert_raw` -> `webknossos convert-raw`
     - `python -m wkcuber.downsampling` -> `webknossos downsample`
     - `python -m wkcuber.compress` -> `webknossos compress`
@@ -825,7 +964,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     attributes that are proxies for the skeleton attributes: `dataset_name`, `scale`, `organization_id`, `description`
   - `Annotation`s can now be initialized from their attributes and an optional skeleton.
   - New methods on `Annotation`: `upload`, `add_volume_layer`, `delete_volume_layer`
-  - `Annotation.load()` and `annoation.save()` also works with `.nml` files.
+  - `Annotation.load()` and `annotation.save()` also works with `.nml` files.
 - Added `MagView.get_views_on_disk()` as a shortcut to turning `get_bounding_boxes_on_disk` into views.
   [#621](https://github.com/scalableminds/webknossos-libs/pull/621)
 
@@ -848,7 +987,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 - Added `only_setup_mag` parameter to downsample-related methods in `Layer`. This parameter allows creating output magnifications before parallelizing downsampling invocations to avoid outdated writes to datasource-properties.json. [#610](https://github.com/scalableminds/webknossos-libs/pull/610)
-- Added `Task.create()` method to create tasks by prodiving a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
+- Added `Task.create()` method to create tasks by providing a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
 
 ## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
 

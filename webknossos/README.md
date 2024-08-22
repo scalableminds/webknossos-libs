@@ -35,11 +35,21 @@ You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via p
 pip install webknossos
 ```
 
+By default `webknossos` can only distribute any computations through multiprocessing or Slurm. For Kubernetes or Dask install these additional dependencies:
+
+```bash
+pip install cluster_tools[kubernetes]
+pip install cluster_tools[dask]
+```
+
 ## Examples
 See the [examples folder](examples) or the [the documentation](https://docs.webknossos.org/webknossos-py).
+The dependencies for the examples are not installed by default. Use `poetry install --with examples` to install them.
 
 ## Contributions & Development
 Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/development.html).
+
+The development dependencies not installed by default. Use `poetry install --with dev` to install them.
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)
@@ -51,3 +61,5 @@ Excerpts for testing purposes have been sampled from:
 * Dow Jacobo Hossain Siletti Hudspeth (2018). **Connectomics of the zebrafish's lateral-line neuromast reveals wiring and miswiring in a simple microcircuit.** eLife. [DOI:10.7554/eLife.33988](https://elifesciences.org/articles/33988)
 * Zheng Lauritzen Perlman Robinson Nichols Milkie Torrens Price Fisher Sharifi Calle-Schuler Kmecova Ali Karsh Trautman Bogovic Hanslovsky Jefferis Kazhdan Khairy Saalfeld Fetter Bock (2018). **A Complete Electron Microscopy Volume of the Brain of Adult Drosophila melanogaster.** Cell. [DOI:10.1016/j.cell.2018.06.019](https://www.cell.com/cell/fulltext/S0092-8674(18)30787-6). License: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 * Bosch Ackels Pacureanu et al (2022). **Functional and multiscale 3D structural investigation of brain tissue through correlative in vivo physiology, synchrotron microtomography and volume electron microscopy.** Nature Communications. [DOI:10.1038/s41467-022-30199-6](https://www.nature.com/articles/s41467-022-30199-6)
+* Hanke, M., Baumgartner, F. J., Ibe, P., Kaule, F. R., Pollmann, S., Speck, O., Zinke, W. & Stadler, J. (2014). **A high-resolution 7-Tesla fMRI dataset from complex natural stimulation with an audio movie. Scientific Data, 1:140003.** [DOI:10.1038/sdata.2014.3](http://www.nature.com/articles/sdata20143)
+* Sample OME-TIFF files (c) by the OME Consortium [https://downloads.openmicroscopy.org/images/OME-TIFF/2016-06/bioformats-artificial/](https://downloads.openmicroscopy.org/images/OME-TIFF/2016-06/bioformats-artificial/)

@@ -11,9 +11,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datastores
+    uri: http://localhost:9000/api/v7/datastores
   response:
     content: '[{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]'
     headers:

@@ -2,14 +2,16 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import typer
 from typing_extensions import Annotated
 
+from webknossos.geometry.mag import Mag
+
 from ..dataset import Dataset
 from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, parse_path
+from ._utils import DistributionStrategy, parse_mag, parse_path
 
 
 def main(
@@ -22,6 +24,22 @@ def main(
             parser=parse_path,
         ),
     ],
+    layer_name: Annotated[
+        Optional[str],
+        typer.Option(
+            help="Name of the layer to be compressed. If not provided, all layers will be compressed.",
+        ),
+    ] = None,
+    mag: Annotated[
+        Optional[List[Mag]],
+        typer.Option(
+            help="Mags that should be compressed. "
+            "Should be number or minus separated string (e.g. 2 or 2-2-2). "
+            "For multiple mags type: --mag 1 --mag 2",
+            parser=parse_mag,
+            metavar="MAG",
+        ),
+    ] = None,
     jobs: Annotated[
         int,
         typer.Option(
@@ -40,7 +58,7 @@ def main(
         Optional[str],
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
@@ -53,5 +71,20 @@ def main(
         job_resources=job_resources,
     )
 
+    ds = Dataset.open(target)
+    if layer_name is None:
+        layers = list(ds.layers.values())
+    else:
+        layers = [ds.get_layer(layer_name)]
+
     with get_executor_for_args(args=executor_args) as executor:
-        Dataset.open(target).compress(executor=executor)
+        for layer in layers:
+            if mag is None:
+                mags = list(layer.mags.values())
+            else:
+                mags = [layer.get_mag(mag) for mag in mag]
+            for current_mag in mags:
+                if not current_mag._is_compressed():
+                    current_mag.compress(executor=executor)
+                else:
+                    typer.echo(f"Skipping {current_mag} as it is already compressed.")

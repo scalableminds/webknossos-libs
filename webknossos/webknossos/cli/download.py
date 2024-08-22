@@ -1,13 +1,15 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
+import re
 from typing import Any, List, Optional
 
 import typer
 from typing_extensions import Annotated
 
-from ..annotation import Annotation
+from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
-from ..dataset import Dataset
+from ..client._resolve_short_link import resolve_short_link
+from ..dataset.dataset import _DATASET_URL_REGEX, Dataset
 from ..geometry import BoundingBox, Mag
 from ._utils import parse_bbox, parse_mag, parse_path
 
@@ -43,7 +45,7 @@ def main(
             rich_help_panel="Partial download",
             help="Bounding box that should be downloaded. "
             "The input format is x,y,z,width,height,depth. "
-            "Should be a comma seperated string (e.g. 0,0,0,10,10,10).",
+            "Should be a comma separated string (e.g. 0,0,0,10,10,10).",
             parser=parse_bbox,
             metavar="BBOX",
         ),
@@ -61,7 +63,7 @@ def main(
         typer.Option(
             rich_help_panel="Partial download",
             help="Mags that should be downloaded. "
-            "Should be number or minus seperated string (e.g. 2 or 2-2-2). "
+            "Should be number or minus separated string (e.g. 2 or 2-2-2). "
             "For multiple mags type: --mag 1 --mag 2",
             parser=parse_mag,
             metavar="MAG",
@@ -72,9 +74,10 @@ def main(
 
     layers = layer if layer else None
     mags = mag if mag else None
+    url = resolve_short_link(url)
 
     with webknossos_context(token=token):
-        try:
+        if re.match(_DATASET_URL_REGEX, url):
             Dataset.download(
                 dataset_name_or_url=url,
                 path=target,
@@ -82,5 +85,13 @@ def main(
                 layers=layers,
                 mags=mags,
             )
-        except AssertionError:
+        elif re.match(_ANNOTATION_URL_REGEX, url):
             Annotation.download(annotation_id_or_url=url).save(target)
+        else:
+            raise RuntimeError(
+                "The provided URL does not lead to a dataset or annotation."
+            )
+
+
+if __name__ == "__main__":
+    typer.run(main)

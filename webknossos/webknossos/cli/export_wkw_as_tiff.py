@@ -11,7 +11,7 @@ from typing import Any, Optional, Tuple, Union
 import numpy as np
 import typer
 from PIL import Image
-from scipy.ndimage.interpolation import zoom
+from scipy.ndimage import zoom
 from typing_extensions import Annotated
 
 from ..dataset import Dataset, MagView, View
@@ -35,7 +35,7 @@ def _make_tiff_name(name: str, slice_index: int) -> str:
         return f"{name}_{slice_index:06d}.tiff"
 
 
-def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image:
+def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
     if data_slice.shape[0] == 1:
         # discard greyscale dimension
         data_slice = data_slice.squeeze(axis=0)
@@ -205,7 +205,7 @@ def main(
         Mag,
         typer.Option(
             help="Max resolution to be downsampled. "
-            "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
             metavar="MAG",
         ),
@@ -253,7 +253,7 @@ def main(
         Optional[str],
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
@@ -262,7 +262,7 @@ def main(
 
     mag_view = Dataset.open(source).get_layer(layer_name).get_mag(mag)
 
-    bbox = mag_view.bounding_box if bbox is None else bbox
+    bbox = BoundingBox.from_ndbbox(mag_view.bounding_box) if bbox is None else bbox
 
     logging.info("Starting tiff export for bounding box: %s", bbox)
     executor_args = Namespace(

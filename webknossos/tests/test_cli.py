@@ -1,4 +1,4 @@
-"""This module containes tests for the WEBKNOSSOS CLI."""
+"""This module contains tests for the WEBKNOSSOS CLI."""
 
 import json
 import os
@@ -176,6 +176,42 @@ def test_compress() -> None:
         assert result.exit_code == 0
 
 
+def test_compress_with_args() -> None:
+    """Tests the functionality of compress subcommand."""
+
+    with tmp_cwd():
+        wkw_path = TESTDATA_DIR / "simple_wkw_dataset"
+        copytree(wkw_path, Path("testdata") / "simple_wkw_dataset")
+
+        result = runner.invoke(
+            app,
+            [
+                "compress",
+                "--layer-name",
+                "color",
+                "--mag",
+                "1",
+                "testdata/simple_wkw_dataset",
+            ],
+        )
+
+        assert result.exit_code == 0
+
+        result_with_wrong_mag = runner.invoke(
+            app,
+            [
+                "compress",
+                "--layer-name",
+                "color",
+                "--mag",
+                "2",
+                "testdata/simple_wkw_dataset",
+            ],
+        )
+
+        assert result_with_wrong_mag.exit_code == 1
+
+
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_convert() -> None:
     """Tests the functionality of convert subcommand."""
@@ -202,16 +238,36 @@ def test_convert() -> None:
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
-@pytest.mark.parametrize(
-    "origin_path",
-    [TESTDATA_DIR / "tiff", TESTDATA_DIR / "tiff_with_different_shapes"],
-)
-def test_convert_with_all_params(origin_path: Path) -> None:
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_convert_single_file() -> None:
+    """Tests the functionality of convert subcommand when given single file instead of directory."""
+
+    with tmp_cwd():
+        origin_path = TESTDATA_DIR / "tiff" / "test.0000.tiff"
+        wkw_path = Path("wkw_from_tiff_single_file")
+
+        result = runner.invoke(
+            app,
+            [
+                "convert",
+                "--voxel-size",
+                "11.0,11.0,11.0",
+                str(origin_path),
+                str(wkw_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (wkw_path / PROPERTIES_FILE_NAME).exists()
+
+
+def test_convert_with_all_params() -> None:
     """Tests the functionality of convert subcommand."""
 
     with tmp_cwd():
+        origin_path = TESTDATA_DIR / "tiff_with_different_shapes"
         wkw_path = Path(f"wkw_from_{origin_path.name}")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="Some images are larger than expected,"):
             result = runner.invoke(
                 app,
                 [

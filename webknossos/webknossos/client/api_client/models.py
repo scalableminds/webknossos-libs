@@ -61,10 +61,16 @@ class ApiDataLayer:
 
 
 @attr.s(auto_attribs=True)
+class ApiVoxelSize:
+    unit: str
+    factor: Tuple[float, float, float]
+
+
+@attr.s(auto_attribs=True)
 class ApiDataSource:
     data_layers: Optional[List[ApiDataLayer]] = None
     status: Optional[str] = None
-    scale: Optional[Tuple[float, float, float]] = None
+    scale: Optional[ApiVoxelSize] = None
 
 
 @attr.s(auto_attribs=True)
@@ -78,6 +84,14 @@ class ApiDataset:
     data_source: ApiDataSource
     display_name: Optional[str] = None
     description: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetAnnounceUpload:
+    dataset_name: str
+    organization: str
+    initial_team_ids: List[str]
+    folder_id: str
 
 
 @attr.s(auto_attribs=True)

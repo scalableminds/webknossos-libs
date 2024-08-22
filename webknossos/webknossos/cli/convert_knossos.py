@@ -15,13 +15,16 @@ import numpy as np
 import typer
 from typing_extensions import Annotated
 
+from webknossos.dataset.length_unit import LengthUnit
+from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
+
 from ..dataset import COLOR_CATEGORY, DataFormat, Dataset, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, time_start, time_stop
 from ._utils import (
     DistributionStrategy,
-    VoxelSize,
+    VoxelSizeTuple,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -151,15 +154,15 @@ def convert_cube_job(
     time_start(f"Converting of {target_view.bounding_box}")
     cube_size = cast(Tuple[int, int, int], (KNOSSOS_CUBE_EDGE_LEN,) * 3)
 
-    offset = target_view.bounding_box.in_mag(target_view.mag).topleft
-    size = target_view.bounding_box.in_mag(target_view.mag).size
+    offset = target_view.bounding_box.in_mag(target_view.mag).topleft_xyz
+    size = target_view.bounding_box.in_mag(target_view.mag).size_xyz
     buffer = np.zeros(size.to_tuple(), dtype=target_view.get_dtype())
     with open_knossos(source_knossos_info) as source_knossos:
         for x in range(0, size.x, KNOSSOS_CUBE_EDGE_LEN):
             for y in range(0, size.y, KNOSSOS_CUBE_EDGE_LEN):
                 for z in range(0, size.z, KNOSSOS_CUBE_EDGE_LEN):
                     cube_data = source_knossos.read(
-                        (offset + Vec3Int(x, y, z)).to_tuple(), cube_size
+                        Vec3Int(offset + (x, y, z)).to_tuple(), cube_size
                     )
                     buffer[
                         x : (x + KNOSSOS_CUBE_EDGE_LEN),
@@ -176,7 +179,7 @@ def convert_knossos(
     target_path: Path,
     layer_name: str,
     dtype: str,
-    voxel_size: Tuple[float, float, float],
+    voxel_size_with_unit: VoxelSize,
     data_format: DataFormat,
     chunk_shape: Vec3Int,  # in target-mag
     chunks_per_shard: Vec3Int,
@@ -187,7 +190,9 @@ def convert_knossos(
 
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
 
-    target_dataset = Dataset(target_path, voxel_size, exist_ok=True)
+    target_dataset = Dataset(
+        target_path, voxel_size_with_unit=voxel_size_with_unit, exist_ok=True
+    )
     target_layer = target_dataset.get_or_add_layer(
         layer_name,
         COLOR_CATEGORY,
@@ -246,15 +251,21 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: Annotated[
-        VoxelSize,
+        VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma seperated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
-            metavar="VOXEL_SIZE",
+            metavar="VoxelSize",
             show_default=False,
         ),
     ],
+    unit: Annotated[
+        LengthUnit,
+        typer.Option(
+            help="The unit of the voxel size.",
+        ),
+    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",
@@ -286,7 +297,7 @@ def main(
         Mag,
         typer.Option(
             help="Mag to start upsampling from. "
-            "Should be number or minus seperated string (e.g. 2 or 2-2-2).",
+            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
             metavar="MAG",
         ),
@@ -309,7 +320,7 @@ def main(
         Optional[str],
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job_resources=\'{"mem": "10M"}\')\'',
+            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
             rich_help_panel="Executor options",
         ),
     ] = None,
@@ -321,13 +332,14 @@ def main(
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
+    voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     convert_knossos(
         source,
         target,
         layer_name,
         dtype,
-        voxel_size,
+        voxel_size_with_unit,
         data_format,
         chunk_shape,
         chunks_per_shard,

@@ -11,9 +11,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/user
+    uri: http://localhost:9000/api/v7/user
   response:
     content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}'
     headers:
@@ -42,16 +42,16 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/datasets/Organization_X/l4_sample
+    uri: http://localhost:9000/api/v7/datasets/Organization_X/l4_sample
   response:
-    content: '{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}'
+    content: '{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}'
     headers:
       cache-control:
       - no-cache
       content-length:
-      - '1380'
+      - '1410'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -75,9 +75,9 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
-    uri: http://localhost:9000/api/v6/userToken/generate
+    uri: http://localhost:9000/api/v7/userToken/generate
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
@@ -104,8 +104,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -128,7 +128,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1486'
+      - '1487'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -149,8 +149,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -173,7 +173,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1486'
+      - '1487'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -194,8 +194,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -218,7 +218,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1486'
+      - '1487'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -351,8 +351,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -373,7 +373,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1288'
+      - '1289'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -389,34 +389,6 @@ interactions:
     headers: {}
     method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zattrs
   response:
     body:
       string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
@@ -467,6 +439,34 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers: {}
@@ -560,8 +560,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -582,7 +582,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1288'
+      - '1289'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -603,8 +603,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -625,7 +625,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -751,6 +751,33 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '166'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
   response:
     body:
@@ -779,41 +806,14 @@ interactions:
     body: null
     headers: {}
     method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '166'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/2-2-1
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -834,7 +834,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -855,8 +855,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -877,7 +877,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1064,8 +1064,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1086,7 +1086,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1107,8 +1107,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1129,92 +1129,9 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
-  response:
-    body:
-      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
-        format. Expected c.x.y.z"}]}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '101'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
-  response:
-    body:
-      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      cache-control:
-      - no-cache
-      content-length:
-      - '163'
-      content-type:
-      - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
@@ -1310,14 +1227,97 @@ interactions:
     body: null
     headers: {}
     method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '163'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+  response:
+    body:
+      string: '{"messages":[{"error":"The requested chunk coordinates are in an invalid
+        format. Expected c.x.y.z"}]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      cache-control:
+      - no-cache
+      content-length:
+      - '101'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/l4_sample/color/8-8-2
   response:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1338,7 +1338,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1292'
+      - '1293'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1359,8 +1359,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1381,7 +1381,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1294'
+      - '1295'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1568,8 +1568,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1590,7 +1590,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1294'
+      - '1295'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1611,8 +1611,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1633,7 +1633,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1295'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1820,8 +1820,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1842,7 +1842,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1295'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1863,8 +1863,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -1885,7 +1885,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2072,8 +2072,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2094,7 +2094,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2115,8 +2115,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2137,7 +2137,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2324,8 +2324,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2346,7 +2346,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2367,8 +2367,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2389,7 +2389,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2576,8 +2576,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2598,7 +2598,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1299'
+      - '1300'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2619,8 +2619,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2641,7 +2641,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1301'
+      - '1302'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2828,8 +2828,8 @@ interactions:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>WEBKNOSSOS
         Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        type=\"text/javascript\">\n      // forward to path with trailing slash\n
+        \     if (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
         + '//' + \n                  window.location.host + \n                  window.location.pathname
         + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
         \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
@@ -2850,7 +2850,7 @@ interactions:
       cache-control:
       - no-cache
       content-length:
-      - '1301'
+      - '1302'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2866,15 +2866,15 @@ interactions:
       zip:
         test_bounding_box_roundtrip.nml: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<things>\n
           \ <parameters>\n    <experiment name=\"l4_sample\" />\n    <scale x=\"11.239999771118164\"
-          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1710419002000\" />\n
+          y=\"11.239999771118164\" z=\"28.0\" />\n    <time ms=\"1722350972000\" />\n
           \   <taskBoundingBox color.a=\"1\" color.b=\"0.2\" color.g=\"0\" color.r=\"0.5\"
           depth=\"5\" height=\"5\" isVisible=\"true\" name=\"task_bbox\" topLeftX=\"10\"
           topLeftY=\"10\" topLeftZ=\"10\" width=\"5\" />\n    <userBoundingBox color.a=\"1\"
           color.b=\"0.1\" color.g=\"0.5\" color.r=\"0.2\" depth=\"64\" height=\"64\"
           id=\"0\" isVisible=\"true\" name=\"Unnamed Bounding Box\" topLeftX=\"1024\"
           topLeftY=\"512\" topLeftZ=\"128\" width=\"64\" />\n  </parameters>\n  <thing
-          color.a=\"1.0\" color.b=\"0.24659426020649555\" color.g=\"0.6027976538514968\"
-          color.r=\"0.9369148312261327\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
+          color.a=\"1.0\" color.b=\"0.16875389843477318\" color.g=\"0.2087269466796553\"
+          color.r=\"0.9000952827746309\" groupId=\"1\" id=\"2\" name=\"a tree\">\n
           \   <nodes>\n      <node id=\"3\" x=\"0.0\" y=\"0.0\" z=\"0.0\" />\n    </nodes>\n
           \   <edges />\n  </thing>\n  <branchpoints />\n  <comments>\n    <comment
           content=\"node 1\" node=\"3\" />\n  </comments>\n  <groups>\n    <group
@@ -2887,17 +2887,17 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '970'
+      - '974'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: POST
-    uri: http://localhost:9000/api/v6/annotations/upload
+    uri: http://localhost:9000/api/v7/annotations/upload
   response:
-    content: '{"annotation":{"typ":"Explorational","id":"65f2ec3a0100009800549085"},"messages":[{"success":"Successfully
+    content: '{"annotation":{"typ":"Explorational","id":"66a8fd7c010000ad00032756"},"messages":[{"success":"Successfully
       uploaded file"}]}'
     headers:
       cache-control:
@@ -2925,39 +2925,40 @@ interactions:
       host:
       - localhost:9000
       user-agent:
-      - python-httpx/0.24.1
+      - python-httpx/0.27.0
     method: GET
-    uri: http://localhost:9000/api/v6/annotations/65f2ec3a0100009800549085/download?skipVolumeData=false
+    uri: http://localhost:9000/api/v7/annotations/66a8fd7c010000ad00032756/download?skipVolumeData=false
   response:
     content: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\"/>\n  <meta
-      name=\"writerGitCommit\" content=\"6cdddfb788b0540a33804f0a0ddee3863a2a742e\"/>\n
-      \ <meta name=\"timestamp\" content=\"1710419002479\"/>\n  <meta name=\"annotationId\"
-      content=\"65f2ec3a0100009800549085\"/>\n  <meta name=\"username\" content=\"user_A
+      name=\"writerGitCommit\" content=\"e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b\"/>\n
+      \ <meta name=\"timestamp\" content=\"1722350972809\"/>\n  <meta name=\"annotationId\"
+      content=\"66a8fd7c010000ad00032756\"/>\n  <meta name=\"username\" content=\"user_A
       BoyA\"/>\n  <parameters>\n    <experiment name=\"l4_sample\" organization=\"Organization_X\"
       description=\"\" wkUrl=\"http://localhost:9000\"/>\n    <scale x=\"11.239999771118164\"
-      y=\"11.239999771118164\" z=\"28.0\"/>\n    <offset x=\"0\" y=\"0\" z=\"0\"/>\n
-      \   <time ms=\"1710419002259\"/>\n    <editPosition x=\"0\" y=\"0\" z=\"0\"/>\n
-      \   <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"/>\n    <zoomLevel zoom=\"2.0\"/>\n
-      \   <userBoundingBox id=\"0\" name=\"Unnamed Bounding Box\" isVisible=\"true\"
-      color.r=\"0.20000000298023224\" color.g=\"0.5\" color.b=\"0.10000000149011612\"
-      color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\" topLeftZ=\"128\" width=\"64\"
-      height=\"64\" depth=\"64\"/>\n    <userBoundingBox id=\"1\" name=\"task bounding
-      box\" color.r=\"0.9375573722916407\" color.g=\"0.028715749304430438\" color.b=\"0.9560877727496515\"
-      color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\" topLeftZ=\"10\" width=\"5\"
-      height=\"5\" depth=\"5\"/>\n  </parameters>\n  <thing id=\"2\" color.r=\"0.9369148015975952\"
-      color.g=\"0.6027976274490356\" color.b=\"0.24659426510334015\" color.a=\"1.0\"
-      name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\" radius=\"1.0\"
-      x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\" inVp=\"0\" inMag=\"0\"
-      bitDepth=\"0\" interpolation=\"false\" time=\"0\"/>\n    </nodes>\n    <edges/>\n
-      \ </thing>\n  <branchpoints/>\n  <comments>\n    <comment node=\"3\" content=\"node
-      1\"/>\n  </comments>\n  <groups>\n    <group name=\"a group\" id=\"1\"/>\n  </groups>\n</things>"
+      y=\"11.239999771118164\" z=\"28.0\" unit=\"nanometer\"/>\n    <offset x=\"0\"
+      y=\"0\" z=\"0\"/>\n    <time ms=\"1722350972499\"/>\n    <editPosition x=\"0\"
+      y=\"0\" z=\"0\"/>\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"/>\n
+      \   <zoomLevel zoom=\"2.0\"/>\n    <userBoundingBox id=\"0\" name=\"Unnamed
+      Bounding Box\" isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\"
+      color.b=\"0.10000000149011612\" color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\"
+      topLeftZ=\"128\" width=\"64\" height=\"64\" depth=\"64\"/>\n    <userBoundingBox
+      id=\"1\" name=\"task bounding box\" color.r=\"0.09494502605202915\" color.g=\"0.8815665145729926\"
+      color.b=\"0.8832161116246047\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
+      topLeftZ=\"10\" width=\"5\" height=\"5\" depth=\"5\"/>\n  </parameters>\n  <thing
+      id=\"2\" color.r=\"0.9000952839851379\" color.g=\"0.2087269425392151\" color.b=\"0.16875389218330383\"
+      color.a=\"1.0\" name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\"
+      radius=\"1.0\" x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\"
+      inVp=\"0\" inMag=\"0\" bitDepth=\"0\" interpolation=\"false\" time=\"0\"/>\n
+      \   </nodes>\n    <edges/>\n  </thing>\n  <branchpoints/>\n  <comments>\n    <comment
+      node=\"3\" content=\"node 1\"/>\n  </comments>\n  <groups>\n    <group name=\"a
+      group\" id=\"1\"/>\n  </groups>\n</things>"
     headers:
       cache-control:
       - no-cache
       content-disposition:
       - attachment;filename="test_bounding_box_roundtrip.nml"
       content-length:
-      - '1667'
+      - '1683'
       content-type:
       - application/xml
       date: Mon, 01 Jan 2000 00:00:00 GMT

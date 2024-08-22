@@ -13,7 +13,7 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ._array import ArrayException, BaseArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
@@ -193,7 +193,7 @@ class Layer:
         self.path.mkdir(parents=True, exist_ok=True)
 
         for mag in properties.mags:
-            self._setup_mag(Mag(mag.mag))
+            self._setup_mag(Mag(mag.mag), mag.path)
         # Only keep the properties of mags that were initialized.
         # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
         self._properties.mags = [
@@ -252,11 +252,11 @@ class Layer:
         return self._dataset
 
     @property
-    def bounding_box(self) -> BoundingBox:
+    def bounding_box(self) -> NDBoundingBox:
         return self._properties.bounding_box
 
     @bounding_box.setter
-    def bounding_box(self, bbox: BoundingBox) -> None:
+    def bounding_box(self, bbox: NDBoundingBox) -> None:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
@@ -411,7 +411,12 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    dict(
+                        zip(
+                            ("c", "x", "y", "z"),
+                            (0, *self.bounding_box.index_xyz),
+                        )
+                    )
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
@@ -448,7 +453,13 @@ class Layer:
                     else None
                 ),
                 axis_order=(
-                    {"x": 1, "y": 2, "z": 3, "c": 0}
+                    {
+                        key: value
+                        for key, value in zip(
+                            ("c", "x", "y", "z"),
+                            (0, *self.bounding_box.index_xyz),
+                        )
+                    }
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
@@ -470,7 +481,7 @@ class Layer:
         file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
-        Creates a new mag called and adds it to the dataset, in case it did not exist before.
+        Creates a new mag and adds it to the dataset, in case it did not exist before.
         Then, returns the mag.
 
         See `add_mag` for more information.
@@ -722,7 +733,7 @@ class Layer:
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if coarsest_mag is None:
-            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size)
+            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -812,7 +823,7 @@ class Layer:
         of multiple layers while avoiding parallel writes with outdated updates
         to the datasource-properties.json file.
 
-        `executor` can be passed to allow distrubuted computation, parallelizing
+        `executor` can be passed to allow distributed computation, parallelizing
         across chunks. `args` is deprecated.
         """
         self._dataset._ensure_writable()
@@ -854,14 +865,10 @@ class Layer:
         bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
         # Get target view
-        target_view = target_mag_view.get_view(
-            absolute_offset=bb_mag1.topleft,
-            size=bb_mag1.size,
-        )
+        target_view = target_mag_view.get_view(absolute_bounding_box=bb_mag1)
 
         source_view = prev_mag_view.get_view(
-            absolute_offset=bb_mag1.topleft,
-            size=bb_mag1.size,
+            absolute_bounding_box=bb_mag1,
             read_only=True,
         )
 
@@ -1052,8 +1059,9 @@ class Layer:
             # Saving the original layer bbox for later restore
             old_layer_bbox = self.bounding_box
             self.bounding_box = prev_mag_view.bounding_box
+            bbox_mag1 = self.bounding_box.align_with_mag(prev_mag, ceil=True)
             # Get target view
-            target_view = target_mag_view.get_view()
+            target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
             with get_executor_for_args(args, executor) as actual_executor:
@@ -1064,7 +1072,9 @@ class Layer:
                     mag_factors=mag_factors,
                     buffer_shape=buffer_shape,
                 )
-                prev_mag_view.get_view().for_zipped_chunks(
+                prev_mag_view.get_view(
+                    absolute_bounding_box=bbox_mag1
+                ).for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
@@ -1074,7 +1084,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag) -> None:
+    def _setup_mag(self, mag: Mag, path: Optional[str] = None) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         mag_name = mag.to_layer_name()
@@ -1084,7 +1094,7 @@ class Layer:
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
             info = cls_array.open(
-                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
+                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name, path)
             ).info
             self._mags[mag] = MagView(
                 self,

@@ -11,7 +11,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
         group: [1, 2, 3]
       fail-fast: false
     defaults:
@@ -29,7 +29,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry
-        poetry install --extras all
+        poetry install --extras all --with examples --with dev
 
     - name: Check if git is dirty
       run: |

@@ -115,8 +115,8 @@ See below for specifics of the different packages. Let's have a look at the comm
   To install the dependencies for all sub-projects, run `make install`.
   
 * **Tooling** we use across the sub-projects to enforce coding styles and tests:
-    * `./format.sh`: black and isort
-    * `./lint.sh`: pylint
+    * `./format.sh`: ruff
+    * `./lint.sh`: ruff
     * `./typecheck.sh`: mypy
     * `./test.sh`: pytest and custom scripts
 
@@ -140,21 +140,12 @@ The `webknossos` folder contains examples, which are not part of the package, bu
 The tests also contain functionality for the WEBKNOSSOS client. There a two modes to run the tests:
 
 1. `./test.sh --refresh-snapshots`, sending network requests to a WEBKNOSSOS instance:
-  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a docker-compose setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
+  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a docker-compose setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
 2. `./test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
 
 `./test.sh --store-durations` updates the durations for
 [`pytest-split`](https://jerry-git.github.io/pytest-split),
 which is used in the CI to split the tests for different runners.
-
-The code under `webknossos/client/_generated` is auto-generated! Please don't adapt anything in the `generated` folder manually, but re-run the code generation.
-
-The client code is generated using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) and [InducOapi](https://github.com/TheWall89/inducoapi).
-
-To re-generate the code, run
-```bash
-./generate_client.sh
-```
 
 #### `cluster_tools` package
 
