@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 set -Eeo pipefail
 
-poetry install
+poetry install --no-root
 
 if [ ! -d "wk-repo" ]; then
     echo
