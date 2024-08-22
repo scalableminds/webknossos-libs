@@ -295,7 +295,8 @@ jobs:
 
       - name: Build Docs
         run: |
-          docs/generate.sh --persist
+          cd docs
+          ./generate.sh --persist
 
       - name: Push docs (for branch)
         if: github.ref_type == 'branch'
