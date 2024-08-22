@@ -833,7 +833,7 @@ class View:
         Internally, it reads multiple slices from disk at once and buffers the data.
 
         Arguments:
-        
+
         * The user can specify where the writer should start:
             * `relative_bounding_box` in Mag(1)
             * `absolute_bounding_box` in Mag(1)
