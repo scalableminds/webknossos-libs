@@ -190,10 +190,10 @@ plugins:
                     unwrap_annotated: true
                     line_length: 60
                     filters:
-                        - "!^_"
-                        - "!^__"
-                        - "!RE$"
-                        - "!logger"
+                        - "!^_" # ignore class members with leading underscore
+                        - "!^__" # ignore (private) class members with leading double underscore
+                        - "!RE$" # ignore REGEX variables ending with ...RE
+                        - "!logger" # ignore class-level loggers
 
 markdown_extensions:
   - admonition
