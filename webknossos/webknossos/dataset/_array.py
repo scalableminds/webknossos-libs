@@ -281,8 +281,8 @@ class AWSCredentialManager:
     entries: Dict[int, Tuple[str, str]]
     credentials_file_path: Path
 
-    @lru_cache
     @classmethod
+    @lru_cache
     def singleton(cls) -> "Self":
         return cls()
 
