@@ -200,6 +200,7 @@ markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
+  - footnotes
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.superfences
