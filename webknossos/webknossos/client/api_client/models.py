@@ -103,6 +103,14 @@ class ApiDataset:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetAnnounceUpload:
+    dataset_name: str
+    organization: str
+    initial_team_ids: List[str]
+    folder_id: str
+
+
+@attr.s(auto_attribs=True)
 class ApiDatasetIsValidNewNameResponse:
     is_valid: bool
     errors: Optional[List[str]] = None

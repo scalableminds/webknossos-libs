@@ -82,7 +82,7 @@ def get_executor_for_args(
                 else '{"memory": "1G"}'
             )
             raise argparse.ArgumentTypeError(
-                f"Job resources (--job_resources) has to be provided when using {args.distribution_strategy} as distribution strategy. Example: --job_resources='{resources_example}'"
+                f"Job resources (--job-resources) has to be provided when using {args.distribution_strategy} as distribution strategy. Example: --job-resources='{resources_example}'"
             )
 
         executor = get_executor(
