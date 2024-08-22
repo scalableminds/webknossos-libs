@@ -59,11 +59,9 @@ def test_url_download(
 def test_url_open_remote(
     url: str, sample_dataset: wk.Dataset, sample_bbox: wk.BoundingBox
 ) -> None:
-    print("test_url_open_remote start")
     ds = wk.Dataset.open_remote(
         url,
     )
-    print("opened")
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
         ds.get_color_layers()[0]
