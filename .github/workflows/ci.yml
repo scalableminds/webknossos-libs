@@ -186,17 +186,18 @@ jobs:
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./typecheck.sh
 
+      - name: tensorstore tests
+        timeout-minutes: 30
+        env:
+          WK_TOKEN: ${{ secrets.WK_TOKEN }}
+        run: ./test_tensorstore.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+
       - name: Python tests
         timeout-minutes: 30
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
         run: ./test.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
-      - name: tensorstore tests
-        timeout-minutes: 30
-        env:
-          WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: ./test_tensorstore.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
       - name: Check if git is dirty
         run: |
