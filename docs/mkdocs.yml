@@ -93,40 +93,106 @@ nav:
     - webknossos/index.md
     - webknossos/getting_started.md
     - Guides:
-      - webknossos/dashboard.md
-      - Skeleton: 
-        - webknossos/skeleton_annotation/index.md
-        - Tools: webknossos/tools.md
-      - webknossos/volume_annotation.md
-      - webknossos/tracing_ui.md
-      - webknossos/mesh_visualization.md
-      - webknossos/datasets.md
-      - Managing Users & Permissions: webknossos/users.md
-      - webknossos/tasks.md
-      - webknossos/sharing.md
-      - webknossos/installation.md
-      - webknossos/automated_analysis.md
-      - webknossos/animations.md
-      - Pen Tablets, iPads, Wacom: webknossos/pen_tablets.md
-      - webknossos/jobs.md
-      - webknossos/export.md
-      - webknossos/proof_reading.md
-      - webknossos/connectome_viewer.md
+      - Dashboard:
+        - Datasets: webknossos/dashboard/datasets.md
+        - Annotations: webknossos/dashboard/annotations.md
+        - Tasks: webknossos/dashboard/tasks.md
+        - Featured Publications: webknossos/dashboard/featured_publications.md
+      - User Interface:
+        - Toolbar: webknossos/ui/toolbar.md
+        - Layers and Settings: webknossos/ui/layers.md
+        - Object Info and Lists: webknossos/ui/object_info.md
+        - Status Bar: webknossos/ui/status_bar.md
+        - Keyboard Shortcuts: webknossos/ui/keyboard_shortcuts.md
+      - Volume Annotations:
+        - Tools: webknossos/volume_annotation/tools.md
+        - Segments List: webknossos/volume_annotation/segments_list.md
+        - Segments Statistics: webknossos/volume_annotation/segments_statistics.md
+        - Import and Export Volume Annotations: webknossos/volume_annotation/import_export.md
+        - Pen Tablets, iPads, Wacom: webknossos/volume_annotation/pen_tablets.md
+      - Skeleton Annotations:
+        - Tools: webknossos/skeleton_annotation/tools.md
+        - Skeleton Trees List: webknossos/skeleton_annotation/trees_list.md
+        - Skeleton Operations: webknossos/skeleton_annotation/operations.md
+        - Comments: webknossos/skeleton_annotation/comments.md
+        - Import and Export Skeleton Annotations: webknossos/skeleton_annotation/import_export.md
+        - Annotation Modes: webknossos/skeleton_annotation/modes.md
+      - Mesh Visualization:
+        - Loading Meshes: webknossos/meshes/loading_meshes.md
+        - Working with Meshes: webknossos/meshes/working_with_meshes.md
+        - Precomputed Meshes: webknossos/meshes/precomputed_meshes.md
+      - Data Sources and Upload:
+        - Data Sources:
+          - webknossos/data/image_stacks.md
+          - webknossos/data/zarr.md
+          - webknossos/data/wkw.md
+          - webknossos/data/n5.md
+          - webknossos/data/neuroglancer_precomputed.md
+        - Upload Through UI: webknossos/data/upload_ui.md
+        - Upload Through Python: webknossos/data/upload_python.md
+        - Streaming from Cloud Storage: webknossos/data/streaming.md
+      - Data Export and Interoperability:
+        - Export Through UI : webknossos/data/export_ui.md
+        - Export Through Python: webknossos/data/export_python.md
+        - Export as Zarr Stream: webknossos/data/zarr_stream.md
+      - Managing Datasets:
+        - Converting Datasets: webknossos/datasets/converting.md
+        - Composing Datasets: webknossos/datasets/composing.md
+        - Dataset Organization and Folders: webknossos/datasets/organization.md
+        - Dataset Settings: webknossos/datasets/settings.md
+        - Using external data storage: webknossos/datasets/external_storage.md
+      - Managing Users and Permissions:
+        - Organizations: webknossos/users/organizations.md
+        - Teams: webknossos/users/teams.md
+        - Access rights/roles: webknossos/users/access_rights.md
+        - Adding New Users: webknossos/users/new_users.md
+        - Password & Account: webknossos/users/password.md
+      - Managing Tasks & Projects:
+        - Concepts: webknossos/tasks_projects/concepts.md
+        - Tasks: webknossos/tasks_projects/tasks.md
+        - Projects: webknossos/tasks_projects/projects.md
+      - Collaboration and sharing:
+        - Annotation Sharing: webknossos/sharing/annotation_sharing.md
+        - Dataset Sharing: webknossos/sharing/dataset_sharing.md
+      - AI Automations and Jobs:
+        - AI Segmentations: webknossos/automation/ai_segmentation.md
+        - Animations: webknossos/automation/animations.md
+        - Jobs: webknossos/automation/jobs.md
+        - Alignment: webknossos/automation/alignment.md
+      - Proofreading:
+        - Tools: webknossos/proofreading/tools.md
+        - Segmentation mappings: webknossos/proofreading/segmentation_mappings.md
+        - Merger-mode: webknossos/proofreading/merger_mode.md
+        - Skeletons and custom scripting: webknossos/proofreading/xxx.md
+      - Synapse and Connectome Viewer: webknossos/connectome_viewer.md
+      - Open source version:
+        - Installation: webknossos/open_source/installation.md
+        - Dataset Handling: webknossos/open_source/dataset_handling.md
+
+        # - webknossos/dashboard.md
+        # - webknossos/skeleton_annotation.md
+        # - webknossos/volume_annotation.md
+        # - webknossos/tracing_ui.md
+        # - webknossos/mesh_visualization.md
+        # - webknossos/datasets.md
+        # - Managing Users & Permissions: webknossos/users.md
+        # - webknossos/tasks.md
+        # - webknossos/sharing.md
+        # - webknossos/installation.md
+        # - webknossos/automated_analysis.md
+        # - webknossos/animations.md
+        # - webknossos/jobs.md
+        # - webknossos/export.md
+        # - webknossos/proof_reading.md
+        # - webknossos/connectome_viewer.md
     - Tutorials:
       - Volume Annotation: webknossos/tutorial_volume_annotation.md
       - Data Sharing: webknossos/tutorial_data_sharing.md
       - Automation: webknossos/tutorial_automation.md
       # - Today I Learned: webknossos/today_i_learned.md
-    - Data Sources:
-      - webknossos/image_stacks.md
-      - webknossos/zarr.md
-      - webknossos/wkw.md
-      - webknossos/n5.md
-      - webknossos/neuroglancer_precomputed.md
     - Reference:
       - Terminology: webknossos/terminology.md
       - webknossos/data_formats.md
-      - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
       - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
       - Changelog: webknossos/CHANGELOG.released.md
       - Migration Guide: webknossos/MIGRATIONS.released.md
