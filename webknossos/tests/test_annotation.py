@@ -155,87 +155,39 @@ def test_annotation_from_file_with_multi_volume() -> None:
     ],
 )
 def test_annotation_from_url(url: str) -> None:
-    line = 0;
-    print("test_annotation_from_url start")
     annotation = wk.Annotation.download(url, skip_volume_data=True)
-    print(line)
-    line += 1
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
-    print(line)
-    line += 1
     assert len(list(annotation.skeleton.flattened_trees())) == 1
-    print(line)
-    line += 1
-    print(line)
-    line += 1
+
     mag = wk.Mag("16-16-8")
     node_bbox = wk.BoundingBox.from_points(
         next(annotation.skeleton.flattened_trees()).get_node_positions()
     ).align_with_mag(mag, ceil=True)
-    print(line)
-    line += 1
     with wk.webknossos_context(url="https://webknossos.org"):
         ds = annotation.get_remote_annotation_dataset()
 
-    print(line)
-    line += 1
     mag_view = ds.layers["Volume"].get_mag(mag)
-    print(line)
-    line += 1
     annotated_data = mag_view.read(absolute_bounding_box=node_bbox)
-    print(line)
-    line += 1
     assert annotated_data.size > 10
-    print(line)
-    line += 1
     assert (annotated_data == 2504698).all()
-    print(line)
-    line += 1
     assert mag_view.read(absolute_offset=(0, 0, 0), size=(16, 16, 8))[0, 0, 0, 0] == 0
-    print(line)
-    line += 1
     assert (
-        mag_view.read(absolute_offset=(128, 128, 128), size=(16, 16, 8))[0, 0, 0, 0]
-        == 286022
+            mag_view.read(absolute_offset=(128, 128, 128), size=(16, 16, 8))[0, 0, 0, 0]
+            == 286022
     )
-    print(line)
-    line += 1
     segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
-    print(line)
-    line += 1
     assert segment_info.anchor_position == (2785, 4423, 1792)
-    print(line)
-    line += 1
     segment_info.name = "Test Segment"
-    print(line)
-    line += 1
     segment_info.color = (1, 0, 0, 1)
 
-    print(line)
-    line += 1
     annotation.save(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
-    print(line)
-    line += 1
     annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
-    print(line)
-    line += 1
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
-    print(line)
-    line += 1
     assert len(list(annotation.skeleton.flattened_trees())) == 1
-    print(line)
-    line += 1
     segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
-    print(line)
-    line += 1
     assert segment_info.anchor_position == (2785, 4423, 1792)
-    print(line)
-    line += 1
     assert segment_info.name == "Test Segment"
-    print(line)
-    line += 1
     assert segment_info.color == (1, 0, 0, 1)
-    print(line)
 
 
 def test_reading_bounding_boxes() -> None:
