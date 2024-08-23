@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   changes:
-    runs-on: ubicloud-standard-8
+    runs-on: ubuntu-latest
     outputs:
       webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
       cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
@@ -33,7 +33,7 @@ jobs:
   cluster_tools:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
-    runs-on: ubicloud-standard-8
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       max-parallel: 4
@@ -149,7 +149,7 @@ jobs:
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
-    runs-on: ubicloud-standard-8
+    runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
@@ -204,7 +204,7 @@ jobs:
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
       !github.event.pull_request.head.repo.fork
-    runs-on: ubicloud-standard-8
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -272,7 +272,7 @@ jobs:
 
   docs:
     needs: [cluster_tools, webknossos_linux]
-    runs-on: ubicloud-standard-8
+    runs-on: ubuntu-latest
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
