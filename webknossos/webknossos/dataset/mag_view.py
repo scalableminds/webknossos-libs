@@ -21,7 +21,7 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, WKWArray, TensorStoreArray
+from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:

@@ -2,8 +2,8 @@ from typing import (
     TYPE_CHECKING,
 )
 
-from .data_format import DataFormat
 from ..geometry import NDBoundingBox, VecInt
+from .data_format import DataFormat
 
 if TYPE_CHECKING:
     import zarrita
@@ -124,10 +124,10 @@ class BaseArray(ABC):
 
     @abstractmethod
     def ensure_size(
-            self,
-            new_bbox: NDBoundingBox,
-            align_with_shards: bool = True,
-            warn: bool = False,
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
     ) -> None:
         pass
 
@@ -192,7 +192,7 @@ class WKWArray(BaseArray):
             array_info.chunk_shape.x
         ), f"`chunk_shape` needs to be a power of 2 for WKW storage. Got {array_info.chunk_shape.x}."
         assert (
-                1 <= array_info.chunk_shape.x and array_info.chunk_shape.x <= 32768
+            1 <= array_info.chunk_shape.x and array_info.chunk_shape.x <= 32768
         ), f"`chunk_shape` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunk_shape.x}."
 
         assert array_info.chunks_per_shard.is_uniform(), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
@@ -200,8 +200,8 @@ class WKWArray(BaseArray):
             array_info.chunks_per_shard.x
         ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {array_info.chunks_per_shard.x}."
         assert (
-                1 <= array_info.chunks_per_shard.x
-                and array_info.chunks_per_shard.x <= 32768
+            1 <= array_info.chunks_per_shard.x
+            and array_info.chunks_per_shard.x <= 32768
         ), f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunks_per_shard.x}."
 
         try:
@@ -230,10 +230,10 @@ class WKWArray(BaseArray):
         self._wkw_dataset.write(Vec3Int(bbox.topleft), data)
 
     def ensure_size(
-            self,
-            new_bbox: NDBoundingBox,
-            align_with_shards: bool = True,
-            warn: bool = False,
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
     ) -> None:
         pass
 
@@ -322,9 +322,9 @@ class AWSCredentialManager:
                 [
                     f"[profile-{key_hash}]\naws_access_key_id = {access_key_id}\naws_secret_access_key = {secret_access_key}\n"
                     for key_hash, (
-                    access_key_id,
-                    secret_access_key,
-                ) in self.entries.items()
+                        access_key_id,
+                        secret_access_key,
+                    ) in self.entries.items()
                 ]
             )
         )
@@ -344,7 +344,7 @@ class TensorStoreArray(BaseArray):
     _cached_array: Optional[tensorstore.TensorStore]
 
     def __init__(
-            self, path: Path, _cached_array: Optional[tensorstore.TensorStore] = None
+        self, path: Path, _cached_array: Optional[tensorstore.TensorStore] = None
     ):
         super().__init__(path)
         self._cached_array = _cached_array
@@ -376,7 +376,7 @@ class TensorStoreArray(BaseArray):
                         path.storage_options["key"], path.storage_options["secret"]
                     )
                     if "key" in path.storage_options
-                       and "secret" in path.storage_options
+                    and "secret" in path.storage_options
                     else None
                 ),
             }
@@ -394,7 +394,7 @@ class TensorStoreArray(BaseArray):
                     "kvstore": uri,
                 },
                 open=True,
-                create=True
+                create=True,
             ).result()  # check that everything exists
             return cls(path, _array)
         except Exception as exc:
@@ -421,10 +421,10 @@ class TensorStoreArray(BaseArray):
             )
             data = array[available_domain].read(order="F").result()
             out[
-            : data.shape[0],
-            : data.shape[1],
-            : data.shape[2],
-            : data.shape[3],
+                : data.shape[0],
+                : data.shape[1],
+                : data.shape[2],
+                : data.shape[3],
             ] = data
             return out
 
@@ -485,10 +485,10 @@ class TensorStoreArray(BaseArray):
         )
         array = self._array
         array[
-        :,
-        offset.x: (offset.x + data.shape[1]),
-        offset.y: (offset.y + data.shape[2]),
-        offset.z: (offset.z + data.shape[3]),
+            :,
+            offset.x : (offset.x + data.shape[1]),
+            offset.y : (offset.y + data.shape[2]),
+            offset.z : (offset.z + data.shape[3]),
         ].write(data).result()
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
@@ -578,7 +578,7 @@ class Zarr3Array(TensorStoreArray):
                         "name": "regular",
                         "configuration": {
                             "chunk_shape": (array_info.num_channels,)
-                                           + array_info.shard_shape.to_tuple()
+                            + array_info.shard_shape.to_tuple()
                         },
                     },
                     "chunk_key_encoding": {
@@ -592,7 +592,7 @@ class Zarr3Array(TensorStoreArray):
                             "name": "sharding_indexed",
                             "configuration": {
                                 "chunk_shape": (array_info.num_channels,)
-                                               + array_info.chunk_shape.to_tuple(),
+                                + array_info.chunk_shape.to_tuple(),
                                 "codecs": (
                                     [
                                         {
@@ -675,7 +675,7 @@ class Zarr2Array(TensorStoreArray):
                 "metadata": {
                     "shape": (array_info.num_channels, 1, 1, 1),
                     "chunks": (array_info.num_channels,)
-                              + array_info.shard_shape.to_tuple(),
+                    + array_info.shard_shape.to_tuple(),
                     "dtype": array_info.voxel_type.str,
                     "fill_value": 0,
                     "order": "F",
@@ -759,19 +759,19 @@ class ZarrArray(BaseArray):
         if data.shape not in (shape, shape_with_channels):
             padded_data = np.zeros(shape_with_channels, dtype=data.dtype)
             padded_data[
-            :,
-            0: data.shape[1],
-            0: data.shape[2],
-            0: data.shape[3],
+                :,
+                0 : data.shape[1],
+                0 : data.shape[2],
+                0 : data.shape[3],
             ] = data
             data = padded_data
         return data
 
     def ensure_size(
-            self,
-            new_bbox: NDBoundingBox,
-            align_with_shards: bool = True,
-            warn: bool = False,
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
     ) -> None:
         new_shape = VecInt(new_bbox.size, axes=new_bbox.axes)
         zarray = self._zarray
@@ -911,7 +911,7 @@ class ZarritaArray(BaseArray):
         )
         if isinstance(zarray, Array):
             if len(zarray.codec_pipeline.codecs) == 1 and isinstance(
-                    zarray.codec_pipeline.codecs[0], ShardingCodec
+                zarray.codec_pipeline.codecs[0], ShardingCodec
             ):
                 sharding_codec = zarray.codec_pipeline.codecs[0]
                 shard_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
@@ -951,7 +951,7 @@ class ZarritaArray(BaseArray):
                 chunk_shape=Vec3Int(
                     chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
                 )
-                            or Vec3Int.full(1),
+                or Vec3Int.full(1),
                 chunks_per_shard=Vec3Int.full(1),
                 dimension_names=dimension_names,
             )
@@ -966,7 +966,7 @@ class ZarritaArray(BaseArray):
                     zarray.metadata.chunks[y_index],
                     zarray.metadata.chunks[z_index],
                 )
-                            or Vec3Int.full(1),
+                or Vec3Int.full(1),
                 chunks_per_shard=Vec3Int.full(1),
                 dimension_names=dimension_names,
             )
@@ -1018,7 +1018,7 @@ class ZarritaArray(BaseArray):
                 store=path,
                 shape=(array_info.shape),
                 chunks=(array_info.num_channels,)
-                       + tuple(
+                + tuple(
                     getattr(array_info.chunk_shape, axis, 1)
                     for axis in array_info.dimension_names[1:]
                 ),
@@ -1050,10 +1050,10 @@ class ZarritaArray(BaseArray):
         return data
 
     def ensure_size(
-            self,
-            new_bbox: NDBoundingBox,
-            align_with_shards: bool = True,
-            warn: bool = False,
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
     ) -> None:
         zarray = self._zarray
 
@@ -1071,8 +1071,8 @@ class ZarritaArray(BaseArray):
                     new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
                 )
                 new_shape_tuple = (
-                                      zarray.metadata.shape[0],
-                                  ) + new_aligned_bbox.bottomright.to_tuple()
+                    zarray.metadata.shape[0],
+                ) + new_aligned_bbox.bottomright.to_tuple()
 
             # Check on-disk for changes to shape
             current_zarray = zarray.open(self._path)

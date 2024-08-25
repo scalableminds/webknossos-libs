@@ -246,6 +246,7 @@ def is_fs_path(path: Path) -> bool:
         path, (PosixPath, WindowsPath, PosixUPath, WindowsUPath)
     )
 
+
 def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath) and not is_fs_path(path):
         return UPath(str(path).rstrip("/"), **path.storage_options)
