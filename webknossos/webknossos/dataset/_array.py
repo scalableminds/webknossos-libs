@@ -1,32 +1,9 @@
-import re
-import warnings
-from abc import ABC, abstractmethod
-from contextlib import contextmanager
-from dataclasses import dataclass
-from os.path import relpath
-from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
 )
 
-import numcodecs
-import numpy as np
-import wkw
-import zarr
-from upath import UPath
-from zarr.storage import FSStore
-
-from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import is_fs_path, warn_deprecated
 from .data_format import DataFormat
+from ..geometry import NDBoundingBox, VecInt
 
 if TYPE_CHECKING:
     import zarrita
@@ -40,7 +17,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Type, Union
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, Iterator, List, Optional, Self, Tuple, Type, Union
 
@@ -411,11 +387,14 @@ class TensorStoreArray(BaseArray):
     def open(cls, path: Path) -> "TensorStoreArray":
         try:
             uri = cls._make_kvstore(path)
+            print(f"{uri=}, {str(cls.data_format)=}, {path=}")
             _array = tensorstore.open(
                 {
                     "driver": str(cls.data_format),
                     "kvstore": uri,
-                }
+                },
+                open=True,
+                create=True
             ).result()  # check that everything exists
             return cls(path, _array)
         except Exception as exc:
