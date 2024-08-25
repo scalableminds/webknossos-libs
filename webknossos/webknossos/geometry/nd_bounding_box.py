@@ -51,7 +51,7 @@ class NDBoundingBox:
 
     # Create a 2D bounding box
     bbox_1 = NDBoundingBox(
-        top_left=(0, 0),
+        topleft=(0, 0),
         size=(100, 100),
         axes=("x", "y"),
         index=(1,2)

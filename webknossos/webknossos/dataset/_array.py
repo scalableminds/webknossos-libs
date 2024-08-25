@@ -421,9 +421,9 @@ class TensorStoreArray(BaseArray):
         except Exception as exc:
             raise ArrayException(f"Could not open array at {uri}.") from exc
 
-    def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
-        offset = Vec3Int(offset)
-        shape = Vec3Int(shape)
+    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+        offset = Vec3Int(bbox.topleft)
+        shape = Vec3Int(bbox.size)
         array = self._array
 
         requested_domain = tensorstore.IndexDomain(
