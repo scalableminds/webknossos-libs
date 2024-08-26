@@ -2,7 +2,6 @@
 
 {% block styles %}
 	{{ super() }}
-	<link rel="stylesheet" href="{{ base_url }}/css/image_gallery.css">
 	<link rel="stylesheet" href="{{ base_url }}/css/lists.css">
 	<style type="text/css">
 		@font-face {
@@ -29,9 +28,7 @@
 			--md-primary-fg-color--light: #AABAFF;
 			--md-primary-fg-color--dark:  #59F8E8;
 		}
-		.pdoc .attr {
-			font-family: var(--md-code-font);
-		}
+
 		[dir=ltr] .md-header__title {
 			margin-left: 0;
 		}
@@ -57,3 +54,9 @@
 		gtag('config', 'G-5ZWBGTPH13', { 'anonymize_ip': true, 'cookie_expires': 0 });
 	</script>
 {% endblock libs %}
+
+## Add a custom footer to every page highlight help otions, such as the community forums
+{% block content %}
+  {{ super() }}
+  	{% include "partials/page_content_footer.html" %}
+{% endblock %}
