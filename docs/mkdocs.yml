@@ -174,21 +174,21 @@ nav:
         - Export Through UI : webknossos/data/export_ui.md
         - Export Through Python: webknossos/data/export_python.md
         - Export as Zarr Stream: webknossos/data/zarr_stream.md
-      - Managing Datasets:
+      - Datasets:
         - webknossos/datasets/index.md
         - Converting Datasets: webknossos/datasets/converting.md
         - Composing Datasets: webknossos/datasets/composing.md
         - Dataset Organization and Folders: webknossos/datasets/organization.md
         - Dataset Settings: webknossos/datasets/settings.md
         - Using external data storage: webknossos/datasets/external_storage.md
-      - Managing Users and Permissions:
+      - Users and Permissions:
         - webknossos/users/index.md
         - Organizations: webknossos/users/organizations.md
         - Teams: webknossos/users/teams.md
         - Access rights/roles: webknossos/users/access_rights.md
         - Adding New Users: webknossos/users/new_users.md
         - Password & Account: webknossos/users/password.md
-      - Managing Tasks & Projects:
+      - Tasks & Projects:
         - webknossos/tasks_projects/index.md
         - Concepts: webknossos/tasks_projects/concepts.md
         - Tasks: webknossos/tasks_projects/tasks.md

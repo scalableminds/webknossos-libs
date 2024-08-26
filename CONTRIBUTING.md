@@ -1,6 +1,6 @@
 # Contributing Guide
 
-**Welcome to the WEBKNOSSOS-libs contributing guide :sparkles: **
+**Welcome to the WEBKNOSSOS-libs contributing guide :sparkles:**
 
 Thank you for taking the time to contribute to this project! The following is a set of guidelines for contributing to the different WEBKNOSSOS related Python libraries, which are part of the [WEBKNOSSOS-libs repository on GitHub](https://github.com/scalableminds/webknossos-libs). These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
