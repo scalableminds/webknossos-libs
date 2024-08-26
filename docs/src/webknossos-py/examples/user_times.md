@@ -1,6 +1,6 @@
 # Logged User Times
 
-This example uses the [`User` class](../../api/webknossos/administration/user.md#User) to load the logged times
+This example uses the [`User` class](../../api/webknossos/administration/user.md#webknossos.administration.user.User) to load the logged times
 for all users of whom the current user is admin or team-manager.
 
 *This example additionally needs the pandas and tabulate packages.*

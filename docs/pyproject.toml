@@ -8,15 +8,16 @@ readme = "README.md"
 [tool.poetry.dependencies]
 # mkdocs-video is not ready for Py3.11 because of bugs in lxml lib https://github.com/getnikola/nikola/issues/3679
 python = ">=3.9,<3.11"
-mkdocs-glightbox = "^0.4.0"
+mkdocs-glightbox = "^0.3.4"
+mkdocstrings-python = "^1.10.8"
+mkdocs-gen-files = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 LinkChecker = "^10.0.1"
 mkdocs-video = {branch="master", git="https://github.com/calmzhu/mkdocs-video.git"}
 mkdocs-material = "^9.5.32"
 mkdocs-redirects = "^1.2.0"
-pdoc = "^14.6.0"
-webknossos = { path = "../webknossos/", develop = true }
+webknossos = { path = "../webknossos/", develop = true}
 
 [build-system]
 requires = ["poetry-core>=1.1"]
