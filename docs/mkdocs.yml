@@ -119,7 +119,7 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - toc:
-      title: On this page
+      title: ON THIS PAGE
       permalink: true  
 
 nav:
@@ -160,7 +160,7 @@ nav:
         - Loading Meshes: webknossos/meshes/loading_meshes.md
         - Working with Meshes: webknossos/meshes/working_with_meshes.md
         - Precomputed Meshes: webknossos/meshes/precomputed_meshes.md
-      - Data Sources and Upload:
+      - Data Sources and Upload/Download:
         - Data Sources:
           - webknossos/data/image_stacks.md
           - webknossos/data/zarr.md
@@ -170,7 +170,6 @@ nav:
         - Upload Through UI: webknossos/data/upload_ui.md
         - Upload Through Python: webknossos/data/upload_python.md
         - Streaming from Cloud Storage: webknossos/data/streaming.md
-      - Data Export and Interoperability:
         - Export Through UI : webknossos/data/export_ui.md
         - Export Through Python: webknossos/data/export_python.md
         - Export as Zarr Stream: webknossos/data/zarr_stream.md
@@ -198,8 +197,7 @@ nav:
         - Annotation Sharing: webknossos/sharing/annotation_sharing.md
         - Dataset Sharing: webknossos/sharing/dataset_sharing.md
       - AI Automations and Jobs:
-        - Foobar:
-          - webknossos/automation/index.md
+        - webknossos/automation/index.md
         - AI Segmentations: webknossos/automation/ai_segmentation.md
         - Animations: webknossos/automation/animations.md
         - Jobs: webknossos/automation/jobs.md
@@ -219,10 +217,7 @@ nav:
       - Data Sharing: webknossos/tutorial_data_sharing.md
       - Automation: webknossos/tutorial_automation.md
       # - Today I Learned: webknossos/today_i_learned.md
-    - TODO_TOOLS: webknossos/tools.md
     - Reference:
-      - Terminology: webknossos/terminology.md
-      - webknossos/data_formats.md
       - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
       - Changelog: webknossos/CHANGELOG.released.md
       - Migration Guide: webknossos/MIGRATIONS.released.md
@@ -287,13 +282,12 @@ nav:
       - webknossos-py/changelog.md
     - Community:
       - webknossos-py/CONTRIBUTING.md
-      - webknossos-py/CODE_OF_CONDUCT.md
-      - webknossos/terminology.md
       - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
-      - Blog: https://medium.com/scalableminds" target="_blank
   - Community:
     - webknossos/faq.md
-    - webknossos/src/publications.md
+    - Terminology: webknossos/terminology.md
+    - webknossos/publications.md
+    - webknossos-py/CODE_OF_CONDUCT.md
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
     - Email Support: mailto:hello@webknossos.org
     - Commercial Support: https://scalableminds.com" target="_blank
