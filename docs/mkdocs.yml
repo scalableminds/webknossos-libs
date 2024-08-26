@@ -209,7 +209,6 @@ nav:
         - Merger-mode: webknossos/proofreading/merger_mode.md
       - Synapse and Connectome Viewer: webknossos/connectome_viewer.md
       - Open source version:
-        - webknossos/open_source/index.md 
         - Installation: webknossos/open_source/installation.md
         - Dataset Handling: webknossos/open_source/dataset_handling.md
     - Tutorials:
