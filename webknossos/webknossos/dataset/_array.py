@@ -1,6 +1,7 @@
 from typing import (
     TYPE_CHECKING,
 )
+from typing_extensions import Self
 
 from ..geometry import NDBoundingBox, VecInt
 from .data_format import DataFormat
@@ -18,7 +19,7 @@ from functools import lru_cache
 from os.path import relpath
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, Iterator, List, Optional, Self, Tuple, Type, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, Union
 
 import numcodecs
 import numpy as np
