@@ -1,6 +1,7 @@
 from typing import (
     TYPE_CHECKING,
 )
+
 from typing_extensions import Self
 
 from ..geometry import NDBoundingBox, VecInt
