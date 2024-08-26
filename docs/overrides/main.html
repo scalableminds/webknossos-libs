@@ -1,62 +1,62 @@
 {% extends "base.html" %}
 
 {% block styles %}
-	{{ super() }}
-	<link rel="stylesheet" href="{{ base_url }}/css/lists.css">
-	<style type="text/css">
-		@font-face {
-			font-family: "Nunito";
-			src: local("Nunito"), url("https://static.webknossos.org/assets/fonts/Nunito-VariableFont_wght.ttf") format("truetype");
-			font-style: normal;
-		}
-		@font-face {
-			font-family: "Nunito";
-			src: local("Nunito"), url("https://static.webknossos.org/assets/fonts/Nunito-Italic-VariableFont_wght.ttf") format("truetype");
-			font-style: italic;
-		}
-		@font-face {
-			font-family: "Roboto Mono";
-			src: local("Roboto Mono"), url("https://static.webknossos.org/assets/fonts/robotomono-400.woff2") format("woff2"),
-			url("https://static.webknossos.org/assets/fonts/robotomono-400.woff") format("woff");
-			font-weight: 400;
-			font-style: normal;
-		}
-		:root {
-			--md-text-font: "Nunito";
-			--md-code-font: "Roboto Mono";
-			--md-primary-fg-color:        #5660ff;
-			--md-primary-fg-color--light: #AABAFF;
-			--md-primary-fg-color--dark:  #59F8E8;
-		}
+{{ super() }}
+<link rel="stylesheet" href="{{ base_url }}/css/lists.css">
+<style type="text/css">
+	@font-face {
+		font-family: "Nunito";
+		src: local("Nunito"), url("https://static.webknossos.org/assets/fonts/Nunito-VariableFont_wght.ttf") format("truetype");
+		font-style: normal;
+	}
 
-		[dir=ltr] .md-header__title {
-			margin-left: 0;
-		}
-		.md-nav__item--section>.md-nav__link[for] {
-			/* Navbar Section Headers */
-			color: var(--md-typeset-color);
-    }
-		.md-nav__item--section>.md-nav>.md-nav__list>.md-nav__item {
-			/* Navbar Section Items */
- 		  padding-left: 15px;
-		}
-	</style>
+	@font-face {
+		font-family: "Nunito";
+		src: local("Nunito"), url("https://static.webknossos.org/assets/fonts/Nunito-Italic-VariableFont_wght.ttf") format("truetype");
+		font-style: italic;
+	}
+
+	@font-face {
+		font-family: "Roboto Mono";
+		src: local("Roboto Mono"), url("https://static.webknossos.org/assets/fonts/robotomono-400.woff2") format("woff2"),
+			url("https://static.webknossos.org/assets/fonts/robotomono-400.woff") format("woff");
+		font-weight: 400;
+		font-style: normal;
+	}
+
+	:root {
+		--md-text-font: "Nunito";
+		--md-code-font: "Roboto Mono";
+		--md-primary-fg-color: #5660ff;
+		--md-primary-fg-color--light: #AABAFF;
+		--md-primary-fg-color--dark: #59F8E8;
+	}
+
+	[dir=ltr] .md-header__title {
+		margin-left: 0;
+	}
+
+	.md-nav__item--section>.md-nav__link[for] {
+		/* Navbar Section Headers */
+		color: var(--md-typeset-color);
+	}
+</style>
 {% endblock styles %}
 
 {% block libs %}
-	{{ super() }}
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-5ZWBGTPH13"></script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
+{{ super() }}
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5ZWBGTPH13"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
 
-		gtag('config', 'G-5ZWBGTPH13', { 'anonymize_ip': true, 'cookie_expires': 0 });
-	</script>
+	gtag('config', 'G-5ZWBGTPH13', { 'anonymize_ip': true, 'cookie_expires': 0 });
+</script>
 {% endblock libs %}
 
 ## Add a custom footer to every page highlight help otions, such as the community forums
 {% block content %}
-  {{ super() }}
-  	{% include "partials/page_content_footer.html" %}
+{{ super() }}
+{% include "partials/page_content_footer.html" %}
 {% endblock %}

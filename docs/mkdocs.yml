@@ -17,18 +17,20 @@ theme:
   icon:
     repo: fontawesome/brands/github
   font: false
-  ### pdoc sites don't invert the text color in dark-mode
-  # palette:
-  #   - media: "(prefers-color-scheme: light)"
-  #     scheme: default
-  #     toggle:
-  #       icon: material/toggle-switch-off-outline
-  #       name: Switch to dark mode
-  #   - media: "(prefers-color-scheme: dark)"
-  #     scheme: slate
-  #     toggle:
-  #       icon: material/toggle-switch
-  #       name: Switch to light mode
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
   features:
     - navigation.instant
     - navigation.tabs
@@ -56,9 +58,9 @@ extra:
   generator: false
 
 plugins:
-  - gen-files:
-      scripts:
-        - generate_api_doc_pages.py
+  # - gen-files:
+  #     scripts:
+  #       - generate_api_doc_pages.py
   - search
   - redirects:
       redirect_maps:
@@ -291,6 +293,7 @@ nav:
       - Blog: https://medium.com/scalableminds" target="_blank
   - Community:
     - webknossos/faq.md
+    - webknossos/src/publications.md
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
     - Email Support: mailto:hello@webknossos.org
     - Commercial Support: https://scalableminds.com" target="_blank
