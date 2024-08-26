@@ -254,7 +254,7 @@ nav:
       - Overview: api/webknossos.md
       - Geometry:
         - BoundingBox: api/webknossos/geometry/boundingbox.md
-        - NDBoundingBox: api/webknossos/geometry/nd_boundingbox.md
+        - NDBoundingBox: api/webknossos/geometry/ndboundingbox.md
         - Mag: api/webknossos/geometry/mag.md
         - Vec3Int: api/webknossos/geometry/vec3int.md
         - VecInt: api/webknossos/geometry/vecint.md
