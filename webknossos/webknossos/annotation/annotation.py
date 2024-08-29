@@ -1,4 +1,5 @@
 """Annotations can contain annotated data in two forms:
+
   - [skeleton data](/webknossos/skeleton_annotation.html), as provided by the `Skeleton` class, and
   - [volume annotation layers](/webknossos/volume_annotation.html) (or volume layers short),
     which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`

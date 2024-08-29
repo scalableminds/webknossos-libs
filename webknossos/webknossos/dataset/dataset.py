@@ -397,6 +397,59 @@ class Dataset:
         )
 
     @classmethod
+    def announce_manual_upload(
+        cls,
+        dataset_name: str,
+        organization: str,
+        initial_team_ids: List[str],
+        folder_id: str,
+        token: Optional[str] = None,
+    ) -> None:
+        """
+        Announces a manual dataset upload to webknossos. This is useful when users with access
+        to the file system of the datastore want to upload a dataset manually. It creates an entry
+        in the database and sets the access rights accordingly.
+        """
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.api_client.models import ApiDatasetAnnounceUpload
+        from ..client.context import _get_context
+
+        context = _get_context()
+        dataset_announce = ApiDatasetAnnounceUpload(
+            dataset_name=dataset_name,
+            organization=organization,
+            initial_team_ids=initial_team_ids,
+            folder_id=folder_id,
+        )
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
+
+    @classmethod
+    def trigger_reload_in_datastore(
+        cls,
+        dataset_name: str,
+        organization: str,
+        token: Optional[str] = None,
+    ) -> None:
+        """
+        This method is used for datasets that were uploaded manually
+        to a webknossos datastore. It can not be used for local datasets.
+        After a manual upload of a dataset, the datasets properties are
+        updated automatically after a few minutes. To trigger a reload
+        of the datasets properties manually, use this method.
+        """
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.context import _get_context
+
+        context = _get_context()
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
+
+    @classmethod
     def _parse_remote(
         cls,
         dataset_name_or_url: str,
@@ -1137,6 +1190,7 @@ class Dataset:
         """
         Creates a new layer called `layer_name` with mag `mag` from `images`.
         `images` can be one of the following:
+
         * glob-string
         * list of paths
         * `pims.FramesSequence` instance
@@ -1147,6 +1201,7 @@ class Dataset:
         e.g. using `python -m pip install "webknossos[all]"`.
 
         Further Arguments:
+
         * `category`: `color` by default, may be set to "segmentation"
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data
