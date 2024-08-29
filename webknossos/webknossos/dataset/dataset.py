@@ -1683,6 +1683,48 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
+    def add_remote_layer(
+        self,
+        remote_layer: Union[str, UPath, Layer],
+        new_layer_name: Optional[str] = None,
+    ) -> Layer:
+        """
+        Adds a remote layer to this dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        If new_layer_name is None, the name of the foreign layer is used.
+        """
+        self._ensure_writable()
+        remote_layer = Layer._ensure_layer(remote_layer)
+
+        if new_layer_name is None:
+            new_layer_name = remote_layer.name
+
+        if new_layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot create symlink to {remote_layer}. This dataset already has a layer called {new_layer_name}."
+            )
+        foreign_layer_path = remote_layer.path
+
+        assert is_fs_path(
+            self.path
+        ), f"Cannot create symlinks in remote dataset {self.path}"
+        assert is_fs_path(
+            foreign_layer_path
+        ), f"Cannot create symlink to remote layer {foreign_layer_path}"
+
+
+        layer_properties = copy.deepcopy(remote_layer._properties)
+        layer_properties.name = new_layer_name
+        self._properties.data_layers += [layer_properties]
+        self._layers[new_layer_name] = self._initialize_layer_from_properties(
+            layer_properties
+        )
+
+        self._export_as_json()
+        return self.layers[new_layer_name]
+
     def add_fs_copy_layer(
         self,
         foreign_layer: Union[str, Path, Layer],

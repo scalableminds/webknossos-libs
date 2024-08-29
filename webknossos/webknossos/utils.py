@@ -244,6 +244,12 @@ def is_fs_path(path: Path) -> bool:
 
     return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
 
+def is_remote_path(path: Path) -> bool:
+    from upath.implementations.cloud import S3Path, GCSPath
+    from upath.implementations.http import HTTPPath
+
+    return not isinstance(path, UPath) or isinstance(path, (HTTPPath, S3Path, GCSPath))
+
 
 def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath):

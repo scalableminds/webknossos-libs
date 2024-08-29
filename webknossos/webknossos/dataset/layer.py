@@ -45,7 +45,7 @@ from ..utils import (
     is_fs_path,
     named_partial,
     rmtree,
-    warn_deprecated,
+    warn_deprecated, is_remote_path,
 )
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -451,6 +451,7 @@ class Layer:
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
+                # TODO: I think nd support is missing here.
                 axis_order=(
                     {
                         key: value
@@ -467,6 +468,28 @@ class Layer:
         self.dataset._export_as_json()
 
         return mag_view
+
+    # TODO:M continue here
+    def add_existing_remote_mag_view(
+        self,
+        mag_view: MagView,
+    ) -> MagView:
+        """
+        Creates a new mag based on already existing files.
+
+        Raises an IndexError if the specified `mag` does not exists.
+        """
+        self.dataset._ensure_writable()
+        assert (
+            mag_view.mag not in self.mags
+        ), f"Cannot add mag {mag_view.mag} as it already exists for layer {self}"
+        self._mags[mag_view.mag] = mag_view
+        mag_array_info = mag_view.info
+        self._properties.mags.append(mag_view._properties)
+        self.dataset._export_as_json()
+
+        return mag_view
+
 
     def get_or_add_mag(
         self,
@@ -621,6 +644,35 @@ class Layer:
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
         mag = self.add_mag_for_existing_files(foreign_mag_view.mag)
+
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+        return mag
+
+    def add_remote_mag(
+        self,
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView:
+        """
+        Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        If make_relative is True, the symlink is made relative to the current dataset path.
+        Symlinked mags can only be added to layers on local file systems.
+        """
+        self.dataset._ensure_writable()
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+
+        assert is_remote_path(
+            foreign_mag_view.path
+        ), f"Cannot create remote mag for local mag {foreign_mag_view.path}"
+
+        mag = self.add_existing_remote_mag_view(foreign_mag_view)
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
