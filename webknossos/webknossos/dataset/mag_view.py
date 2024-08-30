@@ -509,8 +509,10 @@ class MagView(View):
         else:
             # local import to prevent circular dependency
             from .dataset import Dataset
-
-            mag_view_path = UPath(mag_view)
+            # Calling .parent on a upath ending with a trailing slash jsut removes the slash.
+            # Therefore, we remove a potential trailing slash here.
+            path = mag_view[:-1] if mag_view.endswith('/') else mag_view
+            mag_view_path = UPath(path)
             return (
                 Dataset.open(mag_view_path.parent.parent)
                 .get_layer(mag_view_path.parent.name)

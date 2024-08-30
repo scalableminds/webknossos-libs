@@ -74,7 +74,7 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
-    warn_deprecated,
+    warn_deprecated, is_remote_path,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from ._utils.segmentation_recognition import (
@@ -327,6 +327,7 @@ class Dataset:
 
         self.path: Path = dataset_path
         self._properties: DatasetProperties = self._load_properties()
+        self.is_remote_dataset = is_remote_path(self.path)
         self._last_read_properties = copy.deepcopy(self._properties)
 
         self._layers: Dict[str, Layer] = {}
@@ -346,6 +347,10 @@ class Dataset:
 
             layer = self._initialize_layer_from_properties(layer_properties)
             self._layers[layer_properties.name] = layer
+            if is_remote_path(layer.path):
+                for mag in layer.mags:
+                    mag_prop = next(mag_prop for mag_prop in layer_properties.mags if mag_prop.mag == mag)
+                    mag_prop.path = str(layer.mags[mag].path)
 
         if dataset_existed_already:
             if voxel_size_with_unit is None:
@@ -1707,10 +1712,7 @@ class Dataset:
             )
         foreign_layer_path = remote_layer.path
 
-        assert is_fs_path(
-            self.path
-        ), f"Cannot create symlinks in remote dataset {self.path}"
-        assert is_fs_path(
+        assert is_remote_path(
             foreign_layer_path
         ), f"Cannot create symlink to remote layer {foreign_layer_path}"
 
