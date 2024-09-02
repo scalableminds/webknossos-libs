@@ -4,7 +4,7 @@ This example demonstrates the basic interactions with Datasets that have more th
 
 In order to manipulate 4D data in WEBKNOSSOS, we first convert the 4D Tiff dataset into a Zarr3 dataset. This conversion is achieved using the [from_images method](../../api/webknossos/dataset/dataset.md#webknossos.dataset.dataset.Dataset.from_images).
 
-Once the dataset is converted, we can access specific layers and views, [read data](../../api/webknossos/dataset/magview.md#webknossos.dataset.mag_view.MagView.read) from a defined bounding box, and [write data](../../api/webknossos/dataset/magview.md#webknossos.dataset.mag_view.MagView.write) to a different position within the dataset. The [NDBoundingBox](../../api/webknossos/geometry/ndboundingbox.md#webknossos.geometry.nd_bounding_box.NDBoundingBox) is utilized to select a 4D region of the dataset.
+Once the dataset is converted, we can access specific layers and views, [read data](../../api/webknossos/dataset/mag_view.md#webknossos.dataset.mag_view.MagView.read) from a defined bounding box, and [write data](../../api/webknossos/dataset/mag_view.md#webknossos.dataset.mag_view.MagView.write) to a different position within the dataset. The [NDBoundingBox](../../api/webknossos/geometry/nd_bounding_box.md#webknossos.geometry.nd_bounding_box.NDBoundingBox) is utilized to select a 4D region of the dataset.
 
 ```python
 --8<--
