@@ -172,8 +172,8 @@ def test_annotation_from_url(url: str) -> None:
     assert (annotated_data == 2504698).all()
     assert mag_view.read(absolute_offset=(0, 0, 0), size=(16, 16, 8))[0, 0, 0, 0] == 0
     assert (
-        mag_view.read(absolute_offset=(128, 128, 128), size=(16, 16, 8))[0, 0, 0, 0]
-        == 286022
+            mag_view.read(absolute_offset=(128, 128, 128), size=(16, 16, 8))[0, 0, 0, 0]
+            == 286022
     )
     segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
     assert segment_info.anchor_position == (2785, 4423, 1792)
