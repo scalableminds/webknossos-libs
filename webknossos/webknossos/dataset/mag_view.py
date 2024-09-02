@@ -17,6 +17,7 @@ from ..utils import (
     NDArrayLike,
     get_executor_for_args,
     is_fs_path,
+    is_remote_path,
     rmtree,
     wait_and_ensure_success,
     warn_deprecated,
@@ -30,6 +31,18 @@ if TYPE_CHECKING:
     )
 
 from .view import View
+
+
+def _find_mag_path(
+    dataset_path: Path,
+    layer_name: str,
+    mag_name: str,
+    path: Optional[str | Path] = None,
+) -> Path:
+    path = UPath(path)
+    if path is None or is_fs_path(path):
+        return _find_mag_path_on_disk(dataset_path, layer_name, mag_name, str(path))
+    return path
 
 
 def _find_mag_path_on_disk(
@@ -71,6 +84,7 @@ class MagView(View):
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
         create: bool = False,
+        path: Optional[UPath] = None,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -93,11 +107,27 @@ class MagView(View):
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
-            self_path = layer.dataset.path / layer.name / mag.to_layer_name()
+            assert not (path and is_remote_path(
+                path
+            )), "Creating remote mags is not possible. The given mag path is {}".format(
+                path
+            )
+            self_path = (
+                path if path else layer.dataset.path / layer.name / mag.to_layer_name()
+            )
             BaseArray.get_class(array_info.data_format).create(self_path, array_info)
 
+        mag_path = (
+            path
+            if path
+            else _find_mag_path(
+                layer.dataset.path, layer.name, mag.to_layer_name(), path
+            )
+        )
+        # TODO use path if local -> relative to
+
         super().__init__(
-            _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
+            mag_path,
             array_info,
             bounding_box=layer.bounding_box,
             mag=mag,
@@ -142,6 +172,10 @@ class MagView(View):
     @property
     def path(self) -> Path:
         return self._path
+
+    @property
+    def is_remote(self) -> bool:
+        return is_remote_path(self._path)
 
     @property
     def name(self) -> str:
@@ -509,9 +543,11 @@ class MagView(View):
         else:
             # local import to prevent circular dependency
             from .dataset import Dataset
+
             # Calling .parent on a upath ending with a trailing slash jsut removes the slash.
             # Therefore, we remove a potential trailing slash here.
-            path = mag_view[:-1] if mag_view.endswith('/') else mag_view
+            path = str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
+            path = path[:-1] if path.endswith("/") else path
             mag_view_path = UPath(path)
             return (
                 Dataset.open(mag_view_path.parent.parent)

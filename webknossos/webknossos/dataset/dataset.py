@@ -70,11 +70,12 @@ from ..utils import (
     count_defined_values,
     get_executor_for_args,
     is_fs_path,
+    is_remote_path,
     named_partial,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
-    warn_deprecated, is_remote_path,
+    warn_deprecated,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from ._utils.segmentation_recognition import (
@@ -349,7 +350,11 @@ class Dataset:
             self._layers[layer_properties.name] = layer
             if is_remote_path(layer.path):
                 for mag in layer.mags:
-                    mag_prop = next(mag_prop for mag_prop in layer_properties.mags if mag_prop.mag == mag)
+                    mag_prop = next(
+                        mag_prop
+                        for mag_prop in layer_properties.mags
+                        if mag_prop.mag == mag
+                    )
                     mag_prop.path = str(layer.mags[mag].path)
 
         if dataset_existed_already:
@@ -1586,7 +1591,8 @@ class Dataset:
         ]
         # delete files on disk
         # rmtree does not recurse into linked dirs, but removes the link
-        rmtree(layer_path)
+        if is_fs_path(layer_path):
+            rmtree(layer_path)
         self._export_as_json()
 
     def add_copy_layer(
@@ -1708,14 +1714,13 @@ class Dataset:
 
         if new_layer_name in self.layers.keys():
             raise IndexError(
-                f"Cannot create symlink to {remote_layer}. This dataset already has a layer called {new_layer_name}."
+                f"Cannot create symlink to {remote_layer}. This dataset already has a layer called {new_layer_name}."  # TODO
             )
         foreign_layer_path = remote_layer.path
 
         assert is_remote_path(
             foreign_layer_path
-        ), f"Cannot create symlink to remote layer {foreign_layer_path}"
-
+        ), f"Cannot create symlink to remote layer {foreign_layer_path}"  # TODO
 
         layer_properties = copy.deepcopy(remote_layer._properties)
         layer_properties.name = new_layer_name
@@ -1907,7 +1912,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             for mag in layer.mags.values():
-                if not mag._is_compressed():
+                if not mag._is_compressed() and not mag.is_remote:
                     mag.compress(executor=executor)
 
     def downsample(
