@@ -210,7 +210,7 @@ class NDBoundingBox:
 
         Args:
             color (Optional[Tuple[float, float, float, float]]): The color to set for the bounding box.
-            The color should be specified as a tuple of four floats representing RGBA values.
+                The color should be specified as a tuple of four floats representing RGBA values.
 
         Returns:
             NDBoundingBox: A new instance of NDBoundingBox with the specified color.
