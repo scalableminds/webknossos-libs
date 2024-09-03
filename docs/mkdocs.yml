@@ -172,7 +172,7 @@ plugins:
             python:
                 options:
                     show_source: false
-                    docstring_style: null
+                    docstring_style: google
                     docstring_section_style: list
                     heading_level: 1
                     inherited_members: true
