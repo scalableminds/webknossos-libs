@@ -207,10 +207,18 @@ class Layer:
             self._properties.mags[0].path if len(self._properties.mags) > 0 else None
         )
         if maybe_mag_path_str:
-            maybe_mag_path_str = maybe_mag_path_str[:-1] if maybe_mag_path_str.endswith("/") else maybe_mag_path_str
+            maybe_mag_path_str = (
+                maybe_mag_path_str[:-1]
+                if maybe_mag_path_str.endswith("/")
+                else maybe_mag_path_str
+            )
         maybe_mag_upath = UPath(maybe_mag_path_str) if maybe_mag_path_str else None
         is_remote = maybe_mag_upath and is_remote_path(maybe_mag_upath)
-        return maybe_mag_upath.parent if maybe_mag_upath and is_remote else self.dataset.path / self.name
+        return (
+            maybe_mag_upath.parent
+            if maybe_mag_upath and is_remote
+            else self.dataset.path / self.name
+        )
 
     @property
     def is_remote_path(self) -> bool:
@@ -482,7 +490,6 @@ class Layer:
 
         return mag_view
 
-
     def add_existing_remote_mag_view(
         self,
         mag_view_maybe: Union[int, str, list, tuple, np.ndarray, Mag, MagView],
@@ -498,14 +505,21 @@ class Layer:
             if isinstance(mag_view_maybe, MagView)
             else self.path / Mag(mag_view_maybe).to_layer_name()
         )
-        # TODO constructing a mag view from Union[int, str, list, tuple, np.ndarray] doesnt work, maybe get rid of this type support
         # but on the other hand the other methods support this arg types. So maybe make them work here as well
-        mag_view = mag_view_maybe if isinstance(mag_view_maybe, MagView) else MagView._ensure_mag_view(mag_path)
-        mag = mag_view_maybe.mag if isinstance(mag_view_maybe, MagView) else Mag(mag_view_maybe)
+        mag = (
+            mag_view_maybe.mag
+            if isinstance(mag_view_maybe, MagView)
+            else Mag(mag_view_maybe)
+        )
+        mag_view = (
+            mag_view_maybe
+            if isinstance(mag_view_maybe, MagView)
+            else MagView._ensure_mag_view(mag_path)
+        )
         assert (
             mag not in self.mags
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
-        self._setup_mag(mag, mag_path)
+        self._setup_mag(mag, str(mag_path))
         # TODO: Fill Cube Length
         self._properties.mags.append(mag_view._properties)
         self.dataset._export_as_json()
@@ -1175,10 +1189,12 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-        path = UPath(path) if path else path
+        mag_path_maybe = UPath(path) if path else path
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
-            resolved_path = _find_mag_path(self.dataset.path, self.name, mag_name, path)
+            resolved_path = _find_mag_path(
+                self.dataset.path, self.name, mag_name, mag_path_maybe
+            )
             info = cls_array.open(resolved_path).info
             self._mags[mag] = MagView(
                 self,
@@ -1187,7 +1203,7 @@ class Layer:
                 info.chunks_per_shard,
                 info.compression_mode,
                 False,
-                resolved_path,
+                UPath(resolved_path),
             )
             self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:

@@ -107,9 +107,9 @@ class MagView(View):
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
-            assert not (path and is_remote_path(
-                path
-            )), "Creating remote mags is not possible. The given mag path is {}".format(
+            assert not (
+                path and is_remote_path(path)
+            ), "Creating remote mags is not possible. The given mag path is {}".format(
                 path
             )
             self_path = (
@@ -544,9 +544,11 @@ class MagView(View):
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            # Calling .parent on a upath ending with a trailing slash jsut removes the slash.
+            # Calling .parent on a upath ending with a trailing slash just removes the slash.
             # Therefore, we remove a potential trailing slash here.
-            path = str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
+            path = (
+                str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
+            )
             path = path[:-1] if path.endswith("/") else path
             mag_view_path = UPath(path)
             return (
