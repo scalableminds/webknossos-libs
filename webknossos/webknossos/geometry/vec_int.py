@@ -126,10 +126,10 @@ class VecInt(tuple):
         Returns a new ND Vector from a string representation.
 
         Args:
-        - string (str): The string representation of the vector.
+            string (str): The string representation of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
@@ -169,10 +169,10 @@ class VecInt(tuple):
         Checks if all elements in the vector are positive.
 
         Args:
-        - strictly_positive (bool): If True, checks if all elements are strictly positive.
+            strictly_positive (bool): If True, checks if all elements are strictly positive.
 
         Returns:
-        - bool: True if all elements are positive, False otherwise.
+            bool: True if all elements are positive, False otherwise.
         """
         if strictly_positive:
             return all(i > 0 for i in self)
@@ -260,10 +260,10 @@ class VecInt(tuple):
         Adds two VecInts or returns None if the other is None.
 
         Args:
-        - other (Optional[VecInt]): The other vector to add.
+            other (Optional[VecInt]): The other vector to add.
 
         Returns:
-        - Optional[VecInt]: The sum of the two vectors or None if the other is None.
+            Optional[VecInt]: The sum of the two vectors or None if the other is None.
         """
         return None if other is None else self + other
 
@@ -276,11 +276,11 @@ class VecInt(tuple):
         source so that the other elements move when necessary.
 
         Args:
-        - source (Union[int, List[int]]): The index of the element to move.
-        - target (Union[int, List[int]]): The index where the element should be moved to.
+            source (Union[int, List[int]]): The index of the element to move.
+            target (Union[int, List[int]]): The index where the element should be moved to.
 
         Returns:
-        - VecInt: A new vector with the moved element.
+            VecInt: A new vector with the moved element.
         """
 
         # Piggy-back on np.moveaxis by creating an auxiliary array where the indices 0, 1 and
@@ -298,10 +298,10 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 0.
 
         Args:
-        - axes (Tuple[str, ...]): The axes of the vector.
+            axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return cls((0 for _ in range(len(axes))), axes=axes)
 
@@ -311,10 +311,10 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 1.
 
         Args:
-        - axes (Tuple[str, ...]): The axes of the vector.
+            axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return cls((1 for _ in range(len(axes))), axes=axes)
 
@@ -324,11 +324,11 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to the same value.
 
         Args:
-        - an_int (int): The value to set all elements to.
-        - axes (Tuple[str, ...]): The axes of the vector.
+            an_int (int): The value to set all elements to.
+            axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return cls((an_int for _ in range(len(axes))), axes=axes)
 

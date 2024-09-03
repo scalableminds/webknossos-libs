@@ -224,7 +224,12 @@ class BoundingBox(NDBoundingBox):
     def _align_with_mag_slow(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
+        Args:
+            mag (Mag): The mag to align with.
+            ceil (bool): If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
+
+        Returns:
+            BoundingBox: The aligned bounding box.
         """
         np_mag = mag.to_np()
 
@@ -244,7 +249,12 @@ class BoundingBox(NDBoundingBox):
     ) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
+        Args:
+            mag (Mag): The mag to align with.
+            ceil (bool): If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
+
+        Returns:
+            BoundingBox: The aligned bounding box.
         """
         # This does the same as _align_with_mag_slow, which is more readable.
         # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
