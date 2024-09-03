@@ -114,7 +114,7 @@ def download_dataset(
             ):
                 chunk_in_mag = chunk.in_mag(mag)
                 chunk_bytes, missing_buckets = datastore_client.dataset_get_raw_data(
-                    organization_name=organization_id,
+                    organization_id=organization_id,
                     dataset_name=dataset_name,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),
