@@ -179,7 +179,7 @@ class MagView(View):
         return self._path
 
     @property
-    def is_remote(self) -> bool:
+    def is_remote_mag(self) -> bool:
         return is_remote_path(self._path)
 
     @property
