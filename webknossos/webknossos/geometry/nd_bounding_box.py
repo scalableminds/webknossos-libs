@@ -555,8 +555,8 @@ class NDBoundingBox:
         """
         Returns the intersection of two bounding boxes.
         If there is no intersection (resulting bounding box is empty) and dont_assert is False (default)
-        the function raises an assertion error. 
-        If dont_assert is set to True this method returns an empty bounding box if there is no intersection.  
+        the function raises an assertion error.
+        If dont_assert is set to True this method returns an empty bounding box if there is no intersection.
 
         Args:
             other (NDBoundingBox): The other bounding box to intersect with.
