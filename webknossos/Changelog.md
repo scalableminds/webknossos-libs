@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Updated and clarified documentation for nd_bounding_box intersected_with method  
 
 ### Fixed
 
