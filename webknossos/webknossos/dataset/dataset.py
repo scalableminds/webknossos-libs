@@ -1714,13 +1714,13 @@ class Dataset:
 
         if new_layer_name in self.layers.keys():
             raise IndexError(
-                f"Cannot create symlink to {remote_layer}. This dataset already has a layer called {new_layer_name}."  # TODO
+                f"Cannot add remote layer {remote_layer}. This dataset already has a layer called {new_layer_name}."
             )
         foreign_layer_path = remote_layer.path
 
         assert is_remote_path(
             foreign_layer_path
-        ), f"Cannot create symlink to remote layer {foreign_layer_path}"  # TODO
+        ), f"Cannot add remote layer {foreign_layer_path} as it is not remote. Try using dataset.add_layer instead."
 
         layer_properties = copy.deepcopy(remote_layer._properties)
         layer_properties.name = new_layer_name
@@ -1988,6 +1988,7 @@ class Dataset:
         with (self.path / PROPERTIES_FILE_NAME).open(
             encoding="utf-8"
         ) as datasource_properties:
+            print("loading", str(self.path / PROPERTIES_FILE_NAME))
             data = json.load(datasource_properties)
         return dataset_converter.structure(data, DatasetProperties)
 

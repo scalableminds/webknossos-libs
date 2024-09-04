@@ -39,14 +39,17 @@ def _find_mag_path(
     mag_name: str,
     path: Optional[str | Path] = None,
 ) -> Path:
-    path = UPath(path)
+    path = UPath(path) if path else None
     if path is None or is_fs_path(path):
-        return _find_mag_path_on_disk(dataset_path, layer_name, mag_name, str(path))
+        return _find_mag_path_on_disk(dataset_path, layer_name, mag_name, path)
     return path
 
 
 def _find_mag_path_on_disk(
-    dataset_path: Path, layer_name: str, mag_name: str, path: Optional[str] = None
+    dataset_path: Path,
+    layer_name: str,
+    mag_name: str,
+    path: Optional[str | Path] = None,
 ) -> Path:
     if path is not None:
         return dataset_path / path
@@ -112,10 +115,13 @@ class MagView(View):
             ), "Creating remote mags is not possible. The given mag path is {}".format(
                 path
             )
-            self_path = (
+            creation_path = Path(
                 path if path else layer.dataset.path / layer.name / mag.to_layer_name()
             )
-            BaseArray.get_class(array_info.data_format).create(self_path, array_info)
+            BaseArray.get_class(array_info.data_format).create(
+                creation_path, array_info
+            )
+            path = UPath(creation_path)
 
         mag_path = (
             path
@@ -124,7 +130,6 @@ class MagView(View):
                 layer.dataset.path, layer.name, mag.to_layer_name(), path
             )
         )
-        # TODO use path if local -> relative to
 
         super().__init__(
             mag_path,
