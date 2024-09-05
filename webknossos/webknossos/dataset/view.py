@@ -212,6 +212,7 @@ class View:
         The user can specify where the data should be written.
         The default is to write the data to the view's bounding box.
         Alternatively, one can supply one of the following keywords:
+
         * `relative_offset` in Mag(1) -> only usable for 3D datasets
         * `absolute_offset` in Mag(1) -> only usable for 3D datasets
         * `relative_bounding_box` in Mag(1)
@@ -612,6 +613,7 @@ class View:
         The default is to return the same view as the current bounding box,
         in case of a `MagView` that's the layer bounding box.
         One can supply one of the following keyword argument combinations:
+
         * `relative_bounding_box`in Mag(1)
         * `absolute_bounding_box` in Mag(1)
         * `relative_offset` and `size`, both in Mag(1)
@@ -771,6 +773,7 @@ class View:
         As soon as the buffer is full, the data gets written to disk.
 
         Arguments:
+
         * The user can specify where the writer should start:
             * `relative_offset` in Mag(1)
             * `absolute_offset` in Mag(1)
@@ -830,6 +833,7 @@ class View:
         Internally, it reads multiple slices from disk at once and buffers the data.
 
         Arguments:
+
         * The user can specify where the writer should start:
             * `relative_bounding_box` in Mag(1)
             * `absolute_bounding_box` in Mag(1)

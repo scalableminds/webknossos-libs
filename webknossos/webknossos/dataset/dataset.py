@@ -1192,6 +1192,7 @@ class Dataset:
         """
         Creates a new layer called `layer_name` with mag `mag` from `images`.
         `images` can be one of the following:
+
         * glob-string
         * list of paths
         * `pims.FramesSequence` instance
@@ -1202,6 +1203,7 @@ class Dataset:
         e.g. using `python -m pip install "webknossos[all]"`.
 
         Further Arguments:
+
         * `category`: `color` by default, may be set to "segmentation"
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data

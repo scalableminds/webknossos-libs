@@ -2,7 +2,7 @@
 
 **Note: Refer to cluster_tools/README.md for how to use this container in the context of testing the cluster_tools**
 
-This is a multi-container Slurm cluster using docker-compose.  The compose file
+This is a multi-container Slurm cluster using `docker compose`.  The compose file
 creates named volumes for persistent storage of MySQL data files as well as
 Slurm state and log directories.
 
@@ -26,10 +26,10 @@ The compose file will create the following named volumes:
 
 ## Starting the Cluster
 
-Run `docker-compose` to instantiate the cluster:
+Run `docker compose` to instantiate the cluster:
 
 ```console
-$ docker-compose up -d
+$ docker compose up -d
 ```
 
 > Note: If you encounter permission errors (`Failed to check keyfile "/etc/munge/munge.key": Permission denied`), follow the steps from the "Deleting the Cluster" section and run the previous command again.
@@ -47,10 +47,10 @@ $ ./register_cluster.sh
 > ready before registering the cluster.  Otherwise, you may get an error such
 > as **sacctmgr: error: Problem talking to the database: Connection refused**.
 >
-> You can check the status of the cluster by viewing the logs: `docker-compose
+> You can check the status of the cluster by viewing the logs: `docker compose
 > logs -f`
 
-> Note: If you encounter an error that the daemon is not running (`Error response from daemon: Container <...> is not running`), the start of the containers was not successful. Check the logs using `docker-compose logs -f` and revisit the last step.
+> Note: If you encounter an error that the daemon is not running (`Error response from daemon: Container <...> is not running`), the start of the containers was not successful. Check the logs using `docker compose logs -f` and revisit the last step.
 
 ## Accessing the Cluster
 
@@ -85,11 +85,11 @@ slurm-2.out
 ## Stopping and Restarting the Cluster
 
 ```console
-$ docker-compose stop
+$ docker compose stop
 ```
 
 ```console
-$ docker-compose start
+$ docker compose start
 ```
 
 ## Deleting the Cluster
@@ -97,6 +97,6 @@ $ docker-compose start
 To remove all containers and volumes, run:
 
 ```console
-$ docker-compose rm -sf
+$ docker compose rm -sf
 $ docker volume rm dockered-slurm_etc_munge dockered-slurm_etc_slurm dockered-slurm_slurm_jobdir dockered-slurm_var_lib_mysql dockered-slurm_var_log_slurm
 ```

@@ -137,6 +137,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-/src/api
+/src/api/webknossos
 /wk-repo
 /out
