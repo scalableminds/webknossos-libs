@@ -1988,7 +1988,6 @@ class Dataset:
         with (self.path / PROPERTIES_FILE_NAME).open(
             encoding="utf-8"
         ) as datasource_properties:
-            print("loading", str(self.path / PROPERTIES_FILE_NAME))
             data = json.load(datasource_properties)
         return dataset_converter.structure(data, DatasetProperties)
 
