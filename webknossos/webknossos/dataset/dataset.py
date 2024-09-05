@@ -2116,7 +2116,12 @@ class RemoteDataset(Dataset):
         if metadata := self._get_dataset_info().metadata:
             for i in metadata:
                 value = parse_metadata_value(i.value, i.type)
+                if i.key in result:
+                    warnings.warn(
+                        f"The key {i.key} is a duplicate in the metadata. It is overwritten with last value."
+                    )
                 result[i.key] = value
+
         return result
 
     @metadata.setter
