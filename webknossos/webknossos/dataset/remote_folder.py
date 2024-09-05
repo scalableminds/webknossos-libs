@@ -19,6 +19,8 @@ def _get_folder_path(
 
 @attr.define
 class RemoteFolder:
+    """This class is used to access and edit metadata of a folder on the webknossos server."""
+
     id: str
     name: str
 
