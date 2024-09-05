@@ -1912,7 +1912,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             for mag in layer.mags.values():
-                if not mag._is_compressed() and not mag.is_remote:
+                if not mag._is_compressed() and not mag.is_remote_mag:
                     mag.compress(executor=executor)
 
     def downsample(
