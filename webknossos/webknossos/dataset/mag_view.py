@@ -19,6 +19,7 @@ from ..utils import (
     is_fs_path,
     is_remote_path,
     rmtree,
+    strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
 )
@@ -110,17 +111,11 @@ class MagView(View):
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
-            assert not (
-                path and is_remote_path(path)
-            ), "Creating remote mags is not possible. The given mag path is {}".format(
-                path
-            )
-            creation_path = Path(
+            creation_path = (
                 path if path else layer.dataset.path / layer.name / mag.to_layer_name()
             )
-            BaseArray.get_class(array_info.data_format).create(
-                creation_path, array_info
-            )
+            print("creation path", creation_path)
+            BaseArray.get_class(array_info.data_format).create(creation_path, array_info)
             path = UPath(creation_path)
 
         mag_path = (
@@ -549,13 +544,10 @@ class MagView(View):
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            # Calling .parent on a upath ending with a trailing slash just removes the slash.
-            # Therefore, we remove a potential trailing slash here.
-            path = (
+            path = UPath(
                 str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
             )
-            path = path[:-1] if path.endswith("/") else path
-            mag_view_path = UPath(path)
+            mag_view_path = strip_trailing_slash(path)
             return (
                 Dataset.open(mag_view_path.parent.parent)
                 .get_layer(mag_view_path.parent.name)

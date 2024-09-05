@@ -46,6 +46,7 @@ from ..utils import (
     is_remote_path,
     named_partial,
     rmtree,
+    strip_trailing_slash,
     warn_deprecated,
 )
 from .defaults import (
@@ -206,17 +207,11 @@ class Layer:
         maybe_mag_path_str = (
             self._properties.mags[0].path if len(self._properties.mags) > 0 else None
         )
-        if maybe_mag_path_str:
-            maybe_mag_path_str = (
-                maybe_mag_path_str[:-1]
-                if maybe_mag_path_str.endswith("/")
-                else maybe_mag_path_str
-            )
-        maybe_mag_upath = UPath(maybe_mag_path_str) if maybe_mag_path_str else None
-        is_remote = maybe_mag_upath and is_remote_path(maybe_mag_upath)
+        maybe_mag_path_upath = strip_trailing_slash(UPath(maybe_mag_path_str)) if maybe_mag_path_str else None
+        is_remote = maybe_mag_path_upath and is_remote_path(maybe_mag_path_upath)
         return (
-            maybe_mag_upath.parent
-            if maybe_mag_upath and is_remote
+            maybe_mag_path_upath.parent
+            if maybe_mag_path_upath and is_remote
             else self.dataset.path / self.name
         )
 
@@ -590,18 +585,16 @@ class Layer:
                 "Deleting mag {} failed. There is no mag with this name".format(mag)
             )
 
-        full_mag_path = _find_mag_path(
+        full_path = _find_mag_path(
             self.dataset.path, self.name, mag.to_layer_name(), self.mags[mag].path
         )
-        assert is_fs_path(full_mag_path), "Cannot delete remote mags."
-
         del self._mags[mag]
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag
         ]
         self.dataset._export_as_json()
         # delete files on disk
-        rmtree(full_mag_path)
+        rmtree(full_path)
 
     def add_copy_mag(
         self,

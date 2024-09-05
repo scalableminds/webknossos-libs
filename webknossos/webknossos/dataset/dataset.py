@@ -988,6 +988,7 @@ class Dataset:
 
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
+            print("creating layer for color", self.path / layer_name)
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif category == SEGMENTATION_CATEGORY:
@@ -1591,8 +1592,7 @@ class Dataset:
         ]
         # delete files on disk
         # rmtree does not recurse into linked dirs, but removes the link
-        if is_fs_path(layer_path):
-            rmtree(layer_path)
+        rmtree(layer_path)
         self._export_as_json()
 
     def add_copy_layer(
