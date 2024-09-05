@@ -19,13 +19,16 @@ def load_annotation(annotation_file: Path) -> None:
         mag_view = segmentation_layer.get_finest_mag()
         segments = mag_view.read(absolute_bounding_box=BOUNDING_BOX)
 
+        # Drop channel dimension as it has depth 1
+        segments = segments[0]
+
         # Write segmentation IDs to an OME Tiff file
         imwrite(
             "segmentation.ome.tiff",
             segments.T,  # note, the tiff lib use different channel order
             ome=True,
             metadata={
-                "axes": "ZYXC",
+                "axes": "ZYX",
             },
         )
 
