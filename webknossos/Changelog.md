@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Updated and clarified documentation for nd_bounding_box intersected_with method  
 
 ### Fixed
 - Fixed an issue with cattrs v24.1.0. [#1184](https://github.com/scalableminds/webknossos-libs/pull/1184)

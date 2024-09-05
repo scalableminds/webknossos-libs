@@ -554,12 +554,13 @@ class NDBoundingBox:
     def intersected_with(self: _T, other: _T, dont_assert: bool = False) -> _T:
         """
         Returns the intersection of two bounding boxes.
-
-        If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))
+        If there is no intersection (resulting bounding box is empty) and dont_assert is False (default)
+        the function raises an assertion error.
+        If dont_assert is set to True this method returns an empty bounding box if there is no intersection.
 
         Args:
             other (NDBoundingBox): The other bounding box to intersect with.
-            dont_assert (bool): If True, the method may return empty bounding boxes.
+            dont_assert (bool): If True, the method may return an empty bounding box. Default is False.
 
         Returns:
             NDBoundingBox: The intersection of the two bounding boxes.
