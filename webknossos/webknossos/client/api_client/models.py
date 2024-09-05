@@ -50,7 +50,7 @@ class ApiBoundingBox:
 
 
 @attr.s(auto_attribs=True)
-class ApiAdditionalAxes:
+class ApiAdditionalAxis:
     name: str
     bounds: Tuple[int, int]
     index: int
@@ -63,7 +63,7 @@ class ApiDataLayer:
     element_class: str
     bounding_box: ApiBoundingBox
     resolutions: List[Tuple[int, int, int]]
-    additional_axes: Optional[List[ApiAdditionalAxes]] = None
+    additional_axes: Optional[List[ApiAdditionalAxis]] = None
     largest_segment_id: Optional[int] = None
     default_view_configuration: Optional[Dict[str, Any]] = None
 

@@ -1,6 +1,8 @@
-from typing import Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Sequence, Union
 
 import attr
+
+from webknossos.utils import infer_metadata_type, parse_metadata_value
 
 from ..client.api_client.models import ApiFolder, ApiFolderWithParent, ApiMetadata
 
@@ -49,20 +51,29 @@ class RemoteFolder:
         raise KeyError(f"Could not find folder {path}.")
 
     @property
-    def metadata(self) -> List[ApiMetadata]:
+    def metadata(self) -> Dict[str, Union[str, int, float, List[str]]]:
         from ..client.context import _get_api_client
 
         client = _get_api_client()
+        result = {}
         if metadata := client._get_json(f"/folders/{self.id}", ApiFolder).metadata:
-            return metadata
-        else:
-            return []
+            for i in metadata:
+                value = parse_metadata_value(i.value, i.type)
+                result[i.key] = value
+        return result
 
     @metadata.setter
-    def metadata(self, metadata: Optional[List[ApiMetadata]]) -> None:
+    def metadata(
+        self, metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]]
+    ) -> None:
         from ..client.context import _get_api_client
 
         client = _get_api_client(enforce_auth=True)
         folder = client._get_json(f"/folders/{self.id}", ApiFolder)
-        folder.metadata = metadata
+        if metadata is not None:
+            api_metadata = [
+                ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
+                for k, v in metadata.items()
+            ]
+        folder.metadata = api_metadata
         client._put_json(f"/folders/{self.id}", folder)

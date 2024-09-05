@@ -69,8 +69,10 @@ from ..utils import (
     copytree,
     count_defined_values,
     get_executor_for_args,
+    infer_metadata_type,
     is_fs_path,
     named_partial,
+    parse_metadata_value,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
@@ -2107,14 +2109,24 @@ class RemoteDataset(Dataset):
             )
 
     @property
-    def metadata(self) -> List[ApiMetadata]:
+    def metadata(self) -> Dict[str, Union[str, int, float, List[str]]]:
+        result = {}
         if metadata := self._get_dataset_info().metadata:
-            return metadata
-        return []
+            for i in metadata:
+                value = parse_metadata_value(i.value, i.type)
+                result[i.key] = value
+        return result
 
     @metadata.setter
-    def metadata(self, metadata: Optional[List[ApiMetadata]]) -> None:
-        self._update_dataset_info(metadata=metadata)
+    def metadata(
+        self, metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]]
+    ) -> None:
+        if metadata is not None:
+            api_metadata = [
+                ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
+                for k, v in metadata.items()
+            ]
+        self._update_dataset_info(metadata=api_metadata)
 
     @property
     def display_name(self) -> Optional[str]:

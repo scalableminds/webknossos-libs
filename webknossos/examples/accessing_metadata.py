@@ -1,5 +1,4 @@
 import webknossos as wk
-from webknossos.client.api_client.models import ApiMetadata
 
 
 def main() -> None:
@@ -12,9 +11,7 @@ def main() -> None:
         print(dataset_metadata)
 
         # Edit the metadata of the dataset
-        dataset_metadata.append(
-            ApiMetadata(key="new_key", type="string", value="new_value")
-        )
+        dataset_metadata["new_key"] = "new_value"
         l4_sample_dataset.metadata = dataset_metadata
 
         # Access metadata of a folder
@@ -22,9 +19,7 @@ def main() -> None:
         print(folder_metadata)
 
         # Edit the metadata of the folder
-        folder_metadata.append(
-            ApiMetadata(key="new_folder_key", type="string", value="new_folder_value")
-        )
+        folder_metadata["new_folder_key"] = "new_folder_value"
         l4_sample_dataset.folder.metadata = folder_metadata
 
 
