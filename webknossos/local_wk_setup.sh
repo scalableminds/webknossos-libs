@@ -8,12 +8,12 @@ function ensure_local_test_wk {
     export_vars
 
     if ! curl -sf localhost:9000/api/health; then
-        echo "Using docker-compose setup with the docker tag $DOCKER_TAG"
+        echo "Using docker compose setup with the docker tag $DOCKER_TAG"
         echo "  To change this, please update DOCKER_TAG in local_wk_setup.sh"
 
         WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
-        docker-compose pull webknossos
+        docker compose pull webknossos
         if [ ! -d binaryData/Organization_X/l4_sample ]; then
             mkdir -p binaryData/Organization_X
             pushd binaryData/Organization_X > /dev/null
@@ -22,11 +22,11 @@ function ensure_local_test_wk {
             rm l4_sample.zip
             popd > /dev/null
         fi
-        USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
+        USER_UID=$(id -u) USER_GID=$(id -g) docker compose up -d --no-build webknossos
         stop_wk () {
             ARG=$?
             pushd $WK_DOCKER_DIR > /dev/null
-            docker-compose down
+            docker compose down
             popd > /dev/null
             exit $ARG
         }
@@ -34,7 +34,7 @@ function ensure_local_test_wk {
         while ! curl -sf localhost:9000/api/health; do
             sleep 5
         done
-        OUT=$(docker-compose exec -T webknossos tools/postgres/dbtool.js prepare-test-db 2>&1) || echo "$OUT"
+        OUT=$(docker compose exec -T webknossos tools/postgres/dbtool.js prepare-test-db 2>&1) || echo "$OUT"
         popd > /dev/null
     else
         echo "Using the already running local webknossos setup at localhost:9000"
@@ -62,7 +62,7 @@ function ensure_local_test_wk {
 function stop_local_test_wk {
     if [ -n "${WK_DOCKER_DIR-}" ]; then
         pushd $WK_DOCKER_DIR > /dev/null
-        docker-compose down || true
+        docker compose down || true
         popd > /dev/null
     fi
 }

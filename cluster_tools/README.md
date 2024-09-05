@@ -76,7 +76,7 @@ If you would like to configure these limits independently, you can do so by sett
 ```
 # See ./dockered-slurm/README.md for troubleshooting
 cd dockered-slurm
-docker-compose up -d
+docker compose up -d
 docker exec -it slurmctld bash
 docker exec -it c1 bash
 ```

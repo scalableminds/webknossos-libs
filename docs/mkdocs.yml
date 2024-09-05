@@ -115,15 +115,15 @@ nav:
       - API Reference:
           - Overview: api/webknossos.md
           - Geometry:
-              - BoundingBox: api/webknossos/geometry/boundingbox.md
-              - NDBoundingBox: api/webknossos/geometry/ndboundingbox.md
+              - BoundingBox: api/webknossos/geometry/bounding_box.md
+              - NDBoundingBox: api/webknossos/geometry/nd_bounding_box.md
               - Mag: api/webknossos/geometry/mag.md
-              - Vec3Int: api/webknossos/geometry/vec3int.md
-              - VecInt: api/webknossos/geometry/vecint.md
+              - Vec3Int: api/webknossos/geometry/vec3_int.md
+              - VecInt: api/webknossos/geometry/vec_int.md
           - Dataset:
               - Dataset: api/webknossos/dataset/dataset.md
               - Layer: api/webknossos/dataset/layer.md
-              - MagView: api/webknossos/dataset/magview.md
+              - MagView: api/webknossos/dataset/mag_view.md
               - View: api/webknossos/dataset/view.md
           - Annotation: api/webknossos/annotation/annotation.md
           - Skeleton:
@@ -131,7 +131,7 @@ nav:
               - Group: api/webknossos/skeleton/group.md
               - Tree: api/webknossos/skeleton/tree.md
               - Node: api/webknossos/skeleton/node.md
-          - Authentication & Server Context: api/webknossos/client/webknossos_context.md
+          - Authentication & Server Context: api/webknossos/client/context.md
           - Administration:
               - User: api/webknossos/administration/user.md
               - Project: api/webknossos/administration/project.md
@@ -172,9 +172,9 @@ plugins:
             python:
                 options:
                     show_source: false
-                    docstring_style: null
+                    docstring_style: google
                     docstring_section_style: list
-                    heading_level: 2
+                    heading_level: 1
                     inherited_members: true
                     merge_init_into_class: true
                     parameter_headings: true
