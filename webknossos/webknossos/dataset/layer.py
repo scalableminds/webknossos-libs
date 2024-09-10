@@ -207,7 +207,11 @@ class Layer:
         maybe_mag_path_str = (
             self._properties.mags[0].path if len(self._properties.mags) > 0 else None
         )
-        maybe_mag_path_upath = strip_trailing_slash(UPath(maybe_mag_path_str)) if maybe_mag_path_str else None
+        maybe_mag_path_upath = (
+            strip_trailing_slash(UPath(maybe_mag_path_str))
+            if maybe_mag_path_str
+            else None
+        )
         is_remote = maybe_mag_path_upath and is_remote_path(maybe_mag_path_upath)
         return (
             maybe_mag_path_upath.parent
@@ -467,7 +471,7 @@ class Layer:
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
-                # TODO: I think nd support is missing here.
+                # TO DO: I think nd support is missing here.
                 axis_order=(
                     {
                         key: value
@@ -515,7 +519,7 @@ class Layer:
             mag not in self.mags
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag, str(mag_path))
-        # TODO: Fill Cube Length
+        # TO DO: Fill Cube Length
         self._properties.mags.append(mag_view._properties)
         self.dataset._export_as_json()
 

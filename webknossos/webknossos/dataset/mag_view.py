@@ -115,7 +115,9 @@ class MagView(View):
                 path if path else layer.dataset.path / layer.name / mag.to_layer_name()
             )
             print("creation path", creation_path)
-            BaseArray.get_class(array_info.data_format).create(creation_path, array_info)
+            BaseArray.get_class(array_info.data_format).create(
+                creation_path, array_info
+            )
             path = UPath(creation_path)
 
         mag_path = (
