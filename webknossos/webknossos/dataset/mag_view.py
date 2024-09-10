@@ -114,7 +114,6 @@ class MagView(View):
             creation_path = (
                 path if path else layer.dataset.path / layer.name / mag.to_layer_name()
             )
-            print("creation path", creation_path)
             BaseArray.get_class(array_info.data_format).create(
                 creation_path, array_info
             )
@@ -176,8 +175,8 @@ class MagView(View):
         return self._path
 
     @property
-    def is_remote_mag(self) -> bool:
-        return is_remote_path(self._path)
+    def is_foreign_mag(self) -> bool:
+        return self._path.parent.parent != self.layer.dataset.path
 
     @property
     def name(self) -> str:

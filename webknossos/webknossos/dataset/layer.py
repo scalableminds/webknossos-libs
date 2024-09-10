@@ -204,6 +204,7 @@ class Layer:
     @property
     def path(self) -> Path:
         # Assume that all mags belong to the same layer. If they have a path use them as this layers path.
+        # This is necessary for foreign layer / mag support.
         maybe_mag_path_str = (
             self._properties.mags[0].path if len(self._properties.mags) > 0 else None
         )
@@ -220,8 +221,8 @@ class Layer:
         )
 
     @property
-    def is_remote_path(self) -> bool:
-        return is_remote_path(self.path)
+    def is_foreign_path(self) -> bool:
+        return self.path.parent != self.dataset.path
 
     @property
     def _properties(self) -> LayerProperties:
@@ -489,12 +490,12 @@ class Layer:
 
         return mag_view
 
-    def add_existing_remote_mag_view(
+    def add_existing_foreign_mag_view(
         self,
         mag_view_maybe: Union[int, str, list, tuple, np.ndarray, Mag, MagView],
     ) -> MagView:
         """
-        Add the mag of the passed mag view to the layer. The mag view should point to a remote layer's mag.
+        Add the mag of the passed mag view to the layer. The mag view should point to a foreign layer's mag.
 
         Raises an IndexError if the specified `mag` does not exists.
         """
@@ -504,7 +505,6 @@ class Layer:
             if isinstance(mag_view_maybe, MagView)
             else self.path / Mag(mag_view_maybe).to_layer_name()
         )
-        # but on the other hand the other methods support this arg types. So maybe make them work here as well
         mag = (
             mag_view_maybe.mag
             if isinstance(mag_view_maybe, MagView)
@@ -598,6 +598,11 @@ class Layer:
         ]
         self.dataset._export_as_json()
         # delete files on disk
+        print(full_path.exists())
+        print(full_path.absolute())
+        print(full_path.absolute().exists())
+        print("deleting full path")
+        print(full_path)
         rmtree(full_path)
 
     def add_copy_mag(
@@ -685,18 +690,16 @@ class Layer:
             )
         return mag
 
-    def add_remote_mag(
+    def add_foreign_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
-        Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
+        Adds the mag at `foreign_mag_view_or_path` which belongs to foreign dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
-        If make_relative is True, the symlink is made relative to the current dataset path.
-        Symlinked mags can only be added to layers on local file systems.
         """
         self.dataset._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -704,7 +707,7 @@ class Layer:
 
         assert is_remote_path(
             foreign_mag_view.path
-        ), f"Cannot create remote mag for local mag {foreign_mag_view.path}"
+        ), f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
         assert self.data_format == foreign_mag_view.info.data_format, (
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"
@@ -714,7 +717,7 @@ class Layer:
             + f"must match the layer's dtype {self.dtype_per_channel}"
         )
 
-        mag = self.add_existing_remote_mag_view(foreign_mag_view)
+        mag = self.add_existing_foreign_mag_view(foreign_mag_view)
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(

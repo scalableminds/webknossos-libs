@@ -75,7 +75,7 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
-    warn_deprecated,
+    warn_deprecated, is_writable_path,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from ._utils.segmentation_recognition import (
@@ -327,7 +327,7 @@ class Dataset:
                 )
 
         self.path: Path = dataset_path
-        self._properties: DatasetProperties = self._load_properties()
+        self._properties: DatasetProperties = self._load_properties() # TODO: ND bounding box is created here!
         self.is_remote_dataset = is_remote_path(self.path)
         self._last_read_properties = copy.deepcopy(self._properties)
 
@@ -348,7 +348,8 @@ class Dataset:
 
             layer = self._initialize_layer_from_properties(layer_properties)
             self._layers[layer_properties.name] = layer
-            if is_remote_path(layer.path):
+            if layer.is_foreign_path:
+                # The mags of foreign layers need to have their path properly set.
                 for mag in layer.mags:
                     mag_prop = next(
                         mag_prop
@@ -988,7 +989,6 @@ class Dataset:
 
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
-            print("creating layer for color", self.path / layer_name)
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties)
         elif category == SEGMENTATION_CATEGORY:
@@ -1694,35 +1694,38 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
-    def add_remote_layer(
+    def add_foreign_layer(
         self,
-        remote_layer: Union[str, UPath, Layer],
+        foreign_layer: Union[str, UPath, Layer],
         new_layer_name: Optional[str] = None,
     ) -> Layer:
         """
-        Adds a remote layer to this dataset.
+        Adds a layer of another dataset to this dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         If new_layer_name is None, the name of the foreign layer is used.
         """
         self._ensure_writable()
-        remote_layer = Layer._ensure_layer(remote_layer)
+        foreign_layer = Layer._ensure_layer(foreign_layer)
 
         if new_layer_name is None:
-            new_layer_name = remote_layer.name
+            new_layer_name = foreign_layer.name
 
         if new_layer_name in self.layers.keys():
             raise IndexError(
-                f"Cannot add remote layer {remote_layer}. This dataset already has a layer called {new_layer_name}."
+                f"Cannot add foreign layer {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
-        foreign_layer_path = remote_layer.path
+        assert foreign_layer.dataset.path != self.path, f"Cannot add layer with the same origin dataset as foreign layer"
+        foreign_layer_path = foreign_layer.path
 
         assert is_remote_path(
             foreign_layer_path
-        ), f"Cannot add remote layer {foreign_layer_path} as it is not remote. Try using dataset.add_layer instead."
+        ), f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_layer instead."
 
-        layer_properties = copy.deepcopy(remote_layer._properties)
+        layer_properties = copy.deepcopy(foreign_layer._properties)
+        for mag in layer_properties.mags:
+            mag.path = str(foreign_layer.mags[mag.mag].path)
         layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
@@ -1912,7 +1915,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             for mag in layer.mags.values():
-                if not mag._is_compressed() and not mag.is_remote_mag:
+                if not mag._is_compressed(): #and is_writable_path(mag.path):
                     mag.compress(executor=executor)
 
     def downsample(

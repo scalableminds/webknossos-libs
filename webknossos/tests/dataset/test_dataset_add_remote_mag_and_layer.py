@@ -35,7 +35,6 @@ def sample_remote_mags() -> list[wk.MagView]:
     ]
     mags = []
     for url in mag_urls:
-        print("calling ensure mag on", url)
         mags.append(MagView._ensure_mag_view(url))
     return mags
 
@@ -64,7 +63,7 @@ def test_add_remote_mags_from_mag_view(
         )
         print("using path")
         print(remote_mag.path)
-        new_layer.add_remote_mag(remote_mag)
+        new_layer.add_foreign_mag(remote_mag)
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
@@ -103,10 +102,10 @@ def test_add_remote_layer_from_object(
     for layer in sample_remote_layer:
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_object"
-        sample_remote_dataset.add_remote_layer(layer, layer_name)
+        sample_remote_dataset.add_foreign_layer(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
         assert (
-            is_remote_path(new_layer.path) and new_layer.path == layer.path
+            is_remote_path(new_layer.path) and layer.path.as_uri() == new_layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."
 
 
