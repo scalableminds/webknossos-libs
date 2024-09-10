@@ -33,9 +33,7 @@ def sample_remote_mags() -> list[wk.MagView]:
         "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/",
         "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/",
     ]
-    mags = []
-    for url in mag_urls:
-        mags.append(MagView._ensure_mag_view(url))
+    mags = [MagView._ensure_mag_view(url) for url in mag_urls]
     return mags
 
 
@@ -61,8 +59,6 @@ def test_add_remote_mags_from_mag_view(
             data_format=remote_mag.info.data_format,
             dtype_per_channel=remote_mag.get_dtype(),
         )
-        print("using path")
-        print(remote_mag.path)
         new_layer.add_foreign_mag(remote_mag)
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
@@ -87,8 +83,6 @@ def test_add_remote_mags_from_path(
             data_format=remote_mag.info.data_format,
             dtype_per_channel=remote_mag.get_dtype(),
         )
-        print("using path")
-        print(remote_mag.path)
         new_layer.add_remote_mag(remote_mag.path)
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
@@ -105,7 +99,8 @@ def test_add_remote_layer_from_object(
         sample_remote_dataset.add_foreign_layer(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
         assert (
-            is_remote_path(new_layer.path) and layer.path.as_uri() == new_layer.path.as_uri()
+            is_remote_path(new_layer.path)
+            and layer.path.as_uri() == new_layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."
 
 

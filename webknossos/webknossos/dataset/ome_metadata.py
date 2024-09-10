@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING, Any, Dict
 
 import numpy as np
 
+from ..utils import is_writable_path
 from .data_format import DataFormat
 from .defaults import ZARR_JSON_FILE_NAME, ZATTRS_FILE_NAME, ZGROUP_FILE_NAME
-from ..utils import is_writable_path
 
 if TYPE_CHECKING:
     from .dataset import Dataset

@@ -75,7 +75,7 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
-    warn_deprecated, is_writable_path,
+    warn_deprecated,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from ._utils.segmentation_recognition import (
@@ -327,7 +327,7 @@ class Dataset:
                 )
 
         self.path: Path = dataset_path
-        self._properties: DatasetProperties = self._load_properties() # TODO: ND bounding box is created here!
+        self._properties: DatasetProperties = self._load_properties()
         self.is_remote_dataset = is_remote_path(self.path)
         self._last_read_properties = copy.deepcopy(self._properties)
 
@@ -1716,7 +1716,9 @@ class Dataset:
             raise IndexError(
                 f"Cannot add foreign layer {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
-        assert foreign_layer.dataset.path != self.path, f"Cannot add layer with the same origin dataset as foreign layer"
+        assert (
+            foreign_layer.dataset.path != self.path
+        ), "Cannot add layer with the same origin dataset as foreign layer"
         foreign_layer_path = foreign_layer.path
 
         assert is_remote_path(
@@ -1915,7 +1917,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             for mag in layer.mags.values():
-                if not mag._is_compressed(): #and is_writable_path(mag.path):
+                if not mag._is_compressed(): # and is_writable_path(mag.path):
                     mag.compress(executor=executor)
 
     def downsample(

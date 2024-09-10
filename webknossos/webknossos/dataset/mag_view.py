@@ -17,7 +17,6 @@ from ..utils import (
     NDArrayLike,
     get_executor_for_args,
     is_fs_path,
-    is_remote_path,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
@@ -41,7 +40,7 @@ def _find_mag_path(
     path: Optional[str | Path] = None,
 ) -> Path:
     path = UPath(path) if path else None
-    if path is None or is_fs_path(path):
+    if path is None:
         return _find_mag_path_on_disk(dataset_path, layer_name, mag_name, path)
     return path
 

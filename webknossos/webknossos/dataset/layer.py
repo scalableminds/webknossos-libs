@@ -54,7 +54,7 @@ from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
-from .mag_view import MagView, _find_mag_path, _find_mag_path_on_disk
+from .mag_view import MagView, _find_mag_path
 
 
 def _is_int(s: str) -> bool:
@@ -260,7 +260,10 @@ class Layer:
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
+            if not mag.is_foreign_mag:
+                mag._path = _find_mag_path(
+                    self.dataset.path, self.name, mag.name, mag._properties.path
+                )
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
             del mag._array
@@ -598,11 +601,6 @@ class Layer:
         ]
         self.dataset._export_as_json()
         # delete files on disk
-        print(full_path.exists())
-        print(full_path.absolute())
-        print(full_path.absolute().exists())
-        print("deleting full path")
-        print(full_path)
         rmtree(full_path)
 
     def add_copy_mag(

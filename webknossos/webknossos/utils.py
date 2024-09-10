@@ -251,8 +251,10 @@ def is_remote_path(path: Path) -> bool:
 
     return not isinstance(path, UPath) or isinstance(path, (HTTPPath, S3Path, GCSPath))
 
+
 def is_writable_path(path: Path) -> bool:
     from upath.implementations.http import HTTPPath
+
     # cannot write to http paths
     return not isinstance(path, UPath) or not isinstance(path, HTTPPath)
 
