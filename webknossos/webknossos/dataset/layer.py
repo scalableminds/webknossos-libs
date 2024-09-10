@@ -177,7 +177,7 @@ class Layer:
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
         """
-        Do not use this constructor manually. Instead use `Dataset``.add_layer()` to create a `Layer`.
+        Do not use this constructor manually. Instead use `Dataset.add_layer()` to create a `Layer`.
         """
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
@@ -743,6 +743,7 @@ class Layer:
         """
         Downsamples the data starting from `from_mag` until a magnification is `>= max(coarsest_mag)`.
         There are three different `sampling_modes`:
+
         - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
@@ -854,6 +855,7 @@ class Layer:
         Performs a single downsampling step from `from_mag` to `target_mag`.
 
         The supported `interpolation_modes` are:
+
          - "median"
          - "mode"
          - "nearest"
@@ -1029,6 +1031,7 @@ class Layer:
         """
         Upsamples the data starting from `from_mag` as long as the magnification is `>= finest_mag`.
         There are three different `sampling_modes`:
+
         - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.

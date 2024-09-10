@@ -140,7 +140,7 @@ The `webknossos` folder contains examples, which are not part of the package, bu
 The tests also contain functionality for the WEBKNOSSOS client. There a two modes to run the tests:
 
 1. `./test.sh --refresh-snapshots`, sending network requests to a WEBKNOSSOS instance:
-  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a docker-compose setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
+  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a `docker compose` setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
 2. `./test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
 
 `./test.sh --store-durations` updates the durations for
@@ -149,7 +149,7 @@ which is used in the CI to split the tests for different runners.
 
 #### `cluster_tools` package
 
-For testing the `slurm` setup a docker-compose setup is available. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
+For testing the `slurm` setup a `docker compose` setup is available. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
 
 For testing the `kubernetes` setup, we recommend a [Kubernetes-in-Docker setup](https://kind.sigs.k8s.io/).
 

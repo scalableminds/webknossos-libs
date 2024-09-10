@@ -153,6 +153,9 @@ nav:
           - Blog: https://medium.com/scalableminds" target="_blank
 
 plugins:
+  - gen-files:
+      scripts:
+        - generate_api_doc_pages.py
   - search
   - redirects:
       redirect_maps:
@@ -163,12 +166,41 @@ plugins:
       is_video: False
       mark: "youtube-video"
   - glightbox
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+            python:
+                options:
+                    show_source: false
+                    docstring_style: google
+                    docstring_section_style: list
+                    heading_level: 1
+                    inherited_members: true
+                    merge_init_into_class: true
+                    parameter_headings: true
+                    preload_modules: [webknossos]
+                    separate_signature: true
+                    show_root_heading: true
+                    show_root_full_path: true
+                    show_signature_annotations: true
+                    show_symbol_type_heading: true
+                    show_symbol_type_toc: true
+                    show_if_no_docstring: true
+                    signature_crossrefs: true
+                    summary: true
+                    unwrap_annotated: true
+                    line_length: 60
+                    filters:
+                        - "!^_" # ignore class members with leading underscore
+                        - "!^__" # ignore (private) class members with leading double underscore
+                        - "!RE$" # ignore REGEX variables ending with ...RE
+                        - "!logger" # ignore class-level loggers
 
 markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
-  - md_extensions.pdoc_toc_extension
+  - footnotes
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.superfences
@@ -176,5 +208,5 @@ markdown_extensions:
       base_path: ".."
       check_paths: true
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+        emoji_index: !!python/name:material.extensions.emoji.twemoji
+        emoji_generator: !!python/name:material.extensions.emoji.to_svg
