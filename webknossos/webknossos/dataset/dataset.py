@@ -71,6 +71,7 @@ from ..utils import (
     get_executor_for_args,
     is_fs_path,
     is_remote_path,
+    is_writable_path,
     named_partial,
     rmtree,
     strip_trailing_slash,
@@ -1917,7 +1918,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             for mag in layer.mags.values():
-                if not mag._is_compressed(): # and is_writable_path(mag.path):
+                if not mag._is_compressed() and is_writable_path(mag.path):
                     mag.compress(executor=executor)
 
     def downsample(

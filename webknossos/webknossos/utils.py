@@ -256,7 +256,7 @@ def is_writable_path(path: Path) -> bool:
     from upath.implementations.http import HTTPPath
 
     # cannot write to http paths
-    return not isinstance(path, UPath) or not isinstance(path, HTTPPath)
+    return not isinstance(path, HTTPPath)
 
 
 def strip_trailing_slash(path: Path) -> Path:
