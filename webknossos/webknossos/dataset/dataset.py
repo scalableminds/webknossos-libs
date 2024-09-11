@@ -799,6 +799,7 @@ class Dataset:
                         batch_size=batch_size,
                         allow_multiple_layers=True,
                         max_layers=max_layers - len(ds.layers),
+                        truncate_rgba_to_rgb=False,
                         executor=executor,
                     )
 

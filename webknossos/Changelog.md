@@ -13,10 +13,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.2...HEAD)
 
 ### Breaking Changes
+- Conversion of images with 4 channels creates a dataset with four layers instead of a dataset with one RGB layer. [#1192](https://github.com/scalableminds/webknossos-libs/pull/1192)
 
 ### Added
 
 ### Changed
+- Updated tifffile dependency to v2024.8.30. [#1190](https://github.com/scalableminds/webknossos-libs/pull/1190)
 
 ### Fixed
 
