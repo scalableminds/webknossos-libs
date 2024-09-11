@@ -350,17 +350,13 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
 
     ds2 = Dataset.open(ds_path)
 
-    layer = ds2.add_layer(
+    ds2.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
         "uint8",
         largest_segment_id=100000,
         data_format=data_format,
-    )
-    mag = layer.add_mag("1")
-    print(mag)
-    assert (ds_path).is_dir()
-    assert (ds_path / "segmentation").is_dir()
+    ).add_mag("1")
 
     assert (ds_path / "segmentation" / "1").is_dir()
 

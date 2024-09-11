@@ -83,7 +83,7 @@ def test_add_remote_mags_from_path(
             data_format=remote_mag.info.data_format,
             dtype_per_channel=remote_mag.get_dtype(),
         )
-        new_layer.add_remote_mag(remote_mag.path)
+        new_layer.add_foreign_mag(str(remote_mag.path))
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert added_mag.path == mag_path or added_mag.path == mag_path.parent, "Added remote mag's path does not match remote path of mag added."

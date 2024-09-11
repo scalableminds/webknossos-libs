@@ -40,19 +40,8 @@ def _find_mag_path(
     path: Optional[str | Path] = None,
 ) -> Path:
     path = UPath(path) if path else None
-    if path is None:
-        return _find_mag_path_on_disk(dataset_path, layer_name, mag_name, path)
-    return path
-
-
-def _find_mag_path_on_disk(
-    dataset_path: Path,
-    layer_name: str,
-    mag_name: str,
-    path: Optional[str | Path] = None,
-) -> Path:
     if path is not None:
-        return dataset_path / path
+        return path
 
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
