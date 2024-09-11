@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.3...HEAD)
 
 ### Breaking Changes
-- Conversion of images with 4 channels creates a dataset with four layers instead of a dataset with one RGB layer. [#1192](https://github.com/scalableminds/webknossos-libs/pull/1192)
 
 ### Added
 
 ### Changed
-- Updated tifffile dependency to v2024.8.30. [#1190](https://github.com/scalableminds/webknossos-libs/pull/1190)
 
 ### Fixed
+
+
+## [0.15.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.3) - 2024-09-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.2...v0.15.3)
+
+### Breaking Changes
+- Conversion of images with 4 channels creates a dataset with four layers instead of a dataset with one RGB layer. [#1192](https://github.com/scalableminds/webknossos-libs/pull/1192)
+
+### Changed
+- Updated tifffile dependency to v2024.8.30. [#1190](https://github.com/scalableminds/webknossos-libs/pull/1190)
 
 
 ## [0.15.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.2) - 2024-09-05
