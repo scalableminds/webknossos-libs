@@ -538,8 +538,11 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                     f"is not equal to the original wkw_file."
                 )
 
+
 @pytest.mark.parametrize("use_compression", [True, False])
-def test_merge_fallback_no_fallback_layer(tmp_path: Path, use_compression: bool) -> None:
+def test_merge_fallback_no_fallback_layer(
+    tmp_path: Path, use_compression: bool
+) -> None:
     from zipfile import ZIP_DEFLATED, ZipFile
     from zlib import Z_BEST_SPEED
 
@@ -555,7 +558,12 @@ def test_merge_fallback_no_fallback_layer(tmp_path: Path, use_compression: bool)
             SEGMENTATION_CATEGORY,
             dtype_per_channel=fallback_layer_data.dtype,
         )
-        .add_mag(1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3, compress=use_compression)
+        .add_mag(
+            1,
+            chunk_shape=(32,) * 3,
+            chunks_per_shard=(1,) * 3,
+            compress=use_compression,
+        )
     )
 
     fallback_mag.write(absolute_offset=(0,) * 3, data=fallback_layer_data)
