@@ -35,6 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import ApiDataset, ApiMetadata
@@ -72,7 +73,6 @@ from ..utils import (
     infer_metadata_type,
     is_fs_path,
     named_partial,
-    parse_metadata_value,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
@@ -2111,22 +2111,15 @@ class RemoteDataset(Dataset):
             )
 
     @property
-    def metadata(self) -> Dict[str, Union[str, int, float, List[str]]]:
-        result = {}
-        if metadata := self._get_dataset_info().metadata:
-            for i in metadata:
-                value = parse_metadata_value(i.value, i.type)
-                if i.key in result:
-                    warnings.warn(
-                        f"The key {i.key} is a duplicate in the metadata. It is overwritten with last value."
-                    )
-                result[i.key] = value
-
-        return result
+    def metadata(self) -> DatasetMetadata:
+        return DatasetMetadata(f"{self._organization_id}/{self._dataset_name}")
 
     @metadata.setter
     def metadata(
-        self, metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]]
+        self,
+        metadata: Optional[
+            Union[Dict[str, Union[str, int, float, Sequence[str]]], DatasetMetadata]
+        ],
     ) -> None:
         if metadata is not None:
             api_metadata = [
