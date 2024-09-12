@@ -1,14 +1,21 @@
+from concurrent.futures import Future
 from multiprocessing.context import BaseContext
-from typing import Any, Callable, Optional, Tuple
+from pathlib import Path
+from typing import Any, Callable, Optional, Tuple, TypeVar, cast
 
-from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
+from typing_extensions import ParamSpec
+
+from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
+from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingExecutor
+
+_T = TypeVar("_T")
+_P = ParamSpec("_P")
 
 
+# TODO: Does this really need to inherit from MultiprocessingExecutor
 class SequentialExecutor(MultiprocessingExecutor):
     """
-    The same as MultiprocessingExecutor, but always uses only one core. In essence,
-    this is a sequential executor approach, but it still makes use of the standard pool approach.
-    That way, switching between different executors should always work without any problems.
+    The same as MultiprocessingExecutor, but always uses only one core.
     """
 
     def __init__(
@@ -27,3 +34,28 @@ class SequentialExecutor(MultiprocessingExecutor):
             initializer=initializer,
             initargs=initargs,
         )
+
+    def submit(  # type: ignore[override]
+        self,
+        __fn: Callable[_P, _T],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> Future[_T]:
+        fut: Future[_T] = Future()
+        if "__cfut_options" in kwargs:
+            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
+                "output_pickle_path"
+            ]
+            del kwargs["__cfut_options"]
+            result = MultiprocessingExecutor._execute_and_persist_function(
+                Path(output_pickle_path),
+                __fn,
+                *args,
+                **kwargs,
+            )
+        else:
+            result = __fn(*args, **kwargs)
+
+        fut.set_result(result)
+        enrich_future_with_uncaught_warning(fut)
+        return fut

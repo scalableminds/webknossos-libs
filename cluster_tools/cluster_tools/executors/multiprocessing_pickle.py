@@ -7,8 +7,6 @@ from typing_extensions import ParamSpec
 from cluster_tools._utils import pickling
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 
-# The module name includes a _-suffix to avoid name clashes with the standard library pickle module.
-
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
@@ -27,7 +25,7 @@ def _pickle_identity_executor(
     return _pickle_identity(result)
 
 
-class PickleExecutor(MultiprocessingExecutor):
+class MultiprocessingPickleExecutor(MultiprocessingExecutor):
     """
     The same as MultiprocessingExecutor, but always pickles input and output of the jobs.
     When using this executor for automated tests, it is ensured that using cluster executors in production
@@ -40,7 +38,7 @@ class PickleExecutor(MultiprocessingExecutor):
         /,
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> "Future[_T]":
+    ) -> Future[_T]:
         (fn_pickled, args_pickled, kwargs_pickled) = _pickle_identity(
             (fn, args, kwargs)
         )

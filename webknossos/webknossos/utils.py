@@ -92,7 +92,7 @@ def get_executor_for_args(
             job_resources=json.loads(args.job_resources),
         )
         logging.info(f"Using {args.distribution_strategy} cluster.")
-    elif args.distribution_strategy == "debug_sequential":
+    elif args.distribution_strategy == "sequential":
         executor = get_executor(
             args.distribution_strategy,
             debug=True,
