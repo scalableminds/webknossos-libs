@@ -1725,7 +1725,7 @@ class Dataset:
 
         assert is_remote_path(
             foreign_layer_path
-        ), f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_layer instead."
+        ), f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_copy_layer instead."
 
         layer_properties = copy.deepcopy(foreign_layer._properties)
         for mag in layer_properties.mags:
@@ -1919,7 +1919,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             for mag in layer.mags.values():
-                if not mag._is_compressed() and is_writable_path(mag.path):
+                if not mag._is_compressed():
                     mag.compress(executor=executor)
 
     def downsample(

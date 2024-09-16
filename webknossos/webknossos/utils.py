@@ -249,7 +249,7 @@ def is_remote_path(path: Path) -> bool:
     from upath.implementations.cloud import GCSPath, S3Path
     from upath.implementations.http import HTTPPath
 
-    return not isinstance(path, UPath) or isinstance(path, (HTTPPath, S3Path, GCSPath))
+    return isinstance(path, (HTTPPath, S3Path, GCSPath))
 
 
 def is_writable_path(path: Path) -> bool:

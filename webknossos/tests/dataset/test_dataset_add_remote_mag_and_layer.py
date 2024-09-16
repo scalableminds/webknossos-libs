@@ -51,7 +51,6 @@ def test_add_remote_mags_from_mag_view(
         mag_path = remote_mag.path
         layer_type = remote_mag.layer.category
         assert is_remote_path(mag_path), "Remote mag does not have remote path."
-        # Additional .parent calls are needed as the first .parent only removes the trailing slash.
         layer_name = f"test_remote_layer_{mag_path.parent.name}_{mag_path.name}_object"
         new_layer = sample_remote_dataset.add_layer(
             layer_name,

@@ -475,7 +475,6 @@ class Layer:
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
-                # TO DO: I think nd support is missing here.
                 axis_order=(
                     {
                         key: value
@@ -522,7 +521,6 @@ class Layer:
             mag not in self.mags
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag, str(mag_path))
-        # TO DO: Fill Cube Length
         self._properties.mags.append(mag_view._properties)
         self.dataset._export_as_json()
 
