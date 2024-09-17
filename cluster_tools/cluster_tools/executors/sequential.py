@@ -15,7 +15,7 @@ _P = ParamSpec("_P")
 # TODO: Does this really need to inherit from MultiprocessingExecutor
 class SequentialExecutor(MultiprocessingExecutor):
     """
-    The same as MultiprocessingExecutor, but always uses only one core.
+    The same as MultiprocessingExecutor, but synchronous and uses only one core.
     """
 
     def __init__(

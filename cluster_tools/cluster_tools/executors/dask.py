@@ -162,7 +162,7 @@ class DaskExecutor(futures.Executor):
         return cls(client, job_resources=job_resources)
 
     @classmethod
-    def as_completed(cls, futures: List["Future[_T]"]) -> Iterator["Future[_T]"]:
+    def as_completed(cls, futures: List[Future[_T]]) -> Iterator[Future[_T]]:
         from distributed import as_completed
 
         return as_completed(futures)
@@ -172,7 +172,7 @@ class DaskExecutor(futures.Executor):
         __fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> "Future[_T]":
+    ) -> Future[_T]:
         if "__cfut_options" in kwargs:
             output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
                 "output_pickle_path"
@@ -237,7 +237,7 @@ class DaskExecutor(futures.Executor):
         return fut
 
     def map_unordered(self, fn: Callable[[_S], _T], args: Iterable[_S]) -> Iterator[_T]:
-        futs: List["Future[_T]"] = self.map_to_futures(fn, args)
+        futs: List[Future[_T]] = self.map_to_futures(fn, args)
 
         # Return a separate generator to avoid that map_unordered
         # is executed lazily (otherwise, jobs would be submitted
@@ -255,7 +255,7 @@ class DaskExecutor(futures.Executor):
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
-    ) -> List["Future[_T]"]:
+    ) -> List[Future[_T]]:
         if output_pickle_path_getter is not None:
             futs = [
                 self.submit(  # type: ignore[call-arg]
@@ -283,7 +283,7 @@ class DaskExecutor(futures.Executor):
             chunksize = 1
         return super().map(fn, iterables, timeout=timeout, chunksize=chunksize)
 
-    def forward_log(self, fut: "Future[_T]") -> _T:
+    def forward_log(self, fut: Future[_T]) -> _T:
         return fut.result()
 
     def handle_kill(
