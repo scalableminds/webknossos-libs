@@ -56,8 +56,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.8 for automatic linting fixes
-target-version = "py38"
+# Assume Python 3.9 for automatic linting fixes
+target-version = "py39"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
