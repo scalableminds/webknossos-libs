@@ -170,15 +170,12 @@ def test_uncaught_warning() -> None:
 
 @pytest.mark.parametrize("exc", get_executors(with_pickling=True), ids=type)
 def test_submit(exc: cluster_tools.Executor) -> None:
-    def run_square_numbers(executor: cluster_tools.Executor) -> None:
-        with executor:
-            job_count = 3
-            job_range = range(job_count)
-            futures = [executor.submit(square, n) for n in job_range]
-            for future, job_index in zip(futures, job_range):
-                assert future.result() == square(job_index)
-
-    run_square_numbers(exc)
+    with exc:
+        job_count = 3
+        job_range = range(job_count)
+        futures = [exc.submit(square, n) for n in job_range]
+        for future, job_index in zip(futures, job_range):
+            assert future.result() == square(job_index)
 
 
 def get_pid() -> int:
@@ -189,29 +186,26 @@ def get_pid() -> int:
 def test_process_id(exc: cluster_tools.Executor) -> None:
     outer_pid = os.getpid()
 
-    def compare_pids(executor: cluster_tools.Executor) -> None:
-        with executor:
-            future = executor.submit(get_pid)
-            inner_pid = future.result()
+    with exc:
+        future = exc.submit(get_pid)
+        inner_pid = future.result()
 
-            should_differ = not isinstance(
-                executor,
-                (
-                    cluster_tools.SequentialExecutor,
-                    cluster_tools.SequentialPickleExecutor,
-                ),
-            )
+        should_differ = not isinstance(
+            exc,
+            (
+                cluster_tools.SequentialExecutor,
+                cluster_tools.SequentialPickleExecutor,
+            ),
+        )
 
-            if should_differ:
-                assert (
-                    inner_pid != outer_pid
-                ), f"Inner and outer pid should differ, but both are {inner_pid}."
-            else:
-                assert (
-                    inner_pid == outer_pid
-                ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
-
-    compare_pids(exc)
+        if should_differ:
+            assert (
+                inner_pid != outer_pid
+            ), f"Inner and outer pid should differ, but both are {inner_pid}."
+        else:
+            assert (
+                inner_pid == outer_pid
+            ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
 
 
 @pytest.mark.parametrize("exc", get_executors(), ids=type)
@@ -291,47 +285,37 @@ def test_map_to_futures_with_pickle_paths(exc: cluster_tools.Executor) -> None:
 @pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with exc:
+            job_count = 3
+            job_range = range(job_count)
 
-        def run_square_numbers(executor: cluster_tools.Executor) -> Path:
-            with executor:
-                job_count = 3
-                job_range = range(job_count)
+            futures = []
+            for n in job_range:
+                output_path = Path(tmp_dir) / f"{n}.pickle"
+                cfut_options = {"output_pickle_path": output_path}
+                futures.append(
+                    exc.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
+                )
 
-                futures = []
-                for n in job_range:
-                    output_path = Path(tmp_dir) / f"{n}.pickle"
-                    cfut_options = {"output_pickle_path": output_path}
-                    futures.append(
-                        executor.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
-                    )
+            for future, job_index in zip(futures, job_range):
+                assert future.result() == square(job_index)
 
-                for future, job_index in zip(futures, job_range):
-                    assert future.result() == square(job_index)
-                return output_path
-
-        output_path = run_square_numbers(exc)
         assert output_path.exists(), "Output pickle file should exist."
 
 
 @pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_map(exc: cluster_tools.Executor) -> None:
-    def run_map(executor: cluster_tools.Executor) -> None:
-        with executor:
-            result = list(executor.map(square, [2, 3, 4]))
-            assert result == [4, 9, 16]
-
-    run_map(exc)
+    with exc:
+        result = list(exc.map(square, [2, 3, 4]))
+        assert result == [4, 9, 16]
 
 
 @pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_map_lazy(exc: cluster_tools.Executor) -> None:
-    def run_map(executor: cluster_tools.Executor) -> None:
-        with executor:
-            result = executor.map(square, [2, 3, 4])
-        assert list(result) == [4, 9, 16]
-
     if not isinstance(exc, cluster_tools.DaskExecutor):
-        run_map(exc)
+        with exc:
+            result = exc.map(square, [2, 3, 4])
+        assert list(result) == [4, 9, 16]
 
 
 def test_executor_args() -> None:
