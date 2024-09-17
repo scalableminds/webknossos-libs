@@ -12,7 +12,9 @@ _T = TypeVar("_T")
 _P = ParamSpec("_P")
 
 
-# TODO: Does this really need to inherit from MultiprocessingExecutor
+# Strictly speaking, this executor doesn't need to inherit from MultiprocessingExecutor
+# but could inherit from futures.Executor instead. However, this would require to duplicate
+# quite a few methods to adhere to the executor protocol (as_completed, map_to_futures, map, forward_log, shutdown).
 class SequentialExecutor(MultiprocessingExecutor):
     """
     The same as MultiprocessingExecutor, but synchronous and uses only one core.
