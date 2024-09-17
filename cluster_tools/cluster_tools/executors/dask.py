@@ -236,6 +236,18 @@ class DaskExecutor(futures.Executor):
         enrich_future_with_uncaught_warning(fut)
         return fut
 
+    def map_unordered(self, fn: Callable[[_S], _T], args: Iterable[_S]) -> Iterator[_T]:
+        futs: List[Future[_T]] = self.map_to_futures(fn, args)
+
+        # Return a separate generator to avoid that map_unordered
+        # is executed lazily (otherwise, jobs would be submitted
+        # lazily, as well).
+        def result_generator() -> Iterator:
+            for fut in self.as_completed(futs):
+                yield fut.result()
+
+        return result_generator()
+
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],

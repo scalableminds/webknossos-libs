@@ -42,7 +42,7 @@ _S = TypeVar("_S")
 class MultiprocessingExecutor(ProcessPoolExecutor):
     """
     Wraps the ProcessPoolExecutor to add various features:
-    - map_to_futures method
+    - map_to_futures and map_unordered method
     - pickling of job's output (see output_pickle_path_getter and output_pickle_path)
     """
 
@@ -181,6 +181,18 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             with output_pickle_path.open("wb") as file:
                 pickling.dump((True, result), file)
             return result
+
+    def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
+        futs: List[Future[_T]] = self.map_to_futures(fn, args)
+
+        # Return a separate generator to avoid that map_unordered
+        # is executed lazily (otherwise, jobs would be submitted
+        # lazily, as well).
+        def result_generator() -> Iterator:
+            for fut in futures.as_completed(futs):
+                yield fut.result()
+
+        return result_generator()
 
     def map_to_futures(
         self,

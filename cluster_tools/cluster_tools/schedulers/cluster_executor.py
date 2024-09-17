@@ -657,6 +657,17 @@ class ClusterExecutor(futures.Executor):
 
         return result_generator()
 
+    def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
+        futs = self.map_to_futures(fn, args)
+
+        # Return a separate generator to avoid that map_unordered
+        # is executed lazily.
+        def result_generator() -> Iterator[_T]:
+            for fut in futures.as_completed(futs):
+                yield fut.result()
+
+        return result_generator()
+
     def forward_log(self, fut: Future[_T]) -> _T:
         """
         Takes a future from which the log file is forwarded to the active

@@ -30,6 +30,10 @@ class Executor(Protocol, ContextManager["Executor"]):
         **kwargs: _P.kwargs,
     ) -> Future[_T]: ...
 
+    def map_unordered(
+        self, fn: Callable[[_S], _T], args: Iterable[_S]
+    ) -> Iterator[_T]: ...
+
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],

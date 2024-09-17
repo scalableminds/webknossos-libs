@@ -232,6 +232,29 @@ def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
 
 
 @pytest.mark.parametrize("exc", get_executors(), ids=type)
+def test_unordered_map(exc: cluster_tools.Executor) -> None:
+    with exc:
+        durations = [3, 1]
+        results_gen = exc.map_unordered(sleep, durations)
+        results = list(results_gen)
+
+        if isinstance(
+            exc,
+            (
+                cluster_tools.SequentialExecutor,
+                cluster_tools.SequentialPickleExecutor,
+            ),
+        ):
+            # futures.as_completed does not return previously completed futures in completion order.
+            # For sequential executors as_completed is only called after all futures completed, though.
+            results.sort()
+
+        durations.sort()
+        for duration, result in zip(durations, results):
+            assert result == duration
+
+
+@pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_map_to_futures(exc: cluster_tools.Executor) -> None:
     with exc:
         durations = [3, 1]
