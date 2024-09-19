@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Literal, Optional, Union
 
 import pytest
 
@@ -35,10 +35,36 @@ def raise_if(msg: str, _bool: bool) -> None:
         raise Exception("raise_if was called with True: {}".format(msg))
 
 
-def get_executors(
-    with_pickling: bool = False,
+# This function is called for each test. It has access to the fixtures supplied
+# to the test and most importantly can parametrize those fixtures.
+# Depending on whether the exc or the exc_with_pickling fixture is used,
+# the test is parametrized with the respective executors.
+def pytest_generate_tests(metafunc):
+    if "exc" in metafunc.fixturenames or "exc_with_pickling" in metafunc.fixturenames:
+        with_pickling = "exc_with_pickling" in metafunc.fixturenames
+        executor_keys = get_executor_keys(with_pickling)
+        metafunc.parametrize(
+            "exc_with_pickling" if with_pickling else "exc",
+            executor_keys,
+            indirect=True,
+        )
+
+
+@pytest.fixture
+def exc(
+    request: Any,
 ) -> List[cluster_tools.Executor]:
-    global _dask_cluster
+    return get_executor(request.param)
+
+
+@pytest.fixture
+def exc_with_pickling(
+    request: Any,
+) -> List[cluster_tools.Executor]:
+    return get_executor(request.param)
+
+
+def get_executor_keys(with_pickling: bool = False) -> set[str]:
     executor_keys = {
         "slurm",
         "kubernetes",
@@ -46,6 +72,7 @@ def get_executors(
         "multiprocessing",
         "sequential",
     }
+
     if with_pickling:
         executor_keys.add("multiprocessing_with_pickling")
         executor_keys.add("sequential_with_pickling")
@@ -55,45 +82,47 @@ def get_executors(
             os.environ["PYTEST_EXECUTORS"].split(",")
         )
 
-    executors: List[cluster_tools.Executor] = []
-    if "slurm" in executor_keys:
-        executors.append(
-            cluster_tools.get_executor(
-                "slurm", debug=True, job_resources={"mem": "100M"}
-            )
+    return executor_keys
+
+
+def get_executor(environment: str):
+    global _dask_cluster
+
+    print("called get executors")
+    if "slurm" == environment:
+        return cluster_tools.get_executor(
+            "slurm", debug=True, job_resources={"mem": "100M"}
         )
-    if "kubernetes" in executor_keys:
-        executors.append(
-            cluster_tools.get_executor(
-                "kubernetes",
-                debug=True,
-                job_resources={
-                    "memory": "1G",
-                    "image": "scalableminds/cluster-tools:latest",
-                },
-            )
+    if "kubernetes" == environment:
+        return cluster_tools.get_executor(
+            "kubernetes",
+            debug=True,
+            job_resources={
+                "memory": "1G",
+                "image": "scalableminds/cluster-tools:latest",
+            },
         )
-    if "multiprocessing" in executor_keys:
-        executors.append(cluster_tools.get_executor("multiprocessing", max_workers=5))
-    if "sequential" in executor_keys:
-        executors.append(cluster_tools.get_executor("sequential"))
-    if "dask" in executor_keys:
+    if "multiprocessing" == environment:
+        return cluster_tools.get_executor("multiprocessing", max_workers=5)
+    if "sequential" == environment:
+        return cluster_tools.get_executor("sequential")
+    if "dask" == environment:
         if not _dask_cluster:
             from distributed import LocalCluster, Worker
 
             _dask_cluster = LocalCluster(
                 worker_class=Worker, resources={"mem": 20e9, "cpus": 4}, nthreads=6
             )
-        executors.append(
-            cluster_tools.get_executor("dask", job_resources={"address": _dask_cluster})
+        return cluster_tools.get_executor(
+            "dask", job_resources={"address": _dask_cluster}
         )
-    if "multiprocessing_with_pickling" in executor_keys:
-        executors.append(cluster_tools.get_executor("multiprocessing_with_pickling"))
-    if "pbs" in executor_keys:
-        executors.append(cluster_tools.get_executor("pbs"))
-    if "sequential_with_pickling" in executor_keys:
-        executors.append(cluster_tools.get_executor("sequential_with_pickling"))
-    return executors
+    if "multiprocessing_with_pickling" == environment:
+        return cluster_tools.get_executor("multiprocessing_with_pickling")
+    if "pbs" == environment:
+        return cluster_tools.get_executor("pbs")
+    if "sequential_with_pickling" == environment:
+        return cluster_tools.get_executor("sequential_with_pickling")
+    raise RuntimeError("No executor specified.")
 
 
 @pytest.mark.skip(
@@ -127,13 +156,15 @@ def test_uncaught_warning() -> None:
 
     # In the following 4 cases we check whether there is a/no warning when using
     # map/submit with/without checking the futures.
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "map-expect-warning"
         with exc:
             exc.map(partial(raise_if, marker), cases)
         expect_marker(marker, "There should be a warning for an uncaught Future in map")
 
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "map-dont-expect-warning"
         with exc:
             try:
@@ -144,7 +175,8 @@ def test_uncaught_warning() -> None:
             marker, "There should be no warning for an uncaught Future in map", False
         )
 
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "submit-expect-warning"
         with exc:
             futures = [exc.submit(partial(raise_if, marker), b) for b in cases]
@@ -152,7 +184,8 @@ def test_uncaught_warning() -> None:
             marker, "There should be no warning for an uncaught Future in submit"
         )
 
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "submit-dont-expect-warning"
         with exc:
             futures = [exc.submit(partial(raise_if, marker), b) for b in cases]
@@ -168,8 +201,8 @@ def test_uncaught_warning() -> None:
     logger.removeHandler(fh)
 
 
-@pytest.mark.parametrize("exc", get_executors(with_pickling=True), ids=type)
-def test_submit(exc: cluster_tools.Executor) -> None:
+def test_submit(exc_with_pickling: cluster_tools.Executor) -> None:
+    exc = exc_with_pickling
     with exc:
         job_count = 3
         job_range = range(job_count)
@@ -182,8 +215,8 @@ def get_pid() -> int:
     return os.getpid()
 
 
-@pytest.mark.parametrize("exc", get_executors(with_pickling=True), ids=type)
-def test_process_id(exc: cluster_tools.Executor) -> None:
+def test_process_id(exc_with_pickling: cluster_tools.Executor) -> None:
+    exc = exc_with_pickling
     outer_pid = os.getpid()
 
     with exc:
@@ -208,7 +241,6 @@ def test_process_id(exc: cluster_tools.Executor) -> None:
             ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
 
 
-@pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
     with exc:
         durations = [3, 1]
@@ -231,7 +263,6 @@ def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
             assert result == duration
 
 
-@pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_map_to_futures(exc: cluster_tools.Executor) -> None:
     with exc:
         durations = [3, 1]
@@ -251,7 +282,6 @@ def test_map_to_futures(exc: cluster_tools.Executor) -> None:
             assert result == duration
 
 
-@pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_empty_map_to_futures(exc: cluster_tools.Executor) -> None:
     with exc:
         futures = exc.map_to_futures(sleep, [])
@@ -263,8 +293,10 @@ def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
     return Path(tmp_dir) / f"test_{chunk}.pickle"
 
 
-@pytest.mark.parametrize("exc", get_executors(with_pickling=True), ids=type)
-def test_map_to_futures_with_pickle_paths(exc: cluster_tools.Executor) -> None:
+def test_map_to_futures_with_pickle_paths(
+    exc_with_pickling: cluster_tools.Executor,
+) -> None:
+    exc = exc_with_pickling
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         with exc:
             numbers = [2, 1]
@@ -282,7 +314,6 @@ def test_map_to_futures_with_pickle_paths(exc: cluster_tools.Executor) -> None:
             ).exists(), f"File for chunk {number} should exist."
 
 
-@pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         with exc:
@@ -303,14 +334,12 @@ def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
         assert output_path.exists(), "Output pickle file should exist."
 
 
-@pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_map(exc: cluster_tools.Executor) -> None:
     with exc:
         result = list(exc.map(square, [2, 3, 4]))
         assert result == [4, 9, 16]
 
 
-@pytest.mark.parametrize("exc", get_executors(), ids=type)
 def test_map_lazy(exc: cluster_tools.Executor) -> None:
     if not isinstance(exc, cluster_tools.DaskExecutor):
         with exc:
