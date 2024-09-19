@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 
 import pytest
 
@@ -39,7 +39,7 @@ def raise_if(msg: str, _bool: bool) -> None:
 # to the test and most importantly can parametrize those fixtures.
 # Depending on whether the exc or the exc_with_pickling fixture is used,
 # the test is parametrized with the respective executors.
-def pytest_generate_tests(metafunc):
+def pytest_generate_tests(metafunc: Any) -> None:
     if "exc" in metafunc.fixturenames or "exc_with_pickling" in metafunc.fixturenames:
         with_pickling = "exc_with_pickling" in metafunc.fixturenames
         executor_keys = get_executor_keys(with_pickling)
@@ -53,14 +53,14 @@ def pytest_generate_tests(metafunc):
 @pytest.fixture
 def exc(
     request: Any,
-) -> List[cluster_tools.Executor]:
+) -> cluster_tools.Executor:
     return get_executor(request.param)
 
 
 @pytest.fixture
 def exc_with_pickling(
     request: Any,
-) -> List[cluster_tools.Executor]:
+) -> cluster_tools.Executor:
     return get_executor(request.param)
 
 
@@ -85,15 +85,15 @@ def get_executor_keys(with_pickling: bool = False) -> set[str]:
     return executor_keys
 
 
-def get_executor(environment: str):
+def get_executor(environment: str) -> cluster_tools.Executor:
     global _dask_cluster
 
     print("called get executors")
-    if "slurm" == environment:
+    if environment == "slurm":
         return cluster_tools.get_executor(
             "slurm", debug=True, job_resources={"mem": "100M"}
         )
-    if "kubernetes" == environment:
+    if environment == "kubernetes":
         return cluster_tools.get_executor(
             "kubernetes",
             debug=True,
@@ -102,11 +102,11 @@ def get_executor(environment: str):
                 "image": "scalableminds/cluster-tools:latest",
             },
         )
-    if "multiprocessing" == environment:
+    if environment == "multiprocessing":
         return cluster_tools.get_executor("multiprocessing", max_workers=5)
-    if "sequential" == environment:
+    if environment == "sequential":
         return cluster_tools.get_executor("sequential")
-    if "dask" == environment:
+    if environment == "dask":
         if not _dask_cluster:
             from distributed import LocalCluster, Worker
 
@@ -116,11 +116,11 @@ def get_executor(environment: str):
         return cluster_tools.get_executor(
             "dask", job_resources={"address": _dask_cluster}
         )
-    if "multiprocessing_with_pickling" == environment:
+    if environment == "multiprocessing_with_pickling":
         return cluster_tools.get_executor("multiprocessing_with_pickling")
-    if "pbs" == environment:
+    if environment == "pbs":
         return cluster_tools.get_executor("pbs")
-    if "sequential_with_pickling" == environment:
+    if environment == "sequential_with_pickling":
         return cluster_tools.get_executor("sequential_with_pickling")
     raise RuntimeError("No executor specified.")
 
