@@ -5,7 +5,10 @@ from typing import (
     Generator,
     Iterator,
     List,
+    MutableMapping,
+    Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
 )
@@ -16,7 +19,7 @@ from webknossos.utils import infer_metadata_type, parse_metadata_value
 _T = TypeVar("_T", bound="Metadata")
 
 
-class Metadata(dict):
+class Metadata(MutableMapping):
     __slots__ = ()
     _api_path: str
     _api_type: Any
@@ -28,6 +31,8 @@ class Metadata(dict):
             )
         super().__init__(*args, **kwargs)
         self._id: str = _id
+        self._has_changed: bool = False
+        self._mapping = {}
 
     @contextmanager
     def _recent_metadata(self: _T) -> Generator[_T, None, None]:
@@ -41,57 +46,112 @@ class Metadata(dict):
             )
             metadata: List[ApiMetadata] = full_object.metadata
             if metadata is not None:
-                self = self.__class__(
-                    self._id,
-                    {
-                        element.key: parse_metadata_value(element.value, element.type)
-                        for element in metadata
-                    },
-                )
+                self._mapping = {
+                    element.key: parse_metadata_value(element.value, element.type)
+                    for element in metadata
+                }
             else:
-                self = self.__class__(self._id)
+                self._mapping = {}
             yield self
         finally:
-            api_metadata = [
-                ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
-                for k, v in self.items()
-            ]
+            if self._has_changed:
+                api_metadata = [
+                    ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
+                    for k, v in self._mapping.items()
+                ]
 
-            full_object.metadata = api_metadata
-            if self._api_type == ApiDataset:
-                client._patch_json(f"{self._api_path}{self._id}", full_object)
-            else:
-                client._put_json(f"{self._api_path}{self._id}", full_object)
+                full_object.metadata = api_metadata
+                if self._api_type == ApiDataset:
+                    client._patch_json(f"{self._api_path}{self._id}", full_object)
+                else:
+                    client._put_json(f"{self._api_path}{self._id}", full_object)
+                self._has_changed = False
 
     def __setitem__(
         self, key: str, value: Union[str, int, float, Sequence[str]]
     ) -> None:
         with self._recent_metadata() as metadata:
-            super(Metadata, metadata).__setitem__(key, value)
+            metadata._has_changed = True
+            metadata._mapping[key] = value
 
     def __getitem__(self, key: str) -> Union[str, int, float, Sequence[str]]:
         with self._recent_metadata() as metadata:
-            return super(Metadata, metadata).__getitem__(key)
+            return metadata._mapping[key]
 
     def __delitem__(self, key: str) -> None:
         with self._recent_metadata() as metadata:
-            super(Metadata, metadata).__delitem__(key)
+            metadata._has_changed = True
+            del metadata._mapping[key]
 
     def __contains__(self, key: object) -> bool:
         with self._recent_metadata() as metadata:
-            return super(Metadata, metadata).__contains__(key)
+            return key in metadata._mapping
+
+    def __eq__(self: _T, other: _T) -> bool:
+        with self._recent_metadata() as metadata:
+            return metadata._mapping == other._mapping
+
+    def __ne__(self: _T, other: _T) -> bool:
+        return not self == other
+
+    def keys(self) -> List[str]:
+        with self._recent_metadata() as metadata:
+            return list(metadata._mapping.keys())
+
+    def values(self) -> List[Union[str, int, float, Sequence[str]]]:
+        with self._recent_metadata() as metadata:
+            return list(metadata._mapping.values())
+
+    def items(self) -> List[Tuple[str, Union[str, int, float, Sequence[str]]]]:
+        with self._recent_metadata() as metadata:
+            return list(metadata._mapping.items())
+
+    def get(
+        self, key: str, default: Optional[Union[str, int, float, Sequence[str]]] = None
+    ) -> Any:
+        with self._recent_metadata() as metadata:
+            return metadata._mapping.get(key, default)
+
+    def pop(
+        self, key: str, default: Optional[Union[str, int, float, Sequence[str]]] = None
+    ) -> Any:
+        with self._recent_metadata() as metadata:
+            metadata._has_changed = True
+            return metadata._mapping.pop(key, default)
+
+    def popitem(self) -> Tuple[str, Union[str, int, float, Sequence[str]]]:
+        with self._recent_metadata() as metadata:
+            metadata._has_changed = True
+            return metadata._mapping.popitem()
+
+    def clear(self) -> None:
+        with self._recent_metadata() as metadata:
+            metadata._has_changed = True
+            metadata._mapping.clear()
+
+    def update(self, *args: Any, **kwargs: Any) -> None:
+        with self._recent_metadata() as metadata:
+            metadata._has_changed = True
+            metadata._mapping.update(*args, **kwargs)
+
+    def setdefault(
+        self, key: str, default: Union[str, int, float, Sequence[str]]
+    ) -> Any:
+        with self._recent_metadata() as metadata:
+            metadata._has_changed = True
+            return metadata._mapping.setdefault(key, default)
 
     def __iter__(self) -> Iterator[Any]:
         with self._recent_metadata() as metadata:
-            return super(Metadata, metadata).__iter__()
+            return iter(metadata._mapping)
 
     def __len__(self) -> int:
         with self._recent_metadata() as metadata:
-            return super(Metadata, metadata).__len__()
+            return len(metadata._mapping)
 
     def __repr__(self) -> str:
         with self._recent_metadata() as metadata:
-            return f"{self.__class__.__name__}({super(Metadata, metadata).__repr__()})"
+            return f"{self.__class__.__name__}({repr(metadata._mapping)})"
 
 
 class FolderMetadata(Metadata):
