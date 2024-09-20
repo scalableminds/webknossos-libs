@@ -205,19 +205,23 @@ class Layer:
     def path(self) -> Path:
         # Assume that all mags belong to the same layer. If they have a path use them as this layers path.
         # This is necessary for remote layer / mag support.
-        maybe_mag_path_upath = (
-            strip_trailing_slash(UPath(self._properties.mags[0].path)).parent
-            if len(self._properties.mags) > 0
+        maybe_mag_path_str = (
+            self._properties.mags[0].path if len(self._properties.mags) > 0 else None
+        )
+        maybe_layer_path = (
+            strip_trailing_slash(UPath(maybe_mag_path_str)).parent
+            if maybe_mag_path_str
             else None
         )
         for mag in self._properties.mags:
-            assert (
-                strip_trailing_slash(UPath(mag.path)).parent == maybe_mag_path_upath
-            ), "All mags of a layer must point to the same layer."
-        is_remote = maybe_mag_path_upath and is_remote_path(maybe_mag_path_upath)
+            is_same_layer = (
+                mag.path is None and maybe_layer_path is None
+            ) or strip_trailing_slash(UPath(mag.path)).parent == maybe_layer_path
+            assert is_same_layer, "All mags of a layer must point to the same layer."
+        is_remote = maybe_layer_path and is_remote_path(maybe_layer_path)
         return (
-            maybe_mag_path_upath.parent
-            if maybe_mag_path_upath and is_remote
+            maybe_layer_path
+            if maybe_layer_path and is_remote
             else self.dataset.path / self.name
         )
 
