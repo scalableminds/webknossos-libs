@@ -71,7 +71,6 @@ from ..utils import (
     get_executor_for_args,
     is_fs_path,
     is_remote_path,
-    is_writable_path,
     named_partial,
     rmtree,
     strip_trailing_slash,
@@ -349,8 +348,8 @@ class Dataset:
 
             layer = self._initialize_layer_from_properties(layer_properties)
             self._layers[layer_properties.name] = layer
-            if layer.is_foreign_path:
-                # The mags of foreign layers need to have their path properly set.
+            if layer.is_remote_to_dataset:
+                # The mags of remote layers need to have their path properly set.
                 for mag in layer.mags:
                     mag_prop = next(
                         mag_prop
@@ -1696,7 +1695,7 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
-    def add_foreign_layer(
+    def add_remote_layer(
         self,
         foreign_layer: Union[str, UPath, Layer],
         new_layer_name: Optional[str] = None,

@@ -37,7 +37,7 @@ def _find_mag_path(
     dataset_path: Path,
     layer_name: str,
     mag_name: str,
-    path: Optional[str | Path] = None,
+    path: Optional[Union[str, Path]] = None,
 ) -> Path:
     path = UPath(path) if path else None
     if path is not None:
@@ -163,7 +163,7 @@ class MagView(View):
         return self._path
 
     @property
-    def is_foreign_mag(self) -> bool:
+    def is_remote_to_dataset(self) -> bool:
         return self._path.parent.parent != self.layer.dataset.path
 
     @property

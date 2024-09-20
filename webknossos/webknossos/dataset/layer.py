@@ -204,15 +204,16 @@ class Layer:
     @property
     def path(self) -> Path:
         # Assume that all mags belong to the same layer. If they have a path use them as this layers path.
-        # This is necessary for foreign layer / mag support.
-        maybe_mag_path_str = (
-            self._properties.mags[0].path if len(self._properties.mags) > 0 else None
-        )
+        # This is necessary for remote layer / mag support.
         maybe_mag_path_upath = (
-            strip_trailing_slash(UPath(maybe_mag_path_str))
-            if maybe_mag_path_str
+            strip_trailing_slash(UPath(self._properties.mags[0].path)).parent
+            if len(self._properties.mags) > 0
             else None
         )
+        for mag in self._properties.mags:
+            assert (
+                strip_trailing_slash(UPath(mag.path)).parent == maybe_mag_path_upath
+            ), "All mags of a layer must point to the same layer."
         is_remote = maybe_mag_path_upath and is_remote_path(maybe_mag_path_upath)
         return (
             maybe_mag_path_upath.parent
@@ -221,7 +222,7 @@ class Layer:
         )
 
     @property
-    def is_foreign_path(self) -> bool:
+    def is_remote_to_dataset(self) -> bool:
         return self.path.parent != self.dataset.path
 
     @property
@@ -260,7 +261,7 @@ class Layer:
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            if not mag.is_foreign_mag:
+            if not mag.is_remote_to_dataset:
                 mag._path = _find_mag_path(
                     self.dataset.path, self.name, mag.name, mag._properties.path
                 )
@@ -492,12 +493,12 @@ class Layer:
 
         return mag_view
 
-    def add_existing_foreign_mag_view(
+    def add_existing_remote_mag_view(
         self,
         mag_view_maybe: Union[int, str, list, tuple, np.ndarray, Mag, MagView],
     ) -> MagView:
         """
-        Add the mag of the passed mag view to the layer. The mag view should point to a foreign layer's mag.
+        Add the mag of the passed mag view to the layer. The mag view should point to a remote layer's mag.
 
         Raises an IndexError if the specified `mag` does not exists.
         """
@@ -686,7 +687,7 @@ class Layer:
             )
         return mag
 
-    def add_foreign_mag(
+    def add_remote_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
         extend_layer_bounding_box: bool = True,
@@ -713,7 +714,7 @@ class Layer:
             + f"must match the layer's dtype {self.dtype_per_channel}"
         )
 
-        mag = self.add_existing_foreign_mag_view(foreign_mag_view)
+        mag = self.add_existing_remote_mag_view(foreign_mag_view)
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(

@@ -58,7 +58,7 @@ def test_add_remote_mags_from_mag_view(
             data_format=remote_mag.info.data_format,
             dtype_per_channel=remote_mag.get_dtype(),
         )
-        new_layer.add_foreign_mag(remote_mag)
+        new_layer.add_remote_mag(remote_mag)
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
@@ -82,7 +82,7 @@ def test_add_remote_mags_from_path(
             data_format=remote_mag.info.data_format,
             dtype_per_channel=remote_mag.get_dtype(),
         )
-        new_layer.add_foreign_mag(str(remote_mag.path))
+        new_layer.add_remote_mag(str(remote_mag.path))
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert added_mag.path == mag_path or added_mag.path == mag_path.parent, "Added remote mag's path does not match remote path of mag added."
@@ -95,7 +95,7 @@ def test_add_remote_layer_from_object(
     for layer in sample_remote_layer:
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_object"
-        sample_remote_dataset.add_foreign_layer(layer, layer_name)
+        sample_remote_dataset.add_remote_layer(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
         assert (
             is_remote_path(new_layer.path)
