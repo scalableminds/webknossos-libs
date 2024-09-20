@@ -42,6 +42,11 @@ class ApiTeam:
 
 
 @attr.s(auto_attribs=True)
+class ApiTeamAdd:
+    name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiBoundingBox:
     top_left: Tuple[int, int, int]
     width: int
@@ -199,6 +204,7 @@ class ApiTaskCreationResult:
 class ApiTeamMembership:
     id: str
     name: str
+    is_team_manager: bool
 
 
 @attr.s(auto_attribs=True)

@@ -20,6 +20,7 @@ from webknossos.client.api_client.models import (
     ApiTaskCreationResult,
     ApiTaskParameters,
     ApiTeam,
+    ApiTeamAdd,
     ApiUser,
     ApiWkBuildInfo,
 )
@@ -176,9 +177,17 @@ class WkApiClient(AbstractApiClient):
         route = f"/users/{user_id}/loggedTime"
         return self._get_json(route, ApiLoggedTimeGroupedByMonth)
 
+    def user_update(self, user: ApiUser) -> None:
+        route = "/users/{user.id}"
+        self._patch_json(route, user)
+
     def team_list(self) -> List[ApiTeam]:
         route = "/teams"
         return self._get_json(route, List[ApiTeam])
+
+    def team_add(self, team: ApiTeamAdd) -> None:
+        route = "/teams"
+        self._post_json(route, team)
 
     def token_generate_for_data_store(self) -> ApiDataStoreToken:
         route = "/userToken/generate"
