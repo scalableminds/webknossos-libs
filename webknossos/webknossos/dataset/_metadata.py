@@ -32,7 +32,7 @@ class Metadata(MutableMapping):
         super().__init__(*args, **kwargs)
         self._id: str = _id
         self._has_changed: bool = False
-        self._mapping = {}
+        self._mapping: Dict = {}
 
     @contextmanager
     def _recent_metadata(self: _T) -> Generator[_T, None, None]:
@@ -87,59 +87,16 @@ class Metadata(MutableMapping):
         with self._recent_metadata() as metadata:
             return key in metadata._mapping
 
-    def __eq__(self: _T, other: _T) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Metadata):
+            raise NotImplementedError(
+                f"Cannot compare {self.__class__.__name__} with {other.__class__.__name__}"
+            )
         with self._recent_metadata() as metadata:
             return metadata._mapping == other._mapping
 
-    def __ne__(self: _T, other: _T) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self == other
-
-    def keys(self) -> List[str]:
-        with self._recent_metadata() as metadata:
-            return list(metadata._mapping.keys())
-
-    def values(self) -> List[Union[str, int, float, Sequence[str]]]:
-        with self._recent_metadata() as metadata:
-            return list(metadata._mapping.values())
-
-    def items(self) -> List[Tuple[str, Union[str, int, float, Sequence[str]]]]:
-        with self._recent_metadata() as metadata:
-            return list(metadata._mapping.items())
-
-    def get(
-        self, key: str, default: Optional[Union[str, int, float, Sequence[str]]] = None
-    ) -> Any:
-        with self._recent_metadata() as metadata:
-            return metadata._mapping.get(key, default)
-
-    def pop(
-        self, key: str, default: Optional[Union[str, int, float, Sequence[str]]] = None
-    ) -> Any:
-        with self._recent_metadata() as metadata:
-            metadata._has_changed = True
-            return metadata._mapping.pop(key, default)
-
-    def popitem(self) -> Tuple[str, Union[str, int, float, Sequence[str]]]:
-        with self._recent_metadata() as metadata:
-            metadata._has_changed = True
-            return metadata._mapping.popitem()
-
-    def clear(self) -> None:
-        with self._recent_metadata() as metadata:
-            metadata._has_changed = True
-            metadata._mapping.clear()
-
-    def update(self, *args: Any, **kwargs: Any) -> None:
-        with self._recent_metadata() as metadata:
-            metadata._has_changed = True
-            metadata._mapping.update(*args, **kwargs)
-
-    def setdefault(
-        self, key: str, default: Union[str, int, float, Sequence[str]]
-    ) -> Any:
-        with self._recent_metadata() as metadata:
-            metadata._has_changed = True
-            return metadata._mapping.setdefault(key, default)
 
     def __iter__(self) -> Iterator[Any]:
         with self._recent_metadata() as metadata:
