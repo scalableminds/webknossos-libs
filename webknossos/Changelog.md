@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Enable metadata access for remote datasets. [#1163](https://github.com/scalableminds/webknossos-libs/pull/1163)
 
 ### Changed
 
