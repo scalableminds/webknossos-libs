@@ -6,9 +6,7 @@ from typing import (
     Iterator,
     List,
     MutableMapping,
-    Optional,
     Sequence,
-    Tuple,
     TypeVar,
     Union,
 )
