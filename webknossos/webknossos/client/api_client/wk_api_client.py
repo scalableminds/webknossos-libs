@@ -188,7 +188,7 @@ class WkApiClient(AbstractApiClient):
         return self._get_json(route, ApiLoggedTimeGroupedByMonth)
 
     def user_update(self, user: ApiUser) -> None:
-        route = "/users/{user.id}"
+        route = f"/users/{user.id}"
         self._patch_json(route, user)
 
     def team_list(self) -> List[ApiTeam]:
