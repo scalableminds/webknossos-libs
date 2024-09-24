@@ -2208,7 +2208,7 @@ class RemoteDataset(Dataset):
 
     @classmethod
     def explore_and_add_remote(
-        cls, dataset_uri: PathLike, dataset_name: str, folder_path: str
+        cls, dataset_uri: Union[str, PathLike], dataset_name: str, folder_path: str
     ) -> "RemoteDataset":
         from ..client.context import _get_api_client
 
