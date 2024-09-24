@@ -35,9 +35,10 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.geometry.vec_int import VecIntLike
 
-from ..client.api_client.models import ApiDataset
+from ..client.api_client.models import ApiDataset, ApiMetadata
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._utils import pims_images
@@ -69,6 +70,7 @@ from ..utils import (
     copytree,
     count_defined_values,
     get_executor_for_args,
+    infer_metadata_type,
     is_fs_path,
     is_remote_path,
     named_partial,
@@ -2137,6 +2139,7 @@ class RemoteDataset(Dataset):
         is_public: bool = _UNSET,
         folder_id: str = _UNSET,
         tags: List[str] = _UNSET,
+        metadata: Optional[List[ApiMetadata]] = _UNSET,
     ) -> None:
         from ..client.context import _get_api_client
 
@@ -2154,13 +2157,31 @@ class RemoteDataset(Dataset):
             info.is_public = is_public
         if folder_id is not _UNSET:
             info.folder_id = folder_id
-        if display_name is not _UNSET:
-            info.display_name = display_name
+        if metadata is not _UNSET:
+            info.metadata = metadata
 
         with self._context:
             _get_api_client().dataset_update(
                 self._organization_id, self._dataset_name, info
             )
+
+    @property
+    def metadata(self) -> DatasetMetadata:
+        return DatasetMetadata(f"{self._organization_id}/{self._dataset_name}")
+
+    @metadata.setter
+    def metadata(
+        self,
+        metadata: Optional[
+            Union[Dict[str, Union[str, int, float, Sequence[str]]], DatasetMetadata]
+        ],
+    ) -> None:
+        if metadata is not None:
+            api_metadata = [
+                ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
+                for k, v in metadata.items()
+            ]
+        self._update_dataset_info(metadata=api_metadata)
 
     @property
     def display_name(self) -> Optional[str]:
