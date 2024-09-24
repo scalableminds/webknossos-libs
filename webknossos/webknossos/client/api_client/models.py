@@ -108,6 +108,14 @@ class ApiDataset:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetExploreAndAddRemote:
+    remote_uri: str
+    dataset_name: str
+    folder_path: Optional[str] = None
+    data_store_name: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
 class ApiDatasetAnnounceUpload:
     dataset_name: str
     organization: str

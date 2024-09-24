@@ -7,6 +7,7 @@ from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetExploreAndAddRemote,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
     ApiDataStoreToken,
@@ -104,6 +105,15 @@ class WkApiClient(AbstractApiClient):
     ) -> ApiDatasetIsValidNewNameResponse:
         route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
         return self._get_json(route, ApiDatasetIsValidNewNameResponse)
+
+    def dataset_explore_and_add_remote(
+        self, dataset: ApiDatasetExploreAndAddRemote
+    ) -> None:
+        route = "/datasets/exploreAndAddRemote"
+        self._post_json(
+            route,
+            dataset,
+        )
 
     def datastore_list(self) -> List[ApiDataStore]:
         route = "/datastores"
