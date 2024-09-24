@@ -2206,17 +2206,24 @@ class RemoteDataset(Dataset):
                 self._organization_id, self._dataset_name, team_ids
             )
 
+    @classmethod
     def explore_and_add_remote(
-        self, dataset_uri: PathLike, dataset_name: str, folder_path: str
-    ) -> None:
+        cls, dataset_uri: PathLike, dataset_name: str, folder_path: str
+    ) -> "RemoteDataset":
         from ..client.context import _get_api_client
 
-        with self._context:
+        (context, dataset_name, organisation_id, sharing_token) = cls._parse_remote(
+            dataset_name
+        )
+
+        with context:
             client = _get_api_client()
             dataset = ApiDatasetExploreAndAddRemote(
-                Path(dataset_uri).as_uri(), dataset_name, folder_path
+                UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
             )
             client.dataset_explore_and_add_remote(dataset)
+
+            return cls.open_remote(dataset_name, organisation_id, sharing_token)
 
     @property
     def folder(self) -> RemoteFolder:
