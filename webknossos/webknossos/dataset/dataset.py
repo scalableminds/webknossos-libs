@@ -330,7 +330,6 @@ class Dataset:
 
         self.path: Path = dataset_path
         self._properties: DatasetProperties = self._load_properties()
-        self.is_remote_dataset = is_remote_path(self.path)
         self._last_read_properties = copy.deepcopy(self._properties)
 
         self._layers: Dict[str, Layer] = {}
