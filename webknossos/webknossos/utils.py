@@ -283,10 +283,7 @@ def is_fs_path(path: Path) -> bool:
 
 
 def is_remote_path(path: Path) -> bool:
-    from upath.implementations.cloud import GCSPath, S3Path
-    from upath.implementations.http import HTTPPath
-
-    return isinstance(path, (HTTPPath, S3Path, GCSPath))
+    return not is_fs_path(path)
 
 
 def is_writable_path(path: Path) -> bool:

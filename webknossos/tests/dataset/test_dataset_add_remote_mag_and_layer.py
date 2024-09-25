@@ -78,4 +78,3 @@ def test_add_remote_layer_from_object(
             is_remote_path(new_layer.path)
             and layer.path.as_uri() == new_layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."
-
