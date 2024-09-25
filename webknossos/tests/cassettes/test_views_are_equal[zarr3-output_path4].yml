@@ -1,0 +1,917 @@
+http_interactions:
+  - request:
+      method: HEAD
+      path: /testoutput/a/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=ffb91adfb8844cba78cb2338b4414debfe835e3ecd9121424d85b2fd38cad5dc
+        amz-sdk-invocation-id: 3c505bfa-37a9-4bec-b6ab-949dced5a433
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /testoutput?list-type=2&prefix=a%2Fzarr3_dataset%2F&delimiter=%2F&encoding-type=url
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=40ebbb4264712aa987a3fdbd1f651242aeaf3c3c86c748449033bb45857bbe97
+        amz-sdk-invocation-id: 8d0c9adb-56ed-4cfc-bb14-bf24df06244b
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+              <meta name="commit-hash" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b" />
+              <meta name="selected-theme" content="auto" />
+              
+              <title>WEBKNOSSOS</title>
+              
+              <meta property="og:title" content="WEBKNOSSOS" />
+                 
+              <meta name="robot" content="noindex" />
+              
+              <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png" />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/vendors~main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <script
+                data-airbrake-project-id="insert-valid-projectID-here"
+                data-airbrake-project-key="insert-valid-projectKey-here"
+                data-airbrake-environment-name="dev-local"
+              ></script>
+              <script src="/assets/bundle/vendors~main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script src="/assets/bundle/main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script type="text/javascript" src="https://app.olvy.co/script.js" defer="defer"></script>
+            </head>
+            <body>
+              <main id="main-container"></main>
+
+              
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: HEAD
+      path: /testoutput/a/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=ffb91adfb8844cba78cb2338b4414debfe835e3ecd9121424d85b2fd38cad5dc
+        amz-sdk-invocation-id: 7c3caed2-f866-4e72-ad57-9e496520c69d
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: HEAD
+      path: /testoutput/a/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=ffb91adfb8844cba78cb2338b4414debfe835e3ecd9121424d85b2fd38cad5dc
+        amz-sdk-invocation-id: 253658b3-ed55-4296-ad20-ed114ff4ec89
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: POST
+      path: /testoutput?delete
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        content-md5: 7KMLonuFIWJ56cJYo7t4xA==
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: 5c4025efb61c6eae8ee7db4b7b060c4874d9fe5eebb3717c49e31ef700092e17
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=content-md5;host;x-amz-content-sha256;x-amz-date,
+          Signature=f4e848cdda122e633a4f00f8207eaab006922e2d1d2da901fafc9831dead72f6
+        amz-sdk-invocation-id: fe5a0b82-6360-43cf-bc19-9b60ce6c1214
+        amz-sdk-request: attempt=1
+        content-length: '127'
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: >-
+          <Delete
+          xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Object><Key>a/zarr3_dataset</Key></Object><Quiet>true</Quiet></Delete>
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+              <meta name="commit-hash" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b" />
+              <meta name="selected-theme" content="auto" />
+              
+              <title>WEBKNOSSOS</title>
+              
+              <meta property="og:title" content="WEBKNOSSOS" />
+                 
+              <meta name="robot" content="noindex" />
+              
+              <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png" />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/vendors~main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <script
+                data-airbrake-project-id="insert-valid-projectID-here"
+                data-airbrake-project-key="insert-valid-projectKey-here"
+                data-airbrake-environment-name="dev-local"
+              ></script>
+              <script src="/assets/bundle/vendors~main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script src="/assets/bundle/main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script type="text/javascript" src="https://app.olvy.co/script.js" defer="defer"></script>
+            </head>
+            <body>
+              <main id="main-container"></main>
+
+              
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: HEAD
+      path: /testoutput/b/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=40a4f4f78ab02c3789de4aeab887cbb6c37d7b3a1d727374e67b5806cb76720f
+        amz-sdk-invocation-id: 7cbcbb46-13de-4708-a55f-84374bda47b5
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /testoutput?list-type=2&prefix=b%2Fzarr3_dataset%2F&delimiter=%2F&encoding-type=url
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=4dd1114328f2a71768727a7c30d15a17ee371b37f1ccc33c35dc42316367c330
+        amz-sdk-invocation-id: c8ac244e-7269-4545-9243-11ec8156ba60
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+              <meta name="commit-hash" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b" />
+              <meta name="selected-theme" content="auto" />
+              
+              <title>WEBKNOSSOS</title>
+              
+              <meta property="og:title" content="WEBKNOSSOS" />
+                 
+              <meta name="robot" content="noindex" />
+              
+              <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png" />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/vendors~main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <script
+                data-airbrake-project-id="insert-valid-projectID-here"
+                data-airbrake-project-key="insert-valid-projectKey-here"
+                data-airbrake-environment-name="dev-local"
+              ></script>
+              <script src="/assets/bundle/vendors~main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script src="/assets/bundle/main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script type="text/javascript" src="https://app.olvy.co/script.js" defer="defer"></script>
+            </head>
+            <body>
+              <main id="main-container"></main>
+
+              
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: HEAD
+      path: /testoutput/b/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=40a4f4f78ab02c3789de4aeab887cbb6c37d7b3a1d727374e67b5806cb76720f
+        amz-sdk-invocation-id: 35362733-b57d-4995-9c22-14b7eeba4318
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: HEAD
+      path: /testoutput/b/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=40a4f4f78ab02c3789de4aeab887cbb6c37d7b3a1d727374e67b5806cb76720f
+        amz-sdk-invocation-id: d03c50ea-bcb4-44fe-a64a-2d16a0f9301a
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: POST
+      path: /testoutput?delete
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        content-md5: XeoBSYHDfHE5T442bkaQvg==
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: 5032f3b1b21c9ab94cf2485e312c5088fa001dba53e7624e9caba5b8802d51de
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=content-md5;host;x-amz-content-sha256;x-amz-date,
+          Signature=dd8e8168e47527e4a0e4aca11f131782490d04f5b0e150147e5575715760d5e9
+        amz-sdk-invocation-id: a3b29a9a-86a3-4c1f-b859-50343b361b81
+        amz-sdk-request: attempt=1
+        content-length: '127'
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: >-
+          <Delete
+          xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Object><Key>b/zarr3_dataset</Key></Object><Quiet>true</Quiet></Delete>
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+              <meta name="commit-hash" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b" />
+              <meta name="selected-theme" content="auto" />
+              
+              <title>WEBKNOSSOS</title>
+              
+              <meta property="og:title" content="WEBKNOSSOS" />
+                 
+              <meta name="robot" content="noindex" />
+              
+              <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png" />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/vendors~main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <script
+                data-airbrake-project-id="insert-valid-projectID-here"
+                data-airbrake-project-key="insert-valid-projectKey-here"
+                data-airbrake-environment-name="dev-local"
+              ></script>
+              <script src="/assets/bundle/vendors~main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script src="/assets/bundle/main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script type="text/javascript" src="https://app.olvy.co/script.js" defer="defer"></script>
+            </head>
+            <body>
+              <main id="main-container"></main>
+
+              
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: HEAD
+      path: /testoutput/a/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=ffb91adfb8844cba78cb2338b4414debfe835e3ecd9121424d85b2fd38cad5dc
+        amz-sdk-invocation-id: 602cf2c4-f394-4476-b340-a6baaad6fc58
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /testoutput?list-type=2&prefix=a%2Fzarr3_dataset%2F&delimiter=%2F&encoding-type=url
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=40ebbb4264712aa987a3fdbd1f651242aeaf3c3c86c748449033bb45857bbe97
+        amz-sdk-invocation-id: c596f84c-ed11-43c3-98bb-7562f2f9074e
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+              <meta name="commit-hash" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b" />
+              <meta name="selected-theme" content="auto" />
+              
+              <title>WEBKNOSSOS</title>
+              
+              <meta property="og:title" content="WEBKNOSSOS" />
+                 
+              <meta name="robot" content="noindex" />
+              
+              <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png" />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/vendors~main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <script
+                data-airbrake-project-id="insert-valid-projectID-here"
+                data-airbrake-project-key="insert-valid-projectKey-here"
+                data-airbrake-environment-name="dev-local"
+              ></script>
+              <script src="/assets/bundle/vendors~main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script src="/assets/bundle/main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script type="text/javascript" src="https://app.olvy.co/script.js" defer="defer"></script>
+            </head>
+            <body>
+              <main id="main-container"></main>
+
+              
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: HEAD
+      path: /testoutput/a/zarr3_dataset
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=ffb91adfb8844cba78cb2338b4414debfe835e3ecd9121424d85b2fd38cad5dc
+        amz-sdk-invocation-id: 1c9d3fa3-3569-444b-b1d6-ef2f9320ce5b
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /testoutput?list-type=2&prefix=a%2Fzarr3_dataset%2F&delimiter=%2F&encoding-type=url
+      headers:
+        host: localhost:8000
+        user-agent: >-
+          aiobotocore/2.14.0 md/Botocore#1.35.7 ua/2.0 os/linux#6.8.0-45-generic
+          md/arch#x86_64 lang/python#3.10.12 md/pyimpl#CPython
+          cfg/retry-mode#legacy botocore/1.35.7
+        x-amz-date: 20240925T100024Z
+        x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        authorization: >-
+          AWS4-HMAC-SHA256
+          Credential=TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur/20240925/us-east-1/s3/aws4_request,
+          SignedHeaders=host;x-amz-content-sha256;x-amz-date,
+          Signature=40ebbb4264712aa987a3fdbd1f651242aeaf3c3c86c748449033bb45857bbe97
+        amz-sdk-invocation-id: 5ea428cd-376a-4804-a519-6087c57cad4a
+        amz-sdk-request: attempt=1
+        accept-encoding: identity
+        accept: '*/*'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-security-policy: >-
+          img-src * data: blob: 'unsafe-inline'; style-src 'self'
+          'unsafe-inline' *; base-uri 'none'; frame-src * data: blob: ;
+          default-src * data: mediastream: blob: filesystem: about: ws: wss:
+          'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; script-src * data:
+          blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:
+          'unsafe-inline'; connect-src * data: blob: 'unsafe-inline'; object-src
+          'none'; font-src * data: blob: 'unsafe-inline'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 25 Sep 2024 10:00:24 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1435'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+              <meta name="commit-hash" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b" />
+              <meta name="selected-theme" content="auto" />
+              
+              <title>WEBKNOSSOS</title>
+              
+              <meta property="og:title" content="WEBKNOSSOS" />
+                 
+              <meta name="robot" content="noindex" />
+              
+              <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png" />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/vendors~main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                media="screen"
+                href="/assets/bundle/main.css?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"
+              />
+              <script
+                data-airbrake-project-id="insert-valid-projectID-here"
+                data-airbrake-project-key="insert-valid-projectKey-here"
+                data-airbrake-environment-name="dev-local"
+              ></script>
+              <script src="/assets/bundle/vendors~main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script src="/assets/bundle/main.js?nocache=e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"></script>
+              <script type="text/javascript" src="https://app.olvy.co/script.js" defer="defer"></script>
+            </head>
+            <body>
+              <main id="main-container"></main>
+
+              
+            </body>
+          </html>
+        compression: none
