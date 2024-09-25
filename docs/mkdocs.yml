@@ -100,6 +100,8 @@ nav:
               - webknossos-py/examples/zarr_and_dask.md
               - webknossos-py/examples/convert_4d_tiff.md
               - webknossos-py/examples/announce_dataset_upload.md
+              - webknossos-py/examples/accessing_metadata.md
+              - webknossos-py/examples/explore_and_add_remote.md
           - Annotation Examples:
               - webknossos-py/examples/apply_merger_mode.md
               - webknossos-py/examples/learned_segmenter.md
@@ -110,6 +112,7 @@ nav:
               - webknossos-py/examples/skeleton_path_length.md
               - webknossos-py/examples/upsample_skeleton.md
           - Administration Examples:
+              - webknossos-py/examples/teams_and_users.md
               - webknossos-py/examples/user_times.md
               - webknossos-py/examples/annotation_project_administration.md
       - API Reference:

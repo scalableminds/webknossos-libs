@@ -7,6 +7,7 @@ from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetExploreAndAddRemote,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
     ApiDataStoreToken,
@@ -20,6 +21,7 @@ from webknossos.client.api_client.models import (
     ApiTaskCreationResult,
     ApiTaskParameters,
     ApiTeam,
+    ApiTeamAdd,
     ApiUser,
     ApiWkBuildInfo,
 )
@@ -104,6 +106,15 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
         return self._get_json(route, ApiDatasetIsValidNewNameResponse)
 
+    def dataset_explore_and_add_remote(
+        self, dataset: ApiDatasetExploreAndAddRemote
+    ) -> None:
+        route = "/datasets/exploreAndAddRemote"
+        self._post_json(
+            route,
+            dataset,
+        )
+
     def datastore_list(self) -> List[ApiDataStore]:
         route = "/datastores"
         return self._get_json(route, List[ApiDataStore])
@@ -176,9 +187,17 @@ class WkApiClient(AbstractApiClient):
         route = f"/users/{user_id}/loggedTime"
         return self._get_json(route, ApiLoggedTimeGroupedByMonth)
 
+    def user_update(self, user: ApiUser) -> None:
+        route = f"/users/{user.id}"
+        self._patch_json(route, user)
+
     def team_list(self) -> List[ApiTeam]:
         route = "/teams"
         return self._get_json(route, List[ApiTeam])
+
+    def team_add(self, team: ApiTeamAdd) -> None:
+        route = "/teams"
+        self._post_json(route, team)
 
     def token_generate_for_data_store(self) -> ApiDataStoreToken:
         route = "/userToken/generate"
