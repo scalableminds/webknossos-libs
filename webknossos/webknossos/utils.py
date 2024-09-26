@@ -282,6 +282,17 @@ def is_fs_path(path: Path) -> bool:
     return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
 
 
+def is_remote_path(path: Path) -> bool:
+    return not is_fs_path(path)
+
+
+def is_writable_path(path: Path) -> bool:
+    from upath.implementations.http import HTTPPath
+
+    # cannot write to http paths
+    return not isinstance(path, HTTPPath)
+
+
 def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath):
         return UPath(
