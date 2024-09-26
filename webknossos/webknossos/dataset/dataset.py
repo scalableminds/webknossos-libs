@@ -38,7 +38,11 @@ from upath import UPath
 from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.geometry.vec_int import VecIntLike
 
-from ..client.api_client.models import ApiDataset, ApiMetadata
+from ..client.api_client.models import (
+    ApiDataset,
+    ApiDatasetExploreAndAddRemote,
+    ApiMetadata,
+)
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._utils import pims_images
@@ -2254,6 +2258,25 @@ class RemoteDataset(Dataset):
             client.dataset_update_teams(
                 self._organization_id, self._dataset_name, team_ids
             )
+
+    @classmethod
+    def explore_and_add_remote(
+        cls, dataset_uri: Union[str, PathLike], dataset_name: str, folder_path: str
+    ) -> "RemoteDataset":
+        from ..client.context import _get_api_client
+
+        (context, dataset_name, organisation_id, sharing_token) = cls._parse_remote(
+            dataset_name
+        )
+
+        with context:
+            client = _get_api_client()
+            dataset = ApiDatasetExploreAndAddRemote(
+                UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+            )
+            client.dataset_explore_and_add_remote(dataset)
+
+            return cls.open_remote(dataset_name, organisation_id, sharing_token)
 
     @property
     def folder(self) -> RemoteFolder:

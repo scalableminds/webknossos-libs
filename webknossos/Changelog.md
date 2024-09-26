@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Webknossos API functions were added: `Team.get_list()`, `Team.add("new_name")`, `User.assign_team_roles("teamName", isTeamManager: True)` and `RemoteDataset.explore_and_add_remote()` are available now. [#1196](https://github.com/scalableminds/webknossos-libs/pull/1196)
 
 ### Changed
 

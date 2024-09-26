@@ -42,6 +42,11 @@ class ApiTeam:
 
 
 @attr.s(auto_attribs=True)
+class ApiTeamAdd:
+    name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiBoundingBox:
     top_left: Tuple[int, int, int]
     width: int
@@ -100,6 +105,14 @@ class ApiDataset:
     metadata: Optional[List[ApiMetadata]] = None
     display_name: Optional[str] = None
     description: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetExploreAndAddRemote:
+    remote_uri: str
+    dataset_name: str
+    folder_path: Optional[str] = None
+    data_store_name: Optional[str] = None
 
 
 @attr.s(auto_attribs=True)
@@ -215,6 +228,7 @@ class ApiTaskCreationResult:
 class ApiTeamMembership:
     id: str
     name: str
+    is_team_manager: bool
 
 
 @attr.s(auto_attribs=True)

@@ -228,7 +228,7 @@ def test_create_dataset_with_layer_and_mag(
 
 
 @pytest.mark.skip(
-    reason="The test is flaky on as sometimes fetching the file https://ngff.openmicroscopy.org/0.4/schemas/image.schema does fail. Disable it for now."
+    reason="The test is flaky as sometimes fetching the file https://ngff.openmicroscopy.org/0.4/schemas/image.schema does fail. Disable it for now."
 )
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
 def test_ome_ngff_metadata(output_path: Path) -> None:
