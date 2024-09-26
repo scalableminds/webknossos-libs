@@ -3,8 +3,6 @@ set -eEuo pipefail
 
 source local_wk_setup.sh
 
-# export_vars
-
 
 # Note that pytest should be executed via `python -m`, since
 # this will ensure that the current directory is added to sys.path
@@ -18,15 +16,20 @@ if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
 
     rm -rf tests/cassettes
     
-    proxay --mode record --tapes-dir tests/cassettes --redact-headers  &
-    export http_proxy=http://localhost:3000
+    # Starts a proxy server in record mode on port 3000 and sets the HTTP_PROXY env var
+    proxay --mode record --host http://localhost:9000 --tapes-dir tests/cassettes &
+
     shift
     $PYTEST "$@"
+
+    # Kill the proxy server
+    kill %+
+
     stop_local_test_wk
 else
     export_vars
 
-    proxay --mode mimic --host http://localhost:9000 --tapes-dir tests/cassettes 2>&1 > /dev/null &
-    export http_proxy=http://localhost:3000
+    proxay --mode replay --tapes-dir tests/cassettes 2>&1 > /dev/null &
     $PYTEST "$@"
+    kill %+
 fi

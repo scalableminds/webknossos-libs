@@ -1,21 +1,14 @@
 import gc
-import json
-import re
+import os
 import warnings
-from io import BytesIO
 from os import makedirs
 from pathlib import Path
 from shutil import rmtree, unpack_archive
-from typing import Any, Dict, Generator, List
-from unittest.mock import MagicMock, patch
-from zipfile import ZipFile
+from typing import Any, Generator
 
 import httpx
 import pytest
 from hypothesis import strategies as st
-from vcr import VCR
-from vcr.request import Request as VcrRequest
-from vcr.stubs import httpx_stubs
 
 import webknossos as wk
 from webknossos.client._upload_dataset import _cached_get_upload_datastore
@@ -110,8 +103,12 @@ def error_on_warnings() -> Generator:
 @pytest.fixture(autouse=True, scope="function")
 def use_replay_proxay(request) -> Generator:
     testname = request.node.name
-    httpx.post("http://localhost:3000/__proxay/tape", json={"tape": testname})
+    if "use_proxay" in request.keywords:
+        os.environ["HTTP_PROXY"] = "http://localhost:3000"
+        httpx.post("http://localhost:3000/__proxay/tape", json={"tape": testname})
     yield
+    if "HTTP_PROXY" in os.environ:
+        del os.environ["HTTP_PROXY"]
 
 
 ### Misc fixtures
