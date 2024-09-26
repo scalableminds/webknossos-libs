@@ -43,9 +43,11 @@ from ..utils import (
     copytree,
     get_executor_for_args,
     is_fs_path,
+    is_remote_path,
     movetree,
     named_partial,
     rmtree,
+    strip_trailing_slash,
     warn_deprecated,
 )
 from .defaults import (
@@ -53,7 +55,7 @@ from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
-from .mag_view import MagView, _find_mag_path_on_disk
+from .mag_view import MagView, _find_mag_path
 
 
 def _is_int(s: str) -> bool:
@@ -202,7 +204,31 @@ class Layer:
 
     @property
     def path(self) -> Path:
-        return self.dataset.path / self.name
+        # Assume that all mags belong to the same layer. If they have a path use them as this layers path.
+        # This is necessary for remote layer / mag support.
+        maybe_mag_path_str = (
+            self._properties.mags[0].path if len(self._properties.mags) > 0 else None
+        )
+        maybe_layer_path = (
+            strip_trailing_slash(UPath(maybe_mag_path_str)).parent
+            if maybe_mag_path_str
+            else None
+        )
+        for mag in self._properties.mags:
+            is_same_layer = (
+                mag.path is None and maybe_layer_path is None
+            ) or strip_trailing_slash(UPath(mag.path)).parent == maybe_layer_path
+            assert is_same_layer, "All mags of a layer must point to the same layer."
+        is_remote = maybe_layer_path and is_remote_path(maybe_layer_path)
+        return (
+            maybe_layer_path
+            if maybe_layer_path and is_remote
+            else self.dataset.path / self.name
+        )
+
+    @property
+    def is_remote_to_dataset(self) -> bool:
+        return self.path.parent != self.dataset.path
 
     @property
     def _properties(self) -> LayerProperties:
@@ -240,7 +266,10 @@ class Layer:
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
+            if not mag.is_remote_to_dataset:
+                mag._path = _find_mag_path(
+                    self.dataset.path, self.name, mag.name, mag._properties.path
+                )
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
             del mag._array
@@ -469,6 +498,40 @@ class Layer:
 
         return mag_view
 
+    def add_existing_remote_mag_view(
+        self,
+        mag_view_maybe: Union[int, str, list, tuple, np.ndarray, Mag, MagView],
+    ) -> MagView:
+        """
+        Add the mag of the passed mag view to the layer. The mag view should point to a remote layer's mag.
+
+        Raises an IndexError if the specified `mag` does not exists.
+        """
+        self.dataset._ensure_writable()
+        mag_path = (
+            mag_view_maybe.path
+            if isinstance(mag_view_maybe, MagView)
+            else self.path / Mag(mag_view_maybe).to_layer_name()
+        )
+        mag = (
+            mag_view_maybe.mag
+            if isinstance(mag_view_maybe, MagView)
+            else Mag(mag_view_maybe)
+        )
+        mag_view = (
+            mag_view_maybe
+            if isinstance(mag_view_maybe, MagView)
+            else MagView._ensure_mag_view(mag_path)
+        )
+        assert (
+            mag not in self.mags
+        ), f"Cannot add mag {mag} as it already exists for layer {self}"
+        self._setup_mag(mag, str(mag_path))
+        self._properties.mags.append(mag_view._properties)
+        self.dataset._export_as_json()
+
+        return mag_view
+
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
@@ -533,15 +596,15 @@ class Layer:
                 "Deleting mag {} failed. There is no mag with this name".format(mag)
             )
 
+        full_path = _find_mag_path(
+            self.dataset.path, self.name, mag.to_layer_name(), self.mags[mag].path
+        )
         del self._mags[mag]
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag
         ]
         self.dataset._export_as_json()
         # delete files on disk
-        full_path = _find_mag_path_on_disk(
-            self.dataset.path, self.name, mag.to_layer_name()
-        )
         rmtree(full_path)
 
     def add_copy_mag(
@@ -622,6 +685,41 @@ class Layer:
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
         mag = self.add_mag_for_existing_files(foreign_mag_view.mag)
+
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+        return mag
+
+    def add_remote_mag(
+        self,
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView:
+        """
+        Adds the mag at `foreign_mag_view_or_path` which belongs to foreign dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        """
+        self.dataset._ensure_writable()
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+
+        assert is_remote_path(
+            foreign_mag_view.path
+        ), f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
+        assert self.data_format == foreign_mag_view.info.data_format, (
+            f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
+            + f"does not match the layers data format {self.data_format}"
+        )
+        assert self.dtype_per_channel == foreign_mag_view.get_dtype(), (
+            f"The dtype/elementClass of the remote mag {foreign_mag_view.get_dtype()} "
+            + f"must match the layer's dtype {self.dtype_per_channel}"
+        )
+
+        mag = self.add_existing_remote_mag_view(foreign_mag_view)
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
@@ -1137,18 +1235,21 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-
+        mag_path_maybe = UPath(path) if path else path
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
-            info = cls_array.open(
-                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name, path)
-            ).info
+            resolved_path = _find_mag_path(
+                self.dataset.path, self.name, mag_name, mag_path_maybe
+            )
+            info = cls_array.open(resolved_path).info
             self._mags[mag] = MagView(
                 self,
                 mag,
                 info.chunk_shape,
                 info.chunks_per_shard,
                 info.compression_mode,
+                False,
+                UPath(resolved_path),
             )
             self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:

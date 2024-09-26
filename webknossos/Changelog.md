@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.5...HEAD)
 
 ### Breaking Changes
 
@@ -20,6 +20,30 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.15.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.5) - 2024-09-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.4...v0.15.5)
+
+### Added
+- Webknossos API functions were added: `Team.get_list()`, `Team.add("new_name")`, `User.assign_team_roles("teamName", isTeamManager: True)` and `RemoteDataset.explore_and_add_remote()` are available now. [#1196](https://github.com/scalableminds/webknossos-libs/pull/1196)
+
+
+## [0.15.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.4) - 2024-09-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.3...v0.15.4)
+
+### Added
+- Enable metadata access for remote datasets. [#1163](https://github.com/scalableminds/webknossos-libs/pull/1163)
+
+
+## [0.15.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.3) - 2024-09-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.2...v0.15.3)
+
+### Breaking Changes
+- Conversion of images with 4 channels creates a dataset with four layers instead of a dataset with one RGB layer. [#1192](https://github.com/scalableminds/webknossos-libs/pull/1192)
+
+### Changed
+- Updated tifffile dependency to v2024.8.30. [#1190](https://github.com/scalableminds/webknossos-libs/pull/1190)
 
 
 ## [0.15.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.2) - 2024-09-05
