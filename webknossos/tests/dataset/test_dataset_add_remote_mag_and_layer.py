@@ -109,7 +109,7 @@ def test_add_remote_layer_from_object(
 
 
 @pytest.mark.skip(
-    reason="The test is flaky on the when trying to fetch the required datasource-properties.json from data-humerus.webknossos.org. Disable it for now."
+    reason="The test is flaky when trying to fetch the required datasource-properties.json from data-humerus.webknossos.org. Disable it for now."
 )
 def test_add_remote_layer_from_path(
     sample_remote_layer: list[wk.Layer],
