@@ -158,7 +158,7 @@ class ClusterExecutor(futures.Executor):
             self.metadata["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
     @classmethod
-    def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
+    def as_completed(cls, futs: List[Future[_T]]) -> Iterator[Future[_T]]:
         return futures.as_completed(futs)
 
     @classmethod
@@ -217,7 +217,7 @@ class ClusterExecutor(futures.Executor):
         workerid: str,
         job_count: Optional[int] = None,
         job_name: Optional[str] = None,
-    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List[Future[str]], List[Tuple[int, int]]]:
         """Start job(s) with the given worker ID and return IDs
         identifying the new job(s). The job should run ``python -m
         cfut.remote <executorkey> <workerid>.
@@ -246,7 +246,7 @@ class ClusterExecutor(futures.Executor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List[Future[str]], List[Tuple[int, int]]]:
         pass
 
     def _maybe_mark_logs_for_cleanup(self, jobid: str) -> None:
@@ -386,7 +386,7 @@ class ClusterExecutor(futures.Executor):
         __fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> "Future[_T]":
+    ) -> Future[_T]:
         """
         Submit a job to the pool.
         kwargs may contain __cfut_options which currently should look like:
@@ -475,7 +475,7 @@ class ClusterExecutor(futures.Executor):
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
-    ) -> List["Future[_T]"]:
+    ) -> List[Future[_T]]:
         self.ensure_not_shutdown()
         args = list(args)
         if len(args) == 0:
@@ -567,7 +567,7 @@ class ClusterExecutor(futures.Executor):
         should_keep_output: bool,
         job_index_offset: int,
         batch_description: str,
-        jobid_future: "Future[str]",
+        jobid_future: Future[str],
     ) -> None:
         jobid = jobid_future.result()
         if self.debug:
@@ -657,18 +657,7 @@ class ClusterExecutor(futures.Executor):
 
         return result_generator()
 
-    def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
-        futs = self.map_to_futures(fn, args)
-
-        # Return a separate generator to avoid that map_unordered
-        # is executed lazily.
-        def result_generator() -> Iterator[_T]:
-            for fut in futures.as_completed(futs):
-                yield fut.result()
-
-        return result_generator()
-
-    def forward_log(self, fut: "Future[_T]") -> _T:
+    def forward_log(self, fut: Future[_T]) -> _T:
         """
         Takes a future from which the log file is forwarded to the active
         process. This method blocks as long as the future is not done.

@@ -21,7 +21,7 @@ typing-extensions = "^4.4.0"
 [tool.poetry.group.dev.dependencies]
 icecream = "^2.1.1"
 mypy = "^1.0.0"
-pytest = "^7.2.1"
+pytest = "^8.3.3"
 ruff = "^0.5.0"
 
 [build-system]
@@ -56,8 +56,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.8 for automatic linting fixes
-target-version = "py38"
+# Assume Python 3.9 for automatic linting fixes
+target-version = "py39"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f

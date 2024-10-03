@@ -39,7 +39,7 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--distribution_strategy",
         default="multiprocessing",
-        choices=["slurm", "kubernetes", "multiprocessing", "debug_sequential"],
+        choices=["slurm", "kubernetes", "multiprocessing", "sequential"],
         help="Strategy to distribute the task across CPUs or nodes.",
     )
 

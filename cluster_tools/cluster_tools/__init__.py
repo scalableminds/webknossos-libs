@@ -2,10 +2,10 @@ from typing import Any, Literal, overload
 
 from cluster_tools.executor_protocol import Executor
 from cluster_tools.executors.dask import DaskExecutor
-from cluster_tools.executors.debug_sequential import DebugSequentialExecutor
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
-from cluster_tools.executors.pickle_ import PickleExecutor
+from cluster_tools.executors.multiprocessing_pickle import MultiprocessingPickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
+from cluster_tools.executors.sequential_pickle import SequentialPickleExecutor
 from cluster_tools.schedulers.cluster_executor import (
     ClusterExecutor,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
     RemoteOutOfMemoryException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
@@ -79,20 +79,20 @@ def get_executor(
 
 @overload
 def get_executor(
+    environment: Literal["multiprocessing_with_pickling"], **kwargs: Any
+) -> MultiprocessingPickleExecutor: ...
+
+
+@overload
+def get_executor(
     environment: Literal["sequential"], **kwargs: Any
 ) -> SequentialExecutor: ...
 
 
 @overload
 def get_executor(
-    environment: Literal["debug_sequential"], **kwargs: Any
-) -> DebugSequentialExecutor: ...
-
-
-@overload
-def get_executor(
-    environment: Literal["test_pickling"], **kwargs: Any
-) -> PickleExecutor: ...
+    environment: Literal["sequential_with_pickling"], **kwargs: Any
+) -> SequentialPickleExecutor: ...
 
 
 def get_executor(environment: str, **kwargs: Any) -> "Executor":
@@ -116,8 +116,8 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         return MultiprocessingExecutor(**kwargs)
     elif environment == "sequential":
         return SequentialExecutor(**kwargs)
-    elif environment == "debug_sequential":
-        return DebugSequentialExecutor(**kwargs)
-    elif environment == "test_pickling":
-        return PickleExecutor(**kwargs)
+    elif environment == "sequential_with_pickling":
+        return SequentialPickleExecutor(**kwargs)
+    elif environment == "multiprocessing_with_pickling":
+        return MultiprocessingPickleExecutor(**kwargs)
     raise Exception("Unknown executor: {}".format(environment))
