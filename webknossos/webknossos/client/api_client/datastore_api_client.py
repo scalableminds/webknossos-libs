@@ -59,11 +59,11 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_trigger_reload(
         self,
-        organization_name: str,
+        organization_id: str,
         dataset_name: str,
         token: Optional[str] = None,
     ) -> None:
-        route = f"/triggers/reload/{organization_name}/{dataset_name}"
+        route = f"/triggers/reload/{organization_id}/{dataset_name}"
         query: Query = {"token": token}
         self._post(route, query=query)
 
@@ -78,7 +78,7 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_get_raw_data(
         self,
-        organization_name: str,
+        organization_id: str,
         dataset_name: str,
         data_layer_name: str,
         mag: str,
@@ -90,7 +90,9 @@ class DatastoreApiClient(AbstractApiClient):
         height: int,
         depth: int,
     ) -> Tuple[bytes, str]:
-        route = f"/datasets/{organization_name}/{dataset_name}/layers/{data_layer_name}/data"
+        route = (
+            f"/datasets/{organization_id}/{dataset_name}/layers/{data_layer_name}/data"
+        )
         query: Query = {
             "mag": mag,
             "x": x,
