@@ -161,17 +161,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: "x64"
-
-      - name: Install dependencies
-        run: |
-          pip install -r ../requirements.txt
-          poetry install --extras all --with examples --with dev
-
+          # Install a specific version of uv.
+          version: "0.4.19"
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+      
       - name: Check formatting
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./format.sh check
