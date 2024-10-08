@@ -4,6 +4,7 @@
 [![Build Status](https://img.shields.io/github/actions/workflow/status/scalableminds/webknossos-libs/.github/workflows/ci.yml?branch=master)](https://github.com/scalableminds/webknossos-libs/actions?query=workflow%3A%22CI%22)
 [![Documentation](https://img.shields.io/badge/docs-passing-brightgreen.svg)](https://docs.webknossos.org/webknossos-py)
 [![Code Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 
 Python API for working with [WEBKNOSSOS](https://webknossos.org) datasets, annotations, and for WEBKNOSSOS server interaction.
 
@@ -48,8 +49,6 @@ The dependencies for the examples are not installed by default. Use `poetry inst
 
 ## Contributions & Development
 Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/development.html).
-
-The development dependencies not installed by default. Use `poetry install --with dev` to install them.
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)
