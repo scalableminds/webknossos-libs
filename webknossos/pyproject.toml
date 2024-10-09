@@ -102,7 +102,7 @@ dev-dependencies = [
     "pytest-timeout ~=2.3.0",
     "pytest-timestamper ~=0.0.10",
     "types-python-dateutil ~=2.9",
-    "ruff ~=0.5",
+    "ruff ~=0.6.0",
 ]
 
 [tool.uv.sources]
