@@ -204,17 +204,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: "3.10"
-
+          # Install a specific version of uv.
+          version: "0.4.19"
       - name: Write version file
         run: |
           pip install -r requirements.txt
           pushd webknossos
 
-          PKG_VERSION="$(dunamai from git)"
+          PKG_VERSION="$(uvx dunamai from git)"
           echo "__version__ = '$PKG_VERSION'" > ./webknossos/version.py
           poetry version "$PKG_VERSION"
 
@@ -339,20 +339,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: 3.8
-          architecture: "x64"
-      - name: Install dependencies
-        run: pip3 install -r requirements.txt
+          # Install a specific version of uv.
+          version: "0.4.19"
+      - name: Set up Python 3.9
+        run: uv python install 3.9
       - name: Publish python packages
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_PASSWORD }}
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
         run: _tooling/publish.sh
       - name: Prepare github release
         run: |
-          VERSION="$(dunamai from git)"
+          VERSION="$(uvx dunamai from git)"
           _tooling/changelog_for_version.sh $VERSION > Changelog.md
       - name: Publish github release
         id: create_release

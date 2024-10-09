@@ -182,7 +182,7 @@ markers = ["with_vcr: Runs with VCR recording and optionally blocked network"]
 testpaths = ["tests"]
 
 [build-system]
-requires = ["setuptools>=70.0", "dunamai==1.18.1", "wheel; python_version>='3.12'"]
+requires = ["setuptools>=70.0", "wheel; python_version>='3.12'"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
