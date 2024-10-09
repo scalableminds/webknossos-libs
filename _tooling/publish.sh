@@ -14,8 +14,8 @@ for PKG in {cluster_tools,webknossos}/pyproject.toml; do
     echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
 
     poetry version "$PKG_VERSION"
-    # replace all relative path dependencies with the current version:
-    sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
+    # replace relative path dependencies (i.e. cluster-tools) with the current version:
+    sed -i 's/"cluster-tools"/"cluster-tools=='"${PKG_VERSION}"'"/g' pyproject.toml    
     
     uv build
     uv publish
