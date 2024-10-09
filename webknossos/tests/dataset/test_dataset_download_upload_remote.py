@@ -8,8 +8,6 @@ import pytest
 
 import webknossos as wk
 
-pytestmark = [pytest.mark.with_vcr]
-
 
 @pytest.fixture(scope="module")
 def sample_bbox() -> wk.BoundingBox:

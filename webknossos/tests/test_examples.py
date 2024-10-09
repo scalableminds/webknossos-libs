@@ -15,8 +15,6 @@ from scipy.spatial import cKDTree
 import webknossos as wk
 from webknossos.client.api_client.errors import UnexpectedStatusError
 
-pytestmark = [pytest.mark.with_vcr]
-
 
 @contextmanager
 def tmp_cwd() -> Iterator[None]:
@@ -119,8 +117,6 @@ def test_image_stack_to_dataset() -> None:
         assert dataset.get_layer("test").dtype_per_channel == "uint8"
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
@@ -135,8 +131,6 @@ def test_apply_merger_mode() -> None:
     )
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_calculate_segment_sizes() -> None:
     import examples.calculate_segment_sizes as example
 
@@ -165,8 +159,6 @@ def test_skeleton_synapse_candidates() -> None:
 
 # Allowing requests to download the cells3d dataset via pooch,
 # which are not snapshotted
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["gitlab.com"])
 def test_upload_image_data() -> None:
     with tmp_cwd():
         import examples.upload_image_data as example
@@ -179,8 +171,6 @@ def test_upload_image_data() -> None:
         assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_image_data() -> None:
     with tmp_cwd():
         import examples.download_image_data as example
@@ -222,8 +212,6 @@ class _DummyNearestNeighborClassifier:
 
 
 @pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_learned_segmenter() -> None:
     with tmp_cwd():
         from skimage.future import trainable_segmentation
@@ -277,8 +265,6 @@ def test_remote_datasets() -> None:
 
 
 @pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 @pytest.mark.skipif(
     sys.version_info <= (3, 9), reason="Dask only supports Python >= 3.9"
 )
@@ -313,8 +299,6 @@ def test_upload_dicom_stack() -> None:
 
 
 @pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_segments() -> None:
     import examples.download_segments as example
 
@@ -331,8 +315,6 @@ def test_download_segments() -> None:
 
 
 @pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_tiff_stack() -> None:
     import examples.download_tiff_stack as example
 
@@ -348,8 +330,6 @@ def test_download_tiff_stack() -> None:
         )
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_skeleton_path_length() -> None:
     from examples.skeleton_path_length import calculate_path_length
 

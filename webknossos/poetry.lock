@@ -2326,25 +2326,6 @@ files = [
 pytest = ">=4.0.2"
 
 [[package]]
-name = "pytest-recording"
-version = "0.13.2"
-description = "A pytest plugin that allows you recording of network interactions via VCR.py"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "pytest_recording-0.13.2-py3-none-any.whl", hash = "sha256:3820fe5743d1ac46e807989e11d073cb776a60bdc544cf43ebca454051b22d13"},
-    {file = "pytest_recording-0.13.2.tar.gz", hash = "sha256:000c3babbb466681457fd65b723427c1779a0c6c17d9e381c3142a701e124877"},
-]
-
-[package.dependencies]
-pytest = ">=3.5.0"
-vcrpy = ">=2.0.1"
-
-[package.extras]
-dev = ["pytest-httpbin", "pytest-mock", "requests", "werkzeug (==3.0.3)"]
-tests = ["pytest-httpbin", "pytest-mock", "requests", "werkzeug (==3.0.3)"]
-
-[[package]]
 name = "pytest-split"
 version = "0.9.0"
 description = "Pytest plugin which splits the test suite to equally sized sub suites based on test execution time."
@@ -3150,25 +3131,6 @@ files = [
 crypto-eth-addresses = ["eth-hash[pycryptodome] (>=0.7.0)"]
 
 [[package]]
-name = "vcrpy"
-version = "6.0.1"
-description = "Automatically mock your HTTP interactions to simplify and speed up testing"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "vcrpy-6.0.1.tar.gz", hash = "sha256:9e023fee7f892baa0bbda2f7da7c8ac51165c1c6e38ff8688683a12a4bde9278"},
-]
-
-[package.dependencies]
-PyYAML = "*"
-urllib3 = {version = "<2", markers = "platform_python_implementation == \"PyPy\" or python_version < \"3.10\""}
-wrapt = "*"
-yarl = "*"
-
-[package.extras]
-tests = ["Werkzeug (==2.0.3)", "aiohttp", "boto3", "httplib2", "httpx", "pytest", "pytest-aiohttp", "pytest-asyncio", "pytest-cov", "pytest-httpbin", "requests (>=2.22.0)", "tornado", "urllib3"]
-
-[[package]]
 name = "wkw"
 version = "1.1.24"
 description = ""
@@ -3519,4 +3481,4 @@ tifffile = ["tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "0a4a2ed483ee86799a8bd13b74d6e0f945402e2f48f846871e9b85f671d31060"
+content-hash = "95d1c1a02d3c7f53038e7b23536712b1fb304d52252a53893f7f2f03faed9782"

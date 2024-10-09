@@ -56,8 +56,6 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
 ]
 
-pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
-
 
 def copy_simple_dataset(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
