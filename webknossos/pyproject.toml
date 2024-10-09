@@ -65,13 +65,23 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/webkno
 [project.optional-dependencies]
 tifffile = ["tifffile >=2024.8.24"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
-bioformats = ["JPype1 ~=1.3.0"]
+bioformats = ["JPype1 ~=1.5.0"]
 czi = ["pylibCZIrw ==4.1.1"]
+examples = [
+    "fastremap ~=1.15.0",
+    "pandas ~=2.2.0",
+    "pooch ~=1.5.2",
+    "s3fs >=2023.9.0",
+    "tabulate >=0.9.0",
+    "scikit-learn ~=1.5.1",
+    "scikit-image ~=0.24.0"
+]
 all = [
-    "tifffile>=2024.8.24",
-    "imagecodecs>=2021.11.20",
-    "JPype1~=1.3.0",
-    "pylibCZIrw==4.1.1",
+    "webknossos[tifffile]",
+    "webknossos[imagecodecs]",
+    "webknossos[bioformats]",
+    "webknossos[czi]",
+    "webknossos[examples]",
 ]
 
 [tool.uv]
@@ -86,6 +96,7 @@ dev-dependencies = [
     "pytest ~=8.3.2",
     "pytest-custom-exit-code ~=0.3.0",
     "pytest-recording ~=0.13.0",
+    "vcrpy ~=5.1",
     "pytest-split ~=0.9.0",
     "pytest-sugar ~=1.0.0",
     "pytest-timeout ~=2.3.0",
@@ -93,19 +104,6 @@ dev-dependencies = [
     "types-python-dateutil ~=2.9",
     "ruff ~=0.5",
 ]
-
-# [tool.poetry.group.examples]
-# optional = true
-
-# [tool.poetry.group.examples.dependencies]
-# # packages for examples:
-# fastremap = "^1.15.0"
-# pandas = "^2"
-# pooch = "^1.5.2"
-# s3fs = ">=2023.9.0"
-# tabulate = "^0.9"
-# scikit-learn = "^1.0.1"
-# scikit-image = "^0.24.0"
 
 [tool.uv.sources]
 cluster-tools = { path = "../cluster_tools", editable = true }
@@ -149,8 +147,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.8 for automatic linting fixes
-target-version = "py38"
+# Assume Python 3.9 for automatic linting fixes
+target-version = "py39"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
@@ -186,9 +184,9 @@ testpaths = ["tests"]
 [build-system]
 requires = ["setuptools>=70.0", "dunamai==1.18.1", "wheel; python_version>='3.12'"]
 build-backend = "setuptools.build_meta"
-include = [
-    "webknossos/version.py",
-] # included explicitly since it's in .gitignore
 
 [tool.setuptools]
 packages = ["webknossos"]
+# include = [
+#     "webknossos/version.py",
+# ] # included explicitly since it's in .gitignore
