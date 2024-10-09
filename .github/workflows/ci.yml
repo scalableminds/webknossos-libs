@@ -211,14 +211,13 @@ jobs:
           version: "0.4.19"
       - name: Write version file
         run: |
-          pip install -r requirements.txt
           pushd webknossos
 
           PKG_VERSION="$(uvx dunamai from git)"
           echo "__version__ = '$PKG_VERSION'" > ./webknossos/version.py
           poetry version "$PKG_VERSION"
 
-            popd
+          popd
 
       - name: Build docker image
         run: docker build -t scalableminds/webknossos-cli:$GITHUB_SHA -f webknossos/Dockerfile .
@@ -290,7 +289,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip3 install -r requirements.txt
+          pip3 install poetry==1.8
 
       - name: Build Docs
         run: |
