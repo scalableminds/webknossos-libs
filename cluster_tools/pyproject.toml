@@ -1,32 +1,37 @@
-[tool.poetry]
+[project]
 name = "cluster_tools"
 version = "0.0.0"  # filled by dunamai
 description = "Utility library for easily distributing code execution on clusters"
-authors = ["scalable minds <hello@scalableminds.com>"]
+authors = [{name= "scalable minds", email="hello@scalableminds.com"}] 
 readme = "README.md"
-license = "MIT"
-repository = "https://github.com/scalableminds/webknossos-libs"
+license = {text = "MIT"}
+requires-python = ">=3.9"
 
-[tool.poetry.extras]
-kubernetes = ["kubernetes"]
-dask = ["distributed"]
-all = ["kubernetes", "distributed"]
+[project.urls]
+Repository = "https://github.com/scalableminds/webknossos-libs"
+Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/Changelog.md"
 
-[tool.poetry.dependencies]
-python = ">=3.9"
-distributed = { version = "^2023.9.1", python = ">=3.9", optional = true }
-kubernetes = {version = "^27.2.0", optional = true }
-typing-extensions = "^4.4.0"
 
-[tool.poetry.group.dev.dependencies]
-icecream = "^2.1.1"
-mypy = "^1.0.0"
-pytest = "^7.2.1"
-ruff = "^0.5.0"
+[project.optional-dependencies]
+kubernetes = ["distributed ~=2023.9.1"]
+dask = ["kubernetes ~=27.2.0"]
+all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
+
+[tool.uv]
+dev-dependencies = [
+    "typing-extensions ~=4.4.0",
+    "icecream ~=2.1.1",
+    "mypy ~=1.0.0",
+    "pytest ~=7.2.1",
+    "ruff ~=0.5.0",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=70.0", "wheel; python_version>='3.12'"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["cluster_tools"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -56,8 +61,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.8 for automatic linting fixes
-target-version = "py38"
+# Assume Python 3.9 for automatic linting fixes
+target-version = "py39"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
