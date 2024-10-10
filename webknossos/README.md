@@ -4,6 +4,7 @@
 [![Build Status](https://img.shields.io/github/actions/workflow/status/scalableminds/webknossos-libs/.github/workflows/ci.yml?branch=master)](https://github.com/scalableminds/webknossos-libs/actions?query=workflow%3A%22CI%22)
 [![Documentation](https://img.shields.io/badge/docs-passing-brightgreen.svg)](https://docs.webknossos.org/webknossos-py)
 [![Code Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 
 Python API for working with [WEBKNOSSOS](https://webknossos.org) datasets, annotations, and for WEBKNOSSOS server interaction.
 
@@ -27,13 +28,15 @@ For the WEBKNOSSOS server, please refer to https://github.com/scalableminds/webk
 Please refer to [the documentation for further instructions](https://docs.webknossos.org/webknossos-py).
 
 ## Installation
-The `webknossos` package requires at least Python 3.8.
+The `webknossos` package requires at least Python 3.9.
 
 You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via pip:
 
 ```bash
 pip install webknossos
 ```
+
+To install `webknossos` with the depencies for all examples, support for CZI files, and BioFormats conversions, run: `pip install webknossos[all]`.
 
 By default `webknossos` can only distribute any computations through multiprocessing or Slurm. For Kubernetes or Dask install these additional dependencies:
 
@@ -44,12 +47,10 @@ pip install cluster_tools[dask]
 
 ## Examples
 See the [examples folder](examples) or the [the documentation](https://docs.webknossos.org/webknossos-py).
-The dependencies for the examples are not installed by default. Use `poetry install --with examples` to install them.
+The dependencies for the examples are not installed by default. Use `pip install webknossos[examples]` to install them.
 
 ## Contributions & Development
 Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/development.html).
-
-The development dependencies not installed by default. Use `poetry install --with dev` to install them.
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)

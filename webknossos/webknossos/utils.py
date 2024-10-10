@@ -340,9 +340,10 @@ def copytree(in_path: Path, out_path: Path) -> None:
         if in_sub_path.is_dir():
             _append(out_path, sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with _append(in_path, sub_path).open("rb") as in_file, _append(
-                out_path, sub_path
-            ).open("wb") as out_file:
+            with (
+                _append(in_path, sub_path).open("rb") as in_file,
+                _append(out_path, sub_path).open("wb") as out_file,
+            ):
                 copyfileobj(in_file, out_file)
 
 

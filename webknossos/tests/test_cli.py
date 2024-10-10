@@ -93,9 +93,12 @@ def test_tiff_cubing_zarr_s3() -> None:
     assert (out_path / "tiff" / "1" / ".zarray").exists()
     assert (out_path / PROPERTIES_FILE_NAME).exists()
 
-    with (out_path / PROPERTIES_FILE_NAME).open("r") as file, (
-        TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json"
-    ).open("r") as fixture:
+    with (
+        (out_path / PROPERTIES_FILE_NAME).open("r") as file,
+        (TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json").open(
+            "r"
+        ) as fixture,
+    ):
         json_a = json.load(file)
         json_fixture = json.load(fixture)
         del json_a["id"]

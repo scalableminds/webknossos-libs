@@ -81,9 +81,9 @@ docker exec -it slurmctld bash
 docker exec -it c1 bash
 ```
 
-Make sure to install all extra dependencies, such as Kubernetes, with `poetry install --all-extras`.
+Make sure to install all extra dependencies, such as Kubernetes, with `uv sync --all-extras`.
 
-Tests can be executed with `cd tests && poetry run pytest -s tests.py` after entering the container.
+Tests can be executed with `cd tests && uv run pytest -s tests.py` after entering the container.
 Linting can be run with `./lint.sh`.
 Code formatting (black) can be run with `./format.sh`.
 

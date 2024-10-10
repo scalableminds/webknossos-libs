@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `add_mag_from_zarrarray` to `Layer` class, to add existing Zarr arrays as a mag of a layer. [#1151](https://github.com/scalableminds/webknossos-libs/pull/1151)
 
 ### Changed
+- Replaced the Python package manager `poetry` with `uv`. [#1199](https://github.com/scalableminds/webknossos-libs/pull/1199)
 
 ### Fixed
 

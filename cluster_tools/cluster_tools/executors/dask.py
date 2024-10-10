@@ -118,7 +118,7 @@ class DaskExecutor(futures.Executor):
             import distributed  # noqa: F401 unused import
         except ModuleNotFoundError:
             logger.error(
-                'The distributed Python package for Dask is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[dask]` or `poetry install --extras "dask"` to install Dask support.'
+                'The distributed Python package for Dask is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[dask]` or `uv sync --extra "dask"` to install Dask support.'
             )
             exit()
 
