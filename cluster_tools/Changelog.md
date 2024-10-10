@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Replaced the Python package manager `poetry` with `uv`. [#1199](https://github.com/scalableminds/webknossos-libs/pull/1199)
 
 ### Fixed
 

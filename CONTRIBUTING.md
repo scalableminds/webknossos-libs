@@ -106,7 +106,7 @@ See below for specifics of the different packages. Let's have a look at the comm
   Use `uv sync --all-extras` in each package folder to install all dependencies for development.
   By default, this creates a [virtual environment](https://docs.python.org/3/tutorial/venv.html) for each package.
   To run commands inside this package, prefix them with `uv run`, e.g. `uv run python myscript.py`,
-  or enter the virtual environment with `poetry shell`.
+  or enter the virtual environment with `source .venv/bin/activate`.
 
   To install the dependencies for all sub-projects, run `make install`.
   
