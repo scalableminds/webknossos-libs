@@ -87,7 +87,6 @@ jobs:
           ./kind create cluster --config=tests/cluster-config.yaml
           ./kind export kubeconfig
 
-          cp ../requirements.txt .
           docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
           ./kind load docker-image scalableminds/cluster-tools:latest
 
