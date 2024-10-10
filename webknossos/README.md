@@ -28,13 +28,15 @@ For the WEBKNOSSOS server, please refer to https://github.com/scalableminds/webk
 Please refer to [the documentation for further instructions](https://docs.webknossos.org/webknossos-py).
 
 ## Installation
-The `webknossos` package requires at least Python 3.8.
+The `webknossos` package requires at least Python 3.9.
 
 You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via pip:
 
 ```bash
 pip install webknossos
 ```
+
+To install `webknossos` with the depencies for all examples, support for CZI files, and BioFormats conversions, run: `pip install webknossos[all]`.
 
 By default `webknossos` can only distribute any computations through multiprocessing or Slurm. For Kubernetes or Dask install these additional dependencies:
 
@@ -45,7 +47,7 @@ pip install cluster_tools[dask]
 
 ## Examples
 See the [examples folder](examples) or the [the documentation](https://docs.webknossos.org/webknossos-py).
-The dependencies for the examples are not installed by default. Use `poetry install --with examples` to install them.
+The dependencies for the examples are not installed by default. Use `pip install webknossos[examples]` to install them.
 
 ## Contributions & Development
 Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/development.html).

@@ -13,7 +13,10 @@ for PKG in {cluster_tools,webknossos}/pyproject.toml; do
 
     echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
 
-    poetry version "$PKG_VERSION"
+    # Update version number in pyproject.toml
+    sed -i 's/version = "0.0.0"/version = '"${PKG_VERSION}"'"/g' pyproject.toml    
+
+    # poetry version "$PKG_VERSION"
     # replace relative path dependencies (i.e. cluster-tools) with the current version:
     sed -i 's/"cluster-tools"/"cluster-tools=='"${PKG_VERSION}"'"/g' pyproject.toml    
     
