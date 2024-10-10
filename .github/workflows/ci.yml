@@ -118,7 +118,7 @@ jobs:
         run: |
           cd tests
           PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
-            uv run python -m pytest -sv test_all.py test_multiprocessing.py
+            uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
 
       - name: Run slurm tests
         if: ${{ matrix.executors == 'slurm' }}
@@ -127,22 +127,22 @@ jobs:
           docker exec \
             -w /cluster_tools/tests \
             -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "uv run python -m pytest -sv test_all.py test_slurm.py"
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py"
           docker exec \
             -w /cluster_tools/tests \
-            slurmctld bash -c "uv run python test_deref_main.py"
+            slurmctld bash -c "uv run --frozen python test_deref_main.py"
 
       - name: Run kubernetes tests
         if: ${{ matrix.executors == 'kubernetes' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=kubernetes uv run python -m pytest -sv test_all.py test_kubernetes.py
+          PYTEST_EXECUTORS=kubernetes uv run --frozen python -m pytest -sv test_all.py test_kubernetes.py
 
       - name: Run dask tests
         if: ${{ matrix.executors == 'dask' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=dask uv run python -m pytest -sv test_all.py test_dask.py
+          PYTEST_EXECUTORS=dask uv run --frozen python -m pytest -sv test_all.py test_dask.py
 
   webknossos_linux:
     needs: changes

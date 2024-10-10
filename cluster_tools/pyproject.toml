@@ -19,7 +19,7 @@ all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 
 [tool.uv]
 dev-dependencies = [
-    "typing-extensions ~=4.4.0",
+    "typing-extensions ~=4.12.0",
     "icecream ~=2.1.1",
     "mypy ~=1.0.0",
     "pytest ~=7.2.1",
