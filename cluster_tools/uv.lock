@@ -168,6 +168,7 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -184,6 +185,7 @@ dev = [
     { name = "mypy", specifier = "~=1.0.0" },
     { name = "pytest", specifier = "~=7.2.1" },
     { name = "ruff", specifier = "~=0.5.0" },
+    { name = "typing-extensions", specifier = "~=4.4.0" },
 ]
 
 [[package]]
