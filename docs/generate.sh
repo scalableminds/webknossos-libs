@@ -9,10 +9,10 @@ if [ ! -d "wk-repo" ]; then
     exit 1
 fi
 rm -rf src/api/webknossos
-PYTHONPATH=$PYTHONPATH uv run python generate_api_doc_pages.py
+uv run --frozen python generate_api_doc_pages.py 
 
 if [ $# -eq 1 ] && [ "$1" = "--persist" ]; then
-    PYTHONPATH=$PYTHONPATH uv run mkdocs build
+    uv run mkdocs build
 else
-    PYTHONPATH=$PYTHONPATH uv run mkdocs serve -a localhost:8197 --watch-theme
+    uv run mkdocs serve -a localhost:8197 --watch-theme
 fi
