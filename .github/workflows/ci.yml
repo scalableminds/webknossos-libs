@@ -215,7 +215,7 @@ jobs:
 
           PKG_VERSION="$(uvx dunamai from git)"
           echo "__version__ = '$PKG_VERSION'" > ./webknossos/version.py
-          sed -i 's/version = "0.0.0"/version = '"${PKG_VERSION}"'"/g' pyproject.toml
+          sed -i 's/version = "0.0.0"/version = "'"${PKG_VERSION}"'"/g' pyproject.toml
 
           popd
 
