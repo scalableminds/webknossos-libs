@@ -44,11 +44,14 @@ jobs:
         working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: "x64"
+          # Install a specific version of uv.
+          version: "0.4.19"
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
       - name: Build/pull dockered-slurm image
         if: ${{ matrix.executors == 'slurm' }}
         run: |
@@ -70,9 +73,9 @@ jobs:
           docker logs c2
 
           # Run setup.py on all three nodes
-          docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
-          docker exec -w /cluster_tools c1 bash -c "poetry install" &
-          docker exec -w /cluster_tools c2 bash -c "poetry install" &
+          docker exec -w /cluster_tools slurmctld bash -c "uv sync --frozen" &
+          docker exec -w /cluster_tools c1 bash -c "uv sync --frozen" &
+          docker exec -w /cluster_tools c2 bash -c "uv sync --frozen" &
           wait
 
       - name: Setup Kubernetes-in-Docker
@@ -91,14 +94,12 @@ jobs:
       - name: Install dependencies (without docker)
         if: ${{ matrix.executors == 'multiprocessing' }}
         run: |
-          pip install -r ../requirements.txt
-          poetry install
+          uv sync --frozen
 
       - name: Install dependencies (without docker)
         if: ${{ matrix.executors == 'kubernetes' || matrix.executors == 'dask' }}
         run: |
-          pip install -r ../requirements.txt
-          poetry install --all-extras
+          uv sync --all-extras --frozen
 
       - name: Check typing
         if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version == '3.11' }}
@@ -117,7 +118,7 @@ jobs:
         run: |
           cd tests
           PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
-            poetry run python -m pytest -sv test_all.py test_multiprocessing.py
+            uv run python -m pytest -sv test_all.py test_multiprocessing.py
 
       - name: Run slurm tests
         if: ${{ matrix.executors == 'slurm' }}
@@ -126,22 +127,22 @@ jobs:
           docker exec \
             -w /cluster_tools/tests \
             -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "poetry run python -m pytest -sv test_all.py test_slurm.py"
+            slurmctld bash -c "uv run python -m pytest -sv test_all.py test_slurm.py"
           docker exec \
             -w /cluster_tools/tests \
-            slurmctld bash -c "poetry run python test_deref_main.py"
+            slurmctld bash -c "uv run python test_deref_main.py"
 
       - name: Run kubernetes tests
         if: ${{ matrix.executors == 'kubernetes' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
+          PYTEST_EXECUTORS=kubernetes uv run python -m pytest -sv test_all.py test_kubernetes.py
 
       - name: Run dask tests
         if: ${{ matrix.executors == 'dask' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=dask poetry run python -m pytest -sv test_all.py test_dask.py
+          PYTEST_EXECUTORS=dask uv run python -m pytest -sv test_all.py test_dask.py
 
   webknossos_linux:
     needs: changes
