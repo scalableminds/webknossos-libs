@@ -191,7 +191,7 @@ jobs:
 
       - name: Check if git is dirty
         run: |
-          git diff --no-ext-diff --quiet --exit-code
+          git diff --no-ext-diff --exit-code
           [[ -z $(git status -s) ]]
 
   webknossos_cli_docker:
