@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
-uv run ruff check --fix .
+uv run --frozen ruff check --fix .

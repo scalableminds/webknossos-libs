@@ -7,6 +7,7 @@ COPY . /cluster_tools
 
 WORKDIR /cluster_tools
 
-RUN uv export --all-extras --output-file requirements.txt
-RUN uv pip sync --system requirements.txt
+RUN uv export --all-extras --output-file requirements.txt && \
+    uv pip sync --system requirements.txt && \
+    uv cache clear
 

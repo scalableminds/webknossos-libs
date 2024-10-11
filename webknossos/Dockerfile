@@ -16,5 +16,6 @@ COPY cluster_tools/README.md /cluster_tools/
 
 WORKDIR /webknossos
 
-RUN uv venv --system-site-packages
-RUN uv sync --all-extras --frozen
+RUN uv export --all-extras --output-file requirements.txt && \
+    uv pip sync --system requirements.txt && \
+    uv cache clear
