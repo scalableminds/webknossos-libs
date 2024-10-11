@@ -7,6 +7,6 @@ COPY . /cluster_tools
 
 WORKDIR /cluster_tools
 
-RUN uv venv --system-site-packages
-RUN uv sync --all-extras --frozen
+RUN uv export --all-extras --output-file requirements.txt
+RUN uv pip sync --system requirements.txt
 
