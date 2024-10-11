@@ -18,4 +18,4 @@ WORKDIR /webknossos
 
 RUN uv export --all-extras --output-file requirements.txt && \
     uv pip sync --system requirements.txt && \
-    uv cache clear
+    uv cache clean
