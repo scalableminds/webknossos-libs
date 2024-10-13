@@ -243,7 +243,10 @@ class Group:
         )
 
     def __hash__(self) -> int:
-        return id(self)
+        if hasattr(self, "_id"):
+            return self._id
+        else:
+            return id(self)
 
 
 Group._set_init_docstring()
