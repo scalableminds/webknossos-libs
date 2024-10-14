@@ -177,7 +177,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.pytest.ini_options]
-markers = ["with_vcr: Runs with VCR recording and optionally blocked network"]
+markers = ["use_proxay: Runs with a proxay instance recording/replaying http responses", "serial"]
 testpaths = ["tests"]
 
 [tool.poetry.scripts]

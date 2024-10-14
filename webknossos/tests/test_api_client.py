@@ -5,6 +5,8 @@ from webknossos.client.api_client import WkApiClient
 from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client, webknossos_context
 
+pytestmark = [pytest.mark.use_proxay]
+
 DATASTORE_URL = "https://data-humerus.webknossos.org"
 
 

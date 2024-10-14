@@ -1,0 +1,186 @@
+http_interactions:
+  - request:
+      method: GET
+      path: /api/v7/user
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 14 Oct 2024 15:19:08 GMT
+        content-type: application/json
+        content-length: '680'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1728919100995,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+        compression: none
+  - request:
+      method: GET
+      path: /api/v7/datasets/Organization_X/l4_sample
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 14 Oct 2024 15:19:08 GMT
+        content-type: application/json
+        content-length: '1410'
+      body:
+        encoding: utf8
+        data: >-
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1728919148963,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+        compression: none
+  - request:
+      method: POST
+      path: /api/v7/userToken/generate
+      headers:
+        host: localhost:9000
+        content-length: '0'
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 14 Oct 2024 15:19:08 GMT
+        content-type: application/json
+        content-length: '34'
+      body:
+        encoding: utf8
+        data: '{"token":"liduygN0ljr54IJYvwkuAg"}'
+        compression: none
+  - request:
+      method: POST
+      path: /api/v7/annotations/upload
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        content-length: '974'
+        content-type: multipart/form-data; boundary=e5d8523e5e17019559853e9859c61544
+      body:
+        encoding: base64
+        data: >-
+          LS1lNWQ4NTIzZTVlMTcwMTk1NTk4NTNlOTg1OWM2MTU0NA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS1lNWQ4NTIzZTVlMTcwMTk1NTk4NTNlOTg1OWM2MTU0NA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgAZIpOWTVcUrThAQAA8AMAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZPLbt0gEIb3eQrEvucYX46NZCdSdpW6bZR2E/lCjlFtsAC3Tp6+MxhSJ2qlegMDM8z/eWbqu22eyE9hrNSqoeyUUCJUrweprg1d3fOnit7d3tRuhAN7e0NIvbSmnYWDEDThQGyLMHIWyhEFNw2d8ifbzsskKDkHH9u3kyAbZGCnNOPwlSVjrGKXnJKXvx+/NjStUFB8xEESMlvwLtOKM85yniTH+9b+uNerQvH3eiO9nrQ5teBPw75raHJKowWEEL17GbwpKBnE4saGwm4U8jo6v5X2QVrZTcDmzApYO6eDfE9dpzdKnF6+iGf3CLngyWB9e2d9361fcggJItZqhfkP2W8QKBulHoQDUhCO/zMqx70cPOQ/CL4qJBlITA+bDzApvPEHp2CQKZjIk1aUBCBM5onq8/sO2XvnUAws6a7dlyNjJUsuRckuBXw8h3f2W8+Z5UVVVUXOeZaXWZ5c4q0vWJWXKUsKzlPGi4SDmqvR6/IZoOF3ITvo3YvVEmeEoKEflR5E6F/oYLS8d0axRxNUCE3pV+hCv8ZqnQ+htRiuwkZsPyN+RDrTqn5ctFQu3vZ6xgmJMxNMIFUOjhvqJYBmXBsKOsK/PMbVHi4+4Q2vGsP84LU7/ltw9K/PcX5/A1BLAQIUAxQAAAAIAGSKTlk1XFK04QEAAPADAAAfAAAAAAAAAAAAAACAAQAAAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sUEsFBgAAAAABAAEATQAAAB4CAAAAAA0KLS1lNWQ4NTIzZTVlMTcwMTk1NTk4NTNlOTg1OWM2MTU0NC0tDQo=
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 14 Oct 2024 15:19:08 GMT
+        content-type: application/json
+        content-length: '124'
+      body:
+        encoding: utf8
+        data: >-
+          {"annotation":{"typ":"Explorational","id":"670d366d010000a00030b24f"},"messages":[{"success":"Successfully
+          uploaded file"}]}
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /api/v7/annotations/670d366d010000a00030b24f/download?skipVolumeData=false
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 14 Oct 2024 15:19:09 GMT
+        content-type: application/xml
+        content-length: '1684'
+      body:
+        encoding: utf8
+        data: |-
+          <things>
+            <meta name="writer" content="NmlWriter.scala"/>
+            <meta name="writerGitCommit" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"/>
+            <meta name="timestamp" content="1728919150046"/>
+            <meta name="annotationId" content="670d366d010000a00030b24f"/>
+            <meta name="username" content="user_A BoyA"/>
+            <parameters>
+              <experiment name="l4_sample" organization="Organization_X" description="" wkUrl="http://localhost:9000"/>
+              <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
+              <offset x="0" y="0" z="0"/>
+              <time ms="1728919149680"/>
+              <editPosition x="0" y="0" z="0"/>
+              <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
+              <zoomLevel zoom="2.0"/>
+              <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.9168231063646578" color.g="0.2877605680689834" color.b="0.32207026328371147" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+            </parameters>
+            <thing id="2" color.r="0.8472105860710144" color.g="0.34588855504989624" color.b="0.31710657477378845" color.a="1.0" name="a tree" groupId="1">
+              <nodes>
+                <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
+              </nodes>
+              <edges/>
+            </thing>
+            <branchpoints/>
+            <comments>
+              <comment node="3" content="node 1"/>
+            </comments>
+            <groups>
+              <group name="a group" id="1"/>
+            </groups>
+          </things>
+        compression: none

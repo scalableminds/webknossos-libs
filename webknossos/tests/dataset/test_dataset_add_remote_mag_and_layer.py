@@ -9,8 +9,6 @@ import webknossos as wk
 from webknossos import Dataset, MagView
 from webknossos.utils import is_remote_path
 
-pytestmark = [pytest.mark.with_vcr]
-
 
 @pytest.fixture(scope="module")
 def sample_bbox() -> wk.BoundingBox:
@@ -67,9 +65,6 @@ def test_add_remote_mags_from_mag_view(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-@pytest.mark.skip(
-    reason="The test is flaky when trying to fetch the required datasource-properties.json from data-humerus.webknossos.org. Disable it for now."
-)
 def test_add_remote_mags_from_path(
     sample_remote_mags: list[wk.MagView],
     sample_remote_dataset: wk.Dataset,
@@ -102,15 +97,11 @@ def test_add_remote_layer_from_object(
         layer_name = f"test_remote_layer_{layer.category}_object"
         sample_remote_dataset.add_remote_layer(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
-        assert (
-            is_remote_path(new_layer.path)
-            and layer.path.as_uri() == new_layer.path.as_uri()
+        assert is_remote_path(new_layer.path) and (
+            layer.path.as_uri() == new_layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."
 
 
-@pytest.mark.skip(
-    reason="The test is flaky when trying to fetch the required datasource-properties.json from data-humerus.webknossos.org. Disable it for now."
-)
 def test_add_remote_layer_from_path(
     sample_remote_layer: list[wk.Layer],
     sample_remote_dataset: wk.Dataset,
@@ -120,6 +111,6 @@ def test_add_remote_layer_from_path(
         layer_name = f"test_remote_layer_{layer.category}_path"
         sample_remote_dataset.add_remote_layer(UPath(layer.path), layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
-        assert (
-            is_remote_path(new_layer.path) and new_layer.path == layer.path
+        assert is_remote_path(new_layer.path) and (
+            new_layer.path.as_uri() == layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."

@@ -157,8 +157,7 @@ def test_skeleton_synapse_candidates() -> None:
     assert len(ids) == len(id_set), "Tree IDs are not unique."
 
 
-# Allowing requests to download the cells3d dataset via pooch,
-# which are not snapshotted
+@pytest.mark.use_proxay
 def test_upload_image_data() -> None:
     with tmp_cwd():
         import examples.upload_image_data as example
@@ -211,7 +210,7 @@ class _DummyNearestNeighborClassifier:
         return self.labels[nearest_neighbors]
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
+@pytest.mark.use_proxay
 def test_learned_segmenter() -> None:
     with tmp_cwd():
         from skimage.future import trainable_segmentation
@@ -239,6 +238,7 @@ def test_learned_segmenter() -> None:
             trainable_segmentation.RandomForestClassifier = old_default_classifier
 
 
+@pytest.mark.use_proxay
 def test_user_times() -> None:
     import examples.user_times as example
 
@@ -249,6 +249,7 @@ def test_user_times() -> None:
     assert "user_A@scalableminds.com" in df.index
 
 
+@pytest.mark.use_proxay
 def test_remote_datasets() -> None:
     import examples.remote_datasets as example
 
@@ -264,7 +265,6 @@ def test_remote_datasets() -> None:
     assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
 @pytest.mark.skipif(
     sys.version_info <= (3, 9), reason="Dask only supports Python >= 3.9"
 )
@@ -276,6 +276,7 @@ def test_zarr_and_dask() -> None:
     assert 123 < mean_value < 125
 
 
+@pytest.mark.use_proxay
 def test_upload_tiff_stack() -> None:
     import examples.upload_tiff_stack as example
 
@@ -287,6 +288,7 @@ def test_upload_tiff_stack() -> None:
         )
 
 
+@pytest.mark.use_proxay
 def test_upload_dicom_stack() -> None:
     import examples.upload_dicom_stack as example
 
@@ -298,7 +300,6 @@ def test_upload_dicom_stack() -> None:
         )
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
 def test_download_segments() -> None:
     import examples.download_segments as example
 
@@ -314,7 +315,6 @@ def test_download_segments() -> None:
         )
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
 def test_download_tiff_stack() -> None:
     import examples.download_tiff_stack as example
 

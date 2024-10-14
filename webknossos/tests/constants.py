@@ -53,7 +53,7 @@ def use_minio() -> Iterator[None]:
         container_name = "minio"
         cmd = (
             "docker run"
-            f" -p {MINIO_PORT}:8000"
+            f" -p {MINIO_PORT}:9000"
             f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
             f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
             f" --name {container_name}"

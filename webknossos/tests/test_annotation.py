@@ -221,6 +221,7 @@ def test_reading_bounding_boxes() -> None:
         check_properties(annotation_deserialized)
 
 
+@pytest.mark.use_proxay
 def test_bounding_box_roundtrip() -> None:
     ds = wk.Dataset.open_remote("l4_sample")
 
