@@ -101,7 +101,7 @@ def error_on_warnings() -> Generator:
 
 
 @pytest.fixture(autouse=True, scope="function")
-def use_replay_proxay(request) -> Generator:
+def use_replay_proxay(request: Any) -> Generator:
     testname = request.node.name
     if "use_proxay" in request.keywords:
         os.environ["HTTP_PROXY"] = "http://localhost:3000"
