@@ -38,7 +38,11 @@ from upath import UPath
 from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.geometry.vec_int import VecIntLike
 
-from ..client.api_client.models import ApiDataset, ApiMetadata
+from ..client.api_client.models import (
+    ApiDataset,
+    ApiDatasetExploreAndAddRemote,
+    ApiMetadata,
+)
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._utils import pims_images
@@ -72,6 +76,7 @@ from ..utils import (
     get_executor_for_args,
     infer_metadata_type,
     is_fs_path,
+    is_remote_path,
     named_partial,
     rmtree,
     strip_trailing_slash,
@@ -348,6 +353,15 @@ class Dataset:
 
             layer = self._initialize_layer_from_properties(layer_properties)
             self._layers[layer_properties.name] = layer
+            if layer.is_remote_to_dataset:
+                # The mags of remote layers need to have their path properly set.
+                for mag in layer.mags:
+                    mag_prop = next(
+                        mag_prop
+                        for mag_prop in layer_properties.mags
+                        if mag_prop.mag == mag
+                    )
+                    mag_prop.path = str(layer.mags[mag].path)
 
         if dataset_existed_already:
             if voxel_size_with_unit is None:
@@ -1686,6 +1700,49 @@ class Dataset:
         self._export_as_json()
         return self.layers[new_layer_name]
 
+    def add_remote_layer(
+        self,
+        foreign_layer: Union[str, UPath, Layer],
+        new_layer_name: Optional[str] = None,
+    ) -> Layer:
+        """
+        Adds a layer of another dataset to this dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        If new_layer_name is None, the name of the foreign layer is used.
+        """
+        self._ensure_writable()
+        foreign_layer = Layer._ensure_layer(foreign_layer)
+
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
+
+        if new_layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot add foreign layer {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+            )
+        assert (
+            foreign_layer.dataset.path != self.path
+        ), "Cannot add layer with the same origin dataset as foreign layer"
+        foreign_layer_path = foreign_layer.path
+
+        assert is_remote_path(
+            foreign_layer_path
+        ), f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_copy_layer instead."
+
+        layer_properties = copy.deepcopy(foreign_layer._properties)
+        for mag in layer_properties.mags:
+            mag.path = str(foreign_layer.mags[mag.mag].path)
+        layer_properties.name = new_layer_name
+        self._properties.data_layers += [layer_properties]
+        self._layers[new_layer_name] = self._initialize_layer_from_properties(
+            layer_properties
+        )
+
+        self._export_as_json()
+        return self.layers[new_layer_name]
+
     def add_fs_copy_layer(
         self,
         foreign_layer: Union[str, Path, Layer],
@@ -2201,6 +2258,25 @@ class RemoteDataset(Dataset):
             client.dataset_update_teams(
                 self._organization_id, self._dataset_name, team_ids
             )
+
+    @classmethod
+    def explore_and_add_remote(
+        cls, dataset_uri: Union[str, PathLike], dataset_name: str, folder_path: str
+    ) -> "RemoteDataset":
+        from ..client.context import _get_api_client
+
+        (context, dataset_name, organisation_id, sharing_token) = cls._parse_remote(
+            dataset_name
+        )
+
+        with context:
+            client = _get_api_client()
+            dataset = ApiDatasetExploreAndAddRemote(
+                UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+            )
+            client.dataset_explore_and_add_remote(dataset)
+
+            return cls.open_remote(dataset_name, organisation_id, sharing_token)
 
     @property
     def folder(self) -> RemoteFolder:

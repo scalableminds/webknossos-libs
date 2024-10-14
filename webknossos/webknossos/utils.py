@@ -13,7 +13,7 @@ from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
 from pathlib import Path
-from shutil import copyfileobj
+from shutil import copyfileobj, move
 from typing import (
     Any,
     Callable,
@@ -282,6 +282,17 @@ def is_fs_path(path: Path) -> bool:
     return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
 
 
+def is_remote_path(path: Path) -> bool:
+    return not is_fs_path(path)
+
+
+def is_writable_path(path: Path) -> bool:
+    from upath.implementations.http import HTTPPath
+
+    # cannot write to http paths
+    return not isinstance(path, HTTPPath)
+
+
 def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath):
         return UPath(
@@ -333,6 +344,10 @@ def copytree(in_path: Path, out_path: Path) -> None:
                 out_path, sub_path
             ).open("wb") as out_file:
                 copyfileobj(in_file, out_file)
+
+
+def movetree(in_path: Path, out_path: Path) -> None:
+    move(in_path, out_path)
 
 
 K = TypeVar("K")  # key
