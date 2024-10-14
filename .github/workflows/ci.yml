@@ -47,7 +47,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          # Install a specific version of uv.
           version: "0.4.19"
       
       - name: Set up Python ${{ matrix.python-version }}
@@ -318,7 +317,7 @@ jobs:
           SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
         run: |
           cd docs
-          uv run linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
+          uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
             curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
               "$SLACK_HOOK"
 
