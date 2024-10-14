@@ -7,10 +7,10 @@ readme = "README.md"
 requires-python = ">=3.9,<3.13"
 
 dependencies = [
+    "webknossos",
     "mkdocs-glightbox ~=0.4.0",
-    "mkdocstrings-python ~=1.10.8",
+    "mkdocstrings-python ~=1.12.1",
     "mkdocs-gen-files ~=0.5.0", 
-    "webknossos ~=0.0.0",
     "mkdocs-redirects ~=1.2.0",
     "mkdocs-video ~=1.5.0",
     "mkdocs-material ~=9.5.32",
@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-webknossos = { path = "../webknossos/", editable = true}
+webknossos = { path = "../webknossos"}
 mkdocs-video = {branch="master", git="https://github.com/calmzhu/mkdocs-video.git"}
 
 [build-system]

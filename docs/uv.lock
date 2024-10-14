@@ -390,6 +390,7 @@ dev = [
     { name = "mypy", specifier = "~=1.0.0" },
     { name = "pytest", specifier = "~=7.2.1" },
     { name = "ruff", specifier = "~=0.5.0" },
+    { name = "typing-extensions", specifier = "~=4.12.0" },
 ]
 
 [[package]]
@@ -826,14 +827,14 @@ wheels = [
 
 [[package]]
 name = "markdown"
-version = "3.3.7"
+version = "3.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "importlib-metadata", marker = "python_full_version < '3.10'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d6/58/79df20de6e67a83f0d0bbfe6c19bb82adf68cdf362885257eb01099f930a/Markdown-3.3.7.tar.gz", hash = "sha256:cbb516f16218e643d8e0a95b309f77eb118cb138d39a4f27851e6a63581db874", size = 324130 }
+sdist = { url = "https://files.pythonhosted.org/packages/54/28/3af612670f82f4c056911fbbbb42760255801b3068c48de792d354ff4472/markdown-3.7.tar.gz", hash = "sha256:2ae2471477cfd02dbbf038d5d9bc226d40def84b4fe2986e49b59b6b472bbed2", size = 357086 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/df/ca72f352e15b6f8ce32b74af029f1189abffb906f7c137501ffe69c98a65/Markdown-3.3.7-py3-none-any.whl", hash = "sha256:f5da449a6e1c989a4cea2631aa8ee67caa5a2ef855d551c88f9e309f4634c621", size = 97778 },
+    { url = "https://files.pythonhosted.org/packages/3f/08/83871f3c50fc983b88547c196d11cf8c3340e37c32d2e9d6152abe2c61f7/Markdown-3.7-py3-none-any.whl", hash = "sha256:7eb6df5690b81a1d7942992c97fad2938e956e79df20cbc6186e9c3a77b1c803", size = 106349 },
 ]
 
 [[package]]
@@ -1063,7 +1064,7 @@ dependencies = [
 
 [[package]]
 name = "mkdocstrings"
-version = "0.25.2"
+version = "0.26.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1077,23 +1078,23 @@ dependencies = [
     { name = "pymdown-extensions" },
     { name = "typing-extensions", marker = "python_full_version < '3.10'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/24/a6/d544fae9749b19e23fb590f6344f9eae3a312323065070b4874236bb0e04/mkdocstrings-0.25.2.tar.gz", hash = "sha256:5cf57ad7f61e8be3111a2458b4e49c2029c9cb35525393b179f9c916ca8042dc", size = 91796 }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/76/0475d10d27f3384df3a6ddfdf4a4fdfef83766f77cd4e327d905dc956c15/mkdocstrings-0.26.2.tar.gz", hash = "sha256:34a8b50f1e6cfd29546c6c09fbe02154adfb0b361bb758834bf56aa284ba876e", size = 92512 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2b/86/ee2aef075cc9a62a4f087c3c3f4e3e8a8318afe05a92f8f8415f1bf1af64/mkdocstrings-0.25.2-py3-none-any.whl", hash = "sha256:9e2cda5e2e12db8bb98d21e3410f3f27f8faab685a24b03b06ba7daa5b92abfc", size = 29289 },
+    { url = "https://files.pythonhosted.org/packages/80/b6/4ee320d7c313da3774eff225875eb278f7e6bb26a9cd8e680b8dbc38fdea/mkdocstrings-0.26.2-py3-none-any.whl", hash = "sha256:1248f3228464f3b8d1a15bd91249ce1701fe3104ac517a5f167a0e01ca850ba5", size = 29716 },
 ]
 
 [[package]]
 name = "mkdocstrings-python"
-version = "1.10.9"
+version = "1.12.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "griffe" },
     { name = "mkdocs-autorefs" },
     { name = "mkdocstrings" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/df/c0c09bf79f1329da2422b5d1d2d4d84070aee7cf7f99df98d7b78be066a9/mkdocstrings_python-1.10.9.tar.gz", hash = "sha256:f344aaa47e727d8a2dc911e063025e58e2b7fb31a41110ccc3902aa6be7ca196", size = 162070 }
+sdist = { url = "https://files.pythonhosted.org/packages/61/19/7b186a49a957611270d6c4fc156face8748cf98680a40c00b5b0b7008fe1/mkdocstrings_python-1.12.1.tar.gz", hash = "sha256:60d6a5ca912c9af4ad431db6d0111ce9f79c6c48d33377dde6a05a8f5f48d792", size = 168014 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/45/35c2ade06b6dfd383795008260405a47e10aba74e2c9594741a1a1f034b0/mkdocstrings_python-1.10.9-py3-none-any.whl", hash = "sha256:cbe98710a6757dfd4dff79bf36cb9731908fb4c69dd2736b15270ae7a488243d", size = 108360 },
+    { url = "https://files.pythonhosted.org/packages/65/e8/3cf3467fb8e31f68bfc8a2bfd5f4891c1eaa584b0c62b76c783d24d1901d/mkdocstrings_python-1.12.1-py3-none-any.whl", hash = "sha256:205244488199c9aa2a39787ad6a0c862d39b74078ea9aa2be817bc972399563f", size = 111657 },
 ]
 
 [[package]]
@@ -1928,7 +1929,7 @@ wheels = [
 [[package]]
 name = "webknossos"
 version = "0.0.0"
-source = { editable = "../webknossos" }
+source = { directory = "../webknossos" }
 dependencies = [
     { name = "aiohttp" },
     { name = "attrs" },
@@ -2045,8 +2046,8 @@ requires-dist = [
     { name = "mkdocs-material", specifier = "~=9.5.32" },
     { name = "mkdocs-redirects", specifier = "~=1.2.0" },
     { name = "mkdocs-video", git = "https://github.com/calmzhu/mkdocs-video.git?branch=master" },
-    { name = "mkdocstrings-python", specifier = "~=1.10.8" },
-    { name = "webknossos", editable = "../webknossos" },
+    { name = "mkdocstrings-python", specifier = "~=1.12.1" },
+    { name = "webknossos", directory = "../webknossos" },
 ]
 
 [[package]]

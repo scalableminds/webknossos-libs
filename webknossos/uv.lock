@@ -421,15 +421,22 @@ wheels = [
 name = "cluster-tools"
 version = "0.0.0"
 source = { editable = "../cluster_tools" }
-dependencies = [
-    { name = "typing-extensions" },
-]
 
 [package.metadata]
 requires-dist = [
-    { name = "distributed", marker = "(python_full_version >= '3.9' and extra == 'all') or (python_full_version >= '3.9' and extra == 'dask')", specifier = ">=2023.9.1,<2024.0.0" },
-    { name = "kubernetes", marker = "extra == 'all' or extra == 'kubernetes'", specifier = ">=27.2.0,<28.0.0" },
-    { name = "typing-extensions", specifier = ">=4.4.0,<5.0.0" },
+    { name = "cluster-tools", extras = ["dask"], marker = "extra == 'all'" },
+    { name = "cluster-tools", extras = ["kubernetes"], marker = "extra == 'all'" },
+    { name = "distributed", marker = "extra == 'kubernetes'", specifier = "~=2023.9.1" },
+    { name = "kubernetes", marker = "extra == 'dask'", specifier = "~=27.2.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "icecream", specifier = "~=2.1.1" },
+    { name = "mypy", specifier = "~=1.0.0" },
+    { name = "pytest", specifier = "~=7.2.1" },
+    { name = "ruff", specifier = "~=0.5.0" },
+    { name = "typing-extensions", specifier = "~=4.12.0" },
 ]
 
 [[package]]

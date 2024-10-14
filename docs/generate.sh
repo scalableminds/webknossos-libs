@@ -9,7 +9,7 @@ if [ ! -d "wk-repo" ]; then
     exit 1
 fi
 rm -rf src/api/webknossos
-uv run --frozen python generate_api_doc_pages.py 
+uv run --frozen generate_api_doc_pages.py 
 
 if [ $# -eq 1 ] && [ "$1" = "--persist" ]; then
     uv run mkdocs build
