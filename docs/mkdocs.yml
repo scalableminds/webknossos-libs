@@ -160,32 +160,32 @@ nav:
         - Loading Meshes: webknossos/meshes/loading_meshes.md
         - Working with Meshes: webknossos/meshes/working_with_meshes.md
         - Precomputed Meshes: webknossos/meshes/precomputed_meshes.md
-      - Data Sources and Upload/Download:
+      - Data Sources and Import/Export:
+        - webknossos/data/index.md
         - Data Sources:
           - webknossos/data/image_stacks.md
           - webknossos/data/zarr.md
           - webknossos/data/wkw.md
           - webknossos/data/n5.md
           - webknossos/data/neuroglancer_precomputed.md
-        - Upload Through UI: webknossos/data/upload_ui.md
-        - Upload Through Python: webknossos/data/upload_python.md
+        - Import Through UI: webknossos/data/upload_ui.md
+        - Import Through Python: webknossos/data/upload_python.md
         - Streaming from Cloud Storage: webknossos/data/streaming.md
         - Export Through UI : webknossos/data/export_ui.md
         - Export Through Python: webknossos/data/export_python.md
         - Export as Zarr Stream: webknossos/data/zarr_stream.md
       - Datasets:
         - webknossos/datasets/index.md
-        - Converting Datasets: webknossos/datasets/converting.md
-        - Composing Datasets: webknossos/datasets/composing.md
         - Dataset Organization and Folders: webknossos/datasets/organization.md
         - Dataset Settings: webknossos/datasets/settings.md
+        - Composing Datasets: webknossos/datasets/composing.md
         - Using external data storage: webknossos/datasets/external_storage.md
       - Users and Permissions:
         - webknossos/users/index.md
         - Organizations: webknossos/users/organizations.md
         - Teams: webknossos/users/teams.md
         - Access rights/roles: webknossos/users/access_rights.md
-        - Adding New Users: webknossos/users/new_users.md
+        - Users: webknossos/users/new_users.md
         - Password & Account: webknossos/users/password.md
       - Tasks & Projects:
         - webknossos/tasks_projects/index.md
@@ -199,14 +199,15 @@ nav:
       - AI Automations and Jobs:
         - webknossos/automation/index.md
         - AI Segmentations: webknossos/automation/ai_segmentation.md
+        - Alignment: webknossos/automation/alignment.md
         - Animations: webknossos/automation/animations.md
         - Jobs: webknossos/automation/jobs.md
-        - Alignment: webknossos/automation/alignment.md
       - Proofreading:
         - webknossos/proofreading/index.md
-        - Tools: webknossos/proofreading/tools.md
         - Segmentation mappings: webknossos/proofreading/segmentation_mappings.md
+        - Tools: webknossos/proofreading/tools.md
         - Merger-mode: webknossos/proofreading/merger_mode.md
+        - Proofreading with skeletons: webknossos/proofreading/proofreading_with_skeletons.md
       - Synapse and Connectome Viewer: webknossos/connectome_viewer.md
       - Open source version:
         - Installation: webknossos/open_source/installation.md
