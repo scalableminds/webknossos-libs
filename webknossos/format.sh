@@ -2,8 +2,8 @@
 set -eEuo pipefail
 
 if [ $# -eq 1 ] && [ "$1" = "check" ]; then
-    poetry run ruff format --check .
+    uv run --frozen ruff format --check .
 else
-    poetry run ruff check --select I --fix . # format the imports 
-    poetry run ruff format .
+    uv run --frozen ruff check --select I --fix . # format the imports 
+    uv run --frozen ruff format .
 fi

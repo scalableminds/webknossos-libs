@@ -102,15 +102,11 @@ The [WEBKNOSSOS-libs repository](https://github.com/scalableminds/webknossos-lib
 
 See below for specifics of the different packages. Let's have a look at the common tooling first:
 
-* [**poetry**](https://python-poetry.org) is used for dependency management and publishing.
-  Use `poetry install --all-extras` in each package folder to install all dependencies for development.
+* [**uv**](https://docs.astral.sh/uv) is used for dependency management and publishing.
+  Use `uv sync --all-extras` in each package folder to install all dependencies for development.
   By default, this creates a [virtual environment](https://docs.python.org/3/tutorial/venv.html) for each package.
-  To run commands inside this package, prefix them with `poetry run`, e.g. `poetry run python myscript.py`,
-  or enter the virtual environment with `poetry shell`.
-  The creation of a separate environment can be disabled (e.g. if you want to manage this manually),
-  [see here for details](https://python-poetry.org/docs/configuration/#virtualenvscreate).
-  To install the preferred version for this repository, run
-  [`pip install -f requirements.txt`](https://github.com/scalableminds/webknossos-libs/blob/master/requirements.txt)
+  To run commands inside this package, prefix them with `uv run`, e.g. `uv run python myscript.py`,
+  or enter the virtual environment with `source .venv/bin/activate`.
 
   To install the dependencies for all sub-projects, run `make install`.
   
@@ -140,7 +136,7 @@ The `webknossos` folder contains examples, which are not part of the package, bu
 The tests also contain functionality for the WEBKNOSSOS client. There a two modes to run the tests:
 
 1. `./test.sh --refresh-snapshots`, sending network requests to a WEBKNOSSOS instance:
-  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a docker-compose setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
+  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a `docker compose` setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
 2. `./test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
 
 `./test.sh --store-durations` updates the durations for
@@ -149,7 +145,7 @@ which is used in the CI to split the tests for different runners.
 
 #### `cluster_tools` package
 
-For testing the `slurm` setup a docker-compose setup is available. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
+For testing the `slurm` setup a `docker compose` setup is available. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
 
 For testing the `kubernetes` setup, we recommend a [Kubernetes-in-Docker setup](https://kind.sigs.k8s.io/).
 

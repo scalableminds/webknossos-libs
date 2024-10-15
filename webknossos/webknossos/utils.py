@@ -13,7 +13,7 @@ from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
 from pathlib import Path
-from shutil import copyfileobj
+from shutil import copyfileobj, move
 from typing import (
     Any,
     Callable,
@@ -25,8 +25,10 @@ from typing import (
     Mapping,
     Optional,
     Protocol,
+    Sequence,
     Tuple,
     TypeVar,
+    Union,
 )
 
 import numpy as np
@@ -117,6 +119,41 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
         # Generic types cannot be pickled in Python <= 3.6, see https://github.com/python/typing/issues/511
         partial_func.__annotations__ = {}
     return partial_func
+
+
+def infer_metadata_type(value: Union[str, int, float, Sequence[str]]) -> str:
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, Sequence):
+        for i in value:
+            if not isinstance(i, str):
+                raise ValueError(
+                    f"In lists only str type is allowed, got: {type(value)}"
+                )
+        if all(isinstance(i, str) for i in value):
+            return "string[]"
+        raise ValueError(f"Unsupported metadata type: {type(value)}")
+    if isinstance(value, (int, float)):
+        return "number"
+    raise ValueError(f"Unsupported metadata type: {type(value)}")
+
+
+def parse_metadata_value(
+    value: str, ts_type: str
+) -> Union[str, int, float, Sequence[str]]:
+    if ts_type == "string[]":
+        result = json.loads(value, parse_int=str, parse_float=str)
+        assert isinstance(result, list), f"Expected a list, got {type(result)}"
+    elif ts_type == "number":
+        try:
+            result = int(value)
+        except ValueError:
+            result = float(value)
+    elif ts_type == "string":
+        result = value
+    else:
+        raise ValueError(f"Unknown metadata type {ts_type}")
+    return result
 
 
 def wait_and_ensure_success(
@@ -245,6 +282,17 @@ def is_fs_path(path: Path) -> bool:
     return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
 
 
+def is_remote_path(path: Path) -> bool:
+    return not is_fs_path(path)
+
+
+def is_writable_path(path: Path) -> bool:
+    from upath.implementations.http import HTTPPath
+
+    # cannot write to http paths
+    return not isinstance(path, HTTPPath)
+
+
 def strip_trailing_slash(path: Path) -> Path:
     if isinstance(path, UPath):
         return UPath(
@@ -292,10 +340,15 @@ def copytree(in_path: Path, out_path: Path) -> None:
         if in_sub_path.is_dir():
             _append(out_path, sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with _append(in_path, sub_path).open("rb") as in_file, _append(
-                out_path, sub_path
-            ).open("wb") as out_file:
+            with (
+                _append(in_path, sub_path).open("rb") as in_file,
+                _append(out_path, sub_path).open("wb") as out_file,
+            ):
                 copyfileobj(in_file, out_file)
+
+
+def movetree(in_path: Path, out_path: Path) -> None:
+    move(in_path, out_path)
 
 
 K = TypeVar("K")  # key

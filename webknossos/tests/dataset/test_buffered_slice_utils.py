@@ -117,13 +117,16 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
         mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
         mag_view.write(test_cube, absolute_offset=offset)
 
-        with mag_view.get_buffered_slice_reader(
-            buffer_size=5, dimension=dim
-        ) as reader_a, mag_view.get_buffered_slice_reader(
-            absolute_bounding_box=BoundingBox(offset, cube_size_without_channel),
-            buffer_size=5,
-            dimension=dim,
-        ) as reader_b:
+        with (
+            mag_view.get_buffered_slice_reader(
+                buffer_size=5, dimension=dim
+            ) as reader_a,
+            mag_view.get_buffered_slice_reader(
+                absolute_bounding_box=BoundingBox(offset, cube_size_without_channel),
+                buffer_size=5,
+                dimension=dim,
+            ) as reader_b,
+        ):
             i = 0
             for slice_data_a, slice_data_b in zip(reader_a, reader_b):
                 if dim == 0:
