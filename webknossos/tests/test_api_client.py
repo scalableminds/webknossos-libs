@@ -1,13 +1,12 @@
 import pytest
 
-from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client.api_client import WkApiClient
 from webknossos.client.api_client.models import ApiDataStore
-from webknossos.client.context import _get_api_client, webknossos_context
+from webknossos.client.context import _get_api_client
 
 pytestmark = [pytest.mark.use_proxay]
 
-DATASTORE_URL = "https://data-humerus.webknossos.org"
+DATASTORE_URL = "http://localhost:9000"
 
 
 @pytest.fixture
@@ -65,20 +64,17 @@ def test_user_list(auth_client: WkApiClient) -> None:
 
 
 def test_dataset_info() -> None:
-    with webknossos_context(url=DEFAULT_WEBKNOSSOS_URL):
-        client = _get_api_client()
+    client = _get_api_client()
     api_dataset = client.dataset_info(
-        organization_name="scalable_minds", dataset_name="l4dense_motta_et_al_demo"
+        organization_name="Organization_X", dataset_name="l4_sample"
     )
     assert api_dataset.data_store.url == DATASTORE_URL
-    assert api_dataset.display_name == "L4 Mouse Cortex Demo"
     data_layers = api_dataset.data_source.data_layers
     assert data_layers is not None
     assert sorted(
         (layer.name, layer.category, layer.element_class) for layer in data_layers
     ) == [
         ("color", "color", "uint8"),
-        ("predictions", "color", "uint24"),
         ("segmentation", "segmentation", "uint32"),
     ]
 

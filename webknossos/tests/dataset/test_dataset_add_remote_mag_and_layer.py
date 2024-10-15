@@ -17,20 +17,23 @@ def sample_bbox() -> wk.BoundingBox:
 
 @pytest.fixture(scope="module")
 def sample_remote_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
-    url = "https://webknossos.org/datasets/scalable_minds/l4_sample_dev"
+    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
     with TemporaryDirectory() as temp_dir:
         yield wk.Dataset.download(url, path=Path(temp_dir) / "ds", bbox=sample_bbox)
+
+
+pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture(scope="module")
 def sample_remote_mags() -> list[wk.MagView]:
     mag_urls = [
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/color/1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/color/2-2-1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/color/4-4-2/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/2-2-1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/4-4-2/",
     ]
     mags = [MagView._ensure_mag_view(url) for url in mag_urls]
     return mags
@@ -38,7 +41,7 @@ def sample_remote_mags() -> list[wk.MagView]:
 
 @pytest.fixture(scope="module")
 def sample_remote_layer() -> list[wk.Layer]:
-    remote_dataset_url = "https://webknossos.org/datasets/scalable_minds/l4_sample_dev"
+    remote_dataset_url = "http://localhost:9000/datasets/Organization_X/l4_sample"
     remote_dataset = Dataset.open_remote(remote_dataset_url)
     return list(remote_dataset.layers.values())
 
