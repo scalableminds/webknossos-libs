@@ -185,8 +185,7 @@ testpaths = ["tests"]
 requires = ["setuptools>=70.0", "wheel; python_version>='3.12'"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["webknossos"]
-# include = [
-#     "webknossos/version.py",
-# ] # included explicitly since it's in .gitignore
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["webknossos*", "webknossos/version.py"]
+exclude = ["webknossos.tests", "webknossos/testdata/**"]
