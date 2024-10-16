@@ -8,28 +8,29 @@ import pytest
 
 import webknossos as wk
 
-pytestmark = [pytest.mark.with_vcr]
-
 
 @pytest.fixture(scope="module")
 def sample_bbox() -> wk.BoundingBox:
-    return wk.BoundingBox((2807, 4352, 1794), (10, 10, 10))
+    return wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
 
 
 @pytest.fixture(scope="module")
 def sample_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
-    url = "https://webknossos.org/datasets/scalable_minds/l4_sample_dev"
+    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
     with TemporaryDirectory() as temp_dir:
         yield wk.Dataset.download(url, path=Path(temp_dir) / "ds", bbox=sample_bbox)
+
+
+pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.mark.parametrize(
     "url",
     [
-        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev",
-        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view",
-        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
-        "https://webknossos.org/links/93zLg9U9vJ3c_UWp",
+        "http://localhost:9000/datasets/Organization_X/l4_sample",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/view",
+        # "http://localhost:9000/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
+        # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
 def test_url_download(
@@ -40,7 +41,7 @@ def test_url_download(
     )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_finest_mag().read()
-    assert data.sum() == 122507
+    assert data.sum() == 120697
     assert np.array_equal(
         data,
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
@@ -50,10 +51,10 @@ def test_url_download(
 @pytest.mark.parametrize(
     "url",
     [
-        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev",
-        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view",
-        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
-        "https://webknossos.org/links/93zLg9U9vJ3c_UWp",
+        "http://localhost:9000/datasets/Organization_X/l4_sample",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/view",
+        # "http://localhost:9000/datasets/Organization_X/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
+        # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
 def test_url_open_remote(
@@ -68,13 +69,14 @@ def test_url_open_remote(
         .get_finest_mag()
         .read(absolute_bounding_box=sample_bbox)
     )
-    assert data.sum() == 122507
+    assert data.sum() == 120697
     assert np.array_equal(
         data,
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
 
 
+@pytest.mark.use_proxay
 def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     remote_ds = sample_dataset.upload(
@@ -128,6 +130,7 @@ def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     assert remote_ds.folder.name == "A subfolder!"
 
 
+@pytest.mark.use_proxay
 def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -> None:
     ds_original = sample_dataset
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())

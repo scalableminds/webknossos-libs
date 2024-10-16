@@ -9,8 +9,6 @@ import webknossos as wk
 from webknossos import Dataset, MagView
 from webknossos.utils import is_remote_path
 
-pytestmark = [pytest.mark.with_vcr]
-
 
 @pytest.fixture(scope="module")
 def sample_bbox() -> wk.BoundingBox:
@@ -19,20 +17,23 @@ def sample_bbox() -> wk.BoundingBox:
 
 @pytest.fixture(scope="module")
 def sample_remote_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
-    url = "https://webknossos.org/datasets/scalable_minds/l4_sample_dev"
+    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
     with TemporaryDirectory() as temp_dir:
         yield wk.Dataset.download(url, path=Path(temp_dir) / "ds", bbox=sample_bbox)
+
+
+pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture(scope="module")
 def sample_remote_mags() -> list[wk.MagView]:
     mag_urls = [
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/2-2-1/",
-        "https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/segmentation/4-4-2/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/color/1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/color/2-2-1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/color/4-4-2/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/2-2-1/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/4-4-2/",
     ]
     mags = [MagView._ensure_mag_view(url) for url in mag_urls]
     return mags
@@ -40,7 +41,7 @@ def sample_remote_mags() -> list[wk.MagView]:
 
 @pytest.fixture(scope="module")
 def sample_remote_layer() -> list[wk.Layer]:
-    remote_dataset_url = "https://webknossos.org/datasets/scalable_minds/l4_sample_dev"
+    remote_dataset_url = "http://localhost:9000/datasets/Organization_X/l4_sample"
     remote_dataset = Dataset.open_remote(remote_dataset_url)
     return list(remote_dataset.layers.values())
 
@@ -67,9 +68,6 @@ def test_add_remote_mags_from_mag_view(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-@pytest.mark.skip(
-    reason="The test is flaky when trying to fetch the required datasource-properties.json from data-humerus.webknossos.org. Disable it for now."
-)
 def test_add_remote_mags_from_path(
     sample_remote_mags: list[wk.MagView],
     sample_remote_dataset: wk.Dataset,
@@ -102,15 +100,11 @@ def test_add_remote_layer_from_object(
         layer_name = f"test_remote_layer_{layer.category}_object"
         sample_remote_dataset.add_remote_layer(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
-        assert (
-            is_remote_path(new_layer.path)
-            and layer.path.as_uri() == new_layer.path.as_uri()
+        assert is_remote_path(new_layer.path) and (
+            layer.path.as_uri() == new_layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."
 
 
-@pytest.mark.skip(
-    reason="The test is flaky when trying to fetch the required datasource-properties.json from data-humerus.webknossos.org. Disable it for now."
-)
 def test_add_remote_layer_from_path(
     sample_remote_layer: list[wk.Layer],
     sample_remote_dataset: wk.Dataset,
@@ -120,6 +114,6 @@ def test_add_remote_layer_from_path(
         layer_name = f"test_remote_layer_{layer.category}_path"
         sample_remote_dataset.add_remote_layer(UPath(layer.path), layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
-        assert (
-            is_remote_path(new_layer.path) and new_layer.path == layer.path
+        assert is_remote_path(new_layer.path) and (
+            new_layer.path.as_uri() == layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."

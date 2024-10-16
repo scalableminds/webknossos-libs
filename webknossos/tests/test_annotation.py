@@ -10,8 +10,6 @@ from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
-pytestmark = [pytest.mark.with_vcr]
-
 
 def test_annotation_from_wkw_zip_file() -> None:
     annotation = wk.Annotation.load(
@@ -150,8 +148,8 @@ def test_annotation_from_file_with_multi_volume() -> None:
 @pytest.mark.parametrize(
     "url",
     [
-        "https://webknossos.org/annotations/61c20205010000cc004a6356",
-        "https://webknossos.org/links/LNir_A2-aCUzsoSL",
+        "http://localhost:9000/annotations/61c20205010000cc004a6356",
+        "http://localhost:9000/links/LNir_A2-aCUzsoSL",
     ],
 )
 def test_annotation_from_url(url: str) -> None:
@@ -163,7 +161,7 @@ def test_annotation_from_url(url: str) -> None:
     node_bbox = wk.BoundingBox.from_points(
         next(annotation.skeleton.flattened_trees()).get_node_positions()
     ).align_with_mag(mag, ceil=True)
-    with wk.webknossos_context(url="https://webknossos.org"):
+    with wk.webknossos_context():
         ds = annotation.get_remote_annotation_dataset()
 
     mag_view = ds.layers["Volume"].get_mag(mag)
@@ -223,6 +221,7 @@ def test_reading_bounding_boxes() -> None:
         check_properties(annotation_deserialized)
 
 
+@pytest.mark.use_proxay
 def test_bounding_box_roundtrip() -> None:
     ds = wk.Dataset.open_remote("l4_sample")
 
