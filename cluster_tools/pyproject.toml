@@ -30,8 +30,11 @@ dev-dependencies = [
 requires = ["setuptools>=70.0", "wheel; python_version>='3.12'"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["cluster_tools"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cluster_tools*"]
+exclude = ["cluster_tools.tests"]
+
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
