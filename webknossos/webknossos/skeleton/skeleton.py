@@ -15,7 +15,7 @@ Vector3 = Tuple[float, float, float]
 @attr.define
 class Skeleton(Group):
     """
-    Representation of the [skeleton](/webknossos/skeleton_annotation.html) of an `Annotation`.
+    Representation of the [skeleton](/webknossos/skeleton_annotation/index.html) of an `Annotation`.
     It contains metadata to identify the related dataset and is the root-group of sub-groups and trees.
     See the parent class `Group` for methods about group and tree handling.
     To upload a skeleton to webknossos, please create an `Annotation()` with it.
