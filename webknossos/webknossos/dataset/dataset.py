@@ -1929,6 +1929,7 @@ class Dataset:
     def downsample(
         self,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
+        coarsest_mag: Optional[Mag] = None,
         executor: Optional[Executor] = None,
     ) -> None:
         """
@@ -1936,6 +1937,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             layer.downsample(
+                coarsest_mag=coarsest_mag,
                 sampling_mode=sampling_mode,
                 executor=executor,
             )

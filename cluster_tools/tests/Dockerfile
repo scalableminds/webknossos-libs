@@ -1,14 +1,13 @@
 FROM python:3.11
 
+COPY --from=ghcr.io/astral-sh/uv:0.4.20 /uv /bin/uv
+
 RUN mkdir /cluster_tools
-COPY requirements.txt /cluster_tools
-COPY poetry.lock /cluster_tools
-COPY pyproject.toml /cluster_tools
+COPY . /cluster_tools
 
 WORKDIR /cluster_tools
 
-RUN pip install -r requirements.txt && poetry config virtualenvs.create false && poetry install --all-extras
+RUN uv export --all-extras --output-file requirements.txt && \
+    uv pip sync --system requirements.txt && \
+    uv cache clean
 
-COPY . /cluster_tools
-
-RUN poetry install --all-extras

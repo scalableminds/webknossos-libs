@@ -1,8 +1,6 @@
 #! /usr/bin/env bash
 set -Eeo pipefail
 
-poetry install --no-root
-
 if [ ! -d "wk-repo" ]; then
     echo
     echo ERROR!
@@ -11,10 +9,10 @@ if [ ! -d "wk-repo" ]; then
     exit 1
 fi
 rm -rf src/api/webknossos
-PYTHONPATH=$PYTHONPATH poetry run python generate_api_doc_pages.py
+uv run --frozen generate_api_doc_pages.py 
 
 if [ $# -eq 1 ] && [ "$1" = "--persist" ]; then
-    PYTHONPATH=$PYTHONPATH poetry run mkdocs build
+    uv run --with black mkdocs build
 else
-    PYTHONPATH=$PYTHONPATH poetry run mkdocs serve -a localhost:8197 --watch-theme
+    uv run --with black mkdocs serve -a localhost:8197 --watch-theme
 fi
