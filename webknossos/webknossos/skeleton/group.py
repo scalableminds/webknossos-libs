@@ -135,7 +135,7 @@ class Group:
     @property
     def trees(self) -> Iterator[Tree]:
         """Returns all (immediate) tree children as an iterator.
-        Use flattened_trees if you need also need trees within subgroups."""
+        Use flattened_trees if you also need trees within subgroups."""
         return (child for child in self._child_trees)
 
     @property
