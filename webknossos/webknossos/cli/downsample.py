@@ -8,8 +8,9 @@ import typer
 from typing_extensions import Annotated
 
 from ..dataset import Dataset, SamplingModes
+from ..geometry import Mag
 from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, SamplingMode, parse_path
+from ._utils import DistributionStrategy, SamplingMode, parse_mag, parse_path
 
 
 def main(
@@ -29,6 +30,14 @@ def main(
         Optional[str],
         typer.Option(
             help="Name of the layer to downsample (if not provided, all layers are downsampled)."
+        ),
+    ] = None,
+    coarsest_mag: Annotated[
+        Optional[Mag],
+        typer.Option(
+            help="Mag to stop downsampling at. \
+Should be number or minus separated string (e.g. 2 or 2-2-2).",
+            parser=parse_mag,
         ),
     ] = None,
     jobs: Annotated[
@@ -66,9 +75,14 @@ def main(
     with get_executor_for_args(args=executor_args) as executor:
         if layer_name is None:
             dataset.downsample(
+                coarsest_mag=coarsest_mag,
                 sampling_mode=SamplingModes.parse(sampling_mode.value),
                 executor=executor,
             )
         else:
             layer = dataset.get_layer(layer_name)
-            layer.downsample(executor=executor)
+            layer.downsample(
+                coarsest_mag=coarsest_mag,
+                sampling_mode=SamplingModes.parse(sampling_mode.value),
+                executor=executor,
+            )
