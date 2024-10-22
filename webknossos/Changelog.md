@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `--coarsest-mag` argument to the `webknossos downsample` command. [#1203](https://github.com/scalableminds/webknossos-libs/pull/1203)
 
 ### Changed
 
