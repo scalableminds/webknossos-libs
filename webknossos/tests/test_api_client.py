@@ -68,7 +68,7 @@ def test_dataset_info() -> None:
     with webknossos_context(url=DEFAULT_WEBKNOSSOS_URL):
         client = _get_api_client()
     api_dataset = client.dataset_info(
-        organization_name="scalable_minds", dataset_name="l4dense_motta_et_al_demo"
+        organization_id="scalable_minds", dataset_name="l4dense_motta_et_al_demo"
     )
     assert api_dataset.data_store.url == DATASTORE_URL
     assert api_dataset.display_name == "L4 Mouse Cortex Demo"
