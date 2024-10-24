@@ -1,5 +1,4 @@
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from time import gmtime, strftime
 from typing import Iterator
 
