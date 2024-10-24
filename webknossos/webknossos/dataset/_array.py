@@ -498,6 +498,7 @@ class ZarritaArray(BaseArray):
         from zarrita.sharding import ShardingCodec
 
         zarray = self._zarray
+        dimension_names: tuple[str, ...]
         if (names := getattr(zarray.metadata, "dimension_names", None)) is None:
             if (shape := getattr(zarray.metadata, "shape", None)) is None:
                 raise ValueError(
