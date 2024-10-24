@@ -494,6 +494,13 @@ class MagView(View):
             bboxes, Mag(self.info.shard_shape * self.mag)
         )
 
+        new_bbox = self.bounding_box
+        for shard_bbox in shards_with_bboxes.keys():
+            new_bbox = new_bbox.extended_by(shard_bbox)
+
+        logging.info(f"Set mag layer bounding box to {new_bbox}")
+        self.layer.bounding_box = new_bbox
+
         args = [(other, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
 
         logging.info("Merging %s shards.", len(args))
