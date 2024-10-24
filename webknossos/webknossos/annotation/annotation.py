@@ -1,7 +1,7 @@
 """Annotations can contain annotated data in two forms:
 
-  - [skeleton data](/webknossos/skeleton_annotation.html), as provided by the `Skeleton` class, and
-  - [volume annotation layers](/webknossos/volume_annotation.html) (or volume layers short),
+  - [skeleton data](/webknossos/skeleton_annotation/index.html), as provided by the `Skeleton` class, and
+  - [volume annotation layers](/webknossos/volume_annotation/index.html) (or volume layers short),
     which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
     and `temporary_volume_layer_copy()`.
 
@@ -106,9 +106,10 @@ def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
         if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
             out_file_path = out_path / (zip_entry.filename[len(prefix) :])
             out_file_path.parent.mkdir(parents=True, exist_ok=True)
-            with zip_file.open(zip_entry, "r") as zip_f, out_file_path.open(
-                "wb"
-            ) as out_f:
+            with (
+                zip_file.open(zip_entry, "r") as zip_f,
+                out_file_path.open("wb") as out_f,
+            ):
                 copyfileobj(zip_f, out_f)
 
 

@@ -10,17 +10,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `add_mag_from_zarrarray` to `Layer` class, to add existing Zarr arrays as a mag of a layer. [#1151](https://github.com/scalableminds/webknossos-libs/pull/1151)
+- Added `--coarsest-mag` argument to the `webknossos downsample` command. [#1203](https://github.com/scalableminds/webknossos-libs/pull/1203)
 
 ### Changed
 
 ### Fixed
 - Fixed an issue with merging annotations with compressed fallback layers.
+
+
+## [0.15.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.6) - 2024-10-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.5...v0.15.6)
+
+### Added
+- Added `add_mag_from_zarrarray` to `Layer` class, to add existing Zarr arrays as a mag of a layer. [#1151](https://github.com/scalableminds/webknossos-libs/pull/1151)
+
+### Changed
+- Replaced the Python package manager `poetry` with `uv`. [#1199](https://github.com/scalableminds/webknossos-libs/pull/1199)
 
 
 ## [0.15.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.5) - 2024-09-26
