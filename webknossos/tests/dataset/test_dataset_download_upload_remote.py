@@ -68,7 +68,6 @@ def test_url_open_remote(url: str, sample_dataset: wk.Dataset) -> None:
     )
 
 
-@pytest.mark.use_proxay
 def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     remote_ds = sample_dataset.upload(
@@ -122,7 +121,6 @@ def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     assert remote_ds.folder.name == "A subfolder!"
 
 
-@pytest.mark.use_proxay
 def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -> None:
     ds_original = sample_dataset
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())

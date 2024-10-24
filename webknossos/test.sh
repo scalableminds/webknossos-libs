@@ -20,16 +20,16 @@ if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
     proxay --mode record --host http://localhost:9000 --tapes-dir tests/cassettes &
 
     shift
-    $PYTEST "-m" "use_proxay" "$@" || true
+    $PYTEST "-m" "use_proxay" "$@"
 
     # Kill the proxy server
-    kill %+ || true
+    kill %+
 
     stop_local_test_wk
 else
     export_vars
 
-    proxay --mode replay --tapes-dir tests/cassettes --rewrite-before-diff "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}_[0-9]\{2\}-[0-9]\{2\}-[0-9]\{2\}/2000-01-01_00-00-00/g" & # 2>&1 > /dev/null &
-    $PYTEST "$@" || true
-    kill %+ || true
+    proxay --mode replay --tapes-dir tests/cassettes 2>&1 > /dev/null &
+    $PYTEST "$@"
+    kill %+
 fi
