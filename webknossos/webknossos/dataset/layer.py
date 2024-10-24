@@ -1248,6 +1248,7 @@ class Layer:
                 info.chunk_shape,
                 info.chunks_per_shard,
                 info.compression_mode,
+                info.shape,
                 False,
                 UPath(resolved_path),
             )
