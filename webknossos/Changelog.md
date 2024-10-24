@@ -21,6 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue with merging annotations with compressed fallback layers.
+- Fixed an issue where adding a Zarr array with other axes than `cxyz` leads to an error. [#1204](https://github.com/scalableminds/webknossos-libs/pull/1204)
 
 
 ## [0.15.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.6) - 2024-10-16
