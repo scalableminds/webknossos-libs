@@ -427,9 +427,24 @@ class BoundingBox(NDBoundingBox):
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_shape`.
 
-        Chunks at the border of the bounding box might be smaller than chunk_shape.
-        If `chunk_border_alignment` is set, all border coordinates
-        *between two chunks* will be divisible by that value.
+        Args:
+            chunk_shape (Vec3IntLike): Size of chunks to decompose into. Each chunk
+                will be at most this size.
+            chunk_border_alignments (Optional[Vec3IntLike]): If provided, all border
+                coordinates between chunks will be divisible by these values.
+
+        Yields:
+            BoundingBox: Smaller chunks of the original bounding box. Border chunks
+                may be smaller than chunk_shape.
+
+        Raises:
+            AssertionError: If chunk_border_alignments is provided and chunk_shape is
+                not divisible by it.
+
+        Note:
+            - Border chunks may be smaller than chunk_shape
+            - If chunk_border_alignments is provided, all border coordinates between
+              chunks will be aligned to those values
         """
 
         start = self.topleft.to_np()

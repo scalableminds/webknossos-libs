@@ -160,13 +160,19 @@ class Dataset:
 
     Examples:
         Create a new dataset:
-            >>> ds = Dataset("path/to/dataset", voxel_size=(11.2, 11.2, 25))
+            ```
+            ds = Dataset("path/to/dataset", voxel_size=(11.2, 11.2, 25))
+            ```
 
         Open an existing dataset:
-            >>> ds = Dataset.open("path/to/dataset")
+            ```
+            ds = Dataset.open("path/to/dataset")
+            ```
 
         Open a remote dataset:
-            >>> ds = Dataset.open_remote("my_dataset", "organization_id")
+            ```
+            ds = Dataset.open_remote("my_dataset", "organization_id")
+            ```
     """
 
     @unique
@@ -182,21 +188,27 @@ class Dataset:
 
         Examples:
             Using default strategy:
-                >>> ds = Dataset.from_images("images/", "dataset/")
+                ```
+                ds = Dataset.from_images("images/", "dataset/")
+                ```
 
             Explicit strategy:
-                >>> ds = Dataset.from_images(
-                ...     "images/",
-                ...     "dataset/",
-                ...     map_filepath_to_layer_name=ConversionLayerMapping.ENFORCE_SINGLE_LAYER
-                ... )
+                ```
+                ds = Dataset.from_images(
+                    "images/",
+                    "dataset/",
+                    map_filepath_to_layer_name=ConversionLayerMapping.ENFORCE_SINGLE_LAYER
+                )
+                ```
 
             Custom mapping function:
-                >>> ds = Dataset.from_images(
-                ...     "images/",
-                ...     "dataset/",
-                ...     map_filepath_to_layer_name=lambda p: p.stem
-                ... )
+                ```
+                ds = Dataset.from_images(
+                    "images/",
+                    "dataset/",
+                    map_filepath_to_layer_name=lambda p: p.stem
+                )
+                ```
         """
 
         INSPECT_SINGLE_FILE = "inspect_single_file"
@@ -484,12 +496,14 @@ class Dataset:
             access to the WEBKNOSSOS datastore. Most users should use upload() instead.
 
         Examples:
-            >>> Dataset.announce_manual_upload(
-            ...     "my_dataset",
-            ...     "my_organization",
-            ...     ["team_a", "team_b"],
-            ...     "folder_123"
-            ... )
+            ```
+            Dataset.announce_manual_upload(
+                "my_dataset",
+                "my_organization",
+                ["team_a", "team_b"],
+                "folder_123"
+            )
+            ```
         """
 
         from ..client._upload_dataset import _cached_get_upload_datastore
@@ -528,12 +542,14 @@ class Dataset:
             organization: Organization ID where dataset is located
             token: Optional authentication token
 
-        Example:
-            >>> # Force reload after manual file changes
-            >>> Dataset.trigger_reload_in_datastore(
-            ...     "my_dataset",
-            ...     "organization_id"
-            ... )
+        Examples:
+            ```
+            # Force reload after manual file changes
+            Dataset.trigger_reload_in_datastore(
+                "my_dataset",
+                "organization_id"
+            )
+            ```
         """
 
         from ..client._upload_dataset import _cached_get_upload_datastore
@@ -632,8 +648,10 @@ class Dataset:
         Returns:
             RemoteDataset: Dataset instance for remote access
 
-        Example:
-            >>> ds = Dataset.open_remote("`https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`")
+        Examples:
+            ```
+            ds = Dataset.open_remote("`https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`")
+            ```
 
         Note:
             If supplying an URL, organization_id, webknossos_url and sharing_token
@@ -795,10 +813,12 @@ class Dataset:
         Returns:
             Dataset: The created dataset instance
 
-        Example:
-            >>> ds = Dataset.from_images("path/to/images/",
-            ...                         "path/to/dataset/",
-            ...                         voxel_size=(1, 1, 1))
+        Examples:
+            ```
+            ds = Dataset.from_images("path/to/images/",
+                                    "path/to/dataset/",
+                                    voxel_size=(1, 1, 1))
+            ```
 
         Note:
             This method needs extra packages like tifffile or pylibczirw.
@@ -926,9 +946,11 @@ class Dataset:
         Returns:
             Dict[str, Layer]: Dictionary mapping layer names to Layer objects
 
-        Example:
-            >>> for layer_name, layer in ds.layers.items():
-            ...    print(layer_name)
+        Examples:
+            ```
+            for layer_name, layer in ds.layers.items():
+               print(layer_name)
+            ```
         """
 
         return self._layers
@@ -940,9 +962,11 @@ class Dataset:
         Returns:
             Tuple[float, float, float]: Size of each voxel in nanometers for x,y,z dimensions
 
-        Example:
-            >>> vx, vy, vz = ds.voxel_size
-            >>> print(f"X resolution is {vx}nm")
+        Examples:
+            ```
+            vx, vy, vz = ds.voxel_size
+            print(f"X resolution is {vx}nm")
+            ```
         """
 
         return self._properties.scale.to_nanometer()
@@ -976,8 +1000,10 @@ class Dataset:
         Returns:
             str: Current dataset name
 
-        Example:
-            >>> ds.name = "my_renamed_dataset"  # Updates the name in properties file
+        Examples:
+            ```
+            ds.name = "my_renamed_dataset"  # Updates the name in properties file
+            ```
         """
 
         return self._properties.id["name"]
@@ -1001,10 +1027,12 @@ class Dataset:
             Optional[DatasetViewConfiguration]: Current view configuration if set
 
         Examples:
-            >>> ds.default_view_configuration = DatasetViewConfiguration(
-            ...     zoom=1.5,
-            ...     position=(100, 100, 100)
-            ... )
+            ```
+            ds.default_view_configuration = DatasetViewConfiguration(
+                zoom=1.5,
+                position=(100, 100, 100)
+            )
+            ```
         """
 
         return self._properties.default_view_configuration
@@ -1057,12 +1085,16 @@ class Dataset:
 
         Examples:
             Simple upload:
-                >>> remote_ds = ds.upload("my_new_dataset")
-                >>> print(remote_ds.url)
+                ```
+                remote_ds = ds.upload("my_new_dataset")
+                print(remote_ds.url)
+                ```
 
             Link existing layers:
-                >>> link = LayerToLink.from_remote_layer(existing_layer)
-                >>> remote_ds = ds.upload(layers_to_link=[link])
+                ```
+                link = LayerToLink.from_remote_layer(existing_layer)
+                remote_ds = ds.upload(layers_to_link=[link])
+                ```
         """
 
         from ..client._upload_dataset import LayerToLink, upload_dataset
@@ -1092,9 +1124,11 @@ class Dataset:
         Raises:
             IndexError: If no layer with the given name exists
 
-        Example:
-            >>> color_layer = ds.get_layer("color")
-            >>> seg_layer = ds.get_layer("segmentation")
+        Examples:
+            ```
+            color_layer = ds.get_layer("color")
+            seg_layer = ds.get_layer("segmentation")
+            ```
 
         Note:
             Use `layers` property to access all layers at once.
@@ -1143,18 +1177,22 @@ class Dataset:
 
         Examples:
             Create color layer:
-                >>> layer = ds.add_layer(
-                ...     "my_raw_microscopy_layer",
-                ...     LayerCategoryType.COLOR_CATEGORY,
-                ...     dtype_per_channel=np.uint8,
-                ... )
+                ```
+                layer = ds.add_layer(
+                    "my_raw_microscopy_layer",
+                    LayerCategoryType.COLOR_CATEGORY,
+                    dtype_per_channel=np.uint8,
+                )
+                ```
 
             Create segmentation layer:
-                >>> layer = ds.add_layer(
-                ...     "my_segmentation_labels",
-                ...     LayerCategoryType.SEGMENTATION_CATEGORY,
-                ...     dtype_per_channel=np.uint64
-                ... )
+                ```
+                layer = ds.add_layer(
+                    "my_segmentation_labels",
+                    LayerCategoryType.SEGMENTATION_CATEGORY,
+                    dtype_per_channel=np.uint64
+                )
+                ```
 
         Note:
             The dtype can be specified either per layer or per channel, but not both.
@@ -1280,12 +1318,14 @@ class Dataset:
             ValueError: If both dtype_per_layer and dtype_per_channel specified
             RuntimeError: If invalid category specified
 
-        Example:
-            >>> layer = ds.get_or_add_layer(
-            ...     "segmentation",
-            ...     LayerCategoryType.SEGMENTATION_CATEGORY,
-            ...     dtype_per_channel=np.uint64,
-            ... )
+        Examples:
+            ```
+            layer = ds.get_or_add_layer(
+                "segmentation",
+                LayerCategoryType.SEGMENTATION_CATEGORY,
+                dtype_per_channel=np.uint64,
+            )
+            ```
 
         Note:
             The dtype can be specified either per layer or per channel, but not both.
@@ -1416,17 +1456,21 @@ class Dataset:
 
         Examples:
             Basic usage:
-                >>> layer = ds.add_layer_for_existing_files(
-                ...     "external_data",
-                ...     "color"
-                ... )
+                ```
+                layer = ds.add_layer_for_existing_files(
+                    "external_data",
+                    "color"
+                )
+                ```
 
             Override properties:
-                >>> layer = ds.add_layer_for_existing_files(
-                ...     "segmentation_data",
-                ...     "segmentation",
-                ...     dtype_per_channel=np.uint64
-                ... )
+                ```
+                layer = ds.add_layer_for_existing_files(
+                    "segmentation_data",
+                    "segmentation",
+                    dtype_per_channel=np.uint64
+                )
+                ```
 
         Note:
             The data files must already exist in the dataset directory under the layer name.
@@ -1854,8 +1898,10 @@ class Dataset:
 
         Examples:
             Print all segmentation layer names:
-                >>> for layer in ds.get_segmentation_layers():
-                ...     print(layer.name)
+                ```
+                for layer in ds.get_segmentation_layers():
+                    print(layer.name)
+                ```
 
         Note:
             If you need only a single segmentation layer, consider using
@@ -1892,8 +1938,10 @@ class Dataset:
 
         Examples:
             Print all color layer names:
-                >>> for layer in ds.get_color_layers():
-                ...     print(layer.name)
+                ```
+                for layer in ds.get_color_layers():
+                    print(layer.name)
+                ```
 
         Note:
             If you need only a single color layer, consider using
@@ -1919,9 +1967,11 @@ class Dataset:
             IndexError: If no layer with the given name exists
             RuntimeError: If dataset is read-only
 
-        Example:
-            >>> ds.delete_layer("old_layer")
-            >>> print("Remaining layers:", list(ds.layers))
+        Examples:
+            ```
+            ds.delete_layer("old_layer")
+            print("Remaining layers:", list(ds.layers))
+            ```
         """
 
         self._ensure_writable()
@@ -1973,15 +2023,19 @@ class Dataset:
 
         Examples:
             Copy layer keeping same name:
-                >>> other_ds = Dataset.open("other/dataset")
-                >>> copied = ds.add_copy_layer(other_ds.get_layer("color"))
+            ```
+            other_ds = Dataset.open("other/dataset")
+            copied = ds.add_copy_layer(other_ds.get_layer("color"))
+            ```
 
             Copy with new name:
-                >>> copied = ds.add_copy_layer(
-                ...     other_ds.get_layer("color"),
-                ...     new_layer_name="color_copy",
-                ...     compress=True
-                ... )
+            ```
+            copied = ds.add_copy_layer(
+                other_ds.get_layer("color"),
+                new_layer_name="color_copy",
+                compress=True
+            )
+            ```
         """
         self._ensure_writable()
         foreign_layer = Layer._ensure_layer(foreign_layer)
@@ -2041,12 +2095,14 @@ class Dataset:
             AssertionError: If trying to create symlinks in/to remote datasets
             RuntimeError: If dataset is read-only
 
-        Example:
-            >>> other_ds = Dataset.open("other/dataset")
-            >>> linked = ds.add_symlink_layer(
-            ...     other_ds.get_layer("color"),
-            ...     make_relative=True
-            ... )
+        Examples:
+            ```
+            other_ds = Dataset.open("other/dataset")
+            linked = ds.add_symlink_layer(
+                other_ds.get_layer("color"),
+                make_relative=True
+            )
+            ```
 
         Note:
             Only works with local file systems, cannot link remote datasets or
@@ -2111,12 +2167,14 @@ class Dataset:
             AssertionError: If trying to add non-remote layer or same origin dataset
             RuntimeError: If dataset is read-only
 
-        Example:
-            >>> ds = Dataset.open("other/dataset")
-            >>> remote_ds = Dataset.open_remote("my_dataset", "my_org_id")
-            >>> new_layer = ds.add_remote_layer(
-            ...     remote_ds.get_layer("color")
-            ... )
+        Examples:
+            ```
+            ds = Dataset.open("other/dataset")
+            remote_ds = Dataset.open_remote("my_dataset", "my_org_id")
+            new_layer = ds.add_remote_layer(
+                remote_ds.get_layer("color")
+            )
+            ```
 
         Note:
             Changes to the original layer's properties afterwards won't affect this dataset.
@@ -2197,10 +2255,12 @@ class Dataset:
         Returns:
             NDBoundingBox: Bounding box containing all layer data
 
-        Example:
-            >>> bbox = ds.calculate_bounding_box()
-            >>> print(f"Dataset spans {bbox.size} voxels")
-            >>> print(f"Dataset starts at {bbox.topleft}")
+        Examples:
+            ```
+            bbox = ds.calculate_bounding_box()
+            print(f"Dataset spans {bbox.size} voxels")
+            print(f"Dataset starts at {bbox.topleft}")
+            ```
         """
 
         all_layers = list(self.layers.values())
@@ -2255,14 +2315,18 @@ class Dataset:
 
         Examples:
             Basic copy:
-                >>> copied = ds.copy_dataset("path/to/copy")
+                ```
+                copied = ds.copy_dataset("path/to/copy")
+                ```
 
             Copy with different storage:
-                >>> copied = ds.copy_dataset(
-                ...     "path/to/copy",
-                ...     data_format="zarr",
-                ...     compress=True
-                ... )
+                ```
+                copied = ds.copy_dataset(
+                    "path/to/copy",
+                    data_format="zarr",
+                    compress=True
+                )
+                ```
 
         Note:
             WKW layers can only be copied to datasets on local file systems.
@@ -2348,14 +2412,18 @@ class Dataset:
 
         Examples:
             Basic shallow copy:
-                >>> linked = ds.shallow_copy_dataset("path/to/link")
+                ```
+                linked = ds.shallow_copy_dataset("path/to/link")
+                ```
 
             With relative links excluding layers:
-                >>> linked = ds.shallow_copy_dataset(
-                ...     "path/to/link",
-                ...     make_relative=True,
-                ...     layers_to_ignore=["temp_layer"]
-                ... )
+                ```
+                linked = ds.shallow_copy_dataset(
+                    "path/to/link",
+                    make_relative=True,
+                    layers_to_ignore=["temp_layer"]
+                )
+                ```
 
         Note:
             Only works with datasets on local filesystems. Cannot create shallow
@@ -2413,9 +2481,10 @@ class Dataset:
         Raises:
             RuntimeError: If dataset is read-only
 
-        Example:
-            >>> from cluster_tools import LocalExecutor
-            >>> ds.compress(executor=LocalExecutor())
+        Examples:
+            ```
+            ds.compress()
+            ```
 
         Note:
             If data is already compressed, this will have no effect.
@@ -2447,13 +2516,17 @@ class Dataset:
 
         Examples:
             Basic downsampling:
-                >>> ds.downsample()
+                ```
+                ds.downsample()
+                ```
 
             With custom parameters:
-                >>> ds.downsample(
-                ...     sampling_mode=SamplingModes.ANISOTROPIC,
-                ...     coarsest_mag=Mag(8),
-                ... )
+                ```
+                ds.downsample(
+                    sampling_mode=SamplingModes.ANISOTROPIC,
+                    coarsest_mag=Mag(8),
+                )
+                ```
 
         Note:
             - ANISOTROPIC sampling creates anisotropic downsampling until dataset is isotropic
@@ -2601,16 +2674,22 @@ class Dataset:
 
         Examples:
             List all available datasets:
-                >>> datasets = Dataset.get_remote_datasets()
-                >>> print(sorted(datasets.keys()))
+            ```
+            datasets = Dataset.get_remote_datasets()
+            print(sorted(datasets.keys()))
+            ```
 
             Get datasets for specific organization:
-                >>> org_datasets = Dataset.get_remote_datasets("my_organization")
-                >>> ds = org_datasets["dataset_name"]
+            ```
+            org_datasets = Dataset.get_remote_datasets("my_organization")
+            ds = org_datasets["dataset_name"]
+            ```
 
             Filter datasets by tag:
-                >>> published = Dataset.get_remote_datasets(tags="published")
-                >>> tagged = Dataset.get_remote_datasets(tags=["tag1", "tag2"])
+            ```
+            published = Dataset.get_remote_datasets(tags="published")
+            tagged = Dataset.get_remote_datasets(tags=["tag1", "tag2"])
+            ```
 
         Note:
             RemoteDataset objects are initialized lazily when accessed for the first time.
@@ -2639,15 +2718,21 @@ class RemoteDataset(Dataset):
 
     Examples:
         Opening a remote dataset with organization ID:
-        >>> ds = Dataset.open_remote("my_dataset", "org_id")
+        ```
+        ds = Dataset.open_remote("my_dataset", "org_id")
+        ```
 
         Opening with dataset URL:
-        >>> ds = Dataset.open_remote("https://webknossos.org/datasets/org/dataset/view")
+        ```
+        ds = Dataset.open_remote("https://webknossos.org/datasets/org/dataset/view")
+        ```
 
         Setting metadata:
-        >>> ds.metadata = {"key": "value", "tags": ["tag1", "tag2"]}
-        >>> ds.display_name = "My Dataset"
-        >>> ds.allowed_teams = [Team.get_by_name("Lab_A")]
+        ```
+        ds.metadata = {"key": "value", "tags": ["tag1", "tag2"]}
+        ds.display_name = "My Dataset"
+        ds.allowed_teams = [Team.get_by_name("Lab_A")]
+        ```
 
     Note:
         Do not instantiate directly, use `Dataset.open_remote()` instead.
@@ -2715,9 +2800,10 @@ class RemoteDataset(Dataset):
         Returns:
             str: Full dataset URL including organization and dataset name
 
-        Example:
-            >>> print(ds.url)
-            'https://webknossos.org/datasets/my_org/my_dataset'
+        Examples:
+            ```
+            print(ds.url) # 'https://webknossos.org/datasets/my_org/my_dataset'
+            ```
         """
 
         from ..client.context import _get_context
@@ -2778,13 +2864,15 @@ class RemoteDataset(Dataset):
         Returns:
             DatasetMetadata: Current metadata key-value pairs
 
-        Example:
-            >>> ds.metadata = {
-            ...     "species": "mouse",
-            ...     "age_days": 42,
-            ...     "tags": ["verified", "published"]
-            ... }
-            >>> print(ds.metadata["species"])
+        Examples:
+            ```
+            ds.metadata = {
+                "species": "mouse",
+                "age_days": 42,
+                "tags": ["verified", "published"]
+            }
+            print(ds.metadata["species"])
+            ```
         """
 
         return DatasetMetadata(f"{self._organization_id}/{self._dataset_name}")
@@ -2813,8 +2901,10 @@ class RemoteDataset(Dataset):
         Returns:
             Optional[str]: Current display name if set, None otherwise
 
-        Example:
-            >>> remote_ds.display_name = "Mouse Brain Sample A"
+        Examples:
+            ```
+            remote_ds.display_name = "Mouse Brain Sample A"
+            ```
         """
 
         return self._get_dataset_info().display_name
@@ -2837,9 +2927,11 @@ class RemoteDataset(Dataset):
         Returns:
             Optional[str]: Current description if set, None otherwise
 
-        Example:
-            >>> ds.description = "Dataset acquired on *June 1st*"
-            >>> ds.description = None  # Remove description
+        Examples:
+            ```
+            ds.description = "Dataset acquired on *June 1st*"
+            ds.description = None  # Remove description
+            ```
         """
 
         return self._get_dataset_info().description
@@ -2862,11 +2954,12 @@ class RemoteDataset(Dataset):
         Returns:
             Tuple[str, ...]: Currently assigned tags, in string tuple form
 
-        Example:
-            >>> ds.tags = ["verified", "published"]
-            >>> print(ds.tags)
-            ('verified', 'published')
-            >>> ds.tags = []  # Remove all tags
+        Examples:
+            ```
+            ds.tags = ["verified", "published"]
+            print(ds.tags)  # ('verified', 'published')
+            ds.tags = []  # Remove all tags
+            ```
         """
 
         return tuple(self._get_dataset_info().tags)
@@ -2885,11 +2978,12 @@ class RemoteDataset(Dataset):
         Returns:
             bool: True if dataset is public, False if private
 
-        Example:
-            >>> ds.is_public = True
-            >>> ds.is_public = False
-            >>> print("Public" if ds.is_public else "Private")
-            'Private'
+        Examples:
+            ```
+            ds.is_public = True
+            ds.is_public = False
+            print("Public" if ds.is_public else "Private")  # Private
+            ```
         """
 
         return bool(self._get_dataset_info().is_public)
@@ -2908,10 +3002,12 @@ class RemoteDataset(Dataset):
         Returns:
             str: Fresh sharing token for dataset access
 
-        Example:
-            >>> token = ds.sharing_token
-            >>> url = f"{ds.url}?token={token}"
-            >>> print("Share this link:", url)
+        Examples:
+            ```
+            token = ds.sharing_token
+            url = f"{ds.url}?token={token}"
+            print("Share this link:", url)
+            ```
 
         Note:
             - A new token is generated on each access
@@ -2937,18 +3033,19 @@ class RemoteDataset(Dataset):
         Returns:
             Tuple[Team, ...]: Teams currently having access
 
-        Example:
-            >>> from webknossos import Team
-            >>> team = Team.get_by_name("Lab_A")
-            >>> ds.allowed_teams = [team]
-            >>> print([t.name for t in ds.allowed_teams])
-            ['Lab_A']
+        Examples:
+            ```
+            from webknossos import Team
+            team = Team.get_by_name("Lab_A")
+            ds.allowed_teams = [team]
+            print([t.name for t in ds.allowed_teams])
 
             # Give access to multiple teams:
-            >>> ds.allowed_teams = [
-            ...     Team.get_by_name("Lab_A"),
-            ...     Team.get_by_name("Lab_B")
-            ... ]
+            ds.allowed_teams = [
+                Team.get_by_name("Lab_A"),
+                Team.get_by_name("Lab_B")
+            ]
+            ```
 
         Note:
             - Teams must be from the same organization as the dataset
@@ -2994,12 +3091,14 @@ class RemoteDataset(Dataset):
         Returns:
             RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
 
-        Example:
-            >>> remote = Dataset.explore_and_add_remote(
-            ...     "s3://bucket/dataset",
-            ...     "my_dataset",
-            ...     "Datasets/Research"
-            ... )
+        Examples:
+            ```
+            remote = Dataset.explore_and_add_remote(
+                "s3://bucket/dataset",
+                "my_dataset",
+                "Datasets/Research"
+            )
+            ```
 
         Note:
             The dataset files must be accessible from the WEBKNOSSOS server
@@ -3031,11 +3130,13 @@ class RemoteDataset(Dataset):
         Returns:
             RemoteFolder: Current folder containing the dataset
 
-        Example:
-            >>> folder = RemoteFolder.get_by_path("Datasets/Published")
-            >>> ds.folder = folder
-            >>> print(ds.folder.path)
-            'Datasets/Published'
+        Examples:
+            ```
+            folder = RemoteFolder.get_by_path("Datasets/Published")
+            ds.folder = folder
+            print(ds.folder.path) # 'Datasets/Published'
+            ```
+
         """
 
         return RemoteFolder.get_by_id(self._get_dataset_info().folder_id)

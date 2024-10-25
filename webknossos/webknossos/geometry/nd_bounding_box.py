@@ -38,33 +38,45 @@ def int_tpl(vec_int_like: VecIntLike) -> VecInt:
 
 @attr.frozen
 class NDBoundingBox:
-    """
-    The NDBoundingBox class is a generalized version of the 3-dimensional BoundingBox class. It is designed to represent bounding boxes in any number of dimensions.
+    """A generalized N-dimensional bounding box that can handle arbitrary dimensions.
 
-    The bounding box is characterized by its top-left corner, the size of the box, the names of the axes for each dimension, and the index (or order) of the axes. Each axis must have a unique index, starting from 1 (index 0 is reserved for channel information).
+    The NDBoundingBox represents an N-dimensional rectangular region defined by its
+    top-left corner coordinates and size. Each dimension has an associated axis name
+    and index for ordering.
 
-    The top-left coordinate is inclusive, while the bottom-right coordinate is exclusive.
+    Args:
+        topleft: The coordinates of the upper-left corner (inclusive)
+        size: The size/extent in each dimension
+        axes: The names of the axes/dimensions (e.g. "x", "y", "z", "t")
+        index: The order/position of each axis, starting from 1 (0 is reserved for channels)
+        name: Optional name for this bounding box
+        is_visible: Whether this bounding box should be visible
+        color: Optional RGBA color tuple (4 floats) for display
 
-    Here's a brief example of how to use it:
+    Examples:
+        Create a 2D bounding box:
+            ```
+            bbox_1 = NDBoundingBox(
+                top_left=(0, 0),
+                size=(100, 100),
+                axes=("x", "y"),
+                index=(1,2)
+            )
+            ````
+        Create a 4D bounding box:
+            ```
+            bbox_2 = NDBoundingBox(
+                top_left=(75, 75, 75, 0),
+                size=(100, 100, 100, 20),
+                axes=("x", "y", "z", "t"),
+                index=(2,3,4,1)
+            )
+            ```
 
-    ```python
-
-    # Create a 2D bounding box
-    bbox_1 = NDBoundingBox(
-        top_left=(0, 0),
-        size=(100, 100),
-        axes=("x", "y"),
-        index=(1,2)
-    )
-
-    # Create a 4D bounding box
-    bbox_2 = NDBoundingBox(
-        top_left=(75, 75, 75, 0),
-        size=(100, 100, 100, 20),
-        axes=("x", "y", "z", "t"),
-        index=(2,3,4,1)
-    )
-    ```
+    Note:
+        - The top-left coordinate is inclusive while bottom-right is exclusive
+        - Each axis must have a unique index starting from 1
+        - Index 0 is reserved for channel information
     """
 
     topleft: VecInt = attr.field(converter=int_tpl)

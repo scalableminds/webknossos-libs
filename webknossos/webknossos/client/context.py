@@ -194,13 +194,19 @@ class webknossos_context(ContextDecorator):
 
         Examples:
             Using as context manager:
-                >>> with webknossos_context(token="my_webknossos_token"):
-                ...     # code that interacts with webknossos
+                ```
+                with webknossos_context(token="my_webknossos_token"):
+                    # code that interacts with webknossos
+                    ds.download(...)
+                ```
 
             Using as decorator:
-                >>> @webknossos_context(token="my_webknossos_token")
-                ... def my_func():
-                ...     # code that interacts with webknossos
+                ```
+                @webknossos_context(token="my_webknossos_token")
+                def my_func():
+                    # code that interacts with webknossos
+                    ...
+                ```
 
         Note:
             The url and timeout parameters will use values from the previous context
