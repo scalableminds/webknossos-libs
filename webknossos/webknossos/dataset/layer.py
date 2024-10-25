@@ -1152,9 +1152,7 @@ class Layer:
             buffer_shape: Shape of processing buffer
             args: Deprecated, use executor
             allow_overwrite: Whether to allow overwriting existing mag
-            only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling
-            of multiple layers while avoiding parallel writes with outdated updates
-            to the datasource-properties.json file.
+            only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
             executor: Executor for parallel processing
 
         Raises:
