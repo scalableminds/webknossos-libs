@@ -483,7 +483,7 @@ class Dataset:
             This is typically only used by administrators with direct file system
             access to the WEBKNOSSOS datastore. Most users should use upload() instead.
 
-        Example:
+        Examples:
             >>> Dataset.announce_manual_upload(
             ...     "my_dataset",
             ...     "my_organization",
