@@ -252,8 +252,6 @@ class BoundingBox(NDBoundingBox):
         """
         return {"topleft": self.topleft.to_list(), "size": self.size.to_list()}
 
-
-
     def to_checkpoint_name(self) -> str:
         """Converts the bounding box dimensions to a checkpoint name string.
 

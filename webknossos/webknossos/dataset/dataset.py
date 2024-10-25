@@ -171,37 +171,57 @@ class Dataset:
 
     @unique
     class ConversionLayerMapping(Enum):
-        """Strategies for mapping file paths to layers, for use in
-        `Dataset.from_images` for the `map_filepath_to_layer_name` argument.
+        """Strategies for mapping file paths to layers when importing images.
 
-        If none of the strategies fit, the mapping can also be specified by a callable.
+        These strategies determine how input image files are grouped into layers during
+        dataset creation using `Dataset.from_images()`. If no strategy is provided,
+        `INSPECT_SINGLE_FILE` is used as the default.
+
+        If none of the pre-defined strategies fit your needs, you can provide a custom
+        callable that takes a Path and returns a layer name string.
+
+        Examples:
+            Using default strategy:
+                >>> ds = Dataset.from_images("images/", "dataset/")
+
+            Explicit strategy:
+                >>> ds = Dataset.from_images(
+                ...     "images/",
+                ...     "dataset/",
+                ...     map_filepath_to_layer_name=ConversionLayerMapping.ENFORCE_SINGLE_LAYER
+                ... )
+
+            Custom mapping function:
+                >>> ds = Dataset.from_images(
+                ...     "images/",
+                ...     "dataset/",
+                ...     map_filepath_to_layer_name=lambda p: p.stem
+                ... )
         """
 
         INSPECT_SINGLE_FILE = "inspect_single_file"
-        """The first found image file is opened. If it appears to be
-        a 2D image, `ENFORCE_LAYER_PER_FOLDER` is used,
-        if it appears to be 3D, `ENFORCE_LAYER_PER_FILE` is used.
-        This is the default mapping."""
+        """Default strategy. Inspects first image file to determine if data is 2D or 3D.
+        For 2D data uses ENFORCE_LAYER_PER_FOLDER, for 3D uses ENFORCE_LAYER_PER_FILE."""
 
         INSPECT_EVERY_FILE = "inspect_every_file"
-        """Like `INSPECT_SINGLE_FILE`, but the strategy
-        is determined for each image file separately."""
+        """Like INSPECT_SINGLE_FILE but determines strategy separately for each file.
+        More flexible but slower for many files."""
 
         ENFORCE_LAYER_PER_FILE = "enforce_layer_per_file"
-        """Enforce a new layer per file. This is useful for 2D
-        images that should be converted to 2D layers each."""
+        """Creates a new layer for each input file. Useful for converting multiple
+        3D images or when each 2D image should become its own layer."""
 
         ENFORCE_SINGLE_LAYER = "enforce_single_layer"
-        """Combines all found files into a single layer. This is only
-        useful if all images are 2D."""
+        """Combines all input files into a single layer. Only useful when all
+        images are 2D slices that should be combined."""
 
         ENFORCE_LAYER_PER_FOLDER = "enforce_layer_per_folder"
-        """Combine all files in a folder into one layer."""
+        """Groups files by their containing folder. Each folder becomes one layer.
+        Useful for organized 2D image stacks."""
 
         ENFORCE_LAYER_PER_TOPLEVEL_FOLDER = "enforce_layer_per_toplevel_folder"
-        """The first folders of the input path are each converted to one layer.
-        This might be useful if multiple layers have stacks of 2D images, but
-        parts of the stacks are in different folders."""
+        """Groups files by their top-level folder. Useful when multiple layers each
+        have their stacks split across subfolders."""
 
         def _to_callable(
             self,
@@ -2641,7 +2661,22 @@ class RemoteDataset(Dataset):
         sharing_token: Optional[str],
         context: ContextManager,
     ) -> None:
-        """Do not call manually, please use `Dataset.open_remote()` instead."""
+        """Initialize a remote dataset instance.
+
+        Args:
+            dataset_path: Path to remote dataset location
+            dataset_name: Name of dataset in WEBKNOSSOS
+            organization_id: Organization that owns the dataset
+            sharing_token: Optional token for shared access
+            context: Context manager for WEBKNOSSOS connection
+
+        Raises:
+            FileNotFoundError: If dataset cannot be opened as zarr format and no metadata exists
+
+        Note:
+            Do not call this constructor directly, use Dataset.open_remote() instead.
+            This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
+        """
         try:
             super().__init__(
                 dataset_path,
@@ -2673,6 +2708,18 @@ class RemoteDataset(Dataset):
 
     @property
     def url(self) -> str:
+        """URL to access this dataset in webknossos.
+
+        Constructs the full URL to the dataset in the webknossos web interface.
+
+        Returns:
+            str: Full dataset URL including organization and dataset name
+
+        Example:
+            >>> print(ds.url)
+            'https://webknossos.org/datasets/my_org/my_dataset'
+        """
+
         from ..client.context import _get_context
 
         with self._context:
@@ -2723,6 +2770,23 @@ class RemoteDataset(Dataset):
 
     @property
     def metadata(self) -> DatasetMetadata:
+        """Get or set metadata key-value pairs for the dataset.
+
+        The metadata can contain strings, numbers, and lists of strings as values.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            DatasetMetadata: Current metadata key-value pairs
+
+        Example:
+            >>> ds.metadata = {
+            ...     "species": "mouse",
+            ...     "age_days": 42,
+            ...     "tags": ["verified", "published"]
+            ... }
+            >>> print(ds.metadata["species"])
+        """
+
         return DatasetMetadata(f"{self._organization_id}/{self._dataset_name}")
 
     @metadata.setter
@@ -2741,6 +2805,18 @@ class RemoteDataset(Dataset):
 
     @property
     def display_name(self) -> Optional[str]:
+        """The human-readable name for the dataset in the webknossos interface.
+
+        Can be set to a different value than the dataset name used in URLs and downloads.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Optional[str]: Current display name if set, None otherwise
+
+        Example:
+            >>> remote_ds.display_name = "Mouse Brain Sample A"
+        """
+
         return self._get_dataset_info().display_name
 
     @display_name.setter
@@ -2753,6 +2829,19 @@ class RemoteDataset(Dataset):
 
     @property
     def description(self) -> Optional[str]:
+        """Free-text description of the dataset.
+
+        Can be edited with markdown formatting. Changes are immediately synchronized
+        with WEBKNOSSOS.
+
+        Returns:
+            Optional[str]: Current description if set, None otherwise
+
+        Example:
+            >>> ds.description = "Dataset acquired on *June 1st*"
+            >>> ds.description = None  # Remove description
+        """
+
         return self._get_dataset_info().description
 
     @description.setter
@@ -2765,6 +2854,21 @@ class RemoteDataset(Dataset):
 
     @property
     def tags(self) -> Tuple[str, ...]:
+        """User-assigned tags for organizing and filtering datasets.
+
+        Tags allow categorizing and filtering datasets in the webknossos dashboard interface.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Tuple[str, ...]: Currently assigned tags, in string tuple form
+
+        Example:
+            >>> ds.tags = ["verified", "published"]
+            >>> print(ds.tags)
+            ('verified', 'published')
+            >>> ds.tags = []  # Remove all tags
+        """
+
         return tuple(self._get_dataset_info().tags)
 
     @tags.setter
@@ -2773,6 +2877,21 @@ class RemoteDataset(Dataset):
 
     @property
     def is_public(self) -> bool:
+        """Control whether the dataset is publicly accessible.
+
+        When True, anyone can view the dataset without logging in to WEBKNOSSOS.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            bool: True if dataset is public, False if private
+
+        Example:
+            >>> ds.is_public = True
+            >>> ds.is_public = False
+            >>> print("Public" if ds.is_public else "Private")
+            'Private'
+        """
+
         return bool(self._get_dataset_info().is_public)
 
     @is_public.setter
@@ -2781,6 +2900,25 @@ class RemoteDataset(Dataset):
 
     @property
     def sharing_token(self) -> str:
+        """Get a new token for sharing access to this dataset.
+
+        Each call generates a fresh token that allows viewing the dataset without logging in.
+        The token can be appended to dataset URLs as a query parameter.
+
+        Returns:
+            str: Fresh sharing token for dataset access
+
+        Example:
+            >>> token = ds.sharing_token
+            >>> url = f"{ds.url}?token={token}"
+            >>> print("Share this link:", url)
+
+        Note:
+            - A new token is generated on each access
+            - The token provides read-only access
+            - Anyone with the token can view the dataset
+        """
+
         from ..client.context import _get_api_client
 
         with self._context:
@@ -2791,6 +2929,33 @@ class RemoteDataset(Dataset):
 
     @property
     def allowed_teams(self) -> Tuple["Team", ...]:
+        """Teams that are allowed to access this dataset.
+
+        Controls which teams have read access to view and use this dataset.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Tuple[Team, ...]: Teams currently having access
+
+        Example:
+            >>> from webknossos import Team
+            >>> team = Team.get_by_name("Lab_A")
+            >>> ds.allowed_teams = [team]
+            >>> print([t.name for t in ds.allowed_teams])
+            ['Lab_A']
+
+            # Give access to multiple teams:
+            >>> ds.allowed_teams = [
+            ...     Team.get_by_name("Lab_A"),
+            ...     Team.get_by_name("Lab_B")
+            ... ]
+
+        Note:
+            - Teams must be from the same organization as the dataset
+            - Can be set using Team objects or team ID strings
+            - An empty list makes the dataset private
+        """
+
         from ..administration.user import Team
 
         return tuple(
@@ -2857,6 +3022,22 @@ class RemoteDataset(Dataset):
 
     @property
     def folder(self) -> RemoteFolder:
+        """The (virtual) folder containing this dataset in WEBKNOSSOS.
+
+        Represents the folder location in the WEBKNOSSOS UI folder structure.
+        Can be changed to move the dataset to a different folder.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            RemoteFolder: Current folder containing the dataset
+
+        Example:
+            >>> folder = RemoteFolder.get_by_path("Datasets/Published")
+            >>> ds.folder = folder
+            >>> print(ds.folder.path)
+            'Datasets/Published'
+        """
+
         return RemoteFolder.get_by_id(self._get_dataset_info().folder_id)
 
     @folder.setter
