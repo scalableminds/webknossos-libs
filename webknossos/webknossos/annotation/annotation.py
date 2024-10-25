@@ -117,59 +117,60 @@ def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
 class Annotation:
     """Represents an annotation from WEBKNOSSOS containing skeleton and/or volume data.
 
-        The Annotation class provides functionality to:
+    The Annotation class provides functionality to:
 
-        1. Load/save annotations from/to .nml or .zip files
-        2. Download/upload annotations from/to WEBKNOSSOS
-        3. Work with skeleton data and volume layers
-        4. Export volume layers to datasets
+    1. Load/save annotations from/to .nml or .zip files
+    2. Download/upload annotations from/to WEBKNOSSOS
+    3. Work with skeleton data and volume layers
+    4. Export volume layers to datasets
 
-        Attributes:
-            name: Name of the annotation.
-            skeleton: Skeleton object containing tree/node data.
-            owner_name: Name of annotation owner.
-            annotation_id: Unique identifier for the annotation.
-            time: Creation timestamp in ms since epoch.
-            edit_position: 3D position coordinates.
-            edit_rotation: 3D rotation angles.
-            zoom_level: Current zoom level.
-            metadata: Dictionary of custom metadata.
-            task_bounding_box: Optional bounding box for task annotations.
-            user_bounding_boxes: List of user-defined bounding boxes.
+    Attributes:
+        name: Name of the annotation.
+        skeleton: Skeleton object containing tree/node data.
+        owner_name: Name of annotation owner.
+        annotation_id: Unique identifier for the annotation.
+        time: Creation timestamp in ms since epoch.
+        edit_position: 3D position coordinates.
+        edit_rotation: 3D rotation angles.
+        zoom_level: Current zoom level.
+        metadata: Dictionary of custom metadata.
+        task_bounding_box: Optional bounding box for task annotations.
+        user_bounding_boxes: List of user-defined bounding boxes.
 
-        Examples:
-            Create a new annotation:
-            ```python
-            ann = Annotation(
-                name="my_annotation",
-                dataset_name="sample_dataset",
-                voxel_size=(11.2, 11.2, 25.0)
-            )
-            ```
+    Examples:
+        Create a new annotation:
+        ```python
+        ann = Annotation(
+            name="my_annotation",
+            dataset_name="sample_dataset",
+            voxel_size=(11.2, 11.2, 25.0)
+        )
+        ```
 
-            Load annotation from file:
-            ```
-            ann = Annotation.load("annotation.nml")
-            ```
+        Load annotation from file:
+        ```
+        ann = Annotation.load("annotation.nml")
+        ```
 
-            Download from WEBKNOSSOS:
-            ```
-            ann = Annotation.download("annotation_id")
-            ```
+        Download from WEBKNOSSOS:
+        ```
+        ann = Annotation.download("annotation_id")
+        ```
 
-            Save annotation:
-            ```
-            ann.save("annotation.zip")
-            ```
+        Save annotation:
+        ```
+        ann.save("annotation.zip")
+        ```
 
-            Add volume layer:
-            ```
-            ann.add_volume_layer(
-                name="segmentation",
-                fallback_layer="segmentation_layer"
-            )
-            ```
-        """
+        Add volume layer:
+        ```
+        ann.add_volume_layer(
+            name="segmentation",
+            fallback_layer="segmentation_layer"
+        )
+        ```
+    """
+
     name: str
     skeleton: Skeleton = None  # type: ignore[assignment]
     # The following underscored attributes are just for initialization
@@ -781,22 +782,22 @@ class Annotation:
     def upload(self) -> str:
         """Uploads the annotation to WEBKNOSSOS.
 
-                Uses the current webknossos_context for authentication and target instance.
-                See webknossos.webknossos_context() for configuration.
+        Uses the current webknossos_context for authentication and target instance.
+        See webknossos.webknossos_context() for configuration.
 
-                Returns:
-                    str: URL of the uploaded annotation in WEBKNOSSOS.
+        Returns:
+            str: URL of the uploaded annotation in WEBKNOSSOS.
 
-                Raises:
-                    RuntimeError: If no valid authentication is configured.
+        Raises:
+            RuntimeError: If no valid authentication is configured.
 
-                Examples:
-                    ```python
-                    with webknossos.webknossos_context(token="my_token"):
-                        url = annotation.upload()
-                        print(f"Uploaded to: {url}")
-                    ```
-                """
+        Examples:
+            ```python
+            with webknossos.webknossos_context(token="my_token"):
+                url = annotation.upload()
+                print(f"Uploaded to: {url}")
+            ```
+        """
         from ..client.context import _get_api_client, _get_context
 
         context = _get_context()
@@ -936,16 +937,16 @@ class Annotation:
     def get_volume_layer_names(self) -> Iterable[str]:
         """Returns names of all volume layers in the annotation.
 
-            Returns:
-                Iterable[str]: Iterator of volume layer names.
+        Returns:
+            Iterable[str]: Iterator of volume layer names.
 
-            Examples:
-                ```python
-                # Print all layer names
-                for name in annotation.get_volume_layer_names():
-                    print(f"Found layer: {name}")
-                ```
-            """
+        Examples:
+            ```python
+            # Print all layer names
+            for name in annotation.get_volume_layer_names():
+                print(f"Found layer: {name}")
+            ```
+        """
         return (i.name for i in self._volume_layers)
 
     def add_volume_layer(
@@ -956,29 +957,29 @@ class Annotation:
     ) -> None:
         """Adds a new volume layer to the annotation.
 
-               Volume layers can be used to store segmentation data. Using fallback layers
-               is recommended for better performance in WEBKNOSSOS.
+        Volume layers can be used to store segmentation data. Using fallback layers
+        is recommended for better performance in WEBKNOSSOS.
 
-               Args:
-                   name: Name of the volume layer.
-                   fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
-                                 Can be Layer instance or layer name.
-                   volume_layer_id: Optional explicit ID for the layer.
-                                  Auto-generated if not provided.
+        Args:
+            name: Name of the volume layer.
+            fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
+                          Can be Layer instance or layer name.
+            volume_layer_id: Optional explicit ID for the layer.
+                           Auto-generated if not provided.
 
-               Raises:
-                   AssertionError: If volume_layer_id already exists.
-                   AssertionError: If fallback_layer is provided but not a segmentation layer.
+        Raises:
+            AssertionError: If volume_layer_id already exists.
+            AssertionError: If fallback_layer is provided but not a segmentation layer.
 
-               Examples:
-                   ```python
-                   # Add basic layer
-                   annotation.add_volume_layer("segmentation")
+        Examples:
+            ```python
+            # Add basic layer
+            annotation.add_volume_layer("segmentation")
 
-                   # Add with fallback
-                   annotation.add_volume_layer("segmentation", fallback_layer="base_segmentation")
-                   ```
-               """
+            # Add with fallback
+            annotation.add_volume_layer("segmentation", fallback_layer="base_segmentation")
+            ```
+        """
 
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
@@ -1107,30 +1108,30 @@ class Annotation:
     ) -> SegmentationLayer:
         """Exports a volume layer to a dataset.
 
-                Creates a new layer in the target dataset containing the volume annotation data.
+        Creates a new layer in the target dataset containing the volume annotation data.
 
-                Args:
-                    dataset: Target Dataset instance.
-                    layer_name: Name for the new layer (default: "volume_layer").
-                    volume_layer_name: Name of source volume layer if multiple exist.
-                    volume_layer_id: ID of source volume layer if multiple exist.
+        Args:
+            dataset: Target Dataset instance.
+            layer_name: Name for the new layer (default: "volume_layer").
+            volume_layer_name: Name of source volume layer if multiple exist.
+            volume_layer_id: ID of source volume layer if multiple exist.
 
-                Returns:
-                    SegmentationLayer: The created layer in the target dataset.
+        Returns:
+            SegmentationLayer: The created layer in the target dataset.
 
-                Raises:
-                    AssertionError: If specified volume layer doesn't exist.
-                    AssertionError: If volume layer data is not available.
+        Raises:
+            AssertionError: If specified volume layer doesn't exist.
+            AssertionError: If volume layer data is not available.
 
-                Examples:
-                    ```python
-                    # Export to dataset
-                    layer = annotation.export_volume_layer_to_dataset(
-                        dataset,
-                        layer_name="exported_segmentation"
-                    )
-                    ```
-                """
+        Examples:
+            ```python
+            # Export to dataset
+            layer = annotation.export_volume_layer_to_dataset(
+                dataset,
+                layer_name="exported_segmentation"
+            )
+            ```
+        """
 
         volume_layer = self._get_volume_layer(
             volume_layer_name=volume_layer_name,
