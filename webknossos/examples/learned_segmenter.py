@@ -1,7 +1,6 @@
 import os
 from functools import partial
 from tempfile import TemporaryDirectory
-from time import gmtime, strftime
 
 import numpy as np
 from skimage import feature
@@ -20,8 +19,7 @@ def main() -> None:
     # Step 1: Read the training data from the annotation and the dataset's color
     # layer (the data will be streamed from WEBKNOSSOS to our local computer)
     training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
-    time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
-    new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
+    new_dataset_name = f"{annotation.dataset_name}_segmented"
     with wk.webknossos_context("https://webknossos.org"):
         dataset = annotation.get_remote_annotation_dataset()
 

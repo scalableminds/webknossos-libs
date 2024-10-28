@@ -1,5 +1,4 @@
 from pathlib import Path
-from time import gmtime, strftime
 from typing import Iterator
 
 import numpy as np
@@ -68,10 +67,7 @@ def test_url_open_remote(url: str, sample_dataset: wk.Dataset) -> None:
 
 
 def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
-    time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
-    remote_ds = sample_dataset.upload(
-        new_dataset_name=f"test_remote_metadata_{time_str}"
-    )
+    remote_ds = sample_dataset.upload(new_dataset_name="test_remote_metadata")
     assert np.array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
@@ -83,7 +79,7 @@ def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
 
     assert (
         remote_ds.url
-        == f"http://localhost:9000/datasets/Organization_X/test_remote_metadata_{time_str}"
+        == "http://localhost:9000/datasets/Organization_X/test_remote_metadata"
     )
 
     assert remote_ds.display_name is None
@@ -122,10 +118,7 @@ def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
 
 def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -> None:
     ds_original = sample_dataset
-    time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
-    url = ds_original.upload(
-        new_dataset_name=f"test_upload_download_roundtrip_{time_str}"
-    ).url
+    url = ds_original.upload(new_dataset_name="test_upload_download_roundtrip").url
     ds_roundtrip = wk.Dataset.download(
         url, path=tmp_path / "ds", layers=["color", "segmentation"]
     )
