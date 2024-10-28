@@ -1,5 +1,5 @@
 import copy
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Set, Tuple, Union, cast
 
 import attr
 from boltons.strutils import unit_len
@@ -241,6 +241,9 @@ class Group:
             self.name,
             children=[g.as_nml_group() for g in self._child_groups],
         )
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, type(self)) and self._id == other._id
 
     def __hash__(self) -> int:
         return id(self)

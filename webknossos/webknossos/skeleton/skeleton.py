@@ -1,7 +1,7 @@
 import itertools
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import attr
 import networkx as nx
@@ -154,6 +154,9 @@ class Skeleton(Group):
         """Deprecated. Use Skeleton.save instead."""
         warn_deprecated("Skeleton.write", "skeleton.save")
         self.save(out_path)
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, type(self)) and self._id == other._id
 
     def __hash__(self) -> int:
         return id(self)
