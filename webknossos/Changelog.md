@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an issue where adding existing trees to an annotation fails. [#1201](https://github.com/scalableminds/webknossos-libs/pull/1201)
 
 
 ## [0.15.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.7) - 2024-10-25
