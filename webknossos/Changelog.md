@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `--coarsest-mag` argument to the `webknossos downsample` command. [#1203](https://github.com/scalableminds/webknossos-libs/pull/1203)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.15.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.7) - 2024-10-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.6...v0.15.7)
+
+### Added
+- Added `--coarsest-mag` argument to the `webknossos downsample` command. [#1203](https://github.com/scalableminds/webknossos-libs/pull/1203)
+
+### Fixed
 - Fixed an issue with merging annotations with compressed fallback layers.
+
 
 
 ## [0.15.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.6) - 2024-10-16
