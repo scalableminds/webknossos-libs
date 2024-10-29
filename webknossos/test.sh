@@ -18,18 +18,29 @@ if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
     
     # Starts a proxy server in record mode on port 3000 and sets the HTTP_PROXY env var
     proxay --mode record --host http://localhost:9000 --tapes-dir tests/cassettes &
+    PROXAY_PID=$!
 
     shift
     $PYTEST "-m" "use_proxay" "$@"
+    PYTEST_EXIT_CODE=$?
 
     # Kill the proxy server
-    kill %+
+    kill $PROXAY_PID
+    wait $PROXAY_PID
 
     stop_local_test_wk
+
+    exit $PYTEST_EXIT_CODE
 else
     export_vars
 
     proxay --mode replay --tapes-dir tests/cassettes 2>&1 > /dev/null &
+    PROXAY_PID=$!
+
     $PYTEST "$@"
-    kill %+
+    PYTEST_EXIT_CODE=$?
+
+    kill $PROXAY_PID
+
+    exit $PYTEST_EXIT_CODE
 fi

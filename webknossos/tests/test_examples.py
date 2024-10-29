@@ -227,9 +227,7 @@ def test_learned_segmenter() -> None:
         ids, id_counts = np.unique(segmentation, return_counts=True)
         counts = dict(zip(ids, id_counts))
         assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
-        assert url.startswith(
-            "http://localhost:9000/datasets/Organization_X/skin_segmented_"
-        )
+        assert url == "http://localhost:9000/datasets/Organization_X/skin_segmented"
 
         if old_default_classifier is None:
             del trainable_segmentation.RandomForestClassifier

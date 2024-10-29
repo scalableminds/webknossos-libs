@@ -6,12 +6,12 @@ function export_vars {
 
 function ensure_local_test_wk {
     export_vars
+    WK_DOCKER_DIR="tests"
 
     if ! curl -sf localhost:9000/api/health; then
         echo "Using docker compose setup with the docker tag $DOCKER_TAG"
         echo "  To change this, please update DOCKER_TAG in local_wk_setup.sh"
 
-        WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
         docker compose pull webknossos
         if [ ! -d binaryData/Organization_X/l4_sample ]; then
@@ -22,6 +22,7 @@ function ensure_local_test_wk {
             rm l4_sample.zip
             popd > /dev/null
         fi
+        find binaryData/Organization_X -mindepth 1 -maxdepth 1 -type d ! -name 'l4_sample' ! -name 'e2006_knossos' -exec rm -rf {} +
         USER_UID=$(id -u) USER_GID=$(id -g) docker compose up -d --no-build webknossos
         stop_wk () {
             ARG=$?

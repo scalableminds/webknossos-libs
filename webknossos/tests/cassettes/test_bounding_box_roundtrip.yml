@@ -21,13 +21,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 24 Oct 2024 12:54:40 GMT
+        date: Tue, 29 Oct 2024 14:28:45 GMT
         content-type: application/json
         content-length: '680'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1729774314295,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1730211945258,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
@@ -51,13 +51,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 24 Oct 2024 12:54:40 GMT
+        date: Tue, 29 Oct 2024 14:28:45 GMT
         content-type: application/json
         content-length: '1410'
       body:
         encoding: utf8
         data: >-
-          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1729774480525,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1730212125994,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -82,12 +82,12 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 24 Oct 2024 12:54:40 GMT
+        date: Tue, 29 Oct 2024 14:28:45 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"vY_2JziEAf5Gp1oBELkPaA"}'
+        data: '{"token":"wQr-SfqJXG6xoQbdQ956Aw"}'
         compression: none
   - request:
       method: POST
@@ -100,12 +100,12 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '969'
-        content-type: multipart/form-data; boundary=8e5df30b55a33a015f074ee7cb15f88e
+        content-length: '971'
+        content-type: multipart/form-data; boundary=5a8fd15c616b7ce6075585e3c1bfcf9f
       body:
         encoding: base64
         data: >-
-          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
+          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
     response:
       status:
         code: 200
@@ -113,19 +113,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 24 Oct 2024 12:54:40 GMT
+        date: Tue, 29 Oct 2024 14:28:45 GMT
         content-type: application/json
         content-length: '124'
       body:
         encoding: utf8
         data: >-
-          {"annotation":{"typ":"Explorational","id":"671a4391010000a90060a8c6"},"messages":[{"success":"Successfully
+          {"annotation":{"typ":"Explorational","id":"6720f11e010000a100b61902"},"messages":[{"success":"Successfully
           uploaded file"}]}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v7/annotations/671a4391010000a90060a8c6/download?skipVolumeData=false
+        /api/v7/annotations/6720f11e010000a100b61902/download?skipVolumeData=false
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -146,30 +146,30 @@ http_interactions:
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 24 Oct 2024 12:54:41 GMT
+        date: Tue, 29 Oct 2024 14:28:46 GMT
         content-type: application/xml
-        content-length: '1683'
+        content-length: '1680'
       body:
         encoding: utf8
         data: |-
           <things>
             <meta name="writer" content="NmlWriter.scala"/>
             <meta name="writerGitCommit" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"/>
-            <meta name="timestamp" content="1729774481633"/>
-            <meta name="annotationId" content="671a4391010000a90060a8c6"/>
+            <meta name="timestamp" content="1730212127154"/>
+            <meta name="annotationId" content="6720f11e010000a100b61902"/>
             <meta name="username" content="user_A BoyA"/>
             <parameters>
               <experiment name="l4_sample" organization="Organization_X" description="" wkUrl="http://localhost:9000"/>
               <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
               <offset x="0" y="0" z="0"/>
-              <time ms="1729774481295"/>
+              <time ms="1730212126728"/>
               <editPosition x="0" y="0" z="0"/>
               <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
               <zoomLevel zoom="2.0"/>
               <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
-              <userBoundingBox id="1" name="task bounding box" color.r="0.8285426962904431" color.g="0.5735511149884073" color.b="0.06775116416862104" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.3170121889444292" color.g="0.9278550697431108" color.b="0.6906468066453489" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
             </parameters>
-            <thing id="2" color.r="0.7908378839492798" color.g="0.9509191513061523" color.b="0.07765696942806244" color.a="1.0" name="a tree" groupId="1">
+            <thing id="2" color.r="0.1645635962486267" color.g="0.973088264465332" color.b="0.7590513825416565" color.a="1.0" name="a tree" groupId="1">
               <nodes>
                 <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
               </nodes>

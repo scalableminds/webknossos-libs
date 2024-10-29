@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator
@@ -28,12 +29,12 @@ pytestmark = [pytest.mark.use_proxay]
 @pytest.fixture(scope="module")
 def sample_remote_mags() -> list[wk.MagView]:
     mag_urls = [
-        "http://localhost:9000/datasets/Organization_X/l4_sample/color/1/",
-        "http://localhost:9000/datasets/Organization_X/l4_sample/color/2-2-1/",
-        "http://localhost:9000/datasets/Organization_X/l4_sample/color/4-4-2/",
-        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/1/",
-        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/2-2-1/",
-        "http://localhost:9000/datasets/Organization_X/l4_sample/segmentation/4-4-2/",
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/",
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/2-2-1/",
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/4-4-2/",
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/1/",
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/2-2-1/",
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-2/",
     ]
     mags = [MagView._ensure_mag_view(url) for url in mag_urls]
     return mags
@@ -41,8 +42,13 @@ def sample_remote_mags() -> list[wk.MagView]:
 
 @pytest.fixture(scope="module")
 def sample_remote_layer() -> list[wk.Layer]:
-    remote_dataset_url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    remote_dataset = Dataset.open_remote(remote_dataset_url)
+    token = os.getenv("WK_TOKEN")
+    if not token:
+        raise EnvironmentError("WK_TOKEN environment variable not set")
+
+    remote_dataset = Dataset.open_remote(
+        "l4_sample", "Organization_X", token, "http://localhost:9000"
+    )
     return list(remote_dataset.layers.values())
 
 
