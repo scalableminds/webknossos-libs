@@ -20,16 +20,11 @@ def resolve_chunk(
 ) -> None:
     """Make sure a chunk is uploaded to the server and mark it as completed.
 
-    Parameters
-    ----------
-    client : httpx.Client
-        A client to use for communication with the server
-    config : resumable.util.Config
-        The configuration of the resumable client
-    file : resumable.file.ResumableFile
-        The parent file of the chunk to be resolved
-    chunk : resumable.file.FileChunk
-        The chunk to be resolved
+    Args:
+        client: A client to use for communication with the server
+        config: The configuration of the resumable client
+        file: The parent file of the chunk to be resolved
+        chunk: The chunk to be resolved
     """
 
     exists_on_server = False
@@ -52,10 +47,14 @@ def _test_chunk(
 ) -> bool:
     """Check if the chunk exists on the server.
 
-    Returns
-    -------
-    bool
-        True if the chunk exists on the server
+    Args:
+        client: The HTTP client
+        config: The resumable configuration
+        file: The parent file
+        chunk: The chunk to test
+
+    Returns:
+        bool: True if the chunk exists on the server
     """
     response = client.get(
         config.target, params=_build_query(file, chunk, config.additional_query_params)
@@ -68,15 +67,17 @@ def _send_chunk(
 ) -> bool:
     """Upload the chunk to the server.
 
-    Returns
-    -------
-    bool
-        True if the upload was successful
+    Args:
+        client: The HTTP client instance
+        config: The resumable configuration settings
+        file: The parent file of the chunk
+        chunk: The chunk to upload
 
-    Raises
-    ------
-    ResumableError
-        If the server responded with an error code indicating permanent failure
+    Returns:
+        bool: True if the upload was successful
+
+    Raises:
+        ResumableError: If the server responded with an error code indicating permanent failure
     """
     try:
         response = client.post(
@@ -117,15 +118,11 @@ def _file_type(path: Path) -> str:
     which is guessed from file extension according to
     https://developer.mozilla.org/en-US/docs/Web/API/File/type.
 
-    Parameters
-    ----------
-    path : str
-        The path to guess the mime type of
+    Args:
+        path: The path to guess the mime type of
 
-    Returns
-    -------
-    str
-        The inferred mime type, or '' if none could be inferred
+    Returns:
+        str: The inferred mime type, or '' if none could be inferred
     """
     type_, _ = mimetypes.guess_type(path.name)
     # When no type can be inferred, File.type returns an empty string

@@ -92,6 +92,7 @@ plugins:
                     show_symbol_type_toc: true
                     show_if_no_docstring: true
                     signature_crossrefs: true
+                    parameter_headings: false
                     summary: true
                     unwrap_annotated: true
                     line_length: 60
