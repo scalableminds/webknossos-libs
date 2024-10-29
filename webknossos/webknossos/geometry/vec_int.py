@@ -11,29 +11,32 @@ _T = TypeVar("_T", bound="VecInt")
 
 class VecInt(tuple):
     """
-    The VecInt class is designed to represent a vector of integers. This class is a subclass of the built-in tuple class, and it extends the functionality of tuples by providing additional methods and operations.
+    A specialized vector class for storing and manipulating integer values with named axes.
 
-    One of the key features of the VecInt class is that it allows for the storage of axis names along with their corresponding values.
+    This class extends the built-in tuple type to provide vector operations while preserving
+    axis information. It allows for initialization with both positional and named arguments.
 
-    Here is a brief example demonstrating how to use the VecInt class:
+    Attributes:
+        axes (Tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
 
-    ```python
-    from webknossos import VecInt
+    Examples:
+        Create a vector with 4 named dimensions:
+        ```
+        vector_1 = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
+        vector_1 = VecInt([1, 2, 3, 4], axes=("x", "y", "z", "t"))
+        vector_1 = VecInt(x=1, y=2, z=3, t=4)
+        ```
 
-    # Creating a VecInt instance with 4 elements and axes x, y, z, t:
-    vector_1 = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
-    # Alternative ways to create the same VecInt instance:
-    vector_1 = VecInt([1, 2, 3, 4], axes=("x", "y", "z", "t"))
-    vector_1 = VecInt(x=1, y=2, z=3, t=4)
+        Create a vector filled with ones:
+        ```
+        vector_2 = VecInt.full(1, axes=("x", "y", "z", "t"))
+        assert vector_2[0] == vector_2[1] == vector_2[2] == vector_2[3]
+        ```
 
-    # Creating a VecInt instance with all elements set to 1 and axes x, y, z, t:
-    vector_2 = VecInt.full(1, axes=("x", "y", "z", "t"))
-    # Asserting that all elements in vector_2 are equal to 1:
-    assert vector_2[0] == vector_2[1] == vector_2[2] == vector_2[3]
-
-    # Demonstrating the addition operation between two VecInt instances:
-    assert vector_1 + vector_2 == VecInt(2, 3, 4, 5)
-    ```
+        Perform vector addition:
+        ```
+        assert vector_1 + vector_2 == VecInt(2, 3, 4, 5)
+        ```
     """
 
     axes: Tuple[str, ...]
