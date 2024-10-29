@@ -15,21 +15,19 @@ class Vec3Int(VecInt):
         axes: Optional[Iterable[str]] = ("x", "y", "z"),
         **kwargs: int,
     ) -> "Vec3Int":
-        """
-        Class to represent a 3D vector. Inherits from tuple and provides useful
-        methods and operations on top.
+        """A 3D vector class that inherits from tuple with additional vector operations.
 
-        A small usage example:
+        This class provides a convenient way to work with 3D integer vectors, supporting
+        common vector operations and component access.
 
-        ```python
-        from webknossos import Vec3Int
-
-        vector_1 = Vec3Int(1, 2, 3)
-        vector_2 = Vec3Int.full(1)
-        assert vector_2.x == vector_2.y == vector_2.y
-
-        assert vector_1 + vector_2 == (2, 3, 4)
-        ```
+        Examples:
+            Basic vector creation and operations:
+            ```
+            vector_1 = Vec3Int(1, 2, 3)
+            vector_2 = Vec3Int.full(1)
+            assert vector_2.x == vector_2.y == vector_2.y
+            assert vector_1 + vector_2 == (2, 3, 4)
+            ```
         """
 
         if args:

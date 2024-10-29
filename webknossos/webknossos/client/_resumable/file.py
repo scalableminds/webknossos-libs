@@ -35,22 +35,14 @@ def build_chunks(
 class ResumableFile:
     """A file to be uploaded in a resumable session.
 
-    Parameters
-    ----------
-    path : str or pathlib.Path
-        The path of the file
-    relative_path : pathlib.Path or None
-        The relative path of the file
-    chunk_size : int
-        The size, in bytes, of chunks uploaded in a single request
+    Args:
+        path (Union[str, pathlib.Path]): The path of the file
+        relative_path (Optional[pathlib.Path]): The relative path of the file
+        chunk_size (int): The size, in bytes, of chunks uploaded in a single request
 
-    Attributes
-    ----------
-    completed : resumable.util.CallbackDispatcher
-        Triggered when all chunks of the file have been uploaded
-    chunk_completed : resumable.util.CallbackDispatcher
-        Triggered when a chunks of the file has been uploaded, passing the
-        chunk
+    Attributes:
+        completed (resumable.util.CallbackDispatcher): Triggered when all chunks of the file have been uploaded
+        chunk_completed (resumable.util.CallbackDispatcher): Triggered when a chunks of the file has been uploaded, passing the chunk
     """
 
     def __init__(
@@ -106,10 +98,8 @@ class ResumableFile:
         If all chunks have been completed, this will trigger the `completed`
         callback of this file.
 
-        Parameters
-        ----------
-        chunk : resumable.chunk.FileChunk
-            The chunk to mark as completed
+        Args:
+            chunk (resumable.chunk.FileChunk): The chunk to mark as completed
         """
         self._chunk_done[chunk] = True
         if self.is_completed:
