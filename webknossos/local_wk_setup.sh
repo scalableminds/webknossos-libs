@@ -22,7 +22,6 @@ function ensure_local_test_wk {
             rm l4_sample.zip
             popd > /dev/null
         fi
-        find binaryData/Organization_X -mindepth 1 -maxdepth 1 -type d ! -name 'l4_sample' ! -name 'e2006_knossos' -exec rm -rf {} +
         USER_UID=$(id -u) USER_GID=$(id -g) docker compose up -d --no-build webknossos
         stop_wk () {
             ARG=$?

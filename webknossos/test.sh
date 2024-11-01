@@ -10,6 +10,8 @@ source local_wk_setup.sh
 # refer to the checked out (and potentially modified) code.
 PYTEST="uv run --all-extras --frozen python -m pytest --suppress-no-test-exit-code"
 
+find tests/binaryData/Organization_X -mindepth 1 -maxdepth 1 -type d ! -name 'l4_sample' ! -name 'e2006_knossos' -exec rm -rf {} +
+
 
 if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
     ensure_local_test_wk

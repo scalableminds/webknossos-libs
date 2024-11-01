@@ -1,3 +1,4 @@
+import os
 import tempfile
 from pathlib import Path
 
@@ -145,15 +146,18 @@ def test_annotation_from_file_with_multi_volume() -> None:
             pass
 
 
-@pytest.mark.parametrize(
-    "url",
-    [
-        "http://localhost:9000/annotations/61c20205010000cc004a6356",
-        "http://localhost:9000/links/LNir_A2-aCUzsoSL",
-    ],
-)
-def test_annotation_from_url(url: str) -> None:
-    annotation = wk.Annotation.download(url, skip_volume_data=True)
+@pytest.mark.use_proxay
+def test_annotation_from_upload_download_roundtrip() -> None:
+    path = (
+        TESTDATA_DIR
+        / "annotations"
+        / "l4dense_motta_et_al_demo_v2__explorational__4a6356.zip"
+    )
+    annotation_from_file = wk.Annotation.load(path)
+    test_token = os.getenv("WK_TOKEN")
+    with wk.webknossos_context("http://localhost:9000", test_token):
+        url = annotation_from_file.upload()
+    annotation = wk.Annotation.download(url)
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
