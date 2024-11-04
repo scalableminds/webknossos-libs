@@ -33,6 +33,16 @@ if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
     stop_local_test_wk
 
     exit $PYTEST_EXIT_CODE
+elif [ $# -gt 0 ] && [ "$1" = "--debug-cassettes" ]; then
+    # This will start a proxay server in replay mode so that the stored cassettes can be used for debugging tests.
+
+    export_vars
+
+    proxay --mode replay --tapes-dir tests/cassettes &
+    PROXAY_PID=$!
+    echo "Proxay server is running in replay mode. Press Ctrl+C to stop."
+    trap 'kill $PROXAY_PID; exit' INT
+    wait $PROXAY_PID
 else
     export_vars
 
