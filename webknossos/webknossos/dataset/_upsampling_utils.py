@@ -74,7 +74,7 @@ def upsample_cube_job(
                     data_cube = upsample_cube(cube_buffer, inverse_factors)
 
                     buffer_bbox = target_view.bounding_box.with_topleft_xyz(
-                        target_offset
+                        target_offset * inverse_factors
                     ).with_size_xyz(data_cube.shape)
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
                     file_buffer[(channel_index,) + buffer_bbox.to_slices_xyz()] = (
