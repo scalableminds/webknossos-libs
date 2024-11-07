@@ -34,6 +34,8 @@ function ensure_local_test_wk {
         while ! curl -sf localhost:9000/api/health; do
             sleep 5
         done
+        # docker compose exec -T --user root webknossos sh -c "echo name,url,publicUrl,key,isScratch,isDeleted,allowsUpload,onlyAllowedOrganization,reportUsedStorageEnabled\n'http://localhost','http://localhost:9000','http://localhost:3000','something-secure',f,f,t,,f > test/db/dataStores.csv"
+        # docker compose exec -T --user root webknossos sh -c "sed -i 's|publicUri = \${http.uri}|publicUri = \"localhost:3000\"|' conf/application.conf"
         OUT=$(docker compose exec -T webknossos tools/postgres/dbtool.js prepare-test-db 2>&1) || echo "$OUT"
         popd > /dev/null
     else

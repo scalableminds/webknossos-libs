@@ -1,1 +1,156 @@
-http_interactions: []
+http_interactions:
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 403
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:07:32 GMT
+        connection: close
+        content-type: text/plain; charset=UTF-8
+        content-length: '85'
+      body:
+        encoding: utf8
+        data: >-
+          Token may be expired, consider reloading. Access forbidden: No read
+          access on dataset
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 403
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:07:32 GMT
+        connection: close
+        content-type: text/plain; charset=UTF-8
+        content-length: '85'
+      body:
+        encoding: utf8
+        data: >-
+          Token may be expired, consider reloading. Access forbidden: No read
+          access on dataset
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 403
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:07:32 GMT
+        connection: close
+        content-type: text/plain; charset=UTF-8
+        content-length: '85'
+      body:
+        encoding: utf8
+        data: >-
+          Token may be expired, consider reloading. Access forbidden: No read
+          access on dataset
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 403
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:07:32 GMT
+        connection: close
+        content-type: text/plain; charset=UTF-8
+        content-length: '85'
+      body:
+        encoding: utf8
+        data: >-
+          Token may be expired, consider reloading. Access forbidden: No read
+          access on dataset
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 403
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:07:32 GMT
+        connection: close
+        content-type: text/plain; charset=UTF-8
+        content-length: '85'
+      body:
+        encoding: utf8
+        data: >-
+          Token may be expired, consider reloading. Access forbidden: No read
+          access on dataset
+        compression: none

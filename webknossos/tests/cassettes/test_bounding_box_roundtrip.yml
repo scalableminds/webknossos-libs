@@ -21,13 +21,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 29 Oct 2024 14:28:45 GMT
+        date: Thu, 07 Nov 2024 17:43:13 GMT
         content-type: application/json
         content-length: '680'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1730211945258,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1731001227438,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
@@ -51,13 +51,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 29 Oct 2024 14:28:45 GMT
+        date: Thu, 07 Nov 2024 17:43:14 GMT
         content-type: application/json
         content-length: '1410'
       body:
         encoding: utf8
         data: >-
-          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1730212125994,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1731001394115,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -82,12 +82,2998 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 29 Oct 2024 14:28:45 GMT
+        date: Thu, 07 Nov 2024 17:43:14 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"wQr-SfqJXG6xoQbdQ956Aw"}'
+        data: '{"token":"avi9BrnMwmlVI9uvbZ9r4A"}'
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1487'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href="datasource-properties.json">datasource-properties.json</a></li>
+                
+                  <li><a href=".zgroup">.zgroup</a></li>
+                
+                  <li><a href="color">color</a></li>
+                
+                  <li><a href="segmentation">segmentation</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1487'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href="datasource-properties.json">datasource-properties.json</a></li>
+                
+                  <li><a href=".zgroup">.zgroup</a></li>
+                
+                  <li><a href="color">color</a></li>
+                
+                  <li><a href="segmentation">segmentation</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1487'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href="datasource-properties.json">datasource-properties.json</a></li>
+                
+                  <li><a href=".zgroup">.zgroup</a></li>
+                
+                  <li><a href="color">color</a></li>
+                
+                  <li><a href="segmentation">segmentation</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1075'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}
+        compression: none
+  - request:
+      method: HEAD
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept-encoding: identity
+        accept: '*/*'
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1075'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        range: bytes=0-1074
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1075'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1289'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1293'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/2-2-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1293'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/4-4-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1293'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/8-8-2” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1295'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/16-16-4” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1296'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1300'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/2-2-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1300'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/4-4-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1300'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/8-8-2” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1302'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/16-16-4” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: avi9BrnMwmlVI9uvbZ9r4A
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 07 Nov 2024 17:43:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: POST
@@ -100,12 +3086,12 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '971'
-        content-type: multipart/form-data; boundary=5a8fd15c616b7ce6075585e3c1bfcf9f
+        content-length: '972'
+        content-type: multipart/form-data; boundary=b79936997758f30898102a02c2557a33
       body:
         encoding: base64
         data: >-
-          LS01YThmZDE1YzYxNmI3Y2U2MDc1NTg1ZTNjMWJmY2Y5Zg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS01YThmZDE1YzYxNmI3Y2U2MDc1NTg1ZTNjMWJmY2Y5Zg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgAl3tdWfTEnBveAQAA7gMAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZNNb9wgEIbv+RVo7tk1eP0l2YmUW6ReW7W9RP4ga1QbLMCt21/fAcPWiVqpuwczMMO8DzNTP27zRL5zbYSSDdBTAoTLXg1CXhtY7et9CY8Pd7UdccM83BFSL61uZ24xxJm4wbeFazFzaYnEkwamy4tp52XiQM7Bx/TtxMmGGeiJpRX+ioJSWtL8AuTn37d/NcBKJyheYjEJmQ16F2nCKP7zJDmet+bbk1qlE/+kNtKrSelTi/4Q1l0DyYlFCwkxevfS7iQDMvDFjg3gauTiOlq/FOaTMKKbkM3qFbF2Tov5XrpObUCsWj7wV/sZc+GVwfryxvq6Wz/EEBJErNVw/R+ybxBOtpN6EI5IQbh7z6jcrcXgIf9B8FE6koHE9Lh4B8Pwjj84GcVMwXQ8rAQSgFwyT1Sf33bI3juHYriS7tp9OYqsSjKaZnlO2QUX8dBjVljpsmRpUeXFpcpub+DLhc2T5SmGszTJGC2AXLVal2dERkdHjmr3UrXEas4hdKNUAw/di/3rLO+NqbFDE6cPW9J/sQf9N9bqfAit+XDlJkL7CfED0ulW9uOihLTxtFezm484McHEV5AWtxvwElCz+zaAOsJLHuNqDxev8IZX7cL82LU7/i04+tfnOL2/AVBLAQIUAxQAAAAIAJd7XVn0xJwb3gEAAO4DAAAfAAAAAAAAAAAAAACAAQAAAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sUEsFBgAAAAABAAEATQAAABsCAAAAAA0KLS01YThmZDE1YzYxNmI3Y2U2MDc1NTg1ZTNjMWJmY2Y5Zi0tDQo=
+          LS1iNzk5MzY5OTc3NThmMzA4OTgxMDJhMDJjMjU1N2EzMw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS1iNzk5MzY5OTc3NThmMzA4OTgxMDJhMDJjMjU1N2EzMw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgAZ5VnWWsEMKbfAQAA7wMAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZNNb9wgEIbv+RWIe3YBf2HJTqTcIvXaqu0l8gdZo9pgAW7d/voOGLabqJXqixmYYd6HmWke92VG34WxUqsW0xPBSKhBj1JdWry513uOHx/uGjfBhn24Q6hZO9MtwkGIN2FD7KswchHKIQUnLZ7zF9st6ywwOkcfO3SzQDtkoCeW1fBVFaWU0zLH6Offt3+1mHEvKF3iIAlaLHhXGSWEZnVByO15Z7896U158U96R4OetTl14I/jum8xObFkASFEH17GnxQYjWJ1U4thNQl5mVxYSvtJWtnPwObMBlgHp4N8L32vd4ycXj+IV/cZcsGV0fryxvp6WD/kGBMkrM0K8x+yrxBetpd6IxyQonD/nkm5X8sxQP6D4KPyJCNK6WHxDobBHX9wCgqZoul5GMcoAvlkgag5v+2Qo3duiuFLemgP5cg4KcuiZhVnnOWwTqeBs6xqQjgv6pzxsibX2oV6UZ4VLGdFQXld1hze5GL0tj4DM7yWRwf/o1YdckYIHNtR6VHE9oUG9lbwzrBvUeIFQk+GPzRh+KdinW9CGzFehE3UYUTChPSmU8O0aqlcOh304gckjUw04RmUg+0WBwmg2f9bDDriU97GNQEuXRGMoNqHhbnrDvxrcPJvzml8fwNQSwECFAMUAAAACABnlWdZawQwpt8BAADvAwAAHwAAAAAAAAAAAAAAgAEAAAAAdGVzdF9ib3VuZGluZ19ib3hfcm91bmR0cmlwLm5tbFBLBQYAAAAAAQABAE0AAAAcAgAAAAANCi0tYjc5OTM2OTk3NzU4ZjMwODk4MTAyYTAyYzI1NTdhMzMtLQ0K
     response:
       status:
         code: 200
@@ -113,19 +3099,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 29 Oct 2024 14:28:45 GMT
+        date: Thu, 07 Nov 2024 17:43:15 GMT
         content-type: application/json
         content-length: '124'
       body:
         encoding: utf8
         data: >-
-          {"annotation":{"typ":"Explorational","id":"6720f11e010000a100b61902"},"messages":[{"success":"Successfully
+          {"annotation":{"typ":"Explorational","id":"672cfc33010000b1000fb7fc"},"messages":[{"success":"Successfully
           uploaded file"}]}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v7/annotations/6720f11e010000a100b61902/download?skipVolumeData=false
+        /api/v7/annotations/672cfc33010000b1000fb7fc/download?skipVolumeData=false
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -146,30 +3132,30 @@ http_interactions:
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 29 Oct 2024 14:28:46 GMT
+        date: Thu, 07 Nov 2024 17:43:15 GMT
         content-type: application/xml
-        content-length: '1680'
+        content-length: '1684'
       body:
         encoding: utf8
         data: |-
           <things>
             <meta name="writer" content="NmlWriter.scala"/>
             <meta name="writerGitCommit" content="e8d5ea3dd097af5a4a7a3bb834d9da56d072ba4b"/>
-            <meta name="timestamp" content="1730212127154"/>
-            <meta name="annotationId" content="6720f11e010000a100b61902"/>
+            <meta name="timestamp" content="1731001395646"/>
+            <meta name="annotationId" content="672cfc33010000b1000fb7fc"/>
             <meta name="username" content="user_A BoyA"/>
             <parameters>
               <experiment name="l4_sample" organization="Organization_X" description="" wkUrl="http://localhost:9000"/>
               <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
               <offset x="0" y="0" z="0"/>
-              <time ms="1730212126728"/>
+              <time ms="1731001395456"/>
               <editPosition x="0" y="0" z="0"/>
               <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
               <zoomLevel zoom="2.0"/>
               <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
-              <userBoundingBox id="1" name="task bounding box" color.r="0.3170121889444292" color.g="0.9278550697431108" color.b="0.6906468066453489" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.19599689669909437" color.g="0.1858755821105521" color.b="0.41391359117093784" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
             </parameters>
-            <thing id="2" color.r="0.1645635962486267" color.g="0.973088264465332" color.b="0.7590513825416565" color.a="1.0" name="a tree" groupId="1">
+            <thing id="2" color.r="0.1835242509841919" color.g="0.6790088415145874" color.b="0.38066592812538147" color.a="1.0" name="a tree" groupId="1">
               <nodes>
                 <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
               </nodes>
