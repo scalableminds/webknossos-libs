@@ -9,6 +9,7 @@ from zipfile import BadZipFile, ZipFile
 import httpx
 import numpy as np
 import pytest
+from cluster_tools import DebugSequentialExecutor
 from tifffile import TiffFile
 
 import webknossos as wk
@@ -186,10 +187,7 @@ REPO_IMAGES_ARGS: List[
 ]
 
 
-@pytest.mark.parametrize(
-    "path, kwargs, dtype, num_channels, num_layers, size", REPO_IMAGES_ARGS
-)
-def test_repo_images(
+def _test_repo_images(
     tmp_path: Path,
     path: str,
     kwargs: Dict,
@@ -198,7 +196,7 @@ def test_repo_images(
     num_layers: int,
     size: Tuple[int, ...],
 ) -> wk.Dataset:
-    with wk.utils.get_executor_for_args(None) as executor:
+    with DebugSequentialExecutor() as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
         layer = ds.add_layer_from_images(
             path,
@@ -216,6 +214,21 @@ def test_repo_images(
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0
     return ds
+
+
+@pytest.mark.parametrize(
+    "path, kwargs, dtype, num_channels, num_layers, size", REPO_IMAGES_ARGS
+)
+def test_repo_images(
+    tmp_path: Path,
+    path: str,
+    kwargs: Dict,
+    dtype: str,
+    num_channels: int,
+    num_layers: int,
+    size: Tuple[int, ...],
+) -> None:
+    _test_repo_images(tmp_path, path, kwargs, dtype, num_channels, num_layers, size)
 
 
 def download_and_unpack(
@@ -296,10 +309,7 @@ BIOFORMATS_ARGS = [
 ]
 
 
-@pytest.mark.parametrize(
-    "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
-)
-def test_bioformats(
+def _test_bioformats(
     tmp_path: Path,
     url: str,
     filename: str,
@@ -326,6 +336,24 @@ def test_bioformats(
         assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
     assert len(ds.layers) == num_layers
     return ds
+
+
+@pytest.mark.parametrize(
+    "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
+)
+def test_bioformats(
+    tmp_path: Path,
+    url: str,
+    filename: str,
+    kwargs: Dict,
+    dtype: str,
+    num_channels: int,
+    size: Tuple[int, int, int],
+    num_layers: int,
+) -> None:
+    _test_bioformats(
+        tmp_path, url, filename, kwargs, dtype, num_channels, size, num_layers
+    )
 
 
 # All scif images used here are published with CC0 license,
@@ -480,7 +508,7 @@ if __name__ == "__main__":
             name = "".join(filter(str.isalnum, image_path))
             print(*repo_images_args)
             print(
-                test_repo_images(Path(tempdir), *repo_images_args)
+                _test_repo_images(Path(tempdir), *repo_images_args)
                 .upload(f"test_repo_images_{name}_{time()}")
                 .url
             )
@@ -490,7 +518,7 @@ if __name__ == "__main__":
             name = "".join(filter(str.isalnum, bioformats_args[1]))
             print(*bioformats_args)
             print(
-                test_bioformats(Path(tempdir), *bioformats_args)
+                _test_bioformats(Path(tempdir), *bioformats_args)
                 .upload(f"test_bioformats_{name}_{time()}")
                 .url
             )
