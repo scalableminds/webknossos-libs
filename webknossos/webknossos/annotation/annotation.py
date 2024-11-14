@@ -61,7 +61,7 @@ from ..dataset import (
     RemoteDataset,
     SegmentationLayer,
 )
-from ..dataset.defaults import PROPERTIES_FILE_NAME
+from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
 from ..dataset.properties import DatasetProperties, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
@@ -897,6 +897,7 @@ class Annotation:
         zarr_path = UPath(
             f"{datastore_url}/data/annotations/zarr/{self.annotation_id}/",
             headers={} if token is None else {"X-Auth-Token": token},
+            ssl=SSL_CONTEXT,
         )
         return Dataset.open(zarr_path)
 
