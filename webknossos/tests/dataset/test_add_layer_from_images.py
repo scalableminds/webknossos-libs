@@ -189,7 +189,7 @@ REPO_IMAGES_ARGS: List[
 
 def _test_repo_images(
     tmp_path: Path,
-    path: str,
+    path: str | list[Path],
     kwargs: Dict,
     dtype: str,
     num_channels: int,
@@ -260,7 +260,7 @@ def download_and_unpack(
                 copy(download_file.name, out_path / filename_i)
 
 
-BIOFORMATS_ARGS = [
+BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]] = [
     (
         "https://samples.scif.io/wtembryo.zip",
         "wtembryo.mov",
@@ -358,7 +358,9 @@ def test_bioformats(
 
 # All scif images used here are published with CC0 license,
 # see https://scif.io/images.
-TEST_IMAGES_ARGS = [
+TEST_IMAGES_ARGS: list[
+    tuple[str | list[str], str | list[str], dict, str, int, tuple[int, int, int]]
+] = [
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0420.dm4",
         "slice_0420.dm4",
@@ -439,10 +441,7 @@ TEST_IMAGES_ARGS = [
 ]
 
 
-@pytest.mark.parametrize(
-    "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
-)
-def test_test_images(
+def _test_test_images(
     tmp_path: Path,
     url: Union[str, List[str]],
     filename: Union[str, List[str]],
@@ -497,28 +496,43 @@ def test_test_images(
     return ds
 
 
+@pytest.mark.parametrize(
+    "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
+)
+def test_test_images(
+    tmp_path: Path,
+    url: Union[str, List[str]],
+    filename: Union[str, List[str]],
+    kwargs: Dict,
+    dtype: str,
+    num_channels: int,
+    size: Tuple[int, int, int],
+) -> None:
+    _test_test_images(tmp_path, url, filename, kwargs, dtype, num_channels, size)
+
+
 if __name__ == "__main__":
     time = lambda: strftime("%Y-%m-%d_%H-%M-%S", gmtime())  # noqa: E731
 
-    for repo_images_args in REPO_IMAGES_ARGS:
+    for repo_image in REPO_IMAGES_ARGS:
         with TemporaryDirectory() as tempdir:
-            image_path = repo_images_args[0]
+            image_path = repo_image[0]
             if isinstance(image_path, list):
                 image_path = str(image_path[0])
             name = "".join(filter(str.isalnum, image_path))
-            print(*repo_images_args)
+            print(repo_image)
             print(
-                _test_repo_images(Path(tempdir), *repo_images_args)
+                _test_repo_images(Path(tempdir), *repo_image)
                 .upload(f"test_repo_images_{name}_{time()}")
                 .url
             )
 
-    for bioformats_args in BIOFORMATS_ARGS:
+    for bioformat_image in BIOFORMATS_ARGS:
         with TemporaryDirectory() as tempdir:
-            name = "".join(filter(str.isalnum, bioformats_args[1]))
-            print(*bioformats_args)
+            name = "".join(filter(str.isalnum, bioformat_image[1]))
+            print(bioformat_image)
             print(
-                _test_bioformats(Path(tempdir), *bioformats_args)
+                _test_bioformats(Path(tempdir), *bioformat_image)
                 .upload(f"test_bioformats_{name}_{time()}")
                 .url
             )
@@ -528,7 +542,7 @@ if __name__ == "__main__":
             name = "".join(filter(str.isalnum, test_images_args[1]))
             print(*test_images_args)
             print(
-                test_test_images(Path(tempdir), *test_images_args)
+                _test_test_images(Path(tempdir), *test_images_args)
                 .upload(f"test_test_images_{name}_{time()}")
                 .url
             )

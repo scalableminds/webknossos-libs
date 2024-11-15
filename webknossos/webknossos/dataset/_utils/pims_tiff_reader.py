@@ -1,4 +1,3 @@
-import tempfile
 from os import PathLike
 from pathlib import Path
 from typing import Set, Tuple
