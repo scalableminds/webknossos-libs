@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Fixes SSL certificate verification for remote datasets by adding CA certificates using `certifi`. [#1211](https://github.com/scalableminds/webknossos-libs/pull/1211)
 
 ### Fixed
 
