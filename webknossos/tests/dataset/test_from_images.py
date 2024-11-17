@@ -5,6 +5,7 @@ from typing import Iterator
 
 import numpy as np
 import pytest
+from cluster_tools import DebugSequentialExecutor
 from tifffile import TiffFile
 
 import webknossos as wk
@@ -36,7 +37,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
     for z_index in range(0, data.shape[-1]):
         with TiffFile(TESTDATA_DIR / "tiff" / "test.0000.tiff") as tif_file:
             comparison_slice = tif_file.asarray().T
-        assert np.array_equal(data[:, :, z_index], comparison_slice)
+        np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
 def test_multiple_multitiffs(tmp_path: Path) -> None:
@@ -95,11 +96,13 @@ def test_no_slashes_in_layername(tmp_path: Path) -> None:
     )
 
     for strategy in Dataset.ConversionLayerMapping:
-        dataset = wk.Dataset.from_images(
-            tmp_path / "tiff",
-            tmp_path / str(strategy),
-            voxel_size=(10, 10, 10),
-            map_filepath_to_layer_name=strategy,
-        )
+        with DebugSequentialExecutor() as executor:
+            dataset = wk.Dataset.from_images(
+                tmp_path / "tiff",
+                tmp_path / str(strategy),
+                voxel_size=(10, 10, 10),
+                map_filepath_to_layer_name=strategy,
+                executor=executor,
+            )
 
-        assert all("/" not in layername for layername in dataset.layers)
+            assert all("/" not in layername for layername in dataset.layers)

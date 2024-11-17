@@ -82,18 +82,14 @@ class PimsTiffReader(FramesSequenceND):
                 )
                 slices[axis] = index
 
-            if any(ind[axis] == index for axis, index in slices.items()):
-                section_selector = tuple(
-                    slice(None)
-                    if axis in self.bundle_axes
-                    else slice(ind[axis], ind[axis] + 1)
+            if all(ind[axis] == index for axis, index in slices.items()):
+                section_selector: tuple[slice | int, ...] = tuple(
+                    slice(None) if axis in self.bundle_axes else ind[axis]
                     for axis in self._tiff_axes
                     if axis not in self._other_axes
                 )
-                out_selector = tuple(
-                    slice(None)
-                    if axis not in slices
-                    else slice(slices[axis], slices[axis] + 1)
+                out_selector: tuple[slice | int, ...] = tuple(
+                    slice(None) if axis in self.bundle_axes else 0
                     for axis in self._tiff_axes
                 )
                 section = _tiff.asarray(key=i)
