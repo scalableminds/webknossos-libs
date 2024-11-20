@@ -34,7 +34,7 @@ jobs:
 
       - name: Verify installation
         run: |
-          python -c "import webknossos; print(f'webknossos version: {webknossos.__version__}')"
+          python -c "import webknossos; from webknossos import version; print(f'webknossos version: {version.__version__}')"
           
           if [ "${{ matrix.extras }}" = "[all]" ]; then
             # Verify some of the optional dependencies are available
