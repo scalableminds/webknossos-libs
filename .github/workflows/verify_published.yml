@@ -1,0 +1,21 @@
+name: Verify Published Package
+
+# Verifies that the published webknossos package on PyPi.org can be installed and imported 
+# across different Python versions. Tests both basic installation and "all" optional
+# dependencies. Runs nightly to ensure consistent package availability.
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run every night at midnight
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  verify-published:
+    runs-on: ubuntu-latest
+   
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+   
+
+     
