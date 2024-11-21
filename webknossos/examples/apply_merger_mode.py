@@ -21,7 +21,7 @@ def main() -> None:
 
     dataset = wk.Dataset.download(
         "l4_sample",
-        "scalable_minds",
+        "Organization_X",
         path="testoutput/l4_sample_dev",
     )
     in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))

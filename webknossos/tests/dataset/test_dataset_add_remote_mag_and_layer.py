@@ -1,7 +1,8 @@
+import itertools
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Generator, Iterator, List
+from typing import Generator, Iterable, Iterator, List
 
 import pytest
 from upath import UPath
@@ -11,56 +12,26 @@ from webknossos.utils import is_remote_path
 
 
 @pytest.fixture(scope="module")
-def sample_bbox() -> wk.BoundingBox:
-    return wk.BoundingBox((2807, 4352, 1794), (10, 10, 10))
-
-
-@pytest.fixture(scope="module")
-def sample_remote_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
-    # url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    with TemporaryDirectory() as temp_dir:
-        token = os.getenv("WK_TOKEN")
-        yield wk.Dataset.download(
-            "l4_sample",
-            "Organization_X",
-            token,
-            path=Path(temp_dir) / "ds",
-            bbox=sample_bbox,
-        )
+def sample_remote_dataset() -> Iterator[wk.Dataset]:
+    with TemporaryDirectory() as tmpdir:
+        original_ds = wk.Dataset.open("testdata/l4_sample_snipped")
+        yield original_ds.copy_dataset(tmpdir)
 
 
 pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture(scope="module")
-def sample_remote_mags() -> Generator[List[wk.MagView], None, None]:
-    token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", token):
-        # set the l4_sample dataset as public because remote mags only work when the dataset is public
-        dataset = wk.Dataset.open_remote("l4_sample")
-        dataset.is_public = True
-
-        mag_urls = [
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/",
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/2-2-1/",
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/4-4-1/",
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/1/",
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/2-2-1/",
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/",
-        ]
-        mags = [wk.MagView._ensure_mag_view(url) for url in mag_urls]
-    yield mags
-    with wk.webknossos_context("http://localhost:9000", token):
-        dataset = wk.Dataset.open_remote("l4_sample")
-        dataset.is_public = False
+def sample_layer_and_mag_name() -> Iterable[tuple[str, str]]:
+    layer_names = ["color", "segmentation"]
+    mag_names = ["1", "2-2-1", "4-4-1"]
+    return itertools.product(layer_names, mag_names)
 
 
 @pytest.fixture(scope="module")
 def sample_remote_layer() -> list[wk.Layer]:
+    os.environ["HTTP_PROXY"] = "http://localhost:3000"
     token = os.getenv("WK_TOKEN")
-    if not token:
-        raise EnvironmentError("WK_TOKEN environment variable not set")
-
     remote_dataset = wk.Dataset.open_remote(
         "l4_sample", "Organization_X", token, "http://localhost:9000"
     )
@@ -68,8 +39,16 @@ def sample_remote_layer() -> list[wk.Layer]:
 
 
 def test_add_remote_mags_from_mag_view(
-    sample_remote_mags: list[wk.MagView], sample_remote_dataset: wk.Dataset
+    sample_layer_and_mag_name: Iterable[tuple[str, str]],
+    sample_remote_dataset: wk.Dataset,
 ) -> None:
+    remote_dataset = wk.Dataset.open_remote(
+        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+    )
+    sample_remote_mags = [
+        remote_dataset.get_layer(layer).get_mag(mag)
+        for layer, mag in sample_layer_and_mag_name
+    ]
     for remote_mag in sample_remote_mags:
         mag_path = remote_mag.path
         layer_type = remote_mag.layer.category
@@ -90,9 +69,16 @@ def test_add_remote_mags_from_mag_view(
 
 
 def test_add_remote_mags_from_path(
-    sample_remote_mags: list[wk.MagView],
+    sample_layer_and_mag_name: Iterable[tuple[str, str]],
     sample_remote_dataset: wk.Dataset,
 ) -> None:
+    remote_dataset = wk.Dataset.open_remote(
+        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+    )
+    sample_remote_mags = [
+        remote_dataset.get_layer(layer).get_mag(mag)
+        for layer, mag in sample_layer_and_mag_name
+    ]
     for remote_mag in sample_remote_mags:
         mag_path = remote_mag.path
         layer_type = remote_mag.layer.category

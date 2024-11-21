@@ -117,6 +117,7 @@ def test_image_stack_to_dataset() -> None:
         assert dataset.get_layer("test").dtype_per_channel == "uint8"
 
 
+@pytest.mark.use_proxay
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
