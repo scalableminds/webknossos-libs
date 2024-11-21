@@ -1,4 +1,7 @@
 import os
+import ssl
+
+import certifi
 
 from ..geometry import Vec3Int
 from .data_format import DataFormat
@@ -22,3 +25,4 @@ PROPERTIES_FILE_NAME = "datasource-properties.json"
 ZGROUP_FILE_NAME = ".zgroup"
 ZATTRS_FILE_NAME = ".zattrs"
 ZARR_JSON_FILE_NAME = "zarr.json"
+SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())

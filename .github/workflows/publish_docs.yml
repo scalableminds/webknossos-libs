@@ -42,5 +42,5 @@ jobs:
       run: |
         cd docs
         uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
-          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
+          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on docs.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
             "$SLACK_HOOK"

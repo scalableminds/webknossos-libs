@@ -53,6 +53,7 @@ from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
     DEFAULT_DATA_FORMAT,
     PROPERTIES_FILE_NAME,
+    SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
@@ -704,6 +705,7 @@ class Dataset:
         zarr_path = UPath(
             f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",
             headers={} if token is None else {"X-Auth-Token": token},
+            ssl=SSL_CONTEXT,
         )
         return RemoteDataset(
             zarr_path, dataset_name, organization_id, sharing_token, context_manager
