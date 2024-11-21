@@ -39,7 +39,7 @@ If your issue doesn’t already exist, and you’re ready to create a new one, m
 Please use one of the provided templates to make this process easier for you.
 
 You can submit an issue [here](https://github.com/scalableminds/webknossos-libs/issues/new)
-(read more about [issues here](https://docs.github.com/en/issues)).
+(read more about [issues here](https://docs.github.com/en/issues)\).
 
 
 ### Report a Bug :lady_beetle:

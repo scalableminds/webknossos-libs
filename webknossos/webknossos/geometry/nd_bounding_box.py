@@ -62,7 +62,7 @@ class NDBoundingBox:
                 axes=("x", "y"),
                 index=(1,2)
             )
-            ````
+            ```
         Create a 4D bounding box:
             ```
             bbox_2 = NDBoundingBox(
