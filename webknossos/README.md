@@ -50,7 +50,7 @@ See the [examples folder](examples) or the [the documentation](https://docs.webk
 The dependencies for the examples are not installed by default. Use `pip install webknossos[examples]` to install them.
 
 ## Contributions & Development
-Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/development.html).
+Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/CONTRIBUTING.html).
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)
