@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Iterator
+from typing import Generator, Iterator, List
 
 import pytest
 from upath import UPath
@@ -33,19 +33,26 @@ pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture(scope="module")
-def sample_remote_mags() -> list[wk.MagView]:
+def sample_remote_mags() -> Generator[List[wk.MagView], None, None]:
     token = os.getenv("WK_TOKEN")
     with wk.webknossos_context("http://localhost:9000", token):
+        # set the l4_sample dataset as public because remote mags only work when the dataset is public
+        dataset = wk.Dataset.open_remote("l4_sample")
+        dataset.is_public = True
+
         mag_urls = [
             "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/1/",
             "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/2-2-1/",
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/4-4-2/",
+            "http://localhost:9000/data/zarr/Organization_X/l4_sample/color/4-4-1/",
             "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/1/",
             "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/2-2-1/",
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-2/",
+            "http://localhost:9000/data/zarr/Organization_X/l4_sample/segmentation/4-4-1/",
         ]
         mags = [wk.MagView._ensure_mag_view(url) for url in mag_urls]
-    return mags
+    yield mags
+    with wk.webknossos_context("http://localhost:9000", token):
+        dataset = wk.Dataset.open_remote("l4_sample")
+        dataset.is_public = False
 
 
 @pytest.fixture(scope="module")
@@ -78,7 +85,7 @@ def test_add_remote_mags_from_mag_view(
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
-            added_mag.path == mag_path or added_mag.path == mag_path.parent
+            str(added_mag.path) == str(mag_path)  # or added_mag.path == mag_path.parent
         ), "Added remote mag's path does not match remote path of mag added."
 
 
@@ -102,7 +109,7 @@ def test_add_remote_mags_from_path(
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
-            added_mag.path == mag_path or added_mag.path == mag_path.parent
+            str(added_mag.path) == str(mag_path)  # or added_mag.path == mag_path.parent
         ), "Added remote mag's path does not match remote path of mag added."
 
 

@@ -119,6 +119,10 @@ _DATASET_URL_REGEX = re.compile(
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
+# _ZARR_DATASET_URL_REGEX = re.compile(
+#     r"^(?P<webknossos_url>https?://.*)/data/zarr/"
+#     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)/?"
+# )
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.
@@ -464,6 +468,11 @@ class Dataset:
             f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
         )
 
+        # assert not is_remote_path(dataset_path), (
+        #     f"Cannot open Dataset: {dataset_path} is a remote path. "
+        #     + "Please use Dataset.open_remote() to open remote datasets."
+        # )
+
         return cls(
             dataset_path,
             voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
@@ -583,13 +592,14 @@ class Dataset:
         dataset_name_or_url = resolve_short_link(dataset_name_or_url)
 
         match = _DATASET_URL_REGEX.match(dataset_name_or_url)
+        # zarr_match = _ZARR_DATASET_URL_REGEX.match(dataset_name_or_url)
         if match is not None:
             assert (
                 organization_id is None
                 and sharing_token is None
                 and webknossos_url is None
             ), (
-                f"When Dataset.{caller}() is called with an annotation url, "
+                f"When Dataset.{caller}() is called with an url, "
                 + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
                 + "organization_id, sharing_token and webknossos_url must not be set."
             )
@@ -597,6 +607,19 @@ class Dataset:
             organization_id = match.group("organization_id")
             sharing_token = match.group("sharing_token")
             webknossos_url = match.group("webknossos_url")
+        # elif zarr_match is not None:
+        #     assert (
+        #         organization_id is None
+        #         and sharing_token is None
+        #         and webknossos_url is None
+        #     ), (
+        #         f"When Dataset.{caller}() is called with a zarr url, "
+        #         + f"e.g. Dataset.{caller}('https://webknossos.org/data/zarr/scalable_minds/l4_sample_dev/'), "
+        #         + "organization_id, sharing_token and webknossos_url must not be set."
+        #     )
+        #     dataset_name = zarr_match.group("dataset_name")
+        #     organization_id = zarr_match.group("organization_id")
+        #     webknossos_url = zarr_match.group("webknossos_url")
         else:
             dataset_name = dataset_name_or_url
 

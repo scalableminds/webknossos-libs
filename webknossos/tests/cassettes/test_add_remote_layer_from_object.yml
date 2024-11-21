@@ -13,22 +13,175 @@ http_interactions:
         compression: none
     response:
       status:
-        code: 403
+        code: 404
       headers:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:07:31 GMT
+        date: Thu, 21 Nov 2024 10:19:41 GMT
         connection: close
-        content-type: text/plain; charset=UTF-8
-        content-length: '85'
+        content-type: application/json
+        content-length: '101'
       body:
         encoding: utf8
         data: >-
-          Token may be expired, consider reloading. Access forbidden: No read
-          access on dataset
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
@@ -44,22 +197,175 @@ http_interactions:
         compression: none
     response:
       status:
-        code: 403
+        code: 404
       headers:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:07:31 GMT
+        date: Thu, 21 Nov 2024 10:19:41 GMT
         connection: close
-        content-type: text/plain; charset=UTF-8
-        content-length: '85'
+        content-type: application/json
+        content-length: '101'
       body:
         encoding: utf8
         data: >-
-          Token may be expired, consider reloading. Access forbidden: No read
-          access on dataset
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
@@ -75,22 +381,175 @@ http_interactions:
         compression: none
     response:
       status:
-        code: 403
+        code: 404
       headers:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:07:31 GMT
+        date: Thu, 21 Nov 2024 10:19:41 GMT
         connection: close
-        content-type: text/plain; charset=UTF-8
-        content-length: '85'
+        content-type: application/json
+        content-length: '101'
       body:
         encoding: utf8
         data: >-
-          Token may be expired, consider reloading. Access forbidden: No read
-          access on dataset
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -106,22 +565,175 @@ http_interactions:
         compression: none
     response:
       status:
-        code: 403
+        code: 404
       headers:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:07:31 GMT
+        date: Thu, 21 Nov 2024 10:19:41 GMT
         connection: close
-        content-type: text/plain; charset=UTF-8
-        content-length: '85'
+        content-type: application/json
+        content-length: '101'
       body:
         encoding: utf8
         data: >-
-          Token may be expired, consider reloading. Access forbidden: No read
-          access on dataset
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -137,20 +749,1093 @@ http_interactions:
         compression: none
     response:
       status:
-        code: 403
+        code: 404
       headers:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:07:31 GMT
+        date: Thu, 21 Nov 2024 10:19:41 GMT
         connection: close
-        content-type: text/plain; charset=UTF-8
-        content-length: '85'
+        content-type: application/json
+        content-length: '101'
       body:
         encoding: utf8
         data: >-
-          Token may be expired, consider reloading. Access forbidden: No read
-          access on dataset
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 21 Nov 2024 10:19:41 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
         compression: none
