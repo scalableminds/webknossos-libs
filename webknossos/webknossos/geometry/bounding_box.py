@@ -24,9 +24,10 @@ _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 
 @attr.frozen
 class BoundingBox(NDBoundingBox):
-    """
-    This class is used to represent an axis-aligned cuboid in 3D.
-    The top-left coordinate is inclusive and the bottom-right coordinate is exclusive.
+    """An axis-aligned 3D bounding box with integer coordinates.
+
+    This class represents a axis-aligned cuboid in 3D space. The top-left coordinate is
+    inclusive and the bottom-right coordinate is exclusive, defining a volume in space.
 
     A small usage example:
 
@@ -38,6 +39,16 @@ class BoundingBox(NDBoundingBox):
 
     assert bbox_1.intersected_with(bbox_2).size == (25, 25, 25)
     ```
+
+    Attributes:
+        topleft (Vec3Int): Top-left corner coordinates (inclusive)
+        size (Vec3Int): Size of the bounding box in each dimension (width, height, depth)
+        axes (Tuple[str, str, str]): Names of the coordinate axes, defaults to ("x", "y", "z")
+        index (Vec3Int): Index values for each dimension, defaults to (1, 2, 3)
+        bottomright (Vec3Int): Bottom-right corner coordinates (exclusive), computed from topleft + size
+        name (Optional[str]): Optional name for the bounding box, defaults to "Unnamed Bounding Box"
+        is_visible (bool): Whether the bounding box should be visible, defaults to True
+        color (Optional[Tuple[float, float, float, float]]): Optional RGBA color values
     """
 
     topleft: Vec3Int = attr.field(converter=Vec3Int)
@@ -86,23 +97,65 @@ class BoundingBox(NDBoundingBox):
 
     @classmethod
     def from_wkw_dict(cls, bbox: Dict) -> "BoundingBox":
+        """Creates a BoundingBox from a wkw-format dictionary.
+
+        Args:
+            bbox (Dict): Dictionary containing wkw-format bounding box data with
+                keys 'topLeft', 'width', 'height', and 'depth'
+
+        Returns:
+            BoundingBox: A new bounding box with the specified dimensions
+        """
         return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
 
     @classmethod
     def from_config_dict(cls, bbox: Dict) -> "BoundingBox":
+        """Creates a BoundingBox from a config-format dictionary.
+
+        Args:
+            bbox (Dict): Dictionary containing config-format bounding box data with
+                keys 'topleft' and 'size'
+
+        Returns:
+            BoundingBox: A new bounding box with the specified dimensions
+        """
         return cls(bbox["topleft"], bbox["size"])
 
     @classmethod
     def from_tuple6(cls, tuple6: Tuple[int, int, int, int, int, int]) -> "BoundingBox":
+        """Creates a BoundingBox from a 6-tuple of coordinates.
+
+        Args:
+            tuple6 (Tuple[int, int, int, int, int, int]): A tuple containing
+                (x, y, z) coordinates followed by (width, height, depth) dimensions
+
+        Returns:
+            BoundingBox: A new bounding box with the specified dimensions
+        """
         return cls(tuple6[0:3], tuple6[3:6])
 
     @classmethod
     def from_tuple2(cls, tuple2: Tuple[Vec3IntLike, Vec3IntLike]) -> "BoundingBox":
+        """Creates a BoundingBox from a 2-tuple of coordinates.
+
+        Args:
+            tuple2 (Tuple[Vec3IntLike, Vec3IntLike]): A tuple containing
+                the topleft coordinates and size dimensions
+
+        Returns:
+            BoundingBox: A new bounding box with the specified dimensions
+        """
         return cls(tuple2[0], tuple2[1])
 
     @classmethod
     def from_points(cls, points: Iterable[Vec3IntLike]) -> "BoundingBox":
-        """Returns a bounding box exactly containing all points."""
+        """Returns a bounding box which is guaranteed to completely enclose all points in the input.
+
+        Args:
+            points (Iterable[Vec3IntLike]): Set of points to be bounded. Each point must be convertible to Vec3Int.
+
+        Returns:
+            BoundingBox: A bounding box that is the minimum size needed to contain all input points.exactly containing all points."""
 
         all_points = np.array([Vec3Int(point).to_list() for point in points])
         topleft = all_points.min(axis=0)
@@ -163,6 +216,17 @@ class BoundingBox(NDBoundingBox):
         return cls(Vec3Int.zeros(), Vec3Int.zeros())
 
     def to_wkw_dict(self) -> dict:
+        """Converts the bounding box to a wkw-format dictionary.
+
+        Creates a dictionary with wkw-format fields containing the bounding box dimensions.
+
+        Returns:
+            dict: A dictionary with keys:
+                - topLeft: List[int] of (x,y,z) coordinates
+                - width: int width in x dimension
+                - height: int height in y dimension
+                - depth: int depth in z dimension
+        """
         (
             width,
             height,
@@ -177,9 +241,26 @@ class BoundingBox(NDBoundingBox):
         }
 
     def to_config_dict(self) -> dict:
+        """Converts the bounding box to a config-format dictionary.
+
+        Creates a dictionary with config-format fields containing the bounding box dimensions.
+
+        Returns:
+            dict: A dictionary with keys:
+                - topleft: List[int] of (x,y,z) coordinates
+                - size: List[int] of (width,height,depth) dimensions
+        """
         return {"topleft": self.topleft.to_list(), "size": self.size.to_list()}
 
     def to_checkpoint_name(self) -> str:
+        """Converts the bounding box dimensions to a checkpoint name string.
+
+        Creates a string formatted as "x_y_z_width_height_depth" containing the
+        bounding box coordinates and dimensions.
+
+        Returns:
+            str: A string in checkpoint name format containing the bounding box dimensions
+        """
         x, y, z = self.topleft
         width, height, depth = self.size
         return "{x}_{y}_{z}_{width}_{height}_{depth}".format(
@@ -187,9 +268,28 @@ class BoundingBox(NDBoundingBox):
         )
 
     def to_tuple6(self) -> Tuple[int, int, int, int, int, int]:
+        """Converts the bounding box coordinates to a 6-tuple.
+
+        Creates a tuple containing the bounding box coordinates and dimensions.
+
+        Returns:
+            Tuple[int, int, int, int, int, int]: A tuple containing:
+                - First three values: (x,y,z) coordinates of topleft
+                - Last three values: (width,height,depth) dimensions
+        """
         return tuple(self.topleft.to_list() + self.size.to_list())  # type: ignore
 
     def to_csv(self) -> str:
+        """Converts the bounding box coordinates to a comma-separated string.
+
+        Creates a string containing the bounding box coordinates and dimensions
+        in comma-separated format.
+
+        Returns:
+            str: A comma-separated string containing:
+                - First three values: (x,y,z) coordinates of topleft
+                - Last three values: (width,height,depth) dimensions
+        """
         return ",".join(map(str, self.to_tuple6()))
 
     def __eq__(self, other: object) -> bool:
@@ -203,9 +303,30 @@ class BoundingBox(NDBoundingBox):
         return f"BoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()})"
 
     def is_empty(self) -> bool:
+        """Checks if the bounding box has zero or negative size.
+
+        Tests if any dimension of the bounding box has zero or negative size.
+
+        Returns:
+            bool: True if any dimension has zero or negative size, False otherwise.
+        """
         return not self.size.is_positive(strictly_positive=True)
 
     def in_mag(self, mag: Mag) -> "BoundingBox":
+        """Returns a new bounding box with coordinates scaled by the given magnification factor.
+
+        The method asserts that both topleft and bottomright coordinates are already properly
+        aligned with the magnification factor. Use align_with_mag() first if needed.
+
+        Args:
+            mag (Mag): The magnification factor to scale coordinates by
+
+        Returns:
+            BoundingBox: A new bounding box with coordinates divided by the magnification factor
+
+        Raises:
+            AssertionError: If topleft or bottomright coordinates are not aligned with mag
+        """
         mag_vec = mag.to_vec3_int()
 
         assert (
@@ -306,9 +427,24 @@ class BoundingBox(NDBoundingBox):
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_shape`.
 
-        Chunks at the border of the bounding box might be smaller than chunk_shape.
-        If `chunk_border_alignment` is set, all border coordinates
-        *between two chunks* will be divisible by that value.
+        Args:
+            chunk_shape (Vec3IntLike): Size of chunks to decompose into. Each chunk
+                will be at most this size.
+            chunk_border_alignments (Optional[Vec3IntLike]): If provided, all border
+                coordinates between chunks will be divisible by these values.
+
+        Yields:
+            BoundingBox: Smaller chunks of the original bounding box. Border chunks
+                may be smaller than chunk_shape.
+
+        Raises:
+            AssertionError: If chunk_border_alignments is provided and chunk_shape is
+                not divisible by it.
+
+        Note:
+            - Border chunks may be smaller than chunk_shape
+            - If chunk_border_alignments is provided, all border coordinates between
+              chunks will be aligned to those values
         """
 
         start = self.topleft.to_np()
@@ -341,6 +477,16 @@ class BoundingBox(NDBoundingBox):
                     )
 
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
+        """Creates an offset copy of this bounding box by adding a vector to the topleft coordinate.
+
+        Generates a new bounding box with identical dimensions but translated by the given vector.
+
+        Args:
+            vector (Vec3IntLike): The vector to offset the bounding box by
+
+        Returns:
+            BoundingBox: A new bounding box offset by the given vector
+        """
         return attr.evolve(self, topleft=self.topleft + Vec3Int(vector))
 
     def __hash__(self) -> int:

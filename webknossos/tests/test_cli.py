@@ -93,9 +93,12 @@ def test_tiff_cubing_zarr_s3() -> None:
     assert (out_path / "tiff" / "1" / ".zarray").exists()
     assert (out_path / PROPERTIES_FILE_NAME).exists()
 
-    with (out_path / PROPERTIES_FILE_NAME).open("r") as file, (
-        TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json"
-    ).open("r") as fixture:
+    with (
+        (out_path / PROPERTIES_FILE_NAME).open("r") as file,
+        (TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json").open(
+            "r"
+        ) as fixture,
+    ):
         json_a = json.load(file)
         json_fixture = json.load(fixture)
         del json_a["id"]
@@ -539,7 +542,10 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                 )
 
 
-def test_merge_fallback_no_fallback_layer(tmp_path: Path) -> None:
+@pytest.mark.parametrize("use_compression", [True, False])
+def test_merge_fallback_no_fallback_layer(
+    tmp_path: Path, use_compression: bool
+) -> None:
     from zipfile import ZIP_DEFLATED, ZipFile
     from zlib import Z_BEST_SPEED
 
@@ -555,7 +561,12 @@ def test_merge_fallback_no_fallback_layer(tmp_path: Path) -> None:
             SEGMENTATION_CATEGORY,
             dtype_per_channel=fallback_layer_data.dtype,
         )
-        .add_mag(1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3)
+        .add_mag(
+            1,
+            chunk_shape=(32,) * 3,
+            chunks_per_shard=(1,) * 3,
+            compress=use_compression,
+        )
     )
 
     fallback_mag.write(absolute_offset=(0,) * 3, data=fallback_layer_data)

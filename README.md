@@ -3,6 +3,7 @@
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/webknossos.svg)](https://pypi.python.org/pypi/webknossos)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/scalableminds/webknossos-libs/.github/workflows/ci.yml?branch=master)](https://github.com/scalableminds/webknossos-libs/actions?query=workflow%3A%22CI%22)
 [![Documentation](https://img.shields.io/badge/docs-passing-brightgreen.svg)](https://docs.webknossos.org/webknossos-py/index.html)
+[![Package Manager](https://img.shields.io/pypi/pyversions/uv.svg)](https://pypi.python.org/pypi/uv)
 [![Code Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 
 <img align="right" src="https://static.webknossos.org/logos/webknossos-icon-only.svg" alt="WEBKNOSSOS Logo" width="100" height="100"/>

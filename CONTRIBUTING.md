@@ -1,6 +1,6 @@
 # Contributing Guide
 
-**Welcome to the WEBKNOSSOS-libs contributing guide :sparkles: **
+**Welcome to the WEBKNOSSOS-libs contributing guide :sparkles:**
 
 Thank you for taking the time to contribute to this project! The following is a set of guidelines for contributing to the different WEBKNOSSOS related Python libraries, which are part of the [WEBKNOSSOS-libs repository on GitHub](https://github.com/scalableminds/webknossos-libs). These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
@@ -39,7 +39,7 @@ If your issue doesn’t already exist, and you’re ready to create a new one, m
 Please use one of the provided templates to make this process easier for you.
 
 You can submit an issue [here](https://github.com/scalableminds/webknossos-libs/issues/new)
-(read more about [issues here](https://docs.github.com/en/issues)).
+(read more about [issues here](https://docs.github.com/en/issues)\).
 
 
 ### Report a Bug :lady_beetle:
@@ -102,15 +102,11 @@ The [WEBKNOSSOS-libs repository](https://github.com/scalableminds/webknossos-lib
 
 See below for specifics of the different packages. Let's have a look at the common tooling first:
 
-* [**poetry**](https://python-poetry.org) is used for dependency management and publishing.
-  Use `poetry install --all-extras` in each package folder to install all dependencies for development.
+* [**uv**](https://docs.astral.sh/uv) is used for dependency management and publishing.
+  Use `uv sync --all-extras` in each package folder to install all dependencies for development.
   By default, this creates a [virtual environment](https://docs.python.org/3/tutorial/venv.html) for each package.
-  To run commands inside this package, prefix them with `poetry run`, e.g. `poetry run python myscript.py`,
-  or enter the virtual environment with `poetry shell`.
-  The creation of a separate environment can be disabled (e.g. if you want to manage this manually),
-  [see here for details](https://python-poetry.org/docs/configuration/#virtualenvscreate).
-  To install the preferred version for this repository, run
-  [`pip install -f requirements.txt`](https://github.com/scalableminds/webknossos-libs/blob/master/requirements.txt)
+  To run commands inside this package, prefix them with `uv run`, e.g. `uv run python myscript.py`,
+  or enter the virtual environment with `source .venv/bin/activate`.
 
   To install the dependencies for all sub-projects, run `make install`.
   

@@ -18,6 +18,7 @@ from ..utils import (
     get_executor_for_args,
     is_fs_path,
     rmtree,
+    strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
 )
@@ -32,11 +33,15 @@ if TYPE_CHECKING:
 from .view import View
 
 
-def _find_mag_path_on_disk(
-    dataset_path: Path, layer_name: str, mag_name: str, path: Optional[str] = None
+def _find_mag_path(
+    dataset_path: Path,
+    layer_name: str,
+    mag_name: str,
+    path: Optional[Union[str, Path]] = None,
 ) -> Path:
+    path = UPath(path) if path else None
     if path is not None:
-        return dataset_path / path
+        return path
 
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
@@ -71,6 +76,7 @@ class MagView(View):
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
         create: bool = False,
+        path: Optional[UPath] = None,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -93,11 +99,24 @@ class MagView(View):
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
-            self_path = layer.dataset.path / layer.name / mag.to_layer_name()
-            BaseArray.get_class(array_info.data_format).create(self_path, array_info)
+            creation_path = (
+                path if path else layer.dataset.path / layer.name / mag.to_layer_name()
+            )
+            BaseArray.get_class(array_info.data_format).create(
+                creation_path, array_info
+            )
+            path = UPath(creation_path)
+
+        mag_path = (
+            path
+            if path
+            else _find_mag_path(
+                layer.dataset.path, layer.name, mag.to_layer_name(), path
+            )
+        )
 
         super().__init__(
-            _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
+            mag_path,
             array_info,
             bounding_box=layer.bounding_box,
             mag=mag,
@@ -142,6 +161,10 @@ class MagView(View):
     @property
     def path(self) -> Path:
         return self._path
+
+    @property
+    def is_remote_to_dataset(self) -> bool:
+        return self._path.parent.parent != self.layer.dataset.path
 
     @property
     def name(self) -> str:
@@ -468,6 +491,13 @@ class MagView(View):
             bboxes, Mag(self.info.shard_shape * self.mag)
         )
 
+        new_bbox = self.bounding_box
+        for shard_bbox in shards_with_bboxes.keys():
+            new_bbox = new_bbox.extended_by(shard_bbox)
+
+        logging.info(f"Set mag layer bounding box to {new_bbox}")
+        self.layer.bounding_box = new_bbox
+
         args = [(other, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
 
         logging.info("Merging %s shards.", len(args))
@@ -510,7 +540,10 @@ class MagView(View):
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            mag_view_path = UPath(mag_view)
+            path = UPath(
+                str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
+            )
+            mag_view_path = strip_trailing_slash(path)
             return (
                 Dataset.open(mag_view_path.parent.parent)
                 .get_layer(mag_view_path.parent.name)

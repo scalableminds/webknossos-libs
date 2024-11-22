@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.8...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,29 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.15.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.8) - 2024-11-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...v0.15.8)
+
+
+## [0.15.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.7) - 2024-10-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.6...v0.15.7)
+
+
+## [0.15.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.6) - 2024-10-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.5...v0.15.6)
+
+### Changed
+- Replaced the Python package manager `poetry` with `uv`. [#1199](https://github.com/scalableminds/webknossos-libs/pull/1199)
+
+
+## [0.15.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.5) - 2024-09-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.4...v0.15.5)
+
+
+## [0.15.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.4) - 2024-09-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.3...v0.15.4)
 
 
 ## [0.15.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.3) - 2024-09-11
