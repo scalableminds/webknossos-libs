@@ -27,16 +27,6 @@ def sample_layer_and_mag_name() -> Iterable[tuple[str, str]]:
     return itertools.product(layer_names, mag_names)
 
 
-@pytest.fixture(scope="module")
-def sample_remote_layer() -> list[wk.Layer]:
-    os.environ["HTTP_PROXY"] = "http://localhost:3000"
-    token = os.getenv("WK_TOKEN")
-    remote_dataset = wk.Dataset.open_remote(
-        "l4_sample", "Organization_X", token, "http://localhost:9000"
-    )
-    return list(remote_dataset.layers.values())
-
-
 def test_add_remote_mags_from_mag_view(
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
     sample_remote_dataset: wk.Dataset,
@@ -98,9 +88,11 @@ def test_add_remote_mags_from_path(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-def test_add_remote_layer_from_object(
-    sample_remote_layer: list[wk.Layer], sample_remote_dataset: wk.Dataset
-) -> None:
+def test_add_remote_layer_from_object(sample_remote_dataset: wk.Dataset) -> None:
+    remote_dataset = wk.Dataset.open_remote(
+        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+    )
+    sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_object"
@@ -112,9 +104,12 @@ def test_add_remote_layer_from_object(
 
 
 def test_add_remote_layer_from_path(
-    sample_remote_layer: list[wk.Layer],
     sample_remote_dataset: wk.Dataset,
 ) -> None:
+    remote_dataset = wk.Dataset.open_remote(
+        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+    )
+    sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_path"
