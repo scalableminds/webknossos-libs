@@ -10,6 +10,7 @@ source local_wk_setup.sh
 # refer to the checked out (and potentially modified) code.
 PYTEST="uv run --all-extras --frozen python -m pytest --suppress-no-test-exit-code"
 
+# Within the tests folder is a binaryData folder of the local running webknossos instance. This folder is cleaned up before running the tests.
 find tests/binaryData/Organization_X -mindepth 1 -maxdepth 1 -type d ! -name 'l4_sample' ! -name 'e2006_knossos' -exec rm -rf {} +
 
 

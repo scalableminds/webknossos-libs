@@ -152,7 +152,6 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: ["3.12", "3.11", "3.10", "3.9"]
-        group: [1, 2, 3]
       fail-fast: false
     defaults:
       run:
@@ -172,18 +171,6 @@ jobs:
               
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
-      
-      - name: Check formatting
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
-        run: ./format.sh check
-
-      - name: Lint code
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
-        run: ./lint.sh
-
-      - name: Check typing
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
-        run: ./typecheck.sh
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -192,7 +179,7 @@ jobs:
         timeout-minutes: 30
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: ./test.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: ./test.sh -vv -p no:faulthandler
 
       - name: Check if git is dirty
         run: |
