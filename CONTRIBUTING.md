@@ -133,7 +133,7 @@ Internal workflows for scalable minds:
 
 The `webknossos` folder contains examples, which are not part of the package, but are tested via `tests/test_examples.py` and added to the documentation (see `docs/src/webknossos-py/examples`).
 
-To run the `./test.sh` script it is necessary to install `proxay`. This is either done with NPM or yarn:
+To run the `./test.sh` script it is necessary to install `proxay`. This is either done with [NPM](https://www.npmjs.com) or [yarn](https://yarnpkg.com/getting-started/install):
 ```bash
 npm install --global proxay
 
@@ -144,7 +144,7 @@ yarn global add proxay
 The tests also contain functionality for the WEBKNOSSOS client. There a two modes to run the tests:
 
 1. `./test.sh --refresh-snapshots`, sending network requests to a WEBKNOSSOS instance:
-  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a `docker compose` setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
+  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a `docker compose` setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [proxay](https://github.com/airtasker/proxay), see next point:
 2. `./test.sh` replays responses from previous network snapshots using [proxay](https://github.com/airtasker/proxay).
 
 

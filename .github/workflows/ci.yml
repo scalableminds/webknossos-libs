@@ -185,6 +185,9 @@ jobs:
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./typecheck.sh
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - name: Python tests
         timeout-minutes: 30
         env:
