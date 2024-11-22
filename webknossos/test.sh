@@ -8,9 +8,10 @@ source local_wk_setup.sh
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports
 # refer to the checked out (and potentially modified) code.
-PYTEST="uv run --all-extras --frozen python -m pytest --suppress-no-test-exit-code --timeout 300"
+PYTEST="uv run --all-extras --frozen python -m pytest --suppress-no-test-exit-code --timeout=180"
 
 # Within the tests folder is a binaryData folder of the local running webknossos instance. This folder is cleaned up before running the tests.
+# This find command gets all directories in binaryData/Organization_X except for the l4_sample and e2006_knossos directories and deletes them.
 find tests/binaryData/Organization_X -mindepth 1 -maxdepth 1 -type d ! -name 'l4_sample' ! -name 'e2006_knossos' -exec rm -rf {} +
 
 

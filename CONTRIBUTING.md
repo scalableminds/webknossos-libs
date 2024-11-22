@@ -147,6 +147,10 @@ The tests also contain functionality for the WEBKNOSSOS client. There a two mode
   This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a `docker compose` setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [proxay](https://github.com/airtasker/proxay), see next point:
 2. `./test.sh` replays responses from previous network snapshots using [proxay](https://github.com/airtasker/proxay).
 
+`./test.sh --store-durations` updates the durations for
+[`pytest-split`](https://jerry-git.github.io/pytest-split),
+which is used in the CI to split the tests for different runners.
+
 
 #### `cluster_tools` package
 
