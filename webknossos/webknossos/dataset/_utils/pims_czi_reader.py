@@ -10,7 +10,7 @@ try:
     from pylibCZIrw import czi as pyczi
 except ImportError as e:
     raise ImportError(
-        "Cannot import pylibCZIrw, please install it e.g. using 'webknossos[czi]'"
+        "Cannot import pylibCZIrw, please install it e.g. using pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]"
     ) from e
 
 PIXEL_TYPE_TO_DTYPE = {
