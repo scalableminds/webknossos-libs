@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
 
 
 ## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
@@ -32,7 +33,7 @@ Removed the CZI installation extra from `pip install webknossos[all]` by default
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...v0.15.8)
 
 ### Changed
-- Fixes SSL certificate verification for remote datasets by adding CA certificates using `certifi`. [#1211](https://github.com/scalableminds/webknossos-libs/pull/1211)
+- Fixed SSL certificate verification for remote datasets by adding CA certificates using `certifi`. [#1211](https://github.com/scalableminds/webknossos-libs/pull/1211)
 
 
 ## [0.15.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.7) - 2024-10-25
