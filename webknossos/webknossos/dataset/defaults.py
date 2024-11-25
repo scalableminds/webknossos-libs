@@ -1,9 +1,20 @@
+import copyreg
 import os
+import ssl
 
 import certifi
 
 from ..geometry import Vec3Int
 from .data_format import DataFormat
+
+
+def _save_sslcontext(
+    obj: ssl.SSLContext,
+) -> tuple[type[ssl.SSLContext], tuple[ssl._SSLMethod]]:
+    return obj.__class__, (obj.protocol,)
+
+
+copyreg.pickle(ssl.SSLContext, _save_sslcontext)
 
 DEFAULT_WKW_FILE_LEN = 32
 DEFAULT_CHUNK_SHAPE = Vec3Int.full(32)
@@ -24,4 +35,4 @@ PROPERTIES_FILE_NAME = "datasource-properties.json"
 ZGROUP_FILE_NAME = ".zgroup"
 ZATTRS_FILE_NAME = ".zattrs"
 ZARR_JSON_FILE_NAME = "zarr.json"
-SSL_CONTEXT = certifi.where()
+SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
