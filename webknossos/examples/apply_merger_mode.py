@@ -1,6 +1,5 @@
 from os import environ
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Tuple, cast
 
 import fastremap
