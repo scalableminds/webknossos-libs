@@ -1,5 +1,4 @@
 import os
-import ssl
 
 import certifi
 
@@ -25,4 +24,4 @@ PROPERTIES_FILE_NAME = "datasource-properties.json"
 ZGROUP_FILE_NAME = ".zgroup"
 ZATTRS_FILE_NAME = ".zattrs"
 ZARR_JSON_FILE_NAME = "zarr.json"
-SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+SSL_CONTEXT = certifi.where()
