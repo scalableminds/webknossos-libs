@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...v0.15.10)
+
+### Fixed
 - Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
+
 
 
 ## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
