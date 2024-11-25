@@ -36,7 +36,9 @@ You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via p
 pip install webknossos
 ```
 
-To install `webknossos` with the depencies for all examples, support for CZI files, and BioFormats conversions, run: `pip install webknossos[all]`.
+To install `webknossos` with the dependencies for all examples, support for more file types, and BioFormats conversions, run: `pip install webknossos[all]`.
+
+For working with Zeiss CZI microscopy data use `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`.
 
 By default `webknossos` can only distribute any computations through multiprocessing or Slurm. For Kubernetes or Dask install these additional dependencies:
 

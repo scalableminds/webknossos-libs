@@ -17,8 +17,8 @@ For extended file format conversation support it is necessary to install the opt
 pip install "webknossos[all]"
 ```
 
-If you have issues with installing the `pylibczirw` package on macOS, try:
+For working with Zeiss CZI microscopy data utilizing the`pylibczirw` package run:
 
 ```bash
-pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[all]"
+pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[czi]"
 ```

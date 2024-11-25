@@ -23,6 +23,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
     "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
+    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.10", 
+    "Programming Language :: Python :: 3.11", 
+    "Programming Language :: Python :: 3.12", 
 ]
 
 requires-python = ">=3.9,<3.13"
@@ -81,7 +85,6 @@ all = [
     "webknossos[tifffile]",
     "webknossos[imagecodecs]",
     "webknossos[bioformats]",
-    "webknossos[czi]",
     "webknossos[examples]",
 ]
 

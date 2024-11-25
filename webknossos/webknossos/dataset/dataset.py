@@ -824,7 +824,7 @@ class Dataset:
 
         Note:
             This method needs extra packages like tifffile or pylibczirw.
-            Install with `python -m pip install "webknossos[all]"`.
+            Install with `pip install "webknossos[all]"` and `pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[czi]"`.
         """
 
         input_upath = UPath(input_path)
