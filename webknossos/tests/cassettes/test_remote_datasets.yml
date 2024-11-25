@@ -21,13 +21,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         content-type: application/json
         content-length: '680'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1731001852987,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1732532376962,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
@@ -53,15 +53,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         content-type: application/json
-        content-length: '7278'
+        content-length: '4505'
       body:
         encoding: utf8
         data: >-
-          [{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1731001400939,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1730999245898,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1730999245898,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"test_remote_metadata","dataSource":{"id":{"name":"test_remote_metadata","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1730999260175,"isEditable":true,"lastUsedByUser":1731000436199,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1730999260175,"details":null,"isUnreported":false,"tags":["category
-          0","category 1","category
-          2"],"folderId":"570b9f4e4bb848d08880712a","publication":null,"usedStorageBytes":25033957},{"name":"test_upload_download_roundtrip","dataSource":{"id":{"name":"test_upload_download_roundtrip","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1731000455649,"isEditable":true,"lastUsedByUser":1731001227397,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1731000455649,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":25033957},{"name":"cell_dataset","dataSource":{"id":{"name":"cell_dataset","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":{"factor":[260,260,290],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1731001405477,"isEditable":true,"lastUsedByUser":1731001457095,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1731001405477,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":31973009},{"name":"skin_segmented","dataSource":{"id":{"name":"skin_segmented","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":{"factor":[550,550,550],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1731001775278,"isEditable":true,"lastUsedByUser":1731001852963,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1731001775278,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":29005336}]
+          [{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1732531879130,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1732531879130,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"cell_dataset","dataSource":{"id":{"name":"cell_dataset","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":{"factor":[260,260,290],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1732531883822,"isEditable":true,"lastUsedByUser":1732531944843,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1732531883822,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"skin_segmented","dataSource":{"id":{"name":"skin_segmented","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":{"factor":[550,550,550],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1732532294390,"isEditable":true,"lastUsedByUser":1732532376928,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1732532294390,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":29005336}]
         compression: none
   - request:
       method: GET
@@ -85,7 +83,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         content-type: application/json
         content-length: '64'
       body:
@@ -114,13 +112,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         content-type: application/json
-        content-length: '1410'
+        content-length: '1409'
       body:
         encoding: utf8
         data: >-
-          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1731002286219,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1732535474574,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -145,19 +143,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"OBChUinJ5o43BzUjIUwGEw"}'
+        data: '{"token":"9KqhSiBEH5lcJ6MY7UbRrA"}'
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -174,7 +172,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -238,7 +236,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -255,7 +253,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -319,7 +317,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -336,7 +334,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -400,7 +398,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -417,7 +415,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '1075'
@@ -431,7 +429,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -448,7 +446,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '1075'
@@ -461,7 +459,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         range: bytes=0-1074
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -479,7 +477,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '1075'
@@ -493,7 +491,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -510,7 +508,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -568,7 +566,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -585,7 +583,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -600,7 +598,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -617,7 +615,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -632,7 +630,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -649,7 +647,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -663,7 +661,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -680,7 +678,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -695,7 +693,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -712,7 +710,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -726,7 +724,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -743,7 +741,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -758,7 +756,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -775,7 +773,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -833,7 +831,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -850,39 +848,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -897,7 +863,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -914,7 +880,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -922,13 +888,45 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -945,39 +943,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -992,7 +958,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1009,7 +975,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1020,10 +986,42 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1040,7 +1038,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -1098,7 +1096,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1115,7 +1113,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1130,7 +1128,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1147,7 +1145,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1161,7 +1159,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1178,7 +1176,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1193,7 +1191,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1210,7 +1208,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1225,7 +1223,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1242,7 +1240,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1257,7 +1255,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1274,7 +1272,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1288,7 +1286,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1305,7 +1303,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -1363,7 +1361,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1380,39 +1378,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1427,7 +1393,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1444,7 +1410,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1455,10 +1421,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1475,7 +1441,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1490,7 +1488,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1507,7 +1505,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1522,7 +1520,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1539,7 +1537,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1553,7 +1551,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1570,7 +1568,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -1628,7 +1626,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1645,39 +1643,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1692,7 +1658,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1709,7 +1675,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1717,13 +1683,45 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1740,7 +1738,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1755,7 +1785,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1772,7 +1802,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1783,42 +1813,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1835,7 +1833,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -1893,7 +1891,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1910,7 +1908,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -1925,7 +1955,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -1942,7 +1972,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1950,45 +1980,13 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2005,39 +2003,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2052,7 +2018,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2069,7 +2035,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:14 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2080,10 +2046,42 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:14 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2100,7 +2098,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2158,7 +2156,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2175,7 +2173,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2190,7 +2220,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2207,7 +2237,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2215,45 +2245,13 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2270,39 +2268,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2317,7 +2283,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2334,7 +2300,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2345,10 +2311,42 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2365,7 +2363,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2423,7 +2421,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2440,39 +2438,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:05 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2487,7 +2453,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2504,7 +2470,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2512,13 +2478,45 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2535,7 +2533,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2550,7 +2580,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2567,7 +2597,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2578,42 +2608,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2630,7 +2628,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2688,7 +2686,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2705,7 +2703,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2720,7 +2718,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2737,7 +2735,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -2751,7 +2749,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2768,7 +2766,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2783,7 +2781,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2800,7 +2798,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2815,7 +2813,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2832,7 +2830,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2847,7 +2845,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2864,7 +2862,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -2878,7 +2876,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2895,7 +2893,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -2953,7 +2951,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -2970,7 +2968,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -2985,7 +3015,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3002,7 +3032,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -3013,42 +3043,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3065,7 +3063,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -3080,7 +3078,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3097,7 +3095,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -3112,7 +3110,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3129,7 +3127,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -3160,13 +3158,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         content-type: application/json
-        content-length: '1410'
+        content-length: '1409'
       body:
         encoding: utf8
         data: >-
-          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1731002287255,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1732535475972,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: PATCH
@@ -3179,12 +3177,12 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '1161'
+        content-length: '1160'
         content-type: application/json
       body:
         encoding: utf8
         data: >-
-          {"name": "l4_sample", "isPublic": false, "folderId":
+          {"name": "l4_sample", "isPublic": true, "folderId":
           "570b9f4e4bb848d0885ea917", "allowedTeams": [{"id":
           "570b9f4b2a7c0e3b008da6ec", "name": "team_X1", "organization":
           "Organization_X"}], "tags": ["test"], "dataStore": {"url":
@@ -3210,13 +3208,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         content-type: application/json
-        content-length: '1416'
+        content-length: '1415'
       body:
         encoding: utf8
         data: >-
-          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1731002287255,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":["test"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1732535475972,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":["test"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -3240,13 +3238,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         content-type: application/json
         content-length: '680'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1731001852987,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1732532376962,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
@@ -3272,15 +3270,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         content-type: application/json
-        content-length: '7284'
+        content-length: '4523'
       body:
         encoding: utf8
         data: >-
-          [{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1730999245898,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1730999245898,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"test_remote_metadata","dataSource":{"id":{"name":"test_remote_metadata","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1730999260175,"isEditable":true,"lastUsedByUser":1731000436199,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1730999260175,"details":null,"isUnreported":false,"tags":["category
-          0","category 1","category
-          2"],"folderId":"570b9f4e4bb848d08880712a","publication":null,"usedStorageBytes":25033957},{"name":"test_upload_download_roundtrip","dataSource":{"id":{"name":"test_upload_download_roundtrip","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3164,3212,1017],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1731000455649,"isEditable":true,"lastUsedByUser":1731001227397,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1731000455649,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":25033957},{"name":"cell_dataset","dataSource":{"id":{"name":"cell_dataset","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":{"factor":[260,260,290],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1731001405477,"isEditable":true,"lastUsedByUser":1731001457095,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1731001405477,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":31973009},{"name":"skin_segmented","dataSource":{"id":{"name":"skin_segmented","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":{"factor":[550,550,550],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1731001775278,"isEditable":true,"lastUsedByUser":1731001852963,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1731001775278,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":29005336},{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1731002287255,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":["test"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1732531879130,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1732531879130,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"cell_dataset","dataSource":{"id":{"name":"cell_dataset","team":"Organization_X"},"dataLayers":[{"name":"cell_membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":{"factor":[260,260,290],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1732531883822,"isEditable":true,"lastUsedByUser":1732531944843,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1732531883822,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"name":"skin_segmented","dataSource":{"id":{"name":"skin_segmented","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":{"factor":[550,550,550],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1732532294390,"isEditable":true,"lastUsedByUser":1732532376928,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1732532294390,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":29005336},{"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1732535475972,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":["test"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -3304,20 +3300,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         content-type: application/json
-        content-length: '1416'
+        content-length: '1415'
       body:
         encoding: utf8
         data: >-
-          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1731002287719,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":["test"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1732535476244,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":["test"],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3334,7 +3330,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -3398,7 +3394,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3415,7 +3411,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -3479,7 +3475,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3496,7 +3492,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -3560,7 +3556,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3577,7 +3573,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '1075'
@@ -3591,7 +3587,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3608,7 +3604,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '1075'
@@ -3621,7 +3617,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         range: bytes=0-1074
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -3639,7 +3635,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '1075'
@@ -3653,7 +3649,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3670,7 +3666,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -3728,7 +3724,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3745,7 +3741,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:15 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -3760,7 +3756,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3777,7 +3773,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -3792,7 +3788,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3809,7 +3805,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3823,7 +3819,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3840,39 +3836,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -3887,7 +3851,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3904,7 +3868,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:06 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3915,10 +3879,42 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:16 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -3935,7 +3931,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -3993,7 +3989,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4010,7 +4006,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4025,7 +4053,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4042,7 +4070,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4050,45 +4078,13 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4105,7 +4101,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4120,7 +4116,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4137,7 +4133,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4151,7 +4147,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4168,7 +4164,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4183,7 +4179,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4200,7 +4196,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -4258,7 +4254,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4275,7 +4271,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4290,7 +4318,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4307,7 +4335,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4318,42 +4346,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4370,7 +4366,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4385,7 +4381,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4402,7 +4398,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4417,7 +4413,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4434,7 +4430,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4448,7 +4444,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4465,7 +4461,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -4523,7 +4519,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4540,7 +4536,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4555,7 +4583,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4572,7 +4600,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -4583,42 +4611,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4635,7 +4631,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4650,7 +4646,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4667,7 +4663,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4682,7 +4678,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4699,7 +4695,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -4713,7 +4709,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4730,7 +4726,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -4788,7 +4784,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4805,7 +4801,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4820,7 +4848,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4837,7 +4865,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -4845,45 +4873,13 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4900,39 +4896,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -4947,7 +4911,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4964,7 +4928,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -4975,10 +4939,42 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:16 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -4995,7 +4991,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -5053,7 +5049,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5070,7 +5066,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5085,7 +5113,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5102,7 +5130,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -5110,45 +5138,13 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5165,7 +5161,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5180,7 +5176,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5197,7 +5193,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -5211,7 +5207,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5228,7 +5224,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5243,7 +5239,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5260,7 +5256,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -5318,7 +5314,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5335,7 +5331,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5350,7 +5346,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5367,7 +5363,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5382,7 +5378,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5399,7 +5395,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -5413,7 +5409,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5430,7 +5426,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5445,7 +5441,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5462,7 +5458,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5477,7 +5473,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5494,7 +5490,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:16 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -5508,7 +5504,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5525,7 +5521,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -5583,7 +5579,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5600,7 +5596,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5615,7 +5611,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5632,7 +5628,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5647,7 +5643,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5664,7 +5660,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -5678,7 +5674,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5695,39 +5691,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5742,7 +5706,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5759,7 +5723,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -5770,10 +5734,42 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:17 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5790,7 +5786,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -5848,7 +5844,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5865,39 +5861,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:07 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5912,7 +5876,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5929,7 +5893,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -5937,13 +5901,45 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:17 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
         compression: none
   - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5960,7 +5956,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -5975,7 +6003,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -5992,7 +6020,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -6003,42 +6031,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -6055,7 +6051,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -6113,7 +6109,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -6130,7 +6126,39 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
+        connection: close
+        content-type: application/json
+        content-length: '101'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"The requested chunk coordinates are in an
+          invalid format. Expected c.x.y.z"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -6145,7 +6173,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -6162,7 +6190,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -6173,42 +6201,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/zarr.json
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -6225,7 +6221,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -6240,7 +6236,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -6257,7 +6253,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '101'
@@ -6272,7 +6268,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
       headers:
         host: localhost:9000
-        x-auth-token: OBChUinJ5o43BzUjIUwGEw
+        x-auth-token: 9KqhSiBEH5lcJ6MY7UbRrA
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -6289,7 +6285,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:58:08 GMT
+        date: Mon, 25 Nov 2024 11:51:17 GMT
         connection: close
         content-type: application/json
         content-length: '163'

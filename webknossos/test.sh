@@ -8,7 +8,7 @@ source local_wk_setup.sh
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports
 # refer to the checked out (and potentially modified) code.
-PYTEST="uv run --all-extras --frozen python -m pytest --suppress-no-test-exit-code --timeout=240"
+PYTEST="uv run --all-extras --frozen python -m pytest --suppress-no-test-exit-code"
 
 # Within the tests folder is a binaryData folder of the local running webknossos instance. This folder is cleaned up before running the tests.
 # This find command gets all directories in binaryData/Organization_X except for the l4_sample and e2006_knossos directories and deletes them.
@@ -27,10 +27,7 @@ if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
     shift
     $PYTEST "-m" "use_proxay" "$@"
     PYTEST_EXIT_CODE=$?
-
-    # Kill the proxy server
-    kill $PROXAY_PID
-    wait $PROXAY_PID
+    trap 'kill $PROXAY_PID' EXIT
 
     stop_local_test_wk
 
@@ -50,11 +47,10 @@ else
 
     proxay --mode replay --tapes-dir tests/cassettes 2>&1 > /dev/null &
     PROXAY_PID=$!
+    trap 'kill $PROXAY_PID' EXIT
 
-    $PYTEST "$@"
+    $PYTEST "--timeout=360" "$@"
     PYTEST_EXIT_CODE=$?
-
-    kill $PROXAY_PID
 
     exit $PYTEST_EXIT_CODE
 fi

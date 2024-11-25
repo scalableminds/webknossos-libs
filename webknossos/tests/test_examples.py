@@ -117,19 +117,23 @@ def test_image_stack_to_dataset() -> None:
         assert dataset.get_layer("test").dtype_per_channel == "uint8"
 
 
-@pytest.mark.use_proxay
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
-    (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
-    assert (
-        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
-        != 5233922
-    )
-    assert (
-        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
-        == 5233967
-    )
+    with tmp_cwd():
+        (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
+        assert (
+            out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[
+                0, 0, 0, 0
+            ]
+            != 5233922
+        )
+        assert (
+            out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[
+                0, 0, 0, 0
+            ]
+            == 5233967
+        )
 
 
 def test_calculate_segment_sizes() -> None:

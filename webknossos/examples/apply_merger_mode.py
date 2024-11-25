@@ -1,9 +1,13 @@
 from os import environ
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Tuple, cast
 
 import fastremap
 
 import webknossos as wk
+
+TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
 
 
 def main() -> None:
@@ -19,11 +23,9 @@ def main() -> None:
     # Download and open the corresponding dataset #
     ###############################################
 
-    dataset = wk.Dataset.download(
-        "l4_sample",
-        "Organization_X",
-        path="testoutput/l4_sample_dev",
-    )
+    dataset = wk.Dataset.open(
+        TESTDATA_DIR / "l4_sample_dev",
+    ).copy_dataset("l4_sample_dev")
     in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))
     in_mag1 = in_layer.get_mag("1")
 
