@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
 
 ### Fixed
+
+
+## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.8...v0.15.9)
+
+### Changed
+Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
 
 
 ## [0.15.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.8) - 2024-11-15
