@@ -243,44 +243,51 @@ def test_process_id(exc_with_pickling: cluster_tools.Executor) -> None:
 
 
 def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
+    is_async = not isinstance(
+        exc,
+        (
+            cluster_tools.SequentialExecutor,
+            cluster_tools.SequentialPickleExecutor,
+        ),
+    )
+
     with exc:
         durations = [5, 0]
         futures = [exc.submit(sleep, n) for n in durations]
-        results = [f.result() for f in exc.as_completed(futures)]
+        # For synchronous executors, the futures should be completed after submit returns.
+        # .as_completed() would return them in reverse order in that case.
+        completed_futures = exc.as_completed(futures) if is_async else futures
+        results = [f.result() for f in completed_futures]
 
-        if isinstance(
-            exc,
-            (
-                cluster_tools.SequentialExecutor,
-                cluster_tools.SequentialPickleExecutor,
-            ),
-        ):
-            # futures.as_completed does not return previously completed futures in completion order.
-            # For sequential executors as_completed is only called after all futures completed, though.
-            results.sort()
+        if is_async:
+            # For asynchronous executors, the jobs that sleep less should complete first
+            durations.sort()
 
-        durations.sort()
-        for duration, result in zip(durations, results):
-            assert result == duration
+        assert durations == results
 
 
 def test_map_to_futures(exc: cluster_tools.Executor) -> None:
+    is_async = not isinstance(
+        exc,
+        (
+            cluster_tools.SequentialExecutor,
+            cluster_tools.SequentialPickleExecutor,
+        ),
+    )
+
     with exc:
         durations = [5, 0]
         futures = exc.map_to_futures(sleep, durations)
-        results = [f.result() for f in exc.as_completed(futures)]
+        # For synchronous executors, the futures should be completed after submit returns.
+        # .as_completed() would return them in reverse order in that case.
+        completed_futures = exc.as_completed(futures) if is_async else futures
+        results = [f.result() for f in completed_futures]
 
-        if isinstance(
-            exc,
-            (cluster_tools.SequentialExecutor, cluster_tools.SequentialPickleExecutor),
-        ):
-            # futures.as_completed does not return previously completed futures in completion order.
-            # For sequential executors as_completed is only called after all futures completed, though.
-            results.sort()
+        if is_async:
+            # For asynchronous executors, the jobs that sleep less should complete first
+            durations.sort()
 
-        durations.sort()
-        for duration, result in zip(durations, results):
-            assert result == duration
+        assert durations == results
 
 
 def test_empty_map_to_futures(exc: cluster_tools.Executor) -> None:
