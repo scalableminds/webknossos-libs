@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...HEAD)
 
 ### Breaking Changes
 - Removed the `map_unordered` function of executors. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
@@ -19,6 +19,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - The sequential executor strategy no longer uses multiprocessing functionality internally and instead executes functions sequentially and synchronously in the same process. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
 
 ### Fixed
+
+
+## [0.15.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.11) - 2024-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...v0.15.11)
 
 
 ## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
