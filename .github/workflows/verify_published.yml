@@ -38,5 +38,5 @@ jobs:
           
           if [ "${{ matrix.extras }}" = "[all]" ]; then
             # Verify some of the optional dependencies are available
-            python -c "import tifffile; from pylibCZIrw import czi;"
+            python -c "import tifffile; import imagecodecs; import pandas;"
           fi

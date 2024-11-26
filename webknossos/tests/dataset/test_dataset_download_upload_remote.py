@@ -1,4 +1,5 @@
 import os
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -66,6 +67,10 @@ def test_url_open_remote(url: str, tmp_path: Path) -> None:
         data,
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
+    assert set(pickle.loads(pickle.dumps(ds)).layers.keys()) == {
+        "color",
+        "segmentation",
+    }, "Dataset instances should be picklable."
 
 
 def test_remote_dataset(tmp_path: Path) -> None:
