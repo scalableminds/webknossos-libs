@@ -1,6 +1,7 @@
 import copyreg
 import os
 import ssl
+from typing import Any, Callable, Optional
 
 import certifi
 
@@ -8,10 +9,27 @@ from ..geometry import Vec3Int
 from .data_format import DataFormat
 
 
+def _create_sslcontext() -> ssl.SSLContext:
+    cafile = certifi.where()
+    ssl_context = ssl.create_default_context(cafile=cafile)
+    ssl_context.cafile = cafile  # type: ignore
+    return ssl_context
+
+
 def _save_sslcontext(
     obj: ssl.SSLContext,
-) -> tuple[type[ssl.SSLContext], tuple[ssl._SSLMethod]]:
-    return obj.__class__, (obj.protocol,)
+) -> tuple[Callable[[Any, Any], ssl.SSLContext], tuple[ssl._SSLMethod, Optional[str]]]:
+    cafile = getattr(obj, "cafile")
+    return _rebuild_sslcontext, (obj.protocol, cafile)
+
+
+def _rebuild_sslcontext(
+    protocol: ssl._SSLMethod, cafile: Optional[str]
+) -> ssl.SSLContext:
+    ssl_context = ssl.SSLContext(protocol)
+    if cafile is not None:
+        ssl_context.load_verify_locations(cafile=cafile)
+    return ssl_context
 
 
 copyreg.pickle(ssl.SSLContext, _save_sslcontext)
@@ -35,4 +53,4 @@ PROPERTIES_FILE_NAME = "datasource-properties.json"
 ZGROUP_FILE_NAME = ".zgroup"
 ZATTRS_FILE_NAME = ".zattrs"
 ZARR_JSON_FILE_NAME = "zarr.json"
-SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+SSL_CONTEXT = _create_sslcontext()
