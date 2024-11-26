@@ -244,7 +244,7 @@ def test_process_id(exc_with_pickling: cluster_tools.Executor) -> None:
 
 def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
     with exc:
-        durations = [5, 1]
+        durations = [5, 0]
         futures = [exc.submit(sleep, n) for n in durations]
         results = [f.result() for f in exc.as_completed(futures)]
 
@@ -266,7 +266,7 @@ def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
 
 def test_map_to_futures(exc: cluster_tools.Executor) -> None:
     with exc:
-        durations = [5, 1]
+        durations = [5, 0]
         futures = exc.map_to_futures(sleep, durations)
         results = [f.result() for f in exc.as_completed(futures)]
 
@@ -383,7 +383,7 @@ def test_pickling(
 
 def test_map_to_futures_with_sequential() -> None:
     with cluster_tools.get_executor("sequential") as exc:
-        durations = [3, 1]
+        durations = [1, 0]
         futures = exc.map_to_futures(sleep, durations)
 
         for fut in futures:
