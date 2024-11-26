@@ -17,9 +17,9 @@ _S = TypeVar("_S")
 
 class SequentialPickleExecutor(SequentialExecutor):
     """
-    The same as DebugSequentialExecutor, but always pickles input and output of the jobs.
+    The same as SequentialExecutor, but always pickles input and output of the jobs.
     When using this executor for automated tests, it is ensured that using cluster executors in production
-    won't provoke pickling-related problems. In contrast to the TestPicklingExecutor this executor
+    won't provoke pickling-related problems. In contrast to the MultiprocessingPickleExecutor this executor
     does not have multiprocessing overhead.
     """
 
