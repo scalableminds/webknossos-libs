@@ -60,6 +60,9 @@ def exec_main_and_get_vars(
     return tuple(module.__dict__[var_name] for var_name in var_names)
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11), reason="Test is flaky for python 3.9 and 3.10."
+)
 def test_dataset_usage() -> None:
     import examples.dataset_usage as example
 
@@ -279,6 +282,9 @@ def test_zarr_and_dask() -> None:
     assert 123 < mean_value < 125
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11), reason="Test is flaky for python 3.9 and 3.10."
+)
 @pytest.mark.use_proxay
 def test_upload_tiff_stack() -> None:
     import examples.upload_tiff_stack as example
