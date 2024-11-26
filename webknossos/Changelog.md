@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...HEAD)
 
 ### Breaking Changes
 
@@ -21,6 +21,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
 
 ### Fixed
+
+
+## [0.15.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.11) - 2024-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...v0.15.11)
+
+### Fixed
+- Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
+
 
 
 ## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
