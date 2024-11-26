@@ -1,7 +1,7 @@
 import copyreg
 import os
 import ssl
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import certifi
 
@@ -18,12 +18,14 @@ def _create_sslcontext() -> ssl.SSLContext:
 
 def _save_sslcontext(
     obj: ssl.SSLContext,
-) -> tuple[Callable[[Any, Any], ssl.SSLContext], tuple[ssl._SSLMethod, str | None]]:
+) -> tuple[Callable[[Any, Any], ssl.SSLContext], tuple[ssl._SSLMethod, Optional[str]]]:
     cafile = getattr(obj, "cafile")
     return _rebuild_sslcontext, (obj.protocol, cafile)
 
 
-def _rebuild_sslcontext(protocol: ssl._SSLMethod, cafile: str | None) -> ssl.SSLContext:
+def _rebuild_sslcontext(
+    protocol: ssl._SSLMethod, cafile: Optional[str]
+) -> ssl.SSLContext:
     ssl_context = ssl.SSLContext(protocol)
     if cafile is not None:
         ssl_context.load_verify_locations(cafile=cafile)
