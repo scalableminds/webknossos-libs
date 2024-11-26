@@ -1,5 +1,6 @@
 import itertools
 import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterable, Iterator
 
@@ -13,7 +14,9 @@ from webknossos.utils import is_remote_path
 @pytest.fixture(scope="module")
 def sample_remote_dataset() -> Iterator[wk.Dataset]:
     with TemporaryDirectory() as tmpdir:
-        original_ds = wk.Dataset.open("testdata/l4_sample_snipped")
+        original_ds = wk.Dataset.open(
+            Path(__file__).parent.parent / "binaryData" / "Organization_X" / "l4_sample"
+        )
         yield original_ds.copy_dataset(tmpdir)
 
 

@@ -1,5 +1,5 @@
+import os
 from pathlib import Path
-from typing import Iterator
 
 import numpy as np
 import pytest
@@ -11,11 +11,13 @@ SAMPLE_BBOX = wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
 pytestmark = [pytest.mark.use_proxay]
 
 
-@pytest.fixture(scope="module")
-def sample_dataset() -> Iterator[wk.Dataset]:
-    yield wk.Dataset.open(
-        Path(__file__).parent.parent.parent / "testdata" / "l4_sample_snipped"
-    )
+def get_sample_dataset(tmpdir: Path) -> wk.Dataset:
+    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
+    token = os.getenv("WK_TOKEN")
+    with wk.webknossos_context("http://localhost:9000", token):
+        return wk.Dataset.download(
+            url, path=Path(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX
+        )
 
 
 @pytest.mark.parametrize(
@@ -27,7 +29,8 @@ def sample_dataset() -> Iterator[wk.Dataset]:
         # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
-def test_url_download(url: str, tmp_path: Path, sample_dataset: wk.Dataset) -> None:
+def test_url_download(url: str, tmp_path: Path) -> None:
+    sample_dataset = get_sample_dataset(tmp_path)
     ds = wk.Dataset.download(
         url, path=tmp_path / "ds", mags=[wk.Mag(1)], bbox=SAMPLE_BBOX
     )
@@ -49,7 +52,8 @@ def test_url_download(url: str, tmp_path: Path, sample_dataset: wk.Dataset) -> N
         # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
-def test_url_open_remote(url: str, sample_dataset: wk.Dataset) -> None:
+def test_url_open_remote(url: str, tmp_path: Path) -> None:
+    sample_dataset = get_sample_dataset(tmp_path)
     ds = wk.Dataset.open_remote(url)
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
@@ -64,7 +68,8 @@ def test_url_open_remote(url: str, sample_dataset: wk.Dataset) -> None:
     )
 
 
-def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
+def test_remote_dataset(tmp_path: Path) -> None:
+    sample_dataset = get_sample_dataset(tmp_path)
     remote_ds = sample_dataset.upload(new_dataset_name="test_remote_metadata")
     assert np.array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
@@ -114,8 +119,8 @@ def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     assert remote_ds.folder.name == "A subfolder!"
 
 
-def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -> None:
-    ds_original = sample_dataset
+def test_upload_download_roundtrip(tmp_path: Path) -> None:
+    ds_original = get_sample_dataset(tmp_path)
     url = ds_original.upload(new_dataset_name="test_upload_download_roundtrip").url
     ds_roundtrip = wk.Dataset.download(
         url, path=tmp_path / "ds", layers=["color", "segmentation"]
