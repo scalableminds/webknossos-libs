@@ -22,10 +22,10 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 07 Nov 2024 17:43:16 GMT
+        date: Wed, 27 Nov 2024 19:53:05 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"V_E8uJ0yPHT3M7YWuQN4yw"}'
+        data: '{"token":"yvUotPhC4JEnt91qbmg3PQ"}'
         compression: none

@@ -22,13 +22,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         content-type: application/json
-        content-length: '1409'
+        content-length: '1408'
       body:
         encoding: utf8
         data: >-
-          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1732283596914,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1732735110316,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -53,7 +53,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -135,7 +135,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -217,7 +217,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -299,14 +299,14 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
-        content-length: '1075'
+        content-length: '1152'
       body:
         encoding: utf8
         data: >-
-          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
         compression: none
   - request:
       method: HEAD
@@ -331,10 +331,10 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
-        content-length: '1075'
+        content-length: '1152'
       body:
         encoding: utf8
         data: ''
@@ -346,7 +346,7 @@ http_interactions:
         host: localhost:9000
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        range: bytes=0-1074
+        range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -363,14 +363,14 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
-        content-length: '1075'
+        content-length: '1152'
       body:
         encoding: utf8
         data: >-
-          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
         compression: none
   - request:
       method: GET
@@ -395,7 +395,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -471,47 +471,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
-        connection: close
-        content-type: application/json
-        content-length: '166'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -536,15 +507,50 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:29 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -569,15 +575,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -602,15 +611,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -635,7 +647,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:29 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -667,7 +679,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -743,47 +755,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
-        connection: close
-        content-type: application/json
-        content-length: '166'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -808,15 +791,50 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -841,15 +859,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -874,7 +895,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -906,15 +927,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -939,7 +963,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -1015,48 +1039,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1081,7 +1075,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1089,6 +1083,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1113,15 +1143,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1146,7 +1179,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1178,15 +1211,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1211,7 +1247,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:16 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -1287,48 +1323,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1353,7 +1359,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1361,6 +1367,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1385,48 +1427,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1451,7 +1463,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1459,6 +1471,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1483,7 +1531,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -1559,15 +1607,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1592,7 +1643,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1624,15 +1675,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1657,48 +1711,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1723,7 +1747,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1731,6 +1755,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1755,7 +1815,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -1831,48 +1891,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1897,7 +1927,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1905,6 +1935,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1929,47 +1995,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '166'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -1994,15 +2031,50 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -2027,7 +2099,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2103,15 +2175,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2136,15 +2211,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2169,7 +2247,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2201,48 +2279,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2267,7 +2315,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2275,6 +2323,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2048,2048,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2299,7 +2383,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2375,48 +2459,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2441,7 +2495,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -2449,6 +2503,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2473,47 +2563,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '166'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2538,15 +2599,50 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:30 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -2571,7 +2667,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2647,15 +2743,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:30 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2680,15 +2779,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2713,7 +2815,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -2745,15 +2847,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2778,7 +2883,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -2810,15 +2915,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2843,7 +2951,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -2919,48 +3027,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -2985,7 +3063,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -2993,6 +3071,42 @@ http_interactions:
         encoding: utf8
         data: >-
           {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3017,15 +3131,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3050,7 +3167,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -3082,15 +3199,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3113,15 +3233,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3144,7 +3267,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3174,15 +3297,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:17 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3205,15 +3331,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3236,15 +3365,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3267,7 +3399,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3297,15 +3429,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3328,7 +3463,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3358,15 +3493,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3389,46 +3527,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3451,7 +3561,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3462,6 +3572,40 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1/zarr.json
       headers:
         host: localhost:9000
@@ -3481,15 +3625,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3512,15 +3659,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3543,7 +3693,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3573,15 +3723,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3604,7 +3757,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -3634,15 +3787,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3665,15 +3821,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3696,15 +3855,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3727,7 +3889,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -3757,46 +3919,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3819,7 +3953,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -3830,6 +3964,40 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4/zarr.json
       headers:
         host: localhost:9000
@@ -3849,15 +4017,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3880,15 +4051,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -3911,7 +4085,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -3941,46 +4115,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4003,7 +4149,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -4014,6 +4160,40 @@ http_interactions:
         compression: none
   - request:
       method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
       headers:
         host: localhost:9000
@@ -4033,15 +4213,52 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:31 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4064,7 +4281,71 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4094,107 +4375,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/zarr.json
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zattrs
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
-        connection: close
-        content-type: application/json
-        content-length: '166'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,4096,4096,1536],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4217,15 +4409,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4248,15 +4443,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4279,7 +4477,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4309,46 +4507,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4371,7 +4541,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:18 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4382,7 +4552,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zattrs
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -4401,76 +4571,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 404
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
-        connection: close
-        content-type: application/json
-        content-length: '101'
-      body:
-        encoding: utf8
-        data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
-        connection: close
-        content-type: application/json
-        content-length: '166'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4493,15 +4605,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4524,7 +4639,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -4554,15 +4669,116 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/zarr.json
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '166'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1024,1024,1536],"dimension_seperator":"."}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zattrs
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '263'
+      body:
+        encoding: utf8
+        data: >-
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4585,15 +4801,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4616,15 +4835,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4647,7 +4869,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -4677,45 +4899,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
-        connection: close
-        content-type: application/json
-        content-length: '163'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4738,15 +4933,48 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,512,512,768],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -4769,45 +4997,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
-        connection: close
-        content-type: application/json
-        content-length: '163'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4830,15 +5031,48 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
         compression: none
   - request:
       method: GET
@@ -4861,45 +5095,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
-        connection: close
-        content-type: application/json
-        content-length: '163'
-      body:
-        encoding: utf8
-        data: >-
-          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
         compression: none
   - request:
       method: GET
@@ -4922,13 +5129,46 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 22 Nov 2024 13:53:19 GMT
+        date: Wed, 27 Nov 2024 19:18:32 GMT
         connection: close
         content-type: application/json
-        content-length: '101'
+        content-length: '263'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The requested chunk coordinates are in an
-          invalid format. Expected c.x.y.z"}]}
+          {"messages":[{"error":"Invalid chunk coordinates. Expected dot
+          separated coordinates like
+          c.<additional_axes.>x.y.z"},{"chain":"[Server Time 2024-11-27 19:18] 
+          <~ Invalid chunk coordinates. Expected dot separated coordinates like
+          c.<additional_axes.>x.y.z 404"}]}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Wed, 27 Nov 2024 19:18:32 GMT
+        connection: close
+        content-type: application/json
+        content-length: '163'
+      body:
+        encoding: utf8
+        data: >-
+          {"dtype":"<u4","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,384],"dimension_seperator":"."}
         compression: none
