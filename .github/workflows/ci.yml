@@ -115,7 +115,7 @@ jobs:
         if: ${{ matrix.executors == 'multiprocessing' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
+          PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
             uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
 
       - name: Run slurm tests

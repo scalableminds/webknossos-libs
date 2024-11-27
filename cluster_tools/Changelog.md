@@ -10,10 +10,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...HEAD)
 
 ### Breaking Changes
+- Removed the `map_unordered` function of executors. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
 
 ### Added
 
 ### Changed
+- Deprecated the test_pickling and debug_sequential executor strategies. The strategies multiprocessing_with_pickling and sequential should be used instead. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
+- The sequential executor strategy no longer uses multiprocessing functionality internally and instead executes functions sequentially and synchronously in the same process. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
 
 ### Fixed
 

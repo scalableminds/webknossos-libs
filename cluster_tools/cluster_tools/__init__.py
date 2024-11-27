@@ -1,11 +1,12 @@
+import warnings
 from typing import Any, Literal, overload
 
 from cluster_tools.executor_protocol import Executor
 from cluster_tools.executors.dask import DaskExecutor
-from cluster_tools.executors.debug_sequential import DebugSequentialExecutor
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
-from cluster_tools.executors.pickle_ import PickleExecutor
+from cluster_tools.executors.multiprocessing_pickle import MultiprocessingPickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
+from cluster_tools.executors.sequential_pickle import SequentialPickleExecutor
 from cluster_tools.schedulers.cluster_executor import (
     ClusterExecutor,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
     RemoteOutOfMemoryException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
@@ -16,7 +17,7 @@ from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
 from cluster_tools.schedulers.slurm import SlurmExecutor
 
-# For backwards-compatibility:
+# For backwards-compatibility, remove in version 2.0:
 WrappedProcessPoolExecutor = MultiprocessingExecutor
 
 
@@ -79,6 +80,18 @@ def get_executor(
 
 @overload
 def get_executor(
+    environment: Literal["multiprocessing_with_pickling"], **kwargs: Any
+) -> MultiprocessingPickleExecutor: ...
+
+
+@overload
+def get_executor(
+    environment: Literal["test_pickling"], **kwargs: Any
+) -> MultiprocessingPickleExecutor: ...
+
+
+@overload
+def get_executor(
     environment: Literal["sequential"], **kwargs: Any
 ) -> SequentialExecutor: ...
 
@@ -86,13 +99,13 @@ def get_executor(
 @overload
 def get_executor(
     environment: Literal["debug_sequential"], **kwargs: Any
-) -> DebugSequentialExecutor: ...
+) -> SequentialExecutor: ...
 
 
 @overload
 def get_executor(
-    environment: Literal["test_pickling"], **kwargs: Any
-) -> PickleExecutor: ...
+    environment: Literal["sequential_with_pickling"], **kwargs: Any
+) -> SequentialPickleExecutor: ...
 
 
 def get_executor(environment: str, **kwargs: Any) -> "Executor":
@@ -116,8 +129,24 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         return MultiprocessingExecutor(**kwargs)
     elif environment == "sequential":
         return SequentialExecutor(**kwargs)
-    elif environment == "debug_sequential":
-        return DebugSequentialExecutor(**kwargs)
+    elif environment == "sequential_with_pickling":
+        return SequentialPickleExecutor(**kwargs)
+    elif environment == "multiprocessing_with_pickling":
+        return MultiprocessingPickleExecutor(**kwargs)
     elif environment == "test_pickling":
-        return PickleExecutor(**kwargs)
+        # For backwards-compatibility, remove in version 2.0:
+        warnings.warn(
+            "The test_pickling execution strategy is deprecated and will be removed in version 2.0. Use multiprocessing_with_pickling instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return MultiprocessingPickleExecutor(**kwargs)
+    elif environment == "debug_sequential":
+        # For backwards-compatibility, remove in version 2.0:
+        warnings.warn(
+            "The debug_sequential execution strategy is deprecated and will be removed in version 2.0. Use sequential instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return SequentialExecutor(**kwargs)
     raise Exception("Unknown executor: {}".format(environment))
