@@ -1,13 +1,11 @@
 import logging
 import multiprocessing
 import os
-import tempfile
 from concurrent import futures
 from concurrent.futures import Future, ProcessPoolExecutor
 from functools import partial
 from multiprocessing.context import BaseContext
 from pathlib import Path
-from shutil import rmtree
 from typing import (
     Any,
     Callable,
@@ -44,9 +42,8 @@ _S = TypeVar("_S")
 class MultiprocessingExecutor(ProcessPoolExecutor):
     """
     Wraps the ProcessPoolExecutor to add various features:
-    - map_to_futures and map_unordered method
+    - map_to_futures method
     - pickling of job's output (see output_pickle_path_getter and output_pickle_path)
-    - job submission via pickling to circumvent bug in python < 3.8 (see MULTIPROCESSING_VIA_IO_TMP_DIR)
     """
 
     _mp_context: BaseContext
@@ -87,7 +84,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             self._mp_logging_handler_pool = _MultiprocessingLoggingHandlerPool()
 
     @classmethod
-    def as_completed(cls, futs: List["Future[_T]"]) -> Iterator["Future[_T]"]:
+    def as_completed(cls, futs: List[Future[_T]]) -> Iterator[Future[_T]]:
         return futures.as_completed(futs)
 
     def submit(  # type: ignore[override]
@@ -95,7 +92,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         __fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> "Future[_T]":
+    ) -> Future[_T]:
         if "__cfut_options" in kwargs:
             output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
                 "output_pickle_path"
@@ -103,15 +100,6 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             del kwargs["__cfut_options"]
         else:
             output_pickle_path = None
-
-        if os.environ.get("MULTIPROCESSING_VIA_IO"):
-            # If MULTIPROCESSING_VIA_IO is set, _submit_via_io is used to
-            # workaround size constraints in pythons multiprocessing
-            # implementation. Also see https://github.com/python/cpython/pull/10305/files
-            # This should be fixed in python 3.8
-            submit_fn = self._submit_via_io
-        else:
-            submit_fn = super().submit  # type: ignore[assignment]
 
         # Depending on the start_method and output_pickle_path, setup functions may need to be
         # executed in the new process context, before the actual code is ran.
@@ -144,7 +132,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
                 ),
             )
 
-        fut = submit_fn(__fn, *args, **kwargs)
+        fut = super().submit(__fn, *args, **kwargs)
 
         enrich_future_with_uncaught_warning(fut)
         return fut
@@ -160,51 +148,14 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             chunksize = 1
         return super().map(fn, iterables, timeout=timeout, chunksize=chunksize)
 
-    def _submit_via_io(
-        self,
-        __fn: Callable[_P, _T],
-        *args: _P.args,
-        **kwargs: _P.kwargs,
-    ) -> "Future[_T]":
-        opt_tmp_dir = os.environ.get("MULTIPROCESSING_VIA_IO_TMP_DIR")
-        if opt_tmp_dir is not None:
-            dirpath = tempfile.mkdtemp(dir=opt_tmp_dir)
-        else:
-            dirpath = tempfile.mkdtemp()
-
-        output_pickle_path = Path(dirpath) / "jobdescription.pickle"
-
-        with output_pickle_path.open("wb") as file:
-            pickling.dump((__fn, args, kwargs), file)
-
-        future = super().submit(
-            MultiprocessingExecutor._execute_via_io, output_pickle_path
-        )
-
-        future.add_done_callback(
-            partial(MultiprocessingExecutor._remove_tmp_file, dirpath)
-        )
-
-        return future
-
-    @staticmethod
-    def _remove_tmp_file(path: os.PathLike, _future: Future) -> None:
-        rmtree(path)
-
     @staticmethod
     def _setup_logging_and_execute(
         multiprocessing_logging_setup_fn: Callable[[], None],
-        fn: Callable[_P, "Future[_T]"],
+        fn: Callable[_P, Future[_T]],
         *args: Any,
         **kwargs: Any,
-    ) -> "Future[_T]":
+    ) -> Future[_T]:
         multiprocessing_logging_setup_fn()
-        return fn(*args, **kwargs)
-
-    @staticmethod
-    def _execute_via_io(serialized_function_info_path: os.PathLike) -> Any:
-        with open(serialized_function_info_path, "rb") as file:
-            (fn, args, kwargs) = pickling.load(file)
         return fn(*args, **kwargs)
 
     @staticmethod
@@ -231,18 +182,6 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
                 pickling.dump((True, result), file)
             return result
 
-    def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
-        futs: List["Future[_T]"] = self.map_to_futures(fn, args)
-
-        # Return a separate generator to avoid that map_unordered
-        # is executed lazily (otherwise, jobs would be submitted
-        # lazily, as well).
-        def result_generator() -> Iterator:
-            for fut in futures.as_completed(futs):
-                yield fut.result()
-
-        return result_generator()
-
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
@@ -250,7 +189,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             _S
         ],  # TODO change: allow more than one arg per call #noqa: FIX002 Line contains TODO
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
-    ) -> List["Future[_T]"]:
+    ) -> List[Future[_T]]:
         if output_pickle_path_getter is not None:
             futs = [
                 self.submit(  # type: ignore[call-arg]
@@ -267,7 +206,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
         return futs
 
-    def forward_log(self, fut: "Future[_T]") -> _T:
+    def forward_log(self, fut: Future[_T]) -> _T:
         """
         Similar to the cluster executor, this method Takes a future from which the log file is forwarded to the active
         process. This method blocks as long as the future is not done.
