@@ -5,7 +5,7 @@ from typing import Iterator
 
 import numpy as np
 import pytest
-from cluster_tools import DebugSequentialExecutor
+from cluster_tools import SequentialExecutor
 from tifffile import TiffFile
 
 import webknossos as wk
@@ -96,7 +96,7 @@ def test_no_slashes_in_layername(tmp_path: Path) -> None:
     )
 
     for strategy in Dataset.ConversionLayerMapping:
-        with DebugSequentialExecutor() as executor:
+        with SequentialExecutor() as executor:
             dataset = wk.Dataset.from_images(
                 tmp_path / "tiff",
                 tmp_path / str(strategy),

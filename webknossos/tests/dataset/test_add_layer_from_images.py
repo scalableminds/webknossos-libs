@@ -9,7 +9,7 @@ from zipfile import BadZipFile, ZipFile
 import httpx
 import numpy as np
 import pytest
-from cluster_tools import DebugSequentialExecutor
+from cluster_tools import SequentialExecutor
 from tifffile import TiffFile
 
 import webknossos as wk
@@ -58,7 +58,7 @@ def test_compare_tifffile(persistent_path: Path) -> None:
 
 def test_compare_nd_tifffile(persistent_path: Path) -> None:
     ds = wk.Dataset(persistent_path, (1, 1, 1))
-    with DebugSequentialExecutor() as executor:
+    with SequentialExecutor() as executor:
         layer = ds.add_layer_from_images(
             "testdata/4D/4D_series/4D-series.ome.tif",
             layer_name="color",
@@ -212,7 +212,7 @@ def _test_repo_images(
     num_layers: int,
     size: Tuple[int, ...],
 ) -> wk.Dataset:
-    with DebugSequentialExecutor() as executor:
+    with SequentialExecutor() as executor:
         ds = wk.Dataset(persistent_path, (1, 1, 1))
         layer = ds.add_layer_from_images(
             path,
