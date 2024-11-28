@@ -57,11 +57,8 @@ class PimsTiffReader(FramesSequenceND):
     def get_frame_2D(self, **ind: int) -> np.ndarray:
         _tiff = tifffile.TiffFile(self.path).series[0]
 
-        out_shape = tuple(
-            self.sizes[axis] if axis in self.bundle_axes else 1
-            for axis in self._tiff_axes
-        )
-        out = np.empty(out_shape, dtype=self._dtype)
+        out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
+        out = np.zeros(out_shape, dtype=self._dtype)
 
         # Axes that are present in the tiff page
         page_axes = tuple(
@@ -104,15 +101,13 @@ class PimsTiffReader(FramesSequenceND):
                 page_selector = tuple(page_selector_list)
 
                 out_selector_list: list[Union[slice, int]] = []
-                for axis in self._tiff_axes:
+                for axis in self.bundle_axes:
                     if axis in broadcast_axes:
                         out_selector_list.append(slice(None))  # broadcast
-                    elif axis in self.bundle_axes:
+                    else:
                         out_selector_list.append(
                             slices[axis]
                         )  # set page in a slice of the output
-                    else:
-                        out_selector_list.append(0)
                 out_selector = tuple(out_selector_list)
 
                 page = _tiff.asarray(key=i)
@@ -123,12 +118,7 @@ class PimsTiffReader(FramesSequenceND):
                 assert len(page_selector) == page.ndim
                 out[out_selector] = page[page_selector]
 
-        out = np.moveaxis(
-            out,
-            tuple(self._tiff_axes.index(axis) for axis in self.bundle_axes),
-            range(len(self.bundle_axes)),
-        )
-        return out.squeeze(axis=tuple(range(len(self.bundle_axes), len(out.shape))))
+        return out
 
     @property
     def pixel_type(self) -> np.dtype:
