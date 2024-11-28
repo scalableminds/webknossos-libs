@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
 
 
 ## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27
