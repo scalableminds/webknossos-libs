@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 
 import pytest
 
@@ -35,63 +35,95 @@ def raise_if(msg: str, _bool: bool) -> None:
         raise Exception("raise_if was called with True: {}".format(msg))
 
 
-def get_executors(with_debug_sequential: bool = False) -> List[cluster_tools.Executor]:
-    global _dask_cluster
+# Most of the specs in this module should be executed with multiple executors. Some tests
+# should be called with all executors (including the pickling variants) and some with a subset (i.e., without the pickling variants).
+# In order to avoid redundant parameterization of each test, pytest_generate_tests is defined here.
+# If a spec uses an `exc_with_pickling` fixture (defined as a function parameter), that test is automatically parameterized with all executors. Analoguous, parameterization happens with `exc`.
+# Regarding how this works in details: This function is called for each test and has access to the fixtures supplied
+# to the test and most importantly can parametrize those fixtures.
+def pytest_generate_tests(metafunc: Any) -> None:
+    if "exc" in metafunc.fixturenames or "exc_with_pickling" in metafunc.fixturenames:
+        with_pickling = "exc_with_pickling" in metafunc.fixturenames
+        executor_keys = get_executor_keys(with_pickling)
+        metafunc.parametrize(
+            "exc_with_pickling" if with_pickling else "exc",
+            executor_keys,
+            indirect=True,
+        )
+
+
+@pytest.fixture
+def exc(
+    request: Any,
+) -> cluster_tools.Executor:
+    return get_executor(request.param)
+
+
+@pytest.fixture
+def exc_with_pickling(
+    request: Any,
+) -> cluster_tools.Executor:
+    return get_executor(request.param)
+
+
+def get_executor_keys(with_pickling: bool = False) -> set[str]:
     executor_keys = {
         "slurm",
         "kubernetes",
         "dask",
         "multiprocessing",
         "sequential",
-        "test_pickling",
     }
-    if with_debug_sequential:
-        executor_keys.add("debug_sequential")
+
+    if with_pickling:
+        executor_keys.add("multiprocessing_with_pickling")
+        executor_keys.add("sequential_with_pickling")
 
     if "PYTEST_EXECUTORS" in os.environ:
         executor_keys = executor_keys.intersection(
             os.environ["PYTEST_EXECUTORS"].split(",")
         )
 
-    executors: List[cluster_tools.Executor] = []
-    if "slurm" in executor_keys:
-        executors.append(
-            cluster_tools.get_executor(
-                "slurm", debug=True, job_resources={"mem": "100M"}
-            )
+    return executor_keys
+
+
+def get_executor(environment: str) -> cluster_tools.Executor:
+    global _dask_cluster
+
+    if environment == "slurm":
+        return cluster_tools.get_executor(
+            "slurm", debug=True, job_resources={"mem": "100M"}
         )
-    if "kubernetes" in executor_keys:
-        executors.append(
-            cluster_tools.get_executor(
-                "kubernetes",
-                debug=True,
-                job_resources={
-                    "memory": "1G",
-                    "image": "scalableminds/cluster-tools:latest",
-                },
-            )
+    if environment == "kubernetes":
+        return cluster_tools.get_executor(
+            "kubernetes",
+            debug=True,
+            job_resources={
+                "memory": "1G",
+                "image": "scalableminds/cluster-tools:latest",
+            },
         )
-    if "multiprocessing" in executor_keys:
-        executors.append(cluster_tools.get_executor("multiprocessing", max_workers=5))
-    if "sequential" in executor_keys:
-        executors.append(cluster_tools.get_executor("sequential"))
-    if "dask" in executor_keys:
+    if environment == "multiprocessing":
+        return cluster_tools.get_executor("multiprocessing", max_workers=5)
+    if environment == "sequential":
+        return cluster_tools.get_executor("sequential")
+    if environment == "dask":
         if not _dask_cluster:
             from distributed import LocalCluster, Worker
 
             _dask_cluster = LocalCluster(
                 worker_class=Worker, resources={"mem": 20e9, "cpus": 4}, nthreads=6
             )
-        executors.append(
-            cluster_tools.get_executor("dask", job_resources={"address": _dask_cluster})
+        return cluster_tools.get_executor(
+            "dask", job_resources={"address": _dask_cluster}
         )
-    if "test_pickling" in executor_keys:
-        executors.append(cluster_tools.get_executor("test_pickling"))
-    if "pbs" in executor_keys:
-        executors.append(cluster_tools.get_executor("pbs"))
-    if "debug_sequential" in executor_keys:
-        executors.append(cluster_tools.get_executor("debug_sequential"))
-    return executors
+    if environment == "multiprocessing_with_pickling":
+        return cluster_tools.get_executor("multiprocessing_with_pickling")
+    if environment == "pbs":
+        return cluster_tools.get_executor("pbs")
+    if environment == "sequential_with_pickling":
+        return cluster_tools.get_executor("sequential_with_pickling")
+    raise RuntimeError("No executor specified.")
 
 
 @pytest.mark.skip(
@@ -125,13 +157,15 @@ def test_uncaught_warning() -> None:
 
     # In the following 4 cases we check whether there is a/no warning when using
     # map/submit with/without checking the futures.
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "map-expect-warning"
         with exc:
             exc.map(partial(raise_if, marker), cases)
         expect_marker(marker, "There should be a warning for an uncaught Future in map")
 
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "map-dont-expect-warning"
         with exc:
             try:
@@ -142,7 +176,8 @@ def test_uncaught_warning() -> None:
             marker, "There should be no warning for an uncaught Future in map", False
         )
 
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "submit-expect-warning"
         with exc:
             futures = [exc.submit(partial(raise_if, marker), b) for b in cases]
@@ -150,7 +185,8 @@ def test_uncaught_warning() -> None:
             marker, "There should be no warning for an uncaught Future in submit"
         )
 
-    for exc in get_executors():
+    for exc_key in get_executor_keys():
+        exc = get_executor(exc_key)
         marker = "submit-dont-expect-warning"
         with exc:
             futures = [exc.submit(partial(raise_if, marker), b) for b in cases]
@@ -166,173 +202,157 @@ def test_uncaught_warning() -> None:
     logger.removeHandler(fh)
 
 
-def test_submit() -> None:
-    def run_square_numbers(executor: cluster_tools.Executor) -> None:
-        with executor:
-            job_count = 3
-            job_range = range(job_count)
-            futures = [executor.submit(square, n) for n in job_range]
-            for future, job_index in zip(futures, job_range):
-                assert future.result() == square(job_index)
-
-    for exc in get_executors(with_debug_sequential=True):
-        run_square_numbers(exc)
+def test_submit(exc_with_pickling: cluster_tools.Executor) -> None:
+    exc = exc_with_pickling
+    with exc:
+        job_count = 3
+        job_range = range(job_count)
+        futures = [exc.submit(square, n) for n in job_range]
+        for future, job_index in zip(futures, job_range):
+            assert future.result() == square(job_index)
 
 
 def get_pid() -> int:
     return os.getpid()
 
 
-def test_process_id() -> None:
+def test_process_id(exc_with_pickling: cluster_tools.Executor) -> None:
+    exc = exc_with_pickling
     outer_pid = os.getpid()
 
-    def compare_pids(executor: cluster_tools.Executor) -> None:
-        with executor:
-            future = executor.submit(get_pid)
-            inner_pid = future.result()
+    with exc:
+        future = exc.submit(get_pid)
+        inner_pid = future.result()
 
-            should_differ = not isinstance(exc, cluster_tools.DebugSequentialExecutor)
+        should_differ = not isinstance(
+            exc,
+            (
+                cluster_tools.SequentialExecutor,
+                cluster_tools.SequentialPickleExecutor,
+            ),
+        )
 
-            if should_differ:
-                assert (
-                    inner_pid != outer_pid
-                ), f"Inner and outer pid should differ, but both are {inner_pid}."
-            else:
-                assert (
-                    inner_pid == outer_pid
-                ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
-
-    for exc in get_executors(with_debug_sequential=True):
-        compare_pids(exc)
-
-
-def test_unordered_sleep() -> None:
-    """Get host identifying information about the servers running
-    our jobs.
-    """
-    for exc in get_executors():
-        with exc:
-            durations = [10, 5]
-            futures = [exc.submit(sleep, n) for n in durations]
-            if not isinstance(exc, cluster_tools.SequentialExecutor):
-                durations.sort()
-            for duration, future in zip(durations, exc.as_completed(futures)):
-                assert future.result() == duration
+        if should_differ:
+            assert (
+                inner_pid != outer_pid
+            ), f"Inner and outer pid should differ, but both are {inner_pid}."
+        else:
+            assert (
+                inner_pid == outer_pid
+            ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
 
 
-def test_unordered_map() -> None:
-    for exc in get_executors():
-        with exc:
-            durations = [15, 1]
-            results_gen = exc.map_unordered(sleep, durations)
-            results = list(results_gen)
+def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
+    is_async = not isinstance(
+        exc,
+        (
+            cluster_tools.SequentialExecutor,
+            cluster_tools.SequentialPickleExecutor,
+        ),
+    )
 
-            if not isinstance(exc, cluster_tools.SequentialExecutor):
-                durations.sort()
+    with exc:
+        durations = [5, 0]
+        futures = [exc.submit(sleep, n) for n in durations]
+        # For synchronous executors, the futures should be completed after submit returns.
+        # .as_completed() would return them in reverse order in that case.
+        completed_futures = exc.as_completed(futures) if is_async else futures
+        results = [f.result() for f in completed_futures]
 
-            for duration, result in zip(durations, results):
-                assert result == duration
+        if is_async:
+            # For asynchronous executors, the jobs that sleep less should complete first
+            durations.sort()
 
-
-def test_map_to_futures() -> None:
-    for exc in get_executors():
-        with exc:
-            durations = [15, 1]
-            futures = exc.map_to_futures(sleep, durations)
-            results = []
-
-            for i, duration in enumerate(exc.as_completed(futures)):
-                results.append(duration.result())
-
-            if not isinstance(exc, cluster_tools.SequentialExecutor):
-                durations.sort()
-
-            for duration_, result in zip(durations, results):
-                assert result == duration_
+        assert durations == results
 
 
-def test_empty_map_to_futures() -> None:
-    for exc in get_executors():
-        with exc:
-            futures = exc.map_to_futures(sleep, [])
-            results = [f.result() for f in futures]
-            assert len(results) == 0
+def test_map_to_futures(exc: cluster_tools.Executor) -> None:
+    is_async = not isinstance(
+        exc,
+        (
+            cluster_tools.SequentialExecutor,
+            cluster_tools.SequentialPickleExecutor,
+        ),
+    )
+
+    with exc:
+        durations = [5, 0]
+        futures = exc.map_to_futures(sleep, durations)
+        # For synchronous executors, the futures should be completed after submit returns.
+        # .as_completed() would return them in reverse order in that case.
+        completed_futures = exc.as_completed(futures) if is_async else futures
+        results = [f.result() for f in completed_futures]
+
+        if is_async:
+            # For asynchronous executors, the jobs that sleep less should complete first
+            durations.sort()
+
+        assert durations == results
+
+
+def test_empty_map_to_futures(exc: cluster_tools.Executor) -> None:
+    with exc:
+        futures = exc.map_to_futures(sleep, [])
+        results = [f.result() for f in futures]
+        assert len(results) == 0
 
 
 def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
     return Path(tmp_dir) / f"test_{chunk}.pickle"
 
 
-def test_map_to_futures_with_pickle_paths() -> None:
-    for exc in get_executors(with_debug_sequential=True):
-        with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
-            with exc:
-                durations = [2, 1]
-                futures = exc.map_to_futures(
-                    sleep,
-                    durations,
-                    output_pickle_path_getter=partial(
-                        output_pickle_path_getter, tmp_dir
-                    ),
+def test_map_to_futures_with_pickle_paths(
+    exc_with_pickling: cluster_tools.Executor,
+) -> None:
+    exc = exc_with_pickling
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with exc:
+            numbers = [2, 1]
+            futures = exc.map_to_futures(
+                square,
+                numbers,
+                output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
+            )
+            results = [f.result() for f in exc.as_completed(futures)]
+            assert set(results) == {1, 4}
+
+        for number in numbers:
+            assert Path(
+                output_pickle_path_getter(tmp_dir, number)
+            ).exists(), f"File for chunk {number} should exist."
+
+
+def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with exc:
+            job_count = 3
+            job_range = range(job_count)
+
+            futures = []
+            for n in job_range:
+                output_path = Path(tmp_dir) / f"{n}.pickle"
+                cfut_options = {"output_pickle_path": output_path}
+                futures.append(
+                    exc.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
                 )
-                results = []
 
-                for i, duration in enumerate(exc.as_completed(futures)):
-                    results.append(duration.result())
+            for future, job_index in zip(futures, job_range):
+                assert future.result() == square(job_index)
 
-                assert 2 in results
-                assert 1 in results
-
-            for duration_ in durations:
-                assert Path(
-                    output_pickle_path_getter(tmp_dir, duration_)
-                ).exists(), f"File for chunk {duration_} should exist."
+        assert output_path.exists(), "Output pickle file should exist."
 
 
-def test_submit_with_pickle_paths() -> None:
-    for idx, exc in enumerate(get_executors()):
-        with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
-
-            def run_square_numbers(idx: int, executor: cluster_tools.Executor) -> Path:
-                with executor:
-                    job_count = 3
-                    job_range = range(job_count)
-
-                    futures = []
-                    for n in job_range:
-                        output_path = Path(tmp_dir) / f"{idx}_{n}.pickle"
-                        cfut_options = {"output_pickle_path": output_path}
-                        futures.append(
-                            executor.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
-                        )
-
-                    for future, job_index in zip(futures, job_range):
-                        assert future.result() == square(job_index)
-                    return output_path
-
-            output_path = run_square_numbers(idx, exc)
-            assert output_path.exists(), "Output pickle file should exist."
+def test_map(exc: cluster_tools.Executor) -> None:
+    with exc:
+        result = list(exc.map(square, [2, 3, 4]))
+        assert result == [4, 9, 16]
 
 
-def test_map() -> None:
-    def run_map(executor: cluster_tools.Executor) -> None:
-        with executor:
-            result = list(executor.map(square, [2, 3, 4]))
-            assert result == [4, 9, 16]
-
-    for exc in get_executors():
-        run_map(exc)
-
-
-def test_map_lazy() -> None:
-    def run_map(executor: cluster_tools.Executor) -> None:
-        with executor:
-            result = executor.map(square, [2, 3, 4])
+def test_map_lazy(exc: cluster_tools.Executor) -> None:
+    if not isinstance(exc, cluster_tools.DaskExecutor):
+        with exc:
+            result = exc.map(square, [2, 3, 4])
         assert list(result) == [4, 9, 16]
-
-    for exc in get_executors():
-        if not isinstance(exc, cluster_tools.DaskExecutor):
-            run_map(exc)
 
 
 def test_executor_args() -> None:
@@ -350,27 +370,27 @@ class DummyEnum(Enum):
     PEAR = 2
 
 
-def enum_consumer(value: DummyEnum) -> None:
+def enum_consumer(value: DummyEnum) -> DummyEnum:
     assert value == DummyEnum.BANANA
+    return value
 
 
-def test_cloudpickle_serialization() -> None:
-    enum_consumer_inner = enum_consumer
+@pytest.mark.parametrize(
+    "executor_key", ["multiprocessing_with_pickling", "sequential_with_pickling"]
+)
+def test_pickling(
+    executor_key: Union[
+        Literal["multiprocessing_with_pickling"], Literal["sequential_with_pickling"]
+    ],
+) -> None:
+    with cluster_tools.get_executor(executor_key) as executor:
+        future = executor.submit(enum_consumer, DummyEnum.BANANA)
+        assert future.result() == DummyEnum.BANANA
 
-    for fn in [enum_consumer, enum_consumer_inner]:
-        try:
-            with cluster_tools.get_executor("test_pickling") as executor:
-                _fut = executor.submit(fn, DummyEnum.BANANA)
-            assert fn == enum_consumer
-        except Exception:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
-            assert fn != enum_consumer
 
-    assert True
-
-
-def test_map_to_futures_with_debug_sequential() -> None:
-    with cluster_tools.get_executor("debug_sequential") as exc:
-        durations = [4, 1]
+def test_map_to_futures_with_sequential() -> None:
+    with cluster_tools.get_executor("sequential") as exc:
+        durations = [1, 0]
         futures = exc.map_to_futures(sleep, durations)
 
         for fut in futures:
@@ -378,9 +398,7 @@ def test_map_to_futures_with_debug_sequential() -> None:
                 fut.done()
             ), "Future should immediately be finished after map_to_futures has returned"
 
-        results = []
-        for i, duration in enumerate(futures):
-            results.append(duration.result())
+        results = [f.result() for f in futures]
 
-        for duration_, result in zip(durations, results):
-            assert result == duration_
+        for duration, result in zip(durations, results):
+            assert result == duration
