@@ -13,7 +13,6 @@ import pytest
 from scipy.spatial import cKDTree
 
 import webknossos as wk
-from webknossos.client.api_client.errors import UnexpectedStatusError
 
 
 @contextmanager

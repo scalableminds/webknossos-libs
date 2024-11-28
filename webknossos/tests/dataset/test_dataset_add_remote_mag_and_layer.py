@@ -1,8 +1,6 @@
 import itertools
 import os
-from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Iterable, Iterator
+from typing import Iterable
 
 import pytest
 from upath import UPath

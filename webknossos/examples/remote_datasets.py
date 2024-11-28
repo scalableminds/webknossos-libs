@@ -23,7 +23,7 @@ def main() -> None:
         print("*", dataset_name)
 
     # Set demo tag of l4_sample dataset:
-    l4_sample_dataset.tags = ["demo"]
+    l4_sample_dataset.tags = ("demo",)
 
     # List all accessible demo datasets:
     remote_demo_datasets = wk.Dataset.get_remote_datasets(tags="demo")
