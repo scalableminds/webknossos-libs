@@ -120,22 +120,23 @@ def test_image_stack_to_dataset() -> None:
         assert dataset.get_layer("test").dtype_per_channel == "uint8"
 
 
+@pytest.mark.use_proxay
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
-    with tmp_cwd():
+    with wk.webknossos_context("http://localhost:9000", os.environ["WK_TOKEN"]):
         (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
         assert (
-            out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[
+            out_mag1.read(absolute_offset=(3457, 3323, 1204), size=(1, 1, 1))[
                 0, 0, 0, 0
             ]
-            != 5233922
+            != 6016
         )
         assert (
-            out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[
+            out_mag1.read(absolute_offset=(3457, 3323, 1204), size=(1, 1, 1))[
                 0, 0, 0, 0
             ]
-            == 5233967
+            == 1229599
         )
 
 
