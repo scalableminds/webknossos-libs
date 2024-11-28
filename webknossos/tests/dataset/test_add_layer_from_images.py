@@ -205,7 +205,7 @@ REPO_IMAGES_ARGS: List[
 
 def _test_repo_images(
     persistent_path: Path,
-    path: str | list[Path],
+    path: Union[str, list[Path]],
     kwargs: Dict,
     dtype: str,
     num_channels: int,
@@ -377,7 +377,14 @@ def test_bioformats(
 # All scif images used here are published with CC0 license,
 # see https://scif.io/images.
 TEST_IMAGES_ARGS: list[
-    tuple[str | list[str], str | list[str], dict, str, int, tuple[int, int, int]]
+    tuple[
+        Union[str, list[str]],
+        Union[str, list[str]],
+        dict,
+        str,
+        int,
+        tuple[int, int, int],
+    ]
 ] = [
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0420.dm4",
