@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Set, Tuple
+from typing import Set, Tuple, Union
 
 import numpy as np
 from pims import FramesSequenceND
@@ -31,7 +31,7 @@ class PimsTiffReader(FramesSequenceND):
         self.path = Path(path)
 
         _tiff = tifffile.TiffFile(self.path).series[0]
-        self._tiff_axes = tuple(_tiff.axes.lower())
+        self._tiff_axes = tuple(_tiff.axes.lower())  # All the axes in the tiff file
         for axis, shape in zip(self._tiff_axes, _tiff.shape):
             self._init_axis(axis, shape)
 
@@ -47,7 +47,8 @@ class PimsTiffReader(FramesSequenceND):
         self._shape = _tmp.shape
         self._other_axes = tuple(
             axis for axis in self._tiff_axes if axis not in _tmp.axes.lower()
-        )
+        )  # Axes that are not present in a single tiff page
+
         if "c" in self._tiff_axes:
             self._register_get_frame(self.get_frame_2D, "cyx")
         else:
@@ -56,17 +57,24 @@ class PimsTiffReader(FramesSequenceND):
     def get_frame_2D(self, **ind: int) -> np.ndarray:
         _tiff = tifffile.TiffFile(self.path).series[0]
 
-        # A frame of the tiff file might have less axes than the desired shape of a frame in the FramesSequenceND.
-        # To get the desired axes we need to iterate over the axes of the FramesSequenceND and extract the data from the tiff file.
         out_shape = tuple(
             self.sizes[axis] if axis in self.bundle_axes else 1
             for axis in self._tiff_axes
         )
         out = np.empty(out_shape, dtype=self._dtype)
 
-        # The axes per page are a subset of the axes of the tifffile. We copy the data from the tifffile to the memmap with correct axes.
-        # While the actual axes are e.g. ["t", "z", "y", "x"], with a shape like (3, 5, 100, 200), the axes of the tifffile consist of the axes of a singe page, e.g. ["y", "x"]. And the number of pages is 15.
-        # We have to iterate over the pages and copy the data to the correct position in the memmap.
+        # Axes that are present in the tiff page
+        page_axes = tuple(
+            axis for axis in self._tiff_axes if axis not in self._other_axes
+        )
+        # Axes that need to be broadcasted from page to output
+        broadcast_axes = tuple(
+            axis
+            for axis in self._tiff_axes
+            if axis in self.bundle_axes and axis not in self._other_axes
+        )
+
+        # We iterate over all tiff pages to find the pages that are relevant for this frame
         for i in range(len(_tiff.pages)):
             slices = {}
             for j, axis in enumerate(self._other_axes):
@@ -82,23 +90,38 @@ class PimsTiffReader(FramesSequenceND):
                 )
                 slices[axis] = index
 
-            if all(ind[axis] == index for axis, index in slices.items()):
-                section_selector: tuple[slice | int, ...] = tuple(
-                    slice(None) if axis in self.bundle_axes else ind[axis]
-                    for axis in self._tiff_axes
-                    if axis not in self._other_axes
-                )
-                out_selector: tuple[slice | int, ...] = tuple(
-                    slice(None) if axis in self.bundle_axes else 0
-                    for axis in self._tiff_axes
-                )
-                section = _tiff.asarray(key=i)
+            if all(
+                axis in self.bundle_axes or ind[axis] == index
+                for axis, index in slices.items()
+            ):
+                # Prepare selectors
+                page_selector_list: list[Union[slice, int]] = []
+                for axis in page_axes:
+                    if axis in self.bundle_axes:
+                        page_selector_list.append(slice(None))
+                    else:
+                        page_selector_list.append(ind[axis])
+                page_selector = tuple(page_selector_list)
+
+                out_selector_list: list[Union[slice, int]] = []
+                for axis in self._tiff_axes:
+                    if axis in broadcast_axes:
+                        out_selector_list.append(slice(None))  # broadcast
+                    elif axis in self.bundle_axes:
+                        out_selector_list.append(
+                            slices[axis]
+                        )  # set page in a slice of the output
+                    else:
+                        out_selector_list.append(0)
+                out_selector = tuple(out_selector_list)
+
+                page = _tiff.asarray(key=i)
                 print(
-                    f"{ind=} {slices=} {out_shape=} {out_selector=} {section_selector=} {section.shape=} {self.bundle_axes=} {self._tiff_axes=} {self._other_axes=} {self.sizes=}"
+                    f"{ind=} {slices=} {out_shape=} {out_selector=} {page_selector=} {page.shape=} {self.bundle_axes=} {self._tiff_axes=} {self._other_axes=} {self.sizes=}"
                 )
                 assert len(out_selector) == out.ndim
-                assert len(section_selector) == section.ndim
-                out[out_selector] = section[section_selector]
+                assert len(page_selector) == page.ndim
+                out[out_selector] = page[page_selector]
 
         out = np.moveaxis(
             out,
