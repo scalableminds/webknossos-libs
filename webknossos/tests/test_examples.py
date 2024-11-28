@@ -260,16 +260,16 @@ def test_user_times() -> None:
 def test_remote_datasets() -> None:
     import examples.remote_datasets as example
 
-    (own_remote_datasets,) = exec_main_and_get_vars(
-        example,
-        "own_remote_datasets",
-        raises=UnexpectedStatusError,  # request with scalable_minds organization param won’t work against localhost
-    )
+    with wk.webknossos_context("http://localhost:9000", os.environ["WK_TOKEN"]):
+        (own_remote_datasets,) = exec_main_and_get_vars(
+            example,
+            "own_remote_datasets",
+        )
 
-    ds = own_remote_datasets["l4_sample"]
-    assert ds.url == "http://localhost:9000/datasets/Organization_X/l4_sample"
-    ds.tags = ["test"]
-    assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()
+        ds = own_remote_datasets["l4_sample"]
+        assert ds.url == "http://localhost:9000/datasets/Organization_X/l4_sample"
+        ds.tags = ["demo"]
+        assert ds in wk.Dataset.get_remote_datasets(tags=["demo"]).values()
 
 
 @pytest.mark.skipif(
