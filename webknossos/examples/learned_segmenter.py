@@ -19,7 +19,7 @@ def main() -> None:
     # Step 1: Read the training data from the annotation and the dataset's color
     # layer (the data will be streamed from WEBKNOSSOS to our local computer)
     training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
-    new_dataset_name = f"{annotation.dataset_name}_segmented"
+    new_dataset_name = f"{annotation.dataset_name.replace(' ', '_')}_segmented"
     with wk.webknossos_context("https://webknossos.org"):
         dataset = annotation.get_remote_annotation_dataset()
 
