@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
+
+
+## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...v0.16.0)
 
 
 ## [0.15.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.11) - 2024-11-26
