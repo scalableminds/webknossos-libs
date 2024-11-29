@@ -25,20 +25,8 @@ def ignore_warnings() -> Iterator:
         yield
 
 
-@pytest.fixture
-def persistent_path(tmp_path: Path) -> Path:
-    return tmp_path
-
-
-# @pytest.fixture
-# def persistent_path(request: pytest.FixtureRequest) -> Path:
-#     folder = Path("persistent")
-#     folder.mkdir(exist_ok=True)
-#     return folder / request.node.name
-
-
-def test_compare_tifffile(persistent_path: Path) -> None:
-    ds = wk.Dataset(persistent_path, (1, 1, 1))
+def test_compare_tifffile(tmp_path: Path) -> None:
+    ds = wk.Dataset(tmp_path, (1, 1, 1))
     layer = ds.add_layer_from_images(
         "testdata/tiff/test.02*.tiff",
         layer_name="compare_tifffile",
@@ -56,8 +44,8 @@ def test_compare_tifffile(persistent_path: Path) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-def test_compare_nd_tifffile(persistent_path: Path) -> None:
-    ds = wk.Dataset(persistent_path, (1, 1, 1))
+def test_compare_nd_tifffile(tmp_path: Path) -> None:
+    ds = wk.Dataset(tmp_path, (1, 1, 1))
     with SequentialExecutor() as executor:
         layer = ds.add_layer_from_images(
             "testdata/4D/4D_series/4D-series.ome.tif",
@@ -204,7 +192,7 @@ REPO_IMAGES_ARGS: List[
 
 
 def _test_repo_images(
-    persistent_path: Path,
+    tmp_path: Path,
     path: Union[str, list[Path]],
     kwargs: Dict,
     dtype: str,
@@ -213,7 +201,7 @@ def _test_repo_images(
     size: Tuple[int, ...],
 ) -> wk.Dataset:
     with SequentialExecutor() as executor:
-        ds = wk.Dataset(persistent_path, (1, 1, 1))
+        ds = wk.Dataset(tmp_path, (1, 1, 1))
         layer = ds.add_layer_from_images(
             path,
             layer_name="color",
@@ -236,7 +224,7 @@ def _test_repo_images(
     "path, kwargs, dtype, num_channels, num_layers, size", REPO_IMAGES_ARGS
 )
 def test_repo_images(
-    persistent_path: Path,
+    tmp_path: Path,
     path: str,
     kwargs: Dict,
     dtype: str,
@@ -244,9 +232,7 @@ def test_repo_images(
     num_layers: int,
     size: Tuple[int, ...],
 ) -> None:
-    _test_repo_images(
-        persistent_path, path, kwargs, dtype, num_channels, num_layers, size
-    )
+    _test_repo_images(tmp_path, path, kwargs, dtype, num_channels, num_layers, size)
 
 
 def download_and_unpack(
@@ -328,7 +314,7 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
 
 
 def _test_bioformats(
-    persistent_path: Path,
+    tmp_path: Path,
     url: str,
     filename: str,
     kwargs: Dict,
@@ -337,9 +323,9 @@ def _test_bioformats(
     size: Tuple[int, int, int],
     num_layers: int,
 ) -> wk.Dataset:
-    unzip_path = persistent_path / "unzip"
+    unzip_path = tmp_path / "unzip"
     download_and_unpack(url, unzip_path, filename)
-    ds = wk.Dataset(persistent_path / "ds", (1, 1, 1))
+    ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
         layer = ds.add_layer_from_images(
             str(unzip_path / filename),
@@ -360,7 +346,7 @@ def _test_bioformats(
     "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
 )
 def test_bioformats(
-    persistent_path: Path,
+    tmp_path: Path,
     url: str,
     filename: str,
     kwargs: Dict,
@@ -370,7 +356,7 @@ def test_bioformats(
     num_layers: int,
 ) -> None:
     _test_bioformats(
-        persistent_path, url, filename, kwargs, dtype, num_channels, size, num_layers
+        tmp_path, url, filename, kwargs, dtype, num_channels, size, num_layers
     )
 
 
@@ -467,7 +453,7 @@ TEST_IMAGES_ARGS: list[
 
 
 def _test_test_images(
-    persistent_path: Path,
+    tmp_path: Path,
     url: Union[str, List[str]],
     filename: Union[str, List[str]],
     kwargs: Dict,
@@ -475,7 +461,7 @@ def _test_test_images(
     num_channels: int,
     size: Tuple[int, int, int],
 ) -> wk.Dataset:
-    unzip_path = persistent_path / "unzip"
+    unzip_path = tmp_path / "unzip"
     download_and_unpack(url, unzip_path, filename)
     path: Union[Path, List[Path]]
     if isinstance(filename, list):
@@ -484,7 +470,7 @@ def _test_test_images(
     else:
         layer_name = filename
         path = unzip_path / filename
-    ds = wk.Dataset(persistent_path / "ds", (1, 1, 1))
+    ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
         l_bio: Optional[wk.Layer]
         try:
@@ -525,7 +511,7 @@ def _test_test_images(
     "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
 )
 def test_test_images(
-    persistent_path: Path,
+    tmp_path: Path,
     url: Union[str, List[str]],
     filename: Union[str, List[str]],
     kwargs: Dict,
@@ -533,7 +519,7 @@ def test_test_images(
     num_channels: int,
     size: Tuple[int, int, int],
 ) -> None:
-    _test_test_images(persistent_path, url, filename, kwargs, dtype, num_channels, size)
+    _test_test_images(tmp_path, url, filename, kwargs, dtype, num_channels, size)
 
 
 if __name__ == "__main__":

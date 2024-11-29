@@ -1,3 +1,4 @@
+from itertools import product
 from os import PathLike
 from pathlib import Path
 from typing import Set, Tuple, Union
@@ -71,52 +72,52 @@ class PimsTiffReader(FramesSequenceND):
             if axis in self.bundle_axes and axis not in self._other_axes
         )
 
+        page_indices = product(
+            *[
+                range(self.sizes[axis])
+                if axis in self.bundle_axes
+                else range(ind[axis], ind[axis] + 1)
+                for axis in self._other_axes
+            ]
+        )
+
         # We iterate over all tiff pages to find the pages that are relevant for this frame
-        for i in range(len(_tiff.pages)):
-            slices = {}
+        for page_ind in page_indices:
+            this_ind = {axis: index for axis, index in zip(self._other_axes, page_ind)}
+
+            i = 0
             for j, axis in enumerate(self._other_axes):
-                index = (
-                    i
-                    // (
-                        np.prod(
-                            [self.sizes[axis] for axis in self._other_axes[j + 1 :]],
-                            dtype=int,
-                        )
-                    )
-                    % self.sizes[axis]
+                i += this_ind[axis] * np.prod(
+                    [self.sizes[axis] for axis in self._other_axes[j + 1 :]],
+                    dtype=int,
                 )
-                slices[axis] = index
 
-            if all(
-                axis in self.bundle_axes or ind[axis] == index
-                for axis, index in slices.items()
-            ):
-                # Prepare selectors
-                page_selector_list: list[Union[slice, int]] = []
-                for axis in page_axes:
-                    if axis in self.bundle_axes:
-                        page_selector_list.append(slice(None))
-                    else:
-                        page_selector_list.append(ind[axis])
-                page_selector = tuple(page_selector_list)
+            # Prepare selectors
+            page_selector_list: list[Union[slice, int]] = []
+            for axis in page_axes:
+                if axis in self.bundle_axes:
+                    page_selector_list.append(slice(None))
+                else:
+                    page_selector_list.append(ind[axis])
+            page_selector = tuple(page_selector_list)
 
-                out_selector_list: list[Union[slice, int]] = []
-                for axis in self.bundle_axes:
-                    if axis in broadcast_axes:
-                        out_selector_list.append(slice(None))  # broadcast
-                    else:
-                        out_selector_list.append(
-                            slices[axis]
-                        )  # set page in a slice of the output
-                out_selector = tuple(out_selector_list)
+            out_selector_list: list[Union[slice, int]] = []
+            for axis in self.bundle_axes:
+                if axis in broadcast_axes:
+                    out_selector_list.append(slice(None))  # broadcast
+                else:
+                    out_selector_list.append(
+                        this_ind[axis]
+                    )  # set page in a slice of the output
+            out_selector = tuple(out_selector_list)
 
-                page = _tiff.asarray(key=i)
-                print(
-                    f"{ind=} {slices=} {out_shape=} {out_selector=} {page_selector=} {page.shape=} {self.bundle_axes=} {self._tiff_axes=} {self._other_axes=} {self.sizes=}"
-                )
-                assert len(out_selector) == out.ndim
-                assert len(page_selector) == page.ndim
-                out[out_selector] = page[page_selector]
+            page = _tiff.asarray(key=i)
+            print(
+                f"{ind=} {this_ind=} {out_shape=} {out_selector=} {page_selector=} {page.shape=} {self.bundle_axes=} {self._tiff_axes=} {self._other_axes=} {self.sizes=}"
+            )
+            assert len(out_selector) == out.ndim
+            assert len(page_selector) == page.ndim
+            out[out_selector] = page[page_selector]
 
         return out
 
