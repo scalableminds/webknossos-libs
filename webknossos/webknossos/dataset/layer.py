@@ -841,9 +841,10 @@ class Layer:
         assert is_fs_path(
             self.path
         ), f"Cannot create symlinks in remote layer {self.path}"
-        assert is_fs_path(
-            foreign_mag_view.path
-        ), f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+
+        # in case of a remote mag we add it without symlinking
+        if is_remote_path(foreign_mag_view.path):
+            return self.add_remote_mag(foreign_mag_view)
 
         foreign_normalized_mag_path = (
             Path(relpath(foreign_mag_view.path, self.path))
