@@ -214,7 +214,7 @@ class WKWArray(BaseArray):
                     block_len=array_info.chunk_shape.x,
                     file_len=array_info.chunks_per_shard.x,
                     block_type=(
-                        wkw.Header.BLOCK_TYPE_LZ4HC
+                        wkw.Header.BLOCK_TYPE_LZ4
                         if array_info.compression_mode
                         else wkw.Header.BLOCK_TYPE_RAW
                     ),
