@@ -48,11 +48,36 @@ _BLOCK_ALIGNMENT_WARNING = (
 
 
 class View:
-    """
-    A `View` is essentially a bounding box to a region of a specific `StorageBackend` that also provides functionality.
-    Write-operations are restricted to the bounding box.
-    `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to its `StorageBackend`.
+    """A View represents a bounding box to a region of a specific StorageBackend with additional functionality.
+
+    The View class provides a way to access and manipulate a specific region of data within a dataset.
+    Write operations are restricted to the defined bounding box. Views are designed to be easily passed
+    around as parameters and can be used to efficiently work with subsets of larger datasets.
+
+    Attributes:
+        _path (Path): Path to the mag view.
+        _array_info (ArrayInfo): Information about the array structure.
+        _bounding_box (Optional[NDBoundingBox]): The bounding box defining the view's region.
+        _read_only (bool): Whether the view is read-only.
+        _cached_array (Optional[BaseArray]): Cached array data.
+        _mag (Mag): Magnification level of the view.
+
+    Examples:
+        ```python
+        from webknossos.dataset import Dataset, View
+        dataset = Dataset.open("path/to/dataset")
+
+        # Get a view for a specific layer at mag 1
+        layer = dataset.get_layer("color")
+        view = layer.get_mag("1").get_view(size=(100, 100, 10))
+
+        # Read data from the view
+        data = view.read()
+
+        # Write data to the view (if not read_only)
+        import numpy as np
+        view.write(np.zeros(view.bounding_box.in_mag(view.mag).size))
+        ```
     """
 
     _path: Path
@@ -72,8 +97,26 @@ class View:
         mag: Mag,
         read_only: bool = False,
     ):
-        """
-        Do not use this constructor manually. Instead use `View.get_view()` (also available on a `MagView`) to get a `View`.
+        """Initialize a View instance for accessing and manipulating dataset regions.
+
+        Note: Do not use this constructor manually. Instead use `View.get_view()`
+        (also available on a `MagView`) to get a `View`.
+
+        Args:
+            path_to_mag_view (Path): Path to the magnification view directory.
+            array_info (ArrayInfo): Information about the array structure and properties.
+            bounding_box (Optional[NDBoundingBox]): The bounding box in mag 1 absolute coordinates.
+                Optional only for mag_view since it overwrites the bounding_box property.
+            mag (Mag): Magnification level of the view.
+            read_only (bool, optional): Whether the view is read-only. Defaults to False.
+
+        Examples:
+            ```python
+            # The recommended way to create a View is through get_view():
+            layer = dataset.get_layer("color")
+            mag_view = layer.get_mag("1")
+            view = mag_view.get_view(size=(100, 100, 10))
+            ```
         """
         self._path = path_to_mag_view
         self._array_info = array_info
@@ -84,6 +127,20 @@ class View:
 
     @property
     def info(self) -> ArrayInfo:
+        """Get information about the array structure and properties.
+
+        Returns:
+            ArrayInfo: Object containing array metadata such as data type,
+                num_channels, and other array-specific information.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            array_info = view.info
+            print(f"Data type: {array_info.data_type}")
+            print(f"Num channels: {array_info.num_channels}")
+            ```
+        """
         return self._array_info
 
     @property
@@ -208,42 +265,52 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
-        """
-        The user can specify where the data should be written.
-        The default is to write the data to the view's bounding box.
-        Alternatively, one can supply one of the following keywords:
+        """Write data to the view at a specified location.
 
-        * `relative_offset` in Mag(1) -> only usable for 3D datasets
-        * `absolute_offset` in Mag(1) -> only usable for 3D datasets
-        * `relative_bounding_box` in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
+        This method allows writing data to the view's region. By default, data is written to
+        the view's bounding box. Alternatively, the location can be specified using offsets
+        or bounding boxes.
 
-        ⚠️ The `offset` parameter is deprecated.
-        This parameter used to be relative for `View` and absolute for `MagView`,
-        and specified in the mag of the respective view.
+        Args:
+            data (np.ndarray): The data to write. Shape must match the target region.
+            offset (Optional[Vec3IntLike], optional): Deprecated. Use relative_offset or
+                absolute_offset instead. Defaults to None.
+            json_update_allowed (bool, optional): Whether to allow updating JSON metadata.
+                Defaults to True.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+                position in Mag(1). Only for 3D datasets. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
+                Only for 3D datasets. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1). Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1). Defaults to None.
 
-        Writing data to a segmentation layer manually does not automatically update the largest_segment_id. To set
-        the largest segment id properly run the `refresh_largest_segment_id` method on your layer or set the
-        `largest_segment_id` property manually..
+        Raises:
+            AssertionError: If view is read-only or if data dimensions don't match.
 
-        Example:
+        Note:
+            - Only one positioning parameter (offset/bounding_box) should be specified.
+            - Writing unaligned compressed data may impact performance.
+            - For segmentation layers, call refresh_largest_segment_id() after writing.
 
-        ```python
-        ds = Dataset(DS_PATH, voxel_size=(1, 1, 1))
+        Examples:
+            ```python
+            import numpy as np
+            from webknossos.dataset import Dataset
 
-        segmentation_layer = cast(
-            SegmentationLayer,
-            ds.add_layer("segmentation", SEGMENTATION_CATEGORY),
-        )
-        mag = segmentation_layer.add_mag(Mag(1))
+            # Write data using default bounding box
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = np.zeros(view.bounding_box.in_mag(view.mag).size)
+            view.write(data)
 
-        mag.write(data=MY_NP_ARRAY)
+            # Write with relative offset
+            view.write(data, relative_offset=(10, 10, 0))
 
-        segmentation_layer.refresh_largest_segment_id()
-        ```
-
-        Note that writing compressed data which is not aligned with the blocks on disk may result in
-        diminished performance, as full blocks will automatically be read to pad the write actions.
+            # Write with absolute bounding box
+            bbox = NDBoundingBox((0, 0, 0), (100, 100, 10))
+            view.write(data, absolute_bounding_box=bbox)
+            ```
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
@@ -257,10 +324,10 @@ class View:
                 relative_bounding_box,
             ]
         ):
-            if len(data.shape) == len(self.bounding_box) + 1:
-                shape_in_current_mag = data.shape[1:]
-            else:
+            if len(data.shape) == len(self.bounding_box):
                 shape_in_current_mag = data.shape
+            else:
+                shape_in_current_mag = data.shape[1:]
 
             absolute_bounding_box = (
                 self.bounding_box.with_size(shape_in_current_mag)
@@ -400,35 +467,49 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> np.ndarray:
-        """
-        The user can specify which data should be read.
-        The default is to read all data of the view's bounding box.
-        Alternatively, one can supply one of the following keyword argument combinations:
-        * `relative_offset` and `size`, both in Mag(1)
-        * `absolute_offset` and `size`, both in Mag(1)
-        * `relative_bounding_box` in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
-        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
-          `offset` used to be relative for `View` and absolute for `MagView`
+        """Read data from the view at a specified location.
 
-        If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
+        By default, reads all data from the view's bounding box. The region to read can be
+        specified using various coordinate systems and methods.
 
-        Returns the specified data as a `np.array`.
+        Args:
+            offset (Optional[Vec3IntLike], optional): Deprecated. Use relative_offset or
+                absolute_offset instead. Defaults to None.
+            size (Optional[Vec3IntLike], optional): Size of region to read. In Mag(1) except
+                when used with deprecated offset. Defaults to None.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+                position in Mag(1). Requires size. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
+                Requires size. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1). Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1). Defaults to None.
 
+        Returns:
+            np.ndarray: The requested data. Areas outside the dataset are zero-padded.
 
-        Example:
-        ```python
-        import numpy as np
+        Note:
+            - Only use one method to specify the region (offset+size or bounding_box)
+            - All coordinates in Mag(1) except deprecated offset parameter
+            - Zero-padding is applied for regions outside the dataset
 
-        # ...
-        # let mag1 be a MagView
-        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
+        Examples:
+            ```python
+            # Read entire view
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = view.read()
 
-        assert np.array_equal(
-            view.read(absolute_offset=(0, 0, 0), size=(100, 200, 300)),
-            view.read(),
-        )
-        ```
+            # Read with relative offset and size
+            data = view.read(
+                relative_offset=(10, 10, 0),
+                size=(50, 50, 10)
+            )
+
+            # Read with absolute bounding box
+            bbox = NDBoundingBox((0, 0, 0), (100, 100, 10))
+            data = view.read(absolute_bounding_box=bbox)
+            ```
         """
 
         current_mag_size: Optional[Vec3IntLike]
@@ -505,7 +586,6 @@ class View:
             assert (
                 size is None
             ), "Cannot supply a size when using bounding_box in view.read()"
-            # offset is asserted anyways in _get_mag1_bbox
             current_mag_size = None
             mag1_size = None
 
@@ -621,7 +701,7 @@ class View:
         * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
           `offset` used to be relative for `View` and absolute for `MagView`
 
-        Example:
+        Examples:
         ```python
         # ...
         # let mag1 be a MagView
@@ -768,35 +848,49 @@ class View:
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceWriter":
-        """
-        The returned writer buffers multiple slices before they are written to disk.
-        As soon as the buffer is full, the data gets written to disk.
+        """Get a buffered writer for efficiently writing data slices.
 
-        Arguments:
+        Creates a BufferedSliceWriter that allows efficient writing of data slices by
+        buffering multiple slices before performing the actual write operation.
 
-        * The user can specify where the writer should start:
-            * `relative_offset` in Mag(1)
-            * `absolute_offset` in Mag(1)
-            * `relative_bounding_box` in Mag(1)
-            * `absolute_bounding_box` in Mag(1)
-            * ⚠️ deprecated: `offset` in the current Mag,
-              used to be relative for `View` and absolute for `MagView`
-        * `buffer_size`: amount of slices that get buffered
-        * `dimension`: dimension along which the data is sliced
-          (x: `0`, y: `1`, z: `2`; default is `2`)).
+        Args:
+            buffer_size (int, optional): Number of slices to buffer before writing.
+                Defaults to 1.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+                position in Mag(1). Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
+                Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1). Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1). Defaults to None.
 
-        The writer must be used as context manager using the `with` syntax (see example below),
-        which results in a generator consuming np.ndarray-slices via `writer.send(slice)`.
-        Exiting the context will automatically flush any remaining buffered data to disk.
+        Returns:
+            BufferedSliceWriter: A writer object for buffered slice writing.
 
-        Usage:
-        ```python
-        data_cube = ...
-        view = ...
-        with view.get_buffered_slice_writer() as writer:
-            for data_slice in data_cube:
-                writer.send(data_slice)
-        ```
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+
+            # Create a buffered writer with default settings
+            writer = view.get_buffered_slice_writer()
+
+            # Write slices efficiently
+            for z in range(10):
+                slice_data = np.zeros((100, 100))  # Your slice data
+                writer.write(slice_data)
+
+            # Create a writer with custom buffer size and offset
+            writer = view.get_buffered_slice_writer(
+                buffer_size=5,
+                relative_offset=(10, 10, 0)
+            )
+            ```
+
+        Note:
+            - Larger buffer sizes can improve performance but use more memory
+            - Remember to close the writer or use it in a context manager
+            - Only one positioning parameter should be specified
         """
         from ._utils.buffered_slice_writer import BufferedSliceWriter
 
@@ -828,31 +922,53 @@ class View:
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceReader":
-        """
-        The returned reader yields slices of data along a specified axis.
-        Internally, it reads multiple slices from disk at once and buffers the data.
+        """Get a buffered reader for efficiently reading data slices.
 
-        Arguments:
+        Creates a BufferedSliceReader that allows efficient reading of data slices by
+        buffering multiple slices in memory. This is particularly useful when reading
+        large datasets slice by slice.
 
-        * The user can specify where the writer should start:
-            * `relative_bounding_box` in Mag(1)
-            * `absolute_bounding_box` in Mag(1)
-            * ⚠️ deprecated: `offset` and `size` in the current Mag,
-              `offset` used to be relative for `View` and absolute for `MagView`
-        * `buffer_size`: amount of slices that get buffered
-        * `dimension`: dimension along which the data is sliced
-          (x: `0`, y: `1`, z: `2`; default is `2`)).
+        Args:
+            buffer_size (int, optional): Number of slices to buffer in memory.
+                Defaults to 32.
+            dimension (int, optional): Dimension along which to slice the data.
+                0 for x, 1 for y, 2 for z. Defaults to 2 (z-axis).
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+                position in Mag(1). Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
+                Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1). Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1). Defaults to None.
+            use_logging (bool, optional): Whether to log reading operations.
+                Defaults to False.
 
-        The reader must be used as a context manager using the `with` syntax (see example below).
-        Entering the context returns an iterator yielding slices (np.ndarray).
+        Returns:
+            BufferedSliceReader: A reader object that yields data slices.
 
-        Usage:
-        ```python
-        view = ...
-        with view.get_buffered_slice_reader() as reader:
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+
+            # Create a reader with default settings (z-slices)
+            reader = view.get_buffered_slice_reader()
             for slice_data in reader:
-                ...
+                process_slice(slice_data)
+
+        # Read y-slices with custom buffer size
+        reader = view.get_buffered_slice_reader(
+            buffer_size=10,
+            dimension=1,  # y-axis
+            relative_offset=(10, 0, 0)
+        )
         ```
+
+        Note:
+            - Larger buffer sizes improve performance but use more memory
+            - Choose dimension based on your data access pattern
+            - Only one positioning parameter should be specified
+            - The reader can be used as an iterator
         """
         from ._utils.buffered_slice_reader import BufferedSliceReader
 
@@ -888,7 +1004,7 @@ class View:
 
         If the `View` is of type `MagView` only the bounding box from the properties is chunked.
 
-        Example:
+        Examples:
         ```python
         from webknossos.utils import named_partial
 
@@ -966,7 +1082,7 @@ class View:
 
         If the `View` is of type `MagView` only the bounding box from the properties is chunked.
 
-        Example:
+        Examples:
         ```python
         from webknossos.utils import named_partial
 
@@ -1018,7 +1134,7 @@ class View:
         The `chunk_border_alignments` parameter specifies the alignment of the chunks.
         The default is to align the chunks to the origin (0, 0, 0).
 
-        Example:
+        Examples:
         ```python
         # ...
         # let 'mag1' be a `MagView`

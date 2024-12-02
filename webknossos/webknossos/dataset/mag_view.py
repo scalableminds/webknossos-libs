@@ -60,12 +60,61 @@ def _compress_cube_job(args: Tuple[View, View, int]) -> None:
 
 
 class MagView(View):
-    """
-    A `MagView` contains all information about the data of a single magnification of a `Layer`.
-    `MagView` inherits from `View`. The main difference is that the `MagView `has a reference to its `Layer`
+    """A view of a specific magnification level within a WEBKNOSSOS layer.
 
-    Therefore, a `MagView` can write outside the specified bounding box (unlike a normal `View`), resizing the layer's bounding box.
-    If necessary, the properties are automatically updated (e.g. if the bounding box changed).
+    MagView provides access to volumetric data at a specific resolution/magnification level.
+    It supports reading, writing, and processing operations on the underlying data, with
+    coordinates automatically handled in the correct magnification space.
+
+    Key Features:
+        - Read/write volumetric data at specific magnification levels
+        - Automatic coordinate transformation between Mag(1) and current magnification
+        - Support for compressed and uncompressed data formats
+        - Chunked processing for efficient memory usage
+        - Downsampling and upsampling capabilities
+
+    Attributes:
+        layer: The parent Layer object this magnification belongs to.
+        mag: The magnification level (e.g., Mag(1), Mag(2), Mag(4), etc.).
+        info: Information about array storage (chunk shape, compression, etc.).
+        path: Path to the data on disk.
+        bounding_box: The spatial extent of this magnification in Mag(1) coordinates.
+
+    Examples:
+        ```python
+        # Create a dataset with a segmentation layer
+        ds = Dataset("path/to/dataset", voxel_size=(1, 1, 1))
+        layer = ds.add_layer("segmentation", SEGMENTATION_CATEGORY)
+
+        # Add and work with magnification levels
+        mag1 = layer.add_mag(Mag(1))
+        mag2 = layer.add_mag(Mag(2))
+
+        # Write data at Mag(1)
+        mag1.write(data, absolute_offset=(100, 200, 300))
+
+        # Read data at Mag(2) - coordinates are in Mag(1) space
+        data = mag2.read(absolute_offset=(100, 200, 300), size=(512, 512, 512))
+
+        # Process data in chunks
+        def process_chunk(view: View) -> None:
+            data = view.read()
+            # Process data...
+            view.write(processed_data)
+
+        mag1.for_each_chunk(process_chunk)
+        ```
+
+    Notes:
+        - All offset/size parameters in read/write methods expect Mag(1) coordinates
+        - Use get_view() to obtain restricted views of the data
+        - Compressed data operations may have performance implications
+        - When writing to segmentation layers, update largest_segment_id as needed
+
+    See Also:
+        - Layer: Parent container for magnification levels
+        - View: Base class providing data access methods
+        - Dataset: Root container for all layers
     """
 
     def __init__(
@@ -531,21 +580,3 @@ class MagView(View):
 
     def __repr__(self) -> str:
         return f"MagView(name={repr(self.name)}, bounding_box={self.bounding_box})"
-
-    @classmethod
-    def _ensure_mag_view(cls, mag_view: Union[str, PathLike, "MagView"]) -> "MagView":
-        if isinstance(mag_view, MagView):
-            return mag_view
-        else:
-            # local import to prevent circular dependency
-            from .dataset import Dataset
-
-            path = UPath(
-                str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
-            )
-            mag_view_path = strip_trailing_slash(path)
-            return (
-                Dataset.open(mag_view_path.parent.parent)
-                .get_layer(mag_view_path.parent.name)
-                .get_mag(mag_view_path.name)
-            )
