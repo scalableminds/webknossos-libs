@@ -14,28 +14,70 @@ Vector3 = Tuple[float, float, float]
 
 @attr.define
 class Skeleton(Group):
-    """
-    Representation of the [skeleton](/webknossos/skeleton_annotation/index.html) of an `Annotation`.
-    It contains metadata to identify the related dataset and is the root-group of sub-groups and trees.
-    See the parent class `Group` for methods about group and tree handling.
-    To upload a skeleton to webknossos, please create an `Annotation()` with it.
+    """A hierarchical representation of skeleton annotations in WEBKNOSSOS.
 
-    A small usage example:
+    The Skeleton class serves as the root container for all skeleton annotation data,
+    organizing nodes and edges into a hierarchical structure of groups and trees.
+    It contains dataset metadata and provides methods for loading, saving, and manipulating
+    skeleton annotations.
 
-    ```python
-    annotation = Annotation(
-        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
-    )
-    group = annotation.skeleton.add_group("a group")
-    tree = group.add_tree("a tree")
-    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
+    Attributes:
+        voxel_size: 3D tuple (x, y, z) specifying the size of voxels in nanometers.
+        dataset_name: Name of the dataset this skeleton belongs to.
+        organization_id: Optional ID of the organization owning this skeleton.
+        description: Optional description of the skeleton annotation.
+        name: Always set to "Root" as this is the root group of the hierarchy.
 
-    tree.add_edge(node_1, node_2)
-    ```
+    The skeleton structure follows a hierarchical organization:
+        - Skeleton (root)
+            - Groups (optional organizational units)
+                - Trees (collections of connected nodes)
+                    - Nodes (3D points with metadata)
+                    - Edges (connections between nodes)
 
-    Also see [this example](/webknossos-py/examples/skeleton_synapse_candidates.html) for a more
-    complex interaction.
+    Examples:
+        Create and populate a new skeleton:
+        ```python
+        # Create skeleton through an annotation
+        annotation = Annotation(
+            name="dendrite_trace",
+            dataset_name="cortex_sample",
+            voxel_size=(11, 11, 24)
+        )
+        skeleton = annotation.skeleton
+
+        # Add hierarchical structure
+        dendrites = skeleton.add_group("dendrites")
+        basal = dendrites.add_group("basal")
+        tree = basal.add_tree("dendrite_1")
+
+        # Add and connect nodes
+        soma = tree.add_node(position=(100, 100, 100), comment="soma")
+        branch = tree.add_node(position=(200, 150, 100), radius=1.5)
+        tree.add_edge(soma, branch)
+        ```
+
+        Load an existing skeleton:
+        ```python
+        # Load from NML file
+        skeleton = Skeleton.load("annotation.nml")
+
+        # Access existing structure
+        for group in skeleton.groups:
+            for tree in group.trees:
+                print(f"Tree {tree.name} has {len(tree.nodes)} nodes")
+        ```
+
+    Notes:
+        - The Skeleton class inherits from Group, providing group and tree management methods.
+        - To upload a skeleton to WEBKNOSSOS, create an Annotation with it.
+        - For complex examples, see the skeleton synapse candidates example in the documentation.
+
+    See Also:
+        - Group: Base class providing group and tree management
+        - Tree: Class representing connected node structures
+        - Node: Class representing individual 3D points
+        - Annotation: Container class for working with WEBKNOSSOS
     """
 
     voxel_size: Vector3
@@ -52,16 +94,6 @@ class Skeleton(Group):
     _id: int = attr.field(init=False, repr=False)
     _element_id_generator: Iterator[int] = attr.field(init=False, eq=False, repr=False)
     _skeleton: "Skeleton" = attr.field(init=False, eq=False, repr=False)
-
-    @classmethod
-    def _set_init_docstring(cls) -> None:
-        Skeleton.__init__.__doc__ = """
-        To initialize a skeleton, setting the following parameters is required (or recommended):
-        - voxel_size
-        - dataset_name
-        - organization_id
-        - description
-        """
 
     def __attrs_post_init__(self) -> None:
         self._element_id_generator = itertools.count()
@@ -157,6 +189,3 @@ class Skeleton(Group):
 
     def __hash__(self) -> int:
         return id(self)
-
-
-Skeleton._set_init_docstring()

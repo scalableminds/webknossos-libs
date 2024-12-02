@@ -90,22 +90,47 @@ class _AdjDict(MutableMapping):
 
 
 class Tree(nx.Graph):
-    """
-    Contains a collection of nodes and edges. Despite the name, trees may contain cycles.
-    This class inherits from [`networkx.Graph`](https://networkx.org/documentation/stable/reference/classes/graph.html).
-    For further methods, please [check the networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
+    """Contains a collection of nodes and edges in a graph structure.
 
-    See Tree.__init__ for more details.
+    Despite the name, trees may contain cycles. This class inherits from networkx.Graph
+    and provides additional functionality specific to neural annotation tasks.
 
-    A small usage example:
+    Args:
+        name (str): The name of the tree.
+        group (Group): The group this tree belongs to.
+        skeleton (Skeleton): The skeleton this tree is part of.
+        color (Optional[Vector4], optional): RGBA color values for the tree. Defaults to None.
+        enforced_id (Optional[int], optional): Specific ID to use for the tree. Defaults to None.
 
-    ```python
-    tree = skeleton.add_tree("a tree")
-    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
+    Note:
+        It is recommended to create trees using `Skeleton.add_tree` or `Group.add_tree`
+        instead of instantiating this class directly. This ensures proper parent-child
+        relationships are maintained.
 
-    tree.add_edge(node_1, node_2)
-    ```
+    Examples:
+        Create a new tree with nodes and edges:
+        ```python
+        # First create a skeleton (parent object)
+        skeleton = Skeleton("example_skeleton")
+        
+        # Add a new tree to the skeleton
+        tree = skeleton.add_tree("dendrite_1")
+        
+        # Add nodes with 3D positions
+        soma = tree.add_node(position=(0, 0, 0), comment="soma")
+        branch1 = tree.add_node(position=(100, 0, 0), comment="branch1")
+        branch2 = tree.add_node(position=(0, 100, 0), comment="branch2")
+        
+        # Connect nodes with edges
+        tree.add_edge(soma, branch1)
+        tree.add_edge(soma, branch2)
+        
+        # Access node positions
+        positions = tree.get_node_positions()  # Returns numpy array of all positions
+        ```
+
+    For additional graph operations, see the 
+    [networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
     """
 
     def __init__(
