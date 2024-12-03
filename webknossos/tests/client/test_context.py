@@ -6,7 +6,7 @@ from webknossos.client.context import (
     webknossos_context,
 )
 
-pytestmark = [pytest.mark.with_vcr]
+pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture
