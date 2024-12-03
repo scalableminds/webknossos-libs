@@ -140,7 +140,7 @@ npm install --global proxay
 # or if you're using yarn
 yarn global add proxay
 ```
-When running the `./test.sh` script on iOS, it is also necessary to install `minio` using the following command:
+When running the `./test.sh` script on MacOS, it is also necessary to install `minio` using the following command:
 
 ```bash
 brew install minio
