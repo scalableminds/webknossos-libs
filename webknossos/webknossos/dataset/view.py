@@ -1042,13 +1042,13 @@ class View:
             for slice_data in reader:
                 process_slice(slice_data)
 
-        # Read y-slices with custom buffer size
-        reader = view.get_buffered_slice_reader(
-            buffer_size=10,
-            dimension=1,  # y-axis
-            relative_offset=(10, 0, 0)
-        )
-        ```
+            # Read y-slices with custom buffer size
+            reader = view.get_buffered_slice_reader(
+                buffer_size=10,
+                dimension=1,  # y-axis
+                relative_offset=(10, 0, 0)
+            )
+            ```
 
         Note:
             - Larger buffer sizes improve performance but use more memory
@@ -1295,7 +1295,6 @@ class View:
 
         Examples:
         ```python
-        # ...
         # let 'mag1' be a `MagView`
         chunks = mag1.chunk(chunk_shape=(100, 100, 100), chunk_border_alignments=(50, 50, 50))
         ```
