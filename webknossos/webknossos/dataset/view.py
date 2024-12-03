@@ -641,14 +641,39 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,
         absolute_bounding_box: Optional[NDBoundingBox] = None,
     ) -> np.ndarray:
-        """
-        The user can specify the bounding box in the dataset's coordinate system.
-        The default is to read all data of the view's bounding box.
-        Alternatively, one can supply one of the following keyword arguments:
-        * `relative_bounding_box` in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
+        """Read data from the view in XYZ coordinate order.
 
-        Returns the specified data as a `np.array`.
+        This method reads data from the view and returns it with dimensions ordered
+        as (channels, X, Y, Z) instead of the default (channels, Z, Y, X). This is
+        useful when working with tools or libraries that expect XYZ ordering.
+
+        Args:
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
+
+        Returns:
+            np.ndarray: The requested data as a numpy array with dimensions ordered as
+                (channels, X, Y, Z) for multi-channel data or (X, Y, Z) for single-channel
+                data. Areas outside the dataset are zero-padded.
+
+        Examples:
+            ```python
+            # Read entire view's data in XYZ order
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            xyz_data = view.read_xyz()  # Returns (X, Y, Z) array
+
+            # Read with relative bounding box
+            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10))
+            xyz_data = view.read_xyz(relative_bounding_box=bbox)
+            ```
+
+        Note:
+            - If no bounding box is provided, reads the entire view's region
+            - Only one bounding box parameter should be specified
+            - The returned array's axes are ordered differently from read()
+            - All coordinates are in Mag(1)
         """
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_bbox=relative_bounding_box,
@@ -668,8 +693,7 @@ class View:
         return data
 
     def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
-        """
-        ⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.
+        """⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.
         The user can specify the `bounding_box` in the current mag of the requested data.
         See `read()` for more details.
         """
@@ -716,36 +740,68 @@ class View:
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> "View":
-        """
-        Returns a view that is limited to the specified bounding box.
-        The new view may exceed the bounding box of the current view only if `read_only` is set to `True`.
+        """Create a new view restricted to a specified region.
 
-        The default is to return the same view as the current bounding box,
-        in case of a `MagView` that's the layer bounding box.
-        One can supply one of the following keyword argument combinations:
+        This method returns a new View instance that represents a subset of the current
+        view's data. The new view can be specified using various coordinate systems
+        and can optionally be made read-only.
 
-        * `relative_bounding_box`in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
-        * `relative_offset` and `size`, both in Mag(1)
-        * `absolute_offset` and `size`, both in Mag(1)
-        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
-          `offset` used to be relative for `View` and absolute for `MagView`
+        Args:
+            offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
+                absolute_offset instead. Defaults to None.
+            size (Optional[Vec3IntLike], optional): Size of the new view. Must be specified
+                when using any offset parameter. Defaults to None.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to current
+                view's position in Mag(1) coordinates. Must be used with size. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Must be used with size. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to current view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
+            read_only (Optional[bool], optional): Whether the new view should be read-only.
+                If None, inherits from parent view. Defaults to None.
+
+        Returns:
+            View: A new View instance representing the specified region.
+
+        Raises:
+            AssertionError: If:
+                - Multiple positioning parameters are provided
+                - Size is missing when using offset parameters
+                - Non-read-only subview requested from read-only parent
+                - Non-read-only subview extends beyond parent's bounds
 
         Examples:
-        ```python
-        # ...
-        # let mag1 be a MagView
-        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
+            ```python
+            # Create view from MagView
+            mag1 = layer.get_mag("1")
+            view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
 
-        # works because the specified sub-view is completely in the bounding box of the view
-        sub_view = view.get_view(relative_offset=(50, 60, 70), size=(10, 120, 230))
+            # Create subview within bounds
+            sub_view = view.get_view(
+                relative_offset=(50, 60, 70),
+                size=(10, 120, 230)
+            )
 
-        # fails because the specified sub-view is not completely in the bounding box of the view
-        invalid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230))
+            # Create read-only subview (can extend beyond bounds)
+            large_view = view.get_view(
+                relative_offset=(50, 60, 70),
+                size=(999, 120, 230),
+                read_only=True
+            )
 
-        # works because `read_only=True`
-        valid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
-        ```
+            # Use bounding box instead of offset+size
+            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10))
+            bbox_view = view.get_view(relative_bounding_box=bbox)
+            ```
+
+        Note:
+            - Use only one method to specify the region (offset+size or bounding_box)
+            - All coordinates are in Mag(1) except for the deprecated offset
+            - Non-read-only views must stay within parent view's bounds
+            - Read-only views can extend beyond parent view's bounds
+            - The view's magnification affects the actual data resolution
         """
         if read_only is None:
             read_only = self.read_only
