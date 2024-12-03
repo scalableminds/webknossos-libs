@@ -81,4 +81,3 @@ class Node:
 
     def __hash__(self) -> int:
         return self._id
-

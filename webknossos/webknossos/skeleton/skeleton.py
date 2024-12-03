@@ -146,6 +146,7 @@ class Skeleton(Group):
             containing both the skeleton and any additional data.
         """
         from ..annotation import Annotation
+
         return Annotation.load(file_path).skeleton
 
     def save(self, out_path: Union[str, PathLike]) -> None:

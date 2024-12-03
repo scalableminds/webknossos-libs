@@ -119,24 +119,24 @@ class Tree(nx.Graph):
         ```python
         # First create a skeleton (parent object)
         skeleton = Skeleton("example_skeleton")
-        
+
         # Add a new tree to the skeleton
         tree = skeleton.add_tree("dendrite_1")
-        
+
         # Add nodes with 3D positions
         soma = tree.add_node(position=(0, 0, 0), comment="soma")
         branch1 = tree.add_node(position=(100, 0, 0), comment="branch1")
         branch2 = tree.add_node(position=(0, 100, 0), comment="branch2")
-        
+
         # Connect nodes with edges
         tree.add_edge(soma, branch1)
         tree.add_edge(soma, branch2)
-        
+
         # Access node positions
         positions = tree.get_node_positions()  # Returns numpy array of all positions
         ```
 
-    For additional graph operations, see the 
+    For additional graph operations, see the
     [networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
     """
 

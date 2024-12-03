@@ -1,7 +1,6 @@
 import logging
 import warnings
 from argparse import Namespace
-from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 from uuid import uuid4
@@ -18,7 +17,6 @@ from ..utils import (
     get_executor_for_args,
     is_fs_path,
     rmtree,
-    strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
 )
