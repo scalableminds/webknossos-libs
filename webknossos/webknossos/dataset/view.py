@@ -267,50 +267,67 @@ class View:
     ) -> None:
         """Write data to the view at a specified location.
 
-        This method allows writing data to the view's region. By default, data is written to
-        the view's bounding box. Alternatively, the location can be specified using offsets
-        or bounding boxes.
+        This method writes array data to the view's region. If no position parameters
+        are provided, data is written to the view's bounding box. The write location
+        can be specified using either offset parameters or bounding boxes.
 
         Args:
-            data (np.ndarray): The data to write. Shape must match the target region.
-            offset (Optional[Vec3IntLike], optional): Deprecated. Use relative_offset or
+            data (np.ndarray): The data to write. For single-channel data, shape should
+                be (z, y, x). For multi-channel data, shape should be (channels, z, y, x).
+                Shape must match the target region size.
+            offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
                 absolute_offset instead. Defaults to None.
-            json_update_allowed (bool, optional): Whether to allow updating JSON metadata.
-                Defaults to True.
+            json_update_allowed (bool, optional): Whether to allow updating JSON metadata
+                and show alignment warnings. Set to False to suppress warnings about
+                unaligned writes. Defaults to True.
             relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
-                position in Mag(1). Only for 3D datasets. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
-                Only for 3D datasets. Defaults to None.
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
             relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
-                to view's position in Mag(1). Defaults to None.
+                to view's position in Mag(1) coordinates. Defaults to None.
             absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
-                in Mag(1). Defaults to None.
+                in Mag(1) coordinates. Defaults to None.
 
         Raises:
-            AssertionError: If view is read-only or if data dimensions don't match.
-
-        Note:
-            - Only one positioning parameter (offset/bounding_box) should be specified.
-            - Writing unaligned compressed data may impact performance.
-            - For segmentation layers, call refresh_largest_segment_id() after writing.
+            AssertionError: If:
+                - View is read-only
+                - Data dimensions don't match the target region
+                - Number of channels doesn't match the dataset
+                - Write region is outside the view's bounding box
+                - Multiple positioning parameters are provided
 
         Examples:
             ```python
             import numpy as np
-            from webknossos.dataset import Dataset
+            from webknossos.dataset import Dataset, View
 
-            # Write data using default bounding box
+            # Write to entire view's region
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
             data = np.zeros(view.bounding_box.in_mag(view.mag).size)
             view.write(data)
 
             # Write with relative offset
+            data = np.ones((50, 50, 5))  # Smaller region
             view.write(data, relative_offset=(10, 10, 0))
+
+            # Write multi-channel data
+            rgb_data = np.zeros((3, 100, 100, 10))  # 3 channels
+            rgb_view = color_layer.get_mag("1").get_view(size=(100, 100, 10))
+            rgb_view.write(rgb_data)
 
             # Write with absolute bounding box
             bbox = NDBoundingBox((0, 0, 0), (100, 100, 10))
             view.write(data, absolute_bounding_box=bbox)
             ```
+
+        Note:
+            - Only one positioning parameter (offset or bounding_box) should be used
+            - All coordinates are in Mag(1) except for the deprecated offset
+            - For compressed data, writes should align with compression blocks
+            - For segmentation layers, call refresh_largest_segment_id() after writing
+            - The view's magnification affects the actual data resolution
+            - Data shape must match the target region size
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
@@ -469,49 +486,62 @@ class View:
     ) -> np.ndarray:
         """Read data from the view at a specified location.
 
-        By default, reads all data from the view's bounding box. The region to read can be
-        specified using various coordinate systems and methods.
+        This method provides flexible ways to read data from the view's region. If no
+        parameters are provided, it reads the entire view's bounding box. The region
+        to read can be specified using either offset+size combinations or bounding boxes.
 
         Args:
-            offset (Optional[Vec3IntLike], optional): Deprecated. Use relative_offset or
+            offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
                 absolute_offset instead. Defaults to None.
-            size (Optional[Vec3IntLike], optional): Size of region to read. In Mag(1) except
-                when used with deprecated offset. Defaults to None.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
-                position in Mag(1). Requires size. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
-                Requires size. Defaults to None.
+            size (Optional[Vec3IntLike], optional): Size of region to read. Specified in
+                Mag(1) coordinates unless used with deprecated offset. Defaults to None.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to the view's
+                position in Mag(1) coordinates. Must be used with size. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Must be used with size. Defaults to None.
             relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
-                to view's position in Mag(1). Defaults to None.
+                to the view's position in Mag(1) coordinates. Defaults to None.
             absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
-                in Mag(1). Defaults to None.
+                in Mag(1) coordinates. Defaults to None.
 
         Returns:
-            np.ndarray: The requested data. Areas outside the dataset are zero-padded.
+            np.ndarray: The requested data as a numpy array. The shape will be either
+                (channels, z, y, x) for multi-channel data or (z, y, x) for
+                single-channel data. Areas outside the dataset are zero-padded.
 
-        Note:
-            - Only use one method to specify the region (offset+size or bounding_box)
-            - All coordinates in Mag(1) except deprecated offset parameter
-            - Zero-padding is applied for regions outside the dataset
+        Raises:
+            AssertionError: If incompatible parameters are provided (e.g., both
+                offset+size and bounding_box) or if the requested region is empty.
 
         Examples:
             ```python
-            # Read entire view
+            # Read entire view's data
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
-            data = view.read()
+            data = view.read()  # Returns (z, y, x) array for single-channel data
 
             # Read with relative offset and size
             data = view.read(
-                relative_offset=(10, 10, 0),
-                size=(50, 50, 10)
+                relative_offset=(10, 10, 0),  # Offset from view's position
+                size=(50, 50, 10)            # Size in Mag(1) coordinates
             )
 
             # Read with absolute bounding box
             bbox = NDBoundingBox((0, 0, 0), (100, 100, 10))
             data = view.read(absolute_bounding_box=bbox)
-            ```
-        """
 
+            # Read from multi-channel data
+            view = color_layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = view.read()  # Returns (channels, z, y, x) array
+            ```
+
+        Note:
+            - Use only one method to specify the region (offset+size or bounding_box)
+            - All coordinates are in Mag(1) except for the deprecated offset parameter
+            - For multi-channel data, the returned array has shape (C, Z, Y, X)
+            - For single-channel data, the returned array has shape (Z, Y, X)
+            - Regions outside the dataset are automatically zero-padded
+            - The view's magnification affects the actual data resolution
+        """
         current_mag_size: Optional[Vec3IntLike]
         mag1_size: Optional[Vec3IntLike]
         if absolute_bounding_box is None and relative_bounding_box is None:
