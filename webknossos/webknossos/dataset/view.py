@@ -1078,36 +1078,64 @@ class View:
         *,
         chunk_size: Optional[Vec3IntLike] = None,  # deprecated
     ) -> None:
-        """
-        The view is chunked into multiple sub-views of size `chunk_shape` (in Mag(1)),
-        by default one chunk per file.
-        Then, `func_per_chunk` is performed on each sub-view.
-        Besides the view, the counter `i` is passed to the `func_per_chunk`,
-        which can be used for logging.
-        Additional parameters for `func_per_chunk` can be specified using `functools.partial`.
-        The computation of each chunk has to be independent of each other.
-        Therefore, the work can be parallelized with `executor`.
+        """Process each chunk of the view with a given function.
 
-        If the `View` is of type `MagView` only the bounding box from the properties is chunked.
+        Divides the view into chunks and applies a function to each chunk, optionally in parallel.
+        This is useful for processing large datasets in manageable pieces, with optional
+        progress tracking and parallel execution.
+
+        Args:
+            func_per_chunk (Callable[[Tuple[View, int]], None]): Function to apply to each chunk.
+                Takes a tuple of (chunk_view, chunk_index) as argument. The chunk_index can be
+                used for progress tracking or logging.
+            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+                If None, uses one chunk per file based on the dataset's file dimensions.
+                Defaults to None.
+            executor (Optional[Executor], optional): Executor for parallel processing.
+                If None, processes chunks sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+            chunk_size (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use chunk_shape instead.
+                Defaults to None.
 
         Examples:
-        ```python
-        from webknossos.utils import named_partial
+            ```python
+            from concurrent.futures import ThreadPoolExecutor
+            from webknossos.utils import named_partial
 
-        def some_work(args: Tuple[View, int], some_parameter: int) -> None:
-            view_of_single_chunk, i = args
-            # perform operations on the view
-            ...
+            # Define processing function
+            def process_chunk(args: Tuple[View, int], threshold: float) -> None:
+                chunk_view, chunk_idx = args
+                data = chunk_view.read()
+                # Process data...
+                chunk_view.write(processed_data)
+                print(f"Processed chunk {chunk_idx}")
 
-        # ...
-        # let 'mag1' be a `MagView`
-        func = named_partial(some_work, some_parameter=42)
-        mag1.for_each_chunk(
-            func,
-        )
-        ```
+            # Sequential processing with progress bar
+            view.for_each_chunk(
+                named_partial(process_chunk, threshold=0.5),
+                chunk_shape=(64, 64, 64),
+                progress_desc="Processing chunks"
+            )
+
+            # Parallel processing with thread pool
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                view.for_each_chunk(
+                    named_partial(process_chunk, threshold=0.5),
+                    chunk_shape=(64, 64, 64),
+                    executor=executor,
+                    progress_desc="Processing chunks in parallel"
+                )
+            ```
+
+        Note:
+            - Each chunk is processed independently, making this suitable for parallel execution
+            - For non-read-only views, chunks must align with file boundaries
+            - Progress tracking shows total volume processed
+            - Memory usage depends on chunk_shape and parallel execution settings
+            - When using an executor, ensure thread/process safety in func_per_chunk
+            - The view's magnification affects the actual data resolution
         """
-
         if chunk_shape is None:
             if chunk_size is not None:
                 warn_deprecated("chunk_size", "chunk_shape")
@@ -1157,34 +1185,67 @@ class View:
         executor: Optional[Executor] = None,
         progress_desc: Optional[str] = None,
     ) -> List[Any]:
-        """
-        The view is chunked into multiple sub-views of size `chunk_shape` (in Mag(1)),
-        by default one chunk per file.
-        Then, `func_per_chunk` is performed on each sub-view and the results are collected
-        in a list.
-        Additional parameters for `func_per_chunk` can be specified using `functools.partial`.
-        The computation of each chunk has to be independent of each other.
-        Therefore, the work can be parallelized with `executor`.
+        """Process each chunk of the view and collect results.
 
-        If the `View` is of type `MagView` only the bounding box from the properties is chunked.
+        Similar to for_each_chunk(), but collects and returns the results from each chunk.
+        Useful for parallel data analysis or feature extraction where results need to be
+        aggregated.
+
+        Args:
+            func_per_chunk (Callable[[View], Any]): Function to apply to each chunk.
+                Takes a chunk view as argument and returns a result of any type.
+            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+                If None, uses one chunk per file based on the dataset's file dimensions.
+                Defaults to None.
+            executor (Optional[Executor], optional): Executor for parallel processing.
+                If None, processes chunks sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+
+        Returns:
+            List[Any]: List of results from processing each chunk, in chunk order.
 
         Examples:
-        ```python
-        from webknossos.utils import named_partial
+            ```python
+            from concurrent.futures import ProcessPoolExecutor
+            from webknossos.utils import named_partial
 
-        def some_work(view: View, some_parameter: int) -> None:
-            # perform operations on the view
-            ...
+            # Calculate statistics per chunk
+            def chunk_statistics(view: View, min_value: float) -> Dict[str, float]:
+                data = view.read()
+                return {
+                    "mean": data[data > min_value].mean(),
+                    "std": data[data > min_value].std(),
+                    "volume": view.bounding_box.volume()
+                }
 
-        # ...
-        # let 'mag1' be a `MagView`
-        func = named_partial(some_work, some_parameter=42)
-        results = mag1.map_chunk(
-            func,
-        )
-        ```
+            # Sequential processing
+            stats = view.map_chunk(
+                named_partial(chunk_statistics, min_value=0.1),
+                chunk_shape=(128, 128, 128)
+            )
+
+            # Parallel processing with process pool
+            with ProcessPoolExecutor(max_workers=4) as executor:
+                stats = view.map_chunk(
+                    named_partial(chunk_statistics, min_value=0.1),
+                    chunk_shape=(128, 128, 128),
+                    executor=executor,
+                    progress_desc="Calculating statistics"
+                )
+
+            # Aggregate results
+            total_volume = sum(s["volume"] for s in stats)
+            mean_values = [s["mean"] for s in stats]
+            ```
+
+        Note:
+            - Results are collected in memory, consider memory usage for large datasets
+            - Each chunk is processed independently, suitable for parallel execution
+            - For non-read-only views, chunks must align with file boundaries
+            - When using ProcessPoolExecutor, ensure func_per_chunk is picklable
+            - Results maintain chunk order regardless of execution order
         """
-
         if chunk_shape is None:
             chunk_shape = self._get_file_dimensions_mag1()
         else:
@@ -1215,10 +1276,22 @@ class View:
         chunk_border_alignments: Optional[VecIntLike] = None,
         read_only: bool = False,
     ) -> Generator["View", None, None]:
-        """
-        This method chunks the view into multiple sub-views of size `chunk_shape` (in Mag(1)).
-        The `chunk_border_alignments` parameter specifies the alignment of the chunks.
-        The default is to align the chunks to the origin (0, 0, 0).
+        """Generate a sequence of sub-views by chunking the current view.
+
+        Divides the view into smaller, regularly-sized chunks that can be processed
+        independently. This is useful for parallel processing or when working with
+        large datasets that don't fit in memory.
+
+        Args:
+            chunk_shape (VecIntLike): Size of each chunk in Mag(1) coordinates.
+            chunk_border_alignments (Optional[VecIntLike], optional): Alignment of chunk
+                borders in Mag(1) coordinates. If None, aligns to (0, 0, 0).
+                Defaults to None.
+            read_only (bool, optional): Whether the generated chunks should be read-only.
+                Defaults to False.
+
+        Yields:
+            View: Sub-views representing each chunk of the original view.
 
         Examples:
         ```python
@@ -1243,28 +1316,66 @@ class View:
         source_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
         target_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
     ) -> None:
+        """Process paired chunks from source and target views simultaneously.
+
+        Chunks both the source (self) and target views, then applies a function to each
+        corresponding pair of chunks. This is particularly useful for operations that
+        transform data between views of different magnifications, like downsampling.
+
+        Args:
+            func_per_chunk (Callable[[Tuple[View, View, int]], None]): Function to apply
+                to each chunk pair. Takes (source_chunk, target_chunk, index) as arguments.
+            target_view (View): The target view to write transformed data to.
+            source_chunk_shape (Optional[Vec3IntLike], optional): Size of source chunks
+                in Mag(1). If None, uses maximum of source and target file dimensions.
+                Defaults to None.
+            target_chunk_shape (Optional[Vec3IntLike], optional): Size of target chunks
+                in Mag(1). If None, uses maximum of source and target file dimensions.
+                Defaults to None.
+            executor (Optional[Executor], optional): Executor for parallel processing.
+                If None, processes chunks sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+            source_chunk_size (Optional[Vec3IntLike], optional): ⚠️ Deprecated.
+                Use source_chunk_shape instead. Defaults to None.
+            target_chunk_size (Optional[Vec3IntLike], optional): ⚠️ Deprecated.
+                Use target_chunk_shape instead. Defaults to None.
+
+        Examples:
+            ```python
+            # Downsample data from Mag(1) to Mag(2)
+            def downsample_chunk(args: Tuple[View, View, int]) -> None:
+                source_chunk, target_chunk, idx = args
+                data = source_chunk.read()
+                downsampled = downsample_data(data)  # Your downsampling function
+                target_chunk.write(downsampled)
+                print(f"Processed chunk pair {idx}")
+
+            # Process with default chunk sizes
+            mag1_view.for_zipped_chunks(
+                downsample_chunk,
+                mag2_view,
+                progress_desc="Downsampling data"
+            )
+
+            # Process with custom chunk sizes and parallel execution
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                mag1_view.for_zipped_chunks(
+                    downsample_chunk,
+                    mag2_view,
+                    source_chunk_shape=(2048, 2048, 2048),
+                    target_chunk_shape=(1024, 1024, 1024),
+                    executor=executor
+                )
+            ```
+
+        Note:
+            - Source/target view size ratios must match chunk size ratios
+            - Target chunks must align with file boundaries to avoid concurrent writes
+            - Both views are chunked with matching strides
+            - Progress tracks total volume processed
+            - Memory usage depends on chunk sizes and parallel execution
         """
-        This method is similar to `for_each_chunk` in the sense that it delegates work to smaller chunks,
-        given by `source_chunk_shape` and `target_chunk_shape` (both in Mag(1),
-        by default using the larger of the source_views and the target_views file-sizes).
-        However, this method also takes another view as a parameter. Both views are chunked simultaneously
-        and a matching pair of chunks is then passed to the function that shall be executed.
-        This is useful if data from one view should be (transformed and) written to a different view,
-        assuming that the transformation of the data can be handled on chunk-level.
-        Additionally to the two views, the counter `i` is passed to the `func_per_chunk`, which can be used for logging.
-
-        The mapping of chunks from the source view to the target is bijective.
-        The ratio between the size of the `source_view` (`self`) and the `source_chunk_shape` must be equal to
-        the ratio between the `target_view` and the `target_chunk_shape`. This guarantees that the number of chunks
-        in the `source_view` is equal to the number of chunks in the `target_view`.
-        The `target_chunk_shape` must be a multiple of the file size on disk to avoid concurrent writes.
-
-        Example use case: *downsampling from Mag(1) to Mag(2)*
-        - size of the views: `16384³` (`8192³` in Mag(2) for `target_view`)
-        - automatic chunk sizes: `2048³`, assuming  default file-lengths
-          (`1024³` in Mag(2), which fits the default file-length of 32*32)
-        """
-
         if source_chunk_shape is None and source_chunk_size is not None:
             warn_deprecated("source_chunk_size", "source_chunk_shape")
             source_chunk_shape = source_chunk_size
@@ -1341,6 +1452,46 @@ class View:
         args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
     ) -> bool:
+        """Compare the content of this view with another view.
+
+        Performs a chunk-by-chunk comparison of the data in both views. This is more
+        memory efficient than reading entire views at once for large datasets.
+
+        Args:
+            other (View): The view to compare against.
+            chunk_shape (Optional[Vec3IntLike], optional): Size of chunks to use for
+                comparison in Mag(1). If None, uses file dimensions. Defaults to None.
+            executor (Optional[Executor], optional): Executor for parallel comparison.
+                If None, compares sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+
+        Returns:
+            bool: True if the content of both views is identical, False otherwise.
+
+        Examples:
+            ```python
+            # Compare views sequentially
+            if view1.content_is_equal(view2):
+                print("Views are identical")
+
+            # Compare in parallel with progress tracking
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                is_equal = view1.content_is_equal(
+                    view2,
+                    chunk_shape=(128, 128, 128),
+                    executor=executor,
+                    progress_desc="Comparing views"
+                )
+            ```
+
+        Note:
+            - Comparison is done chunk by chunk to manage memory usage
+            - Views must have the same shape and data type
+            - Returns False immediately if shapes or types don't match
+            - Progress tracks total volume compared
+            - Parallel execution can speed up comparison of large views
+        """
         if args is not None:
             warn_deprecated(
                 "args argument",
