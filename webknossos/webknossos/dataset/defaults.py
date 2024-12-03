@@ -19,7 +19,7 @@ def _create_sslcontext() -> ssl.SSLContext:
 def _save_sslcontext(
     obj: ssl.SSLContext,
 ) -> tuple[Callable[[Any, Any], ssl.SSLContext], tuple[ssl._SSLMethod, Optional[str]]]:
-    cafile = getattr(obj, "cafile")
+    cafile = getattr(obj, "cafile", None)
     return _rebuild_sslcontext, (obj.protocol, cafile)
 
 
@@ -29,6 +29,7 @@ def _rebuild_sslcontext(
     ssl_context = ssl.SSLContext(protocol)
     if cafile is not None:
         ssl_context.load_verify_locations(cafile=cafile)
+        ssl_context.cafile = cafile  # type: ignore
     return ssl_context
 
 

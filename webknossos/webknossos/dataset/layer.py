@@ -1543,6 +1543,10 @@ class Layer:
             from .dataset import Dataset
 
             layer_path = UPath(layer)
+            # if is_remote_path(layer_path):
+            #     return Dataset.open_remote(str(layer_path.parent)).get_layer(
+            #         layer_path.name
+            #     )
             return Dataset.open(layer_path.parent).get_layer(layer_path.name)
 
 

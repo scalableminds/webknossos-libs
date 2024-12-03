@@ -1,5 +1,3 @@
-from time import gmtime, strftime
-
 import numpy as np
 from skimage import data
 
@@ -19,12 +17,8 @@ def main() -> None:
     # we expect the following dimensions: Channels, X, Y, Z.
     img = np.transpose(img, [1, 3, 2, 0])
 
-    # choose a name for our dataset
-    time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
-    name = f"cell_{time_str}"
-
-    # voxel_size is defined in nm
-    ds = wk.Dataset(name, voxel_size=(260, 260, 290))
+    # choose name and voxel size (voxel_size is defined in nm)
+    ds = wk.Dataset("cell_dataset", voxel_size=(260, 260, 290))
 
     ds.default_view_configuration = DatasetViewConfiguration(zoom=0.35)
 
