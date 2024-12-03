@@ -1745,19 +1745,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-recording"
-version = "0.13.2"
-source = { registry = "https://pypi.scm.io/simple" }
-dependencies = [
-    { name = "pytest" },
-    { name = "vcrpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/2a/ea6b8036ae01979eae02d8ad5a7da14dec90d9176b613e49fb8d134c78fc/pytest_recording-0.13.2.tar.gz", hash = "sha256:000c3babbb466681457fd65b723427c1779a0c6c17d9e381c3142a701e124877", size = 25270 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/72/52/8e67a969e9fad3fa5ec4eab9f2a7348ff04692065c7deda21d76e9112703/pytest_recording-0.13.2-py3-none-any.whl", hash = "sha256:3820fe5743d1ac46e807989e11d073cb776a60bdc544cf43ebca454051b22d13", size = 12783 },
-]
-
-[[package]]
 name = "pytest-split"
 version = "0.9.0"
 source = { registry = "https://pypi.scm.io/simple" }
@@ -2288,22 +2275,6 @@ wheels = [
 ]
 
 [[package]]
-name = "vcrpy"
-version = "6.0.2"
-source = { registry = "https://pypi.scm.io/simple" }
-dependencies = [
-    { name = "pyyaml" },
-    { name = "urllib3", version = "1.26.20", source = { registry = "https://pypi.scm.io/simple" }, marker = "python_full_version < '3.10' or platform_python_implementation == 'PyPy'" },
-    { name = "urllib3", version = "2.2.3", source = { registry = "https://pypi.scm.io/simple" }, marker = "python_full_version >= '3.10' and platform_python_implementation != 'PyPy'" },
-    { name = "wrapt" },
-    { name = "yarl" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/16/4e/fff59599826793f9e3460c22c0af0377abb27dc9781a7d5daca8cb03da25/vcrpy-6.0.2.tar.gz", hash = "sha256:88e13d9111846745898411dbc74a75ce85870af96dd320d75f1ee33158addc09", size = 85472 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/da/ed/25d19705791d3fccc84423d564695421a75b4e08e8ab15a004a49068742d/vcrpy-6.0.2-py2.py3-none-any.whl", hash = "sha256:40370223861181bc76a5e5d4b743a95058bb1ad516c3c08570316ab592f56cad", size = 42431 },
-]
-
-[[package]]
 name = "webknossos"
 version = "0.0.0"
 source = { editable = "." }
@@ -2343,7 +2314,6 @@ all = [
     { name = "jpype1" },
     { name = "pandas" },
     { name = "pooch" },
-    { name = "pylibczirw" },
     { name = "s3fs" },
     { name = "scikit-image" },
     { name = "scikit-learn" },
@@ -2382,14 +2352,12 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-custom-exit-code" },
-    { name = "pytest-recording" },
     { name = "pytest-split" },
     { name = "pytest-sugar" },
     { name = "pytest-timeout" },
     { name = "pytest-timestamper" },
     { name = "ruff" },
     { name = "types-python-dateutil" },
-    { name = "vcrpy" },
 ]
 
 [package.metadata]
@@ -2398,7 +2366,7 @@ requires-dist = [
     { name = "attrs", specifier = ">=22.0.0" },
     { name = "boltons", specifier = ">=21.0.0" },
     { name = "cattrs", specifier = ">=22.0.0" },
-    { name = "certifi", specifier = ">=2024.8.30" },
+    { name = "certifi", specifier = ">=2023" },
     { name = "cluster-tools", editable = "../cluster_tools" },
     { name = "fastremap", marker = "extra == 'examples'", specifier = "~=1.15.0" },
     { name = "fsspec", specifier = "~=2024.6.0" },
@@ -2428,7 +2396,6 @@ requires-dist = [
     { name = "typing-extensions", specifier = "~=4.0" },
     { name = "universal-pathlib", specifier = "~=0.2" },
     { name = "webknossos", extras = ["bioformats"], marker = "extra == 'all'" },
-    { name = "webknossos", extras = ["czi"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["examples"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["tifffile"], marker = "extra == 'all'" },
@@ -2448,14 +2415,12 @@ dev = [
     { name = "mypy", specifier = "~=1.10.0" },
     { name = "pytest", specifier = "~=8.3.2" },
     { name = "pytest-custom-exit-code", specifier = "~=0.3.0" },
-    { name = "pytest-recording", specifier = "~=0.13.0" },
     { name = "pytest-split", specifier = "~=0.9.0" },
     { name = "pytest-sugar", specifier = "~=1.0.0" },
     { name = "pytest-timeout", specifier = "~=2.3.0" },
     { name = "pytest-timestamper", specifier = "~=0.0.10" },
     { name = "ruff", specifier = "~=0.6.0" },
     { name = "types-python-dateutil", specifier = "~=2.9" },
-    { name = "vcrpy", specifier = "~=6.0" },
 ]
 
 [[package]]
