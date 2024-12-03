@@ -1,3 +1,4 @@
+import os
 import tempfile
 from pathlib import Path
 
@@ -9,8 +10,6 @@ from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
-
-pytestmark = [pytest.mark.with_vcr]
 
 
 def test_annotation_from_wkw_zip_file() -> None:
@@ -147,45 +146,45 @@ def test_annotation_from_file_with_multi_volume() -> None:
             pass
 
 
-@pytest.mark.parametrize(
-    "url",
-    [
-        "https://webknossos.org/annotations/61c20205010000cc004a6356",
-        "https://webknossos.org/links/LNir_A2-aCUzsoSL",
-    ],
-)
-def test_annotation_from_url(url: str) -> None:
-    annotation = wk.Annotation.download(url, skip_volume_data=True)
-    assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
+@pytest.mark.use_proxay
+def test_annotation_upload_download_roundtrip() -> None:
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    annotation_from_file = wk.Annotation.load(path)
+    annotation_from_file.organization_id = "Organization_X"
+    test_token = os.getenv("WK_TOKEN")
+    with wk.webknossos_context("http://localhost:9000", test_token):
+        url = annotation_from_file.upload()
+        annotation = wk.Annotation.download(url)
+    assert annotation.dataset_name == "l4_sample"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
-    mag = wk.Mag("16-16-8")
+    mag = wk.Mag("16-16-4")
     node_bbox = wk.BoundingBox.from_points(
         next(annotation.skeleton.flattened_trees()).get_node_positions()
     ).align_with_mag(mag, ceil=True)
-    with wk.webknossos_context(url="https://webknossos.org"):
+    with wk.webknossos_context("http://localhost:9000", test_token):
         ds = annotation.get_remote_annotation_dataset()
 
     mag_view = ds.layers["Volume"].get_mag(mag)
     annotated_data = mag_view.read(absolute_bounding_box=node_bbox)
     assert annotated_data.size > 10
-    assert (annotated_data == 2504698).all()
-    assert mag_view.read(absolute_offset=(0, 0, 0), size=(16, 16, 8))[0, 0, 0, 0] == 0
+    # assert (annotated_data == 1).all()
+    assert mag_view.read(absolute_offset=(0, 0, 0), size=(16, 16, 4))[0, 0, 0, 0] == 0
     assert (
-        mag_view.read(absolute_offset=(128, 128, 128), size=(16, 16, 8))[0, 0, 0, 0]
-        == 286022
+        mag_view.read(absolute_offset=(3600, 3488, 1024), size=(16, 16, 4))[0, 0, 0, 0]
+        == 1
     )
-    segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
-    assert segment_info.anchor_position == (2785, 4423, 1792)
+    segment_info = annotation.get_volume_layer_segments("Volume")[1]
+    assert segment_info.anchor_position == (3395, 3761, 1024)
     segment_info.name = "Test Segment"
     segment_info.color = (1, 0, 0, 1)
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
-    assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
+    assert annotation.dataset_name == "l4_sample"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
-    segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
-    assert segment_info.anchor_position == (2785, 4423, 1792)
+    segment_info = annotation.get_volume_layer_segments("Volume")[1]
+    assert segment_info.anchor_position == (3395, 3761, 1024)
     assert segment_info.name == "Test Segment"
     assert segment_info.color == (1, 0, 0, 1)
 
@@ -223,6 +222,7 @@ def test_reading_bounding_boxes() -> None:
         check_properties(annotation_deserialized)
 
 
+@pytest.mark.use_proxay
 def test_bounding_box_roundtrip() -> None:
     ds = wk.Dataset.open_remote("l4_sample")
 

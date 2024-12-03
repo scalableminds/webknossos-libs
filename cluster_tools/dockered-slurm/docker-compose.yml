@@ -1,5 +1,3 @@
-version: "2.2"
-
 services:
   mysql:
     image: mysql:5.7
@@ -16,7 +14,7 @@ services:
 
   slurmdbd:
     image: scalableminds/slurm-docker-cluster:master__11274637426
-    command: ["slurmdbd"]
+    command: [ "slurmdbd" ]
     container_name: slurmdbd
     hostname: slurmdbd
     volumes:
@@ -32,7 +30,7 @@ services:
 
   slurmctld:
     image: scalableminds/slurm-docker-cluster:master__11274637426
-    command: ["slurmctld"]
+    command: [ "slurmctld" ]
     container_name: slurmctld
     environment:
       USER: "root"
@@ -53,7 +51,7 @@ services:
 
   c1:
     image: scalableminds/slurm-docker-cluster:master__11274637426
-    command: ["slurmd"]
+    command: [ "slurmd" ]
     hostname: c1
     container_name: c1
     volumes:
@@ -71,7 +69,7 @@ services:
 
   c2:
     image: scalableminds/slurm-docker-cluster:master__11274637426
-    command: ["slurmd"]
+    command: [ "slurmd" ]
     hostname: c2
     container_name: c2
     volumes:

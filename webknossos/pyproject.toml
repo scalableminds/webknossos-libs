@@ -99,8 +99,6 @@ dev-dependencies = [
     "mypy ~=1.10.0",
     "pytest ~=8.3.2",
     "pytest-custom-exit-code ~=0.3.0",
-    "pytest-recording ~=0.13.0",
-    "vcrpy ~=6.0",
     "pytest-split ~=0.9.0",
     "pytest-sugar ~=1.0.0",
     "pytest-timeout ~=2.3.0",
@@ -182,7 +180,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.pytest.ini_options]
-markers = ["with_vcr: Runs with VCR recording and optionally blocked network"]
+markers = ["use_proxay: Runs with a proxay instance recording/replaying http responses", "serial"]
 testpaths = ["tests"]
 
 [build-system]
