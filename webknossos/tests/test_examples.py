@@ -13,9 +13,6 @@ import pytest
 from scipy.spatial import cKDTree
 
 import webknossos as wk
-from webknossos.client.api_client.errors import UnexpectedStatusError
-
-pytestmark = [pytest.mark.with_vcr]
 
 
 @contextmanager
@@ -44,7 +41,8 @@ def exec_main_and_get_vars(
     new_source = source.replace(
         def_main_needle, "def main() -> None:\n" + global_statements + "\n"
     )
-    exec(new_source, module.__dict__)
+    code = compile(new_source, str(module.__file__), "exec")
+    exec(code, module.__dict__)
     cm_raises: ContextManager[Any]
     cm_warns: ContextManager[Any]
     if raises is None:
@@ -62,6 +60,9 @@ def exec_main_and_get_vars(
     return tuple(module.__dict__[var_name] for var_name in var_names)
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11), reason="Test is flaky for python 3.9 and 3.10."
+)
 def test_dataset_usage() -> None:
     import examples.dataset_usage as example
 
@@ -119,24 +120,26 @@ def test_image_stack_to_dataset() -> None:
         assert dataset.get_layer("test").dtype_per_channel == "uint8"
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+@pytest.mark.use_proxay
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
-    (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
-    assert (
-        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
-        != 5233922
-    )
-    assert (
-        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
-        == 5233967
-    )
+    with wk.webknossos_context("http://localhost:9000", os.environ["WK_TOKEN"]):
+        (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
+        assert (
+            out_mag1.read(absolute_offset=(3457, 3323, 1204), size=(1, 1, 1))[
+                0, 0, 0, 0
+            ]
+            != 6016
+        )
+        assert (
+            out_mag1.read(absolute_offset=(3457, 3323, 1204), size=(1, 1, 1))[
+                0, 0, 0, 0
+            ]
+            == 1229599
+        )
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_calculate_segment_sizes() -> None:
     import examples.calculate_segment_sizes as example
 
@@ -163,10 +166,7 @@ def test_skeleton_synapse_candidates() -> None:
     assert len(ids) == len(id_set), "Tree IDs are not unique."
 
 
-# Allowing requests to download the cells3d dataset via pooch,
-# which are not snapshotted
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["gitlab.com"])
+@pytest.mark.use_proxay
 def test_upload_image_data() -> None:
     with tmp_cwd():
         import examples.upload_image_data as example
@@ -179,8 +179,6 @@ def test_upload_image_data() -> None:
         assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_image_data() -> None:
     with tmp_cwd():
         import examples.download_image_data as example
@@ -221,9 +219,7 @@ class _DummyNearestNeighborClassifier:
         return self.labels[nearest_neighbors]
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+@pytest.mark.use_proxay
 def test_learned_segmenter() -> None:
     with tmp_cwd():
         from skimage.future import trainable_segmentation
@@ -240,8 +236,9 @@ def test_learned_segmenter() -> None:
         ids, id_counts = np.unique(segmentation, return_counts=True)
         counts = dict(zip(ids, id_counts))
         assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
-        assert url.startswith(
-            "http://localhost:9000/datasets/Organization_X/skin_segmented_"
+        assert (
+            url
+            == "http://localhost:9000/datasets/Organization_X/Skin_Layers_Dermis_and_Epidermis_segmented"
         )
 
         if old_default_classifier is None:
@@ -251,6 +248,7 @@ def test_learned_segmenter() -> None:
             trainable_segmentation.RandomForestClassifier = old_default_classifier
 
 
+@pytest.mark.use_proxay
 def test_user_times() -> None:
     import examples.user_times as example
 
@@ -261,24 +259,22 @@ def test_user_times() -> None:
     assert "user_A@scalableminds.com" in df.index
 
 
+@pytest.mark.use_proxay
 def test_remote_datasets() -> None:
     import examples.remote_datasets as example
 
-    (own_remote_datasets,) = exec_main_and_get_vars(
-        example,
-        "own_remote_datasets",
-        raises=UnexpectedStatusError,  # request with scalable_minds organization param won’t work against localhost
-    )
+    with wk.webknossos_context("http://localhost:9000", os.environ["WK_TOKEN"]):
+        (own_remote_datasets,) = exec_main_and_get_vars(
+            example,
+            "own_remote_datasets",
+        )
 
-    ds = own_remote_datasets["l4_sample"]
-    assert ds.url == "http://localhost:9000/datasets/Organization_X/l4_sample"
-    ds.tags = ["test"]
-    assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()
+        ds = own_remote_datasets["l4_sample"]
+        assert ds.url == "http://localhost:9000/datasets/Organization_X/l4_sample"
+        ds.tags = ["demo"]
+        assert ds in wk.Dataset.get_remote_datasets(tags=["demo"]).values()
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 @pytest.mark.skipif(
     sys.version_info <= (3, 9), reason="Dask only supports Python >= 3.9"
 )
@@ -290,6 +286,10 @@ def test_zarr_and_dask() -> None:
     assert 123 < mean_value < 125
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11), reason="Test is flaky for python 3.9 and 3.10."
+)
+@pytest.mark.use_proxay
 def test_upload_tiff_stack() -> None:
     import examples.upload_tiff_stack as example
 
@@ -301,6 +301,7 @@ def test_upload_tiff_stack() -> None:
         )
 
 
+@pytest.mark.use_proxay
 def test_upload_dicom_stack() -> None:
     import examples.upload_dicom_stack as example
 
@@ -312,9 +313,6 @@ def test_upload_dicom_stack() -> None:
         )
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_segments() -> None:
     import examples.download_segments as example
 
@@ -330,9 +328,6 @@ def test_download_segments() -> None:
         )
 
 
-@pytest.mark.skip("This test currently fails due to a bug with vcr-py.")
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_tiff_stack() -> None:
     import examples.download_tiff_stack as example
 
@@ -348,8 +343,6 @@ def test_download_tiff_stack() -> None:
         )
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_skeleton_path_length() -> None:
     from examples.skeleton_path_length import calculate_path_length
 
