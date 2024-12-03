@@ -839,10 +839,25 @@ class MagView(View):
         """
         if isinstance(mag_view, MagView):
             return mag_view
-        elif isinstance(mag_view, (str, PathLike)):
-            return MagView.from_path(mag_view)
         else:
-            raise ValueError("Invalid input type for _ensure_mag_view")
+            # local import to prevent circular dependency
+            from .dataset import Dataset
+
+            path = UPath(
+                str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
+            )
+            mag_view_path = strip_trailing_slash(path)
+            # if is_remote_path(mag_view_path):
+            #     return (
+            #         Dataset.open_remote(mag_view_path.parent.parent.as_posix())
+            #         .get_layer(mag_view_path.parent.name)
+            #         .get_mag(mag_view_path.name)
+            #     )
+            return (
+                Dataset.open(mag_view_path.parent.parent)
+                .get_layer(mag_view_path.parent.name)
+                .get_mag(mag_view_path.name)
+            )
 
     @property
     def _properties(self) -> MagViewProperties:
@@ -863,27 +878,3 @@ class MagView(View):
 
     def __repr__(self) -> str:
         return f"MagView(name={repr(self.name)}, bounding_box={self.bounding_box})"
-
-    @classmethod
-    def _ensure_mag_view(cls, mag_view: Union[str, PathLike, "MagView"]) -> "MagView":
-        if isinstance(mag_view, MagView):
-            return mag_view
-        else:
-            # local import to prevent circular dependency
-            from .dataset import Dataset
-
-            path = UPath(
-                str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
-            )
-            mag_view_path = strip_trailing_slash(path)
-            # if is_remote_path(mag_view_path):
-            #     return (
-            #         Dataset.open_remote(mag_view_path.parent.parent.as_posix())
-            #         .get_layer(mag_view_path.parent.name)
-            #         .get_mag(mag_view_path.name)
-            #     )
-            return (
-                Dataset.open(mag_view_path.parent.parent)
-                .get_layer(mag_view_path.parent.name)
-                .get_mag(mag_view_path.name)
-            )
