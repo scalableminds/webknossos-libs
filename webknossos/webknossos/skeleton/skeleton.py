@@ -114,19 +114,70 @@ class Skeleton(Group):
 
     @staticmethod
     def load(file_path: Union[PathLike, str]) -> "Skeleton":
-        """Loads a `.nml` file or a `.zip` file containing an NML (and possibly also volume
-        layers). Returns the `Skeleton` object. Also see `Annotation.load` if you want to
-        have the annotation which wraps the skeleton."""
+        """Load a skeleton annotation from a file.
 
+        This method can load skeleton annotations from either a .nml file or a .zip file
+        that contains an NML file. The .zip file may also contain volume layers.
+
+        Args:
+            file_path (Union[PathLike, str]): Path to the .nml or .zip file containing
+                the skeleton annotation.
+
+        Returns:
+            Skeleton: A new Skeleton instance containing the loaded annotation data.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            ValueError: If the file format is not supported or the file is corrupted.
+
+        Examples:
+            Load from an NML file:
+            ```python
+            # Load a simple NML file
+            skeleton = Skeleton.load("dendrite_trace.nml")
+
+            # Load from a ZIP archive containing NML and volume data
+            skeleton = Skeleton.load("full_annotation.zip")
+            ```
+
+        Note:
+            If you need access to volume layers or other annotation data, use
+            `Annotation.load()` instead, which returns an Annotation object
+            containing both the skeleton and any additional data.
+        """
         from ..annotation import Annotation
-
         return Annotation.load(file_path).skeleton
 
     def save(self, out_path: Union[str, PathLike]) -> None:
-        """
-        Stores the skeleton as a zip or nml at the given path.
-        """
+        """Save the skeleton annotation to a file.
 
+        Saves the skeleton data to either a .nml file or a .zip archive. The .zip
+        format is recommended when the annotation includes volume layers or when
+        you want to compress the data.
+
+        Args:
+            out_path (Union[str, PathLike]): Destination path for the saved file.
+                Must end with either .nml or .zip extension.
+
+        Raises:
+            AssertionError: If the file extension is not .nml or .zip.
+            OSError: If there are permission issues or insufficient disk space.
+
+        Examples:
+            ```python
+            # Save as NML file
+            skeleton.save("dendrite_annotation.nml")
+
+            # Save as ZIP archive (recommended for complex annotations)
+            skeleton.save("full_annotation.zip")
+            ```
+
+        Note:
+            - The name of the annotation will be derived from the filename stem
+            - When saving as .zip, any associated volume layers will be included
+            - The .nml format is human-readable XML but may be larger in size
+            - The .zip format provides compression and can store additional data
+        """
         from ..annotation import Annotation
 
         out_path = Path(out_path)
@@ -140,11 +191,54 @@ class Skeleton(Group):
     def add_nx_graphs(
         self, tree_dict: Union[List[nx.Graph], Dict[str, List[nx.Graph]]]
     ) -> None:
-        """
-        A utility to add nx graphs [NetworkX graph object](https://networkx.org/) to a wk skeleton object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
+        """Import NetworkX graphs as skeleton trees.
 
-        Arguments:
-        tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): A list of wK tree-like structures as NetworkX graphs or a dictionary of group names and same lists of NetworkX tree objects.
+        Converts NetworkX Graph objects into skeleton trees, preserving node positions
+        and edge connections. The graphs can be provided either as a list or as a
+        dictionary mapping group names to lists of graphs.
+
+        Args:
+            tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): Either:
+                - A list of NetworkX graphs to be added directly to the skeleton
+                - A dictionary mapping group names to lists of graphs, which will
+                  create new groups with the specified names containing the graphs
+
+        Raises:
+            ValueError: If any graph nodes lack required position attributes.
+            TypeError: If tree_dict is neither a list nor a dictionary.
+
+        Examples:
+            Add graphs directly to skeleton:
+            ```python
+            import networkx as nx
+
+            # Create sample graphs
+            g1 = nx.Graph()
+            g1.add_node(1, position=(0, 0, 0))
+            g1.add_node(2, position=(100, 0, 0))
+            g1.add_edge(1, 2)
+
+            g2 = nx.Graph()
+            g2.add_node(1, position=(0, 100, 0))
+            g2.add_node(2, position=(100, 100, 0))
+            g2.add_edge(1, 2)
+
+            # Add graphs directly
+            skeleton.add_nx_graphs([g1, g2])
+
+            # Or organize graphs into groups
+            graphs_by_group = {
+                "dendrites": [g1],
+                "axons": [g2]
+            }
+            skeleton.add_nx_graphs(graphs_by_group)
+            ```
+
+        Note:
+            - Each node in the input graphs must have a 'position' attribute
+              containing (x, y, z) coordinates
+            - Other node attributes (e.g., radius, rotation) will be preserved
+            - Edge attributes are currently not preserved in the conversion
         """
 
         if not isinstance(tree_dict, dict):
