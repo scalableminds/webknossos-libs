@@ -11,29 +11,32 @@ _T = TypeVar("_T", bound="VecInt")
 
 class VecInt(tuple):
     """
-    The VecInt class is designed to represent a vector of integers. This class is a subclass of the built-in tuple class, and it extends the functionality of tuples by providing additional methods and operations.
+    A specialized vector class for storing and manipulating integer values with named axes.
 
-    One of the key features of the VecInt class is that it allows for the storage of axis names along with their corresponding values.
+    This class extends the built-in tuple type to provide vector operations while preserving
+    axis information. It allows for initialization with both positional and named arguments.
 
-    Here is a brief example demonstrating how to use the VecInt class:
+    Attributes:
+        axes (Tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
 
-    ```python
-    from webknossos import VecInt
+    Examples:
+        Create a vector with 4 named dimensions:
+        ```
+        vector_1 = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
+        vector_1 = VecInt([1, 2, 3, 4], axes=("x", "y", "z", "t"))
+        vector_1 = VecInt(x=1, y=2, z=3, t=4)
+        ```
 
-    # Creating a VecInt instance with 4 elements and axes x, y, z, t:
-    vector_1 = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
-    # Alternative ways to create the same VecInt instance:
-    vector_1 = VecInt([1, 2, 3, 4], axes=("x", "y", "z", "t"))
-    vector_1 = VecInt(x=1, y=2, z=3, t=4)
+        Create a vector filled with ones:
+        ```
+        vector_2 = VecInt.full(1, axes=("x", "y", "z", "t"))
+        assert vector_2[0] == vector_2[1] == vector_2[2] == vector_2[3]
+        ```
 
-    # Creating a VecInt instance with all elements set to 1 and axes x, y, z, t:
-    vector_2 = VecInt.full(1, axes=("x", "y", "z", "t"))
-    # Asserting that all elements in vector_2 are equal to 1:
-    assert vector_2[0] == vector_2[1] == vector_2[2] == vector_2[3]
-
-    # Demonstrating the addition operation between two VecInt instances:
-    assert vector_1 + vector_2 == VecInt(2, 3, 4, 5)
-    ```
+        Perform vector addition:
+        ```
+        assert vector_1 + vector_2 == VecInt(2, 3, 4, 5)
+        ```
     """
 
     axes: Tuple[str, ...]
@@ -126,10 +129,10 @@ class VecInt(tuple):
         Returns a new ND Vector from a string representation.
 
         Args:
-        - string (str): The string representation of the vector.
+            string (str): The string representation of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
@@ -169,10 +172,10 @@ class VecInt(tuple):
         Checks if all elements in the vector are positive.
 
         Args:
-        - strictly_positive (bool): If True, checks if all elements are strictly positive.
+            strictly_positive (bool): If True, checks if all elements are strictly positive.
 
         Returns:
-        - bool: True if all elements are positive, False otherwise.
+            bool: True if all elements are positive, False otherwise.
         """
         if strictly_positive:
             return all(i > 0 for i in self)
@@ -260,10 +263,10 @@ class VecInt(tuple):
         Adds two VecInts or returns None if the other is None.
 
         Args:
-        - other (Optional[VecInt]): The other vector to add.
+            other (Optional[VecInt]): The other vector to add.
 
         Returns:
-        - Optional[VecInt]: The sum of the two vectors or None if the other is None.
+            Optional[VecInt]: The sum of the two vectors or None if the other is None.
         """
         return None if other is None else self + other
 
@@ -276,11 +279,11 @@ class VecInt(tuple):
         source so that the other elements move when necessary.
 
         Args:
-        - source (Union[int, List[int]]): The index of the element to move.
-        - target (Union[int, List[int]]): The index where the element should be moved to.
+            source (Union[int, List[int]]): The index of the element to move.
+            target (Union[int, List[int]]): The index where the element should be moved to.
 
         Returns:
-        - VecInt: A new vector with the moved element.
+            VecInt: A new vector with the moved element.
         """
 
         # Piggy-back on np.moveaxis by creating an auxiliary array where the indices 0, 1 and
@@ -298,10 +301,10 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 0.
 
         Args:
-        - axes (Tuple[str, ...]): The axes of the vector.
+            axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return cls((0 for _ in range(len(axes))), axes=axes)
 
@@ -311,10 +314,10 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 1.
 
         Args:
-        - axes (Tuple[str, ...]): The axes of the vector.
+            axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return cls((1 for _ in range(len(axes))), axes=axes)
 
@@ -324,11 +327,11 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to the same value.
 
         Args:
-        - an_int (int): The value to set all elements to.
-        - axes (Tuple[str, ...]): The axes of the vector.
+            an_int (int): The value to set all elements to.
+            axes (Tuple[str, ...]): The axes of the vector.
 
         Returns:
-        - VecInt: The new vector.
+            VecInt: The new vector.
         """
         return cls((an_int for _ in range(len(axes))), axes=axes)
 

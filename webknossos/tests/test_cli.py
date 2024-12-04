@@ -78,8 +78,6 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_tiff_cubing_zarr_s3() -> None:
     """Tests zarr support when performing tiff cubing."""
 
@@ -93,9 +91,12 @@ def test_tiff_cubing_zarr_s3() -> None:
     assert (out_path / "tiff" / "1" / ".zarray").exists()
     assert (out_path / PROPERTIES_FILE_NAME).exists()
 
-    with (out_path / PROPERTIES_FILE_NAME).open("r") as file, (
-        TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json"
-    ).open("r") as fixture:
+    with (
+        (out_path / PROPERTIES_FILE_NAME).open("r") as file,
+        (TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json").open(
+            "r"
+        ) as fixture,
+    ):
         json_a = json.load(file)
         json_fixture = json.load(fixture)
         del json_a["id"]
@@ -288,16 +289,14 @@ def test_convert_with_all_params() -> None:
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
+@pytest.mark.use_proxay
 @pytest.mark.parametrize(
     "url",
     [
-        "https://webknossos.org/datasets/scalable_minds/cremi_example/",
-        "https://webknossos.org/datasets/scalable_minds/cremi_example/view#512,512,16,0,1.3",
-        "https://webknossos.org/links/upcKUKDe5CatK4JX",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/view#512,512,16,0,1.3",
     ],
 )
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_dataset(url: str) -> None:
     """Tests the functionality of download subcommand."""
 
@@ -312,7 +311,7 @@ def test_download_dataset(url: str) -> None:
                 "--bbox",
                 "0,0,0,5,5,5",
                 "--mag",
-                "8",
+                "8-8-1",
                 "--url",
                 url,
                 "testoutput/",
@@ -539,7 +538,10 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                 )
 
 
-def test_merge_fallback_no_fallback_layer(tmp_path: Path) -> None:
+@pytest.mark.parametrize("use_compression", [True, False])
+def test_merge_fallback_no_fallback_layer(
+    tmp_path: Path, use_compression: bool
+) -> None:
     from zipfile import ZIP_DEFLATED, ZipFile
     from zlib import Z_BEST_SPEED
 
@@ -555,7 +557,12 @@ def test_merge_fallback_no_fallback_layer(tmp_path: Path) -> None:
             SEGMENTATION_CATEGORY,
             dtype_per_channel=fallback_layer_data.dtype,
         )
-        .add_mag(1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3)
+        .add_mag(
+            1,
+            chunk_shape=(32,) * 3,
+            chunks_per_shard=(1,) * 3,
+            compress=use_compression,
+        )
     )
 
     fallback_mag.write(absolute_offset=(0,) * 3, data=fallback_layer_data)

@@ -14,8 +14,6 @@ from tifffile import TiffFile
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
 
-pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
-
 
 @pytest.fixture(autouse=True, scope="function")
 def ignore_warnings() -> Iterator:

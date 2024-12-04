@@ -7,7 +7,7 @@ The [`Dataset` class](../../api/webknossos/dataset/dataset.md) is the entry-poin
 The dataset stores the data on disk in `.wkw`-files.
 
 Each dataset consists of one or more [layers](../../api/webknossos/dataset/layer.md),
-which themselves can comprise multiple [magnifications represented via `MagView`s](../../api/webknossos/dataset/magview.md).
+which themselves can comprise multiple [magnifications represented via `MagView`s](../../api/webknossos/dataset/mag_view.md).
 
 ```python
 --8<--
