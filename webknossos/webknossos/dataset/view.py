@@ -277,9 +277,8 @@ class View:
                 Shape must match the target region size.
             offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
                 absolute_offset instead. Defaults to None.
-            json_update_allowed (bool, optional): Whether to allow updating JSON metadata
-                and show alignment warnings. Set to False to suppress warnings about
-                unaligned writes. Defaults to True.
+            json_update_allowed (bool, optional): Whether to allow updating JSON metadata.
+                Set to False when executing writes in parallel. Defaults to True.
             relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
             absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
@@ -531,7 +530,7 @@ class View:
 
             # Read from multi-channel data
             view = color_layer.get_mag("1").get_view(size=(100, 100, 10))
-            data = view.read()  # Returns (channels, z, y, x) array
+            data = view.read()  # Returns (channels, x, y, z) array
             ```
 
         Note:
@@ -641,11 +640,15 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,
         absolute_bounding_box: Optional[NDBoundingBox] = None,
     ) -> np.ndarray:
-        """Read data from the view in XYZ coordinate order.
+        """Read n-dimensional data and convert it to 3D XYZ format.
 
-        This method reads data from the view and returns it with dimensions ordered
-        as (channels, X, Y, Z) instead of the default (channels, Z, Y, X). This is
-        useful when working with tools or libraries that expect XYZ ordering.
+        This method is designed for handling n-dimensional data (n > 3) and converting
+        it to strictly 3D data ordered as (X, Y, Z). It is primarily used internally
+        by operations that require 3D data like downsampling, upsampling, and compression.
+
+        When provided with a BoundingBox where additional dimensions (beyond X, Y, Z)
+        have a shape of 1, it returns an array containing only the 3D spatial data.
+        This ensures compatibility with operations that expect purely 3-dimensional input.
 
         Args:
             relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
@@ -665,7 +668,7 @@ class View:
             xyz_data = view.read_xyz()  # Returns (X, Y, Z) array
 
             # Read with relative bounding box
-            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10))
+            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10), axis=("x", "y", "z"), index=(1, 2, 3))
             xyz_data = view.read_xyz(relative_bounding_box=bbox)
             ```
 
@@ -792,7 +795,7 @@ class View:
             )
 
             # Use bounding box instead of offset+size
-            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10))
+            bbox = BoundingBox((10, 10, 0), (50, 50, 10))
             bbox_view = view.get_view(relative_bounding_box=bbox)
             ```
 
@@ -939,17 +942,29 @@ class View:
         Creates a BufferedSliceWriter that allows efficient writing of data slices by
         buffering multiple slices before performing the actual write operation.
 
-        Args:
-            buffer_size (int, optional): Number of slices to buffer before writing.
-                Defaults to 1.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
-                position in Mag(1). Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
+         Args:
+            offset (Optional[Vec3IntLike]): Starting position for writing in the dataset.
                 Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
-                to view's position in Mag(1). Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
-                in Mag(1). Defaults to None.
+            buffer_size (int): Number of slices to buffer before performing a write.
+                Defaults to 32.
+            dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
+                Defaults to 2 (z-axis).
+            json_update_allowed (bool): Whether to allow updating the bounding box and
+                datasource-properties.json. Should be False for parallel access. Defaults to True.
+            relative_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates, relative
+                to the current view's position. Mutually exclusive with absolute_offset.
+                Defaults to None.
+            absolute_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates in
+                absolute dataset coordinates. Mutually exclusive with relative_offset.
+                Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+                coordinates, relative to the current view's offset. Mutually exclusive
+                with absolute_bounding_box. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+                coordinates in absolute dataset coordinates. Mutually exclusive with
+                relative_bounding_box. Defaults to None.
+            use_logging (bool): Whether to enable logging of write operations.
+                Defaults to False.
 
         Returns:
             BufferedSliceWriter: A writer object for buffered slice writing.
@@ -959,15 +974,14 @@ class View:
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
 
             # Create a buffered writer with default settings
-            writer = view.get_buffered_slice_writer()
-
-            # Write slices efficiently
-            for z in range(10):
-                slice_data = np.zeros((100, 100))  # Your slice data
-                writer.write(slice_data)
+            with view.get_buffered_slice_writer() as writer:
+                # Write slices efficiently
+                for z in range(10):
+                    slice_data = np.zeros((100, 100))  # Your slice data
+                    writer.send(slice_data)
 
             # Create a writer with custom buffer size and offset
-            writer = view.get_buffered_slice_writer(
+            with view.get_buffered_slice_writer(
                 buffer_size=5,
                 relative_offset=(10, 10, 0)
             )
@@ -1015,20 +1029,21 @@ class View:
         large datasets slice by slice.
 
         Args:
-            buffer_size (int, optional): Number of slices to buffer in memory.
-                Defaults to 32.
-            dimension (int, optional): Dimension along which to slice the data.
-                0 for x, 1 for y, 2 for z. Defaults to 2 (z-axis).
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
-                position in Mag(1). Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1).
+            offset (Optional[Vec3IntLike]): Starting position for reading in the dataset.
                 Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
-                to view's position in Mag(1). Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
-                in Mag(1). Defaults to None.
-            use_logging (bool, optional): Whether to log reading operations.
-                Defaults to False.
+            size (Optional[Vec3IntLike]): Size of the region to read in voxels.
+                Defaults to None.
+            buffer_size (int): Number of slices to buffer in memory at once.
+                Defaults to 32.
+            dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
+                Defaults to 2 (z-axis).
+            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates,
+                relative to the current view's offset. Mutually exclusive with
+                absolute_bounding_box. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates
+                in absolute dataset coordinates. Mutually exclusive with
+                relative_bounding_box. Defaults to None.
+            use_logging (bool): Whether to enable logging of read operations.
 
         Returns:
             BufferedSliceReader: A reader object that yields data slices.
@@ -1038,16 +1053,16 @@ class View:
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
 
             # Create a reader with default settings (z-slices)
-            reader = view.get_buffered_slice_reader()
-            for slice_data in reader:
-                process_slice(slice_data)
+            with view.get_buffered_slice_reader() as reader:
+                for slice_data in reader:
+                    process_slice(slice_data)
 
             # Read y-slices with custom buffer size
-            reader = view.get_buffered_slice_reader(
+            with view.get_buffered_slice_reader(
                 buffer_size=10,
                 dimension=1,  # y-axis
                 relative_offset=(10, 0, 0)
-            )
+            ) as reader:
             ```
 
         Note:
@@ -1100,7 +1115,6 @@ class View:
 
         Examples:
             ```python
-            from concurrent.futures import ThreadPoolExecutor
             from webknossos.utils import named_partial
 
             # Define processing function
@@ -1117,15 +1131,6 @@ class View:
                 chunk_shape=(64, 64, 64),
                 progress_desc="Processing chunks"
             )
-
-            # Parallel processing with thread pool
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                view.for_each_chunk(
-                    named_partial(process_chunk, threshold=0.5),
-                    chunk_shape=(64, 64, 64),
-                    executor=executor,
-                    progress_desc="Processing chunks in parallel"
-                )
             ```
 
         Note:
@@ -1207,7 +1212,6 @@ class View:
 
         Examples:
             ```python
-            from concurrent.futures import ProcessPoolExecutor
             from webknossos.utils import named_partial
 
             # Calculate statistics per chunk
@@ -1225,15 +1229,6 @@ class View:
                 chunk_shape=(128, 128, 128)
             )
 
-            # Parallel processing with process pool
-            with ProcessPoolExecutor(max_workers=4) as executor:
-                stats = view.map_chunk(
-                    named_partial(chunk_statistics, min_value=0.1),
-                    chunk_shape=(128, 128, 128),
-                    executor=executor,
-                    progress_desc="Calculating statistics"
-                )
-
             # Aggregate results
             total_volume = sum(s["volume"] for s in stats)
             mean_values = [s["mean"] for s in stats]
@@ -1243,7 +1238,7 @@ class View:
             - Results are collected in memory, consider memory usage for large datasets
             - Each chunk is processed independently, suitable for parallel execution
             - For non-read-only views, chunks must align with file boundaries
-            - When using ProcessPoolExecutor, ensure func_per_chunk is picklable
+            - When using an executor, ensure thread/process safety in func_per_chunk
             - Results maintain chunk order regardless of execution order
         """
         if chunk_shape is None:
@@ -1357,15 +1352,6 @@ class View:
                 progress_desc="Downsampling data"
             )
 
-            # Process with custom chunk sizes and parallel execution
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                mag1_view.for_zipped_chunks(
-                    downsample_chunk,
-                    mag2_view,
-                    source_chunk_shape=(2048, 2048, 2048),
-                    target_chunk_shape=(1024, 1024, 1024),
-                    executor=executor
-                )
             ```
 
         Note:
@@ -1458,8 +1444,7 @@ class View:
 
         Args:
             other (View): The view to compare against.
-            chunk_shape (Optional[Vec3IntLike], optional): Size of chunks to use for
-                comparison in Mag(1). If None, uses file dimensions. Defaults to None.
+            args Optional[Namespace], optional): ⚠️ Deprecated. Arguments to pass to executor.
             executor (Optional[Executor], optional): Executor for parallel comparison.
                 If None, compares sequentially. Defaults to None.
             progress_desc (Optional[str], optional): Description for progress bar.
@@ -1473,15 +1458,6 @@ class View:
             # Compare views sequentially
             if view1.content_is_equal(view2):
                 print("Views are identical")
-
-            # Compare in parallel with progress tracking
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                is_equal = view1.content_is_equal(
-                    view2,
-                    chunk_shape=(128, 128, 128),
-                    executor=executor,
-                    progress_desc="Comparing views"
-                )
             ```
 
         Note:

@@ -194,7 +194,7 @@ class Skeleton(Group):
     ) -> None:
         """Import NetworkX graphs as skeleton trees.
 
-        Converts NetworkX Graph objects into skeleton trees, preserving node positions
+        Converts [NetworkX Graph objects](https://networkx.org) into skeleton trees, preserving node positions
         and edge connections. The graphs can be provided either as a list or as a
         dictionary mapping group names to lists of graphs.
 

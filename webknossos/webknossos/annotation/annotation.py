@@ -518,8 +518,8 @@ class Annotation:
         Args:
             annotation_id_or_url: Either an annotation ID or complete WEBKNOSSOS URL.
                 Example URL: https://webknossos.org/annotations/[id]
-            annotation_type: Optional type of annotation (Explorational, Task, etc.).
-                Deprecated and no longer required.
+            annotation_type: ⚠️ Deprecated and no longer required.
+                Optional type of annotation (Explorational, Task, etc.).
             webknossos_url: Optional custom WEBKNOSSOS instance URL.
 
         Returns:

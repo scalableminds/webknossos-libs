@@ -584,7 +584,7 @@ class MagView(View):
                 if not view.read_only:
                     view.write(processed_data)
 
-            with ProcessPoolExecutor() as executor:
+            with get_executor_for_args(None) as executor:
                 executor.map(process_chunk, mag1.get_views_on_disk())
             ```
 
@@ -619,10 +619,6 @@ class MagView(View):
             ```python
             # Compress in-place
             mag1.compress()
-
-            # Compress to new location with parallel processing
-            with ProcessPoolExecutor() as executor:
-                mag1.compress("/path/to/compressed", executor=executor)
             ```
 
         Notes:
@@ -747,13 +743,6 @@ class MagView(View):
             other: The MagView to merge into this one.
             executor: Executor for parallel merging operations.
 
-        Examples:
-            ```python
-            # Merge annotation data over base layer
-            with ProcessPoolExecutor() as executor:
-                base_mag.merge_with_view(annotation_mag, executor)
-            ```
-
         Notes:
             - Both views must have same magnification
             - Other view must have chunks_per_shard = 1
@@ -832,7 +821,6 @@ class MagView(View):
             mag_view: Input that should be converted to a MagView. Can be:
                 - MagView object: returned as-is
                 - str or PathLike: path to a magnification level
-                - MagView with path: path extracted and used to create new MagView
 
         Returns:
             MagView: A valid MagView object.
