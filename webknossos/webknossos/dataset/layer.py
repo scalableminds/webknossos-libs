@@ -696,7 +696,7 @@ class Layer:
         assert (
             mag not in self.mags
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
-        self._setup_mag(mag, str(mag_path))
+        self._setup_mag(mag, mag_path)
         self._properties.mags.append(mag_view._properties)
         self.dataset._export_as_json()
 
@@ -1457,7 +1457,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, path: Optional[str] = None) -> None:
+    def _setup_mag(self, mag: Mag, path: Optional[Union[str, PathLike]] = None) -> None:
         """Initialize a magnification level when opening the Dataset.
 
         Does not create storage headers/metadata, e.g. wk_header.
@@ -1474,26 +1474,26 @@ class Layer:
 
         self._assert_mag_does_not_exist_yet(mag)
         mag_path_maybe = UPath(path) if path else path
-        try:
-            cls_array = BaseArray.get_class(self._properties.data_format)
-            resolved_path = _find_mag_path(
-                self.dataset.path, self.name, mag_name, mag_path_maybe
-            )
-            info = cls_array.open(resolved_path).info
-            self._mags[mag] = MagView(
-                self,
-                mag,
-                info.chunk_shape,
-                info.chunks_per_shard,
-                info.compression_mode,
-                False,
-                UPath(resolved_path),
-            )
-            self._mags[mag]._read_only = self._dataset.read_only
-        except ArrayException:
-            logging.exception(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
-            )
+        # try:
+        cls_array = BaseArray.get_class(self._properties.data_format)
+        resolved_path = _find_mag_path(
+            self.dataset.path, self.name, mag_name, mag_path_maybe
+        )
+        info = cls_array.open(resolved_path).info
+        self._mags[mag] = MagView(
+            self,
+            mag,
+            info.chunk_shape,
+            info.chunks_per_shard,
+            info.compression_mode,
+            False,
+            UPath(resolved_path),
+        )
+        self._mags[mag]._read_only = self._dataset.read_only
+        # except ArrayException:
+        #     logging.exception(
+        #         f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
+        #     )
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
