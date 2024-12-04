@@ -10,16 +10,51 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+- Removes vcr-py from developer dependencies for testing and adds proxay for recording and replaying API requests. [#1198](https://github.com/scalableminds/webknossos-libs/pull/1198)
+- Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
 
 ### Fixed
 - Fixed an issue where adding existing trees to an annotation fails. [#1201](https://github.com/scalableminds/webknossos-libs/pull/1201)
+- Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
+
+
+## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...v0.16.0)
+
+
+## [0.15.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.11) - 2024-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...v0.15.11)
+
+### Fixed
+- Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
+
+
+## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...v0.15.10)
+
+### Fixed
+- Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
+
+
+## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.8...v0.15.9)
+
+### Changed
+Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
+
+
+## [0.15.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.8) - 2024-11-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...v0.15.8)
+
+### Changed
+- Fixed SSL certificate verification for remote datasets by adding CA certificates using `certifi`. [#1211](https://github.com/scalableminds/webknossos-libs/pull/1211)
 
 
 ## [0.15.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.7) - 2024-10-25

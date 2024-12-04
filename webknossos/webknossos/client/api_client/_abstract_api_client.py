@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
 
 import httpx
 
+from ...dataset.defaults import SSL_CONTEXT
 from ._serialization import custom_converter
 from .errors import CannotHandleResponseError, UnexpectedStatusError
 
@@ -197,6 +198,7 @@ class AbstractApiClient(ABC):
                 files=files,
                 headers=self.headers,
                 timeout=timeout_seconds or self.timeout_seconds,
+                verify=SSL_CONTEXT,
             )
             if response.status_code == 200 or response.status_code == 400:
                 # Stop retrying in case of success or bad request
