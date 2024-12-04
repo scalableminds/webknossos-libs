@@ -54,7 +54,7 @@ class KubernetesExecutor(ClusterExecutor):
             import kubernetes  # noqa: F401 unused import
         except ModuleNotFoundError:
             logger.error(
-                'The Kubernetes Python package is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[kubernetes]` or `poetry install --extras "kubernetes"` to install Kubernetes support.'
+                'The Kubernetes Python package is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[kubernetes]` or `uv sync --extra "kubernetes"` to install Kubernetes support.'
             )
             exit()
 
@@ -155,7 +155,7 @@ class KubernetesExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,  # noqa:  ARG002 Unused method argument: `additional_setup_lines`
         job_count: Optional[int] = None,
-    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List[Future[str]], List[Tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
         import kubernetes.client.models as kubernetes_models
@@ -164,7 +164,7 @@ class KubernetesExecutor(ClusterExecutor):
         self.ensure_kubernetes_namespace()
         job_id = str(uuid4())
 
-        job_id_future: "Future[str]" = Future()
+        job_id_future: Future[str] = Future()
         job_id_future.set_result(job_id)
         job_id_futures = [job_id_future]
 

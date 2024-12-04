@@ -17,35 +17,26 @@ MiB = 1024 * 1024
 class Resumable:
     """A resumable-httpx upload client.
 
-    Parameters
-    ----------
-    target : str
-        The URL of the resumable upload target
-    chunk_size : int, optional
-        The size, in bytes, of file chunks to be uploaded
-    simultaneous_uploads : int, optional
-        The number of file chunk uploads to attempt at once
-    headers : dict, optional
-        A dictionary of additional HTTP headers to include in requests
-    test_chunks : bool
-        Flag indicating if the client should check with the server if a chunk
-        already exists with a GET request prior to attempting to upload the
-        chunk with a POST
-    max_chunk_retries : int, optional
-        The number of times to retry uploading a chunk
-    permanent_errors : collection of int, optional
-        HTTP status codes that indicate the upload of a chunk has failed and
-        should not be retried
+    Args:
+        target: The URL of the resumable upload target
+        chunk_size: The size, in bytes, of file chunks to be uploaded. Defaults to 1MB.
+        simultaneous_uploads: The number of file chunk uploads to attempt at once.
+            Defaults to 3.
+        headers: A dictionary of additional HTTP headers to include in requests.
+            Defaults to None.
+        test_chunks: Flag indicating if the client should check with the server if a chunk
+            already exists with a GET request prior to attempting to upload the chunk with
+            a POST. Defaults to True.
+        max_chunk_retries: The number of times to retry uploading a chunk.
+            Defaults to 100.
+        permanent_errors: HTTP status codes that indicate the upload of a chunk has failed
+            and should not be retried. Defaults to (400, 404, 415, 500, 501).
 
-    Attributes
-    ----------
-    file_added : resumable.util.CallbackDispatcher
-        Triggered when a file has been added, passing the file object
-    file_completed : resumable.util.CallbackDispatcher
-        Triggered when a file upload has completed, passing the file object
-    chunk_completed : resumable.util.CallbackDispatcher
-        Triggered when a chunk upload has completed, passing the file and chunk
-        objects
+    Attributes:
+        file_added: Triggered when a file has been added, passing the file object.
+        file_completed: Triggered when a file upload has completed, passing the file object.
+        chunk_completed: Triggered when a chunk upload has completed, passing the file and
+            chunk objects.
     """
 
     def __init__(

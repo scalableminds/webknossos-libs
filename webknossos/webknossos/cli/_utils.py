@@ -26,7 +26,7 @@ class DistributionStrategy(str, Enum):
     SLURM = "slurm"
     KUBERNETES = "kubernetes"
     MULTIPROCESSING = "multiprocessing"
-    DEBUG_SEQUENTIAL = "debug_sequential"
+    SEQUENTIAL = "sequential"
 
 
 class LayerCategory(str, Enum):

@@ -70,15 +70,14 @@ Most tasks can be configured to be executed in a parallelized manner. Via `--dis
 
 ## Development
 
-Make sure to install all the required dependencies using Poetry:
+Make sure to install all the required dependencies using [`uv`](https://docs.astral.sh/uv/):
 ```bash
 git clone git@github.com:scalableminds/webknossos-libs.git
 
 cd webknossos-libs
-pip install -r requirements.txt
 
 cd webknossos
-poetry install --all-extras
+uv sync --all-extras
 ```
 
 Please, format, lint, typecheck and unit test your code changes before merging them.

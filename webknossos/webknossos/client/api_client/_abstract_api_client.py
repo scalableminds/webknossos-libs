@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union
 
 import httpx
 
+from ...dataset.defaults import SSL_CONTEXT
 from ._serialization import custom_converter
 from .errors import CannotHandleResponseError, UnexpectedStatusError
 
@@ -55,6 +56,10 @@ class AbstractApiClient(ABC):
         return self._parse_json(
             response, response_type
         ), self._extract_total_count_header(response)
+
+    def _put_json(self, route: str, body_structured: Any) -> None:
+        body_json = self._prepare_for_json(body_structured)
+        self._put(route, body_json)
 
     def _patch_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
@@ -125,6 +130,27 @@ class AbstractApiClient(ABC):
             timeout_seconds=timeout_seconds,
         )
 
+    def _put(
+        self,
+        route: str,
+        body_json: Optional[Any] = None,
+        query: Optional[Query] = None,
+        multipart_data: Optional[httpx._types.RequestData] = None,
+        files: Optional[httpx._types.RequestFiles] = None,
+        retry_count: int = 0,
+        timeout_seconds: Optional[float] = None,
+    ) -> httpx.Response:
+        return self._request(
+            "PUT",
+            route,
+            body_json=body_json,
+            multipart_data=multipart_data,
+            files=files,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+        )
+
     def _post(
         self,
         route: str,
@@ -172,6 +198,7 @@ class AbstractApiClient(ABC):
                 files=files,
                 headers=self.headers,
                 timeout=timeout_seconds or self.timeout_seconds,
+                verify=SSL_CONTEXT,
             )
             if response.status_code == 200 or response.status_code == 400:
                 # Stop retrying in case of success or bad request

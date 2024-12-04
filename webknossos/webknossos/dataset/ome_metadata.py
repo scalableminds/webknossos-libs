@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 import numpy as np
 
+from ..utils import is_writable_path
 from .data_format import DataFormat
 from .defaults import ZARR_JSON_FILE_NAME, ZATTRS_FILE_NAME, ZGROUP_FILE_NAME
 
@@ -57,6 +58,8 @@ def get_ome_0_4_multiscale_metadata(
 
 
 def write_ome_0_4_metadata(dataset: "Dataset", layer: "Layer") -> None:
+    if not is_writable_path(layer.path):
+        return
     if layer.data_format == DataFormat.Zarr3:
         with (layer.path / ZARR_JSON_FILE_NAME).open("w", encoding="utf-8") as outfile:
             json.dump(
