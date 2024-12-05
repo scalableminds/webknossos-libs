@@ -490,7 +490,7 @@ class MagView(View):
             view.write(data)    # Write to the view
 
             # Get view using bounding box
-            bbox = NDBoundingBox((0, 0, 0), (100, 100, 100))
+            bbox = BoundingBox((0, 0, 0), (100, 100, 100))
             view = mag2.get_view(absolute_bounding_box=bbox)
             ```
 
