@@ -745,7 +745,7 @@ class MagView(View):
 
         Notes:
             - Both views must have same magnification
-            - Other view must have chunks_per_shard = 1
+            - Other view must have file_len = 1
             - Both views must have same voxel type
             - Merging is parallelized using the provided executor
             - Updates layer bounding box if necessary
