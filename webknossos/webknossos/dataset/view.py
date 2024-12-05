@@ -516,7 +516,7 @@ class View:
             ```python
             # Read entire view's data
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
-            data = view.read()  # Returns (z, y, x) array for single-channel data
+            data = view.read()  # Returns (x, y, z) array for single-channel data
 
             # Read with relative offset and size
             data = view.read(
