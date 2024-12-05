@@ -412,7 +412,7 @@ class MagView(View):
             data = mag1.read(absolute_offset=(100, 200, 300), size=(512, 512, 512))
 
             # Read using bounding box
-            bbox = NDBoundingBox((0, 0, 0), (100, 100, 100))
+            bbox = BoundingBox((0, 0, 0), (100, 100, 100))
             data = mag2.read(absolute_bounding_box=bbox)
             ```
 
