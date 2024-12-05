@@ -13,6 +13,9 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.client.context import _get_context
+from webknossos.dataset.defaults import SSL_CONTEXT
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ._array import ArrayException, BaseArray, DataFormat, ZarritaArray
 from ._downsampling_utils import (
@@ -1472,7 +1475,18 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-        mag_path_maybe = UPath(path) if path else path
+        # To setup the mag, we need to get the token from the context
+        wk_context = _get_context()
+        token = wk_context.datastore_token
+        mag_path_maybe = (
+            UPath(
+                path,
+                headers={} if token is None else {"X-Auth-Token": token},
+                ssl=SSL_CONTEXT,
+            )
+            if path
+            else path
+        )
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
             resolved_path = _find_mag_path(
