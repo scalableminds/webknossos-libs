@@ -90,22 +90,54 @@ class _AdjDict(MutableMapping):
 
 
 class Tree(nx.Graph):
-    """
-    Contains a collection of nodes and edges. Despite the name, trees may contain cycles.
-    This class inherits from [`networkx.Graph`](https://networkx.org/documentation/stable/reference/classes/graph.html).
-    For further methods, please [check the networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
+    """Contains a collection of nodes and edges in a graph structure.
 
-    See Tree.__init__ for more details.
+    Despite the name, trees may contain cycles. This class inherits from networkx.Graph
+    and provides additional functionality specific to neural annotation tasks.
 
-    A small usage example:
+    Args:
+        name (str): The name of the tree.
+        group (Group): The group this tree belongs to.
+        skeleton (Skeleton): The skeleton this tree is part of.
+        color (Optional[Vector4], optional): RGBA color values for the tree. Defaults to None.
+        enforced_id (Optional[int], optional): Specific ID to use for the tree. Defaults to None.
 
-    ```python
-    tree = skeleton.add_tree("a tree")
-    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
+    Returns:
+        Tree: A new Tree instance that represents a collection of nodes and edges.
 
-    tree.add_edge(node_1, node_2)
-    ```
+    Raises:
+        ValueError: If the tree name is empty or if the group or skeleton is None.
+        TypeError: If the color value is not a valid Vector4 type when provided.
+
+    Note:
+        It is recommended to create trees using `Skeleton.add_tree` or `Group.add_tree`
+        instead of instantiating this class directly. This ensures proper parent-child
+        relationships are maintained.
+
+    Examples:
+        Create a new tree with nodes and edges:
+        ```python
+        # First create a skeleton (parent object)
+        skeleton = Skeleton("example_skeleton")
+
+        # Add a new tree to the skeleton
+        tree = skeleton.add_tree("dendrite_1")
+
+        # Add nodes with 3D positions
+        soma = tree.add_node(position=(0, 0, 0), comment="soma")
+        branch1 = tree.add_node(position=(100, 0, 0), comment="branch1")
+        branch2 = tree.add_node(position=(0, 100, 0), comment="branch2")
+
+        # Connect nodes with edges
+        tree.add_edge(soma, branch1)
+        tree.add_edge(soma, branch2)
+
+        # Access node positions
+        positions = tree.get_node_positions()  # Returns numpy array of all positions
+        ```
+
+    For additional graph operations, see the
+    [networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
     """
 
     def __init__(
@@ -197,15 +229,38 @@ class Tree(nx.Graph):
 
     @property
     def id(self) -> int:
-        """Read-only property."""
+        """The unique identifier of the tree.
+
+        Returns:
+            int: A unique identifier for this tree instance.
+
+        Note:
+            This is a read-only property that is set during tree creation.
+        """
         return self._id
 
     def get_node_positions(self) -> np.ndarray:
-        """Returns an numpy array with the positions of all nodes of this tree."""
+        """Get positions of all nodes in the tree.
+
+        Returns:
+            np.ndarray: A numpy array of shape (N, 3) containing the 3D positions
+                of all N nodes in the tree. Each row represents a node's (x, y, z)
+                coordinates.
+        """
         return np.array([node.position for node in self.nodes])
 
     def get_node_by_id(self, node_id: int) -> Node:
-        """Returns the node in this tree with the requested id."""
+        """Retrieve a node using its unique identifier.
+
+        Args:
+            node_id (int): The unique identifier of the node to retrieve.
+
+        Returns:
+            Node: The node with the specified ID.
+
+        Raises:
+            KeyError: If no node exists with the given ID in this tree.
+        """
         return self._node.get_node(node_id)
 
     def add_node(
@@ -223,11 +278,48 @@ class Tree(nx.Graph):
         branchpoint_time: Optional[int] = None,
         _enforced_id: Optional[int] = None,
     ) -> Node:
-        """
-        Adds a node to the tree. Apart from the mandatory `position` parameter,
-        there are several optional parameters which can be used to encode
-        additional information. For example, the comment will be shown by the
-        WEBKNOSSOS UI.
+        """Add a new node to the tree.
+
+        Creates a new node at the specified position and adds it to the tree.
+
+        Args:
+            position (Vec3IntLike): The 3D coordinates (x, y, z) of the node.
+            comment (Optional[str], optional): A text comment associated with the node.
+                Visible in the WEBKNOSSOS UI. Defaults to None.
+            radius (Optional[float], optional): Node radius for visualization.
+                Defaults to None.
+            rotation (Optional[Vector3], optional): 3D rotation vector for the node.
+                Defaults to None.
+            inVp (Optional[int], optional): Viewport information. Defaults to None.
+            inMag (Optional[int], optional): Magnification level. Defaults to None.
+            bitDepth (Optional[int], optional): Bit depth for node data.
+                Defaults to None.
+            interpolation (Optional[bool], optional): Whether to use interpolation.
+                Defaults to None.
+            time (Optional[int], optional): Timestamp for the node. Defaults to None.
+            is_branchpoint (bool, optional): Whether this node is a branch point.
+                Defaults to False.
+            branchpoint_time (Optional[int], optional): Timestamp for branch point
+                creation. Defaults to None.
+            _enforced_id (Optional[int], optional): Internal use only. Forces a
+                specific node ID. Defaults to None.
+
+        Returns:
+            Node: The newly created and added node.
+
+        Examples:
+            ```python
+            # Add a simple node with just position
+            node1 = tree.add_node(position=(100, 200, 300))
+
+            # Add a node with additional properties
+            node2 = tree.add_node(
+                position=(150, 250, 350),
+                comment="Dendrite branch point",
+                radius=2.5,
+                is_branchpoint=True
+            )
+            ```
         """
         node = Node(
             position=Vec3Int(position),
@@ -248,7 +340,12 @@ class Tree(nx.Graph):
         return node
 
     def get_max_node_id(self) -> int:
-        """Returns the highest node id."""
+        """Get the highest node ID in the tree.
+
+        Returns:
+            int: The maximum node ID present in the tree. Returns 0 if the tree
+                has no nodes.
+        """
         return max((node.id for node in self.nodes), default=0)
 
     def __hash__(self) -> int:

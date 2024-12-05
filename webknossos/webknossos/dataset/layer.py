@@ -1041,7 +1041,7 @@ class Layer:
             RuntimeError: If sampling scheme produces invalid magnifications
             AttributeError: If sampling_mode is invalid
 
-        Example:
+        Examples:
             ```python
             from webknossos import SamplingModes
 

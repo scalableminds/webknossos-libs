@@ -14,28 +14,70 @@ Vector3 = Tuple[float, float, float]
 
 @attr.define
 class Skeleton(Group):
-    """
-    Representation of the [skeleton](/webknossos/skeleton_annotation/index.html) of an `Annotation`.
-    It contains metadata to identify the related dataset and is the root-group of sub-groups and trees.
-    See the parent class `Group` for methods about group and tree handling.
-    To upload a skeleton to webknossos, please create an `Annotation()` with it.
+    """A hierarchical representation of skeleton annotations in WEBKNOSSOS.
 
-    A small usage example:
+    The Skeleton class serves as the root container for all skeleton annotation data,
+    organizing nodes and edges into a hierarchical structure of groups and trees.
+    It contains dataset metadata and provides methods for loading, saving, and manipulating
+    skeleton annotations.
 
-    ```python
-    annotation = Annotation(
-        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
-    )
-    group = annotation.skeleton.add_group("a group")
-    tree = group.add_tree("a tree")
-    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
+    Attributes:
+        voxel_size: 3D tuple (x, y, z) specifying the size of voxels in nanometers.
+        dataset_name: Name of the dataset this skeleton belongs to.
+        organization_id: Optional ID of the organization owning this skeleton.
+        description: Optional description of the skeleton annotation.
+        name: Always set to "Root" as this is the root group of the hierarchy.
 
-    tree.add_edge(node_1, node_2)
-    ```
+    The skeleton structure follows a hierarchical organization:
+        - Skeleton (root)
+            - Groups (optional organizational units)
+                - Trees (collections of connected nodes)
+                    - Nodes (3D points with metadata)
+                    - Edges (connections between nodes)
 
-    Also see [this example](/webknossos-py/examples/skeleton_synapse_candidates.html) for a more
-    complex interaction.
+    Examples:
+        Create and populate a new skeleton:
+        ```python
+        # Create skeleton through an annotation
+        annotation = Annotation(
+            name="dendrite_trace",
+            dataset_name="cortex_sample",
+            voxel_size=(11, 11, 24)
+        )
+        skeleton = annotation.skeleton
+
+        # Add hierarchical structure
+        dendrites = skeleton.add_group("dendrites")
+        basal = dendrites.add_group("basal")
+        tree = basal.add_tree("dendrite_1")
+
+        # Add and connect nodes
+        soma = tree.add_node(position=(100, 100, 100), comment="soma")
+        branch = tree.add_node(position=(200, 150, 100), radius=1.5)
+        tree.add_edge(soma, branch)
+        ```
+
+        Load an existing skeleton:
+        ```python
+        # Load from NML file
+        skeleton = Skeleton.load("annotation.nml")
+
+        # Access existing structure
+        for group in skeleton.groups:
+            for tree in group.trees:
+                print(f"Tree {tree.name} has {len(tree.nodes)} nodes")
+        ```
+
+    Notes:
+        - The Skeleton class inherits from Group, providing group and tree management methods.
+        - To upload a skeleton to WEBKNOSSOS, create an Annotation with it.
+        - For complex examples, see the skeleton synapse candidates example in the documentation.
+
+    See Also:
+        - Group: Base class providing group and tree management
+        - Tree: Class representing connected node structures
+        - Node: Class representing individual 3D points
+        - Annotation: Container class for working with WEBKNOSSOS
     """
 
     voxel_size: Vector3
@@ -52,16 +94,6 @@ class Skeleton(Group):
     _id: int = attr.field(init=False, repr=False)
     _element_id_generator: Iterator[int] = attr.field(init=False, eq=False, repr=False)
     _skeleton: "Skeleton" = attr.field(init=False, eq=False, repr=False)
-
-    @classmethod
-    def _set_init_docstring(cls) -> None:
-        Skeleton.__init__.__doc__ = """
-        To initialize a skeleton, setting the following parameters is required (or recommended):
-        - voxel_size
-        - dataset_name
-        - organization_id
-        - description
-        """
 
     def __attrs_post_init__(self) -> None:
         self._element_id_generator = itertools.count()
@@ -82,19 +114,71 @@ class Skeleton(Group):
 
     @staticmethod
     def load(file_path: Union[PathLike, str]) -> "Skeleton":
-        """Loads a `.nml` file or a `.zip` file containing an NML (and possibly also volume
-        layers). Returns the `Skeleton` object. Also see `Annotation.load` if you want to
-        have the annotation which wraps the skeleton."""
+        """Load a skeleton annotation from a file.
 
+        This method can load skeleton annotations from either a .nml file or a .zip file
+        that contains an NML file. The .zip file may also contain volume layers.
+
+        Args:
+            file_path (Union[PathLike, str]): Path to the .nml or .zip file containing
+                the skeleton annotation.
+
+        Returns:
+            Skeleton: A new Skeleton instance containing the loaded annotation data.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            ValueError: If the file format is not supported or the file is corrupted.
+
+        Examples:
+            Load from an NML file:
+            ```python
+            # Load a simple NML file
+            skeleton = Skeleton.load("dendrite_trace.nml")
+
+            # Load from a ZIP archive containing NML and volume data
+            skeleton = Skeleton.load("full_annotation.zip")
+            ```
+
+        Note:
+            If you need access to volume layers or other annotation data, use
+            `Annotation.load()` instead, which returns an Annotation object
+            containing both the skeleton and any additional data.
+        """
         from ..annotation import Annotation
 
         return Annotation.load(file_path).skeleton
 
     def save(self, out_path: Union[str, PathLike]) -> None:
-        """
-        Stores the skeleton as a zip or nml at the given path.
-        """
+        """Save the skeleton annotation to a file.
 
+        Saves the skeleton data to either a .nml file or a .zip archive. The .zip
+        format is recommended when the annotation includes volume layers or when
+        you want to compress the data.
+
+        Args:
+            out_path (Union[str, PathLike]): Destination path for the saved file.
+                Must end with either .nml or .zip extension.
+
+        Raises:
+            AssertionError: If the file extension is not .nml or .zip.
+            OSError: If there are permission issues or insufficient disk space.
+
+        Examples:
+            ```python
+            # Save as NML file
+            skeleton.save("dendrite_annotation.nml")
+
+            # Save as ZIP archive (recommended for complex annotations)
+            skeleton.save("full_annotation.zip")
+            ```
+
+        Note:
+            - The name of the annotation will be derived from the filename stem
+            - When saving as .zip, any associated volume layers will be included
+            - The .nml format is human-readable XML but may be larger in size
+            - The .zip format provides compression and can store additional data
+        """
         from ..annotation import Annotation
 
         out_path = Path(out_path)
@@ -108,11 +192,54 @@ class Skeleton(Group):
     def add_nx_graphs(
         self, tree_dict: Union[List[nx.Graph], Dict[str, List[nx.Graph]]]
     ) -> None:
-        """
-        A utility to add nx graphs [NetworkX graph object](https://networkx.org/) to a wk skeleton object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
+        """Import NetworkX graphs as skeleton trees.
 
-        Arguments:
-        tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): A list of wK tree-like structures as NetworkX graphs or a dictionary of group names and same lists of NetworkX tree objects.
+        Converts [NetworkX Graph objects](https://networkx.org) into skeleton trees, preserving node positions
+        and edge connections. The graphs can be provided either as a list or as a
+        dictionary mapping group names to lists of graphs.
+
+        Args:
+            tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): Either:
+                - A list of NetworkX graphs to be added directly to the skeleton
+                - A dictionary mapping group names to lists of graphs, which will
+                  create new groups with the specified names containing the graphs
+
+        Raises:
+            ValueError: If any graph nodes lack required position attributes.
+            TypeError: If tree_dict is neither a list nor a dictionary.
+
+        Examples:
+            Add graphs directly to skeleton:
+            ```python
+            import networkx as nx
+
+            # Create sample graphs
+            g1 = nx.Graph()
+            g1.add_node(1, position=(0, 0, 0))
+            g1.add_node(2, position=(100, 0, 0))
+            g1.add_edge(1, 2)
+
+            g2 = nx.Graph()
+            g2.add_node(1, position=(0, 100, 0))
+            g2.add_node(2, position=(100, 100, 0))
+            g2.add_edge(1, 2)
+
+            # Add graphs directly
+            skeleton.add_nx_graphs([g1, g2])
+
+            # Or organize graphs into groups
+            graphs_by_group = {
+                "dendrites": [g1],
+                "axons": [g2]
+            }
+            skeleton.add_nx_graphs(graphs_by_group)
+            ```
+
+        Note:
+            - Each node in the input graphs must have a 'position' attribute
+              containing (x, y, z) coordinates
+            - Other node attributes (e.g., radius, rotation) will be preserved
+            - Edge attributes are currently not preserved in the conversion
         """
 
         if not isinstance(tree_dict, dict):
@@ -157,6 +284,3 @@ class Skeleton(Group):
 
     def __hash__(self) -> int:
         return id(self)
-
-
-Skeleton._set_init_docstring()
