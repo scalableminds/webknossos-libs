@@ -525,7 +525,7 @@ class View:
             )
 
             # Read with absolute bounding box
-            bbox = NDBoundingBox((0, 0, 0), (100, 100, 10))
+            bbox = BoundingBox((0, 0, 0), (100, 100, 10))
             data = view.read(absolute_bounding_box=bbox)
 
             # Read from multi-channel data
