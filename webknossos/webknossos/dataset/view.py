@@ -48,11 +48,28 @@ _BLOCK_ALIGNMENT_WARNING = (
 
 
 class View:
-    """
-    A `View` is essentially a bounding box to a region of a specific `StorageBackend` that also provides functionality.
-    Write-operations are restricted to the bounding box.
-    `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to its `StorageBackend`.
+    """A View represents a bounding box to a region of a specific StorageBackend with additional functionality.
+
+    The View class provides a way to access and manipulate a specific region of data within a dataset.
+    Write operations are restricted to the defined bounding box. Views are designed to be easily passed
+    around as parameters and can be used to efficiently work with subsets of larger datasets.
+
+    Examples:
+        ```python
+        from webknossos.dataset import Dataset, View
+        dataset = Dataset.open("path/to/dataset")
+
+        # Get a view for a specific layer at mag 1
+        layer = dataset.get_layer("color")
+        view = layer.get_mag("1").get_view(size=(100, 100, 10))
+
+        # Read data from the view
+        data = view.read()
+
+        # Write data to the view (if not read_only)
+        import numpy as np
+        view.write(np.zeros(view.bounding_box.in_mag(view.mag).size))
+        ```
     """
 
     _path: Path
@@ -72,8 +89,26 @@ class View:
         mag: Mag,
         read_only: bool = False,
     ):
-        """
-        Do not use this constructor manually. Instead use `View.get_view()` (also available on a `MagView`) to get a `View`.
+        """Initialize a View instance for accessing and manipulating dataset regions.
+
+        Note: Do not use this constructor manually. Instead use `View.get_view()`
+        (also available on a `MagView`) to get a `View`.
+
+        Args:
+            path_to_mag_view (Path): Path to the magnification view directory.
+            array_info (ArrayInfo): Information about the array structure and properties.
+            bounding_box (Optional[NDBoundingBox]): The bounding box in mag 1 absolute coordinates.
+                Optional only for mag_view since it overwrites the bounding_box property.
+            mag (Mag): Magnification level of the view.
+            read_only (bool, optional): Whether the view is read-only. Defaults to False.
+
+        Examples:
+            ```python
+            # The recommended way to create a View is through get_view():
+            layer = dataset.get_layer("color")
+            mag_view = layer.get_mag("1")
+            view = mag_view.get_view(size=(100, 100, 10))
+            ```
         """
         self._path = path_to_mag_view
         self._array_info = array_info
@@ -84,6 +119,20 @@ class View:
 
     @property
     def info(self) -> ArrayInfo:
+        """Get information about the array structure and properties.
+
+        Returns:
+            ArrayInfo: Object containing array metadata such as data type,
+                num_channels, and other array-specific information.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            array_info = view.info
+            print(f"Data type: {array_info.data_type}")
+            print(f"Num channels: {array_info.num_channels}")
+            ```
+        """
         return self._array_info
 
     @property
@@ -97,15 +146,65 @@ class View:
 
     @property
     def bounding_box(self) -> NDBoundingBox:
+        """Gets the bounding box of this view.
+
+        The bounding box defines the region of interest within the dataset in absolute
+        coordinates at magnification level 1. It specifies both the position and size
+        of the view's data.
+
+        Returns:
+            NDBoundingBox: A bounding box object representing the view's boundaries
+                in absolute coordinates at magnification level 1.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            bbox = view.bounding_box
+            print(f"Top-left corner: {bbox.topleft}")
+            print(f"Size: {bbox.size}")
+            ```
+        """
         assert self._bounding_box is not None
         return self._bounding_box
 
     @property
     def mag(self) -> Mag:
+        """Gets the magnification level of this view.
+
+        The magnification level determines the resolution at which the data is accessed.
+        A higher magnification number means lower resolution (e.g., mag 2 means every
+        second voxel, mag 4 means every fourth voxel, etc.).
+
+        Returns:
+            Mag: The magnification level of this view.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            print(f"Current magnification: {view.mag}")
+            ```
+        """
         return self._mag
 
     @property
     def read_only(self) -> bool:
+        """Indicates whether this view is read-only.
+
+        When a view is read-only, write operations are not permitted. This property
+        helps prevent accidental modifications to the dataset.
+
+        Returns:
+            bool: True if the view is read-only, False if write operations are allowed.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            if not view.read_only:
+                view.write(data)
+            else:
+                print("Cannot modify read-only view")
+            ```
+        """
         return self._read_only
 
     @property
@@ -208,42 +307,68 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> None:
-        """
-        The user can specify where the data should be written.
-        The default is to write the data to the view's bounding box.
-        Alternatively, one can supply one of the following keywords:
+        """Write data to the view at a specified location.
 
-        * `relative_offset` in Mag(1) -> only usable for 3D datasets
-        * `absolute_offset` in Mag(1) -> only usable for 3D datasets
-        * `relative_bounding_box` in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
+        This method writes array data to the view's region. If no position parameters
+        are provided, data is written to the view's bounding box. The write location
+        can be specified using either offset parameters or bounding boxes.
 
-        ⚠️ The `offset` parameter is deprecated.
-        This parameter used to be relative for `View` and absolute for `MagView`,
-        and specified in the mag of the respective view.
+        Args:
+            data (np.ndarray): The data to write. For single-channel data, shape should
+                be (x, y, y). For multi-channel data, shape should be (channels, x, y, z).
+                Shape must match the target region size.
+            offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
+                absolute_offset instead. Defaults to None.
+            json_update_allowed (bool, optional): Whether to allow updating JSON metadata.
+                Set to False when executing writes in parallel. Defaults to True.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
 
-        Writing data to a segmentation layer manually does not automatically update the largest_segment_id. To set
-        the largest segment id properly run the `refresh_largest_segment_id` method on your layer or set the
-        `largest_segment_id` property manually..
+        Raises:
+            AssertionError: If:
+                - View is read-only
+                - Data dimensions don't match the target region
+                - Number of channels doesn't match the dataset
+                - Write region is outside the view's bounding box
+                - Multiple positioning parameters are provided
 
-        Example:
+        Examples:
+            ```python
+            import numpy as np
+            from webknossos.dataset import Dataset, View
 
-        ```python
-        ds = Dataset(DS_PATH, voxel_size=(1, 1, 1))
+            # Write to entire view's region
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = np.zeros(view.bounding_box.in_mag(view.mag).size)
+            view.write(data)
 
-        segmentation_layer = cast(
-            SegmentationLayer,
-            ds.add_layer("segmentation", SEGMENTATION_CATEGORY),
-        )
-        mag = segmentation_layer.add_mag(Mag(1))
+            # Write with relative offset
+            data = np.ones((50, 50, 5))  # Smaller region
+            view.write(data, relative_offset=(10, 10, 0))
 
-        mag.write(data=MY_NP_ARRAY)
+            # Write multi-channel data
+            rgb_data = np.zeros((3, 100, 100, 10))  # 3 channels
+            rgb_view = color_layer.get_mag("1").get_view(size=(100, 100, 10))
+            rgb_view.write(rgb_data)
 
-        segmentation_layer.refresh_largest_segment_id()
-        ```
+            # Write with absolute bounding box
+            bbox = BoundingBox((0, 0, 0), (100, 100, 10))
+            view.write(data, absolute_bounding_box=bbox)
+            ```
 
-        Note that writing compressed data which is not aligned with the blocks on disk may result in
-        diminished performance, as full blocks will automatically be read to pad the write actions.
+        Note:
+            - Only one positioning parameter (offset or bounding_box) should be used
+            - All coordinates are in Mag(1) except for the deprecated offset
+            - For compressed data, writes should align with compression blocks
+            - For segmentation layers, call refresh_largest_segment_id() after writing
+            - The view's magnification affects the actual data resolution
+            - Data shape must match the target region size
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
@@ -257,10 +382,10 @@ class View:
                 relative_bounding_box,
             ]
         ):
-            if len(data.shape) == len(self.bounding_box) + 1:
-                shape_in_current_mag = data.shape[1:]
-            else:
+            if len(data.shape) == len(self.bounding_box):
                 shape_in_current_mag = data.shape
+            else:
+                shape_in_current_mag = data.shape[1:]
 
             absolute_bounding_box = (
                 self.bounding_box.with_size(shape_in_current_mag)
@@ -400,37 +525,65 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
     ) -> np.ndarray:
+        """Read data from the view at a specified location.
+
+        This method provides flexible ways to read data from the view's region. If no
+        parameters are provided, it reads the entire view's bounding box. The region
+        to read can be specified using either offset+size combinations or bounding boxes.
+
+        Args:
+            offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
+                absolute_offset instead. Defaults to None.
+            size (Optional[Vec3IntLike], optional): Size of region to read. Specified in
+                Mag(1) coordinates unless used with deprecated offset. Defaults to None.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to the view's
+                position in Mag(1) coordinates. Must be used with size. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Must be used with size. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to the view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
+
+        Returns:
+            np.ndarray: The requested data as a numpy array. The shape will be either
+                (channels, x, y, z) for multi-channel data or (x, y, z) for
+                single-channel data. Areas outside the dataset are zero-padded.
+
+        Raises:
+            AssertionError: If incompatible parameters are provided (e.g., both
+                offset+size and bounding_box) or if the requested region is empty.
+
+        Examples:
+            ```python
+            # Read entire view's data
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = view.read()  # Returns (x, y, z) array for single-channel data
+
+            # Read with relative offset and size
+            data = view.read(
+                relative_offset=(10, 10, 0),  # Offset from view's position
+                size=(50, 50, 10)            # Size in Mag(1) coordinates
+            )
+
+            # Read with absolute bounding box
+            bbox = BoundingBox((0, 0, 0), (100, 100, 10))
+            data = view.read(absolute_bounding_box=bbox)
+
+            # Read from multi-channel data
+            view = color_layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = view.read()  # Returns (channels, x, y, z) array
+            ```
+
+        Note:
+            - Use only one method to specify the region (offset+size or bounding_box)
+            - All coordinates are in Mag(1) except for the deprecated offset parameter
+            - For multi-channel data, the returned array has shape (C, X, Y, Z)
+            - For single-channel data, the returned array has shape (X, Y, Z)
+            - Regions outside the dataset are automatically zero-padded
+            - The view's magnification affects the actual data resolution
+            - Data shape must match the target region size
         """
-        The user can specify which data should be read.
-        The default is to read all data of the view's bounding box.
-        Alternatively, one can supply one of the following keyword argument combinations:
-        * `relative_offset` and `size`, both in Mag(1)
-        * `absolute_offset` and `size`, both in Mag(1)
-        * `relative_bounding_box` in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
-        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
-          `offset` used to be relative for `View` and absolute for `MagView`
-
-        If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
-
-        Returns the specified data as a `np.array`.
-
-
-        Example:
-        ```python
-        import numpy as np
-
-        # ...
-        # let mag1 be a MagView
-        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
-
-        assert np.array_equal(
-            view.read(absolute_offset=(0, 0, 0), size=(100, 200, 300)),
-            view.read(),
-        )
-        ```
-        """
-
         current_mag_size: Optional[Vec3IntLike]
         mag1_size: Optional[Vec3IntLike]
         if absolute_bounding_box is None and relative_bounding_box is None:
@@ -505,7 +658,6 @@ class View:
             assert (
                 size is None
             ), "Cannot supply a size when using bounding_box in view.read()"
-            # offset is asserted anyways in _get_mag1_bbox
             current_mag_size = None
             mag1_size = None
 
@@ -513,10 +665,10 @@ class View:
             rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
+            rel_mag1_bbox=relative_bounding_box,
+            abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-            abs_mag1_bbox=absolute_bounding_box,
-            rel_mag1_bbox=relative_bounding_box,
         )
         assert not mag1_bbox.is_empty(), (
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
@@ -531,14 +683,43 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,
         absolute_bounding_box: Optional[NDBoundingBox] = None,
     ) -> np.ndarray:
-        """
-        The user can specify the bounding box in the dataset's coordinate system.
-        The default is to read all data of the view's bounding box.
-        Alternatively, one can supply one of the following keyword arguments:
-        * `relative_bounding_box` in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
+        """Read n-dimensional data and convert it to 3D XYZ format.
 
-        Returns the specified data as a `np.array`.
+        This method is designed for handling n-dimensional data (n > 3) and converting
+        it to strictly 3D data ordered as (X, Y, Z). It is primarily used internally
+        by operations that require 3D data like downsampling, upsampling, and compression.
+
+        When provided with a BoundingBox where additional dimensions (beyond X, Y, Z)
+        have a shape of 1, it returns an array containing only the 3D spatial data.
+        This ensures compatibility with operations that expect purely 3-dimensional input.
+
+        Args:
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
+
+        Returns:
+            np.ndarray: The requested data as a numpy array with dimensions ordered as
+                (channels, X, Y, Z) for multi-channel data or (X, Y, Z) for single-channel
+                data. Areas outside the dataset are zero-padded.
+
+        Examples:
+            ```python
+            # Read entire view's data in XYZ order
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            xyz_data = view.read_xyz()  # Returns (X, Y, Z) array
+
+            # Read with relative bounding box
+            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10), axis=("x", "y", "z"), index=(1, 2, 3))
+            xyz_data = view.read_xyz(relative_bounding_box=bbox)
+            ```
+
+        Note:
+            - If no bounding box is provided, reads the entire view's region
+            - Only one bounding box parameter should be specified
+            - The returned array's axes are ordered differently from read()
+            - All coordinates are in Mag(1)
         """
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_bbox=relative_bounding_box,
@@ -558,8 +739,7 @@ class View:
         return data
 
     def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
-        """
-        ⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.
+        """⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.
         The user can specify the `bounding_box` in the current mag of the requested data.
         See `read()` for more details.
         """
@@ -606,36 +786,68 @@ class View:
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> "View":
-        """
-        Returns a view that is limited to the specified bounding box.
-        The new view may exceed the bounding box of the current view only if `read_only` is set to `True`.
+        """Create a new view restricted to a specified region.
 
-        The default is to return the same view as the current bounding box,
-        in case of a `MagView` that's the layer bounding box.
-        One can supply one of the following keyword argument combinations:
+        This method returns a new View instance that represents a subset of the current
+        view's data. The new view can be specified using various coordinate systems
+        and can optionally be made read-only.
 
-        * `relative_bounding_box`in Mag(1)
-        * `absolute_bounding_box` in Mag(1)
-        * `relative_offset` and `size`, both in Mag(1)
-        * `absolute_offset` and `size`, both in Mag(1)
-        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
-          `offset` used to be relative for `View` and absolute for `MagView`
+        Args:
+            offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
+                absolute_offset instead. Defaults to None.
+            size (Optional[Vec3IntLike], optional): Size of the new view. Must be specified
+                when using any offset parameter. Defaults to None.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to current
+                view's position in Mag(1) coordinates. Must be used with size. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Must be used with size. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to current view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
+            read_only (Optional[bool], optional): Whether the new view should be read-only.
+                If None, inherits from parent view. Defaults to None.
 
-        Example:
-        ```python
-        # ...
-        # let mag1 be a MagView
-        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
+        Returns:
+            View: A new View instance representing the specified region.
 
-        # works because the specified sub-view is completely in the bounding box of the view
-        sub_view = view.get_view(relative_offset=(50, 60, 70), size=(10, 120, 230))
+        Raises:
+            AssertionError: If:
+                - Multiple positioning parameters are provided
+                - Size is missing when using offset parameters
+                - Non-read-only subview requested from read-only parent
+                - Non-read-only subview extends beyond parent's bounds
 
-        # fails because the specified sub-view is not completely in the bounding box of the view
-        invalid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230))
+        Examples:
+            ```python
+            # Create view from MagView
+            mag1 = layer.get_mag("1")
+            view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
 
-        # works because `read_only=True`
-        valid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
-        ```
+            # Create subview within bounds
+            sub_view = view.get_view(
+                relative_offset=(50, 60, 70),
+                size=(10, 120, 230)
+            )
+
+            # Create read-only subview (can extend beyond bounds)
+            large_view = view.get_view(
+                relative_offset=(50, 60, 70),
+                size=(999, 120, 230),
+                read_only=True
+            )
+
+            # Use bounding box instead of offset+size
+            bbox = BoundingBox((10, 10, 0), (50, 50, 10))
+            bbox_view = view.get_view(relative_bounding_box=bbox)
+            ```
+
+        Note:
+            - Use only one method to specify the region (offset+size or bounding_box)
+            - All coordinates are in Mag(1) except for the deprecated offset
+            - Non-read-only views must stay within parent view's bounds
+            - Read-only views can extend beyond parent view's bounds
+            - The view's magnification affects the actual data resolution
         """
         if read_only is None:
             read_only = self.read_only
@@ -768,35 +980,60 @@ class View:
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceWriter":
-        """
-        The returned writer buffers multiple slices before they are written to disk.
-        As soon as the buffer is full, the data gets written to disk.
+        """Get a buffered writer for efficiently writing data slices.
 
-        Arguments:
+        Creates a BufferedSliceWriter that allows efficient writing of data slices by
+        buffering multiple slices before performing the actual write operation.
 
-        * The user can specify where the writer should start:
-            * `relative_offset` in Mag(1)
-            * `absolute_offset` in Mag(1)
-            * `relative_bounding_box` in Mag(1)
-            * `absolute_bounding_box` in Mag(1)
-            * ⚠️ deprecated: `offset` in the current Mag,
-              used to be relative for `View` and absolute for `MagView`
-        * `buffer_size`: amount of slices that get buffered
-        * `dimension`: dimension along which the data is sliced
-          (x: `0`, y: `1`, z: `2`; default is `2`)).
+         Args:
+            offset (Optional[Vec3IntLike]): Starting position for writing in the dataset.
+                Defaults to None.
+            buffer_size (int): Number of slices to buffer before performing a write.
+                Defaults to 32.
+            dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
+                Defaults to 2 (z-axis).
+            json_update_allowed (bool): Whether to allow updating the bounding box and
+                datasource-properties.json. Should be False for parallel access. Defaults to True.
+            relative_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates, relative
+                to the current view's position. Mutually exclusive with absolute_offset.
+                Defaults to None.
+            absolute_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates in
+                absolute dataset coordinates. Mutually exclusive with relative_offset.
+                Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+                coordinates, relative to the current view's offset. Mutually exclusive
+                with absolute_bounding_box. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+                coordinates in absolute dataset coordinates. Mutually exclusive with
+                relative_bounding_box. Defaults to None.
+            use_logging (bool): Whether to enable logging of write operations.
+                Defaults to False.
 
-        The writer must be used as context manager using the `with` syntax (see example below),
-        which results in a generator consuming np.ndarray-slices via `writer.send(slice)`.
-        Exiting the context will automatically flush any remaining buffered data to disk.
+        Returns:
+            BufferedSliceWriter: A writer object for buffered slice writing.
 
-        Usage:
-        ```python
-        data_cube = ...
-        view = ...
-        with view.get_buffered_slice_writer() as writer:
-            for data_slice in data_cube:
-                writer.send(data_slice)
-        ```
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+
+            # Create a buffered writer with default settings
+            with view.get_buffered_slice_writer() as writer:
+                # Write slices efficiently
+                for z in range(10):
+                    slice_data = np.zeros((100, 100))  # Your slice data
+                    writer.send(slice_data)
+
+            # Create a writer with custom buffer size and offset
+            with view.get_buffered_slice_writer(
+                buffer_size=5,
+                relative_offset=(10, 10, 0)
+            )
+            ```
+
+        Note:
+            - Larger buffer sizes can improve performance but use more memory
+            - Remember to use the writer in a context manager
+            - Only one positioning parameter should be specified
         """
         from ._utils.buffered_slice_writer import BufferedSliceWriter
 
@@ -828,31 +1065,54 @@ class View:
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceReader":
-        """
-        The returned reader yields slices of data along a specified axis.
-        Internally, it reads multiple slices from disk at once and buffers the data.
+        """Get a buffered reader for efficiently reading data slices.
 
-        Arguments:
+        Creates a BufferedSliceReader that allows efficient reading of data slices by
+        buffering multiple slices in memory. This is particularly useful when reading
+        large datasets slice by slice.
 
-        * The user can specify where the writer should start:
-            * `relative_bounding_box` in Mag(1)
-            * `absolute_bounding_box` in Mag(1)
-            * ⚠️ deprecated: `offset` and `size` in the current Mag,
-              `offset` used to be relative for `View` and absolute for `MagView`
-        * `buffer_size`: amount of slices that get buffered
-        * `dimension`: dimension along which the data is sliced
-          (x: `0`, y: `1`, z: `2`; default is `2`)).
+        Args:
+            offset (Optional[Vec3IntLike]): Starting position for reading in the dataset.
+                Defaults to None.
+            size (Optional[Vec3IntLike]): Size of the region to read in voxels.
+                Defaults to None.
+            buffer_size (int): Number of slices to buffer in memory at once.
+                Defaults to 32.
+            dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
+                Defaults to 2 (z-axis).
+            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates,
+                relative to the current view's offset. Mutually exclusive with
+                absolute_bounding_box. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates
+                in absolute dataset coordinates. Mutually exclusive with
+                relative_bounding_box. Defaults to None.
+            use_logging (bool): Whether to enable logging of read operations.
 
-        The reader must be used as a context manager using the `with` syntax (see example below).
-        Entering the context returns an iterator yielding slices (np.ndarray).
+        Returns:
+            BufferedSliceReader: A reader object that yields data slices.
 
-        Usage:
-        ```python
-        view = ...
-        with view.get_buffered_slice_reader() as reader:
-            for slice_data in reader:
-                ...
-        ```
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+
+            # Create a reader with default settings (z-slices)
+            with view.get_buffered_slice_reader() as reader:
+                for slice_data in reader:
+                    process_slice(slice_data)
+
+            # Read y-slices with custom buffer size
+            with view.get_buffered_slice_reader(
+                buffer_size=10,
+                dimension=1,  # y-axis
+                relative_offset=(10, 0, 0)
+            ) as reader:
+            ```
+
+        Note:
+            - Larger buffer sizes improve performance but use more memory
+            - Choose dimension based on your data access pattern
+            - Only one positioning parameter should be specified
+            - The reader can be used as an iterator
         """
         from ._utils.buffered_slice_reader import BufferedSliceReader
 
@@ -876,36 +1136,54 @@ class View:
         *,
         chunk_size: Optional[Vec3IntLike] = None,  # deprecated
     ) -> None:
+        """Process each chunk of the view with a given function.
+
+        Divides the view into chunks and applies a function to each chunk, optionally in parallel.
+        This is useful for processing large datasets in manageable pieces, with optional
+        progress tracking and parallel execution.
+
+        Args:
+            func_per_chunk (Callable[[Tuple[View, int]], None]): Function to apply to each chunk.
+                Takes a tuple of (chunk_view, chunk_index) as argument. The chunk_index can be
+                used for progress tracking or logging.
+            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+                If None, uses one chunk per file based on the dataset's file dimensions.
+                Defaults to None.
+            executor (Optional[Executor], optional): Executor for parallel processing.
+                If None, processes chunks sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+            chunk_size (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use chunk_shape instead.
+                Defaults to None.
+
+        Examples:
+            ```python
+            from webknossos.utils import named_partial
+
+            # Define processing function
+            def process_chunk(args: Tuple[View, int], threshold: float) -> None:
+                chunk_view, chunk_idx = args
+                data = chunk_view.read()
+                # Process data...
+                chunk_view.write(processed_data)
+                print(f"Processed chunk {chunk_idx}")
+
+            # Sequential processing with progress bar
+            view.for_each_chunk(
+                named_partial(process_chunk, threshold=0.5),
+                chunk_shape=(64, 64, 64),
+                progress_desc="Processing chunks"
+            )
+            ```
+
+        Note:
+            - Each chunk is processed independently, making this suitable for parallel execution
+            - For non-read-only views, chunks must align with file boundaries
+            - Progress tracking shows total volume processed
+            - Memory usage depends on chunk_shape and parallel execution settings
+            - When using an executor, ensure thread/process safety in func_per_chunk
+            - The view's magnification affects the actual data resolution
         """
-        The view is chunked into multiple sub-views of size `chunk_shape` (in Mag(1)),
-        by default one chunk per file.
-        Then, `func_per_chunk` is performed on each sub-view.
-        Besides the view, the counter `i` is passed to the `func_per_chunk`,
-        which can be used for logging.
-        Additional parameters for `func_per_chunk` can be specified using `functools.partial`.
-        The computation of each chunk has to be independent of each other.
-        Therefore, the work can be parallelized with `executor`.
-
-        If the `View` is of type `MagView` only the bounding box from the properties is chunked.
-
-        Example:
-        ```python
-        from webknossos.utils import named_partial
-
-        def some_work(args: Tuple[View, int], some_parameter: int) -> None:
-            view_of_single_chunk, i = args
-            # perform operations on the view
-            ...
-
-        # ...
-        # let 'mag1' be a `MagView`
-        func = named_partial(some_work, some_parameter=42)
-        mag1.for_each_chunk(
-            func,
-        )
-        ```
-        """
-
         if chunk_shape is None:
             if chunk_size is not None:
                 warn_deprecated("chunk_size", "chunk_shape")
@@ -955,34 +1233,57 @@ class View:
         executor: Optional[Executor] = None,
         progress_desc: Optional[str] = None,
     ) -> List[Any]:
+        """Process each chunk of the view and collect results.
+
+        Similar to for_each_chunk(), but collects and returns the results from each chunk.
+        Useful for parallel data analysis or feature extraction where results need to be
+        aggregated.
+
+        Args:
+            func_per_chunk (Callable[[View], Any]): Function to apply to each chunk.
+                Takes a chunk view as argument and returns a result of any type.
+            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+                If None, uses one chunk per file based on the dataset's file dimensions.
+                Defaults to None.
+            executor (Optional[Executor], optional): Executor for parallel processing.
+                If None, processes chunks sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+
+        Returns:
+            List[Any]: List of results from processing each chunk, in chunk order.
+
+        Examples:
+            ```python
+            from webknossos.utils import named_partial
+
+            # Calculate statistics per chunk
+            def chunk_statistics(view: View, min_value: float) -> Dict[str, float]:
+                data = view.read()
+                return {
+                    "mean": data[data > min_value].mean(),
+                    "std": data[data > min_value].std(),
+                    "volume": view.bounding_box.volume()
+                }
+
+            # Sequential processing
+            stats = view.map_chunk(
+                named_partial(chunk_statistics, min_value=0.1),
+                chunk_shape=(128, 128, 128)
+            )
+
+            # Aggregate results
+            total_volume = sum(s["volume"] for s in stats)
+            mean_values = [s["mean"] for s in stats]
+            ```
+
+        Note:
+            - Results are collected in memory, consider memory usage for large datasets
+            - Each chunk is processed independently, suitable for parallel execution
+            - For non-read-only views, chunks must align with file boundaries
+            - When using an executor, ensure thread/process safety in func_per_chunk
+            - Results maintain chunk order regardless of execution order
         """
-        The view is chunked into multiple sub-views of size `chunk_shape` (in Mag(1)),
-        by default one chunk per file.
-        Then, `func_per_chunk` is performed on each sub-view and the results are collected
-        in a list.
-        Additional parameters for `func_per_chunk` can be specified using `functools.partial`.
-        The computation of each chunk has to be independent of each other.
-        Therefore, the work can be parallelized with `executor`.
-
-        If the `View` is of type `MagView` only the bounding box from the properties is chunked.
-
-        Example:
-        ```python
-        from webknossos.utils import named_partial
-
-        def some_work(view: View, some_parameter: int) -> None:
-            # perform operations on the view
-            ...
-
-        # ...
-        # let 'mag1' be a `MagView`
-        func = named_partial(some_work, some_parameter=42)
-        results = mag1.map_chunk(
-            func,
-        )
-        ```
-        """
-
         if chunk_shape is None:
             chunk_shape = self._get_file_dimensions_mag1()
         else:
@@ -1013,14 +1314,25 @@ class View:
         chunk_border_alignments: Optional[VecIntLike] = None,
         read_only: bool = False,
     ) -> Generator["View", None, None]:
-        """
-        This method chunks the view into multiple sub-views of size `chunk_shape` (in Mag(1)).
-        The `chunk_border_alignments` parameter specifies the alignment of the chunks.
-        The default is to align the chunks to the origin (0, 0, 0).
+        """Generate a sequence of sub-views by chunking the current view.
 
-        Example:
+        Divides the view into smaller, regularly-sized chunks that can be processed
+        independently. This is useful for parallel processing or when working with
+        large datasets that don't fit in memory.
+
+        Args:
+            chunk_shape (VecIntLike): Size of each chunk in Mag(1) coordinates.
+            chunk_border_alignments (Optional[VecIntLike], optional): Alignment of chunk
+                borders in Mag(1) coordinates. If None, aligns to (0, 0, 0).
+                Defaults to None.
+            read_only (bool, optional): Whether the generated chunks should be read-only.
+                Defaults to False.
+
+        Yields:
+            View: Sub-views representing each chunk of the original view.
+
+        Examples:
         ```python
-        # ...
         # let 'mag1' be a `MagView`
         chunks = mag1.chunk(chunk_shape=(100, 100, 100), chunk_border_alignments=(50, 50, 50))
         ```
@@ -1041,28 +1353,57 @@ class View:
         source_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
         target_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
     ) -> None:
+        """Process paired chunks from source and target views simultaneously.
+
+        Chunks both the source (self) and target views, then applies a function to each
+        corresponding pair of chunks. This is particularly useful for operations that
+        transform data between views of different magnifications, like downsampling.
+
+        Args:
+            func_per_chunk (Callable[[Tuple[View, View, int]], None]): Function to apply
+                to each chunk pair. Takes (source_chunk, target_chunk, index) as arguments.
+            target_view (View): The target view to write transformed data to.
+            source_chunk_shape (Optional[Vec3IntLike], optional): Size of source chunks
+                in Mag(1). If None, uses maximum of source and target file dimensions.
+                Defaults to None.
+            target_chunk_shape (Optional[Vec3IntLike], optional): Size of target chunks
+                in Mag(1). If None, uses maximum of source and target file dimensions.
+                Defaults to None.
+            executor (Optional[Executor], optional): Executor for parallel processing.
+                If None, processes chunks sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+            source_chunk_size (Optional[Vec3IntLike], optional): ⚠️ Deprecated.
+                Use source_chunk_shape instead. Defaults to None.
+            target_chunk_size (Optional[Vec3IntLike], optional): ⚠️ Deprecated.
+                Use target_chunk_shape instead. Defaults to None.
+
+        Examples:
+            ```python
+            # Downsample data from Mag(1) to Mag(2)
+            def downsample_chunk(args: Tuple[View, View, int]) -> None:
+                source_chunk, target_chunk, idx = args
+                data = source_chunk.read()
+                downsampled = downsample_data(data)  # Your downsampling function
+                target_chunk.write(downsampled)
+                print(f"Processed chunk pair {idx}")
+
+            # Process with default chunk sizes
+            mag1_view.for_zipped_chunks(
+                downsample_chunk,
+                mag2_view,
+                progress_desc="Downsampling data"
+            )
+
+            ```
+
+        Note:
+            - Source/target view size ratios must match chunk size ratios
+            - Target chunks must align with file boundaries to avoid concurrent writes
+            - Both views are chunked with matching strides
+            - Progress tracks total volume processed
+            - Memory usage depends on chunk sizes and parallel execution
         """
-        This method is similar to `for_each_chunk` in the sense that it delegates work to smaller chunks,
-        given by `source_chunk_shape` and `target_chunk_shape` (both in Mag(1),
-        by default using the larger of the source_views and the target_views file-sizes).
-        However, this method also takes another view as a parameter. Both views are chunked simultaneously
-        and a matching pair of chunks is then passed to the function that shall be executed.
-        This is useful if data from one view should be (transformed and) written to a different view,
-        assuming that the transformation of the data can be handled on chunk-level.
-        Additionally to the two views, the counter `i` is passed to the `func_per_chunk`, which can be used for logging.
-
-        The mapping of chunks from the source view to the target is bijective.
-        The ratio between the size of the `source_view` (`self`) and the `source_chunk_shape` must be equal to
-        the ratio between the `target_view` and the `target_chunk_shape`. This guarantees that the number of chunks
-        in the `source_view` is equal to the number of chunks in the `target_view`.
-        The `target_chunk_shape` must be a multiple of the file size on disk to avoid concurrent writes.
-
-        Example use case: *downsampling from Mag(1) to Mag(2)*
-        - size of the views: `16384³` (`8192³` in Mag(2) for `target_view`)
-        - automatic chunk sizes: `2048³`, assuming  default file-lengths
-          (`1024³` in Mag(2), which fits the default file-length of 32*32)
-        """
-
         if source_chunk_shape is None and source_chunk_size is not None:
             warn_deprecated("source_chunk_size", "source_chunk_shape")
             source_chunk_shape = source_chunk_size
@@ -1139,6 +1480,36 @@ class View:
         args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
     ) -> bool:
+        """Compare the content of this view with another view.
+
+        Performs a chunk-by-chunk comparison of the data in both views. This is more
+        memory efficient than reading entire views at once for large datasets.
+
+        Args:
+            other (View): The view to compare against.
+            args Optional[Namespace], optional): ⚠️ Deprecated. Arguments to pass to executor.
+            executor (Optional[Executor], optional): Executor for parallel comparison.
+                If None, compares sequentially. Defaults to None.
+            progress_desc (Optional[str], optional): Description for progress bar.
+                If None, no progress bar is shown. Defaults to None.
+
+        Returns:
+            bool: True if the content of both views is identical, False otherwise.
+
+        Examples:
+            ```python
+            # Compare views sequentially
+            if view1.content_is_equal(view2):
+                print("Views are identical")
+            ```
+
+        Note:
+            - Comparison is done chunk by chunk to manage memory usage
+            - Views must have the same shape and data type
+            - Returns False immediately if shapes or types don't match
+            - Progress tracks total volume compared
+            - Parallel execution can speed up comparison of large views
+        """
         if args is not None:
             warn_deprecated(
                 "args argument",

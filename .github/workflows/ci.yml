@@ -115,7 +115,7 @@ jobs:
         if: ${{ matrix.executors == 'multiprocessing' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
+          PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
             uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
 
       - name: Run slurm tests
@@ -166,7 +166,10 @@ jobs:
         with:
           # Install a specific version of uv.
           version: "0.4.22"
-      
+
+      - name: Install proxay
+        run: npm install -g proxay
+              
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
       
