@@ -327,9 +327,10 @@ class Dataset:
 
         """
 
-        assert (
-            count_defined_values((voxel_size, voxel_size_with_unit, scale)) <= 1
-        ), "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
+        if count_defined_values((voxel_size, voxel_size_with_unit, scale)) > 1:
+            raise ValueError(
+                "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
+            )
         if scale is not None:
             warn_deprecated("scale", "voxel_size")
             voxel_size_with_unit = VoxelSize(scale)
@@ -337,74 +338,85 @@ class Dataset:
             voxel_size_with_unit = VoxelSize(voxel_size)
 
         self._read_only = read_only
+        self.path: Path = strip_trailing_slash(UPath(dataset_path))
 
-        dataset_path = strip_trailing_slash(UPath(dataset_path))
+        stored_dataset_properties: Optional[DatasetProperties] = None
+        try:
+            stored_dataset_properties = self._load_properties()
+        except FileNotFoundError:
+            if read_only:
+                raise FileNotFoundError(
+                    f"Cannot open read-only dataset, could not find data at {self.path}."
+                )
 
-        dataset_existed_already = (
-            dataset_path.exists()
-            and dataset_path.is_dir()
-            and next(dataset_path.iterdir(), None) is not None  # dir is not empty
-        )
-
+        dataset_existed_already = stored_dataset_properties is not None
         if dataset_existed_already:
             if exist_ok == _UNSET:
                 warnings.warn(
-                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {dataset_path} without setting exist_ok=True. "
+                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {self.path} without setting exist_ok=True. "
                     + "This will fail in future releases, please supply exist_ok=True explicitly then.",
                     DeprecationWarning,
                 )
                 exist_ok = True
             if not exist_ok:
                 raise RuntimeError(
-                    f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
+                    f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
                 )
+            dataset_properties = stored_dataset_properties
 
-            assert (
-                dataset_path / PROPERTIES_FILE_NAME
-            ).is_file(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
         else:
-            if read_only:
-                raise FileNotFoundError(
-                    f"Cannot create read-only dataset, could not find data at {dataset_path}."
+            assert not read_only
+
+            dataset_path_exists = False
+            dataset_path_is_empty = False
+            try:
+                dataset_path_is_empty = next(self.path.iterdir(), None) is None
+                dataset_path_exists = True
+            except NotADirectoryError:
+                dataset_path_exists = True
+            except FileNotFoundError:
+                dataset_path_exists = False
+
+            if dataset_path_exists and not dataset_path_is_empty:
+                raise RuntimeError(
+                    f"Creation of Dataset at {self.path} failed, because a file or folder already exists at this path."
                 )
-            assert (
-                not dataset_path.exists() or dataset_path.is_dir()
-            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
             # Create directories on disk and write datasource-properties.json
             try:
-                dataset_path.mkdir(parents=True, exist_ok=True)
+                self.path.mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 raise type(e)(
-                    "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
+                    "Creation of Dataset {} failed. ".format(self.path) + repr(e)
                 )
 
             # Write empty properties to disk
-            assert (
-                voxel_size_with_unit is not None
-            ), "When creating a new dataset, voxel_size or voxel_size_with_unit must be set, e.g. Dataset(path, voxel_size=(1, 1, 4.2))."
-            name = name or dataset_path.absolute().name
+            if voxel_size_with_unit is None:
+                raise ValueError(
+                    "When creating a new dataset, voxel_size or voxel_size_with_unit must be set, e.g. Dataset(path, voxel_size=(1, 1, 4.2))."
+                )
+            name = name or self.path.absolute().name
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""},
                 scale=voxel_size_with_unit,
                 data_layers=[],
             )
-            with (dataset_path / PROPERTIES_FILE_NAME).open(
-                "w", encoding="utf-8"
-            ) as outfile:
-                json.dump(
-                    dataset_converter.unstructure(dataset_properties), outfile, indent=4
+            (self.path / PROPERTIES_FILE_NAME).write_text(
+                json.dumps(
+                    dataset_converter.unstructure(dataset_properties),
+                    indent=4,
                 )
+            )
 
-        self.path: Path = dataset_path
-        self._properties: DatasetProperties = self._load_properties()
+        assert dataset_properties is not None
+        self._properties = dataset_properties
         self._last_read_properties = copy.deepcopy(self._properties)
 
         self._layers: Dict[str, Layer] = {}
-        # construct self.layer
+        # construct self.layers
         for layer_properties in self._properties.data_layers:
             num_channels = _extract_num_channels(
                 layer_properties.num_channels,
-                UPath(dataset_path),
+                self.path,
                 layer_properties.name,
                 (
                     layer_properties.mags[0].mag
@@ -428,21 +440,22 @@ class Dataset:
 
         if dataset_existed_already:
             if voxel_size_with_unit is None:
-                warnings.warn(
-                    "[DEPRECATION] Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
+                raise ValueError(
+                    "Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
                     + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
-                    DeprecationWarning,
                 )
             elif voxel_size_with_unit == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
-                assert (
-                    self.voxel_size_with_unit == voxel_size_with_unit
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
+                if self.voxel_size_with_unit != voxel_size_with_unit:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
+                    )
             if name is not None:
-                assert (
-                    self.name == name
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the names do not match ({self.name} != {name})"
+                if self.name != name:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the names do not match ({self.name} != {name})"
+                    )
 
     @classmethod
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
@@ -454,26 +467,6 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        dataset_path = UPath(dataset_path)
-        assert (
-            dataset_path.exists()
-        ), f"Cannot open Dataset: Couldn't find {dataset_path}"
-        assert (
-            dataset_path.is_dir()
-        ), f"Cannot open Dataset: {dataset_path} is not a directory"
-
-        dataset_path = strip_trailing_slash(dataset_path)
-        assert (
-            dataset_path / PROPERTIES_FILE_NAME
-        ).is_file(), (
-            f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
-        )
-
-        # assert not is_remote_path(dataset_path), (
-        #     f"Cannot open Dataset: {dataset_path} is a remote path. "
-        #     + "Please use Dataset.open_remote() to open remote datasets."
-        # )
-
         return cls(
             dataset_path,
             voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
@@ -2621,10 +2614,12 @@ class Dataset:
             raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
     def _load_properties(self) -> DatasetProperties:
-        with (self.path / PROPERTIES_FILE_NAME).open(
-            encoding="utf-8"
-        ) as datasource_properties:
-            data = json.load(datasource_properties)
+        try:
+            data = json.loads((self.path / PROPERTIES_FILE_NAME).read_bytes())
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Cannot read dataset at {self.path}. datasource-properties.json file not found."
+            )
         return dataset_converter.structure(data, DatasetProperties)
 
     def _export_as_json(self) -> None:
@@ -2875,9 +2870,10 @@ class RemoteDataset(Dataset):
             info.metadata = metadata
 
         with self._context:
-            _get_api_client().dataset_update(
-                self._organization_id, self._dataset_name, info
-            )
+            client = _get_api_client()
+            print(client, client.headers)
+
+            client.dataset_update(self._organization_id, self._dataset_name, info)
 
     @property
     def metadata(self) -> DatasetMetadata:

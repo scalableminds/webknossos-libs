@@ -633,7 +633,7 @@ class Zarr2Array(TensorStoreArray):
             data_format=DataFormat.Zarr,
             num_channels=array.domain[0].exclusive_max,
             voxel_type=array.dtype.numpy_dtype,
-            compression_mode=array.codec is not None,
+            compression_mode=array.codec.to_json()["compressor"] is not None,
             chunk_shape=Vec3Int(array.chunk_layout.read_chunk.shape[1:4]),
             chunks_per_shard=Vec3Int.full(1),
         )

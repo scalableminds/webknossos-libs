@@ -746,7 +746,7 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
     assert mag.name == "1"
     assert mag.info.data_format == data_format
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         # The mag "1" did exist before but with another 'chunk_shape' (this would work the same for 'chunks_per_shard' and 'compress')
         layer.get_or_add_mag(
             "1",
@@ -975,11 +975,11 @@ def test_dataset_exist_ok() -> None:
     )
     assert "color" in ds2.layers.keys()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         # dataset already exists, but with a different voxel_size
         Dataset(ds_path, voxel_size=(2, 2, 2), exist_ok=True)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         # dataset already exists, but with a different name
         Dataset(
             ds_path, voxel_size=(1, 1, 1), name="some different name", exist_ok=True
