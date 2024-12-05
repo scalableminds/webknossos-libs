@@ -68,8 +68,8 @@ class ArrayInfo:
     data_format: DataFormat
     num_channels: int
     voxel_type: np.dtype
-    chunk_shape: Vec3Int
-    chunks_per_shard: Vec3Int
+    chunk_shape: VecInt
+    shard_shape: VecInt
     shape: VecInt = VecInt(c=1, x=1, y=1, z=1)
     dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
     axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
@@ -81,8 +81,8 @@ class ArrayInfo:
         return self.shard_shape
 
     @property
-    def shard_shape(self) -> Vec3Int:
-        return self.chunk_shape * self.chunks_per_shard
+    def chunks_per_shard(self) -> VecInt:
+        return self.shard_shape // self.chunk_shape
 
 
 class BaseArray(ABC):
@@ -179,9 +179,10 @@ class WKWArray(BaseArray):
             voxel_type=header.voxel_type,
             compression_mode=header.block_type != wkw.Header.BLOCK_TYPE_RAW,
             chunk_shape=Vec3Int.full(header.block_len),
-            chunks_per_shard=Vec3Int.full(
+            shard_shape=Vec3Int.full(
                 header.file_len,
-            ),
+            )
+            * Vec3Int.full(header.block_len),
         )
 
     @classmethod
@@ -514,6 +515,7 @@ class Zarr3Array(TensorStoreArray):
     def info(self) -> ArrayInfo:
         array = self._array
         array_codecs = array.codec.to_json()["codecs"]
+        axes = array.domain.labels
         if len(array_codecs) == 1 and array_codecs[0]["name"] == "sharding_indexed":
             shard_shape = array.chunk_layout.write_chunk.shape
             chunk_shape = array.chunk_layout.read_chunk.shape
@@ -524,16 +526,18 @@ class Zarr3Array(TensorStoreArray):
                 compression_mode=self._has_compression_codecs(
                     array_codecs[0]["configuration"]["codecs"]
                 ),
-                chunk_shape=Vec3Int(chunk_shape[1:4]),
-                chunks_per_shard=Vec3Int(shard_shape[1:4]) // Vec3Int(chunk_shape[1:4]),
+                chunk_shape=VecInt(*chunk_shape, axes=axes),
+                shard_shape=VecInt(*shard_shape, axes=axes),
+                dimension_names=axes,
             )
         return ArrayInfo(
             data_format=DataFormat.Zarr3,
             num_channels=array.domain[0].exclusive_max,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=self._has_compression_codecs(array_codecs),
-            chunk_shape=Vec3Int(array.chunk_layout.read_chunk.shape[1:4]),
-            chunks_per_shard=Vec3Int.full(1),
+            chunk_shape=VecInt(*array.chunk_layout.read_chunk.shape, axes=axes),
+            shard_shape=VecInt(*array.chunk_layout.read_chunk.shape, axes=axes),
+            dimension_names=axes,
         )
 
     @staticmethod
@@ -549,12 +553,11 @@ class Zarr3Array(TensorStoreArray):
                 "kvstore": cls._make_kvstore(path),
                 "metadata": {
                     "data_type": str(array_info.voxel_type),
-                    "shape": (array_info.num_channels, 1, 1, 1),
+                    "shape": array_info.shape.to_tuple(),
                     "chunk_grid": {
                         "name": "regular",
                         "configuration": {
-                            "chunk_shape": (array_info.num_channels,)
-                            + array_info.shard_shape.to_tuple()
+                            "chunk_shape": array_info.shard_shape.to_tuple()
                         },
                     },
                     "chunk_key_encoding": {
@@ -562,13 +565,12 @@ class Zarr3Array(TensorStoreArray):
                         "configuration": {"separator": "/"},
                     },
                     "fill_value": 0,
-                    "dimension_names": ["c", "x", "y", "z"],
+                    "dimension_names": array_info.dimension_names,
                     "codecs": [
                         {
                             "name": "sharding_indexed",
                             "configuration": {
-                                "chunk_shape": (array_info.num_channels,)
-                                + array_info.chunk_shape.to_tuple(),
+                                "chunk_shape": array_info.chunk_shape.to_tuple(),
                                 "codecs": (
                                     [
                                         {
@@ -634,8 +636,8 @@ class Zarr2Array(TensorStoreArray):
             num_channels=array.domain[0].exclusive_max,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=array.codec.to_json()["compressor"] is not None,
-            chunk_shape=Vec3Int(array.chunk_layout.read_chunk.shape[1:4]),
-            chunks_per_shard=Vec3Int.full(1),
+            chunk_shape=VecInt(array.chunk_layout.read_chunk.shape),
+            shard_shape=VecInt(array.chunk_layout.read_chunk.shape),
         )
 
     @classmethod
@@ -649,9 +651,8 @@ class Zarr2Array(TensorStoreArray):
                 "driver": "zarr",
                 "kvstore": cls._make_kvstore(path),
                 "metadata": {
-                    "shape": (array_info.num_channels, 1, 1, 1),
-                    "chunks": (array_info.num_channels,)
-                    + array_info.shard_shape.to_tuple(),
+                    "shape": array_info.shape.to_tuple(),
+                    "chunks": array_info.shard_shape.to_tuple(),
                     "dtype": array_info.voxel_type.str,
                     "fill_value": 0,
                     "order": "F",
@@ -701,8 +702,8 @@ class ZarrArray(BaseArray):
             num_channels=zarray.shape[0],
             voxel_type=zarray.dtype,
             compression_mode=zarray.compressor is not None,
-            chunk_shape=Vec3Int(*zarray.chunks[1:4]) or Vec3Int.full(1),
-            chunks_per_shard=Vec3Int.full(1),
+            chunk_shape=VecInt(zarray.chunks),
+            shard_shape=VecInt(zarray.chunks),
         )
 
     @classmethod
@@ -712,8 +713,8 @@ class ZarrArray(BaseArray):
             1
         ), "Zarr storage doesn't support sharding yet"
         zarr.create(
-            shape=(array_info.num_channels, 1, 1, 1),
-            chunks=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
+            shape=array_info.shape.to_tuple(),
+            chunks=array_info.chunk_shape.to_tuple(),
             dtype=array_info.voxel_type,
             compressor=(
                 numcodecs.Blosc(cname="zstd", clevel=3, shuffle=numcodecs.Blosc.SHUFFLE)

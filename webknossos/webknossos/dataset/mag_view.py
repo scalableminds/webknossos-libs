@@ -79,22 +79,42 @@ class MagView(View):
         compression_mode: bool,
         path: Optional[UPath] = None,
     ) -> "MagView":
+        axes = ("c",) + layer.bounding_box.axes
+        new_chunk_shape = []
+        new_shard_shape = []
+        new_shape = []
+        for i, axis in enumerate(axes):
+            if axis == "c":
+                new_chunk_shape.append(layer.num_channels)
+                new_shard_shape.append(layer.num_channels)
+                new_shape.append(layer.num_channels)
+            elif axis == "x":
+                new_chunk_shape.append(chunk_shape.x)
+                new_shard_shape.append(chunk_shape.x * chunks_per_shard.x)
+                new_shape.append(1)
+            elif axis == "y":
+                new_chunk_shape.append(chunk_shape.y)
+                new_shard_shape.append(chunk_shape.y * chunks_per_shard.y)
+                new_shape.append(1)
+            elif axis == "z":
+                new_chunk_shape.append(chunk_shape.z)
+                new_shard_shape.append(chunk_shape.z * chunks_per_shard.z)
+                new_shape.append(1)
+            else:
+                new_chunk_shape.append(1)
+                new_shard_shape.append(1)
+                new_shape.append(1)
+
         array_info = ArrayInfo(
             data_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            chunk_shape=VecInt(*new_chunk_shape, axes=axes),
+            shard_shape=VecInt(*new_shard_shape, axes=axes),
             compression_mode=compression_mode,
-            axis_order=VecInt(
-                0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
-            ),
-            shape=VecInt(
-                layer.num_channels,
-                *VecInt.ones(layer.bounding_box.axes),
-                axes=("c",) + layer.bounding_box.axes,
-            ),
-            dimension_names=("c",) + layer.bounding_box.axes,
+            axis_order=VecInt(0, *layer.bounding_box.index, axes=axes),
+            shape=VecInt(*new_shape, axes=axes),
+            dimension_names=axes,
         )
         creation_path = (
             path if path else layer.dataset.path / layer.name / mag.to_layer_name()
