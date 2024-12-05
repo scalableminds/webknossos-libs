@@ -283,7 +283,7 @@ class Skeleton(Group):
         self.save(out_path)
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, type(self)) and self._id == other._id
+        return type(other) is type(self) and self._id == other._id
 
     def __hash__(self) -> int:
         return id(self)
