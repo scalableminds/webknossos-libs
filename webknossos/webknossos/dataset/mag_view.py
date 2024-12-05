@@ -314,7 +314,7 @@ class MagView(View):
             mag1.write(data, absolute_offset=(100, 200, 300))
 
             # Write using bounding box
-            bbox = NDBoundingBox((0, 0, 0), (100, 100, 100))
+            bbox = BoundingBox((0, 0, 0), (100, 100, 100))
             mag2.write(data, absolute_bounding_box=bbox)
             ```
 
