@@ -989,7 +989,7 @@ class View:
 
         Note:
             - Larger buffer sizes can improve performance but use more memory
-            - Remember to close the writer or use it in a context manager
+            - Remember to use the writer in a context manager
             - Only one positioning parameter should be specified
         """
         from ._utils.buffered_slice_writer import BufferedSliceWriter
