@@ -54,14 +54,6 @@ class View:
     Write operations are restricted to the defined bounding box. Views are designed to be easily passed
     around as parameters and can be used to efficiently work with subsets of larger datasets.
 
-    Attributes:
-        _path (Path): Path to the mag view.
-        _array_info (ArrayInfo): Information about the array structure.
-        _bounding_box (Optional[NDBoundingBox]): The bounding box defining the view's region.
-        _read_only (bool): Whether the view is read-only.
-        _cached_array (Optional[BaseArray]): Cached array data.
-        _mag (Mag): Magnification level of the view.
-
     Examples:
         ```python
         from webknossos.dataset import Dataset, View
@@ -154,15 +146,65 @@ class View:
 
     @property
     def bounding_box(self) -> NDBoundingBox:
+        """Gets the bounding box of this view.
+
+        The bounding box defines the region of interest within the dataset in absolute
+        coordinates at magnification level 1. It specifies both the position and size
+        of the view's data.
+
+        Returns:
+            NDBoundingBox: A bounding box object representing the view's boundaries
+                in absolute coordinates at magnification level 1.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            bbox = view.bounding_box
+            print(f"Top-left corner: {bbox.topleft}")
+            print(f"Size: {bbox.size}")
+            ```
+        """
         assert self._bounding_box is not None
         return self._bounding_box
 
     @property
     def mag(self) -> Mag:
+        """Gets the magnification level of this view.
+
+        The magnification level determines the resolution at which the data is accessed.
+        A higher magnification number means lower resolution (e.g., mag 2 means every
+        second voxel, mag 4 means every fourth voxel, etc.).
+
+        Returns:
+            Mag: The magnification level of this view.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            print(f"Current magnification: {view.mag}")
+            ```
+        """
         return self._mag
 
     @property
     def read_only(self) -> bool:
+        """Indicates whether this view is read-only.
+
+        When a view is read-only, write operations are not permitted. This property
+        helps prevent accidental modifications to the dataset.
+
+        Returns:
+            bool: True if the view is read-only, False if write operations are allowed.
+
+        Examples:
+            ```python
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            if not view.read_only:
+                view.write(data)
+            else:
+                print("Cannot modify read-only view")
+            ```
+        """
         return self._read_only
 
     @property
@@ -273,7 +315,7 @@ class View:
 
         Args:
             data (np.ndarray): The data to write. For single-channel data, shape should
-                be (z, y, x). For multi-channel data, shape should be (channels, z, y, x).
+                be (x, y, y). For multi-channel data, shape should be (channels, x, y, z).
                 Shape must match the target region size.
             offset (Optional[Vec3IntLike], optional): ⚠️ Deprecated. Use relative_offset or
                 absolute_offset instead. Defaults to None.
@@ -316,7 +358,7 @@ class View:
             rgb_view.write(rgb_data)
 
             # Write with absolute bounding box
-            bbox = NDBoundingBox((0, 0, 0), (100, 100, 10))
+            bbox = BoundingBox((0, 0, 0), (100, 100, 10))
             view.write(data, absolute_bounding_box=bbox)
             ```
 
@@ -505,7 +547,7 @@ class View:
 
         Returns:
             np.ndarray: The requested data as a numpy array. The shape will be either
-                (channels, z, y, x) for multi-channel data or (z, y, x) for
+                (channels, x, y, z) for multi-channel data or (x, y, z) for
                 single-channel data. Areas outside the dataset are zero-padded.
 
         Raises:
@@ -536,10 +578,11 @@ class View:
         Note:
             - Use only one method to specify the region (offset+size or bounding_box)
             - All coordinates are in Mag(1) except for the deprecated offset parameter
-            - For multi-channel data, the returned array has shape (C, Z, Y, X)
-            - For single-channel data, the returned array has shape (Z, Y, X)
+            - For multi-channel data, the returned array has shape (C, X, Y, Z)
+            - For single-channel data, the returned array has shape (X, Y, Z)
             - Regions outside the dataset are automatically zero-padded
             - The view's magnification affects the actual data resolution
+            - Data shape must match the target region size
         """
         current_mag_size: Optional[Vec3IntLike]
         mag1_size: Optional[Vec3IntLike]
@@ -622,10 +665,10 @@ class View:
             rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
+            rel_mag1_bbox=relative_bounding_box,
+            abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-            abs_mag1_bbox=absolute_bounding_box,
-            rel_mag1_bbox=relative_bounding_box,
         )
         assert not mag1_bbox.is_empty(), (
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
