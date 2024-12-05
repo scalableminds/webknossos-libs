@@ -1,8 +1,7 @@
 from typing import (
     TYPE_CHECKING,
 )
-
-from typing_extensions import Self
+from urllib.parse import urlparse
 
 from ..geometry import NDBoundingBox, VecInt
 from .data_format import DataFormat
@@ -19,7 +18,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from os.path import relpath
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import mkdtemp
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, Union
 
 import numcodecs
@@ -297,26 +296,13 @@ class WKWArray(BaseArray):
         self.__dict__ = d
 
 
-@lru_cache
-def _aws_credential_file() -> Path:
-    temp_dir = TemporaryDirectory()
-    temp_dir_path = Path(temp_dir.name)
-    credentials_file_path = Path(temp_dir_path / "aws_credentials")
-    credentials_file_path.touch()
-
-
 class AWSCredentialManager:
     entries: Dict[int, Tuple[str, str]]
     credentials_file_path: Path
 
-    @classmethod
-    @lru_cache
-    def singleton(cls) -> "Self":
-        return cls()
-
-    def __init__(self) -> None:
+    def __init__(self, credentials_file_path: Path) -> None:
         self.entries = {}
-        self.credentials_file_path = _aws_credential_file()
+        self.credentials_file_path = credentials_file_path
 
     def _dump_credentials(self) -> None:
         self.credentials_file_path.write_text(
@@ -342,6 +328,17 @@ class AWSCredentialManager:
         }
 
 
+@lru_cache
+def _aws_credential_file() -> Path:
+    temp_dir_path = Path(mkdtemp())
+    credentials_file_path = Path(temp_dir_path / "aws_credentials")
+    credentials_file_path.touch()
+    return credentials_file_path
+
+
+_aws_credential_manager = AWSCredentialManager(_aws_credential_file())
+
+
 class TensorStoreArray(BaseArray):
     _cached_array: Optional[tensorstore.TensorStore]
 
@@ -365,23 +362,21 @@ class TensorStoreArray(BaseArray):
                 ],
             }
         elif isinstance(path, UPath) and path.protocol in ("s3"):
-            aws_credential_manager = AWSCredentialManager.singleton()
-
-            return {
+            parsed_url = urlparse(str(path))
+            kvstore_spec = {
                 "driver": "s3",
-                "base_url": str(path),
-                "endpoint_url": path.storage_options.get("client_kwargs", {}).get(
-                    "endpoint_url", None
-                ),
-                "aws_credentials": (
-                    aws_credential_manager.add(
-                        path.storage_options["key"], path.storage_options["secret"]
-                    )
-                    if "key" in path.storage_options
-                    and "secret" in path.storage_options
-                    else None
-                ),
+                "path": parsed_url.path,
+                "bucket": parsed_url.netloc,
             }
+            if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
+                "endpoint_url", None
+            ):
+                kvstore_spec["endpoint"] = endpoint_url
+            if "key" in path.storage_options and "secret" in path.storage_options:
+                kvstore_spec["aws_credentials"] = _aws_credential_manager.add(
+                    path.storage_options["key"], path.storage_options["secret"]
+                )
+            return kvstore_spec
         else:
             return str(path)
 
@@ -403,16 +398,13 @@ class TensorStoreArray(BaseArray):
             raise ArrayException(f"Could not open array at {uri}.") from exc
 
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
-        offset = Vec3Int(bbox.topleft)
-        shape = Vec3Int(bbox.size)
         array = self._array
 
         requested_domain = tensorstore.IndexDomain(
-            [
-                tensorstore.Dim(0, self.info.num_channels),
-                tensorstore.Dim(offset.x, offset.x + shape.x),
-                tensorstore.Dim(offset.y, offset.y + shape.y),
-                tensorstore.Dim(offset.z, offset.z + shape.z),
+            [tensorstore.Dim(0, self.info.num_channels)]
+            + [
+                tensorstore.Dim(topleft, topleft + size)
+                for topleft, size in zip(bbox.topleft, bbox.size)
             ]
         )
         available_domain = requested_domain.intersect(array.domain)
@@ -422,31 +414,21 @@ class TensorStoreArray(BaseArray):
                 requested_domain.shape, dtype=array.dtype.numpy_dtype, order="F"
             )
             data = array[available_domain].read(order="F").result()
-            out[
-                : data.shape[0],
-                : data.shape[1],
-                : data.shape[2],
-                : data.shape[3],
-            ] = data
+            out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
             return out
 
         return array[requested_domain].read(order="F").result()
 
-    def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
+    def ensure_size(self, bbox: NDBoundingBox, warn: bool = False) -> None:
         array = self._array
 
         bbox_domain = tensorstore.IndexDomain(
             [
                 tensorstore.Dim(0, self.info.num_channels, implicit_upper=True),
-                tensorstore.Dim(
-                    bbox.topleft.x, bbox.bottomright.x, implicit_upper=True
-                ),
-                tensorstore.Dim(
-                    bbox.topleft.y, bbox.bottomright.y, implicit_upper=True
-                ),
-                tensorstore.Dim(
-                    bbox.topleft.z, bbox.bottomright.z, implicit_upper=True
-                ),
+            ]
+            + [
+                tensorstore.Dim(topleft, topleft + size, implicit_upper=True)
+                for topleft, size in zip(bbox.topleft, bbox.size)
             ]
         )
         new_domain = array.domain.hull(bbox_domain)
@@ -475,23 +457,15 @@ class TensorStoreArray(BaseArray):
                 resize_metadata_only=True,
             ).result()
 
-    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
-        offset = Vec3Int(offset)
-
+    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        self.ensure_size(
-            BoundingBox(topleft=offset, size=Vec3Int(data.shape[1:4])), warn=True
-        )
+        self.ensure_size(bbox, warn=True)
         array = self._array
-        array[
-            :,
-            offset.x : (offset.x + data.shape[1]),
-            offset.y : (offset.y + data.shape[2]),
-            offset.z : (offset.z + data.shape[3]),
-        ].write(data).result()
+        index_tuple = (slice(None),) + bbox.to_slices()
+        array[index_tuple].write(data).result()
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError
@@ -1023,8 +997,7 @@ class ZarritaArray(BaseArray):
                 + tuple(
                     getattr(array_info.chunk_shape, axis, 1)
                     for axis in array_info.dimension_names[1:]
-                ),
-                # The chunk shape consists of the number of channels, the x, y, and z dimensions of a chunk, and 1 for all other dimensions.
+                ),  # The chunk shape consists of the number of channels, the x, y, and z dimensions of a chunk, and 1 for all other dimensions.
                 dtype=array_info.voxel_type,
                 compressor=(
                     {"id": "blosc", "cname": "zstd", "clevel": 5}

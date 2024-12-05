@@ -276,17 +276,6 @@ def test_remote_datasets() -> None:
 
 
 @pytest.mark.skipif(
-    sys.version_info <= (3, 9), reason="Dask only supports Python >= 3.9"
-)
-def test_zarr_and_dask() -> None:
-    import examples.zarr_and_dask as example
-
-    (mean_value,) = exec_main_and_get_vars(example, "mean_value")
-
-    assert 123 < mean_value < 125
-
-
-@pytest.mark.skipif(
     sys.version_info < (3, 11), reason="Test is flaky for python 3.9 and 3.10."
 )
 @pytest.mark.use_proxay

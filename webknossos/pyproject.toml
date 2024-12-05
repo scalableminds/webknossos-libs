@@ -92,7 +92,6 @@ all = [
 [tool.uv]
 extra-index-url = ["https://pypi.scm.io/simple"]
 dev-dependencies = [
-    "dask[distributed] ~=2023.9.1; python_version >='3.9'",
     "hypothesis ~=6.35.0",
     "icecream ~=2.1.1",
     "inducoapi ~=2.0.2",

@@ -1474,26 +1474,26 @@ class Layer:
 
         self._assert_mag_does_not_exist_yet(mag)
         mag_path_maybe = UPath(path) if path else path
-        # try:
-        cls_array = BaseArray.get_class(self._properties.data_format)
-        resolved_path = _find_mag_path(
-            self.dataset.path, self.name, mag_name, mag_path_maybe
-        )
-        info = cls_array.open(resolved_path).info
-        self._mags[mag] = MagView(
-            self,
-            mag,
-            info.chunk_shape,
-            info.chunks_per_shard,
-            info.compression_mode,
-            False,
-            UPath(resolved_path),
-        )
-        self._mags[mag]._read_only = self._dataset.read_only
-        # except ArrayException:
-        #     logging.exception(
-        #         f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
-        #     )
+        try:
+            cls_array = BaseArray.get_class(self._properties.data_format)
+            resolved_path = _find_mag_path(
+                self.dataset.path, self.name, mag_name, mag_path_maybe
+            )
+            info = cls_array.open(resolved_path).info
+            self._mags[mag] = MagView(
+                self,
+                mag,
+                info.chunk_shape,
+                info.chunks_per_shard,
+                info.compression_mode,
+                False,
+                UPath(resolved_path),
+            )
+            self._mags[mag]._read_only = self._dataset.read_only
+        except ArrayException:
+            logging.exception(
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
+            )
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
