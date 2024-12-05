@@ -21,6 +21,67 @@ GroupOrTree = Union["Group", Tree]
 
 @attr.define()
 class Group:
+    """A hierarchical container for organizing trees and subgroups in WEBKNOSSOS skeleton annotations.
+
+    The Group class provides a way to organize skeleton trees into logical collections,
+    supporting nested hierarchies of groups and trees. Groups can contain both trees
+    (collections of connected nodes) and other groups, enabling flexible organization
+    of complex annotations.
+
+    Attributes:
+        name: Name of the group.
+        id: Read-only unique identifier for the group.
+        children: Iterator over all immediate children (both groups and trees).
+        groups: Iterator over immediate subgroups.
+        trees: Iterator over immediate trees.
+
+    The group hierarchy supports:
+        - Nested organization (groups within groups)
+        - Tree management (adding, removing, retrieving trees)
+        - Node access across all contained trees
+        - Flattened views of the hierarchy
+
+    Examples:
+        Create a hierarchical structure:
+        ```python
+        # Create groups for different neuron parts
+        neuron = skeleton.add_group("neuron_42")
+        dendrites = neuron.add_group("dendrites")
+        axons = neuron.add_group("axons")
+
+        # Add trees to groups
+        basal = dendrites.add_tree("basal_dendrite")
+        apical = dendrites.add_tree("apical_dendrite", color=(1, 0, 0, 1))
+        axon_tree = axons.add_tree("main_axon")
+
+        # Work with the hierarchy
+        print(f"Total nodes: {neuron.get_total_node_count()}")
+        for tree in dendrites.trees:
+            print(f"Dendrite tree: {tree.name}")
+
+        # Access nodes across all trees
+        node = neuron.get_node_by_id(123)
+        ```
+
+        Copy existing trees:
+        ```python
+        # Copy a tree to another group
+        template = existing_group.get_tree_by_id(42)
+        copy = new_group.add_tree(template, color=(0, 1, 0, 1))
+        ```
+
+    Notes:
+        - Groups maintain unique IDs for all contained elements
+        - Use flattened_* methods to access nested elements recursively
+        - Trees should be added using add_tree rather than created directly
+        - The group hierarchy is part of a Skeleton instance
+
+    See Also:
+        - Tree: Class representing connected node structures
+        - Node: Class representing individual 3D points
+        - Skeleton: Root container for all annotation data
+    """
+
     _id: int = attr.ib(init=False)
     name: str
     _child_groups: Set["Group"] = attr.ib(
@@ -35,22 +96,6 @@ class Group:
     )
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
     _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
-
-    @classmethod
-    def _set_init_docstring(cls) -> None:
-        Group.__init__.__doc__ = """
-        To create a group, it is recommended to use `webknossos.skeleton.skeleton.Skeleton.add_group` or
-        `Group.add_group`. That way, the newly created group
-        is automatically attached as a child to the object the method was
-        called on.
-
-        A small usage example:
-
-        ```python
-        subgroup = group.add_group("a subgroup")
-        tree = subgroup.add_tree("a tree")
-        ```
-        """
 
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
@@ -69,12 +114,34 @@ class Group:
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
     ) -> Tree:
-        """Adds a tree to the current group. If the first parameter is a string,
-        a new tree will be added with the provided name and color if specified.
-        Otherwise, the first parameter is assumed to be a tree object (e.g., from
-        another skeleton). A copy of that tree will then be added. If the id
-        of the tree already exists, a new id will be generated."""
+        """Adds a new tree or copies an existing tree to this group.
 
+        This method supports two ways of adding trees:
+        1. Creating a new tree by providing a name
+        2. Copying an existing tree from another location
+
+        Args:
+            name_or_tree: Either a string name for a new tree or an existing Tree instance to copy.
+            color: Optional RGBA color tuple (r, g, b, a) or RGB tuple (r, g, b).
+                  If an RGB tuple is provided, alpha will be set to 1.0.
+            _enforced_id: Optional specific ID for the tree (internal use).
+
+        Returns:
+            Tree: The newly created or copied tree.
+
+        Examples:
+            ```python
+            # Create new tree
+            tree = group.add_tree("dendrite_1", color=(1, 0, 0, 1))
+
+            # Copy existing tree
+            copy = group.add_tree(existing_tree)
+            ```
+
+        Notes:
+            When copying a tree, a new ID will be generated if the original ID
+            already exists in this group.
+        """
         if color is not None and len(color) == 3:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
@@ -128,7 +195,25 @@ class Group:
 
     @property
     def children(self) -> Iterator[GroupOrTree]:
-        """Returns all (immediate) children (groups and trees) as an iterator."""
+        """Returns an iterator over all immediate children (groups and trees).
+
+        This property provides access to both groups and trees that are direct
+        children of this group, in no particular order. For nested access,
+        use flattened_trees() or flattened_groups().
+
+        Returns:
+            Iterator[GroupOrTree]: Iterator yielding all immediate child groups and trees.
+
+        Examples:
+            ```python
+            # Print all immediate children
+            for child in group.children:
+                if isinstance(child, Tree):
+                    print(f"Tree: {child.name}")
+                else:
+                    print(f"Group: {child.name}")
+            ```
+        """
         yield from self.trees
         yield from self.groups
 
@@ -155,13 +240,40 @@ class Group:
         name: str,
         _enforced_id: Optional[int] = None,
     ) -> "Group":
-        """Adds a (sub) group to the current group with the provided name."""
+        """Creates and adds a new subgroup to this group.
+
+        Args:
+            name: Name for the new group.
+            _enforced_id: Optional specific ID for the group (internal use).
+
+        Returns:
+            Group: The newly created group.
+
+        Examples:
+            ```python
+            # Create nested group hierarchy
+            dendrites = neuron.add_group("dendrites")
+            basal = dendrites.add_group("basal")
+            apical = dendrites.add_group("apical")
+            ```
+        """
         new_group = Group(name, skeleton=self._skeleton, enforced_id=_enforced_id)
         self._child_groups.add(new_group)
         return new_group
 
     def get_total_node_count(self) -> int:
-        """Returns the total number of nodes of all trees within this group (and its subgroups)."""
+        """Counts all nodes in all trees within this group and its subgroups.
+
+        Returns:
+            int: Total number of nodes across all contained trees.
+
+        Examples:
+            ```python
+            # Check total annotation points
+            count = group.get_total_node_count()
+            print(f"Total annotation points: {count}")
+            ```
+        """
         return sum(tree.number_of_nodes() for tree in self.flattened_trees())
 
     def get_max_tree_id(self) -> int:
@@ -181,7 +293,21 @@ class Group:
         )
 
     def flattened_trees(self) -> Iterator[Tree]:
-        """Returns an iterator of all trees within this group (and its subgroups)."""
+        """Returns an iterator of all trees in this group and its subgroups.
+
+        This method performs a recursive traversal of the group hierarchy,
+        yielding all trees regardless of their nesting level.
+
+        Returns:
+            Iterator[Tree]: Iterator yielding all contained trees.
+
+        Examples:
+            ```python
+            # Process all trees regardless of grouping
+            for tree in group.flattened_trees():
+                print(f"Tree {tree.name} has {len(tree.nodes)} nodes")
+            ```
+        """
         yield from self.trees
         for group in self.groups:
             yield from group.flattened_trees()
@@ -198,7 +324,26 @@ class Group:
             yield from group.flattened_groups()
 
     def get_node_by_id(self, node_id: int) -> "Node":
-        """Returns the node which has the specified node id."""
+        """Retrieves a node by its ID from any tree in this group or its subgroups.
+
+        Args:
+            node_id: The ID of the node to find.
+
+        Returns:
+            Node: The node with the specified ID.
+
+        Raises:
+            ValueError: If no node with the given ID exists in any tree.
+
+        Examples:
+            ```python
+            try:
+                node = group.get_node_by_id(42)
+                print(f"Found node at position {node.position}")
+            except ValueError:
+                print("Node not found")
+            ```
+        """
         for tree in self.flattened_trees():
             if tree.has_node(node_id):
                 return tree.get_node_by_id(node_id)
@@ -206,7 +351,26 @@ class Group:
         raise ValueError("Node id not found")
 
     def get_tree_by_id(self, tree_id: int) -> Tree:
-        """Returns the tree which has the specified tree id."""
+        """Retrieves a tree by its ID from this group or its subgroups.
+
+        Args:
+            tree_id: The ID of the tree to find.
+
+        Returns:
+            Tree: The tree with the specified ID.
+
+        Raises:
+            ValueError: If no tree with the given ID exists.
+
+        Examples:
+            ```python
+            try:
+                tree = group.get_tree_by_id(42)
+                print(f"Found tree '{tree.name}'")
+            except ValueError:
+                print("Tree not found")
+            ```
+        """
         # Todo: Use hashed access if it turns out to be worth it? # noqa: FIX002 Line contains TODO
         for tree in self.flattened_trees():
             if tree.id == tree_id:
@@ -214,7 +378,21 @@ class Group:
         raise ValueError(f"No tree with id {tree_id} was found")
 
     def has_tree_id(self, tree_id: int) -> bool:
-        """Returns true if this group (or a subgroup) contains a tree with the given id."""
+        """Checks if a tree with the given ID exists in this group or its subgroups.
+
+        Args:
+            tree_id: The ID to check for.
+
+        Returns:
+            bool: True if a tree with the ID exists, False otherwise.
+
+        Examples:
+            ```python
+            if group.has_tree_id(42):
+                tree = group.get_tree_by_id(42)
+                print(f"Tree exists: {tree.name}")
+            ```
+        """
         try:
             self.get_tree_by_id(tree_id)
             return True
@@ -235,7 +413,17 @@ class Group:
         raise ValueError(f"No group with id {group_id} was found")
 
     def as_nml_group(self) -> wknml.Group:
-        """Returns a named tuple representation of this group."""
+        """Converts this group to its NML representation.
+
+        This method creates a lightweight representation of the group
+        suitable for serialization in the NML format.
+
+        Returns:
+            wknml.Group: NML representation of this group.
+
+        Notes:
+            This is primarily used internally for file I/O operations.
+        """
         return wknml.Group(
             self.id,
             self.name,
@@ -247,6 +435,3 @@ class Group:
 
     def __hash__(self) -> int:
         return id(self)
-
-
-Group._set_init_docstring()
