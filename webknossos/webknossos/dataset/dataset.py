@@ -36,14 +36,13 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset._metadata import DatasetMetadata
-from webknossos.geometry.vec_int import VecIntLike
 
 from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
 )
-from ..geometry.vec3_int import Vec3Int, Vec3IntLike
+from ..geometry import Vec3Int, Vec3IntLike, VecIntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._utils import pims_images
 from .defaults import (
@@ -2871,8 +2870,6 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            print(client, client.headers)
-
             client.dataset_update(self._organization_id, self._dataset_name, info)
 
     @property

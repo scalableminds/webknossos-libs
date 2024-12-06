@@ -13,7 +13,7 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ._array import ArrayException, ZarritaArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
