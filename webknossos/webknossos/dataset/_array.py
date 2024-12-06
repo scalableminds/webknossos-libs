@@ -29,7 +29,7 @@ import zarr
 from upath import UPath
 from zarr.storage import FSStore
 
-from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import BoundingBox, Vec3Int
 from ..utils import is_fs_path, warn_deprecated
 
 
@@ -83,6 +83,10 @@ class ArrayInfo:
     @property
     def chunks_per_shard(self) -> VecInt:
         return self.shard_shape // self.chunk_shape
+
+    @property
+    def ndim(self) -> int:
+        return len(self.shape)
 
 
 class BaseArray(ABC):
@@ -385,7 +389,6 @@ class TensorStoreArray(BaseArray):
     def open(cls, path: Path) -> "TensorStoreArray":
         try:
             uri = cls._make_kvstore(path)
-            print(f"{uri=}, {str(cls.data_format)=}, {path=}")
             _array = tensorstore.open(
                 {
                     "driver": str(cls.data_format),
@@ -402,11 +405,9 @@ class TensorStoreArray(BaseArray):
         array = self._array
 
         requested_domain = tensorstore.IndexDomain(
-            [tensorstore.Dim(0, self.info.num_channels)]
-            + [
-                tensorstore.Dim(topleft, topleft + size)
-                for topleft, size in zip(bbox.topleft, bbox.size)
-            ]
+            bbox.ndim + 1,
+            inclusive_min=(0,) + bbox.topleft.to_tuple(),
+            shape=(self.info.num_channels,) + bbox.size.to_tuple(),
         )
         available_domain = requested_domain.intersect(array.domain)
         if available_domain != requested_domain:
@@ -420,21 +421,42 @@ class TensorStoreArray(BaseArray):
 
         return array[requested_domain].read(order="F").result()
 
-    def ensure_size(self, bbox: NDBoundingBox, warn: bool = False) -> None:
+    def ensure_size(
+        self,
+        new_bbox: NDBoundingBox,
+        align_with_shards: bool = True,
+        warn: bool = False,
+    ) -> None:
         array = self._array
 
-        bbox_domain = tensorstore.IndexDomain(
-            [
-                tensorstore.Dim(0, self.info.num_channels, implicit_upper=True),
-            ]
-            + [
-                tensorstore.Dim(topleft, topleft + size, implicit_upper=True)
-                for topleft, size in zip(bbox.topleft, bbox.size)
-            ]
+        new_bbox = new_bbox.with_bottomright(
+            (
+                max(array.domain.exclusive_max[i + 1], new_bbox.bottomright[i])
+                for i in range(len(new_bbox))
+            )
         )
-        new_domain = array.domain.hull(bbox_domain)
+        new_domain = tensorstore.IndexDomain(
+            new_bbox.ndim + 1,
+            shape=(self.info.num_channels,) + new_bbox.bottomright.to_tuple(),
+            implicit_upper_bounds=tuple(True for _ in range(new_bbox.ndim + 1)),
+            labels=array.domain.labels,
+        )
+        if new_domain != array.domain:
+            if align_with_shards:
+                shard_shape = self.info.shard_shape
+                new_aligned_bbox = new_bbox.with_bottomright_xyz(
+                    new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
+                )
+                new_domain = tensorstore.IndexDomain(
+                    new_aligned_bbox.ndim + 1,
+                    shape=(self.info.num_channels,)
+                    + new_aligned_bbox.bottomright.to_tuple(),
+                    implicit_upper_bounds=tuple(
+                        True for _ in range(new_aligned_bbox.ndim + 1)
+                    ),
+                    labels=array.domain.labels,
+                )
 
-        if array.domain != new_domain:
             # Check on-disk for changes to shape
             current_array = tensorstore.open(
                 {
@@ -452,21 +474,30 @@ class TensorStoreArray(BaseArray):
                 warnings.warn(
                     f"[WARNING] Resizing Zarr array from `{array.domain}` to `{new_domain}`."
                 )
+
             self._cached_array = array.resize(
                 inclusive_min=None,
                 exclusive_max=new_domain.exclusive_max,
                 resize_metadata_only=True,
+                expand_only=True,
             ).result()
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        if data.ndim == 3:
+        if data.ndim == len(bbox):
+            # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
             data = data.reshape((1,) + data.shape)
-        assert data.ndim == 4
+
+        assert data.ndim == len(bbox) + 1
 
         self.ensure_size(bbox, warn=True)
         array = self._array
-        index_tuple = (slice(None),) + bbox.to_slices()
-        array[index_tuple].write(data).result()
+
+        requested_domain = tensorstore.IndexDomain(
+            bbox.ndim + 1,
+            inclusive_min=(0,) + bbox.topleft.to_tuple(),
+            shape=(self.info.num_channels,) + bbox.size.to_tuple(),
+        )
+        array[requested_domain].write(data).result()
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError
@@ -516,9 +547,19 @@ class Zarr3Array(TensorStoreArray):
         array = self._array
         array_codecs = array.codec.to_json()["codecs"]
         axes = array.domain.labels
+
+        if all(a == "" for a in axes):
+            dimension_names = ("c", "x", "y", "z")
+        else:
+            dimension_names = axes
+        x_index, y_index, z_index = (
+            dimension_names.index("x"),
+            dimension_names.index("y"),
+            dimension_names.index("z"),
+        )
+        chunk_shape = array.chunk_layout.read_chunk.shape
         if len(array_codecs) == 1 and array_codecs[0]["name"] == "sharding_indexed":
             shard_shape = array.chunk_layout.write_chunk.shape
-            chunk_shape = array.chunk_layout.read_chunk.shape
             return ArrayInfo(
                 data_format=DataFormat.Zarr3,
                 num_channels=array.domain[0].exclusive_max,
@@ -526,17 +567,29 @@ class Zarr3Array(TensorStoreArray):
                 compression_mode=self._has_compression_codecs(
                     array_codecs[0]["configuration"]["codecs"]
                 ),
-                chunk_shape=VecInt(*chunk_shape, axes=axes),
-                shard_shape=VecInt(*shard_shape, axes=axes),
-                dimension_names=axes,
+                chunk_shape=Vec3Int(
+                    chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
+                ),
+                shard_shape=Vec3Int(
+                    Vec3Int(
+                        shard_shape[x_index],
+                        shard_shape[y_index],
+                        shard_shape[z_index],
+                    )
+                ),
+                dimension_names=dimension_names,
             )
         return ArrayInfo(
             data_format=DataFormat.Zarr3,
             num_channels=array.domain[0].exclusive_max,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=self._has_compression_codecs(array_codecs),
-            chunk_shape=VecInt(*array.chunk_layout.read_chunk.shape, axes=axes),
-            shard_shape=VecInt(*array.chunk_layout.read_chunk.shape, axes=axes),
+            chunk_shape=Vec3Int(
+                chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
+            ),
+            shard_shape=Vec3Int(
+                chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
+            ),
             dimension_names=axes,
         )
 
@@ -547,18 +600,28 @@ class Zarr3Array(TensorStoreArray):
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "Zarr3Array":
         assert array_info.data_format == cls.data_format
+        chunk_shape = (array_info.num_channels,) + tuple(
+            getattr(array_info.chunk_shape, axis, 1)
+            for axis in array_info.dimension_names[1:]
+        )
+        shard_shape = (array_info.num_channels,) + tuple(
+            getattr(array_info.shard_shape, axis, 1)
+            for axis in array_info.dimension_names[1:]
+        )
+        shape = tuple(
+            shape_a - (shape_a % shard_shape_a)
+            for shape_a, shard_shape_a in zip(array_info.shape, shard_shape)
+        )
         _array = tensorstore.open(
             {
                 "driver": str(cls.data_format),
                 "kvstore": cls._make_kvstore(path),
                 "metadata": {
                     "data_type": str(array_info.voxel_type),
-                    "shape": array_info.shape.to_tuple(),
+                    "shape": shape,
                     "chunk_grid": {
                         "name": "regular",
-                        "configuration": {
-                            "chunk_shape": array_info.shard_shape.to_tuple()
-                        },
+                        "configuration": {"chunk_shape": shard_shape},
                     },
                     "chunk_key_encoding": {
                         "name": "default",
@@ -570,7 +633,7 @@ class Zarr3Array(TensorStoreArray):
                         {
                             "name": "sharding_indexed",
                             "configuration": {
-                                "chunk_shape": array_info.chunk_shape.to_tuple(),
+                                "chunk_shape": chunk_shape,
                                 "codecs": (
                                     [
                                         {
@@ -619,11 +682,6 @@ class Zarr3Array(TensorStoreArray):
         ).result()
         return cls(path, _array)
 
-    def ensure_size(self, bbox: BoundingBox, warn: bool = False) -> None:
-        super().ensure_size(
-            bbox.align_with_mag(self.info.shard_shape, ceil=True), warn=warn
-        )
-
 
 class Zarr2Array(TensorStoreArray):
     data_format = DataFormat.Zarr
@@ -631,13 +689,33 @@ class Zarr2Array(TensorStoreArray):
     @property
     def info(self) -> ArrayInfo:
         array = self._array
+        axes = array.domain.labels
+        if all(a == "" for a in axes):
+            dimension_names = ("c", "x", "y", "z")
+        else:
+            dimension_names = axes
+        x_index, y_index, z_index = (
+            dimension_names.index("x"),
+            dimension_names.index("y"),
+            dimension_names.index("z"),
+        )
+        chunk_shape = array.chunk_layout.read_chunk.shape
+
         return ArrayInfo(
             data_format=DataFormat.Zarr,
             num_channels=array.domain[0].exclusive_max,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=array.codec.to_json()["compressor"] is not None,
-            chunk_shape=VecInt(array.chunk_layout.read_chunk.shape),
-            shard_shape=VecInt(array.chunk_layout.read_chunk.shape),
+            chunk_shape=Vec3Int(
+                chunk_shape[x_index],
+                chunk_shape[y_index],
+                chunk_shape[z_index],
+            ),
+            shard_shape=Vec3Int(
+                chunk_shape[x_index],
+                chunk_shape[y_index],
+                chunk_shape[z_index],
+            ),
         )
 
     @classmethod
@@ -646,13 +724,21 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.chunks_per_shard == Vec3Int.full(
             1
         ), "Zarr2 storage doesn't support sharding yet"
+        chunk_shape = (array_info.num_channels,) + tuple(
+            getattr(array_info.chunk_shape, axis, 1)
+            for axis in array_info.dimension_names[1:]
+        )
+        shape = tuple(
+            shape_a - (shape_a % chunk_shape_a)
+            for shape_a, chunk_shape_a in zip(array_info.shape, chunk_shape)
+        )
         _array = tensorstore.open(
             {
                 "driver": "zarr",
                 "kvstore": cls._make_kvstore(path),
                 "metadata": {
-                    "shape": array_info.shape.to_tuple(),
-                    "chunks": array_info.shard_shape.to_tuple(),
+                    "shape": shape,
+                    "chunks": chunk_shape,
                     "dtype": array_info.voxel_type.str,
                     "fill_value": 0,
                     "order": "F",
@@ -903,16 +989,11 @@ class ZarritaArray(BaseArray):
                     chunk_shape=Vec3Int(
                         chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
                     ),
-                    chunks_per_shard=Vec3Int(
+                    shard_shape=Vec3Int(
                         Vec3Int(
                             shard_shape[x_index],
                             shard_shape[y_index],
                             shard_shape[z_index],
-                        )
-                        // Vec3Int(
-                            chunk_shape[x_index],
-                            chunk_shape[y_index],
-                            chunk_shape[z_index],
                         )
                     ),
                     dimension_names=dimension_names,
@@ -927,9 +1008,10 @@ class ZarritaArray(BaseArray):
                 ),
                 chunk_shape=Vec3Int(
                     chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
-                )
-                or Vec3Int.full(1),
-                chunks_per_shard=Vec3Int.full(1),
+                ),
+                shard_shape=Vec3Int(
+                    chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
+                ),
                 dimension_names=dimension_names,
             )
         else:
@@ -942,9 +1024,12 @@ class ZarritaArray(BaseArray):
                     zarray.metadata.chunks[x_index],
                     zarray.metadata.chunks[y_index],
                     zarray.metadata.chunks[z_index],
-                )
-                or Vec3Int.full(1),
-                chunks_per_shard=Vec3Int.full(1),
+                ),
+                shard_shape=Vec3Int(
+                    zarray.metadata.chunks[x_index],
+                    zarray.metadata.chunks[y_index],
+                    zarray.metadata.chunks[z_index],
+                ),
                 dimension_names=dimension_names,
             )
 

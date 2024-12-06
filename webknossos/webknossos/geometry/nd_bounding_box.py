@@ -95,7 +95,9 @@ class NDBoundingBox:
             f"The dimensions of topleft, size, axes and index ({len(self.topleft)}, "
             + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
         )
-        assert 0 not in self.index, "Index 0 is reserved for channels."
+        assert (
+            "c" not in self.axes or self.index[self.axes.index("c")] == 0
+        ), "Index 0 is reserved for channels."
 
         # Convert the delivered tuples to VecInts
         object.__setattr__(self, "topleft", VecInt(self.topleft, axes=self.axes))
@@ -461,6 +463,12 @@ class NDBoundingBox:
             modified_attr[index] = value[i]
 
         return VecInt(modified_attr, axes=self.axes)
+
+    @property
+    def ndim(self) -> int:
+        """The number of dimensions of the bounding box."""
+
+        return len(self.axes)
 
     @property
     def topleft_xyz(self) -> Vec3Int:

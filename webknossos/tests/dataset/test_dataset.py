@@ -284,11 +284,11 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     mag_view = layer.add_mag("1")
 
     assert layer.data_format == data_format
-    assert mag_view.info.chunk_shape == Vec3Int.full(32)
+    assert mag_view.info.chunk_shape.xyz == Vec3Int.full(32)
     if data_format == DataFormat.Zarr:
-        assert mag_view.info.chunks_per_shard == Vec3Int.full(1)
+        assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(1)
     else:
-        assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
+        assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
     assert mag_view.info.num_channels == 1
     assert mag_view.info.compression_mode == False
 
@@ -310,15 +310,17 @@ def test_create_dataset_with_explicit_header_fields() -> None:
 
     assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
     assert ds.get_layer("color")._properties.element_class == "uint48"
-    assert ds.get_layer("color").get_mag(1).info.chunk_shape == Vec3Int.full(64)
-    assert ds.get_layer("color").get_mag(1).info.chunks_per_shard == Vec3Int.full(64)
+    assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
+    assert ds.get_layer("color").get_mag(1).info.chunks_per_shard.xyz == Vec3Int.full(
+        64
+    )
     assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape == Vec3Int.full(
+    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz == Vec3Int.full(
         32
     )  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunks_per_shard == Vec3Int.full(
-        32
-    )  # defaults are used
+    assert ds.get_layer("color").get_mag(
+        "2-2-1"
+    ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
     assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
     assure_exported_properties(ds)
@@ -412,14 +414,14 @@ def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
 
     # write: zarr, read: wk
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.get_zarr_array()[:, 0:10, 0:10, 0:10] = write_data
+    mag.get_zarr_array()[:, 0:10, 0:10, 0:10].write(write_data).result()
     data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert np.array_equal(data, write_data)
 
     # write: wk, read: zarr
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data, absolute_offset=(0, 0, 0))
-    data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10]
+    data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10].read().result()
     assert np.array_equal(data, write_data)
 
 

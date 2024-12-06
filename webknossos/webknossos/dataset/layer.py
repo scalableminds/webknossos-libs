@@ -13,7 +13,7 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ._array import ArrayException, ZarritaArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
@@ -358,7 +358,9 @@ class Layer:
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
+            mag._array.ensure_size(
+                bbox.align_with_mag(mag.mag).in_mag(mag.mag), self.num_channels
+            )
 
     @property
     def category(self) -> LayerCategoryType:
@@ -572,7 +574,9 @@ class Layer:
             path=mag_path,
         )
 
-        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
+        mag_view._array.ensure_size(
+            self.bounding_box.align_with_mag(mag).in_mag(mag), self.num_channels
+        )
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
