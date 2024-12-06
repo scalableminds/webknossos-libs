@@ -10,19 +10,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.1...HEAD)
 
 ### Breaking Changes
 
 ### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.16.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.1) - 2024-12-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...v0.16.1)
+
+### Added
 - Added .nrrd and .nhdr to supported suffixes. [#1228](https://github.com/scalableminds/webknossos-libs/pull/1228)
+- Added more docstrings for many public classes and methods. [#1225](https://github.com/scalableminds/webknossos-libs/pull/1225)
 
 ### Changed
 - Removes vcr-py from developer dependencies for testing and adds proxay for recording and replaying API requests. [#1198](https://github.com/scalableminds/webknossos-libs/pull/1198)
 - Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
+- Refactored the PimsTiffReader to read the data directly from the tiff file without creating a memmap-able copy first. This greatly reduces the time and storage requirements for converting large tiff files. [#1212](https://github.com/scalableminds/webknossos-libs/pull/1212)
 
 ### Fixed
 - Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
+
 
 
 ## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27
