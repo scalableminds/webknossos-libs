@@ -14,7 +14,6 @@ from webknossos.dataset.data_format import DataFormat
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
-    NDArrayLike,
     get_executor_for_args,
     is_fs_path,
     # is_remote_path,
@@ -27,6 +26,8 @@ from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
+    import tensorstore
+
     from .layer import (
         Layer,
     )
@@ -126,7 +127,7 @@ class MagView(View):
         chunk_shape: Vec3Int,
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
-        path: Optional[UPath] = None,
+        path: Optional[Path] = None,
     ) -> "MagView":
         array_info = ArrayInfo(
             data_format=layer._properties.data_format,
@@ -164,7 +165,7 @@ class MagView(View):
         self,
         layer: "Layer",
         mag: Mag,
-        mag_path: UPath,
+        mag_path: Path,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.get_mag()`.
@@ -263,7 +264,7 @@ class MagView(View):
         """
         return self._mag.to_layer_name()
 
-    def get_zarr_array(self) -> NDArrayLike:
+    def get_zarr_array(self) -> "tensorstore.TensorStore":
         """Get direct access to the underlying Zarr array.
 
         Provides direct access to the underlying Zarr array for advanced operations.
@@ -283,9 +284,9 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(array_wrapper, TensorStoreArray), type(
-            array_wrapper
-        )  # for typechecking
+        assert isinstance(
+            array_wrapper, TensorStoreArray
+        ), f"Expected TensorStoreArray, got {type(array_wrapper)}"  # for typechecking
         return array_wrapper._array
 
     def write(

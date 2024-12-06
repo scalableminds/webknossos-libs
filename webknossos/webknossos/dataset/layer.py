@@ -358,9 +358,7 @@ class Layer:
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag), self.num_channels
-            )
+            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property
     def category(self) -> LayerCategoryType:
@@ -574,9 +572,7 @@ class Layer:
             path=mag_path,
         )
 
-        mag_view._array.ensure_size(
-            self.bounding_box.align_with_mag(mag).in_mag(mag), self.num_channels
-        )
+        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
@@ -1481,7 +1477,7 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-        mag_path_maybe = UPath(path) if path else path
+        mag_path_maybe: Optional[Path] = UPath(path) if path is not None else path
         try:
             resolved_path = _find_mag_path(
                 self.dataset.path, self.name, mag_name, mag_path_maybe

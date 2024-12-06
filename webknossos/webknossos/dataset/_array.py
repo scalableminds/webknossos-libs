@@ -68,8 +68,8 @@ class ArrayInfo:
     data_format: DataFormat
     num_channels: int
     voxel_type: np.dtype
-    chunk_shape: VecInt
-    shard_shape: VecInt
+    chunk_shape: Vec3Int
+    shard_shape: Vec3Int
     shape: VecInt = VecInt(c=1, x=1, y=1, z=1)
     dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
     axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
@@ -81,7 +81,7 @@ class ArrayInfo:
         return self.shard_shape
 
     @property
-    def chunks_per_shard(self) -> VecInt:
+    def chunks_per_shard(self) -> Vec3Int:
         return self.shard_shape // self.chunk_shape
 
     @property
@@ -108,7 +108,7 @@ class BaseArray(ABC):
         classes = (WKWArray, Zarr3Array, Zarr2Array)
         for cls in classes:
             try:
-                array = cls.open(path)
+                array = cls.open(path)  # type: ignore[attr-defined]
                 return array
             except ArrayException:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 pass
@@ -368,7 +368,7 @@ class TensorStoreArray(BaseArray):
             }
         elif isinstance(path, UPath) and path.protocol in ("s3"):
             parsed_url = urlparse(str(path))
-            kvstore_spec = {
+            kvstore_spec: dict[str, Any] = {
                 "driver": "s3",
                 "path": parsed_url.path,
                 "bucket": parsed_url.netloc,
@@ -788,8 +788,8 @@ class ZarrArray(BaseArray):
             num_channels=zarray.shape[0],
             voxel_type=zarray.dtype,
             compression_mode=zarray.compressor is not None,
-            chunk_shape=VecInt(zarray.chunks),
-            shard_shape=VecInt(zarray.chunks),
+            chunk_shape=Vec3Int(zarray.chunks),
+            shard_shape=Vec3Int(zarray.chunks),
         )
 
     @classmethod

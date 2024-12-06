@@ -35,8 +35,6 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset._metadata import DatasetMetadata
-
 from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
@@ -44,6 +42,7 @@ from ..client.api_client.models import (
 )
 from ..geometry import Vec3Int, Vec3IntLike, VecIntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
+from ._metadata import DatasetMetadata
 from ._utils import pims_images
 from .defaults import (
     DEFAULT_BIT_DEPTH,
