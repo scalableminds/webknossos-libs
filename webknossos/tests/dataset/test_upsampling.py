@@ -179,6 +179,7 @@ def test_upsample_nd_dataset(tmp_path: Path) -> None:
         "color",
         COLOR_CATEGORY,
         bounding_box=source_layer.bounding_box,
+        dtype_per_channel=source_layer.dtype_per_channel,
         data_format="zarr3",
     )
 
