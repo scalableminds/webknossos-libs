@@ -147,7 +147,7 @@ jobs:
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4
     strategy:
       max-parallel: 4
       matrix:
