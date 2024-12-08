@@ -65,7 +65,7 @@ def test_method_arithmetic() -> None:
 
 
 def test_repr() -> None:
-    assert str(Vec3Int(1, 2, 3)) == "Vec3Int(1,2,3)"
+    assert str(Vec3Int(1, 2, 3)) == "Vec3Int(1,2,3, axes=('x', 'y', 'z'))"
 
 
 def test_prod() -> None:

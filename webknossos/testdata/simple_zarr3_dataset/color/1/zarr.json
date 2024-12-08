@@ -16,17 +16,17 @@
       "configuration": {
         "chunk_shape": [3, 16, 16, 16],
         "codecs": [
-          { "name": "endian", "configuration": { "endian": "little" } }
+          { "name": "bytes", "configuration": { "endian": "little" } }
         ],
         "index_codecs": [
-          { "name": "endian", "configuration": { "endian": "little" } },
+          { "name": "bytes", "configuration": { "endian": "little" } },
           { "name": "crc32c" }
         ]
       },
       "name": "sharding_indexed"
     }
   ],
-  "dimension_names": null,
+  "dimension_names": ["c", "x", "y", "z"],
   "zarr_format": 3,
   "node_type": "array"
 }

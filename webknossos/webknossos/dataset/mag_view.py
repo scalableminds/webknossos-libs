@@ -14,7 +14,6 @@ from webknossos.dataset.data_format import DataFormat
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
-    NDArrayLike,
     get_executor_for_args,
     is_fs_path,
     # is_remote_path,
@@ -23,10 +22,12 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, WKWArray, ZarrArray, ZarritaArray
+from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
+    import tensorstore
+
     from .layer import (
         Layer,
     )
@@ -118,25 +119,22 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
-    def __init__(
-        self,
+    @classmethod
+    def create(
+        cls,
         layer: "Layer",
         mag: Mag,
         chunk_shape: Vec3Int,
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
-        create: bool = False,
-        path: Optional[UPath] = None,
-    ) -> None:
-        """
-        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
-        """
+        path: Optional[Path] = None,
+    ) -> "MagView":
         array_info = ArrayInfo(
             data_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=chunk_shape * chunks_per_shard,
             compression_mode=compression_mode,
             axis_order=VecInt(
                 0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
@@ -148,14 +146,11 @@ class MagView(View):
             ),
             dimension_names=("c",) + layer.bounding_box.axes,
         )
-        if create:
-            creation_path = (
-                path if path else layer.dataset.path / layer.name / mag.to_layer_name()
-            )
-            BaseArray.get_class(array_info.data_format).create(
-                creation_path, array_info
-            )
-            path = UPath(creation_path)
+        creation_path = (
+            path if path else layer.dataset.path / layer.name / mag.to_layer_name()
+        )
+        BaseArray.get_class(array_info.data_format).create(creation_path, array_info)
+        path = UPath(creation_path)
 
         mag_path = (
             path
@@ -164,12 +159,23 @@ class MagView(View):
                 layer.dataset.path, layer.name, mag.to_layer_name(), path
             )
         )
+        return cls(layer, mag, mag_path)
+
+    def __init__(
+        self,
+        layer: "Layer",
+        mag: Mag,
+        mag_path: Path,
+    ) -> None:
+        """
+        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.get_mag()`.
+        """
 
         super().__init__(
             mag_path,
-            array_info,
             bounding_box=layer.bounding_box,
             mag=mag,
+            data_format=layer.data_format,
         )
         self._layer = layer
 
@@ -258,7 +264,7 @@ class MagView(View):
         """
         return self._mag.to_layer_name()
 
-    def get_zarr_array(self) -> NDArrayLike:
+    def get_zarr_array(self) -> "tensorstore.TensorStore":
         """Get direct access to the underlying Zarr array.
 
         Provides direct access to the underlying Zarr array for advanced operations.
@@ -278,10 +284,10 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(array_wrapper, ZarrArray) or isinstance(
-            array_wrapper, ZarritaArray
-        )  # for typechecking
-        return array_wrapper._zarray
+        assert isinstance(
+            array_wrapper, TensorStoreArray
+        ), f"Expected TensorStoreArray, got {type(array_wrapper)}"  # for typechecking
+        return array_wrapper._array
 
     def write(
         self,
@@ -719,14 +725,7 @@ class MagView(View):
             rmtree(compressed_dataset.path)
 
             # update the handle to the new dataset
-            MagView.__init__(
-                self,
-                self.layer,
-                self._mag,
-                self.info.chunk_shape,
-                self.info.chunks_per_shard,
-                True,
-            )
+            MagView.__init__(self, self.layer, self._mag, self.path)
 
     def merge_with_view(
         self,
@@ -835,12 +834,6 @@ class MagView(View):
                 str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
             )
             mag_view_path = strip_trailing_slash(path)
-            # if is_remote_path(mag_view_path):
-            #     return (
-            #         Dataset.open_remote(mag_view_path.parent.parent.as_posix())
-            #         .get_layer(mag_view_path.parent.name)
-            #         .get_mag(mag_view_path.name)
-            #     )
             return (
                 Dataset.open(mag_view_path.parent.parent)
                 .get_layer(mag_view_path.parent.name)
