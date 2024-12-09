@@ -1,10 +1,12 @@
+from pathlib import Path
+
 import numpy as np
 from zarrita import Array
 
 import webknossos as wk
 
 
-def test_add_mag_from_zarrarray(tmp_path):
+def test_add_mag_from_zarrarray(tmp_path: Path) -> None:
     dataset = wk.Dataset(
         tmp_path / "test_add_mag_from_zarrarray", voxel_size=(10, 10, 10)
     )
