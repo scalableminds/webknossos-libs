@@ -20,10 +20,17 @@ def ignore_warnings() -> Iterator:
         yield
 
 
-def test_compare_tifffile(tmp_path: Path) -> None:
+@pytest.fixture
+def persistent_path(request: pytest.FixtureRequest) -> Path:
+    folder = Path("persistent")
+    folder.mkdir(exist_ok=True)
+    return folder / request.node.name
+
+
+def test_compare_tifffile(persistent_path: Path) -> None:
     ds = wk.Dataset.from_images(
         TESTDATA_DIR / "tiff",
-        tmp_path,
+        persistent_path,
         (1, 1, 1),
         compress=True,
         layer_name="tiff_stack",
@@ -40,10 +47,10 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-def test_multiple_multitiffs(tmp_path: Path) -> None:
+def test_multiple_multitiffs(persistent_path: Path) -> None:
     ds = wk.Dataset.from_images(
         TESTDATA_DIR / "various_tiff_formats",
-        tmp_path,
+        persistent_path,
         (1, 1, 1),
         data_format="zarr3",
         layer_name="tiffs",
@@ -72,10 +79,10 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         assert layer.bounding_box.size == size
 
 
-def test_from_dicom_images(tmp_path: Path) -> None:
+def test_from_dicom_images(persistent_path: Path) -> None:
     ds = wk.Dataset.from_images(
         TESTDATA_DIR / "dicoms",
-        tmp_path,
+        persistent_path,
         (1, 1, 1),
     )
     assert len(ds.layers) == 1
@@ -87,8 +94,10 @@ def test_from_dicom_images(tmp_path: Path) -> None:
     ), f"The maximum value of the image should be 127 but is {data.max()}"
 
 
-def test_no_slashes_in_layername(tmp_path: Path) -> None:
-    (input_path := tmp_path / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
+def test_no_slashes_in_layername(persistent_path: Path) -> None:
+    (input_path := persistent_path / "tiff" / "subfolder" / "tifffiles").mkdir(
+        parents=True
+    )
     copytree(
         TESTDATA_DIR / "tiff_with_different_shapes",
         input_path,
@@ -98,8 +107,8 @@ def test_no_slashes_in_layername(tmp_path: Path) -> None:
     for strategy in Dataset.ConversionLayerMapping:
         with SequentialExecutor() as executor:
             dataset = wk.Dataset.from_images(
-                tmp_path / "tiff",
-                tmp_path / str(strategy),
+                persistent_path / "tiff",
+                persistent_path / str(strategy),
                 voxel_size=(10, 10, 10),
                 map_filepath_to_layer_name=strategy,
                 executor=executor,

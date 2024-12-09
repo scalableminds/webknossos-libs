@@ -13,10 +13,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.1...HEAD)
 
 ### Breaking Changes
+- `MagView.get_zarr_array` now returns a `tensorstore` array instead of a `zarr-python` array. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174) 
 
 ### Added
 
 ### Changed
+- Using tensorstore for reading and writing zarr 2 and 3 arrays. Removed `zarrita` and `zarr` dependency. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174) 
 
 ### Fixed
 

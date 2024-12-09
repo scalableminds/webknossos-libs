@@ -14,7 +14,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
-from ._array import ArrayException, ZarritaArray
+from ._array import ArrayException, TensorStoreArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -943,7 +943,7 @@ class Layer:
         source_path = Path(path)
 
         try:
-            ZarritaArray.open(source_path)
+            TensorStoreArray.open(source_path)
         except ArrayException as e:
             raise ValueError(
                 "The given path does not lead to a valid Zarr Array: "

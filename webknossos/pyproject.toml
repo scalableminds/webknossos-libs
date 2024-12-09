@@ -38,12 +38,10 @@ dependencies = [
     "cattrs >=22.0.0",
     "certifi>=2023",
     "cluster-tools",
-    "fsspec ~=2024.6.0",
     "httpx ~=0.27.0",
     "loxun ~=2.0.0",
     "natsort ~=8.4.0",
     "networkx ~=3.2.1",
-    "numcodecs ~=0.12",
     "numpy ~=2.0.0",
     "pims ~=0.7.0",
     "psutil ~=6.0.0",
@@ -56,8 +54,6 @@ dependencies = [
     "typing-extensions ~=4.0",
     "universal-pathlib ~=0.2",
     "wkw ==1.1.24",
-    "zarr ~=2.18.0",
-    "zarrita ==0.2.7",
     "zipp ~=3.5.0",
 ]
 
@@ -92,6 +88,7 @@ all = [
 [tool.uv]
 extra-index-url = ["https://pypi.scm.io/simple"]
 dev-dependencies = [
+    "fsspec ~=2024.6.0",
     "hypothesis ~=6.35.0",
     "icecream ~=2.1.1",
     "inducoapi ~=2.0.2",

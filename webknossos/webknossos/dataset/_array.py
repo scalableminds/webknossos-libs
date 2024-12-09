@@ -21,11 +21,9 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, Union
 
-import numcodecs
 import numpy as np
 import tensorstore
 import wkw
-import zarr
 from upath import UPath
 from zarr.storage import FSStore
 
@@ -45,18 +43,6 @@ def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
         return FSStore(url=str(path), mode=mode, **storage_options)
 
     return FSStore(url=str(path), mode=mode, **storage_options)
-
-
-@contextmanager
-def _blosc_disable_threading() -> Iterator[None]:
-    old_value = numcodecs.blosc.use_threads
-
-    # See https://zarr.readthedocs.io/en/stable/tutorial.html#configuring-blosc
-    numcodecs.blosc.use_threads = False
-    try:
-        yield
-    finally:
-        numcodecs.blosc.use_threads = old_value
 
 
 class ArrayException(Exception):
@@ -387,6 +373,17 @@ class TensorStoreArray(BaseArray):
 
     @classmethod
     def open(cls, path: Path) -> "TensorStoreArray":
+        classes = (Zarr3Array, Zarr2Array)
+        for _cls in classes:
+            try:
+                array = _cls.open(path)
+                return array
+            except ArrayException:  # noqa: PERF203
+                pass
+        raise ArrayException(f"Could not open the array at {path}.")
+
+    @classmethod
+    def _open(cls, path: Path) -> "TensorStoreArray":
         try:
             uri = cls._make_kvstore(path)
             _array = tensorstore.open(
@@ -542,6 +539,10 @@ class TensorStoreArray(BaseArray):
 class Zarr3Array(TensorStoreArray):
     data_format = DataFormat.Zarr3
 
+    @classmethod
+    def open(cls, path: Path) -> "Zarr3Array":
+        return cls._open(path)
+
     @property
     def info(self) -> ArrayInfo:
         array = self._array
@@ -686,6 +687,10 @@ class Zarr3Array(TensorStoreArray):
 class Zarr2Array(TensorStoreArray):
     data_format = DataFormat.Zarr
 
+    @classmethod
+    def open(cls, path: Path) -> "Zarr2Array":
+        return cls._open(path)
+
     @property
     def info(self) -> ArrayInfo:
         array = self._array
@@ -759,446 +764,3 @@ class Zarr2Array(TensorStoreArray):
             }
         ).result()
         return cls(path, _array)
-
-
-class ZarrArray(BaseArray):
-    data_format = DataFormat.Zarr
-
-    _cached_zarray: Optional[zarr.Array]
-
-    def __init__(self, path: Path):
-        super().__init__(path)
-        self._cached_zarray = None
-
-    @classmethod
-    def open(cls, path: Path) -> "ZarrArray":
-        zarray_path = path / ".zarray"
-
-        if zarray_path.exists() and zarray_path.is_file():
-            return cls(path)
-        raise ArrayException(
-            f"Could not open Zarr array at {path}. `.zarray` not found."
-        )
-
-    @property
-    def info(self) -> ArrayInfo:
-        zarray = self._zarray
-        return ArrayInfo(
-            data_format=self.data_format,
-            num_channels=zarray.shape[0],
-            voxel_type=zarray.dtype,
-            compression_mode=zarray.compressor is not None,
-            chunk_shape=Vec3Int(zarray.chunks),
-            shard_shape=Vec3Int(zarray.chunks),
-        )
-
-    @classmethod
-    def create(cls, path: Path, array_info: ArrayInfo) -> "ZarrArray":
-        assert array_info.data_format == cls.data_format
-        assert array_info.chunks_per_shard == Vec3Int.full(
-            1
-        ), "Zarr storage doesn't support sharding yet"
-        zarr.create(
-            shape=array_info.shape.to_tuple(),
-            chunks=array_info.chunk_shape.to_tuple(),
-            dtype=array_info.voxel_type,
-            compressor=(
-                numcodecs.Blosc(cname="zstd", clevel=3, shuffle=numcodecs.Blosc.SHUFFLE)
-                if array_info.compression_mode
-                else None
-            ),
-            store=_fsstore_from_path(path),
-            order="F",
-        )
-        return ZarrArray(path)
-
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
-        shape = bbox.size
-        zarray = self._zarray
-        with _blosc_disable_threading():
-            data = zarray[(slice(None),) + bbox.to_slices()]
-
-        shape_with_channels = (self.info.num_channels,) + shape.to_tuple()
-        if data.shape not in (shape, shape_with_channels):
-            padded_data = np.zeros(shape_with_channels, dtype=data.dtype)
-            padded_data[
-                :,
-                0 : data.shape[1],
-                0 : data.shape[2],
-                0 : data.shape[3],
-            ] = data
-            data = padded_data
-        return data
-
-    def ensure_size(
-        self,
-        new_bbox: NDBoundingBox,
-        align_with_shards: bool = True,
-        warn: bool = False,
-    ) -> None:
-        new_shape = VecInt(new_bbox.size, axes=new_bbox.axes)
-        zarray = self._zarray
-
-        new_shape_tuple = (zarray.shape[0],) + tuple(
-            (
-                max(zarray.shape[i + 1], new_shape[i])
-                if len(zarray.shape) > i
-                else new_shape[i]
-            )
-            for i in range(len(new_shape))
-        )
-        if new_shape_tuple != zarray.shape:
-            if align_with_shards:
-                shard_shape = self.info.shard_shape
-                new_shape = new_shape.ceildiv(shard_shape) * shard_shape
-                new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
-
-            # Check on-disk for changes to shape
-            current_zarray = zarr.open_array(
-                store=_fsstore_from_path(self._path), mode="r"
-            )
-            if zarray.shape != current_zarray.shape:
-                warnings.warn(
-                    f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
-                    + "This is likely happening because multiple processes changed the metadata of this array."
-                )
-
-            if warn:
-                warnings.warn(
-                    f"[WARNING] Resizing zarr array from `{zarray.shape}` to `{new_shape_tuple}`."
-                )
-            zarray.resize(new_shape_tuple)
-
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        """Writes a ZarrArray. If offset and bbox are given, the bbox is preferred to enable writing of n-dimensional data."""
-
-        # If data is 3-dimensional, it is assumed that num_channels=1.
-        if data.ndim == 3:
-            data = data.reshape((1,) + data.shape)
-        assert data.ndim == 4
-
-        with _blosc_disable_threading():
-            self.ensure_size(bbox, warn=True)
-            zarray = self._zarray
-            index_tuple = (slice(None),) + bbox.to_slices()
-
-            zarray[index_tuple] = data
-
-    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
-        zarray = self._zarray
-        chunk_shape = Vec3Int(*zarray.chunks[1:4])
-        for key in zarray.store.keys():
-            if not key.startswith("."):
-                key_parts = [int(p) for p in key.split(zarray._dimension_separator)]
-                chunk_idx = Vec3Int(key_parts[1:4])
-                yield BoundingBox(topleft=chunk_idx * chunk_shape, size=chunk_shape)
-
-    def close(self) -> None:
-        if self._cached_zarray is not None:
-            self._cached_zarray = None
-
-    @property
-    def _zarray(self) -> zarr.Array:
-        if self._cached_zarray is None:
-            try:
-                self._cached_zarray = zarr.open_array(
-                    store=_fsstore_from_path(self._path), mode="a"
-                )
-            except Exception as e:
-                raise ArrayException(
-                    f"Exception while opening Zarr array for {self._path}"
-                ) from e
-        return self._cached_zarray
-
-    @_zarray.deleter
-    def _zarray(self) -> None:
-        self.close()
-
-    def __del__(self) -> None:
-        del self._cached_zarray
-
-    def __getstate__(self) -> Dict[str, Any]:
-        d = dict(self.__dict__)
-        del d["_cached_zarray"]
-        return d
-
-    def __setstate__(self, d: Dict[str, Any]) -> None:
-        d["_cached_zarray"] = None
-        self.__dict__ = d
-
-
-class ZarritaArray(BaseArray):
-    data_format = DataFormat.Zarr3
-
-    _cached_zarray: Optional[Union["zarrita.Array", "zarrita.ArrayV2"]]
-
-    def __init__(self, path: Path):
-        super().__init__(path)
-        self._cached_zarray = None
-
-    @classmethod
-    def open(cls, path: Path) -> "ZarritaArray":
-        from zarrita import Array
-
-        try:
-            Array.open_auto(store=path)  # check that everything exists
-            return cls(path)
-        except Exception as exc:
-            raise ArrayException(f"Could not open Zarr array at {path}.") from exc
-
-    @staticmethod
-    def _has_compression_codecs(codecs: List["zarrita.codecs.Codec"]) -> bool:
-        from zarrita.codecs import BloscCodec, GzipCodec, ZstdCodec
-
-        return any(
-            isinstance(c, BloscCodec)
-            or isinstance(c, GzipCodec)
-            or isinstance(c, ZstdCodec)
-            for c in codecs
-        )
-
-    @property
-    def info(self) -> ArrayInfo:
-        from zarrita import Array
-        from zarrita.sharding import ShardingCodec
-
-        zarray = self._zarray
-        if (names := getattr(zarray.metadata, "dimension_names", None)) is None:
-            dimension_names = ("c", "x", "y", "z")
-        else:
-            dimension_names = names
-        x_index, y_index, z_index = (
-            dimension_names.index("x"),
-            dimension_names.index("y"),
-            dimension_names.index("z"),
-        )
-        if isinstance(zarray, Array):
-            if len(zarray.codec_pipeline.codecs) == 1 and isinstance(
-                zarray.codec_pipeline.codecs[0], ShardingCodec
-            ):
-                sharding_codec = zarray.codec_pipeline.codecs[0]
-                shard_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
-                chunk_shape = sharding_codec.configuration.chunk_shape
-                return ArrayInfo(
-                    data_format=DataFormat.Zarr3,
-                    num_channels=zarray.metadata.shape[0],
-                    voxel_type=zarray.metadata.dtype,
-                    compression_mode=self._has_compression_codecs(
-                        sharding_codec.codec_pipeline.codecs
-                    ),
-                    chunk_shape=Vec3Int(
-                        chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
-                    ),
-                    shard_shape=Vec3Int(
-                        Vec3Int(
-                            shard_shape[x_index],
-                            shard_shape[y_index],
-                            shard_shape[z_index],
-                        )
-                    ),
-                    dimension_names=dimension_names,
-                )
-            chunk_shape = zarray.metadata.chunk_grid.configuration.chunk_shape
-            return ArrayInfo(
-                data_format=DataFormat.Zarr3,
-                num_channels=zarray.metadata.shape[0],
-                voxel_type=zarray.metadata.dtype,
-                compression_mode=self._has_compression_codecs(
-                    zarray.codec_pipeline.codecs
-                ),
-                chunk_shape=Vec3Int(
-                    chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
-                ),
-                shard_shape=Vec3Int(
-                    chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
-                ),
-                dimension_names=dimension_names,
-            )
-        else:
-            return ArrayInfo(
-                data_format=DataFormat.Zarr,
-                num_channels=zarray.metadata.shape[0],
-                voxel_type=zarray.metadata.dtype,
-                compression_mode=zarray.metadata.compressor is not None,
-                chunk_shape=Vec3Int(
-                    zarray.metadata.chunks[x_index],
-                    zarray.metadata.chunks[y_index],
-                    zarray.metadata.chunks[z_index],
-                ),
-                shard_shape=Vec3Int(
-                    zarray.metadata.chunks[x_index],
-                    zarray.metadata.chunks[y_index],
-                    zarray.metadata.chunks[z_index],
-                ),
-                dimension_names=dimension_names,
-            )
-
-    @classmethod
-    def create(cls, path: Path, array_info: ArrayInfo) -> "ZarritaArray":
-        import zarrita.codecs
-        from zarrita import Array, ArrayV2
-
-        assert array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
-        if array_info.data_format == DataFormat.Zarr3:
-            chunk_shape = (array_info.num_channels,) + tuple(
-                getattr(array_info.chunk_shape, axis, 1)
-                for axis in array_info.dimension_names[1:]
-            )
-            shard_shape = (array_info.num_channels,) + tuple(
-                getattr(array_info.shard_shape, axis, 1)
-                for axis in array_info.dimension_names[1:]
-            )
-            Array.create(
-                store=path,
-                shape=array_info.shape,
-                chunk_shape=shard_shape,
-                chunk_key_encoding=("default", "/"),
-                dtype=array_info.voxel_type,
-                dimension_names=array_info.dimension_names,
-                codecs=[
-                    zarrita.codecs.sharding_codec(
-                        chunk_shape=chunk_shape,
-                        codecs=(
-                            [
-                                zarrita.codecs.transpose_codec(array_info.axis_order),
-                                zarrita.codecs.bytes_codec(),
-                                zarrita.codecs.blosc_codec(
-                                    typesize=array_info.voxel_type.itemsize
-                                ),
-                            ]
-                            if array_info.compression_mode
-                            else [
-                                zarrita.codecs.transpose_codec(array_info.axis_order),
-                                zarrita.codecs.bytes_codec(),
-                            ]
-                        ),
-                    )
-                ],
-            )
-        else:
-            ArrayV2.create(
-                store=path,
-                shape=(array_info.shape),
-                chunks=(array_info.num_channels,)
-                + tuple(
-                    getattr(array_info.chunk_shape, axis, 1)
-                    for axis in array_info.dimension_names[1:]
-                ),  # The chunk shape consists of the number of channels, the x, y, and z dimensions of a chunk, and 1 for all other dimensions.
-                dtype=array_info.voxel_type,
-                compressor=(
-                    {"id": "blosc", "cname": "zstd", "clevel": 5}
-                    if array_info.compression_mode
-                    else None
-                ),
-                order="F",
-                dimension_separator=".",
-            )
-        return ZarritaArray(path)
-
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
-        shape = bbox.size.to_tuple()
-        zarray = self._zarray
-        slice_tuple = (slice(None),) + bbox.to_slices()
-        with _blosc_disable_threading():
-            data = zarray[slice_tuple]
-
-        shape_with_channels = (self.info.num_channels,) + shape
-        if data.shape != shape_with_channels:
-            data_slice_tuple = tuple(slice(0, size) for size in data.shape)
-            padded_data = np.zeros(shape_with_channels, dtype=zarray.metadata.dtype)
-            padded_data[data_slice_tuple] = data
-            data = padded_data
-        return data
-
-    def ensure_size(
-        self,
-        new_bbox: NDBoundingBox,
-        align_with_shards: bool = True,
-        warn: bool = False,
-    ) -> None:
-        zarray = self._zarray
-
-        new_bbox = new_bbox.with_bottomright(
-            (
-                max(zarray.metadata.shape[i + 1], new_bbox.bottomright[i])
-                for i in range(len(new_bbox))
-            )
-        )
-        new_shape_tuple = (zarray.metadata.shape[0],) + tuple(new_bbox.bottomright)
-        if new_shape_tuple != zarray.metadata.shape:
-            if align_with_shards:
-                shard_shape = self.info.shard_shape
-                new_aligned_bbox = new_bbox.with_bottomright_xyz(
-                    new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
-                )
-                new_shape_tuple = (
-                    zarray.metadata.shape[0],
-                ) + new_aligned_bbox.bottomright.to_tuple()
-
-            # Check on-disk for changes to shape
-            current_zarray = zarray.open(self._path)
-            if zarray.metadata.shape != current_zarray.metadata.shape:
-                warnings.warn(
-                    f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.metadata.shape} != {current_zarray.metadata.shape}) was found in the currently persisted metadata."
-                    + "This is likely happening because multiple processes changed the metadata of this array."
-                )
-
-            if warn:
-                warnings.warn(
-                    f"[WARNING] Resizing zarr array from `{zarray.metadata.shape}` to `{new_shape_tuple}`."
-                )
-            self._cached_zarray = zarray.resize(new_shape_tuple)
-
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        if data.ndim == len(bbox):
-            # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
-            data = data.reshape((1,) + data.shape)
-
-        assert data.ndim == len(bbox) + 1
-
-        with _blosc_disable_threading():
-            self.ensure_size(bbox, warn=True)
-            zarray = self._zarray
-            index_tuple = (slice(None),) + bbox.to_slices()
-
-            zarray[index_tuple] = data
-
-    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
-        raise NotImplementedError
-
-    def close(self) -> None:
-        if self._cached_zarray is not None:
-            self._cached_zarray = None
-
-    @property
-    def _zarray(self) -> Union["zarrita.Array", "zarrita.ArrayV2"]:
-        from zarrita import Array, runtime_configuration
-
-        if self._cached_zarray is None:
-            try:
-                zarray = Array.open_auto(
-                    store=self._path,
-                    runtime_configuration=runtime_configuration("F"),
-                )
-                self._cached_zarray = zarray
-            except Exception as e:
-                raise ArrayException(
-                    f"Exception while opening Zarrita array for {self._path}"
-                ) from e
-        return self._cached_zarray
-
-    @_zarray.deleter
-    def _zarray(self) -> None:
-        self.close()
-
-    def __del__(self) -> None:
-        del self._cached_zarray
-
-    def __getstate__(self) -> Dict[str, Any]:
-        d = dict(self.__dict__)
-        del d["_cached_zarray"]
-        return d
-
-    def __setstate__(self, d: Dict[str, Any]) -> None:
-        d["_cached_zarray"] = None
-        self.__dict__ = d
