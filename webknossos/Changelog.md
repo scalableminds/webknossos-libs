@@ -17,7 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
-- Updated to WEBKNOSSOS API version 7. [#1185](https://github.com/scalableminds/webknossos-libs/pull/1185)
+- Updated to WEBKNOSSOS API version 8. [#1185](https://github.com/scalableminds/webknossos-libs/pull/1185)
 
 ### Fixed
 
