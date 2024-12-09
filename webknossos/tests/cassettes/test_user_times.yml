@@ -18,18 +18,16 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 04 Dec 2024 21:44:57 GMT
-        connection: close
+        date: Mon, 09 Dec 2024 13:11:30 GMT
         content-type: application/json
         content-length: '2287'
       body:
         encoding: utf8
         data: >-
-          [{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1733348655342,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"670b9f4d2a7c0e4d008da6ef","email":"user_B@scalableminds.com","firstName":"user_B","lastName":"last_B","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true}],"experiences":{},"lastActivity":1460465869053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"770b9f4d2a7c0e4d008da6ef","email":"user_C@scalableminds.com","firstName":"user_C","lastName":"last_C","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":false}],"experiences":{},"lastActivity":1460552269053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"870b9f4d2a7c0e4d008da6ef","email":"user_D@scalableminds.com","firstName":"user_D","lastName":"last_D","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"69882b370d889b84020efd4f","name":"team_X2","isTeamManager":true}],"experiences":{},"lastActivity":1460638669053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"light","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}]
+          [{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1733749844178,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"670b9f4d2a7c0e4d008da6ef","email":"user_B@scalableminds.com","firstName":"user_B","lastName":"last_B","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true}],"experiences":{},"lastActivity":1460465869053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"770b9f4d2a7c0e4d008da6ef","email":"user_C@scalableminds.com","firstName":"user_C","lastName":"last_C","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":false}],"experiences":{},"lastActivity":1460552269053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true},{"id":"870b9f4d2a7c0e4d008da6ef","email":"user_D@scalableminds.com","firstName":"user_D","lastName":"last_D","isAdmin":false,"isOrganizationOwner":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"69882b370d889b84020efd4f","name":"team_X2","isTeamManager":true}],"experiences":{},"lastActivity":1460638669053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"light","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}]
         compression: none
   - request:
       method: GET
@@ -50,12 +48,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 04 Dec 2024 21:44:57 GMT
-        connection: close
+        date: Mon, 09 Dec 2024 13:11:30 GMT
         content-type: application/json
         content-length: '692'
       body:
@@ -82,12 +78,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 04 Dec 2024 21:44:57 GMT
-        connection: close
+        date: Mon, 09 Dec 2024 13:11:30 GMT
         content-type: application/json
         content-length: '17'
       body:
@@ -113,12 +107,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 04 Dec 2024 21:44:57 GMT
-        connection: close
+        date: Mon, 09 Dec 2024 13:11:30 GMT
         content-type: application/json
         content-length: '285'
       body:
@@ -145,12 +137,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 04 Dec 2024 21:44:57 GMT
-        connection: close
+        date: Mon, 09 Dec 2024 13:11:30 GMT
         content-type: application/json
         content-length: '17'
       body:

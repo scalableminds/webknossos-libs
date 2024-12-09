@@ -18,19 +18,17 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 04 Dec 2024 21:42:06 GMT
-        connection: close
+        date: Mon, 09 Dec 2024 13:07:59 GMT
         content-type: application/json
-        content-length: '407'
+        content-length: '414'
       body:
         encoding: utf8
         data: >-
-          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"6483aada252cee1ee580aa41e857fdfeb5797f59","ciBuild":"","scalaVersion":"2.13.14","version":"dev","sbtVersion":"1.10.1","datastoreApiVersion":"2.0","commitDate":"Wed
-          Dec 4 12:19:54 2024
+          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"2bdc9eb7748d09dab64f03f240b9c09ccd4b2b23","ciBuild":"30988","scalaVersion":"2.13.14","version":"30988","sbtVersion":"1.10.1","datastoreApiVersion":"2.0","commitDate":"Thu
+          Dec 5 15:17:36 2024
           +0000"},"schemaVersion":124,"httpApiVersioning":{"currentApiVersion":9,"oldestSupportedApiVersion":5},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}
         compression: none
