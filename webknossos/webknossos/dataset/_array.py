@@ -665,9 +665,13 @@ class ZarritaArray(BaseArray):
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
         shape = bbox.size.to_tuple()
         zarray = self._zarray
-        slice_tuple = (slice(None),) + bbox.to_slices()
         with _blosc_disable_threading():
-            data = zarray[slice_tuple]
+            try:
+                slice_tuple = (slice(None),) + bbox.to_slices()
+                data = zarray[slice_tuple]
+            except IndexError:
+                # The data is stored without channel axis
+                data = zarray[bbox.to_slices()]
 
         shape_with_channels = (self.info.num_channels,) + shape
         if data.shape != shape_with_channels:
