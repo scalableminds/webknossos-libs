@@ -1,7 +1,7 @@
 import itertools
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import attr
 import networkx as nx
