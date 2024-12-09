@@ -141,7 +141,7 @@ class ApiDatasetUploadInformation:
 
 @attr.s(auto_attribs=True)
 class ApiLinkedLayerIdentifier:
-    organization_name: str
+    organization_id: str
     data_set_name: str
     layer_name: str
     new_layer_name: Optional[str] = None

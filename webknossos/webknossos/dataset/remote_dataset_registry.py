@@ -32,7 +32,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
             tags = [tags]
 
         dataset_infos = client.dataset_list(
-            is_active=True, organization_name=organization_id
+            is_active=True, organization_id=organization_id
         )
 
         datasets_names = []
