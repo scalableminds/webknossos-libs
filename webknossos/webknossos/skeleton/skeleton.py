@@ -1,7 +1,7 @@
 import itertools
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import attr
 import networkx as nx
@@ -12,7 +12,7 @@ from .group import Group
 Vector3 = Tuple[float, float, float]
 
 
-@attr.define
+@attr.define(eq=False)
 class Skeleton(Group):
     """A hierarchical representation of skeleton annotations in WEBKNOSSOS.
 
