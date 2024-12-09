@@ -125,6 +125,7 @@ class MagView(View):
         chunk_shape: Vec3Int,
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
+        shape: Optional[VecInt] = None,
         create: bool = False,
         path: Optional[UPath] = None,
     ) -> None:
@@ -145,7 +146,9 @@ class MagView(View):
                 layer.num_channels,
                 *VecInt.ones(layer.bounding_box.axes),
                 axes=("c",) + layer.bounding_box.axes,
-            ),
+            )
+            if shape is None
+            else shape,
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         if create:
