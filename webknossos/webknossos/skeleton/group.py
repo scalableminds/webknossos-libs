@@ -1,5 +1,5 @@
 import copy
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Set, Tuple, Union, cast
 
 import attr
 from boltons.strutils import unit_len
@@ -220,7 +220,7 @@ class Group:
     @property
     def trees(self) -> Iterator[Tree]:
         """Returns all (immediate) tree children as an iterator.
-        Use flattened_trees if you need also need trees within subgroups."""
+        Use flattened_trees if you also need trees within subgroups."""
         return (child for child in self._child_trees)
 
     @property
@@ -430,5 +430,8 @@ class Group:
             children=[g.as_nml_group() for g in self._child_groups],
         )
 
+    def __eq__(self, other: Any) -> bool:
+        return type(other) is type(self) and self._id == other._id
+
     def __hash__(self) -> int:
-        return self._id
+        return id(self)

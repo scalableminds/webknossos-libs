@@ -438,3 +438,15 @@ def test_add_tree_with_obj_and_properties(tmp_path: Path) -> None:
     assert new_tree.color == (1, 2, 3, 1)
 
     skeleton_b.save(output_path)
+
+
+def test_add_tree_with_group() -> None:
+    annotation = wk.Annotation(
+        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
+    )
+    group = annotation.skeleton.add_group("a group")
+    tree = group.add_tree("a tree")
+
+    skeleton_a = create_dummy_skeleton()
+
+    skeleton_a.add_tree(tree)
