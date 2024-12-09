@@ -124,10 +124,14 @@ def use_replay_proxay(request: Any) -> Generator:
     testname = request.node.name
     if "use_proxay" in request.keywords:
         os.environ["HTTP_PROXY"] = "http://localhost:3000"
+        os.environ["http_proxy"] = (
+            "http://localhost:3000"  # for tensorstore. env var names are case-senstive on Linux
+        )
         httpx.post("http://localhost:3000/__proxay/tape", json={"tape": testname})
     yield
     if "HTTP_PROXY" in os.environ:
-        del os.environ["HTTP_PROXY"]
+        os.environ.pop("HTTP_PROXY", None)
+        os.environ.pop("http_proxy", None)
 
 
 ### Misc fixtures
