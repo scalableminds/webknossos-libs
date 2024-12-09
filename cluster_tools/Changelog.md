@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.1...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,37 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.1) - 2024-12-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...v0.16.1)
+
+
+## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...v0.16.0)
+
+### Breaking Changes
+- Removed the `map_unordered` function of executors. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
+
+### Changed
+- Deprecated the test_pickling and debug_sequential executor strategies. The strategies multiprocessing_with_pickling and sequential should be used instead. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
+- The sequential executor strategy no longer uses multiprocessing functionality internally and instead executes functions sequentially and synchronously in the same process. [#1193](https://github.com/scalableminds/webknossos-libs/pull/1193)
+
+
+## [0.15.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.11) - 2024-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...v0.15.11)
+
+
+## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...v0.15.10)
+
+
+## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.8...v0.15.9)
+
+
+## [0.15.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.8) - 2024-11-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...v0.15.8)
 
 
 ## [0.15.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.7) - 2024-10-25

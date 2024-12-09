@@ -45,6 +45,8 @@ def test_upsampling(tmp_path: Path) -> None:
         args=None,
     )
 
+    assert layer.get_mag("2").read().mean() == layer.get_mag("1").read().mean()
+
 
 def test_upsample_cube() -> None:
     buffer = np.zeros(BUFFER_SHAPE, dtype=np.uint8)

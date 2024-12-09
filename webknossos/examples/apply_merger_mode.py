@@ -1,9 +1,12 @@
 from os import environ
+from pathlib import Path
 from typing import Tuple, cast
 
 import fastremap
 
 import webknossos as wk
+
+TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
 
 
 def main() -> None:
@@ -12,7 +15,7 @@ def main() -> None:
     ####################################
 
     nml = wk.Annotation.download(
-        "https://webknossos.org/annotations/Explorational/6204d2cd010000db0003db91"
+        "https://webknossos.org/annotations/6748612b0100001101c81156"
     ).skeleton
 
     ###############################################
@@ -20,10 +23,9 @@ def main() -> None:
     ###############################################
 
     dataset = wk.Dataset.download(
-        "l4_sample_dev",
-        "scalable_minds",
-        path="testoutput/l4_sample_dev",
-        webknossos_url="https://webknossos.org",
+        "l4_sample",
+        bbox=wk.BoundingBox((3457, 3323, 1204), (40, 10, 10)),
+        path="testoutput/l4_sample",
     )
     in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))
     in_mag1 = in_layer.get_mag("1")
@@ -89,7 +91,7 @@ def main() -> None:
             "l4_sample_remapped",
             layers_to_link=[
                 wk.LayerToLink(
-                    dataset_name="l4_sample_dev",
+                    dataset_name="l4_sample",
                     layer_name="color",
                     organization_id="scalable_minds",
                 )
