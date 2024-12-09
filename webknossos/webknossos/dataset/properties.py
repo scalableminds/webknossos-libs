@@ -25,7 +25,8 @@ from webknossos.dataset.length_unit import (
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
-from ._array import ArrayException, BaseArray, DataFormat
+from ._array import ArrayException, BaseArray
+from .data_format import DataFormat
 from .layer_categories import LayerCategoryType
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER

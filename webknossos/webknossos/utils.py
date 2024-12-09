@@ -12,7 +12,7 @@ from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
-from pathlib import Path
+from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from typing import (
     Any,
@@ -279,7 +279,9 @@ def count_defined_values(values: Iterable[Optional[Any]]) -> int:
 def is_fs_path(path: Path) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
-    return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
+    return not isinstance(path, UPath) or isinstance(
+        path, (PosixPath, WindowsPath, PosixUPath, WindowsUPath)
+    )
 
 
 def is_remote_path(path: Path) -> bool:
@@ -294,11 +296,8 @@ def is_writable_path(path: Path) -> bool:
 
 
 def strip_trailing_slash(path: Path) -> Path:
-    if isinstance(path, UPath):
-        return UPath(
-            str(path).rstrip("/"),
-            **path.storage_options,
-        )
+    if isinstance(path, UPath) and not is_fs_path(path):
+        return UPath(str(path).rstrip("/"), **path.storage_options)
     else:
         return Path(str(path).rstrip("/"))
 

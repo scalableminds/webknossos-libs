@@ -1,10 +1,27 @@
 import re
 from operator import add, floordiv, mod, mul, sub
-from typing import Any, Callable, Iterable, List, Optional, Tuple, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import numpy as np
 
-_VALUE_ERROR = "VecInt can be instantiated with int values `VecInt(1,2,3,4) or with `VecIntLike` object `VecInt([1,2,3,4])."
+if TYPE_CHECKING:
+    from .vec3_int import Vec3Int
+
+
+def _value_error(args: Any) -> str:
+    return f"VecInt can be instantiated with int values `VecInt(1,2,3,4) or with `VecIntLike` object `VecInt([1,2,3,4]). Got {args}."
+
 
 _T = TypeVar("_T", bound="VecInt")
 
@@ -40,6 +57,7 @@ class VecInt(tuple):
     """
 
     axes: Tuple[str, ...]
+    _c_pos: Optional[int]
     _x_pos: Optional[int]
     _y_pos: Optional[int]
     _z_pos: Optional[int]
@@ -56,25 +74,27 @@ class VecInt(tuple):
             if isinstance(args[0], VecInt):
                 return args[0]
             if isinstance(args[0], np.ndarray):
-                assert np.count_nonzero(args[0] % 1) == 0, _VALUE_ERROR
+                assert np.count_nonzero(args[0] % 1) == 0, _value_error(args)
             if isinstance(args[0], str):
                 return cls.from_str(args[0])
             if isinstance(args[0], Iterable):
                 as_tuple = tuple(int(item) for item in args[0])
                 if args[1:] and isinstance(args[1], Iterable):
-                    assert all(isinstance(arg, str) for arg in args[1]), _VALUE_ERROR
+                    assert all(isinstance(arg, str) for arg in args[1]), _value_error(
+                        args
+                    )
                     axes = tuple(args[1])  # type: ignore
             elif isinstance(args, Iterable):
                 as_tuple = tuple(int(arg) for arg in args)  # type: ignore
             else:
-                raise ValueError(_VALUE_ERROR)
-            assert axes is not None, _VALUE_ERROR
+                raise ValueError(_value_error(args))
+            assert axes is not None, _value_error(args)
         else:
-            assert kwargs, _VALUE_ERROR
-            assert axes is None, _VALUE_ERROR
+            assert kwargs, _value_error(args)
+            assert axes is None, _value_error(args)
             as_tuple = tuple(kwargs.values())
 
-        assert as_tuple is not None, _VALUE_ERROR
+        assert as_tuple is not None, _value_error(args)
 
         self = super().__new__(cls, cast(Iterable, as_tuple))
         # self.axes is set in __new__ instead of __init__ so that pickling/unpickling
@@ -84,6 +104,7 @@ class VecInt(tuple):
         # Also see:
         # https://stackoverflow.com/questions/46283738/attributeerror-when-using-python-deepcopy
         self.axes = tuple(axes or kwargs.keys())
+        self._c_pos = self.axes.index("c") if "c" in self.axes else None
         self._x_pos = self.axes.index("x") if "x" in self.axes else None
         self._y_pos = self.axes.index("y") if "y" in self.axes else None
         self._z_pos = self.axes.index("z") if "z" in self.axes else None
@@ -92,6 +113,16 @@ class VecInt(tuple):
 
     def __getnewargs__(self) -> Tuple[Tuple[int, ...], Tuple[str, ...]]:
         return (self.to_tuple(), self.axes)
+
+    @property
+    def c(self) -> int:
+        """
+        Returns the x component of the vector.
+        """
+        if self._c_pos is not None:
+            return self[self._c_pos]
+
+        raise ValueError("The vector does not have an c component.")
 
     @property
     def x(self) -> int:
@@ -122,6 +153,12 @@ class VecInt(tuple):
             return self[self._z_pos]
 
         raise ValueError("The vector does not have an z component.")
+
+    @property
+    def xyz(self) -> "Vec3Int":
+        from .vec3_int import Vec3Int
+
+        return Vec3Int(self.x, self.y, self.z)
 
     @staticmethod
     def from_str(string: str) -> "VecInt":
@@ -254,9 +291,7 @@ class VecInt(tuple):
         return int(np.prod(self.to_np()))
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}({','.join((str(element) for element in self))})"
-        )
+        return f"{self.__class__.__name__}({','.join((str(element) for element in self))}, axes={self.axes})"
 
     def add_or_none(self: _T, other: Optional["VecInt"]) -> Optional[_T]:
         """

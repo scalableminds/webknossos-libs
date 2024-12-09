@@ -488,7 +488,7 @@ def test_get_or_add_mag() -> None:
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         # The mag "1" did exist before but with another 'block_len' (this would work the same for 'file_len' and 'block_type')
         layer.get_or_add_mag("1", block_len=64, file_len=32, compress=False)
 
@@ -692,11 +692,11 @@ def test_dataset_exist_ok() -> None:
     ds2 = Dataset(ds_path, scale=(1, 1, 1), name="wkw_dataset_exist_ok", exist_ok=True)
     assert "color" in ds2.layers.keys()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         # dataset already exists, but with a different scale
         Dataset(ds_path, scale=(2, 2, 2), exist_ok=True)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         # dataset already exists, but with a different name
         Dataset(ds_path, scale=(1, 1, 1), name="some different name", exist_ok=True)
 
