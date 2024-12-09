@@ -281,9 +281,3 @@ class Skeleton(Group):
         """Deprecated. Use Skeleton.save instead."""
         warn_deprecated("Skeleton.write", "skeleton.save")
         self.save(out_path)
-
-    def __eq__(self, other: Any) -> bool:
-        return type(other) is type(self) and self._id == other._id
-
-    def __hash__(self) -> int:
-        return id(self)
