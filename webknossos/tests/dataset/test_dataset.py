@@ -2752,7 +2752,7 @@ def test_remote_dataset_access_metadata() -> None:
     ds = Dataset.open_remote("l4_sample", "Organization_X")
     assert len(ds.metadata) == 0
 
-    ds.metadata = {"key": "value"}
+    ds.metadata["key"] = "value"
     assert ds.metadata["key"] == "value"
     assert len(ds.metadata) == 1
 
