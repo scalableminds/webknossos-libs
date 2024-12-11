@@ -2745,3 +2745,19 @@ def test_wkw_copy_to_remote_dataset() -> None:
             ds_path,
             chunks_per_shard=1,
         )
+
+
+@pytest.mark.use_proxay
+def test_remote_dataset_access_metadata() -> None:
+    ds = Dataset.open_remote("l4_sample", "Organization_X")
+    assert len(ds.metadata) == 0
+
+    ds.metadata = {"key": "value"}
+    assert ds.metadata["key"] == "value"
+    assert len(ds.metadata) == 1
+
+    assert len(ds.folder.metadata) == 1
+
+    ds.folder.metadata["folder_key"] = "folder_value"
+    assert ds.folder.metadata["folder_key"] == "folder_value"
+    assert len(ds.folder.metadata) == 2

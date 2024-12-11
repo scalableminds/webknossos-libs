@@ -1,4 +1,3 @@
-from os import environ
 from pathlib import Path
 from typing import Tuple, cast
 
@@ -84,19 +83,18 @@ def main() -> None:
     # Optionally, downsample and re-upload #
     ########################################
 
-    if "PYTEST_CURRENT_TEST" not in environ:
-        out_layer.downsample()
-        dataset.delete_layer("segmentation")
-        dataset.upload(
-            "l4_sample_remapped",
-            layers_to_link=[
-                wk.LayerToLink(
-                    dataset_name="l4_sample",
-                    layer_name="color",
-                    organization_id="scalable_minds",
-                )
-            ],
-        )
+    out_layer.downsample()
+    dataset.delete_layer("segmentation")
+    dataset.upload(
+        "l4_sample_remapped",
+        layers_to_link=[
+            wk.LayerToLink(
+                dataset_name="l4_sample",
+                layer_name="color",
+                organization_id="scalable_minds",
+            )
+        ],
+    )
 
 
 if __name__ == "__main__":
