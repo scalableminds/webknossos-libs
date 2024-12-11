@@ -117,7 +117,7 @@ class VecInt(tuple):
     @property
     def c(self) -> int:
         """
-        Returns the x component of the vector.
+        Returns the c component of the vector.
         """
         if self._c_pos is not None:
             return self[self._c_pos]
