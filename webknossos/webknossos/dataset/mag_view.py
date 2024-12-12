@@ -14,6 +14,7 @@ from webknossos.dataset.data_format import DataFormat
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
+    EitherPath,
     get_executor_for_args,
     is_fs_path,
     # is_remote_path,
@@ -39,19 +40,15 @@ def _find_mag_path(
     dataset_path: Path,
     layer_name: str,
     mag_name: str,
-    path: Optional[Union[str, Path]] = None,
-) -> Path:
-    path = UPath(path) if path else None
+    path: Optional[EitherPath] = None,
+) -> EitherPath:
     if path is not None:
-        return path
+        return EitherPath.resolved(path)
 
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
-    if short_mag_file_path.exists():
-        return short_mag_file_path
-    else:
-        return long_mag_file_path
+    return EitherPath(short_mag_file_path, long_mag_file_path)
 
 
 def _compress_cube_job(args: Tuple[View, View, int]) -> None:
@@ -127,7 +124,7 @@ class MagView(View):
         chunk_shape: Vec3Int,
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
-        path: Optional[Path] = None,
+        path: Optional[EitherPath] = None,
     ) -> "MagView":
         array_info = ArrayInfo(
             data_format=layer._properties.data_format,
@@ -147,7 +144,11 @@ class MagView(View):
             dimension_names=("c",) + layer.bounding_box.axes,
         )
         creation_path = (
-            path if path else layer.dataset.path / layer.name / mag.to_layer_name()
+            path
+            if path
+            else EitherPath.resolved(
+                layer.dataset.path / layer.name / mag.to_layer_name()
+            )
         )
         BaseArray.get_class(array_info.data_format).create(creation_path, array_info)
         path = UPath(creation_path)

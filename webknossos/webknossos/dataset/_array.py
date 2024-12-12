@@ -1,48 +1,35 @@
-from typing import (
-    TYPE_CHECKING,
-)
-from urllib.parse import urlparse
-
-from ..geometry import NDBoundingBox, VecInt
-from .data_format import DataFormat
-
-if TYPE_CHECKING:
-    import zarrita
-    import zarrita.codecs
-
 import re
 import warnings
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import lru_cache
 from os.path import relpath
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
+from urllib.parse import urlparse
 
 import numpy as np
 import tensorstore
 import wkw
 from upath import UPath
-from zarr.storage import FSStore
 
-from ..geometry import BoundingBox, Vec3Int
+from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
 from ..utils import is_fs_path, warn_deprecated
+from .data_format import DataFormat
 
 
 def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
-
-
-def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
-    storage_options = {}
-    if isinstance(path, UPath) and not is_fs_path(path):
-        storage_options = path._kwargs.copy()
-        storage_options.pop("_url", None)
-        return FSStore(url=str(path), mode=mode, **storage_options)
-
-    return FSStore(url=str(path), mode=mode, **storage_options)
 
 
 class ArrayException(Exception):
@@ -339,6 +326,61 @@ class TensorStoreArray(BaseArray):
         super().__init__(path)
         self._cached_array = _cached_array
 
+    def _get_array_dimensions(
+        array: tensorstore.TensorStore,
+    ) -> Tuple[str, Vec3Int, Vec3Int, int]:
+        axes = array.domain.labels
+        array_chunk_shape = array.chunk_layout.read_chunk.shape
+        array_shard_shape = array.chunk_layout.write_chunk.shape
+
+        chunk_shape = Vec3Int.ones()
+        shard_shape = Vec3Int.ones()
+        num_channels = 1
+        if all(a == "" for a in axes):
+            if len(array.shape) == 2:
+                dimension_names = ("x", "y")
+                chunk_shape = Vec3Int(array_chunk_shape[0], array_chunk_shape[1], 1)
+                shard_shape = Vec3Int(array_shard_shape[0], array_shard_shape[1], 1)
+            elif len(array.shape) == 3:
+                dimension_names = ("x", "y", "z")
+                chunk_shape = Vec3Int(
+                    array_chunk_shape[0], array_chunk_shape[1], array_chunk_shape[2]
+                )
+                shard_shape = Vec3Int(
+                    array_shard_shape[0], array_shard_shape[1], array_shard_shape[2]
+                )
+            elif len(array.shape) == 4:
+                dimension_names = ("c", "x", "y", "z")
+                num_channels = array.domain[0].exclusive_max
+                chunk_shape = Vec3Int(
+                    array_chunk_shape[1], array_chunk_shape[2], array_chunk_shape[3]
+                )
+                shard_shape = Vec3Int(
+                    array_shard_shape[1], array_shard_shape[2], array_shard_shape[3]
+                )
+            else:
+                raise ArrayException(
+                    f"Zarr3 arrays with less than 2 and more than 4 dimensions are not supported without explicit `dimension_names`. Got {len(array.shape)} dimensions."
+                )
+        else:
+            dimension_names = axes
+            x_index, y_index, z_index = (
+                dimension_names.index("x"),
+                dimension_names.index("y"),
+                dimension_names.index("z"),
+            )
+            chunk_shape = Vec3Int(
+                array_chunk_shape[x_index],
+                array_chunk_shape[y_index],
+                array_chunk_shape[z_index],
+            )
+            shard_shape = Vec3Int(
+                array_shard_shape[x_index],
+                array_shard_shape[y_index],
+                array_shard_shape[z_index],
+            )
+        return dimension_names, chunk_shape, shard_shape, num_channels
+
     @staticmethod
     def _make_kvstore(path: Path) -> Union[str, Dict[str, Union[str, List[str]]]]:
         if is_fs_path(path):
@@ -369,7 +411,10 @@ class TensorStoreArray(BaseArray):
                 )
             return kvstore_spec
         else:
-            return str(path)
+            return {
+                "driver": "file",
+                "path": str(path),
+            }
 
     @classmethod
     def open(cls, path: Path) -> "TensorStoreArray":
@@ -547,51 +592,31 @@ class Zarr3Array(TensorStoreArray):
     def info(self) -> ArrayInfo:
         array = self._array
         array_codecs = array.codec.to_json()["codecs"]
-        axes = array.domain.labels
 
-        if all(a == "" for a in axes):
-            dimension_names = ("c", "x", "y", "z")
-        else:
-            dimension_names = axes
-        x_index, y_index, z_index = (
-            dimension_names.index("x"),
-            dimension_names.index("y"),
-            dimension_names.index("z"),
+        dimension_names, chunk_shape, shard_shape, num_channels = (
+            self._get_array_dimensions(array)
         )
-        chunk_shape = array.chunk_layout.read_chunk.shape
+
         if len(array_codecs) == 1 and array_codecs[0]["name"] == "sharding_indexed":
-            shard_shape = array.chunk_layout.write_chunk.shape
             return ArrayInfo(
                 data_format=DataFormat.Zarr3,
-                num_channels=array.domain[0].exclusive_max,
+                num_channels=num_channels,
                 voxel_type=array.dtype.numpy_dtype,
                 compression_mode=self._has_compression_codecs(
                     array_codecs[0]["configuration"]["codecs"]
                 ),
-                chunk_shape=Vec3Int(
-                    chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
-                ),
-                shard_shape=Vec3Int(
-                    Vec3Int(
-                        shard_shape[x_index],
-                        shard_shape[y_index],
-                        shard_shape[z_index],
-                    )
-                ),
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 dimension_names=dimension_names,
             )
         return ArrayInfo(
             data_format=DataFormat.Zarr3,
-            num_channels=array.domain[0].exclusive_max,
+            num_channels=num_channels,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=self._has_compression_codecs(array_codecs),
-            chunk_shape=Vec3Int(
-                chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
-            ),
-            shard_shape=Vec3Int(
-                chunk_shape[x_index], chunk_shape[y_index], chunk_shape[z_index]
-            ),
-            dimension_names=axes,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+            dimension_names=dimension_names,
         )
 
     @staticmethod
@@ -694,33 +719,17 @@ class Zarr2Array(TensorStoreArray):
     @property
     def info(self) -> ArrayInfo:
         array = self._array
-        axes = array.domain.labels
-        if all(a == "" for a in axes):
-            dimension_names = ("c", "x", "y", "z")
-        else:
-            dimension_names = axes
-        x_index, y_index, z_index = (
-            dimension_names.index("x"),
-            dimension_names.index("y"),
-            dimension_names.index("z"),
+        dimension_names, chunk_shape, shard_shape, num_channels = (
+            self._get_array_dimensions(array)
         )
-        chunk_shape = array.chunk_layout.read_chunk.shape
 
         return ArrayInfo(
             data_format=DataFormat.Zarr,
-            num_channels=array.domain[0].exclusive_max,
+            num_channels=num_channels,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=array.codec.to_json()["compressor"] is not None,
-            chunk_shape=Vec3Int(
-                chunk_shape[x_index],
-                chunk_shape[y_index],
-                chunk_shape[z_index],
-            ),
-            shard_shape=Vec3Int(
-                chunk_shape[x_index],
-                chunk_shape[y_index],
-                chunk_shape[z_index],
-            ),
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
         )
 
     @classmethod

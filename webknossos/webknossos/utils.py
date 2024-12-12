@@ -350,6 +350,40 @@ def movetree(in_path: Path, out_path: Path) -> None:
     move(in_path, out_path)
 
 
+class EitherPath:
+    paths: tuple[Path, ...]
+    resolution: Optional[int] = None
+
+    def __init__(self, *paths: Path):
+        self.paths = tuple(paths)
+
+    @classmethod
+    def resolved(cls, path: Path) -> "EitherPath":
+        obj = cls(path)
+        obj.resolution = 0
+        return obj
+
+    def resolve(self) -> Path:
+        if self.resolution is not None:
+            return self.paths[self.resolution]
+        else:
+            for i, path in enumerate(self.paths):
+                if path.exists():
+                    self.resolution = i
+                    return path
+            raise FileNotFoundError(f"No path exists in {self.paths}")
+
+    def __repr__(self) -> str:
+        if self.resolution is not None:
+            return repr(self.paths[self.resolution])
+        return f"EitherPath({','.join(repr(p) for p in self.paths)})"
+
+    def __str__(self) -> str:
+        if self.resolution is not None:
+            return str(self.paths[self.resolution])
+        return f"EitherPath({','.join(str(p) for p in self.paths)})"
+
+
 K = TypeVar("K")  # key
 V = TypeVar("V")  # value
 C = TypeVar("C")  # cache

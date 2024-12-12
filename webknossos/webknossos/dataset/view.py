@@ -1,6 +1,5 @@
 import warnings
 from argparse import Namespace
-from pathlib import Path
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
@@ -22,6 +21,7 @@ from cluster_tools import Executor
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.vec_int import VecInt, VecIntLike
 from ..utils import (
+    EitherPath,
     count_defined_values,
     get_executor_for_args,
     get_rich_progress,
@@ -72,7 +72,7 @@ class View:
         ```
     """
 
-    _path: Path
+    _path: EitherPath
     _data_format: DataFormat
     _bounding_box: Optional[NDBoundingBox]
     _read_only: bool
@@ -81,7 +81,7 @@ class View:
 
     def __init__(
         self,
-        path_to_mag_view: Path,
+        path_to_mag_view: EitherPath,
         bounding_box: Optional[
             NDBoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
@@ -1557,7 +1557,7 @@ class View:
         pass
 
     def __repr__(self) -> str:
-        return f"View({repr(str(self._path))}, bounding_box={self.bounding_box})"
+        return f"View({repr(self._path)}, bounding_box={self.bounding_box})"
 
     def _check_chunk_shape(self, chunk_shape: Vec3Int, read_only: bool) -> None:
         assert chunk_shape.is_positive(
@@ -1582,7 +1582,9 @@ class View:
     @property
     def _array(self) -> BaseArray:
         if self._cached_array is None:
-            self._cached_array = BaseArray.get_class(self._data_format).open(self._path)
+            self._cached_array = BaseArray.get_class(self._data_format).open(
+                self._path.resolve()
+            )
         return self._cached_array
 
     @_array.deleter

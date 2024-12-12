@@ -20,7 +20,12 @@ if TYPE_CHECKING:
 
 
 def _value_error(args: Any) -> str:
-    return f"VecInt can be instantiated with int values `VecInt(1,2,3,4) or with `VecIntLike` object `VecInt([1,2,3,4]). Got {args}."
+    return (
+        'VecInt can be instantiated with int values `VecInt(1, 2, 3, 4, axes=("x","y","z","t"))`, '
+        + "with axes as argument names `VecInt(x=10, y=42, z=3, t=100)` or with two Iterables one with the "
+        + 'axes values and the other with axes names `VecInt((1, 2, 3, 4), ("x", "y", "z", "t"))`. '
+        + f"Got {args}."
+    )
 
 
 _T = TypeVar("_T", bound="VecInt")

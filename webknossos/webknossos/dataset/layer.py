@@ -1479,13 +1479,10 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
         mag_path_maybe: Optional[Path] = UPath(path) if path is not None else path
         try:
-            resolved_path = _find_mag_path(
-                self.dataset.path, self.name, mag_name, mag_path_maybe
-            )
             self._mags[mag] = MagView(
                 self,
                 mag,
-                UPath(resolved_path),
+                _find_mag_path(self.dataset.path, self.name, mag_name, mag_path_maybe),
             )
             self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:
