@@ -12,6 +12,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Self,
     Tuple,
     Type,
     Union,
@@ -326,9 +327,10 @@ class TensorStoreArray(BaseArray):
         super().__init__(path)
         self._cached_array = _cached_array
 
+    @staticmethod
     def _get_array_dimensions(
         array: tensorstore.TensorStore,
-    ) -> Tuple[str, Vec3Int, Vec3Int, int]:
+    ) -> tuple[tuple[str, ...], Vec3Int, Vec3Int, int]:
         axes = array.domain.labels
         array_chunk_shape = array.chunk_layout.read_chunk.shape
         array_shard_shape = array.chunk_layout.write_chunk.shape
@@ -336,6 +338,7 @@ class TensorStoreArray(BaseArray):
         chunk_shape = Vec3Int.ones()
         shard_shape = Vec3Int.ones()
         num_channels = 1
+        dimension_names: tuple[str, ...] = ()
         if all(a == "" for a in axes):
             if len(array.shape) == 2:
                 dimension_names = ("x", "y")
@@ -364,21 +367,42 @@ class TensorStoreArray(BaseArray):
                 )
         else:
             dimension_names = axes
-            x_index, y_index, z_index = (
-                dimension_names.index("x"),
-                dimension_names.index("y"),
-                dimension_names.index("z"),
-            )
-            chunk_shape = Vec3Int(
-                array_chunk_shape[x_index],
-                array_chunk_shape[y_index],
-                array_chunk_shape[z_index],
-            )
-            shard_shape = Vec3Int(
-                array_shard_shape[x_index],
-                array_shard_shape[y_index],
-                array_shard_shape[z_index],
-            )
+            if "x" in dimension_names and "y" in dimension_names:
+                x_index, y_index = (
+                    dimension_names.index("x"),
+                    dimension_names.index("y"),
+                )
+                if "z" in dimension_names:
+                    z_index = dimension_names.index("z")
+                    chunk_shape = Vec3Int(
+                        array_chunk_shape[x_index],
+                        array_chunk_shape[y_index],
+                        array_chunk_shape[z_index],
+                    )
+                    shard_shape = Vec3Int(
+                        array_shard_shape[x_index],
+                        array_shard_shape[y_index],
+                        array_shard_shape[z_index],
+                    )
+                else:
+                    chunk_shape = Vec3Int(
+                        array_chunk_shape[x_index],
+                        array_chunk_shape[y_index],
+                        1,
+                    )
+                    shard_shape = Vec3Int(
+                        array_shard_shape[x_index],
+                        array_shard_shape[y_index],
+                        1,
+                    )
+                if "c" in dimension_names:
+                    c_index = dimension_names.index("c")
+                    num_channels = array.domain[c_index].exclusive_max
+            else:
+                raise ArrayException(
+                    f"Zarr3 arrays without x and y dimensions are not supported. Got {axes} dimensions."
+                )
+
         return dimension_names, chunk_shape, shard_shape, num_channels
 
     @staticmethod
@@ -428,7 +452,7 @@ class TensorStoreArray(BaseArray):
         raise ArrayException(f"Could not open the array at {path}.")
 
     @classmethod
-    def _open(cls, path: Path) -> "TensorStoreArray":
+    def _open(cls, path: Path) -> Self:
         try:
             uri = cls._make_kvstore(path)
             _array = tensorstore.open(
