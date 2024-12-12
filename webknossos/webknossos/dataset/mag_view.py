@@ -17,7 +17,6 @@ from ..utils import (
     EitherPath,
     get_executor_for_args,
     is_fs_path,
-    # is_remote_path,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
@@ -126,6 +125,9 @@ class MagView(View):
         compression_mode: bool,
         path: Optional[EitherPath] = None,
     ) -> "MagView":
+        """
+        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
+        """
         array_info = ArrayInfo(
             data_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,

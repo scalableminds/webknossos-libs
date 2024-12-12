@@ -36,7 +36,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Refactored the PimsTiffReader to read the data directly from the tiff file without creating a memmap-able copy first. This greatly reduces the time and storage requirements for converting large tiff files. [#1212](https://github.com/scalableminds/webknossos-libs/pull/1212)
 
 ### Fixed
+- Fixed an issue where adding existing trees to an annotation fails. [#1201](https://github.com/scalableminds/webknossos-libs/pull/1201)
 - Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
+- Fixed offset error in upsample_cube job [#1209](https://github.com/scalableminds/webknossos-libs/pull/1209)
 
 
 
@@ -51,13 +53,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
 
 
-
 ## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...v0.15.10)
 
 ### Fixed
 - Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
-
 
 
 ## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
@@ -82,6 +82,7 @@ Removed the CZI installation extra from `pip install webknossos[all]` by default
 
 ### Fixed
 - Fixed an issue with merging annotations with compressed fallback layers.
+- Fixed an issue where adding a Zarr array with other axes than `cxyz` leads to an error. [#1204](https://github.com/scalableminds/webknossos-libs/pull/1204)
 
 
 

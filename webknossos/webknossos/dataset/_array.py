@@ -330,7 +330,7 @@ class TensorStoreArray(BaseArray):
     @staticmethod
     def _get_array_dimensions(
         array: tensorstore.TensorStore,
-    ) -> tuple[tuple[str, ...], Vec3Int, Vec3Int, int]:
+    ) -> tuple[tuple[str, ...], Vec3Int, Vec3Int, int, VecInt]:
         axes = array.domain.labels
         array_chunk_shape = array.chunk_layout.read_chunk.shape
         array_shard_shape = array.chunk_layout.write_chunk.shape
@@ -403,7 +403,18 @@ class TensorStoreArray(BaseArray):
                     f"Zarr3 arrays without x and y dimensions are not supported. Got {axes} dimensions."
                 )
 
-        return dimension_names, chunk_shape, shard_shape, num_channels
+        shape = array.domain.exclusive_max
+        if "c" not in dimension_names:
+            shape = (num_channels,) + shape
+            dimension_names = ("c",) + dimension_names
+
+        return (
+            dimension_names,
+            chunk_shape,
+            shard_shape,
+            num_channels,
+            VecInt(shape, axes=dimension_names),
+        )
 
     @staticmethod
     def _make_kvstore(path: Path) -> Union[str, Dict[str, Union[str, List[str]]]]:
@@ -470,12 +481,23 @@ class TensorStoreArray(BaseArray):
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
         array = self._array
 
-        requested_domain = tensorstore.IndexDomain(
-            bbox.ndim + 1,
-            inclusive_min=(0,) + bbox.topleft.to_tuple(),
-            shape=(self.info.num_channels,) + bbox.size.to_tuple(),
-        )
-        available_domain = requested_domain.intersect(array.domain)
+        has_channel_dimension = len(self.info.shape) == len(array.domain)
+
+        if not has_channel_dimension:
+            requested_domain = tensorstore.IndexDomain(
+                bbox.ndim,
+                inclusive_min=bbox.topleft.to_tuple(),
+                shape=bbox.size.to_tuple(),
+            )
+            available_domain = requested_domain.intersect(array.domain)
+        else:
+            requested_domain = tensorstore.IndexDomain(
+                bbox.ndim + 1,
+                inclusive_min=(0,) + bbox.topleft.to_tuple(),
+                shape=(self.info.num_channels,) + bbox.size.to_tuple(),
+            )
+            available_domain = requested_domain.intersect(array.domain)
+
         if available_domain != requested_domain:
             # needs padding
             out = np.zeros(
@@ -483,9 +505,14 @@ class TensorStoreArray(BaseArray):
             )
             data = array[available_domain].read(order="F").result()
             out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
+            if not has_channel_dimension:
+                out = np.expand_dims(out, 0)
             return out
 
-        return array[requested_domain].read(order="F").result()
+        out = array[requested_domain].read(order="F").result()
+        if not has_channel_dimension:
+            out = np.expand_dims(out, 0)
+        return out
 
     def ensure_size(
         self,
@@ -617,7 +644,7 @@ class Zarr3Array(TensorStoreArray):
         array = self._array
         array_codecs = array.codec.to_json()["codecs"]
 
-        dimension_names, chunk_shape, shard_shape, num_channels = (
+        dimension_names, chunk_shape, shard_shape, num_channels, shape = (
             self._get_array_dimensions(array)
         )
 
@@ -631,6 +658,7 @@ class Zarr3Array(TensorStoreArray):
                 ),
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
+                shape=shape,
                 dimension_names=dimension_names,
             )
         return ArrayInfo(
@@ -640,6 +668,7 @@ class Zarr3Array(TensorStoreArray):
             compression_mode=self._has_compression_codecs(array_codecs),
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
+            shape=shape,
             dimension_names=dimension_names,
         )
 
@@ -743,7 +772,7 @@ class Zarr2Array(TensorStoreArray):
     @property
     def info(self) -> ArrayInfo:
         array = self._array
-        dimension_names, chunk_shape, shard_shape, num_channels = (
+        dimension_names, chunk_shape, shard_shape, num_channels, shape = (
             self._get_array_dimensions(array)
         )
 
@@ -754,6 +783,7 @@ class Zarr2Array(TensorStoreArray):
             compression_mode=array.codec.to_json()["compressor"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
+            shape=shape,
         )
 
     @classmethod

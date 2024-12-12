@@ -12,7 +12,7 @@ from .group import Group
 Vector3 = Tuple[float, float, float]
 
 
-@attr.define
+@attr.define(eq=False)
 class Skeleton(Group):
     """A hierarchical representation of skeleton annotations in WEBKNOSSOS.
 
@@ -281,6 +281,3 @@ class Skeleton(Group):
         """Deprecated. Use Skeleton.save instead."""
         warn_deprecated("Skeleton.write", "skeleton.save")
         self.save(out_path)
-
-    def __hash__(self) -> int:
-        return id(self)
