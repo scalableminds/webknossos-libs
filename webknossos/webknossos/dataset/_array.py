@@ -12,7 +12,6 @@ from typing import (
     Iterator,
     List,
     Optional,
-    Self,
     Tuple,
     Type,
     Union,
@@ -22,6 +21,7 @@ from urllib.parse import urlparse
 import numpy as np
 import tensorstore
 import wkw
+from typing_extensions import Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
