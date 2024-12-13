@@ -92,7 +92,7 @@ def test_remote_dataset(tmp_path: Path) -> None:
 
     remote_ds.display_name = "Test Remote Dataset"
     assert remote_ds.display_name == "Test Remote Dataset"
-    del remote_ds.display_name # reset
+    del remote_ds.display_name  # reset
     assert remote_ds.display_name == "test_remote_metadata"
 
     assert remote_ds.description is None
