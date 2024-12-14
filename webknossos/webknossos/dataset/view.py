@@ -21,7 +21,7 @@ from cluster_tools import Executor
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.vec_int import VecInt, VecIntLike
 from ..utils import (
-    EitherPath,
+    LazyPath,
     count_defined_values,
     get_executor_for_args,
     get_rich_progress,
@@ -72,7 +72,7 @@ class View:
         ```
     """
 
-    _path: EitherPath
+    _path: LazyPath
     _data_format: DataFormat
     _bounding_box: Optional[NDBoundingBox]
     _read_only: bool
@@ -81,7 +81,7 @@ class View:
 
     def __init__(
         self,
-        path_to_mag_view: EitherPath,
+        path_to_mag_view: LazyPath,
         bounding_box: Optional[
             NDBoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property

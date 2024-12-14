@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 from ..utils import (
-    EitherPath,
+    LazyPath,
     copytree,
     get_executor_for_args,
     is_fs_path,
@@ -321,7 +321,7 @@ class Layer:
         for mag in self._mags.values():
             if not mag.is_remote_to_dataset:
                 mag_path_maybe = (
-                    EitherPath.resolved(UPath(mag._properties.path))
+                    LazyPath.resolved(UPath(mag._properties.path))
                     if mag._properties.path is not None
                     else None
                 )
@@ -567,7 +567,7 @@ class Layer:
             )
 
         self._assert_mag_does_not_exist_yet(mag)
-        mag_path = EitherPath.resolved(self._create_dir_for_mag(mag))
+        mag_path = LazyPath.resolved(self._create_dir_for_mag(mag))
 
         mag_view = MagView.create(
             self,
@@ -1483,7 +1483,7 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-        mag_path_maybe = EitherPath.resolved(UPath(path)) if path is not None else None
+        mag_path_maybe = LazyPath.resolved(UPath(path)) if path is not None else None
         try:
             self._mags[mag] = MagView(
                 self,

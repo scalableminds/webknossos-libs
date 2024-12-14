@@ -14,7 +14,7 @@ from webknossos.dataset.data_format import DataFormat
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
-    EitherPath,
+    LazyPath,
     get_executor_for_args,
     is_fs_path,
     rmtree,
@@ -39,15 +39,15 @@ def _find_mag_path(
     dataset_path: Path,
     layer_name: str,
     mag_name: str,
-    path: Optional[EitherPath] = None,
-) -> EitherPath:
+    path: Optional[LazyPath] = None,
+) -> LazyPath:
     if path is not None:
         return path
 
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
-    return EitherPath(short_mag_file_path, long_mag_file_path)
+    return LazyPath(short_mag_file_path, long_mag_file_path)
 
 
 def _compress_cube_job(args: Tuple[View, View, int]) -> None:
@@ -123,7 +123,7 @@ class MagView(View):
         chunk_shape: Vec3Int,
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
-        path: Optional[EitherPath] = None,
+        path: Optional[LazyPath] = None,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -151,13 +151,13 @@ class MagView(View):
             else layer.dataset.path / layer.name / mag.to_layer_name()
         )
         BaseArray.get_class(array_info.data_format).create(mag_path, array_info)
-        return cls(layer, mag, EitherPath.resolved(mag_path))
+        return cls(layer, mag, LazyPath.resolved(mag_path))
 
     def __init__(
         self,
         layer: "Layer",
         mag: Mag,
-        mag_path: EitherPath,
+        mag_path: LazyPath,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.get_mag()`.
@@ -718,7 +718,7 @@ class MagView(View):
             rmtree(compressed_dataset.path)
 
             # update the handle to the new dataset
-            MagView.__init__(self, self.layer, self._mag, EitherPath.resolved(path))
+            MagView.__init__(self, self.layer, self._mag, LazyPath.resolved(path))
 
     def merge_with_view(
         self,
