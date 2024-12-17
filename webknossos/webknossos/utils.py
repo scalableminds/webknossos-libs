@@ -12,7 +12,7 @@ from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
-from pathlib import Path
+from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from typing import (
     Any,
@@ -279,7 +279,9 @@ def count_defined_values(values: Iterable[Optional[Any]]) -> int:
 def is_fs_path(path: Path) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
-    return not isinstance(path, UPath) or isinstance(path, (PosixUPath, WindowsUPath))
+    return not isinstance(path, UPath) or isinstance(
+        path, (PosixPath, WindowsPath, PosixUPath, WindowsUPath)
+    )
 
 
 def is_remote_path(path: Path) -> bool:
@@ -294,11 +296,8 @@ def is_writable_path(path: Path) -> bool:
 
 
 def strip_trailing_slash(path: Path) -> Path:
-    if isinstance(path, UPath):
-        return UPath(
-            str(path).rstrip("/"),
-            **path.storage_options,
-        )
+    if isinstance(path, UPath) and not is_fs_path(path):
+        return UPath(str(path).rstrip("/"), **path.storage_options)
     else:
         return Path(str(path).rstrip("/"))
 
@@ -349,6 +348,40 @@ def copytree(in_path: Path, out_path: Path) -> None:
 
 def movetree(in_path: Path, out_path: Path) -> None:
     move(in_path, out_path)
+
+
+class LazyPath:
+    paths: tuple[Path, ...]
+    resolution: Optional[int] = None
+
+    def __init__(self, *paths: Path):
+        self.paths = tuple(paths)
+
+    @classmethod
+    def resolved(cls, path: Path) -> "LazyPath":
+        obj = cls(path)
+        obj.resolution = 0
+        return obj
+
+    def resolve(self) -> Path:
+        if self.resolution is not None:
+            return self.paths[self.resolution]
+        else:
+            for i, path in enumerate(self.paths):
+                if path.exists():
+                    self.resolution = i
+                    return path
+            raise FileNotFoundError(f"No path exists in {self.paths}")
+
+    def __repr__(self) -> str:
+        if self.resolution is not None:
+            return repr(self.paths[self.resolution])
+        return f"LazyPath({','.join(repr(p) for p in self.paths)})"
+
+    def __str__(self) -> str:
+        if self.resolution is not None:
+            return str(self.paths[self.resolution])
+        return f"LazyPath({','.join(str(p) for p in self.paths)})"
 
 
 K = TypeVar("K")  # key

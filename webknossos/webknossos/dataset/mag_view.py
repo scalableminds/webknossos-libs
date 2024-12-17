@@ -14,19 +14,20 @@ from webknossos.dataset.data_format import DataFormat
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
-    NDArrayLike,
+    LazyPath,
     get_executor_for_args,
     is_fs_path,
-    # is_remote_path,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, WKWArray, ZarrArray, ZarritaArray
+from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
+    import tensorstore
+
     from .layer import (
         Layer,
     )
@@ -38,19 +39,15 @@ def _find_mag_path(
     dataset_path: Path,
     layer_name: str,
     mag_name: str,
-    path: Optional[Union[str, Path]] = None,
-) -> Path:
-    path = UPath(path) if path else None
+    path: Optional[LazyPath] = None,
+) -> LazyPath:
     if path is not None:
         return path
 
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
-    if short_mag_file_path.exists():
-        return short_mag_file_path
-    else:
-        return long_mag_file_path
+    return LazyPath(short_mag_file_path, long_mag_file_path)
 
 
 def _compress_cube_job(args: Tuple[View, View, int]) -> None:
@@ -118,17 +115,16 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
-    def __init__(
-        self,
+    @classmethod
+    def create(
+        cls,
         layer: "Layer",
         mag: Mag,
         chunk_shape: Vec3Int,
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
-        shape: Optional[VecInt] = None,
-        create: bool = False,
-        path: Optional[UPath] = None,
-    ) -> None:
+        path: Optional[LazyPath] = None,
+    ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
@@ -137,7 +133,7 @@ class MagView(View):
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=chunk_shape * chunks_per_shard,
             compression_mode=compression_mode,
             axis_order=VecInt(
                 0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
@@ -146,33 +142,32 @@ class MagView(View):
                 layer.num_channels,
                 *VecInt.ones(layer.bounding_box.axes),
                 axes=("c",) + layer.bounding_box.axes,
-            )
-            if shape is None
-            else shape,
+            ),
             dimension_names=("c",) + layer.bounding_box.axes,
         )
-        if create:
-            creation_path = (
-                path if path else layer.dataset.path / layer.name / mag.to_layer_name()
-            )
-            BaseArray.get_class(array_info.data_format).create(
-                creation_path, array_info
-            )
-            path = UPath(creation_path)
-
         mag_path = (
-            path
+            path.resolve()
             if path
-            else _find_mag_path(
-                layer.dataset.path, layer.name, mag.to_layer_name(), path
-            )
+            else layer.dataset.path / layer.name / mag.to_layer_name()
         )
+        BaseArray.get_class(array_info.data_format).create(mag_path, array_info)
+        return cls(layer, mag, LazyPath.resolved(mag_path))
+
+    def __init__(
+        self,
+        layer: "Layer",
+        mag: Mag,
+        mag_path: LazyPath,
+    ) -> None:
+        """
+        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.get_mag()`.
+        """
 
         super().__init__(
             mag_path,
-            array_info,
             bounding_box=layer.bounding_box,
             mag=mag,
+            data_format=layer.data_format,
         )
         self._layer = layer
 
@@ -239,7 +234,7 @@ class MagView(View):
         Notes:
             - Path may be local or remote depending on dataset configuration
         """
-        return self._path
+        return self._path.resolve()
 
     @property
     def is_remote_to_dataset(self) -> bool:
@@ -249,7 +244,7 @@ class MagView(View):
             bool: True if data is stored in a different location than the parent dataset.
 
         """
-        return self._path.parent.parent != self.layer.dataset.path
+        return self._path.resolve().parent.parent != self.layer.dataset.path
 
     @property
     def name(self) -> str:
@@ -261,7 +256,7 @@ class MagView(View):
         """
         return self._mag.to_layer_name()
 
-    def get_zarr_array(self) -> NDArrayLike:
+    def get_zarr_array(self) -> "tensorstore.TensorStore":
         """Get direct access to the underlying Zarr array.
 
         Provides direct access to the underlying Zarr array for advanced operations.
@@ -281,10 +276,10 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(array_wrapper, ZarrArray) or isinstance(
-            array_wrapper, ZarritaArray
-        )  # for typechecking
-        return array_wrapper._zarray
+        assert isinstance(
+            array_wrapper, TensorStoreArray
+        ), f"Expected TensorStoreArray, got {type(array_wrapper)}"  # for typechecking
+        return array_wrapper._array
 
     def write(
         self,
@@ -639,18 +634,19 @@ class MagView(View):
                 "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
             )
 
+        path = self._path.resolve()
         if target_path is None:
             if self._is_compressed():
                 logging.info(f"Mag {self.name} is already compressed")
                 return
             else:
                 assert is_fs_path(
-                    self.path
+                    path
                 ), "Cannot compress a remote mag without `target_path`."
         else:
             target_path = UPath(target_path)
 
-        uncompressed_full_path = self.path
+        uncompressed_full_path = path
         compressed_dataset_path = (
             self.layer.dataset.path / f".compress-{uuid4()}"
             if target_path is None
@@ -717,19 +713,12 @@ class MagView(View):
                 )
 
         if target_path is None:
-            rmtree(self.path)
-            compressed_mag.path.rename(self.path)
+            rmtree(path)
+            compressed_mag.path.rename(path)
             rmtree(compressed_dataset.path)
 
             # update the handle to the new dataset
-            MagView.__init__(
-                self,
-                self.layer,
-                self._mag,
-                self.info.chunk_shape,
-                self.info.chunks_per_shard,
-                True,
-            )
+            MagView.__init__(self, self.layer, self._mag, LazyPath.resolved(path))
 
     def merge_with_view(
         self,
@@ -838,12 +827,6 @@ class MagView(View):
                 str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
             )
             mag_view_path = strip_trailing_slash(path)
-            # if is_remote_path(mag_view_path):
-            #     return (
-            #         Dataset.open_remote(mag_view_path.parent.parent.as_posix())
-            #         .get_layer(mag_view_path.parent.name)
-            #         .get_mag(mag_view_path.name)
-            #     )
             return (
                 Dataset.open(mag_view_path.parent.parent)
                 .get_layer(mag_view_path.parent.name)
