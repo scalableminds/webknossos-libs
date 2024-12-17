@@ -1,6 +1,5 @@
 import warnings
 from argparse import Namespace
-from pathlib import Path
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
@@ -19,10 +18,10 @@ import numpy as np
 import wkw
 from cluster_tools import Executor
 
-from webknossos.geometry.vec_int import VecInt, VecIntLike
-
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry.vec_int import VecInt, VecIntLike
 from ..utils import (
+    LazyPath,
     count_defined_values,
     get_executor_for_args,
     get_rich_progress,
@@ -30,6 +29,7 @@ from ..utils import (
     warn_deprecated,
 )
 from ._array import ArrayInfo, BaseArray, WKWArray
+from .data_format import DataFormat
 
 if TYPE_CHECKING:
     from ._utils.buffered_slice_reader import BufferedSliceReader
@@ -72,8 +72,8 @@ class View:
         ```
     """
 
-    _path: Path
-    _array_info: ArrayInfo
+    _path: LazyPath
+    _data_format: DataFormat
     _bounding_box: Optional[NDBoundingBox]
     _read_only: bool
     _cached_array: Optional[BaseArray]
@@ -81,12 +81,12 @@ class View:
 
     def __init__(
         self,
-        path_to_mag_view: Path,
-        array_info: ArrayInfo,
+        path_to_mag_view: LazyPath,
         bounding_box: Optional[
             NDBoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
+        data_format: DataFormat,
         read_only: bool = False,
     ):
         """Initialize a View instance for accessing and manipulating dataset regions.
@@ -111,7 +111,7 @@ class View:
             ```
         """
         self._path = path_to_mag_view
-        self._array_info = array_info
+        self._data_format = data_format
         self._bounding_box = bounding_box
         self._read_only = read_only
         self._cached_array = None
@@ -133,7 +133,7 @@ class View:
             print(f"Num channels: {array_info.num_channels}")
             ```
         """
-        return self._array_info
+        return self._array.info
 
     @property
     def header(self) -> wkw.Header:
@@ -414,7 +414,7 @@ class View:
                 DeprecationWarning,
             )
 
-        num_channels = self._array_info.num_channels
+        num_channels = self._array.info.num_channels
         if len(data.shape) == len(self.bounding_box):
             assert (
                 num_channels == 1
@@ -458,8 +458,8 @@ class View:
         the preparation to _prepare_compressed_write_chunk."""
 
         chunked_bboxes = current_mag_bbox.chunk(
-            self.info.shard_shape,
-            chunk_border_alignments=self.info.shard_shape,
+            self._array.info.shard_shape,
+            chunk_border_alignments=self._array.info.shard_shape,
         )
         for chunked_bbox in chunked_bboxes:
             source_slice: Any
@@ -488,7 +488,9 @@ class View:
         into the specified volume). That way, the returned data can be written as a whole
         shard which is a requirement for compressed writes."""
 
-        aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_shape, ceil=True)
+        aligned_bbox = current_mag_bbox.align_with_mag(
+            self._array.info.shard_shape, ceil=True
+        )
 
         if current_mag_bbox != aligned_bbox:
             # The data bbox should either be aligned or match the dataset's bounding box:
@@ -944,7 +946,7 @@ class View:
 
             current_mag_bbox = mag1_bbox.in_mag(self._mag)
             current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
-                self.info.shard_shape, ceil=True
+                self._array.info.shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
@@ -959,9 +961,9 @@ class View:
 
         return View(
             self._path,
-            self.info,
             bounding_box=mag1_bbox,
             mag=self._mag,
+            data_format=self._data_format,
             read_only=read_only,
         )
 
@@ -1531,13 +1533,13 @@ class View:
         return True
 
     def _is_compressed(self) -> bool:
-        return self.info.compression_mode
+        return self._array.info.compression_mode
 
     def get_dtype(self) -> np.dtype:
         """
         Returns the dtype per channel of the data. For example `uint8`.
         """
-        return self.info.voxel_type
+        return self._array.info.voxel_type
 
     def __enter__(self) -> "View":
         warnings.warn(
@@ -1555,16 +1557,16 @@ class View:
         pass
 
     def __repr__(self) -> str:
-        return f"View({repr(str(self._path))}, bounding_box={self.bounding_box})"
+        return f"View({repr(self._path)}, bounding_box={self.bounding_box})"
 
     def _check_chunk_shape(self, chunk_shape: Vec3Int, read_only: bool) -> None:
         assert chunk_shape.is_positive(
             strictly_positive=True
         ), f"The passed parameter 'chunk_shape' {chunk_shape} contains at least one 0. This is not allowed."
 
-        divisor = self.mag.to_vec3_int() * self.info.chunk_shape
+        divisor = self.mag.to_vec3_int() * self._array.info.chunk_shape
         if not read_only:
-            divisor *= self.info.chunks_per_shard
+            divisor *= self._array.info.chunks_per_shard
         assert chunk_shape % divisor == Vec3Int.zeros(), (
             f"The chunk_shape {chunk_shape} must be a multiple of "
             + f"mag*chunk_shape{'*chunks_per_shard' if not read_only else ''} of the view, "
@@ -1572,7 +1574,7 @@ class View:
         )
 
     def _get_file_dimensions(self) -> Vec3Int:
-        return self.info.shard_shape
+        return self._array.info.shard_shape
 
     def _get_file_dimensions_mag1(self) -> Vec3Int:
         return Vec3Int(self._get_file_dimensions() * self.mag.to_vec3_int())
@@ -1580,8 +1582,9 @@ class View:
     @property
     def _array(self) -> BaseArray:
         if self._cached_array is None:
-            cls_array = BaseArray.get_class(self.info.data_format)
-            self._cached_array = cls_array(self._path)
+            self._cached_array = BaseArray.get_class(self._data_format).open(
+                self._path.resolve()
+            )
         return self._cached_array
 
     @_array.deleter

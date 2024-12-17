@@ -9,15 +9,14 @@ from pathlib import Path
 from typing import Any, Optional, Tuple, Union, cast
 
 import numpy as np
+import tensorstore
 import typer
-import zarr
 from typing_extensions import Annotated
 
 from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 
 from ..dataset import DataFormat, Dataset, MagView, SegmentationLayer
-from ..dataset._array import _fsstore_from_path
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, wait_and_ensure_success
@@ -34,6 +33,17 @@ from ._utils import (
 logger = logging.getLogger(__name__)
 
 
+def _try_open_zarr(path: Path) -> tensorstore.TensorStore:
+    try:
+        return tensorstore.open(
+            {"driver": "zarr3", "kvstore": {"driver": "file", "path": path}}
+        ).result()
+    except tensorstore.TensorStoreError:
+        return tensorstore.open(
+            {"driver": "zarr", "kvstore": {"driver": "file", "path": path}}
+        ).result()
+
+
 def _zarr_chunk_converter(
     bounding_box: BoundingBox,
     source_zarr_path: Path,
@@ -43,8 +53,8 @@ def _zarr_chunk_converter(
     logging.info("Conversion of %s", bounding_box.topleft)
 
     slices = bounding_box.to_slices()
-    zarr_file = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
-    source_data: Any = zarr_file[slices][None, ...]
+    zarr_file = _try_open_zarr(source_zarr_path)
+    source_data: np.ndarray = zarr_file[slices].read().result()[None, ...]
 
     if flip_axes:
         source_data = np.flip(source_data, flip_axes)
@@ -71,9 +81,9 @@ def convert_zarr(
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
 
-    file = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
-    input_dtype: Any = file.dtype
-    shape: Any = file.shape
+    file = _try_open_zarr(source_zarr_path)
+    input_dtype: np.dtype = file.dtype
+    shape: tuple[int, ...] = file.domain.exclusive_max
 
     wk_ds = Dataset(
         target_path, voxel_size_with_unit=voxel_size_with_unit, exist_ok=True
