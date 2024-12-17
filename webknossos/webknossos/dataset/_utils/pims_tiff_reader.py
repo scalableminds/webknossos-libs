@@ -112,9 +112,6 @@ class PimsTiffReader(FramesSequenceND):
             out_selector = tuple(out_selector_list)
 
             page = _tiff.asarray(key=i)
-            print(
-                f"{ind=} {this_ind=} {out_shape=} {out_selector=} {page_selector=} {page.shape=} {self.bundle_axes=} {self._tiff_axes=} {self._other_axes=} {self.sizes=}"
-            )
             assert len(out_selector) == out.ndim
             assert len(page_selector) == page.ndim
             out[out_selector] = page[page_selector]

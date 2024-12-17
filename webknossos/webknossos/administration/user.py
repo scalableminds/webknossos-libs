@@ -70,7 +70,6 @@ class User:
         """Returns the user specified by the passed id if your token authorizes you to see them."""
         client = _get_api_client(enforce_auth=True)
         api_user = client.user_by_id(id)
-        print(api_user)
         return cls._from_api_user(api_user)
 
     @classmethod
