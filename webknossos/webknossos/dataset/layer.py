@@ -1500,8 +1500,8 @@ class Layer:
                     ssl=SSL_CONTEXT,
                 )
             )
-            if path
-            else path
+            if path is not None
+            else None
         )
         try:
             self._mags[mag] = MagView(
