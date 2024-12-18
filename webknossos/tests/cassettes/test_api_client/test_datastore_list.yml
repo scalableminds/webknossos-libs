@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v7/datastores
+      path: /api/v8/datastores
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 13 Dec 2024 14:05:39 GMT
+        date: Wed, 18 Dec 2024 09:28:21 GMT
         content-type: application/json
         content-length: '147'
       body:

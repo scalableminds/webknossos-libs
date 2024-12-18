@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v7/user
+      path: /api/v8/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 13 Dec 2024 13:56:32 GMT
+        date: Wed, 18 Dec 2024 09:13:38 GMT
         content-type: application/json
         content-length: '682'
       body:
@@ -31,7 +31,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v7/users/570b9f4d2a7c0e4d008da6ef/loggedTime
+      path: /api/v8/users/570b9f4d2a7c0e4d008da6ef/loggedTime
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -51,7 +51,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 13 Dec 2024 13:56:32 GMT
+        date: Wed, 18 Dec 2024 09:13:38 GMT
         content-type: application/json
         content-length: '625'
       body:
