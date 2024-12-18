@@ -119,7 +119,7 @@ class Task:
         cls,
         task_type_id: str,
         project_name: str,
-        dataset_name: Union[str, RemoteDataset],
+        dataset_id: Union[str, RemoteDataset],
         needed_experience_domain: str,
         needed_experience_value: int,
         starting_position: Vec3Int,
@@ -131,8 +131,8 @@ class Task:
         """Submits tasks in WEBKNOSSOS based on a dataset, starting position + rotation, and returns the Task objects"""
 
         client = _get_api_client(enforce_auth=True)
-        if isinstance(dataset_name, RemoteDataset):
-            dataset_name = dataset_name._dataset_name
+        if isinstance(dataset_id, RemoteDataset):
+            dataset_id = dataset_id._dataset_id
         task_parameters = ApiTaskParameters(
             task_type_id=task_type_id,
             needed_experience=ApiExperience(
@@ -142,7 +142,7 @@ class Task:
             pending_instances=instances,
             project_name=project_name,
             script_id=script_id,
-            data_set=dataset_name,
+            dataset_id=dataset_id,
             edit_position=starting_position.to_tuple(),
             edit_rotation=starting_rotation.to_tuple(),
             bounding_box=ApiBoundingBox(
@@ -164,7 +164,7 @@ class Task:
         return cls(
             api_task.id,
             api_task.project_id,
-            api_task.data_set,
+            api_task.dataset_name,
             TaskStatus(
                 api_task.status.pending,
                 api_task.status.active,
