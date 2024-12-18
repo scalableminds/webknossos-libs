@@ -10,18 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.2...HEAD)
 
 ### Breaking Changes
-- `MagView.get_zarr_array` now returns a `tensorstore` array instead of a `zarr-python` array. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174) 
 
 ### Added
 
 ### Changed
-- Updated to WEBKNOSSOS API version 8. [#1185](https://github.com/scalableminds/webknossos-libs/pull/1185)
-- Using tensorstore for reading and writing zarr 2 and 3 arrays. Removed `zarrita` and `zarr` dependency. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174) 
 
 ### Fixed
+
+
+## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.1...v0.16.2)
+
+### Breaking Changes
+- `MagView.get_zarr_array` now returns a `tensorstore` array instead of a `zarr-python` array. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174)
+
+### Changed
+- Updated to WEBKNOSSOS API version 8. [#1185](https://github.com/scalableminds/webknossos-libs/pull/1185)
+- Using tensorstore for reading and writing zarr 2 and 3 arrays. Removed `zarrita` and `zarr` dependency. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174)
 
 
 ## [0.16.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.1) - 2024-12-05
