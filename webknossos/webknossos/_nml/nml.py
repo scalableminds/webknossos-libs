@@ -39,7 +39,7 @@ class Nml(NamedTuple):
         Arguments:
             file (BinaryIO): A Python file handle
 
-        Example:
+        Examples:
             ```
             with open("out.nml", "wb") as f:
                 nml.write(f, nml)
@@ -90,7 +90,7 @@ class Nml(NamedTuple):
         Return:
             NML: A WEBKNOSSOS skeleton annotation as Python NML object
 
-        Example:
+        Examples:
             ```
             with open("input.nml", "rb") as f:
                 nml = Nml.parse(f)

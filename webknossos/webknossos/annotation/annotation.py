@@ -1,22 +1,42 @@
-"""Annotations can contain annotated data in two forms:
+"""WEBKNOSSOS annotation module for working with skeleton and volume data.
 
-  - [skeleton data](/webknossos/skeleton_annotation/index.html), as provided by the `Skeleton` class, and
-  - [volume annotation layers](/webknossos/volume_annotation/index.html) (or volume layers short),
-    which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
-    and `temporary_volume_layer_copy()`.
+This module provides the Annotation class for handling WEBKNOSSOS annotations, which can
+contain two types of data:
 
-Usually, annotations should be created manually in the WEBKNOSSOS interface and can be downloaded using
-`Annotation.download()`. The downloaded instance is not persisted to disk automatically, please use `save()`
-for this purpose. The general purpose file format is `.zip` files containing an `.nml` file with
-meta-information and the skeleton data and also containing inner `.zip` files for the volume layers.
-For skeleton-only annotations without volume layers `.nml` files can be used directly. Both formats
-are compatible with the WEBKNOSSOS up- and downloads.
+    1. Skeleton Data: Represented by the `Skeleton` class, e.g. for annotating neural pathways
+       and structures.
+    2. Volume Annotation Layers: Used for segmentation data, can be exported as
+       `SegmentationLayer` objects.
 
-To prepare volume annotations in the code for correction of segmentation data in the WEBKNOSSOS interface,
-please use `add_volume_layer()` with the `fallback_layer` argument, referencing a segmentation layer that
-is available on WEBKNOSSOS (e.g. using the `Dataset` upload before).
-Correcting segmentations using fallback layers is much more efficient, adding volume
-annotation data programmatically is discouraged therefore.
+The module supports various operations including:
+    * Loading/saving annotations from/to .nml or .zip files
+    * Downloading/uploading annotations from/to WEBKNOSSOS
+    * Working with skeleton data and volume layers
+    * Exporting volume layers to datasets
+
+Typical usage Examples:
+    ```python
+    # Download an annotation from WEBKNOSSOS
+    annotation = Annotation.download("annotation_id")
+
+    # Add a volume layer with fallback for efficient processing
+    annotation.add_volume_layer(
+        name="segmentation",
+        fallback_layer="original_segmentation"
+    )
+
+    # Save the annotation locally
+    annotation.save("my_annotation.zip")
+    ```
+
+Notes:
+    For volume annotations, using fallback layers is recommended for better performance
+    in WEBKNOSSOS. Adding volume annotation data programmatically should be avoided
+    when possible.
+
+See Also:
+    * Skeleton documentation: /webknossos/skeleton_annotation/index.html
+    * Volume annotation documentation: /webknossos/volume_annotation/index.html
 """
 
 import json
@@ -489,6 +509,40 @@ class Annotation:
         annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
     ) -> Dataset:
+        """Opens an annotation directly as a remote dataset from WEBKNOSSOS.
+
+        This is a convenience method that combines downloading an annotation and converting it
+        to a remote dataset in one step. It's useful when you want to work with the annotation
+        data as a dataset without storing it locally.
+
+        Args:
+            annotation_id_or_url: Either an annotation ID or complete WEBKNOSSOS URL.
+                Example URL: https://webknossos.org/annotations/[id]
+            annotation_type: ⚠️ Deprecated and no longer required.
+                Optional type of annotation (Explorational, Task, etc.).
+            webknossos_url: Optional custom WEBKNOSSOS instance URL.
+
+        Returns:
+            Dataset: A remote dataset instance representing the annotation.
+
+        Examples:
+            ```python
+            # Open by ID
+            dataset = Annotation.open_as_remote_dataset("5f7d3a...")
+
+            # Open by URL
+            dataset = Annotation.open_as_remote_dataset(
+                "https://webknossos.org/annotations/5f7d3a..."
+            )
+
+            # Access layers
+            layer = dataset.get_layer("segmentation")
+            ```
+
+        Notes:
+            This method automatically skips downloading volume data locally for efficiency,
+            as the data will be streamed from the remote source.
+        """
         (
             annotation,
             context,
@@ -857,7 +911,7 @@ class Annotation:
             # Access layers
             layer = dataset.get_layer("segmentation")
             ```
-        Note:
+        Notes:
             After an agglomerate mapping was activated in WEBKNOSSOS, it is applied to this method as soon
             as the first volume editing action is done. Note that this behavior might change
             in the future.
@@ -1277,7 +1331,7 @@ class Annotation:
             # Update segment name
             segments[1].name = "Cell A"
             ```
-        Note:
+        Notes:
             Any changes performed on the online version of the annotaiton in webknossos are not
             synced automatically. The annotation needs to be re-downloaded to update segment information.
         """
@@ -1350,12 +1404,3 @@ def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
         ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
         warn_deprecated("open_annotation", "Annotation.download")
         return Annotation.download(annotation_path)
-
-
-def _parse_filename_from_header(value: str) -> str:
-    # Adapted from https://peps.python.org/pep-0594/#cgi
-    from email.message import Message
-
-    m = Message()
-    m["content-type"] = value
-    return dict(m.get_params() or []).get("filename", "")

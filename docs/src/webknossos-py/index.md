@@ -22,12 +22,13 @@ To get started, check out the [installation instructions](installation.md) and t
     - Up/downsample layers
     - Compress layers
     - Add/remove magnifications
-    - Execute any of the `wkCuber` operations from your code
+    - Execute any of the `webknossos` CLI operations from your code
 - Manipulation of WEBKNOSSOS skeleton annotations (*.nml) as Python objects
     - Access to nodes, comments, trees, bounding boxes, metadata, etc.
     - Create new skeleton annotation from Graph structures or Python objects
 - Interaction, connection & scripting with your WEBKNOSSOS instance over the REST API
     - Up- & downloading annotations and datasets
+    - Read datasets from the WEBKNOSSOS server in a streaming fashion 
 
 ## Source Code
 
