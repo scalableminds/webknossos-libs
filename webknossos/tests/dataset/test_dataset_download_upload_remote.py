@@ -90,11 +90,10 @@ def test_remote_dataset(tmp_path: Path) -> None:
         == "http://localhost:9000/datasets/Organization_X/test_remote_metadata"
     )
 
-    assert remote_ds.display_name is None
     remote_ds.display_name = "Test Remote Dataset"
     assert remote_ds.display_name == "Test Remote Dataset"
-    del remote_ds.display_name
-    assert remote_ds.display_name is None
+    del remote_ds.display_name  # reset
+    assert remote_ds.display_name == "test_remote_metadata"
 
     assert remote_ds.description is None
     remote_ds.description = "My awesome test description"

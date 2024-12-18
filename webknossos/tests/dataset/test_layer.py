@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from zarrita import Array
+import tensorstore
 
 import webknossos as wk
 
@@ -18,10 +18,43 @@ def test_add_mag_from_zarrarray(tmp_path: Path) -> None:
     )
     zarr_mag_path = tmp_path / "zarr_data" / "mag1.zarr"
     zarr_data = np.random.randint(0, 255, (16, 16, 16), dtype="uint8")
-    zarr_mag = Array.create(
-        store=zarr_mag_path, shape=(16, 16, 16), chunk_shape=(8, 8, 8), dtype="uint8"
-    )
-    zarr_mag[:] = zarr_data
+    zarr_mag = tensorstore.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": str(zarr_mag_path)},
+            "metadata": {
+                "data_type": "uint8",
+                "shape": (16, 16, 16),
+                "chunk_grid": {
+                    "name": "regular",
+                    "configuration": {"chunk_shape": (8, 8, 8)},
+                },
+                "chunk_key_encoding": {
+                    "name": "default",
+                    "configuration": {"separator": "."},
+                },
+                "fill_value": 0,
+                "codecs": [
+                    {
+                        "name": "bytes",
+                        "configuration": {"endian": "little"},
+                    },
+                    {
+                        "name": "blosc",
+                        "configuration": {
+                            "cname": "zstd",
+                            "clevel": 5,
+                            "shuffle": "shuffle",
+                            "typesize": 1,
+                        },
+                    },
+                ],
+            },
+            "create": True,
+        }
+    ).result()
+
+    zarr_mag[:].write(zarr_data).result()
 
     layer.add_mag_from_zarrarray("1", zarr_mag_path, extend_layer_bounding_box=False)
 
