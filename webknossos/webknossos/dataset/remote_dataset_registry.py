@@ -12,10 +12,11 @@ C = TypeVar("C")  # cache
 
 
 class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
-    """Dict-like class mapping dataset names to `RemoteDataset` instances."""
+    """Dict-like class mapping dataset ids to `RemoteDataset` instances."""
 
     def __init__(
         self,
+        name: Optional[str],
         organization_id: Optional[str],
         tags: Optional[Union[str, Sequence[str]]],
     ) -> None:
@@ -32,17 +33,18 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
             tags = [tags]
 
         dataset_infos = client.dataset_list(
-            is_active=True, organization_id=organization_id
+            is_active=True, organization_id=organization_id, name=name
         )
 
-        datasets_names = []
+        datasets_ids = []
 
         for dataset_info in dataset_infos:
             tags_match = tags is None or any(tag in tags for tag in dataset_info.tags)
-            if tags_match:
-                datasets_names.append(dataset_info.name)
+            name_match = name is None or name == dataset_info.name
+            if tags_match and name_match:
+                datasets_ids.append(dataset_info.id)
 
         super().__init__(
-            entries=dict(zip(datasets_names, datasets_names)),
-            func=lambda name: Dataset.open_remote(name, organization_id),
+            entries=dict(zip(datasets_ids, datasets_ids)),
+            func=lambda dataset_id: Dataset.open_remote(dataset_id),
         )

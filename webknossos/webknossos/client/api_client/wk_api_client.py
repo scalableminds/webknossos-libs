@@ -72,13 +72,20 @@ class WkApiClient(AbstractApiClient):
         return self._get_json(route, ApiDataset, query={"sharingToken": sharing_token})
 
     def dataset_list(
-        self, is_active: Optional[bool], organization_id: Optional[str]
+        self,
+        is_active: Optional[bool],
+        organization_id: Optional[str],
+        name: Optional[str],
     ) -> List[ApiDataset]:
         route = "/datasets"
         return self._get_json(
             route,
             List[ApiDataset],
-            query={"isActive": is_active, "organizationId": organization_id},
+            query={
+                "isActive": is_active,
+                "organizationId": organization_id,
+                "searchQuery": name,
+            },
         )
 
     def dataset_update_teams(self, dataset_id: str, team_ids: List[str]) -> None:

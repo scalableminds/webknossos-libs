@@ -40,19 +40,21 @@ def download_dataset(
     datastore_client = context.get_datastore_api_client(api_dataset.data_store.url)
     optional_datastore_token = sharing_token or context.datastore_token
 
-    actual_path = Path(directory_name) if path is None else Path(path)
-    if actual_path.exists():
-        logger.warning(f"{actual_path} already exists, skipping download.")
-        return Dataset.open(actual_path)
+    download_path = (
+        Path(f"{api_dataset.name}-{api_dataset.id}") if path is None else Path(path)
+    )
+    if download_path.exists():
+        logger.warning(f"{download_path} already exists, skipping download.")
+        return Dataset.open(download_path)
 
     api_data_layers = api_dataset.data_source.data_layers
     scale = api_dataset.data_source.scale
     if api_data_layers is None or len(api_data_layers) == 0 or scale is None:
         raise RuntimeError(
-            f"Could not download dataset {directory_name}: {api_dataset.data_source.status or 'Unknown error.'}"
+            f"Could not download dataset {api_client.base_wk_url}/datasets/{api_dataset.id}: {api_dataset.data_source.status or 'Unknown error.'}"
         )
     dataset = Dataset(
-        actual_path,
+        download_path,
         name=api_dataset.name,
         voxel_size_with_unit=VoxelSize(scale.factor, length_unit_from_str(scale.unit)),
         exist_ok=exist_ok,
