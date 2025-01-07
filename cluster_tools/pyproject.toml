@@ -6,6 +6,9 @@ authors = [{name= "scalable minds", email="hello@scalableminds.com"}]
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
+dependencies = [
+    "typing-extensions ~=4.12.0",
+]
 
 [project.urls]
 Repository = "https://github.com/scalableminds/webknossos-libs"
@@ -19,7 +22,6 @@ all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 
 [tool.uv]
 dev-dependencies = [
-    "typing-extensions ~=4.12.0",
     "icecream ~=2.1.1",
     "mypy ~=1.0.0",
     "pytest ~=8.3.3",
