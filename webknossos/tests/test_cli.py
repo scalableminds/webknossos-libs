@@ -78,8 +78,6 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_tiff_cubing_zarr_s3() -> None:
     """Tests zarr support when performing tiff cubing."""
 
@@ -291,16 +289,14 @@ def test_convert_with_all_params() -> None:
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
+@pytest.mark.use_proxay
 @pytest.mark.parametrize(
     "url",
     [
-        "https://webknossos.org/datasets/scalable_minds/cremi_example/",
-        "https://webknossos.org/datasets/scalable_minds/cremi_example/view#512,512,16,0,1.3",
-        "https://webknossos.org/links/upcKUKDe5CatK4JX",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/",
+        "http://localhost:9000/datasets/Organization_X/l4_sample/view#512,512,16,0,1.3",
     ],
 )
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_dataset(url: str) -> None:
     """Tests the functionality of download subcommand."""
 
@@ -315,7 +311,7 @@ def test_download_dataset(url: str) -> None:
                 "--bbox",
                 "0,0,0,5,5,5",
                 "--mag",
-                "8",
+                "8-8-1",
                 "--url",
                 url,
                 "testoutput/",

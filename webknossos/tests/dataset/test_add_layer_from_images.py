@@ -9,12 +9,11 @@ from zipfile import BadZipFile, ZipFile
 import httpx
 import numpy as np
 import pytest
+from cluster_tools import SequentialExecutor
 from tifffile import TiffFile
 
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
-
-pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -40,20 +39,22 @@ def test_compare_tifffile(tmp_path: Path) -> None:
     for z_index in range(0, data.shape[-1]):
         with TiffFile("testdata/tiff/test.0200.tiff") as tif_file:
             comparison_slice = tif_file.asarray().T
-        assert np.array_equal(data[:, :, z_index], comparison_slice)
+        np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
 def test_compare_nd_tifffile(tmp_path: Path) -> None:
     ds = wk.Dataset(tmp_path, (1, 1, 1))
-    layer = ds.add_layer_from_images(
-        "testdata/4D/4D_series/4D-series.ome.tif",
-        layer_name="color",
-        category="color",
-        topleft=(2, 55, 100, 100),
-        data_format="zarr3",
-        chunk_shape=(8, 8, 8),
-        chunks_per_shard=(8, 8, 8),
-    )
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            "testdata/4D/4D_series/4D-series.ome.tif",
+            layer_name="color",
+            category="color",
+            topleft=(2, 55, 100, 100),
+            data_format="zarr3",
+            chunk_shape=(8, 8, 8),
+            chunks_per_shard=(8, 8, 8),
+            executor=executor,
+        )
     assert layer.bounding_box.topleft == wk.VecInt(
         2, 55, 100, 100, axes=("t", "z", "y", "x")
     )
@@ -64,7 +65,9 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
         "testdata/4D/4D_series/4D-series.ome.tif"
     ).asarray()
     read_first_channel_from_dataset = layer.get_finest_mag().read()[0]
-    assert np.array_equal(read_with_tifffile_reader, read_first_channel_from_dataset)
+    np.testing.assert_array_equal(
+        read_with_tifffile_reader, read_first_channel_from_dataset
+    )
 
 
 REPO_IMAGES_ARGS: List[
@@ -186,19 +189,16 @@ REPO_IMAGES_ARGS: List[
 ]
 
 
-@pytest.mark.parametrize(
-    "path, kwargs, dtype, num_channels, num_layers, size", REPO_IMAGES_ARGS
-)
-def test_repo_images(
+def _test_repo_images(
     tmp_path: Path,
-    path: str,
+    path: Union[str, list[Path]],
     kwargs: Dict,
     dtype: str,
     num_channels: int,
     num_layers: int,
     size: Tuple[int, ...],
 ) -> wk.Dataset:
-    with wk.utils.get_executor_for_args(None) as executor:
+    with SequentialExecutor() as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
         layer = ds.add_layer_from_images(
             path,
@@ -216,6 +216,21 @@ def test_repo_images(
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0
     return ds
+
+
+@pytest.mark.parametrize(
+    "path, kwargs, dtype, num_channels, num_layers, size", REPO_IMAGES_ARGS
+)
+def test_repo_images(
+    tmp_path: Path,
+    path: str,
+    kwargs: Dict,
+    dtype: str,
+    num_channels: int,
+    num_layers: int,
+    size: Tuple[int, ...],
+) -> None:
+    _test_repo_images(tmp_path, path, kwargs, dtype, num_channels, num_layers, size)
 
 
 def download_and_unpack(
@@ -247,7 +262,7 @@ def download_and_unpack(
                 copy(download_file.name, out_path / filename_i)
 
 
-BIOFORMATS_ARGS = [
+BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]] = [
     (
         "https://samples.scif.io/wtembryo.zip",
         "wtembryo.mov",
@@ -296,10 +311,7 @@ BIOFORMATS_ARGS = [
 ]
 
 
-@pytest.mark.parametrize(
-    "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
-)
-def test_bioformats(
+def _test_bioformats(
     tmp_path: Path,
     url: str,
     filename: str,
@@ -328,9 +340,36 @@ def test_bioformats(
     return ds
 
 
+@pytest.mark.parametrize(
+    "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
+)
+def test_bioformats(
+    tmp_path: Path,
+    url: str,
+    filename: str,
+    kwargs: Dict,
+    dtype: str,
+    num_channels: int,
+    size: Tuple[int, int, int],
+    num_layers: int,
+) -> None:
+    _test_bioformats(
+        tmp_path, url, filename, kwargs, dtype, num_channels, size, num_layers
+    )
+
+
 # All scif images used here are published with CC0 license,
 # see https://scif.io/images.
-TEST_IMAGES_ARGS = [
+TEST_IMAGES_ARGS: list[
+    tuple[
+        Union[str, list[str]],
+        Union[str, list[str]],
+        dict,
+        str,
+        int,
+        tuple[int, int, int],
+    ]
+] = [
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0420.dm4",
         "slice_0420.dm4",
@@ -411,10 +450,7 @@ TEST_IMAGES_ARGS = [
 ]
 
 
-@pytest.mark.parametrize(
-    "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
-)
-def test_test_images(
+def _test_test_images(
     tmp_path: Path,
     url: Union[str, List[str]],
     filename: Union[str, List[str]],
@@ -463,34 +499,49 @@ def test_test_images(
         assert l_normal.num_channels == num_channels
         assert l_normal.bounding_box.size.to_tuple() == size
         if l_bio is not None:
-            assert np.array_equal(
+            np.testing.assert_array_equal(
                 l_bio.get_finest_mag().read(), l_normal.get_finest_mag().read()
             )
     return ds
 
 
+@pytest.mark.parametrize(
+    "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
+)
+def test_test_images(
+    tmp_path: Path,
+    url: Union[str, List[str]],
+    filename: Union[str, List[str]],
+    kwargs: Dict,
+    dtype: str,
+    num_channels: int,
+    size: Tuple[int, int, int],
+) -> None:
+    _test_test_images(tmp_path, url, filename, kwargs, dtype, num_channels, size)
+
+
 if __name__ == "__main__":
     time = lambda: strftime("%Y-%m-%d_%H-%M-%S", gmtime())  # noqa: E731
 
-    for repo_images_args in REPO_IMAGES_ARGS:
+    for repo_image in REPO_IMAGES_ARGS:
         with TemporaryDirectory() as tempdir:
-            image_path = repo_images_args[0]
+            image_path = repo_image[0]
             if isinstance(image_path, list):
                 image_path = str(image_path[0])
             name = "".join(filter(str.isalnum, image_path))
-            print(*repo_images_args)
+            print(repo_image)
             print(
-                test_repo_images(Path(tempdir), *repo_images_args)
+                _test_repo_images(Path(tempdir), *repo_image)
                 .upload(f"test_repo_images_{name}_{time()}")
                 .url
             )
 
-    for bioformats_args in BIOFORMATS_ARGS:
+    for bioformat_image in BIOFORMATS_ARGS:
         with TemporaryDirectory() as tempdir:
-            name = "".join(filter(str.isalnum, bioformats_args[1]))
-            print(*bioformats_args)
+            name = "".join(filter(str.isalnum, bioformat_image[1]))
+            print(bioformat_image)
             print(
-                test_bioformats(Path(tempdir), *bioformats_args)
+                _test_bioformats(Path(tempdir), *bioformat_image)
                 .upload(f"test_bioformats_{name}_{time()}")
                 .url
             )
@@ -500,7 +551,7 @@ if __name__ == "__main__":
             name = "".join(filter(str.isalnum, test_images_args[1]))
             print(*test_images_args)
             print(
-                test_test_images(Path(tempdir), *test_images_args)
+                _test_test_images(Path(tempdir), *test_images_args)
                 .upload(f"test_test_images_{name}_{time()}")
                 .url
             )

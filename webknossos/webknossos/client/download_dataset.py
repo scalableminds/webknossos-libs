@@ -9,7 +9,7 @@ from ._download_dataset import download_dataset as actual_download_dataset
 
 def download_dataset(
     dataset_name: str,
-    organization_name: str,
+    organization_id: str,
     bbox: Optional[BoundingBox] = None,
     layers: Optional[List[str]] = None,
     mags: Optional[List[Mag]] = None,
@@ -19,7 +19,7 @@ def download_dataset(
     warn_deprecated("download_dataset", "Dataset.download")
     return actual_download_dataset(
         dataset_name,
-        organization_id=organization_name,
+        organization_id=organization_id,
         bbox=bbox,
         layers=layers,
         mags=mags,

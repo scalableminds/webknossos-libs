@@ -25,6 +25,9 @@ jobs:
       uses: astral-sh/setup-uv@v3
       with:
         version: "0.4.19"
+
+    - name: Install proxay
+      run: npm install -g proxay
         
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
@@ -33,6 +36,10 @@ jobs:
       run: |
         git diff --no-ext-diff --quiet --exit-code
         [[ -z $(git status -s) ]]
+
+    - name: Use currently deployed Webknossos version
+      run: |
+        sed -i "s/export DOCKER_TAG=.*$/export DOCKER_TAG=master__$(curl https://webknossos.org/api/buildinfo | jq -r .webknossos.version)/" local_wk_setup.sh
 
     - name: Python tests, refreshing the network snapshots
       env:

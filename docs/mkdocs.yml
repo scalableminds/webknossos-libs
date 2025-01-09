@@ -93,7 +93,6 @@ plugins:
                     show_if_no_docstring: true
                     signature_crossrefs: true
                     parameter_headings: false
-                    summary: true
                     unwrap_annotated: true
                     line_length: 60
                     filters:
@@ -235,7 +234,6 @@ nav:
         - webknossos-py/examples/download_image_data.md
         - webknossos-py/examples/download_tiff_stack.md
         - webknossos-py/examples/remote_datasets.md
-        - webknossos-py/examples/zarr_and_dask.md
         - webknossos-py/examples/convert_4d_tiff.md
         - webknossos-py/examples/announce_dataset_upload.md
         - webknossos-py/examples/accessing_metadata.md

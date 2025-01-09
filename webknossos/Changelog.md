@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.2...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,36 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
+
+
+## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.1...v0.16.2)
+
+### Breaking Changes
+- `MagView.get_zarr_array` now returns a `tensorstore` array instead of a `zarr-python` array. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174)
+
+### Changed
+- Updated to WEBKNOSSOS API version 8. [#1185](https://github.com/scalableminds/webknossos-libs/pull/1185)
+- Using tensorstore for reading and writing zarr 2 and 3 arrays. Removed `zarrita` and `zarr` dependency. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174)
+
+
+## [0.16.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.1) - 2024-12-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...v0.16.1)
+
+### Added
+- Added .nrrd and .nhdr to supported suffixes. [#1228](https://github.com/scalableminds/webknossos-libs/pull/1228)
+- Added more docstrings for many public classes and methods. [#1225](https://github.com/scalableminds/webknossos-libs/pull/1225)
+
+### Changed
+- Removes vcr-py from developer dependencies for testing and adds proxay for recording and replaying API requests. [#1198](https://github.com/scalableminds/webknossos-libs/pull/1198)
+- Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
+- Refactored the PimsTiffReader to read the data directly from the tiff file without creating a memmap-able copy first. This greatly reduces the time and storage requirements for converting large tiff files. [#1212](https://github.com/scalableminds/webknossos-libs/pull/1212)
+
+### Fixed
+- Fixed an issue where adding existing trees to an annotation fails. [#1201](https://github.com/scalableminds/webknossos-libs/pull/1201)
 - Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
+- Fixed offset error in upsample_cube job [#1209](https://github.com/scalableminds/webknossos-libs/pull/1209)
 
 
 ## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27
@@ -33,13 +62,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
 
 
-
 ## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...v0.15.10)
 
 ### Fixed
 - Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
-
 
 
 ## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
@@ -64,6 +91,7 @@ Removed the CZI installation extra from `pip install webknossos[all]` by default
 
 ### Fixed
 - Fixed an issue with merging annotations with compressed fallback layers.
+- Fixed an issue where adding a Zarr array with other axes than `cxyz` leads to an error. [#1204](https://github.com/scalableminds/webknossos-libs/pull/1204)
 
 
 

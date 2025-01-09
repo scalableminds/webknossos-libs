@@ -166,7 +166,10 @@ jobs:
         with:
           # Install a specific version of uv.
           version: "0.4.22"
-      
+
+      - name: Install proxay
+        run: npm install -g proxay
+              
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
       

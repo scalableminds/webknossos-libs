@@ -13,8 +13,11 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.client.context import _get_context
+from webknossos.dataset.defaults import SSL_CONTEXT
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
-from ._array import ArrayException, BaseArray, DataFormat, ZarritaArray
+from ._array import ArrayException, TensorStoreArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -24,6 +27,7 @@ from ._downsampling_utils import (
     parse_interpolation_mode,
 )
 from ._upsampling_utils import upsample_cube_job
+from .data_format import DataFormat
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     LayerProperties,
@@ -40,6 +44,7 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 from ..utils import (
+    LazyPath,
     copytree,
     get_executor_for_args,
     is_fs_path,
@@ -214,12 +219,8 @@ class Layer:
         )
         self._mags: Dict[Mag, MagView] = {}
 
-        self.path.mkdir(parents=True, exist_ok=True)
-
         for mag in properties.mags:
             self._setup_mag(Mag(mag.mag), mag.path)
-        # Only keep the properties of mags that were initialized.
-        # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) in self._mags
         ]
@@ -322,8 +323,13 @@ class Layer:
         # The MagViews need to be updated
         for mag in self._mags.values():
             if not mag.is_remote_to_dataset:
+                mag_path_maybe = (
+                    LazyPath.resolved(UPath(mag._properties.path))
+                    if mag._properties.path is not None
+                    else None
+                )
                 mag._path = _find_mag_path(
-                    self.dataset.path, self.name, mag.name, mag._properties.path
+                    self.dataset.path, self.name, mag.name, mag_path_maybe
                 )
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
@@ -564,15 +570,15 @@ class Layer:
             )
 
         self._assert_mag_does_not_exist_yet(mag)
-        self._create_dir_for_mag(mag)
+        mag_path = LazyPath.resolved(self._create_dir_for_mag(mag))
 
-        mag_view = MagView(
+        mag_view = MagView.create(
             self,
             mag,
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
-            create=True,
+            path=mag_path,
         )
 
         mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
@@ -695,7 +701,7 @@ class Layer:
         assert (
             mag not in self.mags
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
-        self._setup_mag(mag, str(mag_path))
+        self._setup_mag(mag, mag_path)
         self._properties.mags.append(mag_view._properties)
         self.dataset._export_as_json()
 
@@ -732,17 +738,27 @@ class Layer:
         )
 
         if mag in self._mags.keys():
-            assert (
-                chunk_shape is None or self._mags[mag].info.chunk_shape == chunk_shape
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk sizes do not match"
-            assert (
-                chunks_per_shard is None
-                or self._mags[mag].info.chunks_per_shard == chunks_per_shard
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunks per shard do not match"
-            assert (
-                compression_mode is None
-                or self._mags[mag].info.compression_mode == compression_mode
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match"
+            if (
+                chunk_shape is not None
+                and self._mags[mag].info.chunk_shape != chunk_shape
+            ):
+                raise ValueError(
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk sizes do not match"
+                )
+            if (
+                chunks_per_shard is not None
+                and self._mags[mag].info.chunks_per_shard != chunks_per_shard
+            ):
+                raise ValueError(
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunks per shard do not match"
+                )
+            if (
+                compression_mode is not None
+                and self._mags[mag].info.compression_mode != compression_mode
+            ):
+                raise ValueError(
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match"
+                )
             return self.get_mag(mag)
         else:
             return self.add_mag(
@@ -765,9 +781,7 @@ class Layer:
                 "Deleting mag {} failed. There is no mag with this name".format(mag)
             )
 
-        full_path = _find_mag_path(
-            self.dataset.path, self.name, mag.to_layer_name(), self.mags[mag].path
-        )
+        full_path = self._mags[mag].path
         del self._mags[mag]
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag
@@ -796,13 +810,12 @@ class Layer:
 
         mag_view = self.add_mag(
             mag=foreign_mag_view.mag,
-            chunk_shape=chunk_shape or foreign_mag_view._array_info.chunk_shape,
-            chunks_per_shard=chunks_per_shard
-            or foreign_mag_view._array_info.chunks_per_shard,
+            chunk_shape=chunk_shape or foreign_mag_view.info.chunk_shape,
+            chunks_per_shard=chunks_per_shard or foreign_mag_view.info.chunks_per_shard,
             compress=(
                 compress
                 if compress is not None
-                else foreign_mag_view._array_info.compression_mode
+                else foreign_mag_view.info.compression_mode
             ),
         )
 
@@ -939,7 +952,7 @@ class Layer:
         source_path = Path(path)
 
         try:
-            ZarritaArray.open(source_path)
+            TensorStoreArray.open(source_path)
         except ArrayException as e:
             raise ValueError(
                 "The given path does not lead to a valid Zarr Array: "
@@ -969,10 +982,11 @@ class Layer:
 
     def _create_dir_for_mag(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> None:
-        mag = Mag(mag).to_layer_name()
-        full_path = self.path / mag
+    ) -> Path:
+        mag_name = Mag(mag).to_layer_name()
+        full_path = self.path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
+        return full_path
 
     def _assert_mag_does_not_exist_yet(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
@@ -1041,7 +1055,7 @@ class Layer:
             RuntimeError: If sampling scheme produces invalid magnifications
             AttributeError: If sampling_mode is invalid
 
-        Example:
+        Examples:
             ```python
             from webknossos import SamplingModes
 
@@ -1456,7 +1470,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, path: Optional[str] = None) -> None:
+    def _setup_mag(self, mag: Mag, path: Optional[Union[str, PathLike]] = None) -> None:
         """Initialize a magnification level when opening the Dataset.
 
         Does not create storage headers/metadata, e.g. wk_header.
@@ -1472,21 +1486,28 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-        mag_path_maybe = UPath(path) if path else path
-        try:
-            cls_array = BaseArray.get_class(self._properties.data_format)
-            resolved_path = _find_mag_path(
-                self.dataset.path, self.name, mag_name, mag_path_maybe
+        # To setup the mag for non-public remote paths, we need to get the token from the context
+        if isinstance(path, Path) and is_remote_path(path):
+            wk_context = _get_context()
+            token = wk_context.datastore_token
+        else:
+            token = None
+        mag_path_maybe = (
+            LazyPath.resolved(
+                UPath(
+                    path,
+                    headers={} if token is None else {"X-Auth-Token": token},
+                    ssl=SSL_CONTEXT,
+                )
             )
-            info = cls_array.open(resolved_path).info
+            if path is not None
+            else None
+        )
+        try:
             self._mags[mag] = MagView(
                 self,
                 mag,
-                info.chunk_shape,
-                info.chunks_per_shard,
-                info.compression_mode,
-                False,
-                UPath(resolved_path),
+                _find_mag_path(self.dataset.path, self.name, mag_name, mag_path_maybe),
             )
             self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:
@@ -1529,6 +1550,10 @@ class Layer:
             from .dataset import Dataset
 
             layer_path = UPath(layer)
+            # if is_remote_path(layer_path):
+            #     return Dataset.open_remote(str(layer_path.parent)).get_layer(
+            #         layer_path.name
+            #     )
             return Dataset.open(layer_path.parent).get_layer(layer_path.name)
 
 
