@@ -1,5 +1,6 @@
 import itertools
 import os
+from pathlib import Path
 from typing import Iterable
 
 import pytest
@@ -118,3 +119,22 @@ def test_add_remote_layer_from_path() -> None:
         assert is_remote_path(new_layer.path) and (
             new_layer.path.as_uri() == layer.path.as_uri()
         ), "Added layer should have a remote path matching the remote layer added."
+
+
+def test_add_remote_layer_non_public(tmp_path: Path) -> None:
+    dataset = wk.Dataset.open("testdata/simple_zarr3_dataset").copy_dataset(
+        tmp_path / "simple_zarr3_dataset"
+    )
+    remote_dataset = wk.Dataset.open_remote(
+        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+    )
+    remote_dataset.is_public = False
+    dataset.add_remote_layer(remote_dataset.get_layer("segmentation"), "segmentation")
+
+    assert dataset.layers["segmentation"].get_mag("16-16-4").read().shape == (
+        1,
+        64,
+        64,
+        256,
+    )
+    remote_dataset.is_public = True

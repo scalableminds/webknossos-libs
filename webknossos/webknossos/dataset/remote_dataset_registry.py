@@ -19,6 +19,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         name: Optional[str],
         organization_id: Optional[str],
         tags: Optional[Union[str, Sequence[str]]],
+        folder_id: Optional[str],
     ) -> None:
         from ..administration.user import User
         from ..client.context import _get_api_client
@@ -33,7 +34,10 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
             tags = [tags]
 
         dataset_infos = client.dataset_list(
-            is_active=True, organization_id=organization_id, name=name
+            is_active=True,
+            organization_id=organization_id,
+            name=name,
+            folder_id=folder_id,
         )
 
         datasets_ids = []

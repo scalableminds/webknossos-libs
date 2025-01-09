@@ -2743,6 +2743,7 @@ class Dataset:
         name: Optional[str] = None,
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
+        folder_id: Optional[str] = None,
     ) -> Mapping[str, "RemoteDataset"]:
         """Get available datasets from WEBKNOSSOS.
 
@@ -2783,7 +2784,7 @@ class Dataset:
         """
 
         return RemoteDatasetRegistry(
-            name=name, organization_id=organization_id, tags=tags
+            name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
         )
 
 

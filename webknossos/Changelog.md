@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
 
 
 ## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18
@@ -48,7 +49,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed an issue where adding existing trees to an annotation fails. [#1201](https://github.com/scalableminds/webknossos-libs/pull/1201)
 - Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
 - Fixed offset error in upsample_cube job [#1209](https://github.com/scalableminds/webknossos-libs/pull/1209)
-
 
 
 ## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27

@@ -81,6 +81,7 @@ class WkApiClient(AbstractApiClient):
         is_active: Optional[bool],
         organization_id: Optional[str],
         name: Optional[str],
+        folder_id: Optional[str],
     ) -> List[ApiDataset]:
         route = "/datasets"
         return self._get_json(
@@ -90,6 +91,7 @@ class WkApiClient(AbstractApiClient):
                 "isActive": is_active,
                 "organizationId": organization_id,
                 "searchQuery": name,
+                "folderId": folder_id,
             },
         )
 

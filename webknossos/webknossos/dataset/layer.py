@@ -13,6 +13,9 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.client.context import _get_context
+from webknossos.dataset.defaults import SSL_CONTEXT
+
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ._array import ArrayException, TensorStoreArray
 from ._downsampling_utils import (
@@ -1483,7 +1486,23 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-        mag_path_maybe = LazyPath.resolved(UPath(path)) if path is not None else None
+        # To setup the mag for non-public remote paths, we need to get the token from the context
+        if path is not None and is_remote_path(UPath(path)):
+            wk_context = _get_context()
+            token = wk_context.datastore_token
+        else:
+            token = None
+        mag_path_maybe = (
+            LazyPath.resolved(
+                UPath(
+                    path,
+                    headers={} if token is None else {"X-Auth-Token": token},
+                    ssl=SSL_CONTEXT,
+                )
+            )
+            if path is not None
+            else None
+        )
         try:
             self._mags[mag] = MagView(
                 self,
