@@ -95,16 +95,27 @@ class ApiMetadata:
 
 @attr.s(auto_attribs=True)
 class ApiDataset:
+    id: str
     name: str
     is_public: bool
     folder_id: str
     allowed_teams: List[ApiTeam]
     tags: List[str]
+    directory_name: str
+    owning_organization: str
     data_store: ApiDataStore
     data_source: ApiDataSource
+    created: str
     metadata: Optional[List[ApiMetadata]] = None
-    display_name: Optional[str] = None
     description: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetId:
+    id: str
+    name: str
+    organization: str
+    directory_name: str
 
 
 @attr.s(auto_attribs=True)
@@ -178,7 +189,7 @@ class ApiTaskType:
 class ApiTask:
     id: str
     project_id: str
-    data_set: str
+    dataset_name: str
     status: ApiTaskStatus
     type: ApiTaskType
 
@@ -207,7 +218,7 @@ class ApiTaskParameters:
     project_name: str
     script_id: Optional[str]
     bounding_box: Optional[ApiBoundingBox]
-    data_set: str
+    dataset_id: str
     edit_position: Tuple[int, int, int]
     edit_rotation: Tuple[float, float, float]
 

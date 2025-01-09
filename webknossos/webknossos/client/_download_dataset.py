@@ -23,8 +23,7 @@ _DOWNLOAD_CHUNK_SHAPE = Vec3Int(512, 512, 512)
 
 
 def download_dataset(
-    dataset_name: str,
-    organization_id: str,
+    dataset_id: str,
     sharing_token: Optional[str] = None,
     bbox: Optional[BoundingBox] = None,
     layers: Optional[List[str]] = None,
@@ -34,26 +33,28 @@ def download_dataset(
 ) -> Dataset:
     context = _get_context()
     api_client = context.api_client
-    api_dataset = api_client.dataset_info(
-        organization_id, dataset_name, sharing_token=sharing_token
-    )
+    api_dataset = api_client.dataset_info(dataset_id, sharing_token=sharing_token)
+    organization_id = api_dataset.owning_organization
+    directory_name = api_dataset.directory_name
 
     datastore_client = context.get_datastore_api_client(api_dataset.data_store.url)
     optional_datastore_token = sharing_token or context.datastore_token
 
-    actual_path = Path(dataset_name) if path is None else Path(path)
-    if actual_path.exists():
-        logger.warning(f"{actual_path} already exists, skipping download.")
-        return Dataset.open(actual_path)
+    download_path = (
+        Path(f"{api_dataset.name}-{api_dataset.id}") if path is None else Path(path)
+    )
+    if download_path.exists():
+        logger.warning(f"{download_path} already exists, skipping download.")
+        return Dataset.open(download_path)
 
     api_data_layers = api_dataset.data_source.data_layers
     scale = api_dataset.data_source.scale
     if api_data_layers is None or len(api_data_layers) == 0 or scale is None:
         raise RuntimeError(
-            f"Could not download dataset {dataset_name}: {api_dataset.data_source.status or 'Unknown error.'}"
+            f"Could not download dataset {api_client.base_wk_url}/datasets/{api_dataset.id}: {api_dataset.data_source.status or 'Unknown error.'}"
         )
     dataset = Dataset(
-        actual_path,
+        download_path,
         name=api_dataset.name,
         voxel_size_with_unit=VoxelSize(scale.factor, length_unit_from_str(scale.unit)),
         exist_ok=exist_ok,
@@ -115,7 +116,7 @@ def download_dataset(
                 chunk_in_mag = chunk.in_mag(mag)
                 chunk_bytes, missing_buckets = datastore_client.dataset_get_raw_data(
                     organization_id=organization_id,
-                    dataset_name=dataset_name,
+                    directory_name=directory_name,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),
                     token=optional_datastore_token,
