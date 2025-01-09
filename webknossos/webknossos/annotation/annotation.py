@@ -301,6 +301,18 @@ class Annotation:
         self.skeleton.dataset_name = dataset_name
 
     @property
+    def dataset_id(self) -> Optional[str]:
+        """ID of the dataset this annotation belongs to.
+
+        Proxies to skeleton.dataset_id.
+        """
+        return self.skeleton.dataset_id
+
+    @dataset_id.setter
+    def dataset_id(self, dataset_id: Optional[str]) -> None:
+        self.skeleton.dataset_id = dataset_id
+
+    @property
     def voxel_size(self) -> Tuple[float, float, float]:
         """Voxel dimensions in nanometers (x, y, z).
 
@@ -941,10 +953,14 @@ class Annotation:
                         + f"The annotation uses {organization_id}, the context {context.organization_id}.",
                         UserWarning,
                     )
+        if self.dataset_id is None:
+            dataset_id = context.api_client.dataset_id_from_name(
+                self.dataset_name, organization_id
+            )
+        else:
+            dataset_id = self.dataset_id
 
-        dataset_info = context.api_client.dataset_info(
-            organization_id, self.dataset_name
-        )
+        dataset_info = context.api_client.dataset_info(dataset_id)
 
         datastore_url = dataset_info.data_store.url
 
@@ -987,6 +1003,7 @@ class Annotation:
             self.organization_id,
             sharing_token=sharing_token,
             webknossos_url=webknossos_url,
+            dataset_id=self.dataset_id,
         )
 
     def get_volume_layer_names(self) -> Iterable[str]:

@@ -13,10 +13,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.2...HEAD)
 
 ### Breaking Changes
+- Remote datasets don't have a display_name property anymore. To change the name of a dataset use the `name` property. 
 
 ### Added
+- `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.
+- `RemoteDataset` got an additional property: `created`.
+- `Annotation` got an additional property: `dataset_id`.
 
 ### Changed
+- Updated to WEBKNOSSOS API version 9. This includes support for the new url structure for datasets and [#1231](https://github.com/scalableminds/webknossos-libs/pull/1231)
 
 ### Fixed
 - Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)

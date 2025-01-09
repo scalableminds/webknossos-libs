@@ -1487,7 +1487,7 @@ class Layer:
 
         self._assert_mag_does_not_exist_yet(mag)
         # To setup the mag for non-public remote paths, we need to get the token from the context
-        if isinstance(path, Path) and is_remote_path(path):
+        if path is not None and is_remote_path(UPath(path)):
             wk_context = _get_context()
             token = wk_context.datastore_token
         else:

@@ -82,6 +82,7 @@ class Skeleton(Group):
 
     voxel_size: Vector3
     dataset_name: str
+    dataset_id: Optional[str] = None
     organization_id: Optional[str] = None
     description: Optional[str] = None
     # from Group parent to support mypy:

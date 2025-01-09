@@ -79,7 +79,7 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_get_raw_data(
         self,
         organization_id: str,
-        dataset_name: str,
+        directory_name: str,
         data_layer_name: str,
         mag: str,
         token: Optional[str],
@@ -90,9 +90,7 @@ class DatastoreApiClient(AbstractApiClient):
         height: int,
         depth: int,
     ) -> Tuple[bytes, str]:
-        route = (
-            f"/datasets/{organization_id}/{dataset_name}/layers/{data_layer_name}/data"
-        )
+        route = f"/datasets/{organization_id}/{directory_name}/layers/{data_layer_name}/data"
         query: Query = {
             "mag": mag,
             "x": x,

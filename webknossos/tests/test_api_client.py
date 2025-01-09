@@ -65,8 +65,9 @@ def test_user_list(auth_client: WkApiClient) -> None:
 
 def test_dataset_info() -> None:
     client = _get_api_client()
+    dataset_id = client.dataset_id_from_name("l4_sample", "Organization_X")
     api_dataset = client.dataset_info(
-        organization_id="Organization_X", dataset_name="l4_sample"
+        dataset_id=dataset_id,
     )
     assert api_dataset.data_store.url == DATASTORE_URL
     data_layers = api_dataset.data_source.data_layers

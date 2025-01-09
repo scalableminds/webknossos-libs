@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v8/user
+      path: /api/v9/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -21,17 +21,50 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:29 GMT
+        date: Thu, 09 Jan 2025 14:30:32 GMT
         content-type: application/json
         content-length: '682'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1734529175482,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1736432857848,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
-      path: /api/v8/datasets/Organization_X/l4_sample
+      path: >-
+        /api/v9/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 14:30:32 GMT
+        content-type: application/json
+        content-length: '1505'
+      body:
+        encoding: utf8
+        data: >-
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1736433030922,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}]
+        compression: none
+  - request:
+      method: GET
+      path: /api/v9/datasets/59e9cfbdba632ac2ab8b23b5
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -51,17 +84,17 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:29 GMT
+        date: Thu, 09 Jan 2025 14:30:32 GMT
         content-type: application/json
-        content-length: '1501'
+        content-length: '1503'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1734529349336,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513,"displayName":"l4_sample"}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1736433032308,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
         compression: none
   - request:
       method: POST
-      path: /api/v8/userToken/generate
+      path: /api/v9/userToken/generate
       headers:
         host: localhost:9000
         content-length: '0'
@@ -82,19 +115,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:29 GMT
+        date: Thu, 09 Jan 2025 14:30:32 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"46XGJlCDCY-YKWdFmB0iYA"}'
+        data: '{"token":"3RLYuToOCKK0xhjdB0dSjg"}'
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: 46XGJlCDCY-YKWdFmB0iYA
+        x-auth-token: 3RLYuToOCKK0xhjdB0dSjg
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -111,7 +144,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:29 GMT
+        date: Thu, 09 Jan 2025 14:30:32 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -124,7 +157,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: 46XGJlCDCY-YKWdFmB0iYA
+        x-auth-token: 3RLYuToOCKK0xhjdB0dSjg
         range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -142,7 +175,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:29 GMT
+        date: Thu, 09 Jan 2025 14:30:32 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -152,8 +185,8 @@ http_interactions:
           {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
         compression: none
   - request:
-      method: POST
-      path: /api/v8/annotations/upload
+      method: GET
+      path: /api/v9/datasets/59e9cfbdba632ac2ab8b23b5
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -162,12 +195,10 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '971'
-        content-type: multipart/form-data; boundary=bea7d3fdb51257fcf763c45203858879
       body:
-        encoding: base64
-        data: >-
-          LS1iZWE3ZDNmZGI1MTI1N2ZjZjc2M2M0NTIwMzg1ODg3OQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS1iZWE3ZDNmZGI1MTI1N2ZjZjc2M2M0NTIwMzg1ODg3OQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgATnWSWSixNTHeAQAA7gMAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZPLbt0gEIb3eQrEPueAb9iSnUjZReq2VdpN5As5RrXBAty6efoOGE6dKJHqjRmYYf6Pmanvt3lCv7g2QskG0xPBiMteDUJeGrzal9sS39/d1HaEDXN3g1C9tLqduYUQZ8IG3xauxcylRRJOGjxlz6adl4ljdA4+pm8njjbIQE9JWsHHGKW0pEWG0Z+Pt18bnJROULzEQhI0G/BmaZYnVZpVhBzPW/PzQa3SiX9QG+rVpPSpBX8c1l2DySmJFhBC9O6l3UmO0cAXOzYYViMXl9H6pTDfhBHdBGxWr4C1c1rI99x1asPIquULf7FPkAuuDNb3N9aP3fothpAgYq2G6/+QfYVwsp3Ug3BACsLde0blbi0GD/kJwVfpSAYU08PiHUwCd/zDySlkCqbjSUqMApBL5onq89sO2XvnUAxX0l27LwcpM5anWcIKUuQ0J1cyz8kKRjPCaJkmtGJFjPTlKgllVUqqjKZlkVE4vGi1Lo+ADI/lyEHtXqoWWc05Dt0o1cBD90L/Ost7p9h1KHH6oCX9H3rQ/2OtzofQmg8XbiK0nxA/IJ1uZT8uSkgbT3s1u/mIExNMeAVpYbvBXgJodv8Gg47wkse42sPFK7zhVbswP3btjn8Njv71OU7vX1BLAQIUAxQAAAAIAE51klkosTUx3gEAAO4DAAAfAAAAAAAAAAAAAACAAQAAAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sUEsFBgAAAAABAAEATQAAABsCAAAAAA0KLS1iZWE3ZDNmZGI1MTI1N2ZjZjc2M2M0NTIwMzg1ODg3OS0tDQo=
+        encoding: utf8
+        data: ''
+        compression: none
     response:
       status:
         code: 200
@@ -175,19 +206,51 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:29 GMT
+        date: Thu, 09 Jan 2025 14:30:32 GMT
+        content-type: application/json
+        content-length: '1503'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1736433032395,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
+        compression: none
+  - request:
+      method: POST
+      path: /api/v9/annotations/upload
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        content-length: '969'
+        content-type: multipart/form-data; boundary=e1d82fb08460ae46d0888b08b0e79685
+      body:
+        encoding: base64
+        data: >-
+          LS1lMWQ4MmZiMDg0NjBhZTQ2ZDA4ODhiMDhiMGU3OTY4NQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS1lMWQ4MmZiMDg0NjBhZTQ2ZDA4ODhiMDhiMGU3OTY4NQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgA0HspWu+Zfj/cAQAA7gMAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZNNb9wgEIbv+RWIe3YBf65kJ1JukXpt1fYSYZusUW2wALduf30HDFsnaqWuVjLDzDDvAzPN4zZP6LswVmrVYnoiGAnV60Gqa4tX93pf48eHu8aNsGEf7hBqFm74LBykeBM2xLYII2ehHFLgafGUv1g+L5PA6BxjbM8ngTaoQE8su8CvqiilNS1zjH7+fftXi1ntBaVDHBRBs4XoKivzLCMZI+To5/bbk16VF/+kN9TrSZsTh3gc112LyYklCwghe48y3lNgNIjFjS2G1SjkdXRhKe0naWU3AZszK2DtnA7qvXSd3jByevkgXt1nqAVHRuvLG+vrbv2QQyyQsFYrzH/IvkF42V7qQTggReH+PpNyv5ZDgPwHwUflSQaUysPiHQyDM/7gFBQqRdPzsBqjCOSLBaLm/LZD9t45PIZ/0l37/hzsUhXQD0VBSVWyskzewMkujFxoRqoqp5TdfOG5alJAGoV/RnJagPNq9Lo8AzJclicHtftTceSMEDh2o9KDiN0L/eutEJ1h36HE64OWDF/owfBNb3U+pDZiuAqboMOEhAHpDFf9uGipXPL2evbzkSYmmnALysF2i4ME0Oy/LQYd8SaPeU2AS0cEI6j2aWHs+I5/S07xzTlN729QSwECFAMUAAAACADQeyla75l+P9wBAADuAwAAHwAAAAAAAAAAAAAAgAEAAAAAdGVzdF9ib3VuZGluZ19ib3hfcm91bmR0cmlwLm5tbFBLBQYAAAAAAQABAE0AAAAZAgAAAAANCi0tZTFkODJmYjA4NDYwYWU0NmQwODg4YjA4YjBlNzk2ODUtLQ0K
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 14:30:32 GMT
         content-type: application/json
         content-length: '124'
       body:
         encoding: utf8
         data: >-
-          {"annotation":{"typ":"Explorational","id":"6762d145010000b400d80752"},"messages":[{"success":"Successfully
+          {"annotation":{"typ":"Explorational","id":"677fdd88010000b1008ef7a8"},"messages":[{"success":"Successfully
           uploaded file"}]}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v8/annotations/6762d145010000b400d80752/download?skipVolumeData=false
+        /api/v9/annotations/677fdd88010000b1008ef7a8/download?skipVolumeData=false
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -208,30 +271,30 @@ http_interactions:
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:29 GMT
+        date: Thu, 09 Jan 2025 14:30:32 GMT
         content-type: application/xml
-        content-length: '1738'
+        content-length: '1739'
       body:
         encoding: utf8
         data: |-
           <things>
             <meta name="writer" content="NmlWriter.scala"/>
             <meta name="writerGitCommit" content="e1dd0672d5bd134d589faf6e6cbe15ad2a8fc9a2"/>
-            <meta name="timestamp" content="1734529349513"/>
-            <meta name="annotationId" content="6762d145010000b400d80752"/>
+            <meta name="timestamp" content="1736433032554"/>
+            <meta name="annotationId" content="677fdd88010000b1008ef7a8"/>
             <meta name="username" content="user_A last_A"/>
             <parameters>
               <experiment name="l4_sample" organization="Organization_X" datasetId="59e9cfbdba632ac2ab8b23b5" description="" wkUrl="http://localhost:9000"/>
               <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
               <offset x="0" y="0" z="0"/>
-              <time ms="1734529349457"/>
+              <time ms="1736433032491"/>
               <editPosition x="0" y="0" z="0"/>
               <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
               <zoomLevel zoom="2.0"/>
               <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
-              <userBoundingBox id="1" name="task bounding box" color.r="0.6216956041447752" color.g="0.5452428671401794" color.b="0.9783209862174057" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.9603182788079004" color.g="0.2521645596654639" color.b="0.8049491573697496" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
             </parameters>
-            <thing id="2" color.r="0.801793098449707" color.g="0.7671407461166382" color.b="0.08475342392921448" color.a="1.0" name="a tree" groupId="1">
+            <thing id="2" color.r="0.8059751987457275" color.g="0.2920913100242615" color.b="0.22975997626781464" color.a="1.0" name="a tree" groupId="1">
               <nodes>
                 <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
               </nodes>
