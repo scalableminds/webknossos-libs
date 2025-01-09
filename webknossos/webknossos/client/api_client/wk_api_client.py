@@ -8,6 +8,7 @@ from webknossos.client.api_client.models import (
     ApiAnnotationUploadResult,
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
+    ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
     ApiDataStoreToken,
@@ -70,6 +71,10 @@ class WkApiClient(AbstractApiClient):
     ) -> ApiDataset:
         route = f"/datasets/{dataset_id}"
         return self._get_json(route, ApiDataset, query={"sharingToken": sharing_token})
+
+    def dataset_id_from_name(self, dataset_name: str, organization_id: str) -> str:
+        route = f"/datasets/disambiguate/{organization_id}/{dataset_name}/toId"
+        return self._get_json(route, ApiDatasetId).id
 
     def dataset_list(
         self,

@@ -85,15 +85,7 @@ def test_remote_dataset(tmp_path: Path) -> None:
     assert remote_ds.get_color_layers()[0].read_only
     assert remote_ds.get_color_layers()[0].get_finest_mag().read_only
 
-    assert (
-        remote_ds.url
-        == "http://localhost:9000/datasets/Organization_X/test_remote_metadata"
-    )
-
-    remote_ds.display_name = "Test Remote Dataset"
-    assert remote_ds.display_name == "Test Remote Dataset"
-    del remote_ds.display_name  # reset
-    assert remote_ds.display_name == "test_remote_metadata"
+    assert remote_ds.name == "test_remote_metadata"
 
     assert remote_ds.description is None
     remote_ds.description = "My awesome test description"

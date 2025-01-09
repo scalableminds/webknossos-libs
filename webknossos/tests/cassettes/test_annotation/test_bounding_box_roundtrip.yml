@@ -21,17 +21,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 19 Dec 2024 10:06:55 GMT
+        date: Thu, 09 Jan 2025 12:57:43 GMT
         content-type: application/json
         content-length: '682'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1736427291408,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
-      path: /api/v9/datasets/Organization_X
+      path: >-
+        /api/v9/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -46,17 +47,265 @@ http_interactions:
         compression: none
     response:
       status:
-        code: 400
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 12:57:43 GMT
+        content-type: application/json
+        content-length: '1505'
+      body:
+        encoding: utf8
+        data: >-
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1736427461938,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}]
+        compression: none
+  - request:
+      method: GET
+      path: /api/v9/datasets/59e9cfbdba632ac2ab8b23b5
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
       headers:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 19 Dec 2024 10:06:55 GMT
+        date: Thu, 09 Jan 2025 12:57:43 GMT
         content-type: application/json
-        content-length: '81'
+        content-length: '1503'
       body:
         encoding: utf8
         data: >-
-          {"messages":[{"error":"The passed resource id ‘Organization_X’ is
-          invalid"}]}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1736427463299,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
+        compression: none
+  - request:
+      method: POST
+      path: /api/v9/userToken/generate
+      headers:
+        host: localhost:9000
+        content-length: '0'
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 12:57:43 GMT
+        content-type: application/json
+        content-length: '34'
+      body:
+        encoding: utf8
+        data: '{"token":"kXmEk1fumQUZeoy-qkYQBA"}'
+        compression: none
+  - request:
+      method: HEAD
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: kXmEk1fumQUZeoy-qkYQBA
+        accept-encoding: identity
+        accept: '*/*'
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 12:57:43 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1152'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: kXmEk1fumQUZeoy-qkYQBA
+        range: bytes=0-1151
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.10 aiohttp/3.10.9
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 12:57:43 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1152'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
+        compression: none
+  - request:
+      method: GET
+      path: /api/v9/datasets/59e9cfbdba632ac2ab8b23b5
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 12:57:43 GMT
+        content-type: application/json
+        content-length: '1503'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1736427463377,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
+        compression: none
+  - request:
+      method: POST
+      path: /api/v9/annotations/upload
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        content-length: '972'
+        content-type: multipart/form-data; boundary=df12f3fd0e637636369e755eabc0b16a
+      body:
+        encoding: base64
+        data: >-
+          LS1kZjEyZjNmZDBlNjM3NjM2MzY5ZTc1NWVhYmMwYjE2YQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS1kZjEyZjNmZDBlNjM3NjM2MzY5ZTc1NWVhYmMwYjE2YQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgANW8pWmFezeTfAQAA8AMAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZPLbt0gEIb3eQrEvucAvmHJTqTsKnXbqu0m8oUco9pgAW7dPn0HDKkTtVK9McPMMP8HM83DvszouzBWatVieiEYCTXoUapbizf3/I7jh/u7xk2wYe/vEGrWznSLcJDiTdgQ+yqMXIRySIGnxXP+ZLtlnQVG1xhjh24WaIcK9MKyGr6qopRyWuYY/fz79q8WM+4FpUMcFEGLhegqK3NW5WVGyNnf2W+PelNe/KPe0aBnbS4dxOO47ltMLixZQAjZR5TxngKjUaxuajGsJiFvkwtLaT9JK/sZ2JzZAOvgdFDvqe/1jpHT6wfx7D5DLTgyWl9eWV8P64ccY4GEtVlh/kP2C4SX7aWehANSFO7vMyn3azkGyH8QfFSeZESpPCzewDA44w9OQaFSND0P4xhFIF8sEDXX1x1y9M7pMfyTHtrDcxBac14XtKIVYTUnVZXcAZQTxniRFaxkGamLLDnDgzFe1pBN8rLOc1pD5s3obX0P0HBdnh30Ho/VIWeEwLEflR5F7F/oYG+FaDgdepR4hdCU4Q9dGP7pta6n1EaMN2ETdpiRMCK96dQwrVoql7yDXvyEpJmJJtyDcrDd4iABNPt/i0FHvMtzXhPg0hHBCKp9Whi87sB/SU7xzTXN729QSwECFAMUAAAACAA1bylaYV7N5N8BAADwAwAAHwAAAAAAAAAAAAAAgAEAAAAAdGVzdF9ib3VuZGluZ19ib3hfcm91bmR0cmlwLm5tbFBLBQYAAAAAAQABAE0AAAAcAgAAAAANCi0tZGYxMmYzZmQwZTYzNzYzNjM2OWU3NTVlYWJjMGIxNmEtLQ0K
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 12:57:43 GMT
+        content-type: application/json
+        content-length: '124'
+      body:
+        encoding: utf8
+        data: >-
+          {"annotation":{"typ":"Explorational","id":"677fc7c7010000ac000c72f9"},"messages":[{"success":"Successfully
+          uploaded file"}]}
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /api/v9/annotations/677fc7c7010000ac000c72f9/download?skipVolumeData=false
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate, zstd
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 09 Jan 2025 12:57:43 GMT
+        content-type: application/xml
+        content-length: '1744'
+      body:
+        encoding: utf8
+        data: |-
+          <things>
+            <meta name="writer" content="NmlWriter.scala"/>
+            <meta name="writerGitCommit" content="e1dd0672d5bd134d589faf6e6cbe15ad2a8fc9a2"/>
+            <meta name="timestamp" content="1736427463510"/>
+            <meta name="annotationId" content="677fc7c7010000ac000c72f9"/>
+            <meta name="username" content="user_A last_A"/>
+            <parameters>
+              <experiment name="l4_sample" organization="Organization_X" datasetId="59e9cfbdba632ac2ab8b23b5" description="" wkUrl="http://localhost:9000"/>
+              <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
+              <offset x="0" y="0" z="0"/>
+              <time ms="1736427463449"/>
+              <editPosition x="0" y="0" z="0"/>
+              <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
+              <zoomLevel zoom="2.0"/>
+              <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.04072795718062938" color.g="0.028360672872080217" color.b="0.059762129842325984" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+            </parameters>
+            <thing id="2" color.r="0.28699880838394165" color.g="0.802285373210907" color.b="0.01988951675593853" color.a="1.0" name="a tree" groupId="1">
+              <nodes>
+                <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
+              </nodes>
+              <edges/>
+            </thing>
+            <branchpoints/>
+            <comments>
+              <comment node="3" content="node 1"/>
+            </comments>
+            <groups>
+              <group name="a group" id="1" isExpanded="true"/>
+            </groups>
+          </things>
         compression: none

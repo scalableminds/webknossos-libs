@@ -105,8 +105,17 @@ class ApiDataset:
     owning_organization: str
     data_store: ApiDataStore
     data_source: ApiDataSource
+    created: str
     metadata: Optional[List[ApiMetadata]] = None
     description: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetId:
+    id: str
+    name: str
+    organization: str
+    directory_name: str
 
 
 @attr.s(auto_attribs=True)
