@@ -609,7 +609,9 @@ class Dataset:
             webknossos_url = deprecated_match.group("webknossos_url")
 
             possible_ids = list(
-                Dataset.get_remote_datasets(dataset_name, organization_id).keys()
+                Dataset.get_remote_datasets(
+                    name=dataset_name, organization_id=organization_id
+                ).keys()
             )
             if len(possible_ids) == 0:
                 raise ValueError(
@@ -2740,9 +2742,9 @@ class Dataset:
 
     @staticmethod
     def get_remote_datasets(
-        name: Optional[str] = None,
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
+        name: Optional[str] = None,
         folder_id: Optional[str] = None,
     ) -> Mapping[str, "RemoteDataset"]:
         """Get available datasets from WEBKNOSSOS.
