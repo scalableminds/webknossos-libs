@@ -13,7 +13,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.2...HEAD)
 
 ### Breaking Changes
-- Remote datasets don't have a display_name property anymore. To change the name of a dataset use the `name` property. 
+- `RemoteDataset.display_name` is deprecated. To change the name of a dataset use the `name` property instead. 
+- `Dataset.get_remote_datasets()` returns a mapping. The keys of this mapping changed from datasets name to datasets id.
+- `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternativly a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated.
 
 ### Added
 - `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.

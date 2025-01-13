@@ -26,6 +26,7 @@ from typing import (
     Union,
     cast,
 )
+from urllib.parse import urlparse
 
 import attr
 import numpy as np
@@ -568,9 +569,32 @@ class Dataset:
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
     @classmethod
+    def _disambiguate_remote(
+        cls,
+        dataset_name: str,
+        organization_id: str,
+    ):
+        possible_ids = list(
+            Dataset.get_remote_datasets(
+                name=dataset_name, organization_id=organization_id
+            ).keys()
+        )
+        if len(possible_ids) == 0:
+            raise ValueError(
+                f"Dataset {dataset_name} not found in organization {organization_id}."
+            )
+        elif len(possible_ids) > 1:
+            logger.warning(
+                f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
+                "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
+                'of your datasets with `Dataset.get_remote_datasets("{dataset_name}").'
+            )
+        return possible_ids[0]
+
+    @classmethod
     def _parse_remote(
         cls,
-        dataset_name_or_url: str,
+        dataset_name_or_url: Optional[str] = None,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
@@ -588,127 +612,122 @@ class Dataset:
 
         caller = inspect.stack()[1].function
 
-        dataset_name_or_url = resolve_short_link(dataset_name_or_url)
-
-        match = _DATASET_URL_REGEX.match(dataset_name_or_url)
-        deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
-        # zarr_match = _ZARR_DATASET_URL_REGEX.match(dataset_name_or_url)
-        if deprecated_match is not None:
-            assert (
-                organization_id is None
-                and sharing_token is None
-                and webknossos_url is None
-            ), (
-                f"When Dataset.{caller}() is called with an url, "
-                + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                + "organization_id, sharing_token and webknossos_url must not be set."
-            )
-            dataset_name = deprecated_match.group("dataset_name")
-            organization_id = deprecated_match.group("organization_id")
-            sharing_token = deprecated_match.group("sharing_token")
-            webknossos_url = deprecated_match.group("webknossos_url")
-
-            possible_ids = list(
-                Dataset.get_remote_datasets(
-                    name=dataset_name, organization_id=organization_id
-                ).keys()
-            )
-            if len(possible_ids) == 0:
-                raise ValueError(
-                    f"Dataset {dataset_name} not found in organization {organization_id}."
-                )
-            elif len(possible_ids) > 1:
-                logger.warning(
-                    f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
-                    "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
-                    'of your datasets with `Dataset.get_remote_datasets("{dataset_name}").'
-                )
-            dataset_id = possible_ids[0]
-        elif match is not None:
-            assert (
-                organization_id is None
-                and sharing_token is None
-                and webknossos_url is None
-            ), (
-                f"When Dataset.{caller}() is called with an url, "
-                + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                + "organization_id, sharing_token and webknossos_url must not be set."
-            )
-            dataset_name = match.groupdict().get("dataset_name")
-            dataset_id = match.group("dataset_id")
-            sharing_token = match.group("sharing_token")
-            webknossos_url = match.group("webknossos_url")
-
-        # elif zarr_match is not None:
-        #     assert (
-        #         organization_id is None
-        #         and sharing_token is None
-        #         and webknossos_url is None
-        #     ), (
-        #         f"When Dataset.{caller}() is called with a zarr url, "
-        #         + f"e.g. Dataset.{caller}('https://webknossos.org/data/zarr/scalable_minds/l4_sample_dev/'), "
-        #         + "organization_id, sharing_token and webknossos_url must not be set."
-        #     )
-        #     dataset_name = zarr_match.group("dataset_name")
-        #     organization_id = zarr_match.group("organization_id")
-        #     webknossos_url = zarr_match.group("webknossos_url")
-        else:
-            dataset_name = dataset_name_or_url
-
-        current_context = _get_context()
-        if webknossos_url is not None:
-            webknossos_url = webknossos_url.rstrip("/")
-        if webknossos_url is not None and webknossos_url != current_context.url:
-            if sharing_token is None:
-                warnings.warn(
-                    f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
-                    + f"Using no token, only public datasets can used with Dataset.{caller}(). "
-                    + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
-                )
-            assert organization_id is not None, (
-                f"Please supply the organization_id to Dataset.{caller}()."
-                f"The supplied url {webknossos_url} does not match your current context {current_context.url}. "
-                + "In this case organization_id can not be inferred."
-            )
-            context_manager: ContextManager[None] = webknossos_context(
-                webknossos_url, token=None
-            )
-        else:
-            if organization_id is None:
-                organization_id = current_context.organization_id
-
-            context_manager = nullcontext()
-
         if dataset_id is None:
-            possible_ids = list(
-                Dataset.get_remote_datasets(
-                    name=dataset_name, organization_id=organization_id
-                ).keys()
+            assert dataset_name_or_url is not None, (
+                f"Please supply the url to dataset or the dataset_id to Dataset.{caller}()."
+                f"Dataset.{caller}('https://webknossos.org/datasets/<dataset_id>') or Dataset.{caller}(dataset_id='dataset_id')."
             )
-            if len(possible_ids) == 0:
-                raise ValueError(
-                    f"Dataset {dataset_name} not found in organization {organization_id}."
-                )
-            elif len(possible_ids) > 1:
-                logger.warning(
-                    f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
-                    "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
-                    'of your datasets with `Dataset.get_remote_datasets("{dataset_name}").'
-                )
-            dataset_id = possible_ids[0]
 
-        return (
-            context_manager,
-            dataset_id,
-            dataset_name,
-            organization_id,
-            sharing_token,
-        )
+            dataset_name_or_url = resolve_short_link(dataset_name_or_url)
+            parsed_url = urlparse(dataset_name_or_url)
+            if not parsed_url.scheme:
+                # dataset_name_or_url is a dataset name
+                dataset_name = parsed_url.path
+            else:
+                webknossos_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                parsed_url_path = Path(parsed_url.path)
+                if parsed_url_path.name == 'view':
+                    parsed_url_path = parsed_url_path.parent
+                parsed_url_path.
+
+        #     dataset_name_or_url = dataset_name_or_url.rstrip("/")
+
+        #     match = _DATASET_URL_REGEX.match(dataset_name_or_url)
+        #     deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
+        #     # zarr_match = _ZARR_DATASET_URL_REGEX.match(dataset_name_or_url)
+        #     if deprecated_match is not None:
+        #         assert (
+        #             organization_id is None
+        #             and sharing_token is None
+        #             and webknossos_url is None
+        #         ), (
+        #             f"When Dataset.{caller}() is called with an url, "
+        #             + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+        #             + "organization_id, sharing_token and webknossos_url must not be set."
+        #         )
+        #         dataset_name = deprecated_match.group("dataset_name")
+        #         organization_id = deprecated_match.group("organization_id")
+        #         sharing_token = deprecated_match.group("sharing_token")
+        #         webknossos_url = deprecated_match.group("webknossos_url")
+
+        #         assert organization_id is not None
+        #         dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+
+        #     elif match is not None:
+        #         assert (
+        #             organization_id is None
+        #             and sharing_token is None
+        #             and webknossos_url is None
+        #         ), (
+        #             f"When Dataset.{caller}() is called with an url, "
+        #             + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+        #             + "organization_id, sharing_token and webknossos_url must not be set."
+        #         )
+        #         dataset_name = match.groupdict().get("dataset_name")
+        #         dataset_id = match.group("dataset_id")
+        #         sharing_token = match.group("sharing_token")
+        #         webknossos_url = match.group("webknossos_url")
+
+        #     # elif zarr_match is not None:
+        #     #     assert (
+        #     #         organization_id is None
+        #     #         and sharing_token is None
+        #     #         and webknossos_url is None
+        #     #     ), (
+        #     #         f"When Dataset.{caller}() is called with a zarr url, "
+        #     #         + f"e.g. Dataset.{caller}('https://webknossos.org/data/zarr/scalable_minds/l4_sample_dev/'), "
+        #     #         + "organization_id, sharing_token and webknossos_url must not be set."
+        #     #     )
+        #     #     dataset_name = zarr_match.group("dataset_name")
+        #     #     organization_id = zarr_match.group("organization_id")
+        #     #     webknossos_url = zarr_match.group("webknossos_url")
+        #     else:
+        #         dataset_name = dataset_name_or_url
+        #         if organization_id is None:
+        #             current_context = _get_context()
+        #             organization_id = current_context.organization_id
+        #         dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+        # else:
+        #     current_context = _get_context()
+        #     dataset_info = current_context.api_client.dataset_info(dataset_id)
+        #     dataset_name = dataset_info.directory_name
+        #     organization_id = dataset_info.owning_organization
+
+        # if webknossos_url is not None:
+        #     webknossos_url = webknossos_url.rstrip("/")
+        # if webknossos_url is not None and webknossos_url != current_context.url:
+        #     if sharing_token is None:
+        #         warnings.warn(
+        #             f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
+        #             + f"Using no token, only public datasets can used with Dataset.{caller}(). "
+        #             + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
+        #         )
+        #     assert organization_id is not None, (
+        #         f"Please supply the organization_id to Dataset.{caller}()."
+        #         f"The supplied url {webknossos_url} does not match your current context {current_context.url}. "
+        #         + "In this case organization_id can not be inferred."
+        #     )
+        #     context_manager: ContextManager[None] = webknossos_context(
+        #         webknossos_url, token=None
+        #     )
+        # else:
+        #     if organization_id is None:
+        #         organization_id = current_context.organization_id
+
+        #     context_manager = nullcontext()
+
+        # return (
+        #     context_manager,
+        #     dataset_id,
+        #     dataset_name,
+        #     organization_id,
+        #     sharing_token,
+        # )
 
     @classmethod
     def open_remote(
         cls,
-        dataset_name_or_url: str,
+        dataset_name_or_url: Optional[str] = ModuleNotFoundError,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
@@ -2745,7 +2764,7 @@ class Dataset:
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
         name: Optional[str] = None,
-        folder_id: Optional[str] = None,
+        folder: Optional[RemoteFolder] = None,
     ) -> Mapping[str, "RemoteDataset"]:
         """Get available datasets from WEBKNOSSOS.
 
@@ -2757,6 +2776,10 @@ class Dataset:
                 organization of logged in user.
             tags: Optional tag(s) to filter datasets by. Can be a single tag string or
                 sequence of tags. Only returns datasets with all specified tags.
+            name: Optional name to filter datasets by. Only returns datasets with
+                matching name.
+            folder: Optional folder to filter datasets by. Only returns datasets in
+                the specified folder.
 
         Returns:
             Mapping[str, RemoteDataset]: Dict mapping dataset ids to RemoteDataset objects
@@ -2784,6 +2807,7 @@ class Dataset:
             RemoteDataset objects are initialized lazily when accessed for the first time.
             The mapping object provides a fast way to list and look up available datasets.
         """
+        folder_id = folder.id if folder is not None else None
 
         return RemoteDatasetRegistry(
             name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
@@ -3007,6 +3031,31 @@ class RemoteDataset(Dataset):
     @name.setter
     def name(self, name: str) -> None:
         self._update_dataset_info(name=name)
+
+    @property
+    def display_name(self) -> str:
+        """Deprecated, please use `name`.
+        The human-readable name for the dataset in the webknossos interface.
+
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Optional[str]: Current display name if set, None otherwise
+
+        Examples:
+            ```
+            remote_ds.display_name = "Mouse Brain Sample A"
+            ```
+        """
+        warn_deprecated("display_name", "name")
+
+        return self.name
+
+    @display_name.setter
+    def display_name(self, name: str) -> None:
+        warn_deprecated("display_name", "name")
+
+        self.name = name
 
     @property
     def description(self) -> Optional[str]:

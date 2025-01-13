@@ -77,7 +77,9 @@ def main(
     url = resolve_short_link(url)
 
     with webknossos_context(token=token):
-        if re.match(_DATASET_URL_REGEX, url):
+        if re.match(
+            _DATASET_URL_REGEX, url
+        ):  # TODO: Change this check to include legacy urls
             Dataset.download(
                 dataset_name_or_url=url,
                 path=target,
