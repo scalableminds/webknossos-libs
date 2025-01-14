@@ -2775,14 +2775,14 @@ def test_remote_dataset_urls() -> None:
     assert ds_open_with_id.url == ds.url
 
     # Test different variants of the URL
-    # 1. deprecated url: "http://localhost:9000/datasets/Oranization_X/l4_sample"
+    # 1. deprecated url: "http://localhost:9000/datasets/Organization_X/l4_sample"
 
-    ds1 = Dataset.open_remote("http://localhost:9000/datasets/Oranization_X/l4_sample")
+    ds1 = Dataset.open_remote("http://localhost:9000/datasets/Organization_X/l4_sample")
     assert ds1.url == ds.url
 
-    # 2. deprecated url with params: "http://localhost:9000/datasets/Oranization_X/l4_sample/view#2786,4326,1816,0,3"
+    # 2. deprecated url with params: "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
     ds2 = Dataset.open_remote(
-        "http://localhost:9000/datasets/Oranization_X/l4_sample/view#2786,4326,1816,0,3"
+        "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
     )
     assert ds2.url == ds.url
 
