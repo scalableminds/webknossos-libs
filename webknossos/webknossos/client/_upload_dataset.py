@@ -42,7 +42,7 @@ class LayerToLink(NamedTuple):
         assert isinstance(
             ds, RemoteDataset
         ), f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
-        return cls(ds._dataset_name, layer.name, new_layer_name, organization_id)
+        return cls(ds._dataset_id, layer.name, new_layer_name, organization_id)
 
     def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
         context = _get_context()
@@ -116,7 +116,7 @@ def upload_dataset(
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
     is_valid_new_name_response = context.api_client_with_auth.dataset_is_valid_new_name(
-        context.organization_id, new_dataset_name
+        new_dataset_name
     )
     if not is_valid_new_name_response.is_valid:
         problems_str = ""
