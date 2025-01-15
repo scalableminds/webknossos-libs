@@ -105,7 +105,7 @@ class ApiDataset:
     owning_organization: str
     data_store: ApiDataStore
     data_source: ApiDataSource
-    created: str
+    created: float
     metadata: Optional[List[ApiMetadata]] = None
     description: Optional[str] = None
 

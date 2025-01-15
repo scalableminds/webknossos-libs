@@ -6,6 +6,7 @@ import re
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
+from datetime import datetime
 from enum import Enum, unique
 from itertools import product
 from os import PathLike
@@ -115,7 +116,7 @@ logger = logging.getLogger(__name__)
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
-    + r"((?P<directory_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[\d,.]*)?)?)?"
+    + r"((?P<directory_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[^?/]*)?)?)?"
     + r"((\?token=(?P<sharing_token>[^#\?]*))[^/]*)?$"
 )
 _DATASET_DEPRECATED_URL_REGEX = re.compile(
@@ -123,10 +124,6 @@ _DATASET_DEPRECATED_URL_REGEX = re.compile(
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
-# _ZARR_DATASET_URL_REGEX = re.compile(
-#     r"^(?P<webknossos_url>https?://.*)/data/zarr/"
-#     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)/?"
-# )
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.
@@ -577,7 +574,7 @@ class Dataset:
         organization_id: str,
     ) -> str:
         possible_ids = list(
-            Dataset.get_remote_datasets(
+            cls.get_remote_datasets(
                 name=dataset_name, organization_id=organization_id
             ).keys()
         )
@@ -623,7 +620,6 @@ class Dataset:
 
             match = _DATASET_URL_REGEX.match(dataset_name_or_url)
             deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
-            # zarr_match = _ZARR_DATASET_URL_REGEX.match(dataset_name_or_url)
             if match is not None:
                 assert (
                     organization_id is None
@@ -660,20 +656,6 @@ class Dataset:
 
                 assert organization_id is not None
                 dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
-
-            # elif zarr_match is not None:
-            #     assert (
-            #         organization_id is None
-            #         and sharing_token is None
-            #         and webknossos_url is None
-            #     ), (
-            #         f"When Dataset.{caller}() is called with a zarr url, "
-            #         + f"e.g. Dataset.{caller}('https://webknossos.org/data/zarr/scalable_minds/l4_sample_dev/'), "
-            #         + "organization_id, sharing_token and webknossos_url must not be set."
-            #     )
-            #     dataset_name = zarr_match.group("dataset_name")
-            #     organization_id = zarr_match.group("organization_id")
-            #     webknossos_url = zarr_match.group("webknossos_url")
             else:
                 dataset_name = dataset_name_or_url
         else:
@@ -2926,7 +2908,9 @@ class RemoteDataset(Dataset):
             str: Date and time when dataset was created
         """
 
-        return self._get_dataset_info().created
+        return datetime.fromtimestamp(self._get_dataset_info().created / 1000).strftime(
+            "%B %d, %Y %I:%M:%S"
+        )
 
     def _get_dataset_info(self) -> ApiDataset:
         from ..client.context import _get_api_client
