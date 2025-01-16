@@ -2763,3 +2763,45 @@ def test_remote_dataset_access_metadata() -> None:
     ds.folder.metadata["folder_key"] = "folder_value"
     assert ds.folder.metadata["folder_key"] == "folder_value"
     assert len(ds.folder.metadata) == 2
+
+
+@pytest.mark.use_proxay
+def test_remote_dataset_urls() -> None:
+    ds = Dataset.open_remote("l4_sample", "Organization_X")
+    dataset_id = ds._dataset_id
+    assert dataset_id in ds.url
+
+    ds_open_with_id = Dataset.open_remote(dataset_id=dataset_id)
+    assert ds_open_with_id.url == ds.url
+
+    # Test different variants of the URL
+    # 1. deprecated url: "http://localhost:9000/datasets/Organization_X/l4_sample"
+
+    ds1 = Dataset.open_remote("http://localhost:9000/datasets/Organization_X/l4_sample")
+    assert ds1.url == ds.url
+
+    # 2. deprecated url with params: "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
+    ds2 = Dataset.open_remote(
+        "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
+    )
+    assert ds2.url == ds.url
+
+    # 3. new url: "http://localhost:9000/datasets/{dataset_id}"
+    ds3 = Dataset.open_remote(f"http://localhost:9000/datasets/{dataset_id}")
+    assert ds3.url == ds.url
+
+    # 4. new url with params: "http://localhost:9000/datasets/{dataset_id}/view#2786,4326,1816,0,3"
+    ds4 = Dataset.open_remote(
+        f"http://localhost:9000/datasets/{dataset_id}/view#2786,4326,1816,0,3"
+    )
+    assert ds4.url == ds.url
+
+    # 5. new url with ds name: "http://localhost:9000/datasets/l4_sample-{dataset_id}"
+    ds5 = Dataset.open_remote(f"http://localhost:9000/datasets/l4_sample-{dataset_id}")
+    assert ds5.url == ds.url
+
+    # 6. new url with ds name and params: "http://localhost:9000/datasets/l4_sample-{dataset_id}/view#2786,4326,1816,0,3"
+    ds6 = Dataset.open_remote(
+        f"http://localhost:9000/datasets/l4_sample-{dataset_id}/view#2786,4326,1816,0,3"
+    )
+    assert ds6.url == ds.url
