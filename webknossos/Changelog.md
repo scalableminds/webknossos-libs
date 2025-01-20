@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `RemoteDataset.display_name` is deprecated. To change the name of a dataset use the `name` property instead. 
 - `Dataset.get_remote_datasets()` returns a mapping. The keys of this mapping changed from datasets name to datasets id.
 - `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternativly a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated. As `dataset_name` is an optional argument now its position has changed, this is important if `create()` is called only with positional arguments.
+- When uploading an Annotation the organization_id is neccessary now. The organization_id might be stored in the Annotation object or it is inferred from the current webknossos_context. [#1155](https://github.com/scalableminds/webknossos-libs/pull/1155)
 
 ### Added
 - `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.
