@@ -2495,7 +2495,7 @@ class Dataset:
         """Create a new dataset that uses symlinks to reference data.
 
         Links all magnifications and layer directories from the original dataset via symlinks
-        rather than copying data. Useful for creating alternative views or exposing datasets
+        rather than copying data. Remote layers are referenced as well. Useful for creating alternative views or exposing datasets
         to webknossos.
 
         Args:
@@ -2508,7 +2508,6 @@ class Dataset:
             Dataset: The newly created dataset with linked layers
 
         Raises:
-            AssertionError: If trying to link remote datasets
             RuntimeError: If dataset is read-only
 
         Examples:
@@ -2547,23 +2546,26 @@ class Dataset:
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
-            new_layer = new_dataset.add_layer_like(layer, layer_name)
-            for mag_view in layer.mags.values():
-                new_layer.add_symlink_mag(mag_view, make_relative)
+            if is_remote_path(layer.path):
+                new_dataset.add_remote_layer(layer, layer_name)
+            else:
+                new_layer = new_dataset.add_layer_like(layer, layer_name)
+                for mag_view in layer.mags.values():
+                    new_layer.add_symlink_mag(mag_view, make_relative)
 
-            # copy all other directories with a dir scan
-            copy_directory_with_symlinks(
-                layer.path,
-                new_layer.path,
-                ignore=[str(mag) for mag in layer.mags]
-                + [
-                    PROPERTIES_FILE_NAME,
-                    ZGROUP_FILE_NAME,
-                    ZATTRS_FILE_NAME,
-                    ZARR_JSON_FILE_NAME,
-                ],
-                make_relative=make_relative,
-            )
+                # copy all other directories with a dir scan
+                copy_directory_with_symlinks(
+                    layer.path,
+                    new_layer.path,
+                    ignore=[str(mag) for mag in layer.mags]
+                    + [
+                        PROPERTIES_FILE_NAME,
+                        ZGROUP_FILE_NAME,
+                        ZATTRS_FILE_NAME,
+                        ZARR_JSON_FILE_NAME,
+                    ],
+                    make_relative=make_relative,
+                )
 
         return new_dataset
 
@@ -3044,7 +3046,7 @@ class RemoteDataset(Dataset):
 
         Examples:
             ```
-            remote_ds.display_name = "Mouse Brain Sample A"
+            remote_ds.name = "Mouse Brain Sample A"
             ```
         """
         warn_deprecated("display_name", "name")
