@@ -568,23 +568,20 @@ class Dataset:
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
     @classmethod
-    def trigger_dataset_upload(
+    def trigger_dataset_import(
         cls, directory_name: str, organization: str, token: Optional[str] = None
     ) -> None:
         """Trigger a manual lookup of the dataset in the datastore.
 
         Args:
-            directory_name: Name of the dataset to trigger
+            directory_name: Directory name of the dataset in the datastore
             organization: Organization ID where dataset is located
             token: Optional authentication token
 
-        Returns:
-            List of dataset names
-
         Examples:
             ```
-            # Check for datasets in the datastore
-            Dataset.trigger_dataset_upload()
+            # Trigger a manual lookup of the dataset in the datastore
+            Dataset.trigger_dataset_upload("l4_sample", "scalable_minds")
             ```
         """
 
