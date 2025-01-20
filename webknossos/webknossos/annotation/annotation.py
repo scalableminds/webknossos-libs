@@ -868,6 +868,17 @@ class Annotation:
 
         context = _get_context()
 
+        if self.organization_id is None:
+            if context.organization_id is None:
+                raise RuntimeError(
+                    "No organization_id specified in the annotation or context. "
+                    + "Either set it for this annotation `my_annotation.organization_id = 'org_id'` "
+                    + "or wrap the upload in a context:\n"
+                    + "`with wk.webknossos_context(organization_id='org_id'):`\n"
+                    + "`    my_annotation.upload()`"
+                )
+            self.organization_id = context.organization_id
+
         client = _get_api_client(enforce_auth=True)
         response_annotation_info = client.annotation_upload(
             self._binary_zip(), f"{self.name}.zip", createGroupForEachFile=False

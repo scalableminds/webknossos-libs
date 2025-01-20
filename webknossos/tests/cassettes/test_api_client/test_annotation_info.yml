@@ -2,11 +2,11 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v9/annotations/570ba0092a7c0e980056fe9b/info?timestamp=1736433032000
+        /api/v9/annotations/570ba0092a7c0e980056fe9b/info?timestamp=1737379983000
       headers:
         host: localhost:9000
         accept: '*/*'
-        accept-encoding: gzip, deflate, zstd
+        accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
@@ -22,7 +22,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Jan 2025 14:30:32 GMT
+        date: Mon, 20 Jan 2025 13:33:02 GMT
         content-type: application/json
         content-length: '1929'
       body:

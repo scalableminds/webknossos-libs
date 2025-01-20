@@ -5,7 +5,7 @@ http_interactions:
       headers:
         host: localhost:9000
         accept: '*/*'
-        accept-encoding: gzip, deflate, zstd
+        accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
@@ -22,7 +22,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Jan 2025 14:30:33 GMT
+        date: Mon, 20 Jan 2025 13:33:03 GMT
         content-type: application/json
         content-length: '415'
       body:
