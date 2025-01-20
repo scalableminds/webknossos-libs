@@ -103,3 +103,11 @@ class DatastoreApiClient(AbstractApiClient):
         }
         response = self._get(route, query)
         return response.content, response.headers.get("MISSING-BUCKETS")
+
+    def triggers_check_inbox_blocking(
+        self,
+        token: Optional[str],
+    ) -> None:
+        route = "/triggers/checkInboxBlocking"
+        query: Query = {"token": token}
+        self._post(route, query=query)

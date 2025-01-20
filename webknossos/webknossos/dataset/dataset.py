@@ -567,6 +567,31 @@ class Dataset:
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
+    def check_for_datasets(self, token: Optional[str] = None) -> None:
+        """Check for datasets in the datastore.
+
+        Args:
+            token: Optional authentication token
+
+        Returns:
+            List of dataset names
+
+        Examples:
+            ```
+            # Check for datasets in the datastore
+            Dataset.check_for_datasets()
+            ```
+        """
+
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.context import _get_context
+
+        context = _get_context()
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.triggers_check_inbox_blocking(token=token)
+
     @classmethod
     def _disambiguate_remote(
         cls,
