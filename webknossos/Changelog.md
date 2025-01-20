@@ -27,6 +27,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
+- Fixed an issue when shallow copying datasets with a remote mag. [#1224](https://github.com/scalableminds/webknossos-libs/pull/1224)
 
 
 ## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18

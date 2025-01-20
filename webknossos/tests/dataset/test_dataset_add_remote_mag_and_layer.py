@@ -138,3 +138,14 @@ def test_add_remote_layer_non_public(tmp_path: Path) -> None:
         256,
     )
     remote_dataset.is_public = True
+
+
+def test_shallow_copy_remote_layers(tmp_path: Path) -> None:
+    dataset = wk.Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
+    remote_dataset = wk.Dataset.open_remote(
+        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+    )
+    dataset.add_remote_layer(remote_dataset.get_layer("color"), "color")
+    dataset_copy = dataset.shallow_copy_dataset(tmp_path / "copy")
+    data = dataset_copy.get_layer("color").get_mag("16-16-4").read()
+    assert data.shape == (1, 64, 64, 256)
