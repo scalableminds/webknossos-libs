@@ -13,7 +13,7 @@ from ..client.api_client.models import (
     ApiTaskParameters,
     ApiTaskType,
 )
-from ..client.context import _get_api_client
+from ..client.context import _get_api_client, _get_context
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
 from ..utils import warn_deprecated
@@ -119,20 +119,36 @@ class Task:
         cls,
         task_type_id: str,
         project_name: str,
-        dataset_id: Union[str, RemoteDataset],
         needed_experience_domain: str,
         needed_experience_value: int,
         starting_position: Vec3Int,
+        dataset_name: Optional[Union[str, RemoteDataset]] = None,
         starting_rotation: Vec3Int = Vec3Int(0, 0, 0),
         instances: int = 1,
+        dataset_id: Optional[Union[str, RemoteDataset]] = None,
         script_id: Optional[str] = None,
         bounding_box: Optional[BoundingBox] = None,
     ) -> List["Task"]:
         """Submits tasks in WEBKNOSSOS based on a dataset, starting position + rotation, and returns the Task objects"""
 
         client = _get_api_client(enforce_auth=True)
-        if isinstance(dataset_id, RemoteDataset):
-            dataset_id = dataset_id._dataset_id
+        assert (
+            dataset_id is not None or dataset_name is not None
+        ), "Please provide a dataset_id to create a task."
+        if dataset_id is not None:
+            if isinstance(dataset_id, RemoteDataset):
+                dataset_id = dataset_id._dataset_id
+        else:
+            assert dataset_name is not None
+            warn_deprecated("dataset_name", "dataset_id")
+            if isinstance(dataset_name, RemoteDataset):
+                dataset_id = dataset_name._dataset_id
+            else:
+                context = _get_context()
+                dataset_id = client.dataset_id_from_name(
+                    dataset_name, context.organization_id
+                )
+
         task_parameters = ApiTaskParameters(
             task_type_id=task_type_id,
             needed_experience=ApiExperience(
