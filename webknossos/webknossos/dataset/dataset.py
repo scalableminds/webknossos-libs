@@ -568,6 +568,26 @@ class Dataset:
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
     @classmethod
+    def trigger_dataset_import(
+        cls, directory_name: str, organization: str, token: Optional[str] = None
+    ) -> None:
+        """Trigger a manual lookup of the dataset in the datastore.
+
+        Args:
+            directory_name: Directory name of the dataset in the datastore
+            organization: Organization ID where dataset is located
+            token: Optional authentication token
+
+        Examples:
+            ```
+            # Trigger a manual lookup of the dataset in the datastore
+            Dataset.trigger_dataset_upload("l4_sample", "scalable_minds")
+            ```
+        """
+
+        cls.trigger_reload_in_datastore(directory_name, organization, token)
+
+    @classmethod
     def _disambiguate_remote(
         cls,
         dataset_name: str,
