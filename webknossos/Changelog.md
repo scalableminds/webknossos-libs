@@ -21,9 +21,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.
 - `RemoteDataset` got an additional property: `created`.
 - `Annotation` got an additional property: `dataset_id`.
+- `Dataset.trigger_check_for_datasets()` was added to trigger an imidiate refresh of the dataset list on webknossos. [#1236](https://github.com/scalableminds/webknossos-libs/pull/1236)
 
 ### Changed
-- Updated to WEBKNOSSOS API version 9. This includes support for the new url structure for datasets and [#1231](https://github.com/scalableminds/webknossos-libs/pull/1231)
+- Updated to WEBKNOSSOS API version 9. This includes support for the new url structure for datasets and the usage of `dataset_id`. [#1231](https://github.com/scalableminds/webknossos-libs/pull/1231)
 
 ### Fixed
 - Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)

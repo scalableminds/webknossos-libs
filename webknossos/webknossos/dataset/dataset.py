@@ -567,7 +567,8 @@ class Dataset:
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
-    def check_for_datasets(self, token: Optional[str] = None) -> None:
+    @classmethod
+    def trigger_check_for_datasets(cls, token: Optional[str] = None) -> None:
         """Check for datasets in the datastore.
 
         Args:
@@ -579,7 +580,7 @@ class Dataset:
         Examples:
             ```
             # Check for datasets in the datastore
-            Dataset.check_for_datasets()
+            Dataset.trigger_check_for_datasets()
             ```
         """
 
