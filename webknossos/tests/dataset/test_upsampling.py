@@ -45,6 +45,8 @@ def test_upsampling(tmp_path: Path) -> None:
         args=None,
     )
 
+    assert layer.get_mag("2").read().mean() == layer.get_mag("1").read().mean()
+
 
 def test_upsample_cube() -> None:
     buffer = np.zeros(BUFFER_SHAPE, dtype=np.uint8)
@@ -179,6 +181,7 @@ def test_upsample_nd_dataset(tmp_path: Path) -> None:
         "color",
         COLOR_CATEGORY,
         bounding_box=source_layer.bounding_box,
+        dtype_per_channel=source_layer.dtype_per_channel,
         data_format="zarr3",
     )
 

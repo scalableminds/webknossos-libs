@@ -27,7 +27,7 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 
 ### Python 3 with pip from PyPi
 
-- `webknossos` requires at least Python 3.8
+- `webknossos` requires at least Python 3.9
 
 ```bash
 pip install "webknossos[all]"
@@ -65,20 +65,19 @@ webknossos convert-raw --layer-name color --voxel-size 10,10,30 --dtype uint8 --
 
 ### Parallelization
 
-Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
+Most tasks can be configured to be executed in a parallelized manner. Via `--distribution-strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job-resources='{"mem": "10M"}'`. Use `--help` to get more information.
 
 
 ## Development
 
-Make sure to install all the required dependencies using Poetry:
+Make sure to install all the required dependencies using [`uv`](https://docs.astral.sh/uv/):
 ```bash
 git clone git@github.com:scalableminds/webknossos-libs.git
 
 cd webknossos-libs
-pip install -r requirements.txt
 
 cd webknossos
-poetry install --all-extras
+uv sync --all-extras
 ```
 
 Please, format, lint, typecheck and unit test your code changes before merging them.

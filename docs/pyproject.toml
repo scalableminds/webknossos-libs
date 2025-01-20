@@ -1,24 +1,27 @@
-[tool.poetry]
+[project]
 name = "wk-libs-docs"
 description = "Documentation for webknossos-libs"
 version = "0.0.1"
-authors = ["scalable minds <hello@scalableminds.com>"]
+authors = [{name= "scalable minds", email="hello@scalableminds.com"}]
 readme = "README.md"
+requires-python = ">=3.9,<3.13"
 
-[tool.poetry.dependencies]
-# mkdocs-video is not ready for Py3.11 because of bugs in lxml lib https://github.com/getnikola/nikola/issues/3679
-python = ">=3.8,<3.11"
-mkdocs-glightbox = "^0.3.4"
+dependencies = [
+    "webknossos",
+    "mkdocs-glightbox ~=0.4.0",
+    "mkdocstrings-python ~=1.12.1",
+    "mkdocs-gen-files ~=0.5.0", 
+    "mkdocs-redirects ~=1.2.0",
+    "mkdocs-video ~=1.5.0",
+    "mkdocs-material ~=9.5.32",
+    "LinkChecker ~=10.0.1",
+]
 
-[tool.poetry.dev-dependencies]
-LinkChecker = "^10.0.1"
-mkdocs = "^1.4.3"
-mkdocs-video = "^1.5.0"
-mkdocs-material = "^9.1.16"
-mkdocs-redirects = "^1.2.0"
-pdoc = "^14.0.0"
-webknossos = { path = "../webknossos/", develop = true }
+[tool.uv.sources]
+webknossos = { path = "../webknossos"}
+mkdocs-video = {branch="master", git="https://github.com/calmzhu/mkdocs-video.git"}
 
 [build-system]
-requires = ["poetry-core>=1.1"]
-build-backend = "poetry.masonry.api"
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+

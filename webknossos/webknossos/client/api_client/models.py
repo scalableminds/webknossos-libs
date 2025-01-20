@@ -42,11 +42,23 @@ class ApiTeam:
 
 
 @attr.s(auto_attribs=True)
+class ApiTeamAdd:
+    name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiBoundingBox:
     top_left: Tuple[int, int, int]
     width: int
     height: int
     depth: int
+
+
+@attr.s(auto_attribs=True)
+class ApiAdditionalAxis:
+    name: str
+    bounds: Tuple[int, int]
+    index: int
 
 
 @attr.s(auto_attribs=True)
@@ -56,6 +68,7 @@ class ApiDataLayer:
     element_class: str
     bounding_box: ApiBoundingBox
     resolutions: List[Tuple[int, int, int]]
+    additional_axes: Optional[List[ApiAdditionalAxis]] = None
     largest_segment_id: Optional[int] = None
     default_view_configuration: Optional[Dict[str, Any]] = None
 
@@ -74,16 +87,51 @@ class ApiDataSource:
 
 
 @attr.s(auto_attribs=True)
+class ApiMetadata:
+    key: str
+    type: str
+    value: Any
+
+
+@attr.s(auto_attribs=True)
 class ApiDataset:
+    id: str
     name: str
     is_public: bool
     folder_id: str
     allowed_teams: List[ApiTeam]
     tags: List[str]
+    directory_name: str
+    owning_organization: str
     data_store: ApiDataStore
     data_source: ApiDataSource
-    display_name: Optional[str] = None
+    created: float
+    metadata: Optional[List[ApiMetadata]] = None
     description: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetId:
+    id: str
+    name: str
+    organization: str
+    directory_name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetExploreAndAddRemote:
+    remote_uri: str
+    dataset_name: str
+    folder_path: Optional[str] = None
+    data_store_name: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetAnnounceUpload:
+    dataset_name: str
+    organization: str
+    initial_team_ids: List[str]
+    folder_id: str
 
 
 @attr.s(auto_attribs=True)
@@ -104,7 +152,7 @@ class ApiDatasetUploadInformation:
 
 @attr.s(auto_attribs=True)
 class ApiLinkedLayerIdentifier:
-    organization_name: str
+    organization_id: str
     data_set_name: str
     layer_name: str
     new_layer_name: Optional[str] = None
@@ -141,7 +189,7 @@ class ApiTaskType:
 class ApiTask:
     id: str
     project_id: str
-    data_set: str
+    dataset_name: str
     status: ApiTaskStatus
     type: ApiTaskType
 
@@ -170,7 +218,7 @@ class ApiTaskParameters:
     project_name: str
     script_id: Optional[str]
     bounding_box: Optional[ApiBoundingBox]
-    data_set: str
+    dataset_id: str
     edit_position: Tuple[int, int, int]
     edit_rotation: Tuple[float, float, float]
 
@@ -191,6 +239,7 @@ class ApiTaskCreationResult:
 class ApiTeamMembership:
     id: str
     name: str
+    is_team_manager: bool
 
 
 @attr.s(auto_attribs=True)
@@ -283,3 +332,13 @@ class ApiFolderWithParent:
     id: str
     name: str
     parent: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
+class ApiFolder:
+    id: str
+    name: str
+    allowed_teams: List[ApiTeam]
+    allowed_teams_cumulative: List[ApiTeam]
+    is_editable: bool
+    metadata: Optional[List[ApiMetadata]] = None

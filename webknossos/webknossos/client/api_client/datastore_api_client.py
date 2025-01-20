@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Tuple
 
 from webknossos.client.api_client.models import (
+    ApiDatasetAnnounceUpload,
     ApiDatasetUploadInformation,
     ApiReserveDatasetUploadInformation,
 )
@@ -34,7 +35,7 @@ class DatastoreApiClient(AbstractApiClient):
         retry_count: int,
     ) -> None:
         route = "/datasets/finishUpload"
-        return self._post_json(
+        self._post_json(
             route,
             upload_information,
             query={"token": token},
@@ -49,17 +50,36 @@ class DatastoreApiClient(AbstractApiClient):
         retry_count: int,
     ) -> None:
         route = "/datasets/reserveUpload"
-        return self._post_json(
+        self._post_json(
             route,
             reserve_upload_information,
             query={"token": token},
             retry_count=retry_count,
         )
 
+    def dataset_trigger_reload(
+        self,
+        organization_id: str,
+        dataset_name: str,
+        token: Optional[str] = None,
+    ) -> None:
+        route = f"/triggers/reload/{organization_id}/{dataset_name}"
+        query: Query = {"token": token}
+        self._post(route, query=query)
+
+    def dataset_reserve_manual_upload(
+        self,
+        dataset_announce: ApiDatasetAnnounceUpload,
+        token: Optional[str],
+    ) -> None:
+        route = "/datasets/reserveManualUpload"
+        query: Query = {"token": token}
+        self._post_json(route, dataset_announce, query)
+
     def dataset_get_raw_data(
         self,
-        organization_name: str,
-        dataset_name: str,
+        organization_id: str,
+        directory_name: str,
         data_layer_name: str,
         mag: str,
         token: Optional[str],
@@ -70,7 +90,7 @@ class DatastoreApiClient(AbstractApiClient):
         height: int,
         depth: int,
     ) -> Tuple[bytes, str]:
-        route = f"/datasets/{organization_name}/{dataset_name}/layers/{data_layer_name}/data"
+        route = f"/datasets/{organization_id}/{directory_name}/layers/{data_layer_name}/data"
         query: Query = {
             "mag": mag,
             "x": x,

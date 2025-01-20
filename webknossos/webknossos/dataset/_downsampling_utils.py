@@ -248,7 +248,7 @@ def _mode(x: np.ndarray) -> np.ndarray:
     # Find maximum counts and return modals/counts
     slices = [slice(None, i) for i in sort.shape]
     del slices[axis]
-    index = np.ogrid[slices]
+    index = list(np.ogrid[slices])
     index.insert(axis, np.argmax(counts, axis=axis))
     return sort[tuple(index)]
 

@@ -7,6 +7,8 @@ from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetExploreAndAddRemote,
+    ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
     ApiDataStoreToken,
@@ -20,6 +22,7 @@ from webknossos.client.api_client.models import (
     ApiTaskCreationResult,
     ApiTaskParameters,
     ApiTeam,
+    ApiTeamAdd,
     ApiUser,
     ApiWkBuildInfo,
 )
@@ -39,7 +42,7 @@ class WkApiClient(AbstractApiClient):
         base_wk_url: str,
         timeout_seconds: float,
         headers: Optional[Dict[str, str]] = None,
-        webknossos_api_version: int = 7,
+        webknossos_api_version: int = 9,
     ):
         super().__init__(timeout_seconds, headers)
         self.webknossos_api_version = webknossos_api_version
@@ -63,46 +66,61 @@ class WkApiClient(AbstractApiClient):
 
     def dataset_info(
         self,
-        organization_name: str,
-        dataset_name: str,
+        dataset_id: str,
         sharing_token: Optional[str] = None,
     ) -> ApiDataset:
-        route = f"/datasets/{organization_name}/{dataset_name}"
+        route = f"/datasets/{dataset_id}"
         return self._get_json(route, ApiDataset, query={"sharingToken": sharing_token})
 
+    def dataset_id_from_name(self, dataset_name: str, organization_id: str) -> str:
+        route = f"/datasets/disambiguate/{organization_id}/{dataset_name}/toId"
+        return self._get_json(route, ApiDatasetId).id
+
     def dataset_list(
-        self, is_active: Optional[bool], organization_name: Optional[str]
+        self,
+        is_active: Optional[bool],
+        organization_id: Optional[str],
+        name: Optional[str],
+        folder_id: Optional[str],
     ) -> List[ApiDataset]:
         route = "/datasets"
         return self._get_json(
             route,
             List[ApiDataset],
-            query={"isActive": is_active, "organizationName": organization_name},
+            query={
+                "isActive": is_active,
+                "organizationId": organization_id,
+                "searchQuery": name,
+                "folderId": folder_id,
+            },
         )
 
-    def dataset_update_teams(
-        self, organization_name: str, dataset_name: str, team_ids: List[str]
-    ) -> None:
-        route = f"/datasets/{organization_name}/{dataset_name}/teams"
+    def dataset_update_teams(self, dataset_id: str, team_ids: List[str]) -> None:
+        route = f"/datasets/{dataset_id}/teams"
         self._patch_json(route, team_ids)
 
-    def dataset_update(
-        self, organization_name: str, dataset_name: str, updated_dataset: ApiDataset
-    ) -> None:
-        route = f"/datasets/{organization_name}/{dataset_name}"
+    def dataset_update(self, dataset_id: str, updated_dataset: ApiDataset) -> None:
+        route = f"/datasets/{dataset_id}"
         self._patch_json(route, updated_dataset)
 
-    def dataset_sharing_token(
-        self, organization_name: str, dataset_name: str
-    ) -> ApiSharingToken:
-        route = f"/datasets/{organization_name}/{dataset_name}/sharingToken"
+    def dataset_sharing_token(self, dataset_id: str) -> ApiSharingToken:
+        route = f"/datasets/{dataset_id}/sharingToken"
         return self._get_json(route, ApiSharingToken)
 
     def dataset_is_valid_new_name(
-        self, organization_name: str, dataset_name: str
+        self, dataset_name: str
     ) -> ApiDatasetIsValidNewNameResponse:
-        route = f"/datasets/{organization_name}/{dataset_name}/isValidNewName"
+        route = f"/datasets/{dataset_name}/isValidNewName"
         return self._get_json(route, ApiDatasetIsValidNewNameResponse)
+
+    def dataset_explore_and_add_remote(
+        self, dataset: ApiDatasetExploreAndAddRemote
+    ) -> None:
+        route = "/datasets/exploreAndAddRemote"
+        self._post_json(
+            route,
+            dataset,
+        )
 
     def datastore_list(self) -> List[ApiDataStore]:
         route = "/datastores"
@@ -176,9 +194,17 @@ class WkApiClient(AbstractApiClient):
         route = f"/users/{user_id}/loggedTime"
         return self._get_json(route, ApiLoggedTimeGroupedByMonth)
 
+    def user_update(self, user: ApiUser) -> None:
+        route = f"/users/{user.id}"
+        self._patch_json(route, user)
+
     def team_list(self) -> List[ApiTeam]:
         route = "/teams"
         return self._get_json(route, List[ApiTeam])
+
+    def team_add(self, team: ApiTeamAdd) -> None:
+        route = "/teams"
+        self._post_json(route, team)
 
     def token_generate_for_data_store(self) -> ApiDataStoreToken:
         route = "/userToken/generate"

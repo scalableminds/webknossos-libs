@@ -180,26 +180,38 @@ class webknossos_context(ContextDecorator):
         token: Optional[str] = None,
         timeout: Optional[int] = None,
     ) -> None:
-        """Returns a new WEBKNOSSOS server contextmanager. Use with the `with` statement:
-        ```python
-        with webknossos_context(token="my_webknossos_token"):
-            # code that interacts with webknossos
-        ```
+        """Creates a new WEBKNOSSOS server context manager.
 
-        Or as a decorator:
-        ```python
-        @webknossos_context(token="my_webknossos_token")
-        def my_func():
-            # code that interacts with webknossos
-        ```
+        Can be used as a context manager with 'with' or as a decorator.
 
-        You can specify the following arguments:
-        * `url`, by default [https://webknossos.org](https://www.webknossos.org),
-        * `token`, as displayed on [https://webknossos.org/auth/token](https://webknossos.org/auth/token),
-        * `timeout` to specify a custom network request timeout in seconds, `1800` (30min) by default.
+        Args:
+            url: Base URL for WEBKNOSSOS server, defaults to https://webknossos.org.
+                Taken from previous context if not specified.
+            token: Authentication token from https://webknossos.org/auth/token.
+                Must be specified explicitly.
+            timeout: Network request timeout in seconds, defaults to 1800 (30 min).
+                Taken from previous context if not specified.
 
-        `url` and `timeout` are taken from the previous context (e.g. environment variables) if not specified.
-        `token` must be set explicitly, it is not available when not specified.
+        Examples:
+            Using as context manager:
+                ```
+                with webknossos_context(token="my_webknossos_token"):
+                    # code that interacts with webknossos
+                    ds.download(...)
+                ```
+
+            Using as decorator:
+                ```
+                @webknossos_context(token="my_webknossos_token")
+                def my_func():
+                    # code that interacts with webknossos
+                    ...
+                ```
+
+        Note:
+            The url and timeout parameters will use values from the previous context
+            (e.g. environment variables) if not specified explicitly. The token
+            parameter must always be set explicitly.
         """
         self._url = _get_context().url if url is None else url.rstrip("/")
         self._token = token

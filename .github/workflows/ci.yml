@@ -38,24 +38,26 @@ jobs:
       max-parallel: 4
       matrix:
         executors: [multiprocessing, slurm, kubernetes, dask]
-        python-version: ["3.11", "3.10", "3.9", "3.8"]
+        python-version: ["3.12", "3.11", "3.10", "3.9"]
     defaults:
       run:
         working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: "x64"
+          version: "0.4.22"
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
       - name: Build/pull dockered-slurm image
         if: ${{ matrix.executors == 'slurm' }}
         run: |
           cd ./dockered-slurm
 
-          echo docker-compose up
-          docker-compose up -d
+          echo docker compose up
+          docker compose up -d
 
           # Register cluster (with retry)
           for i in {1..5}; do
@@ -70,9 +72,9 @@ jobs:
           docker logs c2
 
           # Run setup.py on all three nodes
-          docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
-          docker exec -w /cluster_tools c1 bash -c "poetry install" &
-          docker exec -w /cluster_tools c2 bash -c "poetry install" &
+          docker exec -w /cluster_tools slurmctld bash -c "uv sync --frozen" &
+          docker exec -w /cluster_tools c1 bash -c "uv sync --frozen" &
+          docker exec -w /cluster_tools c2 bash -c "uv sync --frozen" &
           wait
 
       - name: Setup Kubernetes-in-Docker
@@ -84,21 +86,18 @@ jobs:
           ./kind create cluster --config=tests/cluster-config.yaml
           ./kind export kubeconfig
 
-          cp ../requirements.txt .
           docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
           ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
         if: ${{ matrix.executors == 'multiprocessing' }}
         run: |
-          pip install -r ../requirements.txt
-          poetry install
+          uv sync --frozen
 
       - name: Install dependencies (without docker)
         if: ${{ matrix.executors == 'kubernetes' || matrix.executors == 'dask' }}
         run: |
-          pip install -r ../requirements.txt
-          poetry install --all-extras
+          uv sync --all-extras --frozen
 
       - name: Check typing
         if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version == '3.11' }}
@@ -116,8 +115,8 @@ jobs:
         if: ${{ matrix.executors == 'multiprocessing' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
-            poetry run python -m pytest -sv test_all.py test_multiprocessing.py
+          PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
+            uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
 
       - name: Run slurm tests
         if: ${{ matrix.executors == 'slurm' }}
@@ -126,22 +125,22 @@ jobs:
           docker exec \
             -w /cluster_tools/tests \
             -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "poetry run python -m pytest -sv test_all.py test_slurm.py"
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py"
           docker exec \
             -w /cluster_tools/tests \
-            slurmctld bash -c "poetry run python test_deref_main.py"
+            slurmctld bash -c "uv run --frozen python test_deref_main.py"
 
       - name: Run kubernetes tests
         if: ${{ matrix.executors == 'kubernetes' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
+          PYTEST_EXECUTORS=kubernetes uv run --frozen python -m pytest -sv test_all.py test_kubernetes.py
 
       - name: Run dask tests
-        if: ${{ matrix.executors == 'dask' && matrix.python-version != '3.8' }}
+        if: ${{ matrix.executors == 'dask' }}
         run: |
           cd tests
-          PYTEST_EXECUTORS=dask poetry run python -m pytest -sv test_all.py test_dask.py
+          PYTEST_EXECUTORS=dask uv run --frozen python -m pytest -sv test_all.py test_dask.py
 
   webknossos_linux:
     needs: changes
@@ -152,7 +151,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ["3.11", "3.10", "3.9", "3.8"]
+        python-version: ["3.12", "3.11", "3.10", "3.9"]
         group: [1, 2, 3]
       fail-fast: false
     defaults:
@@ -161,17 +160,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: "x64"
+          # Install a specific version of uv.
+          version: "0.4.22"
 
-      - name: Install dependencies
-        run: |
-          pip install -r ../requirements.txt
-          poetry install --extras all --with examples --with dev
-
+      - name: Install proxay
+        run: npm install -g proxay
+              
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+      
       - name: Check formatting
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./format.sh check
@@ -192,7 +193,7 @@ jobs:
 
       - name: Check if git is dirty
         run: |
-          git diff --no-ext-diff --quiet --exit-code
+          git diff --no-ext-diff --exit-code
           [[ -z $(git status -s) ]]
 
   webknossos_cli_docker:
@@ -205,21 +206,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: "3.10"
-
+          # Install a specific version of uv.
+          version: "0.4.22"
       - name: Write version file
         run: |
-          pip install -r requirements.txt
           pushd webknossos
 
-          PKG_VERSION="$(dunamai from git)"
+          PKG_VERSION="$(uvx dunamai from git)"
           echo "__version__ = '$PKG_VERSION'" > ./webknossos/version.py
-          poetry version "$PKG_VERSION"
+          sed -i 's/version = "0.0.0"/version = "'"${PKG_VERSION}"'"/g' pyproject.toml
 
-            popd
+          popd
 
       - name: Build docker image
         run: docker build -t scalableminds/webknossos-cli:$GITHUB_SHA -f webknossos/Dockerfile .
@@ -283,19 +283,15 @@ jobs:
         with:
           repository: scalableminds/webknossos
           path: docs/wk-repo
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: 3.8
-          architecture: "x64"
-
-      - name: Install dependencies
-        run: |
-          pip3 install -r requirements.txt
-
+          # Install a specific version of uv.
+          version: "0.4.22"
       - name: Build Docs
         run: |
-          docs/generate.sh --persist
+          cd docs
+          ./generate.sh --persist
 
       - name: Push docs (for branch)
         if: github.ref_type == 'branch'
@@ -324,7 +320,7 @@ jobs:
           SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
         run: |
           cd docs
-          poetry run linkchecker https://docs.webknossos.org > link_status || \
+          uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
             curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
               "$SLACK_HOOK"
 
@@ -339,20 +335,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: 3.8
-          architecture: "x64"
-      - name: Install dependencies
-        run: pip3 install -r requirements.txt
+          # Install a specific version of uv.
+          version: "0.4.22"
       - name: Publish python packages
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_PASSWORD }}
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
         run: _tooling/publish.sh
       - name: Prepare github release
         run: |
-          VERSION="$(dunamai from git)"
+          VERSION="$(uvx dunamai from git)"
           _tooling/changelog_for_version.sh $VERSION > Changelog.md
       - name: Publish github release
         id: create_release

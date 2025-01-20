@@ -1,5 +1,3 @@
-version: "2.2"
-
 services:
   webknossos:
     build: .
@@ -31,11 +29,11 @@ services:
       POSTGRES_PASSWORD: postgres
 
   fossildb:
-    image: scalableminds/fossildb:master__410
+    image: scalableminds/fossildb:0.1.32
     command:
       - fossildb
       - -c
-      - skeletons,skeletonUpdates,volumes,volumeData,volumeUpdates
+      - skeletons,skeletonUpdates,volumes,volumeData,volumeUpdates,volumeSegmentIndex,editableMappings,editableMappingUpdates,editableMappingsInfo,editableMappingsAgglomerateToGraph,editableMappingsSegmentToAgglomerate
     user: ${USER_UID:-1000}:${USER_GID:-1000}
 
   redis:

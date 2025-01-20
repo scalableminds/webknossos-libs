@@ -25,7 +25,8 @@ from webknossos.dataset.length_unit import (
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case, warn_deprecated
-from ._array import ArrayException, BaseArray, DataFormat
+from ._array import ArrayException, BaseArray
+from .data_format import DataFormat
 from .layer_categories import LayerCategoryType
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
@@ -284,7 +285,7 @@ for cls in [
                 a.name: override(
                     omit_if_default=True, rename=snake_to_camel_case(a.name)
                 )
-                for a in attr.fields(cls)  # type: ignore[misc]
+                for a in attr.fields(cls)  # type: ignore
             },
         ),
     )
@@ -295,7 +296,7 @@ for cls in [
             dataset_converter,
             **{
                 a.name: override(rename=snake_to_camel_case(a.name))
-                for a in attr.fields(cls)  # type: ignore[misc]
+                for a in attr.fields(cls)  # type: ignore
             },
         ),
     )
@@ -311,46 +312,6 @@ def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
         return obj
 
     return __dataset_properties_pre_structure
-
-
-dataset_converter.register_unstructure_hook(
-    DatasetProperties,
-    make_dict_unstructure_fn(
-        DatasetProperties,
-        dataset_converter,
-        **{
-            a.name: override(omit_if_default=True, rename=snake_to_camel_case(a.name))
-            for a in attr.fields(DatasetProperties)  # type: ignore[misc]
-        },
-    ),
-)
-dataset_converter.register_structure_hook(
-    DatasetProperties,
-    dataset_properties_pre_structure(
-        make_dict_structure_fn(
-            DatasetProperties,
-            dataset_converter,
-            **{
-                a.name: override(rename=snake_to_camel_case(a.name))
-                for a in attr.fields(DatasetProperties)  # type: ignore[misc]
-            },
-        )
-    ),
-)
-
-
-# The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
-# These post-unstructure and pre-structure functions perform the conditional field renames.
-def mag_view_properties_post_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
-    d["resolution"] = d["mag"]
-    del d["mag"]
-    return d
-
-
-def mag_view_properties_pre_structure(d: Dict[str, Any]) -> Dict[str, Any]:
-    d["mag"] = d["resolution"]
-    del d["resolution"]
-    return d
 
 
 def layer_properties_post_unstructure(
@@ -431,7 +392,7 @@ for cls in [
                     a.name: override(
                         omit_if_default=True, rename=snake_to_camel_case(a.name)
                     )
-                    for a in attr.fields(cls)  # type: ignore[misc]
+                    for a in attr.fields(cls)  # type: ignore
                 },
             )
         ),
@@ -444,7 +405,7 @@ for cls in [
                 dataset_converter,
                 **{
                     a.name: override(rename=snake_to_camel_case(a.name))
-                    for a in attr.fields(cls)  # type: ignore[misc]
+                    for a in attr.fields(cls)  # type: ignore
                 },
             )
         ),
@@ -471,3 +432,43 @@ dataset_converter.register_structure_hook(
     ],
     disambiguate_layer_properties,
 )
+
+
+dataset_converter.register_unstructure_hook(
+    DatasetProperties,
+    make_dict_unstructure_fn(
+        DatasetProperties,
+        dataset_converter,
+        **{
+            a.name: override(omit_if_default=True, rename=snake_to_camel_case(a.name))
+            for a in attr.fields(DatasetProperties)
+        },  # type: ignore[arg-type]
+    ),
+)
+dataset_converter.register_structure_hook(
+    DatasetProperties,
+    dataset_properties_pre_structure(
+        make_dict_structure_fn(
+            DatasetProperties,
+            dataset_converter,
+            **{
+                a.name: override(rename=snake_to_camel_case(a.name))
+                for a in attr.fields(DatasetProperties)
+            },  # type: ignore[arg-type]
+        )
+    ),
+)
+
+
+# The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
+# These post-unstructure and pre-structure functions perform the conditional field renames.
+def mag_view_properties_post_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
+    d["resolution"] = d["mag"]
+    del d["mag"]
+    return d
+
+
+def mag_view_properties_pre_structure(d: Dict[str, Any]) -> Dict[str, Any]:
+    d["mag"] = d["resolution"]
+    del d["resolution"]
+    return d

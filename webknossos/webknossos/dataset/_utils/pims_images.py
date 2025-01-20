@@ -311,6 +311,11 @@ class PimsImages:
                 + "(use_bioformats is False)."
             )
 
+    def _disable_pil_image_size_limit(self) -> None:
+        from PIL import Image
+
+        Image.MAX_IMAGE_PIXELS = None
+
     def _try_open_pims_images(
         self, original_images: Union[str, List[str]], exceptions: List[Exception]
     ) -> Optional[pims.FramesSequence]:
@@ -376,6 +381,8 @@ class PimsImages:
                 )
             else:
                 return None
+
+        self._disable_pil_image_size_limit()
 
         for strategy in [strategy_0, strategy_1, strategy_2]:
             try:
@@ -719,7 +726,9 @@ def get_valid_bioformats_suffixes() -> Set[str]:
         "mdb",
         "nd",
         "nd2",
+        "nhdr",
         "nii",
+        "nrrd",
         "ome",
         "png",
         "pic",

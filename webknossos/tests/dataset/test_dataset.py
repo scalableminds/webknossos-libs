@@ -56,8 +56,6 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
 ]
 
-pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
-
 
 def copy_simple_dataset(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
@@ -286,11 +284,11 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     mag_view = layer.add_mag("1")
 
     assert layer.data_format == data_format
-    assert mag_view.info.chunk_shape == Vec3Int.full(32)
+    assert mag_view.info.chunk_shape.xyz == Vec3Int.full(32)
     if data_format == DataFormat.Zarr:
-        assert mag_view.info.chunks_per_shard == Vec3Int.full(1)
+        assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(1)
     else:
-        assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
+        assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
     assert mag_view.info.num_channels == 1
     assert mag_view.info.compression_mode == False
 
@@ -312,15 +310,17 @@ def test_create_dataset_with_explicit_header_fields() -> None:
 
     assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
     assert ds.get_layer("color")._properties.element_class == "uint48"
-    assert ds.get_layer("color").get_mag(1).info.chunk_shape == Vec3Int.full(64)
-    assert ds.get_layer("color").get_mag(1).info.chunks_per_shard == Vec3Int.full(64)
+    assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
+    assert ds.get_layer("color").get_mag(1).info.chunks_per_shard.xyz == Vec3Int.full(
+        64
+    )
     assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape == Vec3Int.full(
+    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz == Vec3Int.full(
         32
     )  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunks_per_shard == Vec3Int.full(
-        32
-    )  # defaults are used
+    assert ds.get_layer("color").get_mag(
+        "2-2-1"
+    ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
     assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
     assure_exported_properties(ds)
@@ -414,14 +414,14 @@ def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
 
     # write: zarr, read: wk
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.get_zarr_array()[:, 0:10, 0:10, 0:10] = write_data
+    mag.get_zarr_array()[:, 0:10, 0:10, 0:10].write(write_data).result()
     data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert np.array_equal(data, write_data)
 
     # write: wk, read: zarr
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data, absolute_offset=(0, 0, 0))
-    data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10]
+    data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10].read().result()
     assert np.array_equal(data, write_data)
 
 
@@ -748,7 +748,7 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
     assert mag.name == "1"
     assert mag.info.data_format == data_format
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         # The mag "1" did exist before but with another 'chunk_shape' (this would work the same for 'chunks_per_shard' and 'compress')
         layer.get_or_add_mag(
             "1",
@@ -977,11 +977,11 @@ def test_dataset_exist_ok() -> None:
     )
     assert "color" in ds2.layers.keys()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         # dataset already exists, but with a different voxel_size
         Dataset(ds_path, voxel_size=(2, 2, 2), exist_ok=True)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         # dataset already exists, but with a different name
         Dataset(
             ds_path, voxel_size=(1, 1, 1), name="some different name", exist_ok=True
@@ -2747,3 +2747,61 @@ def test_wkw_copy_to_remote_dataset() -> None:
             ds_path,
             chunks_per_shard=1,
         )
+
+
+@pytest.mark.use_proxay
+def test_remote_dataset_access_metadata() -> None:
+    ds = Dataset.open_remote("l4_sample", "Organization_X")
+    assert len(ds.metadata) == 0
+
+    ds.metadata["key"] = "value"
+    assert ds.metadata["key"] == "value"
+    assert len(ds.metadata) == 1
+
+    assert len(ds.folder.metadata) == 1
+
+    ds.folder.metadata["folder_key"] = "folder_value"
+    assert ds.folder.metadata["folder_key"] == "folder_value"
+    assert len(ds.folder.metadata) == 2
+
+
+@pytest.mark.use_proxay
+def test_remote_dataset_urls() -> None:
+    ds = Dataset.open_remote("l4_sample", "Organization_X")
+    dataset_id = ds._dataset_id
+    assert dataset_id in ds.url
+
+    ds_open_with_id = Dataset.open_remote(dataset_id=dataset_id)
+    assert ds_open_with_id.url == ds.url
+
+    # Test different variants of the URL
+    # 1. deprecated url: "http://localhost:9000/datasets/Organization_X/l4_sample"
+
+    ds1 = Dataset.open_remote("http://localhost:9000/datasets/Organization_X/l4_sample")
+    assert ds1.url == ds.url
+
+    # 2. deprecated url with params: "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
+    ds2 = Dataset.open_remote(
+        "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
+    )
+    assert ds2.url == ds.url
+
+    # 3. new url: "http://localhost:9000/datasets/{dataset_id}"
+    ds3 = Dataset.open_remote(f"http://localhost:9000/datasets/{dataset_id}")
+    assert ds3.url == ds.url
+
+    # 4. new url with params: "http://localhost:9000/datasets/{dataset_id}/view#2786,4326,1816,0,3"
+    ds4 = Dataset.open_remote(
+        f"http://localhost:9000/datasets/{dataset_id}/view#2786,4326,1816,0,3"
+    )
+    assert ds4.url == ds.url
+
+    # 5. new url with ds name: "http://localhost:9000/datasets/l4_sample-{dataset_id}"
+    ds5 = Dataset.open_remote(f"http://localhost:9000/datasets/l4_sample-{dataset_id}")
+    assert ds5.url == ds.url
+
+    # 6. new url with ds name and params: "http://localhost:9000/datasets/l4_sample-{dataset_id}/view#2786,4326,1816,0,3"
+    ds6 = Dataset.open_remote(
+        f"http://localhost:9000/datasets/l4_sample-{dataset_id}/view#2786,4326,1816,0,3"
+    )
+    assert ds6.url == ds.url

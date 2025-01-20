@@ -6,6 +6,7 @@ import re
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
+from datetime import datetime
 from enum import Enum, unique
 from itertools import product
 from os import PathLike
@@ -35,11 +36,14 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.geometry.vec_int import VecIntLike
-
-from ..client.api_client.models import ApiDataset
-from ..geometry.vec3_int import Vec3Int, Vec3IntLike
+from ..client.api_client.models import (
+    ApiDataset,
+    ApiDatasetExploreAndAddRemote,
+    ApiMetadata,
+)
+from ..geometry import Vec3Int, Vec3IntLike, VecIntLike
 from ._array import ArrayException, ArrayInfo, BaseArray
+from ._metadata import DatasetMetadata
 from ._utils import pims_images
 from .defaults import (
     DEFAULT_BIT_DEPTH,
@@ -48,6 +52,7 @@ from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
     DEFAULT_DATA_FORMAT,
     PROPERTIES_FILE_NAME,
+    SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
@@ -69,7 +74,9 @@ from ..utils import (
     copytree,
     count_defined_values,
     get_executor_for_args,
+    infer_metadata_type,
     is_fs_path,
+    is_remote_path,
     named_partial,
     rmtree,
     strip_trailing_slash,
@@ -109,6 +116,11 @@ logger = logging.getLogger(__name__)
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
+    + r"((?P<directory_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[^?/]*)?)?)?"
+    + r"((\?token=(?P<sharing_token>[^#\?]*))[^/]*)?$"
+)
+_DATASET_DEPRECATED_URL_REGEX = re.compile(
+    r"^(?P<webknossos_url>https?://.*)/datasets/"
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
@@ -139,10 +151,9 @@ _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
 
 
 class Dataset:
-    """
-    A dataset is the entry point of the Dataset API.
-    An existing dataset on disk can be opened
-    or new datasets can be created.
+    """A dataset is the entry point of the Dataset API.
+
+    An existing dataset on disk can be opened or new datasets can be created.
 
     A dataset stores the data in `.wkw` files on disk with metadata in `datasource-properties.json`.
     The information in those files are kept in sync with the object.
@@ -151,41 +162,83 @@ class Dataset:
     which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
 
     When using `Dataset.open_remote()` an instance of the `RemoteDataset` subclass is returned.
+
+    Examples:
+        Create a new dataset:
+            ```
+            ds = Dataset("path/to/dataset", voxel_size=(11.2, 11.2, 25))
+            ```
+
+        Open an existing dataset:
+            ```
+            ds = Dataset.open("path/to/dataset")
+            ```
+
+        Open a remote dataset:
+            ```
+            ds = Dataset.open_remote("my_dataset", "organization_id")
+            ```
     """
 
     @unique
     class ConversionLayerMapping(Enum):
-        """Strategies for mapping file paths to layers, for use in
-        `Dataset.from_images` for the `map_filepath_to_layer_name` argument.
+        """Strategies for mapping file paths to layers when importing images.
 
-        If none of the strategies fit, the mapping can also be specified by a callable.
+        These strategies determine how input image files are grouped into layers during
+        dataset creation using `Dataset.from_images()`. If no strategy is provided,
+        `INSPECT_SINGLE_FILE` is used as the default.
+
+        If none of the pre-defined strategies fit your needs, you can provide a custom
+        callable that takes a Path and returns a layer name string.
+
+        Examples:
+            Using default strategy:
+                ```
+                ds = Dataset.from_images("images/", "dataset/")
+                ```
+
+            Explicit strategy:
+                ```
+                ds = Dataset.from_images(
+                    "images/",
+                    "dataset/",
+                    map_filepath_to_layer_name=ConversionLayerMapping.ENFORCE_SINGLE_LAYER
+                )
+                ```
+
+            Custom mapping function:
+                ```
+                ds = Dataset.from_images(
+                    "images/",
+                    "dataset/",
+                    map_filepath_to_layer_name=lambda p: p.stem
+                )
+                ```
         """
 
         INSPECT_SINGLE_FILE = "inspect_single_file"
-        """The first found image file is opened. If it appears to be
-        a 2D image, `ENFORCE_LAYER_PER_FOLDER` is used,
-        if it appears to be 3D, `ENFORCE_LAYER_PER_FILE` is used.
-        This is the default mapping."""
+        """Default strategy. Inspects first image file to determine if data is 2D or 3D.
+        For 2D data uses ENFORCE_LAYER_PER_FOLDER, for 3D uses ENFORCE_LAYER_PER_FILE."""
 
         INSPECT_EVERY_FILE = "inspect_every_file"
-        """Like `INSPECT_SINGLE_FILE`, but the strategy
-        is determined for each image file separately."""
+        """Like INSPECT_SINGLE_FILE but determines strategy separately for each file.
+        More flexible but slower for many files."""
 
         ENFORCE_LAYER_PER_FILE = "enforce_layer_per_file"
-        """Enforce a new layer per file. This is useful for 2D
-        images that should be converted to 2D layers each."""
+        """Creates a new layer for each input file. Useful for converting multiple
+        3D images or when each 2D image should become its own layer."""
 
         ENFORCE_SINGLE_LAYER = "enforce_single_layer"
-        """Combines all found files into a single layer. This is only
-        useful if all images are 2D."""
+        """Combines all input files into a single layer. Only useful when all
+        images are 2D slices that should be combined."""
 
         ENFORCE_LAYER_PER_FOLDER = "enforce_layer_per_folder"
-        """Combine all files in a folder into one layer."""
+        """Groups files by their containing folder. Each folder becomes one layer.
+        Useful for organized 2D image stacks."""
 
         ENFORCE_LAYER_PER_TOPLEVEL_FOLDER = "enforce_layer_per_toplevel_folder"
-        """The first folders of the input path are each converted to one layer.
-        This might be useful if multiple layers have stacks of 2D images, but
-        parts of the stacks are in different folders."""
+        """Groups files by their top-level folder. Useful when multiple layers each
+        have their stacks split across subfolders."""
 
         def _to_callable(
             self,
@@ -249,17 +302,35 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         read_only: bool = False,
     ) -> None:
-        """
-        Creates a new dataset and the associated `datasource-properties.json`.
-        If the dataset already exists and exist_ok is set to True,
-        it is opened (the provided voxel_size and name are asserted to match the existing dataset).
+        """Create a new dataset or open an existing one.
+
+        Creates a new dataset and the associated `datasource-properties.json` if one does not exist.
+        If the dataset already exists and exist_ok is True, it is opened (the provided voxel_size
+        and name are asserted to match the existing dataset).
+
         Currently, `exist_ok=True` is the deprecated default and will change in future releases.
-        Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
-        `scale` is deprecated, please use `voxel_size` instead.
+        Please use `Dataset.open` if you intend to open an existing dataset and don't want/need
+        the creation behavior.
+
+        Args:
+            dataset_path: Path where the dataset should be created/opened
+            voxel_size: Optional tuple of floats (x, y, z) specifying voxel size in nanometers
+            name: Optional name for the dataset, defaults to last part of dataset_path if not provided
+            exist_ok: Whether to open an existing dataset at the path rather than failing
+            voxel_size_with_unit: Optional voxel size with unit specification
+            scale: Deprecated, use voxel_size instead
+            read_only: Whether to open dataset in read-only mode
+
+        Raises:
+            RuntimeError: If dataset exists and exist_ok=False
+            AssertionError: If opening existing dataset with mismatched voxel size or name
+
         """
-        assert (
-            count_defined_values((voxel_size, voxel_size_with_unit, scale)) <= 1
-        ), "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
+
+        if count_defined_values((voxel_size, voxel_size_with_unit, scale)) > 1:
+            raise ValueError(
+                "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
+            )
         if scale is not None:
             warn_deprecated("scale", "voxel_size")
             voxel_size_with_unit = VoxelSize(scale)
@@ -267,74 +338,85 @@ class Dataset:
             voxel_size_with_unit = VoxelSize(voxel_size)
 
         self._read_only = read_only
+        self.path: Path = strip_trailing_slash(UPath(dataset_path))
 
-        dataset_path = strip_trailing_slash(UPath(dataset_path))
+        stored_dataset_properties: Optional[DatasetProperties] = None
+        try:
+            stored_dataset_properties = self._load_properties()
+        except FileNotFoundError:
+            if read_only:
+                raise FileNotFoundError(
+                    f"Cannot open read-only dataset, could not find data at {self.path}."
+                )
 
-        dataset_existed_already = (
-            dataset_path.exists()
-            and dataset_path.is_dir()
-            and next(dataset_path.iterdir(), None) is not None  # dir is not empty
-        )
-
+        dataset_existed_already = stored_dataset_properties is not None
         if dataset_existed_already:
             if exist_ok == _UNSET:
                 warnings.warn(
-                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {dataset_path} without setting exist_ok=True. "
+                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {self.path} without setting exist_ok=True. "
                     + "This will fail in future releases, please supply exist_ok=True explicitly then.",
                     DeprecationWarning,
                 )
                 exist_ok = True
             if not exist_ok:
                 raise RuntimeError(
-                    f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
+                    f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
                 )
+            dataset_properties = stored_dataset_properties
 
-            assert (
-                dataset_path / PROPERTIES_FILE_NAME
-            ).is_file(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
         else:
-            if read_only:
-                raise FileNotFoundError(
-                    f"Cannot create read-only dataset, could not find data at {dataset_path}."
+            assert not read_only
+
+            dataset_path_exists = False
+            dataset_path_is_empty = False
+            try:
+                dataset_path_is_empty = next(self.path.iterdir(), None) is None
+                dataset_path_exists = True
+            except NotADirectoryError:
+                dataset_path_exists = True
+            except FileNotFoundError:
+                dataset_path_exists = False
+
+            if dataset_path_exists and not dataset_path_is_empty:
+                raise RuntimeError(
+                    f"Creation of Dataset at {self.path} failed, because a file or folder already exists at this path."
                 )
-            assert (
-                not dataset_path.exists() or dataset_path.is_dir()
-            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
             # Create directories on disk and write datasource-properties.json
             try:
-                dataset_path.mkdir(parents=True, exist_ok=True)
+                self.path.mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 raise type(e)(
-                    "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
+                    "Creation of Dataset {} failed. ".format(self.path) + repr(e)
                 )
 
             # Write empty properties to disk
-            assert (
-                voxel_size_with_unit is not None
-            ), "When creating a new dataset, voxel_size or voxel_size_with_unit must be set, e.g. Dataset(path, voxel_size=(1, 1, 4.2))."
-            name = name or dataset_path.absolute().name
+            if voxel_size_with_unit is None:
+                raise ValueError(
+                    "When creating a new dataset, voxel_size or voxel_size_with_unit must be set, e.g. Dataset(path, voxel_size=(1, 1, 4.2))."
+                )
+            name = name or self.path.absolute().name
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""},
                 scale=voxel_size_with_unit,
                 data_layers=[],
             )
-            with (dataset_path / PROPERTIES_FILE_NAME).open(
-                "w", encoding="utf-8"
-            ) as outfile:
-                json.dump(
-                    dataset_converter.unstructure(dataset_properties), outfile, indent=4
+            (self.path / PROPERTIES_FILE_NAME).write_text(
+                json.dumps(
+                    dataset_converter.unstructure(dataset_properties),
+                    indent=4,
                 )
+            )
 
-        self.path: Path = dataset_path
-        self._properties: DatasetProperties = self._load_properties()
+        assert dataset_properties is not None
+        self._properties = dataset_properties
         self._last_read_properties = copy.deepcopy(self._properties)
 
         self._layers: Dict[str, Layer] = {}
-        # construct self.layer
+        # construct self.layers
         for layer_properties in self._properties.data_layers:
             num_channels = _extract_num_channels(
                 layer_properties.num_channels,
-                UPath(dataset_path),
+                self.path,
                 layer_properties.name,
                 (
                     layer_properties.mags[0].mag
@@ -346,24 +428,34 @@ class Dataset:
 
             layer = self._initialize_layer_from_properties(layer_properties)
             self._layers[layer_properties.name] = layer
+            if layer.is_remote_to_dataset:
+                # The mags of remote layers need to have their path properly set.
+                for mag in layer.mags:
+                    mag_prop = next(
+                        mag_prop
+                        for mag_prop in layer_properties.mags
+                        if mag_prop.mag == mag
+                    )
+                    mag_prop.path = str(layer.mags[mag].path)
 
         if dataset_existed_already:
             if voxel_size_with_unit is None:
-                warnings.warn(
-                    "[DEPRECATION] Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
+                raise ValueError(
+                    "Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
                     + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
-                    DeprecationWarning,
                 )
             elif voxel_size_with_unit == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
-                assert (
-                    self.voxel_size_with_unit == voxel_size_with_unit
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
+                if self.voxel_size_with_unit != voxel_size_with_unit:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
+                    )
             if name is not None:
-                assert (
-                    self.name == name
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the names do not match ({self.name} != {name})"
+                if self.name != name:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the names do not match ({self.name} != {name})"
+                    )
 
     @classmethod
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
@@ -375,21 +467,6 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        dataset_path = UPath(dataset_path)
-        assert (
-            dataset_path.exists()
-        ), f"Cannot open Dataset: Couldn't find {dataset_path}"
-        assert (
-            dataset_path.is_dir()
-        ), f"Cannot open Dataset: {dataset_path} is not a directory"
-
-        dataset_path = strip_trailing_slash(dataset_path)
-        assert (
-            dataset_path / PROPERTIES_FILE_NAME
-        ).is_file(), (
-            f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
-        )
-
         return cls(
             dataset_path,
             voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
@@ -397,15 +474,134 @@ class Dataset:
         )
 
     @classmethod
+    def announce_manual_upload(
+        cls,
+        dataset_name: str,
+        organization: str,
+        initial_team_ids: List[str],
+        folder_id: Union[str, RemoteFolder],
+        token: Optional[str] = None,
+    ) -> None:
+        """Announce a manual dataset upload to WEBKNOSSOS.
+
+        Used when manually uploading datasets to the file system of a datastore.
+        Creates database entries and sets access rights on the webknossos instance before the actual data upload.
+
+        Args:
+            dataset_name: Name for the new dataset
+            organization: Organization ID to upload to
+            initial_team_ids: List of team IDs to grant initial access
+            folder_id: ID of folder where dataset should be placed
+            token: Optional authentication token
+
+        Note:
+            This is typically only used by administrators with direct file system
+            access to the WEBKNOSSOS datastore. Most users should use upload() instead.
+
+        Examples:
+            ```
+            Dataset.announce_manual_upload(
+                "my_dataset",
+                "my_organization",
+                ["team_a", "team_b"],
+                "folder_123"
+            )
+            ```
+        """
+
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.api_client.models import ApiDatasetAnnounceUpload
+        from ..client.context import _get_context
+
+        if isinstance(folder_id, RemoteFolder):
+            folder_id = folder_id.id
+
+        context = _get_context()
+        dataset_announce = ApiDatasetAnnounceUpload(
+            dataset_name=dataset_name,
+            organization=organization,
+            initial_team_ids=initial_team_ids,
+            folder_id=folder_id,
+        )
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
+
+    @classmethod
+    def trigger_reload_in_datastore(
+        cls,
+        dataset_name: str,
+        organization: str,
+        token: Optional[str] = None,
+    ) -> None:
+        """Trigger a manual reload of the dataset's properties.
+
+        For manually uploaded datasets, properties are normally updated automatically
+        after a few minutes. This method forces an immediate reload.
+
+        This is typically only needed after manual changes to the dataset's files.
+        Cannot be used for local datasets.
+
+        Args:
+            dataset_name: Name of dataset to reload
+            organization: Organization ID where dataset is located
+            token: Optional authentication token
+
+        Examples:
+            ```
+            # Force reload after manual file changes
+            Dataset.trigger_reload_in_datastore(
+                "my_dataset",
+                "organization_id"
+            )
+            ```
+        """
+
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.context import _get_context
+
+        context = _get_context()
+        token = token or context.token
+        upload_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(upload_url)
+        datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
+
+    @classmethod
+    def _disambiguate_remote(
+        cls,
+        dataset_name: str,
+        organization_id: str,
+    ) -> str:
+        possible_ids = list(
+            cls.get_remote_datasets(
+                name=dataset_name, organization_id=organization_id
+            ).keys()
+        )
+        if len(possible_ids) == 0:
+            raise ValueError(
+                f"Dataset {dataset_name} not found in organization {organization_id}."
+            )
+        elif len(possible_ids) > 1:
+            logger.warning(
+                f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
+                "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
+                'of your datasets with `Dataset.get_remote_datasets("{dataset_name}").'
+            )
+        return possible_ids[0]
+
+    @classmethod
     def _parse_remote(
         cls,
-        dataset_name_or_url: str,
+        dataset_name_or_url: Optional[str] = None,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
-    ) -> Tuple[ContextManager, str, str, Optional[str]]:
+        dataset_id: Optional[str] = None,
+    ) -> Tuple[ContextManager, str, str, str, Optional[str]]:
         """Parses the given arguments to
         * context_manager that should be entered,
+        * dataset_id,
         * dataset_name,
         * organization_id,
         * sharing_token.
@@ -414,28 +610,59 @@ class Dataset:
         from ..client.context import _get_context, webknossos_context
 
         caller = inspect.stack()[1].function
-
-        dataset_name_or_url = resolve_short_link(dataset_name_or_url)
-
-        match = _DATASET_URL_REGEX.match(dataset_name_or_url)
-        if match is not None:
-            assert (
-                organization_id is None
-                and sharing_token is None
-                and webknossos_url is None
-            ), (
-                f"When Dataset.{caller}() is called with an annotation url, "
-                + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                + "organization_id, sharing_token and webknossos_url must not be set."
-            )
-            dataset_name = match.group("dataset_name")
-            organization_id = match.group("organization_id")
-            sharing_token = match.group("sharing_token")
-            webknossos_url = match.group("webknossos_url")
-        else:
-            dataset_name = dataset_name_or_url
-
         current_context = _get_context()
+
+        if dataset_id is None:
+            assert (
+                dataset_name_or_url is not None
+            ), f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
+            dataset_name_or_url = resolve_short_link(dataset_name_or_url)
+
+            match = _DATASET_URL_REGEX.match(dataset_name_or_url)
+            deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
+            if match is not None:
+                assert (
+                    organization_id is None
+                    and sharing_token is None
+                    and webknossos_url is None
+                ), (
+                    f"When Dataset.{caller}() is called with an url, "
+                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                    + "organization_id, sharing_token and webknossos_url must not be set."
+                )
+                dataset_name = match.groupdict().get("dataset_name")
+                dataset_id = match.group("dataset_id")
+                sharing_token = match.group("sharing_token")
+                webknossos_url = match.group("webknossos_url")
+                if dataset_name is None:
+                    assert dataset_id is not None
+                    dataset_name = current_context.api_client.dataset_info(
+                        dataset_id, sharing_token
+                    ).directory_name
+            elif deprecated_match is not None:
+                assert (
+                    organization_id is None
+                    and sharing_token is None
+                    and webknossos_url is None
+                ), (
+                    f"When Dataset.{caller}() is called with an url, "
+                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                    + "organization_id, sharing_token and webknossos_url must not be set."
+                )
+                dataset_name = deprecated_match.group("dataset_name")
+                organization_id = deprecated_match.group("organization_id")
+                sharing_token = deprecated_match.group("sharing_token")
+                webknossos_url = deprecated_match.group("webknossos_url")
+
+                assert organization_id is not None
+                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+            else:
+                dataset_name = dataset_name_or_url
+        else:
+            dataset_info = current_context.api_client.dataset_info(dataset_id)
+            dataset_name = dataset_info.directory_name
+            organization_id = dataset_info.owning_organization
+
         if webknossos_url is not None:
             webknossos_url = webknossos_url.rstrip("/")
         if webknossos_url is not None and webknossos_url != current_context.url:
@@ -459,58 +686,83 @@ class Dataset:
 
             context_manager = nullcontext()
 
-        return context_manager, dataset_name, organization_id, sharing_token
+        if dataset_id is None:
+            assert dataset_name is not None
+            dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+
+        return (
+            context_manager,
+            dataset_id,
+            dataset_name,
+            organization_id,
+            sharing_token,
+        )
 
     @classmethod
     def open_remote(
         cls,
-        dataset_name_or_url: str,
+        dataset_name_or_url: Optional[str] = None,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
+        dataset_id: Optional[str] = None,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
         via the respective `RemoteDataset` properties.
 
-        * `dataset_name_or_url` may be a dataset name or a full URL to a dataset view, e.g.
-          `https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`
-          If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
-        * `organization_id` may be supplied if a dataset name was used in the previous argument,
-          it defaults to your current organization from the `webknossos_context`.
-          You can find your `organization_id` [here](https://webknossos.org/auth/token).
-        * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
-        * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specify in which webknossos instance to search for the dataset.
-          It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
+        Args:
+            dataset_name_or_url: Either dataset name or full URL to dataset view, e.g.
+                https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view
+            organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/auth/token)
+            sharing_token: Optional sharing token for dataset access
+            webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
+            dataset_id: Optional unique ID of the dataset
+
+        Returns:
+            RemoteDataset: Dataset instance for remote access
+
+        Examples:
+            ```
+            ds = Dataset.open_remote("`https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`")
+            ```
+
+        Note:
+            If supplying an URL, organization_id, webknossos_url and sharing_token
+            must not be set.
         """
+
         from ..client.context import _get_context
 
         (
             context_manager,
-            dataset_name,
+            dataset_id,
+            directory_name,
             organization_id,
             sharing_token,
         ) = cls._parse_remote(
-            dataset_name_or_url, organization_id, sharing_token, webknossos_url
+            dataset_name_or_url,
+            organization_id,
+            sharing_token,
+            webknossos_url,
+            dataset_id,
         )
 
         with context_manager:
             wk_context = _get_context()
             api_dataset_info = wk_context.api_client.dataset_info(
-                organization_id, dataset_name, sharing_token
+                dataset_id, sharing_token
             )
             token = sharing_token or wk_context.datastore_token
 
         datastore_url = api_dataset_info.data_store.url
 
         zarr_path = UPath(
-            f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",
+            f"{datastore_url}/data/zarr/{organization_id}/{directory_name}/",
             headers={} if token is None else {"X-Auth-Token": token},
+            ssl=SSL_CONTEXT,
         )
-        return RemoteDataset(
-            zarr_path, dataset_name, organization_id, sharing_token, context_manager
-        )
+        return RemoteDataset(zarr_path, dataset_id, sharing_token, context_manager)
 
     @classmethod
     def download(
@@ -547,7 +799,8 @@ class Dataset:
 
         (
             context_manager,
-            dataset_name,
+            dataset_id,
+            directory_name,
             organization_id,
             sharing_token,
         ) = cls._parse_remote(
@@ -559,8 +812,7 @@ class Dataset:
 
         with context_manager:
             return download_dataset(
-                dataset_name,
-                organization_id=organization_id,
+                dataset_id=dataset_id,
                 sharing_token=sharing_token,
                 bbox=bbox,
                 layers=layers,
@@ -597,12 +849,12 @@ class Dataset:
         batch_size: Optional[int] = None,
         executor: Optional[Executor] = None,
     ) -> "Dataset":
-        """
-        This method imports image data in a folder or from a file as a
-        WEBKNOSSOS dataset. The image data can be 3D images (such as multipage
-        tiffs) or stacks of 2D images. In case of multiple 3D images or image
-        stacks, those are mapped to different layers. The exact mapping is handled
-        by the argument `map_filepath_to_layer_name`, which can be a pre-defined
+        """This method imports image data in a folder or from a file as a webknossos dataset.
+
+        The image data can be 3D images (such as multipage tiffs) or stacks of 2D images.
+        Multiple 3D images or image stacks are mapped to different layers based on the mapping strategy.
+
+        The exact mapping is handled by the argument `map_filepath_to_layer_name`, which can be a pre-defined
         strategy from the enum `ConversionLayerMapping`, or a custom callable, taking
         a path of an image file and returning the corresponding layer name. All
         files belonging to the same layer name are then grouped. In case of
@@ -610,20 +862,45 @@ class Dataset:
         The order of the z-slices can be customized by setting
         `z_slices_sort_key`.
 
-        If a layer_name is set, this name is used if a single layer is created.
-        Otherwise the layer_name is used as a common prefix for all layers.
+        For more fine-grained control, please create an empty dataset and use `add_layer_from_images`.
 
-        The category of layers (`color` vs `segmentation`) is determined
-        automatically by checking if `segmentation` is part of the path.
-        The category decision is evaluated and corrected after data import with a
-        data driven approach. Alternatively, a category can be enforced by passing
-        `layer_category`.
+        Args:
+            input_path: Path to input image files
+            output_path: Output path for created dataset
+            voxel_size: Optional tuple of floats (x,y,z) for voxel size in nm
+            name: Optional name for dataset
+            map_filepath_to_layer_name: Strategy for mapping files to layers, either a ConversionLayerMapping
+                enum value or callable taking Path and returning str
+            z_slices_sort_key: Optional key function for sorting z-slices
+            voxel_size_with_unit: Optional voxel size with unit specification
+            layer_name: Optional name for layer(s)
+            layer_category: Optional category override (LayerCategoryType.color / LayerCategoryType.segmentation)
+            data_format: Format to store data in ('wkw'/'zarr')
+            chunk_shape: Optional shape of chunks to store data in
+            chunks_per_shard: Optional number of chunks per shard
+            compress: Whether to compress the data
+            swap_xy: Whether to swap x and y axes
+            flip_x: Whether to flip the x axis
+            flip_y: Whether to flip the y axis
+            flip_z: Whether to flip the z axis
+            use_bioformats: Whether to use bioformats for reading
+            max_layers: Maximum number of layers to create
+            batch_size: Size of batches for processing
+            executor: Optional executor for parallelization
 
-        Further arguments behave as in `add_layer_from_images`, please also
-        refer to its documentation.
+        Returns:
+            Dataset: The created dataset instance
 
-        For more fine-grained control, please create an empty dataset and use
-        `add_layer_from_images`.
+        Examples:
+            ```
+            ds = Dataset.from_images("path/to/images/",
+                                    "path/to/dataset/",
+                                    voxel_size=(1, 1, 1))
+            ```
+
+        Note:
+            This method needs extra packages like tifffile or pylibczirw.
+            Install with `pip install "webknossos[all]"` and `pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[czi]"`.
         """
 
         input_upath = UPath(input_path)
@@ -632,16 +909,16 @@ class Dataset:
         if use_bioformats is not False:
             valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
-        if input_upath.is_dir():
+        if input_upath.is_file():
+            if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
+                input_files = [UPath(input_upath.name)]
+                input_upath = input_upath.parent
+        else:
             input_files = [
                 i.relative_to(input_upath)
                 for i in input_upath.glob("**/*")
                 if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
             ]
-        else:
-            if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
-                input_files = [UPath(input_upath.name)]
-                input_upath = input_upath.parent
 
         if len(input_files) == 0:
             raise ValueError(
@@ -734,6 +1011,7 @@ class Dataset:
                         batch_size=batch_size,
                         allow_multiple_layers=True,
                         max_layers=max_layers - len(ds.layers),
+                        truncate_rgba_to_rgb=False,
                         executor=executor,
                     )
 
@@ -741,13 +1019,34 @@ class Dataset:
 
     @property
     def layers(self) -> Dict[str, Layer]:
+        """Dictionary containing all layers of this dataset.
+
+        Returns:
+            Dict[str, Layer]: Dictionary mapping layer names to Layer objects
+
+        Examples:
+            ```
+            for layer_name, layer in ds.layers.items():
+               print(layer_name)
+            ```
         """
-        Getter for dictionary containing all layers.
-        """
+
         return self._layers
 
     @property
     def voxel_size(self) -> Tuple[float, float, float]:
+        """Size of each voxel in nanometers along each dimension (x, y, z).
+
+        Returns:
+            Tuple[float, float, float]: Size of each voxel in nanometers for x,y,z dimensions
+
+        Examples:
+            ```
+            vx, vy, vz = ds.voxel_size
+            print(f"X resolution is {vx}nm")
+            ```
+        """
+
         return self._properties.scale.to_nanometer()
 
     @property
@@ -758,10 +1057,33 @@ class Dataset:
 
     @property
     def voxel_size_with_unit(self) -> VoxelSize:
+        """Size of voxels including unit information.
+
+        Size of each voxel along each dimension (x, y, z), including unit specification.
+        The default unit is nanometers.
+
+        Returns:
+            VoxelSize: Object containing voxel sizes and their units
+
+        """
+
         return self._properties.scale
 
     @property
     def name(self) -> str:
+        """Name of this dataset as specified in datasource-properties.json.
+
+        Can be modified to rename the dataset. Changes are persisted to the properties file.
+
+        Returns:
+            str: Current dataset name
+
+        Examples:
+            ```
+            ds.name = "my_renamed_dataset"  # Updates the name in properties file
+            ```
+        """
+
         return self._properties.id["name"]
 
     @name.setter
@@ -774,6 +1096,23 @@ class Dataset:
 
     @property
     def default_view_configuration(self) -> Optional[DatasetViewConfiguration]:
+        """Default view configuration for this dataset in webknossos.
+
+        Controls how the dataset is displayed in webknossos when first opened by a user, including position,
+        zoom level, rotation etc.
+
+        Returns:
+            Optional[DatasetViewConfiguration]: Current view configuration if set
+
+        Examples:
+            ```
+            ds.default_view_configuration = DatasetViewConfiguration(
+                zoom=1.5,
+                position=(100, 100, 100)
+            )
+            ```
+        """
+
         return self._properties.default_view_configuration
 
     @default_view_configuration.setter
@@ -786,6 +1125,15 @@ class Dataset:
 
     @property
     def read_only(self) -> bool:
+        """Whether this dataset is opened in read-only mode.
+
+        When True, operations that would modify the dataset (adding layers, changing properties,
+        etc.) are not allowed and will raise RuntimeError.
+
+        Returns:
+            bool: True if dataset is read-only, False otherwise
+        """
+
         return self._read_only
 
     def __eq__(self, other: object) -> bool:
@@ -800,17 +1148,31 @@ class Dataset:
         layers_to_link: Optional[List[Union["LayerToLink", Layer]]] = None,
         jobs: Optional[int] = None,
     ) -> "RemoteDataset":
-        """
-        Uploads this dataset to WEBKNOSSOS.
+        """Upload this dataset to webknossos.
 
-        The `new_dataset_name` parameter allows to assign a specific name for the dataset.
-        `layers_to_link` allows to add (or override) a layer in the uploaded dataset, so that
-        it links to a layer of an existing dataset in WEBKNOSSOS. That way, already existing
-        layers don't need to be uploaded again.
+        Copies all data and metadata to webknossos, creating a new dataset that can be accessed remotely.
+        For large datasets, existing layers can be linked instead of re-uploaded.
 
-        If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads. Defaults to 5.
+        Args:
+            new_dataset_name: Optional name for the uploaded dataset
+            layers_to_link: Optional list of layers that should link to existing data instead of being uploaded
+            jobs: Optional number of parallel upload jobs, defaults to 5
 
-        Returns the `RemoteDataset` upon successful upload.
+        Returns:
+            RemoteDataset: Reference to the newly created remote dataset
+
+        Examples:
+            Simple upload:
+                ```
+                remote_ds = ds.upload("my_new_dataset")
+                print(remote_ds.url)
+                ```
+
+            Link existing layers:
+                ```
+                link = LayerToLink.from_remote_layer(existing_layer)
+                remote_ds = ds.upload(layers_to_link=[link])
+                ```
         """
 
         from ..client._upload_dataset import LayerToLink, upload_dataset
@@ -829,10 +1191,25 @@ class Dataset:
         )
 
     def get_layer(self, layer_name: str) -> Layer:
-        """
-        Returns the layer called `layer_name` of this dataset. The return type is `webknossos.dataset.layer.Layer`.
+        """Get a specific layer from this dataset.
 
-        This function raises an `IndexError` if the specified `layer_name` does not exist.
+        Args:
+            layer_name: Name of the layer to retrieve
+
+        Returns:
+            Layer: The requested layer object
+
+        Raises:
+            IndexError: If no layer with the given name exists
+
+        Examples:
+            ```
+            color_layer = ds.get_layer("color")
+            seg_layer = ds.get_layer("segmentation")
+            ```
+
+        Note:
+            Use `layers` property to access all layers at once.
         """
         if layer_name not in self.layers.keys():
             raise IndexError(
@@ -851,18 +1228,54 @@ class Dataset:
         bounding_box: Optional[NDBoundingBox] = None,
         **kwargs: Any,
     ) -> Layer:
-        """
-        Creates a new layer called `layer_name` and adds it to the dataset.
-        The dtype can either be specified per layer or per channel.
-        If neither of them are specified, `uint8` per channel is used as default.
+        """Create a new layer in the dataset.
 
-        Creates the folder `layer_name` in the directory of `self.path`.
+        Creates a new layer with the given name, category, and data type.
 
-        WKW layers can only be added to datasets on local file systems.
+        Args:
+            layer_name: Name for the new layer
+            category: Either 'color' or 'segmentation'
+            dtype_per_layer: Optional data type for entire layer, e.g. np.uint8
+            dtype_per_channel: Optional data type per channel, e.g. np.uint8
+            num_channels: Number of channels (default 1)
+            data_format: Format to store data ('wkw', 'zarr', 'zarr3')
+            bounding_box: Optional initial bounding box of layer
+            **kwargs: Additional arguments:
+                - largest_segment_id: For segmentation layers, initial largest ID
+                - mappings: For segmentation layers, optional ID mappings
 
-        The return type is `webknossos.dataset.layer.Layer`.
+        Returns:
+            Layer: The newly created layer
 
-        This function raises an `IndexError` if the specified `layer_name` already exists.
+        Raises:
+            IndexError: If layer with given name already exists
+            RuntimeError: If invalid category specified
+            AttributeError: If both dtype_per_layer and dtype_per_channel specified
+            AssertionError: If invalid layer name or WKW format used with remote dataset
+
+        Examples:
+            Create color layer:
+                ```
+                layer = ds.add_layer(
+                    "my_raw_microscopy_layer",
+                    LayerCategoryType.COLOR_CATEGORY,
+                    dtype_per_channel=np.uint8,
+                )
+                ```
+
+            Create segmentation layer:
+                ```
+                layer = ds.add_layer(
+                    "my_segmentation_labels",
+                    LayerCategoryType.SEGMENTATION_CATEGORY,
+                    dtype_per_channel=np.uint64
+                )
+                ```
+
+        Note:
+            The dtype can be specified either per layer or per channel, but not both.
+            If neither is specified, uint8 per channel is used by default.
+            WKW format can only be used with local datasets.
         """
 
         self._ensure_writable()
@@ -961,11 +1374,40 @@ class Dataset:
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
-        """
-        Creates a new layer called `layer_name` and adds it to the dataset, in case it did not exist before.
-        Then, returns the layer.
+        """Get an existing layer or create a new one.
 
-        For more information see `add_layer`.
+        Gets a layer with the given name if it exists, otherwise creates a new layer
+        with the specified parameters.
+
+        Args:
+            layer_name: Name of the layer to get or create
+            category: Layer category ('color' or 'segmentation')
+            dtype_per_layer: Optional data type for entire layer
+            dtype_per_channel: Optional data type per channel
+            num_channels: Optional number of channels
+            data_format: Format to store data ('wkw', 'zarr', etc.)
+            **kwargs: Additional arguments passed to add_layer()
+
+        Returns:
+            Layer: The existing or newly created layer
+
+        Raises:
+            AssertionError: If existing layer's properties don't match specified parameters
+            ValueError: If both dtype_per_layer and dtype_per_channel specified
+            RuntimeError: If invalid category specified
+
+        Examples:
+            ```
+            layer = ds.get_or_add_layer(
+                "segmentation",
+                LayerCategoryType.SEGMENTATION_CATEGORY,
+                dtype_per_channel=np.uint64,
+            )
+            ```
+
+        Note:
+            The dtype can be specified either per layer or per channel, but not both.
+            For existing layers, the parameters are validated against the layer properties.
         """
 
         if "dtype" in kwargs:
@@ -1068,6 +1510,51 @@ class Dataset:
         category: LayerCategoryType,
         **kwargs: Any,
     ) -> Layer:
+        """Create a new layer from existing data files.
+
+        Adds a layer by discovering and incorporating existing data files that were created externally,
+        rather than creating new ones. The layer properties are inferred from the existing files
+        unless overridden.
+
+        Args:
+            layer_name: Name for the new layer
+            category: Layer category ('color' or 'segmentation')
+            **kwargs: Additional arguments:
+                - num_channels: Override detected number of channels
+                - dtype_per_channel: Override detected data type
+                - data_format: Override detected data format
+                - bounding_box: Override detected bounding box
+
+        Returns:
+            Layer: The newly created layer referencing the existing files
+
+        Raises:
+            AssertionError: If layer already exists or no valid files found
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Basic usage:
+                ```
+                layer = ds.add_layer_for_existing_files(
+                    "external_data",
+                    "color"
+                )
+                ```
+
+            Override properties:
+                ```
+                layer = ds.add_layer_for_existing_files(
+                    "segmentation_data",
+                    "segmentation",
+                    dtype_per_channel=np.uint64
+                )
+                ```
+
+        Note:
+            The data files must already exist in the dataset directory under the layer name.
+            Files are analyzed to determine properties like data type and number of channels.
+            Magnifications are discovered automatically.
+        """
         self._ensure_writable()
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
@@ -1137,6 +1624,7 @@ class Dataset:
         """
         Creates a new layer called `layer_name` with mag `mag` from `images`.
         `images` can be one of the following:
+
         * glob-string
         * list of paths
         * `pims.FramesSequence` instance
@@ -1147,6 +1635,7 @@ class Dataset:
         e.g. using `python -m pip install "webknossos[all]"`.
 
         Further Arguments:
+
         * `category`: `color` by default, may be set to "segmentation"
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data
@@ -1161,7 +1650,7 @@ class Dataset:
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
-        * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
+        * `batch_size`: size to process the images (influences RAM consumption), must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels or timepoints
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
@@ -1270,9 +1759,9 @@ class Dataset:
             if len(pims_open_kwargs) > 0:
                 # Set parameters from this method as default
                 # if they are not part of the kwargs per layer:
-                pims_open_kwargs.setdefault("timepoint", timepoint)
-                pims_open_kwargs.setdefault("channel", channel)
-                pims_open_kwargs.setdefault("czi_channel", czi_channel)
+                pims_open_kwargs.setdefault("timepoint", timepoint)  # type: ignore
+                pims_open_kwargs.setdefault("channel", channel)  # type: ignore
+                pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
                 pims_image_sequence = pims_images.PimsImages(
                     images,
                     swap_xy=swap_xy,
@@ -1477,9 +1966,26 @@ class Dataset:
         )
 
     def get_segmentation_layers(self) -> List[SegmentationLayer]:
+        """Get all segmentation layers in the dataset.
+
+        Provides access to all layers with category 'segmentation'.
+        Useful when a dataset contains multiple segmentation layers.
+
+        Returns:
+            List[SegmentationLayer]: List of all segmentation layers in order
+
+        Examples:
+            Print all segmentation layer names:
+                ```
+                for layer in ds.get_segmentation_layers():
+                    print(layer.name)
+                ```
+
+        Note:
+            If you need only a single segmentation layer, consider using
+            `get_layer()` with the specific layer name instead.
         """
-        Returns all segmentation layers.
-        """
+
         return [
             cast(SegmentationLayer, layer)
             for layer in self.layers.values()
@@ -1500,8 +2006,24 @@ class Dataset:
         return self._get_layer_by_category(COLOR_CATEGORY)
 
     def get_color_layers(self) -> List[Layer]:
-        """
-        Returns all color layers.
+        """Get all color layers in the dataset.
+
+        Provides access to all layers with category 'color'.
+        Useful when a dataset contains multiple color layers.
+
+        Returns:
+            List[Layer]: List of all color layers in order
+
+        Examples:
+            Print all color layer names:
+                ```
+                for layer in ds.get_color_layers():
+                    print(layer.name)
+                ```
+
+        Note:
+            If you need only a single color layer, consider using
+            `get_layer()` with the specific layer name instead.
         """
         return [
             cast(Layer, layer)
@@ -1510,9 +2032,26 @@ class Dataset:
         ]
 
     def delete_layer(self, layer_name: str) -> None:
+        """Delete a layer from the dataset.
+
+        Removes the layer's data and metadata from disk completely.
+        This deletes both the datasource-properties.json entry and all
+        data files for the layer.
+
+        Args:
+            layer_name: Name of layer to delete
+
+        Raises:
+            IndexError: If no layer with the given name exists
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            ```
+            ds.delete_layer("old_layer")
+            print("Remaining layers:", list(ds.layers))
+            ```
         """
-        Deletes the layer from the `datasource-properties.json` and the data from disk.
-        """
+
         self._ensure_writable()
 
         if layer_name not in self.layers.keys():
@@ -1539,10 +2078,42 @@ class Dataset:
         compress: Optional[bool] = None,
         executor: Optional[Executor] = None,
     ) -> Layer:
-        """
-        Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
-        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
-        If new_layer_name is None, the name of the foreign layer is used.
+        """Copy layer from another dataset to this one.
+
+        Creates a new layer in this dataset by copying data and metadata from
+        a layer in another dataset.
+
+        Args:
+            foreign_layer: Layer to copy (path or Layer object)
+            new_layer_name: Optional name for the new layer, uses original name if None
+            chunk_shape: Optional shape of chunks for storage
+            chunks_per_shard: Optional number of chunks per shard
+            data_format: Optional format to store copied data ('wkw', 'zarr', etc.)
+            compress: Optional whether to compress copied data
+            executor: Optional executor for parallel copying
+
+        Returns:
+            Layer: The newly created copy of the layer
+
+        Raises:
+            IndexError: If target layer name already exists
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Copy layer keeping same name:
+            ```
+            other_ds = Dataset.open("other/dataset")
+            copied = ds.add_copy_layer(other_ds.get_layer("color"))
+            ```
+
+            Copy with new name:
+            ```
+            copied = ds.add_copy_layer(
+                other_ds.get_layer("color"),
+                new_layer_name="color_copy",
+                compress=True
+            )
+            ```
         """
         self._ensure_writable()
         foreign_layer = Layer._ensure_layer(foreign_layer)
@@ -1583,15 +2154,39 @@ class Dataset:
         make_relative: bool = False,
         new_layer_name: Optional[str] = None,
     ) -> Layer:
+        """Create symbolic link to layer from another dataset.
+
+        Instead of copying data, creates a symbolic link to the original layer's data and copies
+        only the layer metadata. Changes to the original layer's properties, e.g. bounding box, afterwards won't
+        affect this dataset and vice-versa.
+
+        Args:
+            foreign_layer: Layer to link to (path or Layer object)
+            make_relative: Whether to create relative symlinks
+            new_layer_name: Optional name for the linked layer, uses original name if None
+
+        Returns:
+            Layer: The newly created symbolic link layer
+
+        Raises:
+            IndexError: If target layer name already exists
+            AssertionError: If trying to create symlinks in/to remote datasets
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            ```
+            other_ds = Dataset.open("other/dataset")
+            linked = ds.add_symlink_layer(
+                other_ds.get_layer("color"),
+                make_relative=True
+            )
+            ```
+
+        Note:
+            Only works with local file systems, cannot link remote datasets or
+            create symlinks in remote datasets.
         """
-        Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
-        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
-        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
-        (or vice versa).
-        If make_relative is True, the symlink is made relative to the current dataset path.
-        If new_layer_name is None, the name of the foreign layer is used.
-        Symlinked layers can only be added to datasets on local file systems.
-        """
+
         self._ensure_writable()
         foreign_layer = Layer._ensure_layer(foreign_layer)
 
@@ -1619,6 +2214,73 @@ class Dataset:
 
         (self.path / new_layer_name).symlink_to(foreign_layer_symlink_path)
         layer_properties = copy.deepcopy(foreign_layer._properties)
+        layer_properties.name = new_layer_name
+        self._properties.data_layers += [layer_properties]
+        self._layers[new_layer_name] = self._initialize_layer_from_properties(
+            layer_properties
+        )
+
+        self._export_as_json()
+        return self.layers[new_layer_name]
+
+    def add_remote_layer(
+        self,
+        foreign_layer: Union[str, UPath, Layer],
+        new_layer_name: Optional[str] = None,
+    ) -> Layer:
+        """Add a remote layer from another dataset.
+
+        Creates a layer that references data from a remote dataset. The image data
+        will be streamed on-demand when accessed.
+
+        Args:
+            foreign_layer: Remote layer to add (path or Layer object)
+            new_layer_name: Optional name for the new layer, uses original name if None
+
+        Returns:
+            Layer: The newly created remote layer referencing the foreign data
+
+        Raises:
+            IndexError: If target layer name already exists
+            AssertionError: If trying to add non-remote layer or same origin dataset
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            ```
+            ds = Dataset.open("other/dataset")
+            remote_ds = Dataset.open_remote("my_dataset", "my_org_id")
+            new_layer = ds.add_remote_layer(
+                remote_ds.get_layer("color")
+            )
+            ```
+
+        Note:
+            Changes to the original layer's properties afterwards won't affect this dataset.
+            Data is only referenced, not copied.
+        """
+
+        self._ensure_writable()
+        foreign_layer = Layer._ensure_layer(foreign_layer)
+
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
+
+        if new_layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot add foreign layer {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+            )
+        assert (
+            foreign_layer.dataset.path != self.path
+        ), "Cannot add layer with the same origin dataset as foreign layer"
+        foreign_layer_path = foreign_layer.path
+
+        assert is_remote_path(
+            foreign_layer_path
+        ), f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_copy_layer instead."
+
+        layer_properties = copy.deepcopy(foreign_layer._properties)
+        for mag in layer_properties.mags:
+            mag.path = str(foreign_layer.mags[mag.mag].path)
         layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
@@ -1663,9 +2325,22 @@ class Dataset:
         return self.layers[new_layer_name]
 
     def calculate_bounding_box(self) -> NDBoundingBox:
+        """Calculate the enclosing bounding box of all layers.
+
+        Finds the smallest box that contains all data from all layers
+        in the dataset.
+
+        Returns:
+            NDBoundingBox: Bounding box containing all layer data
+
+        Examples:
+            ```
+            bbox = ds.calculate_bounding_box()
+            print(f"Dataset spans {bbox.size} voxels")
+            print(f"Dataset starts at {bbox.topleft}")
+            ```
         """
-        Calculates and returns the enclosing bounding box of all data layers of the dataset.
-        """
+
         all_layers = list(self.layers.values())
         if len(all_layers) <= 0:
             return BoundingBox.empty()
@@ -1692,10 +2367,48 @@ class Dataset:
         file_len: Optional[int] = None,  # deprecated
     ) -> "Dataset":
         """
-        Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `voxel_size`, `chunk_shape`, `chunks_per_shard` and `compress` of the current dataset
-        are also used for the new dataset.
-        WKW layers can only be copied to datasets on local file systems.
+        Creates an independent copy of the dataset with all layers at a new location.
+        Data storage parameters can be customized for the copied dataset.
+
+        Args:
+            new_dataset_path: Path where new dataset should be created
+            voxel_size: Optional tuple of floats (x,y,z) specifying voxel size in nanometers
+            chunk_shape: Optional shape of chunks for data storage
+            chunks_per_shard: Optional number of chunks per shard
+            data_format: Optional format to store data ('wkw', 'zarr', 'zarr3')
+            compress: Optional whether to compress data
+            executor: Optional executor for parallel copying
+            voxel_size_with_unit: Optional voxel size specification with units
+            **kwargs: Additional deprecated arguments:
+                - chunk_size: Use chunk_shape instead
+                - block_len: Use chunk_shape instead
+                - file_len: Use chunks_per_shard instead
+                - args: Use executor instead
+
+        Returns:
+            Dataset: The newly created copy
+
+        Raises:
+            AssertionError: If trying to copy WKW layers to remote dataset
+
+        Examples:
+            Basic copy:
+                ```
+                copied = ds.copy_dataset("path/to/copy")
+                ```
+
+            Copy with different storage:
+                ```
+                copied = ds.copy_dataset(
+                    "path/to/copy",
+                    data_format="zarr",
+                    compress=True
+                )
+                ```
+
+        Note:
+            WKW layers can only be copied to datasets on local file systems.
+            For remote datasets, use data_format='zarr'.
         """
 
         if args is not None:
@@ -1756,13 +2469,44 @@ class Dataset:
         make_relative: bool = False,
         layers_to_ignore: Optional[Iterable[str]] = None,
     ) -> "Dataset":
+        """Create a new dataset that uses symlinks to reference data.
+
+        Links all magnifications and layer directories from the original dataset via symlinks
+        rather than copying data. Remote layers are referenced as well. Useful for creating alternative views or exposing datasets
+        to webknossos.
+
+        Args:
+            new_dataset_path: Path where new dataset should be created
+            name: Optional name for the new dataset, uses original name if None
+            make_relative: Whether to create relative symlinks
+            layers_to_ignore: Optional iterable of layer names to exclude
+
+        Returns:
+            Dataset: The newly created dataset with linked layers
+
+        Raises:
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Basic shallow copy:
+                ```
+                linked = ds.shallow_copy_dataset("path/to/link")
+                ```
+
+            With relative links excluding layers:
+                ```
+                linked = ds.shallow_copy_dataset(
+                    "path/to/link",
+                    make_relative=True,
+                    layers_to_ignore=["temp_layer"]
+                )
+                ```
+
+        Note:
+            Only works with datasets on local filesystems. Cannot create shallow
+            copies of remote datasets or create shallow copies in remote locations.
         """
-        Create a new dataset at the given path. Link all mags of all existing layers.
-        In addition, link all other directories in all layer directories
-        to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5.
-        This method becomes useful when exposing a dataset to webknossos.
-        Only datasets on local filesystems can be shallow copied.
-        """
+
         assert is_fs_path(
             self.path
         ), f"Cannot create symlinks to remote dataset {self.path}"
@@ -1779,23 +2523,26 @@ class Dataset:
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
-            new_layer = new_dataset.add_layer_like(layer, layer_name)
-            for mag_view in layer.mags.values():
-                new_layer.add_symlink_mag(mag_view, make_relative)
+            if is_remote_path(layer.path):
+                new_dataset.add_remote_layer(layer, layer_name)
+            else:
+                new_layer = new_dataset.add_layer_like(layer, layer_name)
+                for mag_view in layer.mags.values():
+                    new_layer.add_symlink_mag(mag_view, make_relative)
 
-            # copy all other directories with a dir scan
-            copy_directory_with_symlinks(
-                layer.path,
-                new_layer.path,
-                ignore=[str(mag) for mag in layer.mags]
-                + [
-                    PROPERTIES_FILE_NAME,
-                    ZGROUP_FILE_NAME,
-                    ZATTRS_FILE_NAME,
-                    ZARR_JSON_FILE_NAME,
-                ],
-                make_relative=make_relative,
-            )
+                # copy all other directories with a dir scan
+                copy_directory_with_symlinks(
+                    layer.path,
+                    new_layer.path,
+                    ignore=[str(mag) for mag in layer.mags]
+                    + [
+                        PROPERTIES_FILE_NAME,
+                        ZGROUP_FILE_NAME,
+                        ZATTRS_FILE_NAME,
+                        ZARR_JSON_FILE_NAME,
+                    ],
+                    make_relative=make_relative,
+                )
 
         return new_dataset
 
@@ -1803,8 +2550,25 @@ class Dataset:
         self,
         executor: Optional[Executor] = None,
     ) -> None:
-        """
-        Compresses all mag views in-place that are not yet compressed.
+        """Compress all uncompressed magnifications in-place.
+
+        Compresses the data of all magnification levels that aren't already compressed,
+        for all layers in the dataset.
+
+        Args:
+            executor: Optional executor for parallel compression
+
+        Raises:
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            ```
+            ds.compress()
+            ```
+
+        Note:
+            If data is already compressed, this will have no effect.
+
         """
         for layer in self.layers.values():
             for mag in layer.mags.values():
@@ -1814,13 +2578,44 @@ class Dataset:
     def downsample(
         self,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
+        coarsest_mag: Optional[Mag] = None,
         executor: Optional[Executor] = None,
     ) -> None:
-        """
-        Downsamples all layers that are not yet downsampled.
+        """Generate downsampled magnifications for all layers.
+
+        Creates lower resolution versions (coarser magnifications) of all layers that are not
+        yet downsampled, up to the specified coarsest magnification.
+
+        Args:
+            sampling_mode: Strategy for downsampling (e.g. ANISOTROPIC, MAX)
+            coarsest_mag: Optional maximum/coarsest magnification to generate
+            executor: Optional executor for parallel processing
+
+        Raises:
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Basic downsampling:
+                ```
+                ds.downsample()
+                ```
+
+            With custom parameters:
+                ```
+                ds.downsample(
+                    sampling_mode=SamplingModes.ANISOTROPIC,
+                    coarsest_mag=Mag(8),
+                )
+                ```
+
+        Note:
+            - ANISOTROPIC sampling creates anisotropic downsampling until dataset is isotropic
+            - Other modes like MAX, CONSTANT etc create regular downsampling patterns
+            - If magnifications already exist they will not be regenerated
         """
         for layer in self.layers.values():
             layer.downsample(
+                coarsest_mag=coarsest_mag,
                 sampling_mode=sampling_mode,
                 executor=executor,
             )
@@ -1881,10 +2676,12 @@ class Dataset:
             raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
     def _load_properties(self) -> DatasetProperties:
-        with (self.path / PROPERTIES_FILE_NAME).open(
-            encoding="utf-8"
-        ) as datasource_properties:
-            data = json.load(datasource_properties)
+        try:
+            data = json.loads((self.path / PROPERTIES_FILE_NAME).read_bytes())
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Cannot read dataset at {self.path}. datasource-properties.json file not found."
+            )
         return dataset_converter.structure(data, DatasetProperties)
 
     def _export_as_json(self) -> None:
@@ -1942,38 +2739,120 @@ class Dataset:
     def get_remote_datasets(
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
+        name: Optional[str] = None,
+        folder_id: Optional[Union[RemoteFolder, str]] = None,
     ) -> Mapping[str, "RemoteDataset"]:
+        """Get available datasets from WEBKNOSSOS.
+
+        Returns a mapping of dataset ids to lazy-initialized RemoteDataset objects for all
+        datasets visible to the specified organization or current user.
+
+        Args:
+            organization_id: Optional organization to get datasets from. Defaults to
+                organization of logged in user.
+            tags: Optional tag(s) to filter datasets by. Can be a single tag string or
+                sequence of tags. Only returns datasets with all specified tags.
+            name: Optional name to filter datasets by. Only returns datasets with
+                matching name.
+            folder: Optional folder to filter datasets by. Only returns datasets in
+                the specified folder.
+
+        Returns:
+            Mapping[str, RemoteDataset]: Dict mapping dataset ids to RemoteDataset objects
+
+        Examples:
+            List all available datasets:
+            ```
+            datasets = Dataset.get_remote_datasets()
+            print(sorted(datasets.keys()))
+            ```
+
+            Get datasets for specific organization:
+            ```
+            org_datasets = Dataset.get_remote_datasets("my_organization")
+            ds = org_datasets["dataset_name"]
+            ```
+
+            Filter datasets by tag:
+            ```
+            published = Dataset.get_remote_datasets(tags="published")
+            tagged = Dataset.get_remote_datasets(tags=["tag1", "tag2"])
+            ```
+
+        Note:
+            RemoteDataset objects are initialized lazily when accessed for the first time.
+            The mapping object provides a fast way to list and look up available datasets.
         """
-        Returns a dict of all remote datasets visible for selected organization, or the organization of the logged in user by default.
-        The dict contains lazy-initialized `RemoteDataset` values for keys indicating the dataset name.
+        if isinstance(folder_id, RemoteFolder):
+            folder_id = folder_id.id
 
-        ```python
-        import webknossos as wk
-
-        print(sorted(wk.Dataset.get_remote_datasets()))
-
-        ds = wk.Dataset.get_remote_datasets(
-            organization_id="scalable_minds"
-        )["l4dense_motta_et_al_demo"]
-        ```
-        """
-        return RemoteDatasetRegistry(organization_id=organization_id, tags=tags)
+        return RemoteDatasetRegistry(
+            name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
+        )
 
 
 class RemoteDataset(Dataset):
-    """Representation of a dataset on the webknossos server, returned from `Dataset.open_remote()`.
-    Read-only image data is streamed from the webknossos server using the same interface as `Dataset`.
-    Additionally, metadata can be set via the additional properties below."""
+    """A representation of a dataset on a webknossos server.
+
+    This class is returned from `Dataset.open_remote()` and provides read-only access to
+    image data streamed from the webknossos server. It uses the same interface as `Dataset`
+    but additionally allows metadata manipulation through properties.
+
+    Properties:
+        metadata: Dataset metadata as key-value pairs
+        name: Human readable name
+        description: Dataset description
+        tags: Dataset tags
+        is_public: Whether dataset is public
+        sharing_token: Dataset sharing token
+        allowed_teams: Teams with dataset access
+        folder: Dataset folder location
+
+    Examples:
+        Opening a remote dataset with organization ID:
+        ```
+        ds = Dataset.open_remote("my_dataset", "org_id")
+        ```
+
+        Opening with dataset URL:
+        ```
+        ds = Dataset.open_remote("https://webknossos.org/datasets/org/dataset/view")
+        ```
+
+        Setting metadata:
+        ```
+        ds.metadata = {"key": "value", "tags": ["tag1", "tag2"]}
+        ds.name = "My_Dataset"
+        ds.allowed_teams = [Team.get_by_name("Lab_A")]
+        ```
+
+    Note:
+        Do not instantiate directly, use `Dataset.open_remote()` instead.
+    """
 
     def __init__(
         self,
         dataset_path: UPath,
-        dataset_name: str,
-        organization_id: str,
+        dataset_id: str,
         sharing_token: Optional[str],
         context: ContextManager,
     ) -> None:
-        """Do not call manually, please use `Dataset.open_remote()` instead."""
+        """Initialize a remote dataset instance.
+
+        Args:
+            dataset_path: Path to remote dataset location
+            dataset_name: Name of dataset in WEBKNOSSOS
+            organization_id: Organization that owns the dataset
+            sharing_token: Optional token for shared access
+            context: Context manager for WEBKNOSSOS connection
+
+        Raises:
+            FileNotFoundError: If dataset cannot be opened as zarr format and no metadata exists
+
+        Note:
+            Do not call this constructor directly, use Dataset.open_remote() instead.
+            This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
+        """
         try:
             super().__init__(
                 dataset_path,
@@ -1990,8 +2869,7 @@ class RemoteDataset(Dataset):
                 self.path = None  # type: ignore[assignment]
             else:
                 raise e from None
-        self._dataset_name = dataset_name
-        self._organization_id = organization_id
+        self._dataset_id = dataset_id
         self._sharing_token = sharing_token
         self._context = context
 
@@ -2005,28 +2883,52 @@ class RemoteDataset(Dataset):
 
     @property
     def url(self) -> str:
+        """URL to access this dataset in webknossos.
+
+        Constructs the full URL to the dataset in the webknossos web interface.
+
+        Returns:
+            str: Full dataset URL including organization and dataset name
+
+        Examples:
+            ```
+            print(ds.url) # 'https://webknossos.org/datasets/my_org/my_dataset'
+            ```
+        """
+
         from ..client.context import _get_context
 
         with self._context:
             wk_url = _get_context().url
-        return f"{wk_url}/datasets/{self._organization_id}/{self._dataset_name}"
+        return f"{wk_url}/datasets/{self._dataset_id}"
+
+    @property
+    def created(self) -> str:
+        """Creation date of the dataset.
+
+        Returns:
+            str: Date and time when dataset was created
+        """
+
+        return datetime.fromtimestamp(self._get_dataset_info().created / 1000).strftime(
+            "%B %d, %Y %I:%M:%S"
+        )
 
     def _get_dataset_info(self) -> ApiDataset:
         from ..client.context import _get_api_client
 
         with self._context:
             client = _get_api_client()
-            return client.dataset_info(
-                self._organization_id, self._dataset_name, self._sharing_token
-            )
+            return client.dataset_info(self._dataset_id, self._sharing_token)
 
     def _update_dataset_info(
         self,
-        display_name: Optional[str] = _UNSET,
+        name: str = _UNSET,
         description: Optional[str] = _UNSET,
         is_public: bool = _UNSET,
         folder_id: str = _UNSET,
         tags: List[str] = _UNSET,
+        metadata: Optional[List[ApiMetadata]] = _UNSET,
     ) -> None:
         from ..client.context import _get_api_client
 
@@ -2034,8 +2936,8 @@ class RemoteDataset(Dataset):
         # (this is a race-condition with parallel updates).
 
         info = self._get_dataset_info()
-        if display_name is not _UNSET:
-            info.display_name = display_name
+        if name is not _UNSET:
+            info.name = name
         if description is not _UNSET:
             info.description = description
         if tags is not _UNSET:
@@ -2044,28 +2946,113 @@ class RemoteDataset(Dataset):
             info.is_public = is_public
         if folder_id is not _UNSET:
             info.folder_id = folder_id
-        if display_name is not _UNSET:
-            info.display_name = display_name
+        if metadata is not _UNSET:
+            info.metadata = metadata
 
         with self._context:
-            _get_api_client().dataset_update(
-                self._organization_id, self._dataset_name, info
-            )
+            client = _get_api_client()
+            client.dataset_update(self._dataset_id, info)
 
     @property
-    def display_name(self) -> Optional[str]:
-        return self._get_dataset_info().display_name
+    def metadata(self) -> DatasetMetadata:
+        """Get or set metadata key-value pairs for the dataset.
+
+        The metadata can contain strings, numbers, and lists of strings as values.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            DatasetMetadata: Current metadata key-value pairs
+
+        Examples:
+            ```
+            ds.metadata = {
+                "species": "mouse",
+                "age_days": 42,
+                "tags": ["verified", "published"]
+            }
+            print(ds.metadata["species"])
+            ```
+        """
+
+        return DatasetMetadata(f"{self._dataset_id}")
+
+    @metadata.setter
+    def metadata(
+        self,
+        metadata: Optional[
+            Union[Dict[str, Union[str, int, float, Sequence[str]]], DatasetMetadata]
+        ],
+    ) -> None:
+        if metadata is not None:
+            api_metadata = [
+                ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
+                for k, v in metadata.items()
+            ]
+        self._update_dataset_info(metadata=api_metadata)
+
+    @property
+    def name(self) -> str:
+        """The human-readable name for the dataset in the webknossos interface.
+
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Optional[str]: Current display name if set, None otherwise
+
+        Examples:
+            ```
+            remote_ds.name = "Mouse Brain Sample A"
+            ```
+        """
+
+        return self._get_dataset_info().name
+
+    @name.setter
+    def name(self, name: str) -> None:
+        self._update_dataset_info(name=name)
+
+    @property
+    def display_name(self) -> str:
+        """Deprecated, please use `name`.
+        The human-readable name for the dataset in the webknossos interface.
+
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Optional[str]: Current display name if set, None otherwise
+
+        Examples:
+            ```
+            remote_ds.name = "Mouse Brain Sample A"
+            ```
+        """
+        warn_deprecated("display_name", "name")
+
+        return self.name
 
     @display_name.setter
-    def display_name(self, display_name: Optional[str]) -> None:
-        self._update_dataset_info(display_name=display_name)
+    def display_name(self, name: str) -> None:
+        warn_deprecated("display_name", "name")
 
-    @display_name.deleter
-    def display_name(self) -> None:
-        self.display_name = None
+        self.name = name
 
     @property
     def description(self) -> Optional[str]:
+        """Free-text description of the dataset.
+
+        Can be edited with markdown formatting. Changes are immediately synchronized
+        with WEBKNOSSOS.
+
+        Returns:
+            Optional[str]: Current description if set, None otherwise
+
+        Examples:
+            ```
+            ds.description = "Dataset acquired on *June 1st*"
+            ds.description = None  # Remove description
+            ```
+        """
+
         return self._get_dataset_info().description
 
     @description.setter
@@ -2078,6 +3065,22 @@ class RemoteDataset(Dataset):
 
     @property
     def tags(self) -> Tuple[str, ...]:
+        """User-assigned tags for organizing and filtering datasets.
+
+        Tags allow categorizing and filtering datasets in the webknossos dashboard interface.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Tuple[str, ...]: Currently assigned tags, in string tuple form
+
+        Examples:
+            ```
+            ds.tags = ["verified", "published"]
+            print(ds.tags)  # ('verified', 'published')
+            ds.tags = []  # Remove all tags
+            ```
+        """
+
         return tuple(self._get_dataset_info().tags)
 
     @tags.setter
@@ -2086,6 +3089,22 @@ class RemoteDataset(Dataset):
 
     @property
     def is_public(self) -> bool:
+        """Control whether the dataset is publicly accessible.
+
+        When True, anyone can view the dataset without logging in to WEBKNOSSOS.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            bool: True if dataset is public, False if private
+
+        Examples:
+            ```
+            ds.is_public = True
+            ds.is_public = False
+            print("Public" if ds.is_public else "Private")  # Private
+            ```
+        """
+
         return bool(self._get_dataset_info().is_public)
 
     @is_public.setter
@@ -2094,16 +3113,65 @@ class RemoteDataset(Dataset):
 
     @property
     def sharing_token(self) -> str:
+        """Get a new token for sharing access to this dataset.
+
+        Each call generates a fresh token that allows viewing the dataset without logging in.
+        The token can be appended to dataset URLs as a query parameter.
+
+        Returns:
+            str: Fresh sharing token for dataset access
+
+        Examples:
+            ```
+            token = ds.sharing_token
+            url = f"{ds.url}?token={token}"
+            print("Share this link:", url)
+            ```
+
+        Note:
+            - A new token is generated on each access
+            - The token provides read-only access
+            - Anyone with the token can view the dataset
+        """
+
         from ..client.context import _get_api_client
 
         with self._context:
             api_sharing_token = _get_api_client().dataset_sharing_token(
-                self._organization_id, self._dataset_name
+                self._dataset_id
             )
             return api_sharing_token.sharing_token
 
     @property
     def allowed_teams(self) -> Tuple["Team", ...]:
+        """Teams that are allowed to access this dataset.
+
+        Controls which teams have read access to view and use this dataset.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Tuple[Team, ...]: Teams currently having access
+
+        Examples:
+            ```
+            from webknossos import Team
+            team = Team.get_by_name("Lab_A")
+            ds.allowed_teams = [team]
+            print([t.name for t in ds.allowed_teams])
+
+            # Give access to multiple teams:
+            ds.allowed_teams = [
+                Team.get_by_name("Lab_A"),
+                Team.get_by_name("Lab_B")
+            ]
+            ```
+
+        Note:
+            - Teams must be from the same organization as the dataset
+            - Can be set using Team objects or team ID strings
+            - An empty list makes the dataset private
+        """
+
         from ..administration.user import Team
 
         return tuple(
@@ -2121,12 +3189,73 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update_teams(
-                self._organization_id, self._dataset_name, team_ids
+            client.dataset_update_teams(self._dataset_id, team_ids)
+
+    @classmethod
+    def explore_and_add_remote(
+        cls, dataset_uri: Union[str, PathLike], dataset_name: str, folder_path: str
+    ) -> "RemoteDataset":
+        """Explore and add an external dataset as a remote dataset.
+
+        Adds a dataset from an external location (e.g. S3, Google Cloud Storage, or HTTPs) to WEBKNOSSOS by inspecting
+        its layout and metadata without copying the data.
+
+        Args:
+            dataset_uri: URI pointing to the remote dataset location
+            dataset_name: Name to register dataset under in WEBKNOSSOS
+            folder_path: Path in WEBKNOSSOS folder structure where dataset should appear
+
+        Returns:
+            RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
+
+        Examples:
+            ```
+            remote = Dataset.explore_and_add_remote(
+                "s3://bucket/dataset",
+                "my_dataset",
+                "Datasets/Research"
             )
+            ```
+
+        Note:
+            The dataset files must be accessible from the WEBKNOSSOS server
+            for this to work. The data will be streamed directly from the source.
+        """
+        from ..client.context import _get_api_client
+
+        (context, dataset_id, directory_name, organisation_id, sharing_token) = (
+            cls._parse_remote(dataset_name)
+        )
+
+        with context:
+            client = _get_api_client()
+            dataset = ApiDatasetExploreAndAddRemote(
+                UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+            )
+            client.dataset_explore_and_add_remote(dataset)
+
+            return cls.open_remote(dataset_name, organisation_id, sharing_token)
 
     @property
     def folder(self) -> RemoteFolder:
+        """The (virtual) folder containing this dataset in WEBKNOSSOS.
+
+        Represents the folder location in the WEBKNOSSOS UI folder structure.
+        Can be changed to move the dataset to a different folder.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            RemoteFolder: Current folder containing the dataset
+
+        Examples:
+            ```
+            folder = RemoteFolder.get_by_path("Datasets/Published")
+            ds.folder = folder
+            print(ds.folder.path) # 'Datasets/Published'
+            ```
+
+        """
+
         return RemoteFolder.get_by_id(self._get_dataset_info().folder_id)
 
     @folder.setter

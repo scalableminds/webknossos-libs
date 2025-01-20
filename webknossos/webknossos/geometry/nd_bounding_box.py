@@ -38,33 +38,45 @@ def int_tpl(vec_int_like: VecIntLike) -> VecInt:
 
 @attr.frozen
 class NDBoundingBox:
-    """
-    The NDBoundingBox class is a generalized version of the 3-dimensional BoundingBox class. It is designed to represent bounding boxes in any number of dimensions.
+    """A generalized N-dimensional bounding box that can handle arbitrary dimensions.
 
-    The bounding box is characterized by its top-left corner, the size of the box, the names of the axes for each dimension, and the index (or order) of the axes. Each axis must have a unique index, starting from 1 (index 0 is reserved for channel information).
+    The NDBoundingBox represents an N-dimensional rectangular region defined by its
+    top-left corner coordinates and size. Each dimension has an associated axis name
+    and index for ordering.
 
-    The top-left coordinate is inclusive, while the bottom-right coordinate is exclusive.
+    Args:
+        topleft: The coordinates of the upper-left corner (inclusive)
+        size: The size/extent in each dimension
+        axes: The names of the axes/dimensions (e.g. "x", "y", "z", "t")
+        index: The order/position of each axis, starting from 1 (0 is reserved for channels)
+        name: Optional name for this bounding box
+        is_visible: Whether this bounding box should be visible
+        color: Optional RGBA color tuple (4 floats) for display
 
-    Here's a brief example of how to use it:
+    Examples:
+        Create a 2D bounding box:
+            ```
+            bbox_1 = NDBoundingBox(
+                topleft=(0, 0),
+                size=(100, 100),
+                axes=("x", "y"),
+                index=(1,2)
+            )
+            ```
+        Create a 4D bounding box:
+            ```
+            bbox_2 = NDBoundingBox(
+                topleft=(75, 75, 75, 0),
+                size=(100, 100, 100, 20),
+                axes=("x", "y", "z", "t"),
+                index=(2,3,4,1)
+            )
+            ```
 
-    ```python
-
-    # Create a 2D bounding box
-    bbox_1 = NDBoundingBox(
-        top_left=(0, 0),
-        size=(100, 100),
-        axes=("x", "y"),
-        index=(1,2)
-    )
-
-    # Create a 4D bounding box
-    bbox_2 = NDBoundingBox(
-        top_left=(75, 75, 75, 0),
-        size=(100, 100, 100, 20),
-        axes=("x", "y", "z", "t"),
-        index=(2,3,4,1)
-    )
-    ```
+    Note:
+        - The top-left coordinate is inclusive while bottom-right is exclusive
+        - Each axis must have a unique index starting from 1
+        - Index 0 is reserved for channel information
     """
 
     topleft: VecInt = attr.field(converter=int_tpl)
@@ -83,7 +95,9 @@ class NDBoundingBox:
             f"The dimensions of topleft, size, axes and index ({len(self.topleft)}, "
             + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
         )
-        assert 0 not in self.index, "Index 0 is reserved for channels."
+        assert (
+            "c" not in self.axes or self.index[self.axes.index("c")] == 0
+        ), "Index 0 is reserved for channels."
 
         # Convert the delivered tuples to VecInts
         object.__setattr__(self, "topleft", VecInt(self.topleft, axes=self.axes))
@@ -134,10 +148,10 @@ class NDBoundingBox:
         Returns a new instance of `NDBoundingBox` with the specified name.
 
         Args:
-        - name (Optional[str]): The name to assign to the new `NDBoundingBox` instance.
+            name (Optional[str]): The name to assign to the new `NDBoundingBox` instance.
 
         Returns:
-        - NDBoundingBox: A new instance of `NDBoundingBox` with the specified name.
+            NDBoundingBox: A new instance of `NDBoundingBox` with the specified name.
         """
         return attr.evolve(self, name=name)
 
@@ -146,10 +160,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with the specified top left coordinates.
 
         Args:
-        - new_topleft (VecIntLike): The new top left coordinates for the bounding box.
+            new_topleft (VecIntLike): The new top left coordinates for the bounding box.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated top left coordinates.
+            NDBoundingBox: A new NDBoundingBox object with the updated top left coordinates.
         """
         return attr.evolve(self, topleft=VecInt(new_topleft, axes=self.axes))
 
@@ -158,10 +172,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with the specified size.
 
         Args:
-        - new_size (VecIntLike): The new size of the bounding box. Can be a VecInt or any object that can be converted to a VecInt.
+            new_size (VecIntLike): The new size of the bounding box. Can be a VecInt or any object that can be converted to a VecInt.
 
         Returns:
-        - A new NDBoundingBox object with the specified size.
+            A new NDBoundingBox object with the specified size.
         """
         return attr.evolve(self, size=VecInt(new_size, axes=self.axes))
 
@@ -170,10 +184,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with the specified index.
 
         Args:
-        - new_index (VecIntLike): The new axis order for the bounding box.
+            new_index (VecIntLike): The new axis order for the bounding box.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated index.
+            NDBoundingBox: A new NDBoundingBox object with the updated index.
         """
         axes, _ = zip(*sorted(zip(self.axes, new_index), key=lambda x: x[1]))
         return attr.evolve(self, index=VecInt(new_index, axes=axes))
@@ -183,10 +197,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox with an updated bottomright value.
 
         Args:
-        - new_bottomright (VecIntLike): The new bottom right corner coordinates.
+            new_bottomright (VecIntLike): The new bottom right corner coordinates.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated bottom right corner.
+            NDBoundingBox: A new NDBoundingBox object with the updated bottom right corner.
         """
         new_size = VecInt(new_bottomright, axes=self.axes) - self.topleft
 
@@ -197,10 +211,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with the specified visibility.
 
         Args:
-        - is_visible (bool): The visibility value to set.
+            is_visible (bool): The visibility value to set.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated visibility value.
+            NDBoundingBox: A new NDBoundingBox object with the updated visibility value.
         """
         return attr.evolve(self, is_visible=is_visible)
 
@@ -209,11 +223,11 @@ class NDBoundingBox:
         Returns a new instance of NDBoundingBox with the specified color.
 
         Args:
-        - color (Optional[Tuple[float, float, float, float]]): The color to set for the bounding box.
-            The color should be specified as a tuple of four floats representing RGBA values.
+            color (Optional[Tuple[float, float, float, float]]): The color to set for the bounding box.
+                The color should be specified as a tuple of four floats representing RGBA values.
 
         Returns:
-        - NDBoundingBox: A new instance of NDBoundingBox with the specified color.
+            NDBoundingBox: A new instance of NDBoundingBox with the specified color.
         """
         return attr.evolve(self, color=color)
 
@@ -224,15 +238,15 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with updated bounds along the specified axis.
 
         Args:
-        - axis (str): The name of the axis to update.
-        - new_topleft (Optional[int]): The new value for the top-left coordinate along the specified axis.
-        - new_size (Optional[int]): The new size along the specified axis.
+            axis (str): The name of the axis to update.
+            new_topleft (Optional[int]): The new value for the top-left coordinate along the specified axis.
+            new_size (Optional[int]): The new size along the specified axis.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with updated bounds.
+            NDBoundingBox: A new NDBoundingBox object with updated bounds.
 
         Raises:
-        - ValueError: If the given axis name does not exist.
+            ValueError: If the given axis name does not exist.
 
         """
         try:
@@ -258,10 +272,10 @@ class NDBoundingBox:
         Returns the bounds of the given axis.
 
         Args:
-        - axis (str): The name of the axis to get the bounds for.
+            axis (str): The name of the axis to get the bounds for.
 
         Returns:
-        - Tuple[int, int]: A tuple containing the top-left and bottom-right coordinates along the specified axis.
+            Tuple[int, int]: A tuple containing the top-left and bottom-right coordinates along the specified axis.
         """
         try:
             index = self.axes.index(axis)
@@ -295,13 +309,13 @@ class NDBoundingBox:
         Create an instance of NDBoundingBox from a dictionary representation.
 
         Args:
-        - bbox (Dict): The dictionary representation of the bounding box.
+            bbox (Dict): The dictionary representation of the bounding box.
 
         Returns:
-        - NDBoundingBox: An instance of NDBoundingBox.
+            NDBoundingBox: An instance of NDBoundingBox.
 
         Raises:
-        - AssertionError: If additionalAxes are present but axisOrder is not provided.
+            AssertionError: If additionalAxes are present but axisOrder is not provided.
         """
 
         topleft: Tuple[int, ...] = bbox["topLeft"]
@@ -335,7 +349,7 @@ class NDBoundingBox:
         Converts the bounding box object to a json dictionary.
 
         Returns:
-        - dict: A json dictionary representing the bounding box.
+            dict: A json dictionary representing the bounding box.
         """
         topleft = [None, None, None]
         width, height, depth = None, None, None
@@ -378,7 +392,7 @@ class NDBoundingBox:
         Returns a dictionary representation of the bounding box.
 
         Returns:
-        - dict: A dictionary representation of the bounding box.
+            dict: A dictionary representation of the bounding box.
         """
         return {
             "topleft": self.topleft.to_list(),
@@ -391,7 +405,7 @@ class NDBoundingBox:
         Returns a string representation of the bounding box that can be used as a checkpoint name.
 
         Returns:
-        - str: A string representation of the bounding box.
+            str: A string representation of the bounding box.
         """
         return f"{'_'.join(str(element) for element in self.topleft)}_{'_'.join(str(element) for element in self.size)}"
 
@@ -416,10 +430,10 @@ class NDBoundingBox:
         Returns the size of the bounding box along the specified axis.
 
         Args:
-        - axis_name (str): The name of the axis to get the size for.
+            axis_name (str): The name of the axis to get the size for.
 
         Returns:
-        - int: The size of the bounding box along the specified axis.
+            int: The size of the bounding box along the specified axis.
         """
         try:
             index = self.axes.index(axis_name)
@@ -451,6 +465,12 @@ class NDBoundingBox:
         return VecInt(modified_attr, axes=self.axes)
 
     @property
+    def ndim(self) -> int:
+        """The number of dimensions of the bounding box."""
+
+        return len(self.axes)
+
+    @property
     def topleft_xyz(self) -> Vec3Int:
         """The topleft corner of the bounding box regarding only x, y and z axis."""
 
@@ -479,10 +499,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with changed x, y and z coordinates of the topleft corner.
 
         Args:
-        - new_xyz (Vec3IntLike): The new x, y and z coordinates for the topleft corner.
+            new_xyz (Vec3IntLike): The new x, y and z coordinates for the topleft corner.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated x, y and z coordinates of the topleft corner.
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z coordinates of the topleft corner.
         """
         new_topleft = self._get_attr_with_replaced_xyz("topleft", new_xyz)
 
@@ -493,10 +513,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with changed x, y and z size.
 
         Args:
-        - new_xyz (Vec3IntLike): The new x, y and z size for the bounding box.
+            new_xyz (Vec3IntLike): The new x, y and z size for the bounding box.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated x, y and z size.
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z size.
         """
         new_size = self._get_attr_with_replaced_xyz("size", new_xyz)
 
@@ -507,10 +527,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with changed x, y and z coordinates of the bottomright corner.
 
         Args:
-        - new_xyz (Vec3IntLike): The new x, y and z coordinates for the bottomright corner.
+            new_xyz (Vec3IntLike): The new x, y and z coordinates for the bottomright corner.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated x, y and z coordinates of the bottomright corner.
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z coordinates of the bottomright corner.
         """
         new_bottomright = self._get_attr_with_replaced_xyz("bottomright", new_xyz)
 
@@ -521,10 +541,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with changed x, y and z index.
 
         Args:
-        - new_xyz (Vec3IntLike): The new x, y and z index for the bounding box.
+            new_xyz (Vec3IntLike): The new x, y and z index for the bounding box.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the updated x, y and z index.
+            NDBoundingBox: A new NDBoundingBox object with the updated x, y and z index.
         """
         new_index = self._get_attr_with_replaced_xyz("index", new_xyz)
 
@@ -554,15 +574,16 @@ class NDBoundingBox:
     def intersected_with(self: _T, other: _T, dont_assert: bool = False) -> _T:
         """
         Returns the intersection of two bounding boxes.
-
-        If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))
+        If there is no intersection (resulting bounding box is empty) and dont_assert is False (default)
+        the function raises an assertion error.
+        If dont_assert is set to True this method returns an empty bounding box if there is no intersection.
 
         Args:
-        - other (NDBoundingBox): The other bounding box to intersect with.
-        - dont_assert (bool): If True, the method may return empty bounding boxes.
+            other (NDBoundingBox): The other bounding box to intersect with.
+            dont_assert (bool): If True, the method may return an empty bounding box. Default is False.
 
         Returns:
-        - NDBoundingBox: The intersection of the two bounding boxes.
+            NDBoundingBox: The intersection of the two bounding boxes.
         """
 
         self._check_compatibility(other)
@@ -584,10 +605,10 @@ class NDBoundingBox:
         Returns the smallest bounding box that contains both bounding boxes.
 
         Args:
-        - other (NDBoundingBox): The other bounding box to extend with.
+            other (NDBoundingBox): The other bounding box to extend with.
 
         Returns:
-        - NDBoundingBox: The smallest bounding box that contains both bounding boxes.
+            NDBoundingBox: The smallest bounding box that contains both bounding boxes.
         """
         self._check_compatibility(other)
         if self.is_empty():
@@ -606,7 +627,7 @@ class NDBoundingBox:
         Boolean check whether the boundung box is empty.
 
         Returns:
-        - bool: True if the bounding box is empty, False otherwise.
+            bool: True if the bounding box is empty, False otherwise.
         """
         return not self.size.is_positive(strictly_positive=True)
 
@@ -615,10 +636,10 @@ class NDBoundingBox:
         Returns the bounding box in the given mag.
 
         Args:
-        - mag (Mag): The magnification to convert the bounding box to.
+            mag (Mag): The magnification to convert the bounding box to.
 
         Returns:
-        - NDBoundingBox: The bounding box in the given magnification.
+            NDBoundingBox: The bounding box in the given magnification.
         """
         mag_vec = mag.to_vec3_int()
 
@@ -638,10 +659,10 @@ class NDBoundingBox:
         Returns the bounging box in the finest magnification (Mag(1)).
 
         Args:
-        - from_mag (Mag): The current magnification of the bounding box.
+            from_mag (Mag): The current magnification of the bounding box.
 
         Returns:
-        - NDBoundingBox: The bounding box in the given magnification.
+            NDBoundingBox: The bounding box in the given magnification.
         """
         mag_vec = from_mag.to_vec3_int()
 
@@ -652,7 +673,12 @@ class NDBoundingBox:
     def _align_with_mag_slow(self: _T, mag: Mag, ceil: bool = False) -> _T:
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrunk when necessary.
+        Args:
+            mag (Mag): The mag to align the bounding box to.
+            ceil (bool): If True, the bounding box is enlarged when necessary. If False, it's shrunk when necessary.
+
+        Returns:
+            NDBoundingBox: The aligned bounding box.
         """
         np_mag = mag.to_np()
 
@@ -674,11 +700,11 @@ class NDBoundingBox:
         Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
         Args:
-        - mag (Union[Mag, Vec3Int]): The magnification to align the bounding box to.
-        - ceil (bool): If True, the bounding box is enlarged when necessary. If False, it's shrunk when necessary.
+            mag (Union[Mag, Vec3Int]): The magnification to align the bounding box to.
+            ceil (bool): If True, the bounding box is enlarged when necessary. If False, it's shrunk when necessary.
 
         Returns:
-        - NDBoundingBox: The aligned bounding box.
+            NDBoundingBox: The aligned bounding box.
         """
         # This does the same as _align_with_mag_slow, which is more readable.
         # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
@@ -706,10 +732,10 @@ class NDBoundingBox:
         Note that the point may have float coordinates in the ndarray case
 
         Args:
-        - coord (VecIntLike): The coordinates to check.
+            coord (VecIntLike): The coordinates to check.
 
         Returns:
-        - bool: True if the point is inside of the bounding box, False otherwise.
+            bool: True if the point is inside of the bounding box, False otherwise.
         """
 
         if isinstance(coord, np.ndarray):
@@ -735,10 +761,10 @@ class NDBoundingBox:
         Check whether a bounding box is completely inside of the bounding box.
 
         Args:
-        - inner_bbox (NDBoundingBox): The bounding box to check.
+            inner_bbox (NDBoundingBox): The bounding box to check.
 
         Returns:
-        - bool: True if the bounding box is completely inside of the bounding box, False otherwise.
+            bool: True if the bounding box is completely inside of the bounding box, False otherwise.
         """
         self._check_compatibility(inner_bbox)
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
@@ -756,12 +782,12 @@ class NDBoundingBox:
         *between two chunks* will be divisible by that value.
 
         Args:
-        - chunk_shape (VecIntLike): The size of the chunks to generate.
-        - chunk_border_alignments (Optional[VecIntLike]): The alignment of the chunk borders.
+            chunk_shape (VecIntLike): The size of the chunks to generate.
+            chunk_border_alignments (Optional[VecIntLike]): The alignment of the chunk borders.
 
 
         Yields:
-        - Generator[NDBoundingBox]: A generator of the chunks.
+            Generator[NDBoundingBox]: A generator of the chunks.
         """
 
         start = self.topleft.to_np()
@@ -878,10 +904,10 @@ class NDBoundingBox:
         Returns a new NDBoundingBox object with the specified offset.
 
         Args:
-        - vector (VecIntLike): The offset to apply to the bounding box.
+            vector (VecIntLike): The offset to apply to the bounding box.
 
         Returns:
-        - NDBoundingBox: A new NDBoundingBox object with the specified offset.
+            NDBoundingBox: A new NDBoundingBox object with the specified offset.
         """
         try:
             return self.with_topleft_xyz(self.topleft_xyz + Vec3Int(vector))

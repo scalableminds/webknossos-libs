@@ -10,9 +10,156 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.2...HEAD)
 
 ### Breaking Changes
+- `RemoteDataset.display_name` is deprecated. To change the name of a dataset use the `name` property instead. 
+- `Dataset.get_remote_datasets()` returns a mapping. The keys of this mapping changed from datasets name to datasets id.
+- `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternativly a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated. As `dataset_name` is an optional argument now its position has changed, this is important if `create()` is called only with positional arguments.
+
+### Added
+- `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.
+- `RemoteDataset` got an additional property: `created`.
+- `Annotation` got an additional property: `dataset_id`.
+
+### Changed
+- Updated to WEBKNOSSOS API version 9. This includes support for the new url structure for datasets and [#1231](https://github.com/scalableminds/webknossos-libs/pull/1231)
+
+### Fixed
+- Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
+- Fixed an issue when shallow copying datasets with a remote mag. [#1224](https://github.com/scalableminds/webknossos-libs/pull/1224)
+
+
+## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.1...v0.16.2)
+
+### Breaking Changes
+- `MagView.get_zarr_array` now returns a `tensorstore` array instead of a `zarr-python` array. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174)
+
+### Changed
+- Updated to WEBKNOSSOS API version 8. [#1185](https://github.com/scalableminds/webknossos-libs/pull/1185)
+- Using tensorstore for reading and writing zarr 2 and 3 arrays. Removed `zarrita` and `zarr` dependency. [#1174](https://github.com/scalableminds/webknossos-libs/pull/1174)
+
+
+## [0.16.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.1) - 2024-12-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.0...v0.16.1)
+
+### Added
+- Added .nrrd and .nhdr to supported suffixes. [#1228](https://github.com/scalableminds/webknossos-libs/pull/1228)
+- Added more docstrings for many public classes and methods. [#1225](https://github.com/scalableminds/webknossos-libs/pull/1225)
+
+### Changed
+- Removes vcr-py from developer dependencies for testing and adds proxay for recording and replaying API requests. [#1198](https://github.com/scalableminds/webknossos-libs/pull/1198)
+- Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
+- Refactored the PimsTiffReader to read the data directly from the tiff file without creating a memmap-able copy first. This greatly reduces the time and storage requirements for converting large tiff files. [#1212](https://github.com/scalableminds/webknossos-libs/pull/1212)
+
+### Fixed
+- Fixed an issue where adding existing trees to an annotation fails. [#1201](https://github.com/scalableminds/webknossos-libs/pull/1201)
+- Fixed unpickling of the SSL_Context to allow for a second or third pickling. [#1223](https://github.com/scalableminds/webknossos-libs/pull/1223)
+- Fixed offset error in upsample_cube job [#1209](https://github.com/scalableminds/webknossos-libs/pull/1209)
+
+
+## [0.16.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.0) - 2024-11-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.11...v0.16.0)
+
+
+## [0.15.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.11) - 2024-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.10...v0.15.11)
+
+### Fixed
+- Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
+
+
+## [0.15.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.10) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.9...v0.15.10)
+
+### Fixed
+- Fixed pickling issue that has been introduced in 0.15.9. [#1218](https://github.com/scalableminds/webknossos-libs/pull/1218)
+
+
+## [0.15.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.9) - 2024-11-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.8...v0.15.9)
+
+### Changed
+Removed the CZI installation extra from `pip install webknossos[all]` by default. Users need to manually install it with `pip install --extra-index-url https://pypi.scm.io/simple/ webknossos[czi]`. [#1219](https://github.com/scalableminds/webknossos-libs/pull/1219)
+
+
+## [0.15.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.8) - 2024-11-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.7...v0.15.8)
+
+### Changed
+- Fixed SSL certificate verification for remote datasets by adding CA certificates using `certifi`. [#1211](https://github.com/scalableminds/webknossos-libs/pull/1211)
+
+
+## [0.15.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.7) - 2024-10-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.6...v0.15.7)
+
+### Added
+- Added `--coarsest-mag` argument to the `webknossos downsample` command. [#1203](https://github.com/scalableminds/webknossos-libs/pull/1203)
+
+### Fixed
+- Fixed an issue with merging annotations with compressed fallback layers.
+- Fixed an issue where adding a Zarr array with other axes than `cxyz` leads to an error. [#1204](https://github.com/scalableminds/webknossos-libs/pull/1204)
+
+
+
+## [0.15.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.6) - 2024-10-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.5...v0.15.6)
+
+### Added
+- Added `add_mag_from_zarrarray` to `Layer` class, to add existing Zarr arrays as a mag of a layer. [#1151](https://github.com/scalableminds/webknossos-libs/pull/1151)
+
+### Changed
+- Replaced the Python package manager `poetry` with `uv`. [#1199](https://github.com/scalableminds/webknossos-libs/pull/1199)
+
+
+## [0.15.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.5) - 2024-09-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.4...v0.15.5)
+
+### Added
+- Webknossos API functions were added: `Team.get_list()`, `Team.add("new_name")`, `User.assign_team_roles("teamName", isTeamManager: True)` and `RemoteDataset.explore_and_add_remote()` are available now. [#1196](https://github.com/scalableminds/webknossos-libs/pull/1196)
+
+
+## [0.15.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.4) - 2024-09-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.3...v0.15.4)
+
+### Added
+- Enable metadata access for remote datasets. [#1163](https://github.com/scalableminds/webknossos-libs/pull/1163)
+
+
+## [0.15.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.3) - 2024-09-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.2...v0.15.3)
+
+### Breaking Changes
+- Conversion of images with 4 channels creates a dataset with four layers instead of a dataset with one RGB layer. [#1192](https://github.com/scalableminds/webknossos-libs/pull/1192)
+
+### Changed
+- Updated tifffile dependency to v2024.8.30. [#1190](https://github.com/scalableminds/webknossos-libs/pull/1190)
+
+
+## [0.15.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.2) - 2024-09-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.1...v0.15.2)
+
+### Changed
+- Updated and clarified documentation for nd_bounding_box intersected_with method
+
+### Fixed
+- Fixed an issue with cattrs v24.1.0. [#1184](https://github.com/scalableminds/webknossos-libs/pull/1184)
+
+
+
+## [0.15.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.1) - 2024-08-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.15.0...v0.15.1)
+
+### Changed
+- Updates zarrita to 0.2.7. [#1169](https://github.com/scalableminds/webknossos-libs/pull/1169)
+
+
+## [0.15.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.15.0) - 2024-08-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.14.26...v0.15.0)
+
+### Breaking Changes
+- Python version 3.8 is no longer officially supported. [#1068](https://github.com/scalableminds/webknossos-libs/pull/1068)
 
 ### Added
 - Added example for scaling a skeleton. [#1147](https://github.com/scalableminds/webknossos-libs/pull/1147)
@@ -21,10 +168,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added options `--layer-name` and `--mag` for compress command of the CLI. [#1141](https://github.com/scalableminds/webknossos-libs/pull/1141)
 - Added options `--chunk-shape` and `--chunks-per-shard` for convert command of the CLI. [#1150](https://github.com/scalableminds/webknossos-libs/pull/1150)
 - The `from_images` method of the `Dataset` supports directories and single files as `input_path` now. [#1152](https://github.com/scalableminds/webknossos-libs/pull/1152)
-- Argument `organization_id` is mandatory for calling the `Annotation()` constructor now. [#1155](https://github.com/scalableminds/webknossos-libs/pull/1155)
+- Added support for python version 3.12. [#1068](https://github.com/scalableminds/webknossos-libs/pull/1068)
+- The number of pixel limit for JPG conversion is disabled now. [#1154](https://github.com/scalableminds/webknossos-libs/pull/1154)
+- Added option `--batch-size` to the convert command of the CLI. [#1158](https://github.com/scalableminds/webknossos-libs/pull/1158)
 
 ### Fixed
 - Fixed issue with webknossos URL and context URL being considered different when opening a remote dataset due to trailing slashes. [#1137](https://github.com/scalableminds/webknossos-libs/pull/1137)
+- Fix an issue where the remote folder was not found when the folder path query includes a trailing slash. [#1164](https://github.com/scalableminds/webknossos-libs/pull/1164)
+
 
 
 ## [0.14.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.14.26) - 2024-07-22

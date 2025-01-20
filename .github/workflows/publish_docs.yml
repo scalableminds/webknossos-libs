@@ -15,19 +15,16 @@ jobs:
       with:
         repository: scalableminds/webknossos
         path: docs/wk-repo
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v1
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
       with:
-        python-version: "3.10"
-        architecture: 'x64'
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
+        # Install a specific version of uv.
+        version: "0.4.19"
 
     - name: Build Docs
       run: |
-        docs/generate.sh --persist
+        cd docs
+        ./generate.sh --persist
 
     - name: Push docs
       env:
@@ -44,6 +41,6 @@ jobs:
         SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
       run: |
         cd docs
-        poetry run linkchecker https://docs.webknossos.org > link_status || \
-          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
+        uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
+          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on docs.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
             "$SLACK_HOOK"
