@@ -72,7 +72,6 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
-from webknossos.client.context import _get_context
 
 from ..dataset import (
     SEGMENTATION_CATEGORY,
@@ -251,11 +250,6 @@ class Annotation:
             assert (
                 self._voxel_size is not None
             ), "Please supply a voxel_size for Annotation()."
-            if self._organization_id is None:
-                self._organization_id = _get_context().organization_id
-            assert (
-                self._organization_id is not None
-            ), "Please supply an organization_id for Annotation()."
             self.skeleton = Skeleton(
                 dataset_name=self._dataset_name,
                 voxel_size=self._voxel_size,
@@ -873,6 +867,17 @@ class Annotation:
         from ..client.context import _get_api_client, _get_context
 
         context = _get_context()
+
+        if self.organization_id is None:
+            if context.organization_id is None:
+                raise RuntimeError(
+                    "No organization_id specified in the annotation or context. "
+                    + "Either set it for this annotation `my_annotation.organization_id = 'org_id'` "
+                    + "or wrap the upload in a context:\n"
+                    + "`with wk.webknossos_context(organization_id='org_id'):`\n"
+                    + "`    my_annotation.upload()`"
+                )
+            self.organization_id = context.organization_id
 
         client = _get_api_client(enforce_auth=True)
         response_annotation_info = client.annotation_upload(
