@@ -568,10 +568,14 @@ class Dataset:
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
     @classmethod
-    def trigger_check_for_datasets(cls, token: Optional[str] = None) -> None:
-        """Check for datasets in the datastore.
+    def trigger_dataset_upload(
+        cls, directory_name: str, organization: str, token: Optional[str] = None
+    ) -> None:
+        """Trigger a manual lookup of the dataset in the datastore.
 
         Args:
+            directory_name: Name of the dataset to trigger
+            organization: Organization ID where dataset is located
             token: Optional authentication token
 
         Returns:
@@ -580,18 +584,11 @@ class Dataset:
         Examples:
             ```
             # Check for datasets in the datastore
-            Dataset.trigger_check_for_datasets()
+            Dataset.trigger_dataset_upload()
             ```
         """
 
-        from ..client._upload_dataset import _cached_get_upload_datastore
-        from ..client.context import _get_context
-
-        context = _get_context()
-        token = token or context.token
-        upload_url = _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(upload_url)
-        datastore_api.triggers_check_inbox_blocking(token=token)
+        cls.trigger_reload_in_datastore(directory_name, organization, token)
 
     @classmethod
     def _disambiguate_remote(
