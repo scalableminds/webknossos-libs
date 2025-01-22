@@ -859,7 +859,7 @@ class Dataset:
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
-        compress: bool = False,
+        compress: bool = True,
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -1621,7 +1621,7 @@ class Dataset:
         mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
-        compress: bool = False,
+        compress: bool = True,
         *,
         ## other arguments
         topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)

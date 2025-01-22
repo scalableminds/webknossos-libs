@@ -514,7 +514,7 @@ class Layer:
         chunks_per_shard: Optional[
             Union[int, Vec3IntLike]
         ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
-        compress: bool = False,
+        compress: bool = True,
         *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
@@ -1342,7 +1342,7 @@ class Layer:
         self,
         from_mag: Mag,
         finest_mag: Mag = Mag(1),
-        compress: bool = False,
+        compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
@@ -1360,7 +1360,7 @@ class Layer:
         Args:
             from_mag (Mag): Source coarse magnification
             finest_mag (Mag): Target finest magnification (default Mag(1))
-            compress (bool): Whether to compress upsampled data. Defaults to False.
+            compress (bool): Whether to compress upsampled data. Defaults to True.
             sampling_mode (Union[str, SamplingModes]): How dimensions should be upsampled:
                 - 'anisotropic': Equalizes voxel dimensions based on voxel_size
                 - 'isotropic': Equal upsampling in all dimensions
