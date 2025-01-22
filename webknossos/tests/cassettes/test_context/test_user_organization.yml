@@ -1,11 +1,11 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v8/user
+      path: /api/v9/user
       headers:
         host: localhost:9000
         accept: '*/*'
-        accept-encoding: gzip, deflate, zstd
+        accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:27:10 GMT
+        date: Mon, 20 Jan 2025 13:17:36 GMT
         content-type: application/json
         content-length: '682'
       body:

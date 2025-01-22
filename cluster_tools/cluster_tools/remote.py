@@ -115,10 +115,7 @@ def setup_logging(
         )
         meta_data["logging_setup_fn"](log_file_path)
     else:
-        logging_config = meta_data.get(
-            "logging_config",
-            {"level": logging.DEBUG, "format": "%(asctime)s %(levelname)s %(message)s"},
-        )
+        logging_config = meta_data.get("logging_config", dict())
 
         logging.debug(
             "Setting up logging.basicConfig (potentially overwriting logging configuration of the main script). Config: {}".format(

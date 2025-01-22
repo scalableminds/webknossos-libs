@@ -6,6 +6,7 @@ import re
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
+from datetime import datetime
 from enum import Enum, unique
 from itertools import product
 from os import PathLike
@@ -115,13 +116,14 @@ logger = logging.getLogger(__name__)
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
+    + r"((?P<directory_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[^?/]*)?)?)?"
+    + r"((\?token=(?P<sharing_token>[^#\?]*))[^/]*)?$"
+)
+_DATASET_DEPRECATED_URL_REGEX = re.compile(
+    r"^(?P<webknossos_url>https?://.*)/datasets/"
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
-# _ZARR_DATASET_URL_REGEX = re.compile(
-#     r"^(?P<webknossos_url>https?://.*)/data/zarr/"
-#     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)/?"
-# )
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.
@@ -477,7 +479,7 @@ class Dataset:
         dataset_name: str,
         organization: str,
         initial_team_ids: List[str],
-        folder_id: str,
+        folder_id: Union[str, RemoteFolder],
         token: Optional[str] = None,
     ) -> None:
         """Announce a manual dataset upload to WEBKNOSSOS.
@@ -510,6 +512,9 @@ class Dataset:
         from ..client._upload_dataset import _cached_get_upload_datastore
         from ..client.api_client.models import ApiDatasetAnnounceUpload
         from ..client.context import _get_context
+
+        if isinstance(folder_id, RemoteFolder):
+            folder_id = folder_id.id
 
         context = _get_context()
         dataset_announce = ApiDatasetAnnounceUpload(
@@ -563,15 +568,60 @@ class Dataset:
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
     @classmethod
+    def trigger_dataset_import(
+        cls, directory_name: str, organization: str, token: Optional[str] = None
+    ) -> None:
+        """Trigger a manual lookup of the dataset in the datastore.
+
+        Args:
+            directory_name: Directory name of the dataset in the datastore
+            organization: Organization ID where dataset is located
+            token: Optional authentication token
+
+        Examples:
+            ```
+            # Trigger a manual lookup of the dataset in the datastore
+            Dataset.trigger_dataset_upload("l4_sample", "scalable_minds")
+            ```
+        """
+
+        cls.trigger_reload_in_datastore(directory_name, organization, token)
+
+    @classmethod
+    def _disambiguate_remote(
+        cls,
+        dataset_name: str,
+        organization_id: str,
+    ) -> str:
+        possible_ids = list(
+            cls.get_remote_datasets(
+                name=dataset_name, organization_id=organization_id
+            ).keys()
+        )
+        if len(possible_ids) == 0:
+            raise ValueError(
+                f"Dataset {dataset_name} not found in organization {organization_id}."
+            )
+        elif len(possible_ids) > 1:
+            logger.warning(
+                f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
+                "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
+                'of your datasets with `Dataset.get_remote_datasets("{dataset_name}").'
+            )
+        return possible_ids[0]
+
+    @classmethod
     def _parse_remote(
         cls,
-        dataset_name_or_url: str,
+        dataset_name_or_url: Optional[str] = None,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
-    ) -> Tuple[ContextManager, str, str, Optional[str]]:
+        dataset_id: Optional[str] = None,
+    ) -> Tuple[ContextManager, str, str, str, Optional[str]]:
         """Parses the given arguments to
         * context_manager that should be entered,
+        * dataset_id,
         * dataset_name,
         * organization_id,
         * sharing_token.
@@ -580,42 +630,59 @@ class Dataset:
         from ..client.context import _get_context, webknossos_context
 
         caller = inspect.stack()[1].function
-
-        dataset_name_or_url = resolve_short_link(dataset_name_or_url)
-
-        match = _DATASET_URL_REGEX.match(dataset_name_or_url)
-        # zarr_match = _ZARR_DATASET_URL_REGEX.match(dataset_name_or_url)
-        if match is not None:
-            assert (
-                organization_id is None
-                and sharing_token is None
-                and webknossos_url is None
-            ), (
-                f"When Dataset.{caller}() is called with an url, "
-                + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                + "organization_id, sharing_token and webknossos_url must not be set."
-            )
-            dataset_name = match.group("dataset_name")
-            organization_id = match.group("organization_id")
-            sharing_token = match.group("sharing_token")
-            webknossos_url = match.group("webknossos_url")
-        # elif zarr_match is not None:
-        #     assert (
-        #         organization_id is None
-        #         and sharing_token is None
-        #         and webknossos_url is None
-        #     ), (
-        #         f"When Dataset.{caller}() is called with a zarr url, "
-        #         + f"e.g. Dataset.{caller}('https://webknossos.org/data/zarr/scalable_minds/l4_sample_dev/'), "
-        #         + "organization_id, sharing_token and webknossos_url must not be set."
-        #     )
-        #     dataset_name = zarr_match.group("dataset_name")
-        #     organization_id = zarr_match.group("organization_id")
-        #     webknossos_url = zarr_match.group("webknossos_url")
-        else:
-            dataset_name = dataset_name_or_url
-
         current_context = _get_context()
+
+        if dataset_id is None:
+            assert (
+                dataset_name_or_url is not None
+            ), f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
+            dataset_name_or_url = resolve_short_link(dataset_name_or_url)
+
+            match = _DATASET_URL_REGEX.match(dataset_name_or_url)
+            deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
+            if match is not None:
+                assert (
+                    organization_id is None
+                    and sharing_token is None
+                    and webknossos_url is None
+                ), (
+                    f"When Dataset.{caller}() is called with an url, "
+                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                    + "organization_id, sharing_token and webknossos_url must not be set."
+                )
+                dataset_name = match.groupdict().get("dataset_name")
+                dataset_id = match.group("dataset_id")
+                sharing_token = match.group("sharing_token")
+                webknossos_url = match.group("webknossos_url")
+                if dataset_name is None:
+                    assert dataset_id is not None
+                    dataset_name = current_context.api_client.dataset_info(
+                        dataset_id, sharing_token
+                    ).directory_name
+            elif deprecated_match is not None:
+                assert (
+                    organization_id is None
+                    and sharing_token is None
+                    and webknossos_url is None
+                ), (
+                    f"When Dataset.{caller}() is called with an url, "
+                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                    + "organization_id, sharing_token and webknossos_url must not be set."
+                )
+                dataset_name = deprecated_match.group("dataset_name")
+                organization_id = deprecated_match.group("organization_id")
+                sharing_token = deprecated_match.group("sharing_token")
+                webknossos_url = deprecated_match.group("webknossos_url")
+
+                assert organization_id is not None
+                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+            else:
+                dataset_name = dataset_name_or_url
+        else:
+            dataset_info = current_context.api_client.dataset_info(dataset_id)
+            dataset_name = dataset_info.directory_name
+            organization_id = dataset_info.owning_organization
+
         if webknossos_url is not None:
             webknossos_url = webknossos_url.rstrip("/")
         if webknossos_url is not None and webknossos_url != current_context.url:
@@ -639,15 +706,26 @@ class Dataset:
 
             context_manager = nullcontext()
 
-        return context_manager, dataset_name, organization_id, sharing_token
+        if dataset_id is None:
+            assert dataset_name is not None
+            dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+
+        return (
+            context_manager,
+            dataset_id,
+            dataset_name,
+            organization_id,
+            sharing_token,
+        )
 
     @classmethod
     def open_remote(
         cls,
-        dataset_name_or_url: str,
+        dataset_name_or_url: Optional[str] = None,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
+        dataset_id: Optional[str] = None,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -659,6 +737,7 @@ class Dataset:
             organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/auth/token)
             sharing_token: Optional sharing token for dataset access
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
+            dataset_id: Optional unique ID of the dataset
 
         Returns:
             RemoteDataset: Dataset instance for remote access
@@ -677,30 +756,33 @@ class Dataset:
 
         (
             context_manager,
-            dataset_name,
+            dataset_id,
+            directory_name,
             organization_id,
             sharing_token,
         ) = cls._parse_remote(
-            dataset_name_or_url, organization_id, sharing_token, webknossos_url
+            dataset_name_or_url,
+            organization_id,
+            sharing_token,
+            webknossos_url,
+            dataset_id,
         )
 
         with context_manager:
             wk_context = _get_context()
             api_dataset_info = wk_context.api_client.dataset_info(
-                organization_id, dataset_name, sharing_token
+                dataset_id, sharing_token
             )
             token = sharing_token or wk_context.datastore_token
 
         datastore_url = api_dataset_info.data_store.url
 
         zarr_path = UPath(
-            f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",
+            f"{datastore_url}/data/zarr/{organization_id}/{directory_name}/",
             headers={} if token is None else {"X-Auth-Token": token},
             ssl=SSL_CONTEXT,
         )
-        return RemoteDataset(
-            zarr_path, dataset_name, organization_id, sharing_token, context_manager
-        )
+        return RemoteDataset(zarr_path, dataset_id, sharing_token, context_manager)
 
     @classmethod
     def download(
@@ -737,7 +819,8 @@ class Dataset:
 
         (
             context_manager,
-            dataset_name,
+            dataset_id,
+            directory_name,
             organization_id,
             sharing_token,
         ) = cls._parse_remote(
@@ -749,8 +832,7 @@ class Dataset:
 
         with context_manager:
             return download_dataset(
-                dataset_name,
-                organization_id=organization_id,
+                dataset_id=dataset_id,
                 sharing_token=sharing_token,
                 bbox=bbox,
                 layers=layers,
@@ -2410,7 +2492,7 @@ class Dataset:
         """Create a new dataset that uses symlinks to reference data.
 
         Links all magnifications and layer directories from the original dataset via symlinks
-        rather than copying data. Useful for creating alternative views or exposing datasets
+        rather than copying data. Remote layers are referenced as well. Useful for creating alternative views or exposing datasets
         to webknossos.
 
         Args:
@@ -2423,7 +2505,6 @@ class Dataset:
             Dataset: The newly created dataset with linked layers
 
         Raises:
-            AssertionError: If trying to link remote datasets
             RuntimeError: If dataset is read-only
 
         Examples:
@@ -2462,23 +2543,26 @@ class Dataset:
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
-            new_layer = new_dataset.add_layer_like(layer, layer_name)
-            for mag_view in layer.mags.values():
-                new_layer.add_symlink_mag(mag_view, make_relative)
+            if is_remote_path(layer.path):
+                new_dataset.add_remote_layer(layer, layer_name)
+            else:
+                new_layer = new_dataset.add_layer_like(layer, layer_name)
+                for mag_view in layer.mags.values():
+                    new_layer.add_symlink_mag(mag_view, make_relative)
 
-            # copy all other directories with a dir scan
-            copy_directory_with_symlinks(
-                layer.path,
-                new_layer.path,
-                ignore=[str(mag) for mag in layer.mags]
-                + [
-                    PROPERTIES_FILE_NAME,
-                    ZGROUP_FILE_NAME,
-                    ZATTRS_FILE_NAME,
-                    ZARR_JSON_FILE_NAME,
-                ],
-                make_relative=make_relative,
-            )
+                # copy all other directories with a dir scan
+                copy_directory_with_symlinks(
+                    layer.path,
+                    new_layer.path,
+                    ignore=[str(mag) for mag in layer.mags]
+                    + [
+                        PROPERTIES_FILE_NAME,
+                        ZGROUP_FILE_NAME,
+                        ZATTRS_FILE_NAME,
+                        ZARR_JSON_FILE_NAME,
+                    ],
+                    make_relative=make_relative,
+                )
 
         return new_dataset
 
@@ -2675,10 +2759,12 @@ class Dataset:
     def get_remote_datasets(
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
+        name: Optional[str] = None,
+        folder_id: Optional[Union[RemoteFolder, str]] = None,
     ) -> Mapping[str, "RemoteDataset"]:
         """Get available datasets from WEBKNOSSOS.
 
-        Returns a mapping of dataset names to lazy-initialized RemoteDataset objects for all
+        Returns a mapping of dataset ids to lazy-initialized RemoteDataset objects for all
         datasets visible to the specified organization or current user.
 
         Args:
@@ -2686,9 +2772,13 @@ class Dataset:
                 organization of logged in user.
             tags: Optional tag(s) to filter datasets by. Can be a single tag string or
                 sequence of tags. Only returns datasets with all specified tags.
+            name: Optional name to filter datasets by. Only returns datasets with
+                matching name.
+            folder: Optional folder to filter datasets by. Only returns datasets in
+                the specified folder.
 
         Returns:
-            Mapping[str, RemoteDataset]: Dict mapping dataset names to RemoteDataset objects
+            Mapping[str, RemoteDataset]: Dict mapping dataset ids to RemoteDataset objects
 
         Examples:
             List all available datasets:
@@ -2713,8 +2803,12 @@ class Dataset:
             RemoteDataset objects are initialized lazily when accessed for the first time.
             The mapping object provides a fast way to list and look up available datasets.
         """
+        if isinstance(folder_id, RemoteFolder):
+            folder_id = folder_id.id
 
-        return RemoteDatasetRegistry(organization_id=organization_id, tags=tags)
+        return RemoteDatasetRegistry(
+            name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
+        )
 
 
 class RemoteDataset(Dataset):
@@ -2726,7 +2820,7 @@ class RemoteDataset(Dataset):
 
     Properties:
         metadata: Dataset metadata as key-value pairs
-        display_name: Human readable name
+        name: Human readable name
         description: Dataset description
         tags: Dataset tags
         is_public: Whether dataset is public
@@ -2748,7 +2842,7 @@ class RemoteDataset(Dataset):
         Setting metadata:
         ```
         ds.metadata = {"key": "value", "tags": ["tag1", "tag2"]}
-        ds.display_name = "My Dataset"
+        ds.name = "My_Dataset"
         ds.allowed_teams = [Team.get_by_name("Lab_A")]
         ```
 
@@ -2759,8 +2853,7 @@ class RemoteDataset(Dataset):
     def __init__(
         self,
         dataset_path: UPath,
-        dataset_name: str,
-        organization_id: str,
+        dataset_id: str,
         sharing_token: Optional[str],
         context: ContextManager,
     ) -> None:
@@ -2796,8 +2889,7 @@ class RemoteDataset(Dataset):
                 self.path = None  # type: ignore[assignment]
             else:
                 raise e from None
-        self._dataset_name = dataset_name
-        self._organization_id = organization_id
+        self._dataset_id = dataset_id
         self._sharing_token = sharing_token
         self._context = context
 
@@ -2828,20 +2920,30 @@ class RemoteDataset(Dataset):
 
         with self._context:
             wk_url = _get_context().url
-        return f"{wk_url}/datasets/{self._organization_id}/{self._dataset_name}"
+        return f"{wk_url}/datasets/{self._dataset_id}"
+
+    @property
+    def created(self) -> str:
+        """Creation date of the dataset.
+
+        Returns:
+            str: Date and time when dataset was created
+        """
+
+        return datetime.fromtimestamp(self._get_dataset_info().created / 1000).strftime(
+            "%B %d, %Y %I:%M:%S"
+        )
 
     def _get_dataset_info(self) -> ApiDataset:
         from ..client.context import _get_api_client
 
         with self._context:
             client = _get_api_client()
-            return client.dataset_info(
-                self._organization_id, self._dataset_name, self._sharing_token
-            )
+            return client.dataset_info(self._dataset_id, self._sharing_token)
 
     def _update_dataset_info(
         self,
-        display_name: Optional[str] = _UNSET,
+        name: str = _UNSET,
         description: Optional[str] = _UNSET,
         is_public: bool = _UNSET,
         folder_id: str = _UNSET,
@@ -2854,8 +2956,8 @@ class RemoteDataset(Dataset):
         # (this is a race-condition with parallel updates).
 
         info = self._get_dataset_info()
-        if display_name is not _UNSET:
-            info.display_name = display_name
+        if name is not _UNSET:
+            info.name = name
         if description is not _UNSET:
             info.description = description
         if tags is not _UNSET:
@@ -2869,7 +2971,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update(self._organization_id, self._dataset_name, info)
+            client.dataset_update(self._dataset_id, info)
 
     @property
     def metadata(self) -> DatasetMetadata:
@@ -2892,7 +2994,7 @@ class RemoteDataset(Dataset):
             ```
         """
 
-        return DatasetMetadata(f"{self._organization_id}/{self._dataset_name}")
+        return DatasetMetadata(f"{self._dataset_id}")
 
     @metadata.setter
     def metadata(
@@ -2909,10 +3011,9 @@ class RemoteDataset(Dataset):
         self._update_dataset_info(metadata=api_metadata)
 
     @property
-    def display_name(self) -> Optional[str]:
+    def name(self) -> str:
         """The human-readable name for the dataset in the webknossos interface.
 
-        Can be set to a different value than the dataset name used in URLs and downloads.
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
@@ -2920,19 +3021,40 @@ class RemoteDataset(Dataset):
 
         Examples:
             ```
-            remote_ds.display_name = "Mouse Brain Sample A"
+            remote_ds.name = "Mouse Brain Sample A"
             ```
         """
 
-        return self._get_dataset_info().display_name
+        return self._get_dataset_info().name
+
+    @name.setter
+    def name(self, name: str) -> None:
+        self._update_dataset_info(name=name)
+
+    @property
+    def display_name(self) -> str:
+        """Deprecated, please use `name`.
+        The human-readable name for the dataset in the webknossos interface.
+
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            Optional[str]: Current display name if set, None otherwise
+
+        Examples:
+            ```
+            remote_ds.name = "Mouse Brain Sample A"
+            ```
+        """
+        warn_deprecated("display_name", "name")
+
+        return self.name
 
     @display_name.setter
-    def display_name(self, display_name: Optional[str]) -> None:
-        self._update_dataset_info(display_name=display_name)
+    def display_name(self, name: str) -> None:
+        warn_deprecated("display_name", "name")
 
-    @display_name.deleter
-    def display_name(self) -> None:
-        self.display_name = None
+        self.name = name
 
     @property
     def description(self) -> Optional[str]:
@@ -3036,7 +3158,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             api_sharing_token = _get_api_client().dataset_sharing_token(
-                self._organization_id, self._dataset_name
+                self._dataset_id
             )
             return api_sharing_token.sharing_token
 
@@ -3087,9 +3209,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update_teams(
-                self._organization_id, self._dataset_name, team_ids
-            )
+            client.dataset_update_teams(self._dataset_id, team_ids)
 
     @classmethod
     def explore_and_add_remote(
@@ -3123,8 +3243,8 @@ class RemoteDataset(Dataset):
         """
         from ..client.context import _get_api_client
 
-        (context, dataset_name, organisation_id, sharing_token) = cls._parse_remote(
-            dataset_name
+        (context, dataset_id, directory_name, organisation_id, sharing_token) = (
+            cls._parse_remote(dataset_name)
         )
 
         with context:

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.3...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,30 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.3) - 2025-01-21
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.2...v0.16.3)
+
+### Breaking Changes
+- `RemoteDataset.display_name` is deprecated. To change the name of a dataset use the `name` property instead.
+- `Dataset.get_remote_datasets()` returns a mapping. The keys of this mapping changed from datasets name to datasets id.
+- `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternativly a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated. As `dataset_name` is an optional argument now its position has changed, this is important if `create()` is called only with positional arguments.
+- When uploading an Annotation the organization_id is neccessary now. The organization_id might be stored in the Annotation object or it is inferred from the current webknossos_context. [#1155](https://github.com/scalableminds/webknossos-libs/pull/1155)
+
+### Added
+- `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.
+- `RemoteDataset` got an additional property: `created`.
+- `Annotation` got an additional property: `dataset_id`.
+- `Dataset.trigger_dataset_import()` was added to refresh the datastore to register a newly added dataset. [#1236](https://github.com/scalableminds/webknossos-libs/pull/1236)
+
+### Changed
+- Updated to WEBKNOSSOS API version 9. This includes support for the new url structure for datasets and the usage of `dataset_id`. [#1231](https://github.com/scalableminds/webknossos-libs/pull/1231)
+
+### Fixed
 - Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
+- Fixed an issue when shallow copying datasets with a remote mag. [#1224](https://github.com/scalableminds/webknossos-libs/pull/1224)
+
 
 
 ## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18

@@ -1,12 +1,12 @@
 http_interactions:
   - request:
       method: POST
-      path: /api/v8/userToken/generate
+      path: /api/v9/userToken/generate
       headers:
         host: localhost:9000
         content-length: '0'
         accept: '*/*'
-        accept-encoding: gzip, deflate, zstd
+        accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
@@ -22,10 +22,10 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 18 Dec 2024 13:42:30 GMT
+        date: Mon, 20 Jan 2025 13:33:03 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"IyV-W-lxr-YovycgMxWBvg"}'
+        data: '{"token":"PxDd6hXgE0biL9iVj3wTJQ"}'
         compression: none
