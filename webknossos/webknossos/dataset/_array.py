@@ -597,21 +597,9 @@ class TensorStoreArray(BaseArray):
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         raise NotImplementedError
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
-        kvstore = self._array.kvstore
-
-        if kvstore.spec().to_json()["driver"] == "s3":
-            raise NotImplementedError(
-                "list_bounding_boxes() is not supported for s3 arrays."
-            )
-
-        _, _, shard_shape, _, shape = self._get_array_dimensions(self._array)
-
-        if shape.axes != ("c", "x", "y", "z") and shape.axes != ("x", "y", "z"):
-            raise NotImplementedError(
-                "list_bounding_boxes() is not supported for non 3-D arrays."
-            )
-
+    def _list_bounding_boxes(
+        self, kvstore: Any, shard_shape: Vec3Int, shape: VecInt
+    ) -> Iterator[BoundingBox]:
         _type, separator = self._chunk_key_encoding()
 
         def _try_parse_ints(vec: Iterable[Any]) -> Optional[list[int]]:
@@ -624,7 +612,6 @@ class TensorStoreArray(BaseArray):
             return output
 
         keys = kvstore.list().result()
-        output = []
         for key in keys:
             key_parts = key.decode("utf-8").split(separator)
             if _type == "default":
@@ -642,8 +629,26 @@ class TensorStoreArray(BaseArray):
             else:
                 chunk_coords = Vec3Int(chunk_coords_list)
 
-            output.append(BoundingBox(chunk_coords * shard_shape, shard_shape))
-        return iter(output)
+            yield BoundingBox(chunk_coords * shard_shape, shard_shape)
+
+    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+        kvstore = self._array.kvstore
+
+        if kvstore.spec().to_json()["driver"] == "s3":
+            raise NotImplementedError(
+                "list_bounding_boxes() is not supported for s3 arrays."
+            )
+
+        _, _, shard_shape, _, shape = self._get_array_dimensions(self._array)
+
+        if shape.axes != ("c", "x", "y", "z") and shape.axes != ("x", "y", "z"):
+            raise NotImplementedError(
+                "list_bounding_boxes() is not supported for non 3-D arrays."
+            )
+
+        # This needs to be a separate function because we need the NotImplementedError
+        # to be raised immediately and not part of the iterator.
+        return self._list_bounding_boxes(kvstore, shard_shape, shape)
 
     def close(self) -> None:
         if self._cached_array is not None:
