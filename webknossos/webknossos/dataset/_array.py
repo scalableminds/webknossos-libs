@@ -614,7 +614,7 @@ class TensorStoreArray(BaseArray):
 
         _type, separator = self._chunk_key_encoding()
 
-        def _try_parse_ints(vec: Iterable[Any]) -> list[int] | None:
+        def _try_parse_ints(vec: Iterable[Any]) -> Optional[list[int]]:
             output = []
             for value in vec:
                 try:
