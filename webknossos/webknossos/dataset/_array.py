@@ -1,6 +1,7 @@
 import re
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
 from os.path import relpath
@@ -11,6 +12,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Literal,
     Optional,
     Tuple,
     Type,
@@ -223,7 +225,7 @@ class WKWArray(BaseArray):
             for filename in self._wkw_dataset.list_files()
         )
 
-    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         def _extract_num(s: str) -> int:
             match = re.search("[0-9]+", s)
             assert match is not None
@@ -592,8 +594,61 @@ class TensorStoreArray(BaseArray):
         )
         array[requested_domain].write(data).result()
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         raise NotImplementedError
+
+    def _list_bounding_boxes(
+        self, kvstore: Any, shard_shape: Vec3Int, shape: VecInt
+    ) -> Iterator[BoundingBox]:
+        _type, separator = self._chunk_key_encoding()
+
+        def _try_parse_ints(vec: Iterable[Any]) -> Optional[list[int]]:
+            output = []
+            for value in vec:
+                try:
+                    output.append(int(value))
+                except ValueError:  # noqa: PERF203
+                    return None
+            return output
+
+        keys = kvstore.list().result()
+        for key in keys:
+            key_parts = key.decode("utf-8").split(separator)
+            if _type == "default":
+                if key_parts[0] != "c":
+                    continue
+                key_parts = key_parts[1:]
+            if len(key_parts) != self._array.ndim:
+                continue
+            chunk_coords_list = _try_parse_ints(key_parts)
+            if chunk_coords_list is None:
+                continue
+
+            if shape.axes[0] == "c":
+                chunk_coords = Vec3Int(chunk_coords_list[1:])
+            else:
+                chunk_coords = Vec3Int(chunk_coords_list)
+
+            yield BoundingBox(chunk_coords * shard_shape, shard_shape)
+
+    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+        kvstore = self._array.kvstore
+
+        if kvstore.spec().to_json()["driver"] == "s3":
+            raise NotImplementedError(
+                "list_bounding_boxes() is not supported for s3 arrays."
+            )
+
+        _, _, shard_shape, _, shape = self._get_array_dimensions(self._array)
+
+        if shape.axes != ("c", "x", "y", "z") and shape.axes != ("x", "y", "z"):
+            raise NotImplementedError(
+                "list_bounding_boxes() is not supported for non 3-D arrays."
+            )
+
+        # This needs to be a separate function because we need the NotImplementedError
+        # to be raised immediately and not part of the iterator.
+        return self._list_bounding_boxes(kvstore, shard_shape, shape)
 
     def close(self) -> None:
         if self._cached_array is not None:
@@ -724,12 +779,10 @@ class Zarr3Array(TensorStoreArray):
                                             "configuration": {"endian": "little"},
                                         },
                                         {
-                                            "name": "blosc",
+                                            "name": "zstd",
                                             "configuration": {
-                                                "cname": "zstd",
-                                                "clevel": 5,
-                                                "shuffle": "shuffle",
-                                                "typesize": array_info.voxel_type.itemsize,
+                                                "level": 5,
+                                                "checksum": True,
                                             },
                                         },
                                     ]
@@ -760,6 +813,17 @@ class Zarr3Array(TensorStoreArray):
             }
         ).result()
         return cls(path, _array)
+
+    def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
+        metadata = self._array.spec().to_json()["metadata"]
+        chunk_key_encoding = metadata["chunk_key_encoding"]
+        _type = chunk_key_encoding["name"]
+        separator = chunk_key_encoding.get("configuration", {}).get(
+            "separator", "/" if _type == "default" else "."
+        )
+        assert _type in ["default", "v2"]
+        assert separator in ["/", "."]
+        return _type, separator
 
 
 class Zarr2Array(TensorStoreArray):
@@ -812,10 +876,8 @@ class Zarr2Array(TensorStoreArray):
                     "order": "F",
                     "compressor": (
                         {
-                            "id": "blosc",
-                            "cname": "zstd",
-                            "clevel": 5,
-                            "shuffle": 1,
+                            "id": "zstd",
+                            "level": 5,
                         }
                         if array_info.compression_mode
                         else None
@@ -827,3 +889,9 @@ class Zarr2Array(TensorStoreArray):
             }
         ).result()
         return cls(path, _array)
+
+    def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
+        metadata = self._array.spec().to_json()["metadata"]
+        separator = metadata.get("dimension_separator", ".")
+        assert separator in ["/", "."]
+        return "v2", separator

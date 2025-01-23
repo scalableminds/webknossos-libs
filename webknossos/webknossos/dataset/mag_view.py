@@ -10,8 +10,6 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset.data_format import DataFormat
-
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     LazyPath,
@@ -679,9 +677,13 @@ class MagView(View):
             )
         )
         with get_executor_for_args(args, executor) as executor:
-            if self.layer.data_format == DataFormat.WKW:
+            try:
+                bbox_iterator = self._array.list_bounding_boxes()
+            except NotImplementedError:
+                bbox_iterator = None
+            if bbox_iterator is not None:
                 job_args = []
-                for i, bbox in enumerate(self._array.list_bounding_boxes()):
+                for i, bbox in enumerate(bbox_iterator):
                     bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
                         self.layer.bounding_box, dont_assert=True
                     )
