@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.4...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `list_bounding_boxes()` for Zarr-based datasets. [#1238](https://github.com/scalableminds/webknossos-libs/pull/1238)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.3...v0.16.4)
+
+### Added
+- Added `list_bounding_boxes()` for Zarr-based datasets. [#1238](https://github.com/scalableminds/webknossos-libs/pull/1238)
 
 
 ## [0.16.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.3) - 2025-01-21
