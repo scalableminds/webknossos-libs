@@ -35,10 +35,9 @@ class BufferedSliceWriter:
     def __init__(
         self,
         view: "View",
-        offset: Optional[Vec3IntLike] = None,
         # json_update_allowed enables the update of the bounding box and rewriting of the properties json.
         # It should be False when parallel access is intended.
-        json_update_allowed: bool = True,
+        json_update_allowed: bool = False,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
@@ -62,7 +61,6 @@ class BufferedSliceWriter:
         self._buffer_start_slice: Optional[int] = None
 
         self.reset_offset(
-            offset,
             relative_offset,
             absolute_offset,
             relative_bounding_box,
@@ -239,7 +237,6 @@ class BufferedSliceWriter:
 
     def reset_offset(
         self,
-        offset: Optional[Vec3IntLike] = None,  # deprecated, relative in current mag
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
@@ -253,25 +250,12 @@ class BufferedSliceWriter:
         next(self._generator)
 
         if (
-            offset is None
-            and relative_offset is None
+            relative_offset is None
             and absolute_offset is None
             and relative_bounding_box is None
             and absolute_bounding_box is None
         ):
             relative_offset = Vec3Int.zeros()
-        if offset is not None:
-            warnings.warn(
-                "[DEPRECATION] Using offset for a buffered slice writer is deprecated. "
-                + "Please use the parameter relative_offset or absolute_offset in Mag(1) instead.",
-                DeprecationWarning,
-            )
-
-        if offset is not None:
-            self._bbox = BoundingBox(
-                self._view.bounding_box.topleft_xyz + Vec3Int(offset) * self._view.mag,
-                Vec3Int.zeros(),
-            )
 
         if relative_offset is not None:
             self._bbox = BoundingBox(

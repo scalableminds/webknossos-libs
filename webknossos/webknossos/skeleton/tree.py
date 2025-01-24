@@ -5,7 +5,6 @@ import networkx as nx
 import numpy as np
 
 from ..geometry import Vec3Int, Vec3IntLike
-from ..utils import warn_deprecated
 from .node import Node
 
 if TYPE_CHECKING:
@@ -350,24 +349,3 @@ class Tree(nx.Graph):
 
     def __hash__(self) -> int:
         return self._id
-
-
-class Graph(Tree):
-    """Deprecated, please use `Tree` instead."""
-
-    def __init__(
-        self,
-        name: str,
-        group: "Group",
-        skeleton: "Skeleton",
-        color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None,
-    ) -> None:
-        warn_deprecated("Graph", "Tree")
-        super().__init__(
-            name=name,
-            group=group,
-            skeleton=skeleton,
-            color=color,
-            enforced_id=enforced_id,
-        )

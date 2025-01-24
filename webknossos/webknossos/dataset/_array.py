@@ -25,7 +25,7 @@ from typing_extensions import Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import is_fs_path, warn_deprecated
+from ..utils import is_fs_path
 from .data_format import DataFormat
 
 
@@ -48,11 +48,6 @@ class ArrayInfo:
     dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
     axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
     compression_mode: bool = False
-
-    @property
-    def shard_size(self) -> Vec3Int:
-        warn_deprecated("shard_size", "shard_shape")
-        return self.shard_shape
 
     @property
     def chunks_per_shard(self) -> Vec3Int:
@@ -98,7 +93,9 @@ class BaseArray(ABC):
         pass
 
     @abstractmethod
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+    def write(
+        self, bbox: NDBoundingBox, data: np.ndarray, *, allow_resize: bool = False
+    ) -> None:
         pass
 
     @abstractmethod
@@ -206,7 +203,13 @@ class WKWArray(BaseArray):
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
         return self._wkw_dataset.read(Vec3Int(bbox.topleft), Vec3Int(bbox.size))
 
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+    def write(
+        self,
+        bbox: NDBoundingBox,
+        data: np.ndarray,
+        *,
+        allow_resize: bool = False,  # noqa: ARG002
+    ) -> None:
         self._wkw_dataset.write(Vec3Int(bbox.topleft), data)
 
     def ensure_size(
@@ -575,14 +578,18 @@ class TensorStoreArray(BaseArray):
                 expand_only=True,
             ).result()
 
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+    def write(
+        self, bbox: NDBoundingBox, data: np.ndarray, allow_resize: bool = False
+    ) -> None:
         if data.ndim == len(bbox):
             # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
             data = data.reshape((1,) + data.shape)
 
         assert data.ndim == len(bbox) + 1
 
-        self.ensure_size(bbox, warn=True)
+        if allow_resize:
+            self.ensure_size(bbox, warn=True)
+
         array = self._array
 
         requested_domain = tensorstore.IndexDomain(

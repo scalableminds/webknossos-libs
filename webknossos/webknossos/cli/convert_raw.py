@@ -61,7 +61,7 @@ def _raw_chunk_converter(
     contiguous_chunk = source_data[(slice(None),) + bounding_box.to_slices()].copy(
         order="F"
     )
-    target_mag_view.write(contiguous_chunk, bounding_box.topleft)
+    target_mag_view.write(data=contiguous_chunk, absolute_offset=bounding_box.topleft)
 
 
 def convert_raw(

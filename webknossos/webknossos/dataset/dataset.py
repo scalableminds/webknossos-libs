@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import warnings
-from argparse import Namespace
 from contextlib import nullcontext
 from datetime import datetime
 from enum import Enum, unique
@@ -296,10 +295,9 @@ class Dataset:
         dataset_path: Union[str, PathLike],
         voxel_size: Optional[Tuple[float, float, float]] = None,  # in nanometers
         name: Optional[str] = None,
-        exist_ok: bool = _UNSET,
+        exist_ok: bool = False,
         *,
         voxel_size_with_unit: Optional[VoxelSize] = None,
-        scale: Optional[Tuple[float, float, float]] = None,
         read_only: bool = False,
     ) -> None:
         """Create a new dataset or open an existing one.
@@ -308,7 +306,6 @@ class Dataset:
         If the dataset already exists and exist_ok is True, it is opened (the provided voxel_size
         and name are asserted to match the existing dataset).
 
-        Currently, `exist_ok=True` is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need
         the creation behavior.
 
@@ -318,7 +315,6 @@ class Dataset:
             name: Optional name for the dataset, defaults to last part of dataset_path if not provided
             exist_ok: Whether to open an existing dataset at the path rather than failing
             voxel_size_with_unit: Optional voxel size with unit specification
-            scale: Deprecated, use voxel_size instead
             read_only: Whether to open dataset in read-only mode
 
         Raises:
@@ -327,13 +323,10 @@ class Dataset:
 
         """
 
-        if count_defined_values((voxel_size, voxel_size_with_unit, scale)) > 1:
+        if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
-                "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
+                "Please supply exactly one of voxel_size or voxel_size_with_unit."
             )
-        if scale is not None:
-            warn_deprecated("scale", "voxel_size")
-            voxel_size_with_unit = VoxelSize(scale)
         elif voxel_size is not None:
             voxel_size_with_unit = VoxelSize(voxel_size)
 
@@ -351,13 +344,6 @@ class Dataset:
 
         dataset_existed_already = stored_dataset_properties is not None
         if dataset_existed_already:
-            if exist_ok == _UNSET:
-                warnings.warn(
-                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {self.path} without setting exist_ok=True. "
-                    + "This will fail in future releases, please supply exist_ok=True explicitly then.",
-                    DeprecationWarning,
-                )
-                exist_ok = True
             if not exist_ok:
                 raise RuntimeError(
                     f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
@@ -1070,12 +1056,6 @@ class Dataset:
         return self._properties.scale.to_nanometer()
 
     @property
-    def scale(self) -> Tuple[float, float, float]:
-        """Deprecated, use `voxel_size` instead."""
-        warn_deprecated("scale", "voxel_size")
-        return self.voxel_size
-
-    @property
     def voxel_size_with_unit(self) -> VoxelSize:
         """Size of voxels including unit information.
 
@@ -1304,10 +1284,6 @@ class Dataset:
             layer_name
         ), f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
 
-        if "dtype" in kwargs:
-            raise ValueError(
-                f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
-            )
         if num_channels is None:
             num_channels = 1
 
@@ -1430,10 +1406,6 @@ class Dataset:
             For existing layers, the parameters are validated against the layer properties.
         """
 
-        if "dtype" in kwargs:
-            raise ValueError(
-                f"Called Dataset.get_or_add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
-            )
         if layer_name in self.layers.keys():
             assert (
                 num_channels is None
@@ -1639,7 +1611,6 @@ class Dataset:
         max_layers: int = 20,
         truncate_rgba_to_rgb: bool = True,
         executor: Optional[Executor] = None,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
         """
         Creates a new layer called `layer_name` with mag `mag` from `images`.
@@ -1679,9 +1650,6 @@ class Dataset:
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
-            chunk_size=chunk_size,
-            block_len=None,
-            file_len=None,
         )
 
         if category is None:
@@ -1968,23 +1936,6 @@ class Dataset:
         assert first_layer is not None
         return first_layer
 
-    def get_segmentation_layer(self) -> SegmentationLayer:
-        """
-        Deprecated, please use `get_segmentation_layers()`.
-
-        Returns the only segmentation layer.
-        Fails with a IndexError if there are multiple segmentation layers or none.
-        """
-
-        warnings.warn(
-            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers().",
-            DeprecationWarning,
-        )
-        return cast(
-            SegmentationLayer,
-            self._get_layer_by_category(SEGMENTATION_CATEGORY),
-        )
-
     def get_segmentation_layers(self) -> List[SegmentationLayer]:
         """Get all segmentation layers in the dataset.
 
@@ -2011,19 +1962,6 @@ class Dataset:
             for layer in self.layers.values()
             if layer.category == SEGMENTATION_CATEGORY
         ]
-
-    def get_color_layer(self) -> Layer:
-        """
-        Deprecated, please use `get_color_layers()`.
-
-        Returns the only color layer.
-        Fails with a RuntimeError if there are multiple color layers or none.
-        """
-        warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers().",
-            DeprecationWarning,
-        )
-        return self._get_layer_by_category(COLOR_CATEGORY)
 
     def get_color_layers(self) -> List[Layer]:
         """Get all color layers in the dataset.
@@ -2378,13 +2316,9 @@ class Dataset:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
-        args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
         *,
         voxel_size_with_unit: Optional[VoxelSize] = None,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
-        block_len: Optional[int] = None,  # deprecated
-        file_len: Optional[int] = None,  # deprecated
     ) -> "Dataset":
         """
         Creates an independent copy of the dataset with all layers at a new location.
@@ -2399,11 +2333,6 @@ class Dataset:
             compress: Optional whether to compress data
             executor: Optional executor for parallel copying
             voxel_size_with_unit: Optional voxel size specification with units
-            **kwargs: Additional deprecated arguments:
-                - chunk_size: Use chunk_shape instead
-                - block_len: Use chunk_shape instead
-                - file_len: Use chunks_per_shard instead
-                - args: Use executor instead
 
         Returns:
             Dataset: The newly created copy
@@ -2431,18 +2360,9 @@ class Dataset:
             For remote datasets, use data_format='zarr'.
         """
 
-        if args is not None:
-            warn_deprecated(
-                "args argument",
-                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
-            )
-
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
-            chunk_size=chunk_size,
-            block_len=block_len,
-            file_len=file_len,
         )
 
         new_dataset_path = UPath(new_dataset_path)
@@ -2469,7 +2389,7 @@ class Dataset:
             exist_ok=False,
         )
 
-        with get_executor_for_args(args, executor) as executor:
+        with get_executor_for_args(None, executor) as executor:
             for layer in self.layers.values():
                 new_ds.add_copy_layer(
                     layer,
@@ -2655,38 +2575,6 @@ class Dataset:
             raise IndexError(
                 f"Failed to get segmentation layer: There are multiple {category} layer."
             )
-
-    @classmethod
-    def create(
-        cls,
-        dataset_path: Union[str, PathLike],
-        voxel_size: Tuple[float, float, float],
-        name: Optional[str] = None,
-    ) -> "Dataset":
-        """
-        **Deprecated**, please use the constructor `Dataset()` instead.
-        """
-        warnings.warn(
-            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset().",
-            DeprecationWarning,
-        )
-        return cls(dataset_path, voxel_size, name, exist_ok=False)
-
-    @classmethod
-    def get_or_create(
-        cls,
-        dataset_path: Union[str, Path],
-        voxel_size: Tuple[float, float, float],
-        name: Optional[str] = None,
-    ) -> "Dataset":
-        """
-        **Deprecated**, please use the constructor `Dataset()` instead.
-        """
-        warnings.warn(
-            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True).",
-            DeprecationWarning,
-        )
-        return cls(dataset_path, voxel_size, name, exist_ok=True)
 
     def __repr__(self) -> str:
         return f"Dataset({repr(self.path)})"

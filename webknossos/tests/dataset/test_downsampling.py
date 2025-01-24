@@ -417,7 +417,7 @@ def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
 def test_downsample_compressed(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(1, chunk_shape=8, chunks_per_shard=8)
+    mag = layer.add_mag(1, chunk_shape=8, chunks_per_shard=8, compress=False)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
 
     assert not mag._is_compressed()

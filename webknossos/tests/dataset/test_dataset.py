@@ -269,11 +269,11 @@ def test_ome_ngff_metadata(output_path: Path) -> None:
 
 
 def test_create_default_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds_path = prepare_dataset_path(DataFormat.Zarr3, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
 
-    assert layer.data_format == DataFormat.WKW
+    assert layer.data_format == DataFormat.Zarr3
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)
@@ -290,14 +290,20 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     else:
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
     assert mag_view.info.num_channels == 1
-    assert mag_view.info.compression_mode == False
+    assert mag_view.info.compression_mode == True
 
 
 def test_create_dataset_with_explicit_header_fields() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
 
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="uint48", num_channels=3)
+    ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_layer="uint48",
+        num_channels=3,
+        data_format=DataFormat.WKW,
+    )
 
     ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
     ds.get_layer("color").add_mag("2-2-1")
@@ -731,7 +737,7 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
         "1",
         chunk_shape=chunk_shape,
         chunks_per_shard=chunks_per_shard,
-        compress=False,
+        compress=True,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
@@ -742,7 +748,7 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
         "1",
         chunk_shape=chunk_shape,
         chunks_per_shard=chunks_per_shard,
-        compress=False,
+        compress=True,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
@@ -754,7 +760,7 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
             "1",
             chunk_shape=Vec3Int.full(64),
             chunks_per_shard=chunks_per_shard,
-            compress=False,
+            compress=True,
         )
 
     assure_exported_properties(layer.dataset)
@@ -1684,16 +1690,6 @@ def test_search_dataset_also_for_long_layer_name(
 
     # Note: 'ds' is outdated (it still contains Mag(2)) because it was opened again and changed.
     assure_exported_properties(layer.dataset)
-
-
-def test_outdated_dtype_parameter() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "outdated_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    with pytest.raises(ValueError):
-        ds.get_or_add_layer("color", COLOR_CATEGORY, dtype=np.uint8, num_channels=1)
-
-    with pytest.raises(ValueError):
-        ds.add_layer("color", COLOR_CATEGORY, dtype=np.uint8, num_channels=1)
 
 
 @pytest.mark.parametrize("make_relative", [True, False])

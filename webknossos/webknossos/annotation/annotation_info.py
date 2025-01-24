@@ -3,7 +3,6 @@ from typing import Optional
 import attr
 
 from ..client.api_client.models import ApiAnnotation
-from ..utils import warn_deprecated
 from .annotation import Annotation, AnnotationState, AnnotationType
 
 
@@ -39,8 +38,3 @@ class AnnotationInfo:
             else None,
             modified=api_annotation.modified,
         )
-
-    @property
-    def user_id(self) -> Optional[str]:
-        warn_deprecated("user_id", "owner_id")
-        return self.owner_id

@@ -24,7 +24,7 @@ from webknossos.dataset.length_unit import (
 )
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int
-from ..utils import snake_to_camel_case, warn_deprecated
+from ..utils import snake_to_camel_case
 from ._array import ArrayException, BaseArray
 from .data_format import DataFormat
 from .layer_categories import LayerCategoryType
@@ -159,11 +159,6 @@ class MagViewProperties:
     cube_length: Optional[int] = None
     axis_order: Optional[Dict[str, int]] = None
 
-    @property
-    def resolution(self) -> Mag:
-        warn_deprecated("resolution", "mag")
-        return self.mag
-
 
 @attr.define
 class AxisProperties:
@@ -182,11 +177,6 @@ class LayerProperties:
     mags: List[MagViewProperties]
     num_channels: Optional[int] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None
-
-    @property
-    def resolutions(self) -> List[MagViewProperties]:
-        warn_deprecated("resolutions", "mags")
-        return self.mags
 
 
 @attr.define
