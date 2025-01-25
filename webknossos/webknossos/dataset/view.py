@@ -22,6 +22,7 @@ from ..utils import (
     get_executor_for_args,
     get_rich_progress,
     wait_and_ensure_success,
+    warn_deprecated,
 )
 from ._array import ArrayInfo, BaseArray
 from .data_format import DataFormat
@@ -247,8 +248,9 @@ class View:
     def write(
         self,
         data: np.ndarray,
-        json_update_allowed: bool = True,
+        resize: Optional[bool] = None,
         *,
+        json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
@@ -316,6 +318,17 @@ class View:
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
+        if json_update_allowed is not None:
+            warn_deprecated("json_update_allowed", "resize")
+            if resize is None:
+                resize = json_update_allowed
+            else:
+                raise ValueError(
+                    "Cannot specify both `json_update_allowed` and `resize` arguments."
+                )
+        if resize is None:
+            resize = False
+
         if all(
             i is None
             for i in [
@@ -358,28 +371,36 @@ class View:
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=data_shape,
         )
-        if json_update_allowed:
-            assert self.bounding_box.contains_bbox(
-                mag1_bbox
-            ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
+        assert self.bounding_box.contains_bbox(
+            mag1_bbox
+        ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
         if self._is_compressed():
-            for current_mag_bbox, chunked_data in self._prepare_compressed_write(
-                current_mag_bbox, data, json_update_allowed
-            ):
-                self._array.write(
-                    current_mag_bbox, chunked_data, allow_resize=json_update_allowed
-                )
+            if self._data_format == DataFormat.WKW:
+                for current_mag_bbox, chunked_data in self._prepare_compressed_write(
+                    current_mag_bbox, data, json_update_allowed
+                ):
+                    self._array.write(current_mag_bbox, chunked_data)
+            else:
+                self._check_shard_alignment(current_mag_bbox)
+                self._array.write(current_mag_bbox, data)
         else:
-            self._array.write(current_mag_bbox, data, allow_resize=json_update_allowed)
+            self._array.write(current_mag_bbox, data)
+
+    def _check_shard_alignment(self, bbox: NDBoundingBox) -> None:
+        """Check that the bounding box is aling with the shard grid"""
+        shard_shape = self.info.shard_shape
+        shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
+        assert (
+            shard_bbox.intersected_with(self.bounding_box) == bbox
+        ), f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. Bounding box: {self.bounding_box}"
 
     def _prepare_compressed_write(
         self,
         current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
-        json_update_allowed: bool,
     ) -> Iterator[Tuple[NDBoundingBox, np.ndarray]]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox,
         divides these into chunks of shard_shape size and delegates
@@ -400,15 +421,12 @@ class View:
                     -current_mag_bbox.topleft
                 ).to_slices()
 
-            yield self._prepare_compressed_write_chunk(
-                chunked_bbox, data[source_slice], json_update_allowed
-            )
+            yield self._prepare_compressed_write_chunk(chunked_bbox, data[source_slice])
 
     def _prepare_compressed_write_chunk(
         self,
         current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
-        json_update_allowed: bool,
     ) -> Tuple[NDBoundingBox, np.ndarray]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox
         (ideally not larger than a shard) and enlarges that chunk to fit the shard it
@@ -423,11 +441,7 @@ class View:
         if current_mag_bbox != aligned_bbox:
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
-            if (
-                json_update_allowed
-                and current_mag_bbox
-                != current_mag_view_bbox.intersected_with(aligned_bbox)
-            ):
+            if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
                 warnings.warn(
                     _BLOCK_ALIGNMENT_WARNING,
                 )
@@ -798,9 +812,6 @@ class View:
         self,
         buffer_size: int = 32,
         dimension: int = 2,  # z
-        # json_update_allowed enables the update of the bounding box and rewriting of the properties json.
-        # It should be False when parallel access is intended.
-        json_update_allowed: bool = True,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -818,8 +829,6 @@ class View:
                 Defaults to 32.
             dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
                 Defaults to 2 (z-axis).
-            json_update_allowed (bool): Whether to allow updating the bounding box and
-                datasource-properties.json. Should be False for parallel access. Defaults to True.
             relative_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates, relative
                 to the current view's position. Mutually exclusive with absolute_offset.
                 Defaults to None.
@@ -869,7 +878,6 @@ class View:
 
         return BufferedSliceWriter(
             view=self,
-            json_update_allowed=json_update_allowed,
             buffer_size=buffer_size,
             dimension=dimension,
             relative_offset=relative_offset,

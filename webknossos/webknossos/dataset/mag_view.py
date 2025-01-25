@@ -9,8 +9,6 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset.data_format import DataFormat
-
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     LazyPath,
@@ -19,6 +17,7 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
+    warn_deprecated,
 )
 from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
@@ -260,8 +259,9 @@ class MagView(View):
     def write(
         self,
         data: np.ndarray,
-        json_update_allowed: bool = True,
+        resize: Optional[bool] = None,
         *,
+        json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
@@ -297,6 +297,18 @@ class MagView(View):
             - For compressed data, writing may be slower due to compression
             - Large writes may temporarily increase memory usage
         """
+
+        if json_update_allowed is not None:
+            warn_deprecated("json_update_allowed", "resize")
+            if resize is None:
+                resize = json_update_allowed
+            else:
+                raise ValueError(
+                    "Cannot specify both `json_update_allowed` and `resize` arguments."
+                )
+        if resize is None:
+            resize = False
+
         if all(
             i is None
             for i in [
@@ -323,12 +335,17 @@ class MagView(View):
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
-        if json_update_allowed and not self.bounding_box.contains_bbox(mag1_bbox):
-            self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
+        if not self.bounding_box.contains_bbox(mag1_bbox):
+            if resize:
+                self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
+            else:
+                raise ValueError(
+                    f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. Please use `resize=True` or manually resize the bounding box beforehand."
+                )
 
         super().write(
             data,
-            json_update_allowed=json_update_allowed,
+            resize=resize,
             absolute_bounding_box=mag1_bbox,
         )
 
@@ -486,9 +503,13 @@ class MagView(View):
             )
         )
         with get_executor_for_args(None, executor) as executor:
-            if self.layer.data_format == DataFormat.WKW:
+            try:
+                bbox_iterator = self._array.list_bounding_boxes()
+            except NotImplementedError:
+                bbox_iterator = None
+            if bbox_iterator is not None:
                 job_args = []
-                for i, bbox in enumerate(self._array.list_bounding_boxes()):
+                for i, bbox in enumerate(bbox_iterator):
                     bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
                         self.layer.bounding_box, dont_assert=True
                     )

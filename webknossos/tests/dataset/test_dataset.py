@@ -35,6 +35,7 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import (
     copytree,
     get_executor_for_args,
+    is_remote_path,
     named_partial,
     rmtree,
     snake_to_camel_case,
@@ -479,7 +480,7 @@ def test_mag_view_write_out_of_bounds_mag2(
 
     ds = Dataset.open(ds_path)
     color_layer = ds.get_layer("color")
-    mag_view = color_layer.get_or_add_mag("2-2-1")
+    mag_view = color_layer.get_or_add_mag("2-2-1", compress=False)
 
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
     assert color_layer.bounding_box.size == Vec3Int(24, 24, 24)
@@ -526,7 +527,7 @@ def test_update_new_bounding_box_offset(
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
-    mag = color_layer.add_mag("1")
+    mag = color_layer.add_mag("1", compress=False)
 
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
 
@@ -1985,7 +1986,7 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
     for offset in write_positions:
         mag.write(absolute_offset=offset * mag.mag.to_vec3_int(), data=write_data)
 
-    if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+    if is_remote_path(output_path):
         with pytest.warns(UserWarning, match=".*can be slow.*"):
             bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
 
@@ -2047,22 +2048,13 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
         compressed_dataset_path = (
             REMOTE_TESTOUTPUT_DIR / f"simple_{data_format}_dataset_compressed"
         )
-        if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
-            with pytest.warns(UserWarning, match=".*can be slow.*"):
-                mag1.compress(
-                    target_path=compressed_dataset_path,
-                )
-        else:
+        with pytest.warns(UserWarning, match=".*can be slow.*"):
             mag1.compress(
                 target_path=compressed_dataset_path,
             )
         mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
     else:
-        if data_format in (DataFormat.Zarr, DataFormat.Zarr3):
-            with pytest.warns(UserWarning, match=".*can be slow.*"):
-                mag1.compress()
-        else:
-            mag1.compress()
+        mag1.compress()
 
     assert mag1._is_compressed()
     assert mag1.info.data_format == data_format

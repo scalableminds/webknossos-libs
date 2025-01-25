@@ -35,9 +35,6 @@ class BufferedSliceWriter:
     def __init__(
         self,
         view: "View",
-        # json_update_allowed enables the update of the bounding box and rewriting of the properties json.
-        # It should be False when parallel access is intended.
-        json_update_allowed: bool = False,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
@@ -54,7 +51,6 @@ class BufferedSliceWriter:
         self._buffer_size = buffer_size
         self._dtype = self._view.get_dtype()
         self._use_logging = use_logging
-        self._json_update_allowed = json_update_allowed
         self._bbox: NDBoundingBox
         self._slices_to_write: List[np.ndarray] = []
         self._current_slice: Optional[int] = None
@@ -193,7 +189,6 @@ class BufferedSliceWriter:
 
                 self._view.write(
                     data,
-                    json_update_allowed=self._json_update_allowed,
                     absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self._view._mag),
                 )
                 del data

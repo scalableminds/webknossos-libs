@@ -40,7 +40,15 @@ from ..client.api_client.models import (
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
 )
-from ..geometry import Vec3Int, Vec3IntLike, VecIntLike
+from ..geometry import (
+    BoundingBox,
+    Mag,
+    NDBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+    VecInt,
+    VecIntLike,
+)
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
@@ -67,7 +75,6 @@ if TYPE_CHECKING:
     from ..administration.user import Team
     from ..client._upload_dataset import LayerToLink
 
-from ..geometry import BoundingBox, Mag, NDBoundingBox
 from ..utils import (
     copy_directory_with_symlinks,
     copytree,
@@ -1935,6 +1942,66 @@ class Dataset:
                 first_layer = layer
         assert first_layer is not None
         return first_layer
+
+    def write_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        data: np.ndarray,
+        *,
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
+        downsample: bool = True,
+        chunk_shape: Optional[Vec3IntLike] = None,
+        chunks_per_shard: Optional[Vec3IntLike] = None,
+        axes: Optional[Iterable[str]] = None,
+    ) -> Layer:
+        if axes is not None:
+            assert len(axes) == data.ndim
+            bbox = NDBoundingBox(
+                VecInt.zeros(axes),
+                VecInt(data.shape, axes=axes),
+                axes=axes,
+            )
+            num_channels = data.shape[0]
+        else:
+            if data.ndim == 0:
+                raise ValueError("Scalar values are not supported.")
+            elif data.ndim <= 3:
+                axes = ("x", "y", "z")
+                shape = data.shape
+                while len(shape) < 3:
+                    shape = shape + (1,)
+                bbox = BoundingBox(Vec3Int.zeros(), Vec3Int(shape))
+                num_channels = 1
+            elif data.ndim == 4:
+                axes = ("c", "x", "y", "z")
+                bbox = BoundingBox(Vec3Int.zeros(), Vec3Int(data.shape[1:]))
+                num_channels = data.shape[0]
+            else:
+                raise ValueError(
+                    "axes must be provided for arrays with more than 4 dimensions."
+                )
+
+        layer = self.add_layer(
+            layer_name,
+            category,
+            data_format=data_format,
+            num_channels=num_channels,
+            dtype_per_channel=data.dtype,
+            bounding_box=bbox,
+        )
+        mag = layer.add_mag(
+            1,
+            chunk_shape=chunk_shape,
+            chunks_per_shard=chunks_per_shard,
+            compress=True,
+        )
+        mag.write(data, absolute_bounding_box=layer.bounding_box)
+
+        if downsample:
+            layer.downsample()
+
+        return layer
 
     def get_segmentation_layers(self) -> List[SegmentationLayer]:
         """Get all segmentation layers in the dataset.
