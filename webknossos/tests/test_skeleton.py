@@ -65,9 +65,7 @@ def test_doc_example() -> None:
     from webknossos import Annotation
 
     annotation = Annotation(
-        name="my_annotation",
-        dataset_name="my_dataset",
-        voxel_size=(11, 11, 24),
+        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
     )
     group = annotation.skeleton.add_group("a group")
     tree = group.add_tree("a tree")
@@ -267,7 +265,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(_child_groups=<No child groups>, _child_trees=<No child trees>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
+        "Skeleton(_child_groups=<No child groups>, _child_trees=<No child trees>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None)"
     )
 
     my_group = nml.add_group("my_group")
@@ -314,7 +312,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(_child_groups=<1 child group>, _child_trees=<1 child tree>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
+        "Skeleton(_child_groups=<1 child group>, _child_trees=<1 child tree>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None)"
     )
     assert (
         str(my_group)
@@ -442,13 +440,11 @@ def test_add_tree_with_obj_and_properties(tmp_path: Path) -> None:
     skeleton_b.save(output_path)
 
 
-def test_add_tree_with_group() -> None:
-    annotation = wk.Annotation(
-        name="my_annotation", dataset_name="my_dataset", voxel_size=(11, 11, 24)
-    )
-    group = annotation.skeleton.add_group("a group")
-    tree = group.add_tree("a tree")
-
-    skeleton_a = create_dummy_skeleton()
-
-    skeleton_a.add_tree(tree)
+def test_behave_like_nx_graph() -> None:
+    s = wk.Skeleton((1, 1, 1), dataset_name="test_dataset")
+    g = s.add_group("test")
+    tree = g.add_tree("t")
+    tree.add_node((1, 2, 3))
+    for node_id, node_data in tree.nodes(data=True):
+        assert isinstance(node_id, int)
+        assert isinstance(node_data, dict)
