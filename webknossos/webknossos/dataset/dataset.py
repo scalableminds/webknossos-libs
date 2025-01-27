@@ -115,7 +115,6 @@ from .properties import (
     _properties_floating_type_to_python_type,
     dataset_converter,
 )
-from .view import _BLOCK_ALIGNMENT_WARNING
 
 logger = logging.getLogger(__name__)
 
@@ -1864,7 +1863,7 @@ class Dataset:
                 # For differing sizes, a separate warning is thrown, so block alignment warnings can be ignored:
                 warnings.filterwarnings(
                     "ignore",
-                    message=_BLOCK_ALIGNMENT_WARNING,
+                    message=".*not aligned with the shard shape.*",
                     category=UserWarning,
                     module="webknossos",
                 )

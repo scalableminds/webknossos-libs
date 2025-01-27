@@ -259,8 +259,8 @@ class MagView(View):
     def write(
         self,
         data: np.ndarray,
-        resize: Optional[bool] = None,
         *,
+        allow_resize: Optional[bool] = None,
         json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -299,15 +299,15 @@ class MagView(View):
         """
 
         if json_update_allowed is not None:
-            warn_deprecated("json_update_allowed", "resize")
-            if resize is None:
-                resize = json_update_allowed
+            warn_deprecated("json_update_allowed", "allow_resize")
+            if allow_resize is None:
+                allow_resize = json_update_allowed
             else:
                 raise ValueError(
-                    "Cannot specify both `json_update_allowed` and `resize` arguments."
+                    "Cannot specify both `json_update_allowed` and `allow_resize` arguments."
                 )
-        if resize is None:
-            resize = False
+        if allow_resize is None:
+            allow_resize = False
 
         if all(
             i is None
@@ -336,16 +336,16 @@ class MagView(View):
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
         if not self.bounding_box.contains_bbox(mag1_bbox):
-            if resize:
+            if allow_resize:
                 self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
             else:
                 raise ValueError(
-                    f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. Please use `resize=True` or manually resize the bounding box beforehand."
+                    f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. Please use `allow_resize=True` or manually allow_resize the bounding box beforehand."
                 )
 
         super().write(
             data,
-            resize=resize,
+            allow_resize=allow_resize,
             absolute_bounding_box=mag1_bbox,
         )
 

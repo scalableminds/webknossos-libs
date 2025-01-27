@@ -2,7 +2,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-import wkw
+import pytest
 
 from tests.constants import TESTOUTPUT_DIR
 from webknossos.dataset import COLOR_CATEGORY, Dataset
@@ -18,65 +18,50 @@ def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
     dtype = test_img.dtype
     origin = Vec3Int.zeros()
-    layer_name = "color"
     mag = Mag(1)
     dataset_dir = TESTOUTPUT_DIR / "buffered_slice_writer"
-    dataset_path = str(dataset_dir / layer_name / mag.to_layer_name())
 
     rmtree(dataset_dir)
     ds = Dataset(dataset_dir, voxel_size=(1, 1, 1))
-    mag_view = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel=dtype).add_mag(
-        mag
+    layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel=dtype,
+        bounding_box=BoundingBox(origin, (24, 24, 35)),
     )
+    mag_view = layer.add_mag(mag)
 
     with mag_view.get_buffered_slice_writer(absolute_offset=origin) as writer:
         for i in range(13):
             writer.send(test_img)
-        with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
-            try:
-                read_data = data.read(origin, (24, 24, 13))
-                if read_data[read_data.nonzero()].size != 0:
-                    raise AssertionError(
-                        "Nothing should be written on the disk. But found data with shape: {}".format(
-                            read_data.shape
-                        )
-                    )
-            except wkw.wkw.WKWException:
-                pass
+
+        np.testing.assert_array_equal(
+            mag_view.read(absolute_offset=origin, size=(24, 24, 13)),
+            0,
+            err_msg="Nothing should be written on the disk.",
+        )
 
         for i in range(13, 32):
             writer.send(test_img)
-        with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
-            read_data = data.read(origin, (24, 24, 32))
-            assert np.squeeze(read_data).shape == (24, 24, 32), (
-                "The read data should have the shape: (24, 24, 32) "
-                "but has a shape of: {}".format(np.squeeze(read_data).shape)
-            )
-            assert read_data.size == read_data[read_data.nonzero()].size, (
-                "The read data contains zeros while the " "written image has no zeros"
-            )
+
+        assert np.all(
+            mag_view.read(absolute_offset=origin, size=(24, 24, 32)) != 0
+        ), "The read data contains zeros while the written image has no zeros"
 
         for i in range(32, 35):
             writer.send(test_img)
 
-    with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
-        read_data = data.read(origin, (24, 24, 35))
-        read_data = np.squeeze(read_data)
-        assert read_data.shape == (24, 24, 35), (
-            "The read data should have the shape: (24, 24, 35) "
-            "but has a shape of: {}".format(np.squeeze(read_data).shape)
-        )
-        assert read_data.size == read_data[read_data.nonzero()].size, (
-            "The read data contains zeros while the " "written image has no zeros"
-        )
-        test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
-        for i in np.arange(35):
-            test_img_3d[:, :, i] = test_img
-        # check if the data are correct
-        assert np.array_equal(test_img_3d, read_data), (
-            "The data from the disk is not the same "
-            "as the data that should be written."
-        )
+    read_data = np.squeeze(mag_view.read(absolute_offset=origin, size=(24, 24, 35)))
+    assert np.all(
+        read_data != 0
+    ), "The read data contains zeros while the written image has no zeros"
+    # check if the data are correct
+    test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
+    for i in np.arange(35):
+        test_img_3d[:, :, i] = test_img
+    assert np.array_equal(test_img_3d, read_data), (
+        "The data from the disk is not the same " "as the data that should be written."
+    )
 
 
 def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
@@ -86,9 +71,13 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
 
     for dim in [0, 1, 2]:
         ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
-        mag_view = ds.add_layer(
-            "color", COLOR_CATEGORY, num_channels=test_cube.shape[0]
-        ).add_mag(1)
+        layer = ds.add_layer(
+            "color",
+            COLOR_CATEGORY,
+            num_channels=test_cube.shape[0],
+            bounding_box=BoundingBox(offset, cube_size_without_channel),
+        )
+        mag_view = layer.add_mag(1)
 
         with mag_view.get_buffered_slice_writer(
             absolute_offset=offset, buffer_size=5, dimension=dim
@@ -114,7 +103,13 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
 
     for dim in [0, 1, 2]:
         ds = Dataset(tmp_path / f"buffered_slice_reader_{dim}", voxel_size=(1, 1, 1))
-        mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
+        layer = ds.add_layer(
+            "color",
+            COLOR_CATEGORY,
+            num_channels=3,
+            bounding_box=BoundingBox(offset, cube_size_without_channel),
+        )
+        mag_view = layer.add_mag(1)
         mag_view.write(test_cube, absolute_offset=offset)
 
         with (
@@ -142,16 +137,20 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
 
 
 def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
-    # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
-    layer = dataset.add_layer(
-        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
-    )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
-
     # Allocate some data (~ 8 MB)
     shape = (512, 512, 32)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=1,
+        bounding_box=BoundingBox((0, 0, 0), shape),
+    )
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
 
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
@@ -173,7 +172,11 @@ def test_buffered_slice_writer_unaligned(
     # Create DS
     dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
-        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=1,
+        bounding_box=BoundingBox((0, 0, 0), (513, 513, 36)),
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
 
@@ -216,7 +219,11 @@ def test_buffered_slice_writer_should_warn_about_unaligned_usage(
     # Create DS
     dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
-        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=1,
+        bounding_box=BoundingBox((0, 0, 0), (513, 513, 33)),
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
 
@@ -236,7 +243,8 @@ def test_buffered_slice_writer_should_warn_about_unaligned_usage(
                 section = data[:, :, z]
                 writer.send(section)
 
-        warning1, warning2 = recorded_warnings
+        warning1 = recorded_warnings[0]
+        warning2 = recorded_warnings[1]
         assert issubclass(warning1.category, UserWarning) and "Using an offset" in str(
             warning1.message
         )
@@ -253,7 +261,11 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
     # Create DS
     dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
-        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=1,
+        bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
 
@@ -279,7 +291,11 @@ def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -
     # Create DS
     dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
-        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=3
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=3,
+        bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
 
@@ -302,7 +318,11 @@ def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
     # Create DS
     dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
-        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=1
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=1,
+        bounding_box=BoundingBox((0, 0, 0), (512, 512, 40)),
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
 
@@ -335,3 +355,26 @@ def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
     )
 
     assert np.all(data == written_data)
+
+
+def test_buffered_slice_writer_resize_error(tmp_path: Path) -> None:
+    # Allocate some data (~ 8 MB)
+    shape = (512, 512, 32)
+    data = np.random.randint(0, 255, shape, dtype=np.uint8)
+
+    # Create DS
+    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=1,
+    )  # intentionally not setting a bounding box
+    mag1 = layer.add_mag("1")
+
+    with pytest.raises(ValueError):
+        # Write some slices
+        with mag1.get_buffered_slice_writer() as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)

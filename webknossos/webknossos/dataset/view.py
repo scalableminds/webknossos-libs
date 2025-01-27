@@ -37,12 +37,6 @@ def _assert_check_equality(args: Tuple["View", "View", int]) -> None:
     assert np.all(view_a.read() == view_b.read())
 
 
-_BLOCK_ALIGNMENT_WARNING = (
-    "[WARNING] write() was called on a compressed mag without block alignment. "
-    + "Performance will be degraded as the data has to be padded first."
-)
-
-
 class View:
     """A View represents a bounding box to a region of a specific StorageBackend with additional functionality.
 
@@ -248,8 +242,8 @@ class View:
     def write(
         self,
         data: np.ndarray,
-        resize: Optional[bool] = None,
         *,
+        allow_resize: Optional[bool] = None,
         json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -311,7 +305,7 @@ class View:
 
         Note:
             - Only one positioning parameter (offset or bounding_box) should be used
-            - For compressed data, writes should align with compression blocks
+            - For compressed data, writes should align with shards
             - For segmentation layers, call refresh_largest_segment_id() after writing
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
@@ -319,15 +313,15 @@ class View:
         assert not self.read_only, "Cannot write data to an read_only View"
 
         if json_update_allowed is not None:
-            warn_deprecated("json_update_allowed", "resize")
-            if resize is None:
-                resize = json_update_allowed
+            warn_deprecated("json_update_allowed", "allow_resize")
+            if allow_resize is None:
+                allow_resize = json_update_allowed
             else:
                 raise ValueError(
-                    "Cannot specify both `json_update_allowed` and `resize` arguments."
+                    "Cannot specify both `json_update_allowed` and `allow_resize` arguments."
                 )
-        if resize is None:
-            resize = False
+        if allow_resize is None:
+            allow_resize = False
 
         if all(
             i is None
@@ -377,15 +371,14 @@ class View:
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
-        if self._is_compressed():
-            if self._data_format == DataFormat.WKW:
-                for current_mag_bbox, chunked_data in self._prepare_compressed_write(
-                    current_mag_bbox, data, json_update_allowed
-                ):
-                    self._array.write(current_mag_bbox, chunked_data)
-            else:
-                self._check_shard_alignment(current_mag_bbox)
-                self._array.write(current_mag_bbox, data)
+        if self._data_format in (DataFormat.Zarr, DataFormat.Zarr3):
+            self._check_shard_alignment(current_mag_bbox)
+            self._array.write(current_mag_bbox, data)
+        elif self._is_compressed():
+            for current_mag_bbox, chunked_data in self._prepare_compressed_write(
+                current_mag_bbox, data
+            ):
+                self._array.write(current_mag_bbox, chunked_data)
         else:
             self._array.write(current_mag_bbox, data)
 
@@ -393,9 +386,14 @@ class View:
         """Check that the bounding box is aling with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
-        assert (
-            shard_bbox.intersected_with(self.bounding_box) == bbox
-        ), f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. Bounding box: {self.bounding_box}"
+        if shard_bbox.intersected_with(self.bounding_box) != bbox:
+            warnings.warn(
+                f"The bounding box to write {bbox} is not aligned with the "
+                + f"shard shape {shard_shape}. Performance will be degraded "
+                + f"as the data has to be padded first. Bounding box: {self.bounding_box}",
+                category=UserWarning,
+                stacklevel=2,
+            )
 
     def _prepare_compressed_write(
         self,
@@ -434,16 +432,19 @@ class View:
         into the specified volume). That way, the returned data can be written as a whole
         shard which is a requirement for compressed writes."""
 
-        aligned_bbox = current_mag_bbox.align_with_mag(
-            self._array.info.shard_shape, ceil=True
-        )
+        shard_shape = self._array.info.shard_shape
+        aligned_bbox = current_mag_bbox.align_with_mag(shard_shape, ceil=True)
 
         if current_mag_bbox != aligned_bbox:
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
                 warnings.warn(
-                    _BLOCK_ALIGNMENT_WARNING,
+                    f"The bounding box to write {current_mag_bbox} is not aligned with the "
+                    + f"shard shape {shard_shape}. Performance will be degraded "
+                    + f"as the data has to be padded first. Bounding box: {self.bounding_box}",
+                    category=UserWarning,
+                    stacklevel=2,
                 )
 
             aligned_data = self._read_without_checks(aligned_bbox)
@@ -785,17 +786,22 @@ class View:
                 + "This is only allowed for read-only views."
             )
 
+            shard_shape = self._array.info.shard_shape
             current_mag_bbox = mag1_bbox.in_mag(self._mag)
             current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
-                self._array.info.shard_shape, ceil=True
+                shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(
                 current_mag_aligned_bbox, dont_assert=True
             ):
+                bbox_str = str(current_mag_bbox)
+                if self._mag != Mag(1):
+                    bbox_str += f" ({mag1_bbox} in Mag 1)"
                 warnings.warn(
-                    "[WARNING] get_view() was called without block alignment. "
+                    "[WARNING] get_view() was called without shard alignment. "
+                    + f"The requested bounding box {bbox_str} is not aligned with the shard shape {shard_shape}. "
                     + "Please only use sequentially, parallel access across such views is error-prone.",
                     UserWarning,
                 )

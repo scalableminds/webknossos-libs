@@ -375,7 +375,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
 def test_view_read(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         wk_view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -392,7 +392,7 @@ def test_view_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         wk_view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -438,7 +438,7 @@ def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) ->
         data_format, output_path, "view_dataset_out_of_bounds"
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -465,7 +465,8 @@ def test_mag_view_write_out_of_bounds(
 
     assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 24)
     mag_view.write(
-        np.zeros((3, 1, 1, 48), dtype=np.uint8)
+        np.zeros((3, 1, 1, 48), dtype=np.uint8),
+        allow_resize=True,
     )  # this is bigger than the bounding_box
     assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 48)
 
@@ -485,7 +486,9 @@ def test_mag_view_write_out_of_bounds_mag2(
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
     assert color_layer.bounding_box.size == Vec3Int(24, 24, 24)
     mag_view.write(
-        np.zeros((3, 50, 1, 48), dtype=np.uint8), absolute_offset=(20, 20, 10)
+        np.zeros((3, 50, 1, 48), dtype=np.uint8),
+        absolute_offset=(20, 20, 10),
+        allow_resize=True,
     )  # this is bigger than the bounding_box
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
     assert color_layer.bounding_box.size == Vec3Int(120, 24, 58)
@@ -495,21 +498,31 @@ def test_mag_view_write_out_of_bounds_mag2(
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
     path_a = prepare_dataset_path(data_format, output_path / "a")
     path_b = prepare_dataset_path(data_format, output_path / "b")
     mag_a = (
         Dataset(path_a, voxel_size=(1, 1, 1))
-        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_layer(
+            "color",
+            COLOR_CATEGORY,
+            data_format=data_format,
+            bounding_box=BoundingBox((0, 0, 0), data.shape),
+        )
         .get_or_add_mag("1")
     )
     mag_b = (
         Dataset(path_b, voxel_size=(1, 1, 1))
-        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_layer(
+            "color",
+            COLOR_CATEGORY,
+            data_format=data_format,
+            bounding_box=BoundingBox((0, 0, 0), data.shape),
+        )
         .get_or_add_mag("1")
     )
-
-    np.random.seed(1234)
-    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
 
     mag_a.write(data)
     mag_b.write(data)
@@ -534,13 +547,13 @@ def test_update_new_bounding_box_offset(
     np.random.seed(1234)
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(
-        write_data, absolute_offset=(10, 10, 10)
+        write_data, absolute_offset=(10, 10, 10), allow_resize=True
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
     assert color_layer.bounding_box.topleft == Vec3Int(10, 10, 10)
     assert color_layer.bounding_box.size == Vec3Int(10, 10, 10)
 
     mag.write(
-        write_data, absolute_offset=(5, 5, 20)
+        write_data, absolute_offset=(5, 5, 20), allow_resize=True
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
     assert color_layer.bounding_box.topleft == Vec3Int(5, 5, 10)
     assert color_layer.bounding_box.size == Vec3Int(15, 15, 20)
@@ -552,8 +565,16 @@ def test_chunked_compressed_write() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     mag = (
         Dataset(ds_path, voxel_size=(1, 1, 1))
-        .get_or_add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
-        .get_or_add_mag("1", compress=True)
+        .get_or_add_layer(
+            "color",
+            COLOR_CATEGORY,
+            data_format=DataFormat.WKW,
+            bounding_box=BoundingBox(Vec3Int(1019, 1019, 1019), Vec3Int(10, 10, 10)),
+        )
+        .get_or_add_mag(
+            "1",
+            compress=True,
+        )
     )
 
     np.random.seed(1234)
@@ -581,7 +602,7 @@ def test_write_multi_channel_uint8(data_format: DataFormat, output_path: Path) -
 
     data = get_multichanneled_data(np.uint8)
 
-    mag.write(data)
+    mag.write(data, allow_resize=True)
 
     assert np.array_equal(data, mag.read())
 
@@ -604,7 +625,7 @@ def test_wkw_write_multi_channel_uint16(
 
     data = get_multichanneled_data(np.uint16)
 
-    mag.write(data)
+    mag.write(data, allow_resize=True)
     written_data = mag.read()
 
     assert np.array_equal(data, written_data)
@@ -656,7 +677,9 @@ def test_num_channel_mismatch_assertion(
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)  # 3 channels
 
     with pytest.raises(AssertionError):
-        mag.write(write_data)  # there is a mismatch between the number of channels
+        mag.write(
+            write_data, allow_resize=True
+        )  # there is a mismatch between the number of channels
 
     assure_exported_properties(ds)
 
@@ -878,7 +901,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     )
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
-    mag.write(absolute_offset=(70, 80, 90), data=original_data)
+    mag.write(absolute_offset=(70, 80, 90), data=original_data, allow_resize=True)
 
     # Test with executor
     with get_executor_for_args(None) as executor:
@@ -890,7 +913,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
     # Reset the data
-    mag.write(absolute_offset=(70, 80, 90), data=original_data)
+    mag.write(absolute_offset=(70, 80, 90), data=original_data, allow_resize=True)
 
     # Test without executor
     mag.for_each_chunk(
@@ -917,8 +940,11 @@ def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
         chunk_shape=8,
         chunks_per_shard=8,
     )
-    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
-    with pytest.warns(UserWarning, match="block alignment"):
+    mag.write(
+        data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
         for_each_chunking_advanced(ds, view)
 
@@ -945,7 +971,10 @@ def test_chunking_wkw_wrong_chunk_shape(
         chunk_shape=chunk_shape,
         chunks_per_shard=chunks_per_shard,
     )
-    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
+    mag.write(
+        data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
     view = mag.get_view()
 
     for_each_chunking_with_wrong_chunk_shape(view)
@@ -1110,7 +1139,7 @@ def test_get_view() -> None:
     np.random.seed(1234)
     write_data = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     # This operation updates the bounding box of the dataset according to the written data
-    mag.write(write_data, absolute_offset=(10, 20, 30))
+    mag.write(write_data, absolute_offset=(10, 20, 30), allow_resize=True)
 
     with pytest.raises(AssertionError):
         # The offset and size default to (0, 0, 0).
@@ -1119,7 +1148,7 @@ def test_get_view() -> None:
 
     assert mag.bounding_box.bottomright == Vec3Int(110, 220, 330)
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         # Therefore, creating a view with a size of (16, 16, 16) is now allowed
         wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
     assert wk_view.bounding_box == BoundingBox((10, 20, 30), (16, 16, 16))
@@ -1132,7 +1161,7 @@ def test_get_view() -> None:
     # But setting "read_only=True" still works
     mag.get_view(size=(26, 36, 46), absolute_offset=(0, 0, 0), read_only=True)
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         # Creating this subview works because the subview is completely inside the 'wk_view'.
         # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
         sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
@@ -1269,12 +1298,12 @@ def test_writing_subset_of_compressed_data_multi_channel(
             compress=True,
         )
     )
-    mag_view.write(write_data1)
+    mag_view.write(write_data1, allow_resize=True)
 
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -1311,12 +1340,12 @@ def test_writing_subset_of_compressed_data_single_channel(
             compress=True,
         )
     )
-    mag_view.write(write_data1)
+    mag_view.write(write_data1, allow_resize=True)
 
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -1352,18 +1381,20 @@ def test_writing_subset_of_compressed_data(
             compress=True,
         )
     )
-    mag_view.write((np.random.rand(120, 140, 160) * 255).astype(np.uint8))
+    mag_view.write(
+        (np.random.rand(120, 140, 160) * 255).astype(np.uint8), allow_resize=True
+    )
 
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         compressed_mag.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         compressed_mag.write(
             relative_offset=(20, 40, 60),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
@@ -1412,7 +1443,7 @@ def test_writing_subset_of_chunked_compressed_data(
             compress=True,
         )
     )
-    mag_view.write(write_data1)
+    mag_view.write(write_data1, allow_resize=True)
 
     # open compressed dataset
     compressed_view = (
@@ -1422,7 +1453,7 @@ def test_writing_subset_of_chunked_compressed_data(
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
         write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
@@ -1496,7 +1527,7 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
         "color", COLOR_CATEGORY, dtype_per_channel="uint8"
     )
     original_layer.add_mag(1).write(
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8), allow_resize=True
     )
     original_mag_2 = original_layer.add_mag(2)
     original_mag_2.write(data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8))
@@ -1508,6 +1539,7 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     layer.add_mag(1).write(
         absolute_offset=(6, 6, 6),
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8),
+        allow_resize=True,
     )
 
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
@@ -1526,7 +1558,7 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     # Note: The written data is fully inside the bounding box of the original data.
     # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
     write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    symlink_mag_2.write(absolute_offset=(0, 0, 0), data=write_data)
+    symlink_mag_2.write(absolute_offset=(0, 0, 0), data=write_data, allow_resize=True)
 
     assert np.array_equal(
         symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data
@@ -1584,8 +1616,8 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
     original_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    original_mag = original_layer.add_mag(1)
-    original_mag.write(data=original_data, absolute_offset=(6, 6, 6))
+    original_mag = original_layer.add_mag(1, compress=False)
+    original_mag.write(data=original_data, absolute_offset=(6, 6, 6), allow_resize=True)
 
     copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
     copy_layer = copy_ds.add_layer(
@@ -1601,7 +1633,8 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
     # Write new data in copied layer
     new_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    copy_mag.write(absolute_offset=(0, 0, 0), data=new_data)
+    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+        copy_mag.write(absolute_offset=(0, 0, 0), data=new_data, allow_resize=True)
 
     assert np.array_equal(
         copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
@@ -1623,7 +1656,7 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
     )
     original_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     original_mag = original_layer.add_mag(1)
-    original_mag.write(data=original_data, absolute_offset=(6, 6, 6))
+    original_mag.write(data=original_data, absolute_offset=(6, 6, 6), allow_resize=True)
 
     copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
     copy_layer = copy_ds.add_layer(
@@ -1639,7 +1672,7 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
     # Write new data in copied layer
     new_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    copy_mag.write(absolute_offset=(0, 0, 0), data=new_data)
+    copy_mag.write(absolute_offset=(0, 0, 0), data=new_data, allow_resize=True)
 
     assert np.array_equal(
         copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
@@ -1666,7 +1699,7 @@ def test_search_dataset_also_for_long_layer_name(
     assert not long_mag_file_path.exists()
 
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data, absolute_offset=(20, 20, 20))
+    mag.write(write_data, absolute_offset=(20, 20, 20), allow_resize=True)
 
     assert np.array_equal(
         mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)),
@@ -1852,7 +1885,10 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         num_channels=3,
         data_format=data_format,
     ).add_mag("1")
-    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
+    mag.write(
+        data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
     source_view = mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
 
     target_mag = (
@@ -1954,6 +1990,7 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
     mag.write(
         data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8),
         absolute_offset=(10, 20, 30),
+        allow_resize=True,
     )
     v_write = mag.get_view()
     v_read = mag.get_view(read_only=True)
@@ -1984,7 +2021,11 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
     data_size = Vec3Int(10, 20, 30)
     write_data = (np.random.rand(*data_size) * 255).astype(np.uint8)
     for offset in write_positions:
-        mag.write(absolute_offset=offset * mag.mag.to_vec3_int(), data=write_data)
+        mag.write(
+            absolute_offset=offset * mag.mag.to_vec3_int(),
+            data=write_data,
+            allow_resize=True,
+        )
 
     if is_remote_path(output_path):
         with pytest.warns(UserWarning, match=".*can be slow.*"):
@@ -2031,12 +2072,15 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_compression(data_format: DataFormat, output_path: Path) -> None:
-    new_dataset_path = copy_simple_dataset(data_format, output_path)
-    mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
+    new_dataset_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(new_dataset_path, voxel_size=(2, 2, 1))
+    mag1 = ds.add_layer(
+        "color", COLOR_CATEGORY, num_channels=3, data_format=data_format
+    ).add_mag(1, compress=False)
 
     # writing unaligned data to an uncompressed dataset
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
-    mag1.write(write_data, absolute_offset=(60, 80, 100))
+    mag1.write(write_data, absolute_offset=(60, 80, 100), allow_resize=True)
 
     assert not mag1._is_compressed()
 
@@ -2063,11 +2107,10 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        mag1.write(
-            (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
-        )
+    # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+    mag1.write(
+        (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+    )
 
     assure_exported_properties(mag1.layer.dataset)
 
@@ -2226,7 +2269,7 @@ def test_refresh_largest_segment_id() -> None:
     assert segmentation_layer.largest_segment_id is None
 
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    mag.write(data=write_data)
+    mag.write(data=write_data, allow_resize=True)
 
     segmentation_layer.refresh_largest_segment_id()
 
@@ -2280,6 +2323,7 @@ def test_read_bbox() -> None:
     mag.write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(50, 60, 70) * 255).astype(np.uint8),
+        allow_resize=True,
     )
 
     assert np.array_equal(
@@ -2305,6 +2349,7 @@ def test_add_copy_layer(data_format: DataFormat, output_path: Path) -> None:
     original_color_layer.add_mag(1).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     other_ds.add_layer(
         "segmentation",
@@ -2350,7 +2395,7 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(1)
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    mag.write(data=write_data)
+    mag.write(data=write_data, allow_resize=True)
 
     if output_path == REMOTE_TESTOUTPUT_DIR:
         # Cannot rename layers on remote storage
@@ -2512,7 +2557,7 @@ def test_pickle_view() -> None:
     mag1 = ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
 
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
-    mag1.write(data_to_write)
+    mag1.write(data_to_write, allow_resize=True)
     assert mag1._cached_array is not None
 
     with (ds_path / "save.p").open("wb") as f_write:
@@ -2622,6 +2667,7 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
         absolute_offset=(0, 0, 0),
         # assuming the layer has 3 channels:
         data=(np.random.rand(3, 24, 24, 24) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     test_layer.downsample(coarsest_mag=Mag(2))
 
@@ -2677,7 +2723,7 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     )
     # Copying some data into the output dataset
     input_data = finest_input_mag.read(absolute_offset=(0, 0, 0), size=(24, 24, 24))
-    output_mag.write(absolute_offset=(0, 0, 0), data=input_data)
+    output_mag.write(absolute_offset=(0, 0, 0), data=input_data, allow_resize=True)
     # Downsampling the layer to the magnification used in the input dataset
     output_layer.downsample(
         from_mag=output_mag.mag,

@@ -686,7 +686,6 @@ class Layer:
 
         # normalize the name of the mag
         mag = Mag(mag)
-        compression_mode = compress
 
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
@@ -709,8 +708,8 @@ class Layer:
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunks per shard do not match"
                 )
             if (
-                compression_mode is not None
-                and self._mags[mag].info.compression_mode != compression_mode
+                compress is not None
+                and self._mags[mag].info.compression_mode != compress
             ):
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match"
@@ -721,7 +720,7 @@ class Layer:
                 mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
-                compress=compression_mode or True,
+                compress=compress if compress is not None else True,
             )
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
@@ -1284,7 +1283,7 @@ class Layer:
         compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
-        buffer_shape: Optional[Vec3Int] = None,
+        buffer_shape: Optional[Vec3IntLike] = None,
         executor: Optional[Executor] = None,
     ) -> None:
         """Upsample data to finer magnifications.
@@ -1369,6 +1368,8 @@ class Layer:
             with get_executor_for_args(None, executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                else:
+                    buffer_shape = Vec3Int(buffer_shape)
                 func = named_partial(
                     upsample_cube_job,
                     mag_factors=mag_factors,
