@@ -386,7 +386,7 @@ class View:
         """Check that the bounding box is aling with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
-        if shard_bbox.intersected_with(self.bounding_box) != bbox:
+        if shard_bbox.intersected_with(self.bounding_box.in_mag(self._mag)) != bbox:
             warnings.warn(
                 f"The bounding box to write {bbox} is not aligned with the "
                 + f"shard shape {shard_shape}. Performance will be degraded "

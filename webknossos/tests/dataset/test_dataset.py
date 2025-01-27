@@ -1795,12 +1795,14 @@ def test_dataset_conversion_wkw_only() -> None:
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     seg_layer.add_mag(
         "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     wk_color_layer = origin_ds.add_layer("layer2", COLOR_CATEGORY, num_channels=3)
     wk_color_layer.add_mag(
@@ -1808,12 +1810,14 @@ def test_dataset_conversion_wkw_only() -> None:
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     wk_color_layer.add_mag(
         "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     converted_ds = origin_ds.copy_dataset(converted_path)
 
