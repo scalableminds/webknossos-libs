@@ -348,6 +348,10 @@ class Dataset:
                 raise FileNotFoundError(
                     f"Cannot open read-only dataset, could not find data at {self.path}."
                 )
+            if voxel_size_with_unit is _UNSPECIFIED_SCALE_FROM_OPEN:
+                raise FileNotFoundError(
+                    f"Could not find a valid dataset at {self.path}."
+                )
 
         dataset_existed_already = stored_dataset_properties is not None
         if dataset_existed_already:
