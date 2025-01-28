@@ -34,7 +34,10 @@ class _NodeDict(MutableMapping):
         self._id_to_node: Dict[int, Node] = {}
 
     def __getitem__(self, key: Union[Node, int]) -> Any:
-        return self._id_to_attrs[_get_id(key)]
+        return {
+            **self._id_to_attrs[_get_id(key)],
+            **self._id_to_node[_get_id(key)].get_dict(),
+        }
 
     def __setitem__(self, key: Union[Node, int], value: Dict) -> None:
         key_id = _get_id(key)
@@ -52,8 +55,8 @@ class _NodeDict(MutableMapping):
         del self._id_to_node[_get_id(key)]
         del self._id_to_attrs[_get_id(key)]
 
-    def __iter__(self) -> Iterator:
-        return iter(self._id_to_attrs)
+    def __iter__(self) -> Iterator[Node]:
+        return iter(self._id_to_node.values())
 
     def __len__(self) -> int:
         return len(self._id_to_attrs)
@@ -336,9 +339,7 @@ class Tree(nx.Graph):
             enforced_id=_enforced_id,
             skeleton=self._skeleton,
         )
-        super().add_node(
-            node,
-        )
+        super().add_node(node)
         return node
 
     def get_max_node_id(self) -> int:
@@ -352,9 +353,6 @@ class Tree(nx.Graph):
 
     def __hash__(self) -> int:
         return self._id
-
-    def nodes(self, data=True):
-        return self._node.items() if data else self._node.keys()
 
 
 class Graph(Tree):
