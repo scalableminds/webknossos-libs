@@ -310,7 +310,8 @@ class View:
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
         """
-        assert not self.read_only, "Cannot write data to an read_only View"
+        if self.read_only:
+            raise RuntimeError("Cannot write data to an read_only View")
 
         if json_update_allowed is not None:
             warn_deprecated("json_update_allowed", "allow_resize")
@@ -388,9 +389,9 @@ class View:
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
         if shard_bbox.intersected_with(self.bounding_box.in_mag(self._mag)) != bbox:
             warnings.warn(
-                f"The bounding box to write {bbox} is not aligned with the "
-                + f"shard shape {shard_shape}. Performance will be degraded "
-                + f"as the data has to be padded first. Bounding box: {self.bounding_box}",
+                f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
+                + "Performance will be degraded as existing shard data has to be read, combined and "
+                + f"written as whole shards. Bounding box: {self.bounding_box}",
                 category=UserWarning,
                 stacklevel=2,
             )
@@ -440,9 +441,9 @@ class View:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
                 warnings.warn(
-                    f"The bounding box to write {current_mag_bbox} is not aligned with the "
-                    + f"shard shape {shard_shape}. Performance will be degraded "
-                    + f"as the data has to be padded first. Bounding box: {self.bounding_box}",
+                    f"The bounding box to write {current_mag_bbox} is not aligned with the shard shape {shard_shape}. "
+                    + "Performance will be degraded as existing shard data has to be read, combined and "
+                    + f"written as whole shards. Bounding box: {self.bounding_box}",
                     category=UserWarning,
                     stacklevel=2,
                 )
@@ -816,7 +817,7 @@ class View:
 
     def get_buffered_slice_writer(
         self,
-        buffer_size: int = 32,
+        buffer_size: Optional[int] = None,
         dimension: int = 2,  # z
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -830,9 +831,9 @@ class View:
         Creates a BufferedSliceWriter that allows efficient writing of data slices by
         buffering multiple slices before performing the actual write operation.
 
-         Args:
+        Args:
             buffer_size (int): Number of slices to buffer before performing a write.
-                Defaults to 32.
+                Defaults to the size of the shard in the `dimension`.
             dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
                 Defaults to 2 (z-axis).
             relative_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates, relative
@@ -882,6 +883,9 @@ class View:
             not self._read_only
         ), "Cannot get a buffered slice writer on a read-only view."
 
+        if buffer_size is None:
+            buffer_size = self.info.shard_shape[dimension]
+
         return BufferedSliceWriter(
             view=self,
             buffer_size=buffer_size,
@@ -895,7 +899,7 @@ class View:
 
     def get_buffered_slice_reader(
         self,
-        buffer_size: int = 32,
+        buffer_size: Optional[int] = None,
         dimension: int = 2,  # z
         *,
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
@@ -910,7 +914,7 @@ class View:
 
         Args:
             buffer_size (int): Number of slices to buffer in memory at once.
-                Defaults to 32.
+                Defaults to the size of the shard in the `dimension`.
             dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
                 Defaults to 2 (z-axis).
             relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates,
@@ -948,6 +952,9 @@ class View:
             - The reader can be used as an iterator
         """
         from ._utils.buffered_slice_reader import BufferedSliceReader
+
+        if buffer_size is None:
+            buffer_size = self.info.shard_shape[dimension]
 
         return BufferedSliceReader(
             view=self,

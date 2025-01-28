@@ -29,7 +29,7 @@ def test_buffered_slice_writer() -> None:
         dtype_per_channel=dtype,
         bounding_box=BoundingBox(origin, (24, 24, 35)),
     )
-    mag_view = layer.add_mag(mag)
+    mag_view = layer.add_mag(mag, chunks_per_shard=(32, 32, 1))
 
     with mag_view.get_buffered_slice_writer(absolute_offset=origin) as writer:
         for i in range(13):
@@ -77,7 +77,7 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
             num_channels=test_cube.shape[0],
             bounding_box=BoundingBox(offset, cube_size_without_channel),
         )
-        mag_view = layer.add_mag(1)
+        mag_view = layer.add_mag(1, chunks_per_shard=(32, 32, 1))
 
         with mag_view.get_buffered_slice_writer(
             absolute_offset=offset, buffer_size=5, dimension=dim
@@ -109,7 +109,7 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
             num_channels=3,
             bounding_box=BoundingBox(offset, cube_size_without_channel),
         )
-        mag_view = layer.add_mag(1)
+        mag_view = layer.add_mag(1, chunks_per_shard=(32, 32, 1))
         mag_view.write(test_cube, absolute_offset=offset)
 
         with (
@@ -268,6 +268,7 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
         bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
     mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
+    assert mag1.info.shard_shape[2] == 32 * 4
 
     # Allocate some data (~ 3 MB) that covers multiple shards (also in z)
     shape = (160, 150, 140)
@@ -282,9 +283,9 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
                 section = data[:, :, z]
                 writer.send(section)
 
-    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape)
+    written_data = mag1.read(absolute_offset=(0, 0, 0), size=shape).squeeze()
 
-    assert np.all(data == written_data)
+    np.testing.assert_array_equal(data, written_data)
 
 
 def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -> None:
@@ -324,7 +325,7 @@ def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (512, 512, 40)),
     )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 8), chunks_per_shard=(8, 8, 1))
 
     # Allocate some data (~ 8 MB)
     shape = (512, 512, 32)

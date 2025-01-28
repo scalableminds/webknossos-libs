@@ -97,6 +97,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `DEFAULT_DATA_FORMAT` is now `Zarr3`
   - `compress` in `Layer.add_mag` is now `True`
   - `compress` in `Layer.upsample` is now `True`
+  - `buffer_size` in `View.get_buffered_slice_reader` is now computed from the shard shape
+  - `buffer_size` in `View.get_buffered_slice_writer` is now computed from the shard shape
 - Moved from positional argument to keyword-only argument:
   - `json_update_allowed` in `MagView.write`
   - `json_update_allowed` in `View.write`

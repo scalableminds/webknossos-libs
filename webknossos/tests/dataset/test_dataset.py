@@ -647,6 +647,45 @@ def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_write_layer(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(128, 128, 128) * 255).astype(np.uint8)
+    layer = ds.write_layer(
+        "color",
+        category=COLOR_CATEGORY,
+        data=data,
+        data_format=data_format,
+    )
+
+    np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
+
+
+@pytest.mark.parametrize(
+    "data_format,output_path",
+    [(DataFormat.Zarr3, TESTOUTPUT_DIR), (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR)],
+)
+def test_write_layer_5d(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(3, 2, 128, 128, 128) * 255).astype(np.uint8)
+    layer = ds.write_layer(
+        "color",
+        category=COLOR_CATEGORY,
+        data=data,
+        data_format=data_format,
+        axes=("c", "t", "x", "y", "z"),
+        chunks_per_shard=(4, 4, 4),
+    )
+
+    np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_read_padded_data(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     mag = (
@@ -1616,7 +1655,7 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
     original_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    original_mag = original_layer.add_mag(1, compress=False)
+    original_mag = original_layer.add_mag(1)
     original_mag.write(data=original_data, absolute_offset=(6, 6, 6), allow_resize=True)
 
     copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
@@ -2000,7 +2039,7 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
     v_read = mag.get_view(read_only=True)
 
     new_data = (np.random.rand(1, 5, 6, 7) * 255).astype(np.uint8)
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         v_read.write(data=new_data)
 
     v_write.write(data=new_data)

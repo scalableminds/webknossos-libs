@@ -136,6 +136,8 @@ _ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$"
 # This regex matches any character that is not allowed in a layer name.
 _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
+SAFE_LARGE_XY: int = 10000000000  # 10 billion
+
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
     for f in layer_path.iterdir():
@@ -1784,9 +1786,9 @@ class Dataset:
             expected_bbox = pims_image_sequence.expected_bbox
 
             # When the expected bbox is 2D the chunk_shape is set to 2D too.
-            if (
-                expected_bbox.get_shape("z") == 1
-                and layer.data_format == DataFormat.Zarr
+            if expected_bbox.get_shape("z") == 1 and layer.data_format in (
+                DataFormat.Zarr,
+                DataFormat.Zarr3,
             ):
                 if chunk_shape is None:
                     chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
@@ -1797,7 +1799,17 @@ class Dataset:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
 
             mag = Mag(mag)
-            layer.bounding_box = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
+
+            # Setting a large enough bounding box, because the exact bounding box
+            # cannot be know a priori all the time. It will be replaced with the
+            # correct bounding box after reading through all actual images.
+            safe_expected_bbox = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
+            safe_size = safe_expected_bbox.size.with_replaced(
+                safe_expected_bbox.axes.index("x"), SAFE_LARGE_XY
+            ).with_replaced(safe_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+            safe_expected_bbox = safe_expected_bbox.with_size(safe_size)
+            layer.bounding_box = safe_expected_bbox
+
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
@@ -1858,20 +1870,11 @@ class Dataset:
             )
 
             with warnings.catch_warnings():
-                # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
-                # However, dataset borders might change between different parallelized writes, when sizes differ.
-                # For differing sizes, a separate warning is thrown, so block alignment warnings can be ignored:
+                # For n-d datasets, the `axisOrder` property is stored with mags.
+                # At this point, we don't have any mags yet, so we can't compare the persisted properties.
                 warnings.filterwarnings(
                     "ignore",
-                    message=".*not aligned with the shard shape.*",
-                    category=UserWarning,
-                    module="webknossos",
-                )
-                # There are race-conditions about setting the bbox of the layer.
-                # The bbox is set correctly afterwards, ignore errors here:
-                warnings.filterwarnings(
-                    "ignore",
-                    message=".*properties were found on disk which are newer than the ones that were seen last time.*",
+                    message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
                     category=UserWarning,
                     module="webknossos",
                 )
@@ -1955,13 +1958,25 @@ class Dataset:
         axes: Optional[Iterable[str]] = None,
     ) -> Layer:
         if axes is not None:
+            axes = tuple(axes)
             assert len(axes) == data.ndim
-            bbox = NDBoundingBox(
-                VecInt.zeros(axes),
-                VecInt(data.shape, axes=axes),
-                axes=axes,
-            )
-            num_channels = data.shape[0]
+            if "c" in axes:
+                assert axes[0] == "c"
+                bbox = NDBoundingBox(
+                    VecInt.zeros(axes[1:]),
+                    VecInt(data.shape[1:], axes=axes[1:]),
+                    axes=axes[1:],
+                    index=tuple(range(1, len(axes))),
+                )
+                num_channels = data.shape[0]
+            else:
+                bbox = NDBoundingBox(
+                    VecInt.zeros(axes),
+                    VecInt(data.shape, axes=axes),
+                    axes=axes,
+                    index=tuple(range(1, len(axes) + 1)),
+                )
+                num_channels = 1
         else:
             if data.ndim == 0:
                 raise ValueError("Scalar values are not supported.")
@@ -1989,12 +2004,22 @@ class Dataset:
             dtype_per_channel=data.dtype,
             bounding_box=bbox,
         )
-        mag = layer.add_mag(
-            1,
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-            compress=True,
-        )
+
+        with warnings.catch_warnings():
+            # For n-d datasets, the `axisOrder` property is stored with mags.
+            # At this point, we don't have any mags yet, so we can't compare the persisted properties.
+            warnings.filterwarnings(
+                "ignore",
+                message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
+                category=UserWarning,
+                module="webknossos",
+            )
+            mag = layer.add_mag(
+                1,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                compress=True,
+            )
         mag.write(data, absolute_bounding_box=layer.bounding_box)
 
         if downsample:
