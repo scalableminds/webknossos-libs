@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a misleading error message when Dataset.open() can't find a valid dataset. [#1246](https://github.com/scalableminds/webknossos-libs/pull/1246)
 
 
 ## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23
