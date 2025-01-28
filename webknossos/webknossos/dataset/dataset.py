@@ -618,6 +618,7 @@ class Dataset:
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
         dataset_id: Optional[str] = None,
+        directory_name: Optional[str] = None,
     ) -> Tuple[ContextManager, str, str, str, Optional[str]]:
         """Parses the given arguments to
         * context_manager that should be entered,
@@ -633,6 +634,11 @@ class Dataset:
         current_context = _get_context()
 
         if dataset_id is None:
+            if directory_name is not None and organization_id is not None:
+                dataset_id = current_context.api_client.dataset_id_from_name(
+                    directory_name=directory_name, organization_id=organization_id
+                )
+                dataset_name = directory_name
             assert (
                 dataset_name_or_url is not None
             ), f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
@@ -726,6 +732,7 @@ class Dataset:
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
         dataset_id: Optional[str] = None,
+        directory_name: Optional[str] = None,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -766,6 +773,7 @@ class Dataset:
             sharing_token,
             webknossos_url,
             dataset_id,
+            directory_name,
         )
 
         with context_manager:
