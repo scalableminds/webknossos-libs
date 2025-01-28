@@ -21,13 +21,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:02 GMT
+        date: Tue, 28 Jan 2025 17:11:48 GMT
         content-type: application/json
         content-length: '682'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1738073165117,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1738084098622,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
@@ -54,13 +54,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:02 GMT
+        date: Tue, 28 Jan 2025 17:11:48 GMT
         content-type: application/json
-        content-length: '1505'
+        content-length: '1487'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738073341949,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738084307543,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}]
         compression: none
   - request:
       method: GET
@@ -84,13 +84,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:02 GMT
+        date: Tue, 28 Jan 2025 17:11:49 GMT
         content-type: application/json
-        content-length: '1503'
+        content-length: '1485'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738073343601,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738084309159,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
         compression: none
   - request:
       method: POST
@@ -115,19 +115,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:02 GMT
+        date: Tue, 28 Jan 2025 17:11:49 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"m_dmbWmOreHB4OMhssTxPA"}'
+        data: '{"token":"ck9_SognQ7M6qq8-vAMLXA"}'
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: m_dmbWmOreHB4OMhssTxPA
+        x-auth-token: ck9_SognQ7M6qq8-vAMLXA
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.10 aiohttp/3.10.9
@@ -144,7 +144,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:02 GMT
+        date: Tue, 28 Jan 2025 17:11:49 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -157,7 +157,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: m_dmbWmOreHB4OMhssTxPA
+        x-auth-token: ck9_SognQ7M6qq8-vAMLXA
         range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -175,7 +175,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:02 GMT
+        date: Tue, 28 Jan 2025 17:11:49 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -206,13 +206,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:03 GMT
+        date: Tue, 28 Jan 2025 17:11:49 GMT
         content-type: application/json
-        content-length: '1503'
+        content-length: '1485'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738073343687,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738084309273,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
         compression: none
   - request:
       method: POST
@@ -225,12 +225,12 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '988'
-        content-type: multipart/form-data; boundary=e3fb1094e03ac9597f1348a01e5496cc
+        content-length: '990'
+        content-type: multipart/form-data; boundary=44a5395123ae52340f2db156a083e469
       body:
         encoding: base64
         data: >-
-          LS1lM2ZiMTA5NGUwM2FjOTU5N2YxMzQ4YTAxZTU0OTZjYw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS1lM2ZiMTA5NGUwM2FjOTU5N2YxMzQ4YTAxZTU0OTZjYw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgAIXk8WsHHF5bvAQAADgQAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZNNb9wgEIbv+RWIe3f5cPwh2YmUW6VKPbVKe1mxNrFRbbAwbt38+g4Ytk7VSt3DmgFm5n2Ymfpxm0b0XdpFGd1geiIYSd2aTum+wat7eVfix4e72g2wsTzcIVTPwopJOnDxJmzIbZZWTVI7pOGkwWN2WcQ0jxIjY3uh1atwIfzHg3V5xugcIyytGCXaID89MV7BrygopSXNM4x+/n37tcGs9HJTEAcS0LTA7YKXpOA844Qcz8Xy7cms2qM9mQ21ZjT2JOA+jutrg8mJJQv4wXu/Zf3JPUadnN3QYFgNUvWDC0u1fFaLuo5A7uwK0PsrOMh3uV7NhpEz8wf54p4hF4SM1pc31tfd+qG6mCBhrYu0/yH7BuFle6kH4YAUhfv3TMr9WnUB8h8En7Qn6VBKD4s/YBjE+I1zTyFTND0PKzGKQD5ZIKrPb/tn76xDMXxJd+2hHISXZcVJVjGWE5JlN7LAWZQFz3PKMub/yjy5hnpRRgilhPKKVDSHGBj11qzze4CG5/LsoHcvlkDOSoljP2rTydjd0N/eCrc59j1KvEJoyvCFLgzfVK3zwbWWXS+XhB0mKAzQ1QrdDrNR2qXT1kx+ftJERRPeQTvYbnCQAJr9t8GgI77l0a8OcClEMIJq7xbGUuz4N+d0vz6n6f4FUEsBAhQDFAAAAAgAIXk8WsHHF5bvAQAADgQAAB8AAAAAAAAAAAAAAIABAAAAAHRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC5ubWxQSwUGAAAAAAEAAQBNAAAALAIAAAAADQotLWUzZmIxMDk0ZTAzYWM5NTk3ZjEzNDhhMDFlNTQ5NmNjLS0NCg==
+          LS00NGE1Mzk1MTIzYWU1MjM0MGYyZGIxNTZhMDgzZTQ2OQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS00NGE1Mzk1MTIzYWU1MjM0MGYyZGIxNTZhMDgzZTQ2OQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgAeJE8Wp/AR8vxAQAADwQAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjZNRj5wgEMff71MQ3ruLoiwmepfcW5MmfWpz7cuGVU5JFQxia+/Td0C4ek2bdB9WhmFm/j+YqR+2aUTfpV2U0Q3OTgQjqVvTKd03eHXP7zh+uL+r3QAby/0dQvUsrJikgxBvwobcZmnVJLVDGjwNHovrIqZ5lBgZ2wutXoQL6T8erOsTRueYYWnFKNEG9bNTTiv4XS5ZlvGMFRj9/Pv2S4Nz7uWmJA4koGmB0xfKCS8oqQg5+sXy7dGs2qM9mg21ZjT2JOA8jutbg8kpTxbwQ/R+ynpPiVEnZzc0GFaDVP3gwlItn9WibiOQO7sC9H4LDupdbzezYeTM/EE+uyeoBSmj9eWN9XW3fqguFkhY6yLtf8h+hfCyvdSDcECKwv19JuV+rboA+Q+CT9qTdCiVh8UfMDnk+I1TZlApmp4n5xhFIF8sENXnt/2zd9bhMfyT7trDc2Q8p7xkBakYKWmVQZ7dGzgrxhgtGKeMwz+/JGd4L0JJThnLSMlpRRirQE5vzTq/B2q4Lw8PgvfXEshZKXFsSG06GdsbGtxb4TTFvkmJlwhdGb7QhuGbnut8CK1l18slcYcRChN0s0K3w2yUdsnbmskPUBqpaAKqdrDd4CABNPtvg0FHvMxjXB3gUopgBNU+LMyl2PFfg9P5+pzG+xdQSwECFAMUAAAACAB4kTxan8BHy/EBAAAPBAAAHwAAAAAAAAAAAAAAgAEAAAAAdGVzdF9ib3VuZGluZ19ib3hfcm91bmR0cmlwLm5tbFBLBQYAAAAAAQABAE0AAAAuAgAAAAANCi0tNDRhNTM5NTEyM2FlNTIzNDBmMmRiMTU2YTA4M2U0NjktLQ0K
     response:
       status:
         code: 200
@@ -238,19 +238,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:03 GMT
+        date: Tue, 28 Jan 2025 17:11:49 GMT
         content-type: application/json
         content-length: '124'
       body:
         encoding: utf8
         data: >-
-          {"annotation":{"typ":"Explorational","id":"6798e4ff010000ab001c6880"},"messages":[{"success":"Successfully
+          {"annotation":{"typ":"Explorational","id":"67990fd50100002b00a17193"},"messages":[{"success":"Successfully
           uploaded file"}]}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/annotations/6798e4ff010000ab001c6880/download?skipVolumeData=false
+        /api/v9/annotations/67990fd50100002b00a17193/download?skipVolumeData=false
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -271,7 +271,7 @@ http_interactions:
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 14:09:03 GMT
+        date: Tue, 28 Jan 2025 17:11:49 GMT
         content-type: application/xml
         content-length: '1742'
       body:
@@ -279,22 +279,22 @@ http_interactions:
         data: |-
           <things>
             <meta name="writer" content="NmlWriter.scala"/>
-            <meta name="writerGitCommit" content="e1dd0672d5bd134d589faf6e6cbe15ad2a8fc9a2"/>
-            <meta name="timestamp" content="1738073343847"/>
-            <meta name="annotationId" content="6798e4ff010000ab001c6880"/>
+            <meta name="writerGitCommit" content="13f8c143df4c37980e34b1ea5ed110ce9fb9374f"/>
+            <meta name="timestamp" content="1738084309487"/>
+            <meta name="annotationId" content="67990fd50100002b00a17193"/>
             <meta name="username" content="user_A last_A"/>
             <parameters>
               <experiment name="l4_sample" organization="Organization_X" datasetId="59e9cfbdba632ac2ab8b23b5" description="" wkUrl="http://localhost:9000"/>
               <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
               <offset x="0" y="0" z="0"/>
-              <time ms="1738073343783"/>
+              <time ms="1738084309387"/>
               <editPosition x="0" y="0" z="0"/>
               <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
               <zoomLevel zoom="2.0"/>
               <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
-              <userBoundingBox id="1" name="task bounding box" color.r="0.6282000292349063" color.g="0.3087060428045403" color.b="0.003949867440677046" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.19929862555642996" color.g="0.07475594466275981" color.b="0.8160125674869155" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
             </parameters>
-            <thing id="2" color.r="0.12001101672649384" color.g="0.7873661518096924" color.b="0.03889304772019386" color.a="1.0" name="a tree" groupId="1">
+            <thing id="2" color.r="0.030236611142754555" color.g="0.9666346907615662" color.b="0.1823856383562088" color.a="1.0" name="a tree" groupId="1">
               <nodes>
                 <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
               </nodes>
