@@ -165,7 +165,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
-          version: "0.4.22"
+          version: "0.5.25"
 
       - name: Install proxay
         run: npm install -g proxay
@@ -187,7 +187,7 @@ jobs:
 
       - name: Python tests
         timeout-minutes: 30
-        run: ./test.sh -vv -p no:faulthandler --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: ./test.sh -vv --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
       - name: Check if git is dirty
         run: |
