@@ -3,8 +3,6 @@ set -eEuo pipefail
 
 source local_wk_setup.sh
 
-export MULTIPROCESSING_DEFAULT_START_METHOD=${MULTIPROCESSING_DEFAULT_START_METHOD:-spawn}
-
 # Note that pytest should be executed via `python -m`, since
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports
