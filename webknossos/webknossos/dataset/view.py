@@ -244,6 +244,7 @@ class View:
         data: np.ndarray,
         *,
         allow_resize: Optional[bool] = None,
+        allow_unaligned: bool = True,
         json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -260,8 +261,11 @@ class View:
             data (np.ndarray): The data to write. For single-channel data, shape should
                 be (x, y, y). For multi-channel data, shape should be (channels, x, y, z).
                 Shape must match the target region size.
-            json_update_allowed (bool, optional): Whether to allow updating JSON metadata.
-                Set to False when executing writes in parallel. Defaults to True.
+            allow_resize (bool, optional): If True, allows updating the layer's bounding
+                box if the write extends beyond it. Defaults to False.
+            allow_unaligned (bool, optional): If True, allows writing data to without
+                being aligned to the shard shape. Defaults to True.
+            json_update_allowed (bool, optional): Deprecated, use allow_resize instead.
             relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
             absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
@@ -373,10 +377,12 @@ class View:
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
         if self._data_format in (DataFormat.Zarr, DataFormat.Zarr3):
-            self._check_shard_alignment(current_mag_bbox)
+            if not allow_unaligned:
+                self._check_shard_alignment(current_mag_bbox)
             self._array.write(current_mag_bbox, data)
         elif self._is_compressed():
-            self._check_shard_alignment(current_mag_bbox)
+            if not allow_unaligned:
+                self._check_shard_alignment(current_mag_bbox)
             for current_mag_bbox, chunked_data in self._prepare_compressed_write(
                 current_mag_bbox, data
             ):
