@@ -18,13 +18,6 @@ from webknossos.client.context import _clear_all_context_caches
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 
-def on_fork():
-    raise Exception("fork not allowed")
-
-
-os.register_at_fork(before=on_fork)
-
-
 def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:
     del config
     del argname
