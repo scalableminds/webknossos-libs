@@ -376,6 +376,7 @@ class View:
             self._check_shard_alignment(current_mag_bbox)
             self._array.write(current_mag_bbox, data)
         elif self._is_compressed():
+            self._check_shard_alignment(current_mag_bbox)
             for current_mag_bbox, chunked_data in self._prepare_compressed_write(
                 current_mag_bbox, data
             ):
@@ -438,16 +439,6 @@ class View:
 
         if current_mag_bbox != aligned_bbox:
             # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
-            if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
-                warnings.warn(
-                    f"The bounding box to write {current_mag_bbox} is not aligned with the shard shape {shard_shape}. "
-                    + "Performance will be degraded as existing shard data has to be read, combined and "
-                    + f"written as whole shards. Bounding box: {self.bounding_box}",
-                    category=UserWarning,
-                    stacklevel=2,
-                )
-
             aligned_data = self._read_without_checks(aligned_bbox)
 
             index_slice = (slice(None, None),) + current_mag_bbox.offset(
