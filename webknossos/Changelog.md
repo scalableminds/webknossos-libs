@@ -108,6 +108,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 
 ### Added
+- Added support for python 3.13. [#1240](https://github.com/scalableminds/webknossos-libs/pull/1240)
 
 ### Changed
 
