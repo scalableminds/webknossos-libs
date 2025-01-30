@@ -1,6 +1,6 @@
 import itertools
 import os
-from collections.abc import Iterator, Iterable
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 import pytest

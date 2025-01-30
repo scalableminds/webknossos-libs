@@ -160,9 +160,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ matrix.python-version == '3.11' }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -187,6 +184,9 @@ jobs:
       - name: Check typing
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./typecheck.sh
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Some tests
         timeout-minutes: 10
