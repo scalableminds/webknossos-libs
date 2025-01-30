@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.5...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.16.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.5) - 2025-01-30
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.4...v0.16.5)
 
 ### Added
 - Added support for python 3.13. [#1240](https://github.com/scalableminds/webknossos-libs/pull/1240)
@@ -23,6 +33,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug with loading metadata lists. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
+
 
 
 ## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23
