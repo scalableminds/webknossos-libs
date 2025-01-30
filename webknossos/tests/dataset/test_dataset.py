@@ -6,6 +6,7 @@ from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
 import pytest
+from cluster_tools import get_executor
 from jsonschema import validate
 from upath import UPath
 
@@ -34,7 +35,6 @@ from webknossos.dataset.properties import (
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import (
     copytree,
-    get_executor_for_args,
     is_remote_path,
     named_partial,
     rmtree,
@@ -111,7 +111,7 @@ def advanced_chunk_job(args: Tuple[View, int]) -> None:
 
 
 def for_each_chunking_with_wrong_chunk_shape(view: View) -> None:
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
@@ -133,7 +133,7 @@ def for_each_chunking_with_wrong_chunk_shape(view: View) -> None:
 
 
 def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         view.for_each_chunk(
             advanced_chunk_job,
             executor=executor,
@@ -943,7 +943,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     mag.write(absolute_offset=(70, 80, 90), data=original_data, allow_resize=True)
 
     # Test with executor
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         mag.for_each_chunk(
             chunk_job,
             chunk_shape=shard_shape,
@@ -1953,7 +1953,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
     target_mag.layer.bounding_box = BoundingBox((0, 0, 0), (256, 256, 256))
     target_view = target_mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
 
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         func = named_partial(
             copy_and_transform_job, name="foo", val=42
         )  # curry the function with further arguments
@@ -2009,7 +2009,7 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     layer2.bounding_box = BoundingBox((0, 0, 0), (300, 300, 300))
     target_view = target_mag_view.get_view()
 
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         for test_case in test_cases_wk:
             with pytest.raises(AssertionError):
                 source_view.for_zipped_chunks(

@@ -185,12 +185,12 @@ jobs:
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./typecheck.sh
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
 
       - name: Some tests
         timeout-minutes: 10
-        run: ./test.sh -vv -s tests/dataset/test_dataset.py::test_chunking_wkw_wrong_chunk_shape
+        run: ./test.sh -vv -s tests/dataset/test_dataset.py::test_chunking_wk tests/dataset/test_dataset.py::test_chunking_wkw_wrong_chunk_shape
 
       - name: Python tests
         timeout-minutes: 30
