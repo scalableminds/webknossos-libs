@@ -18,8 +18,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added support for python 3.13. [#1240](https://github.com/scalableminds/webknossos-libs/pull/1240)
 
 ### Changed
+- `Dataset.open_remote()` adds another method to disambiguate dataset_name and organization_id. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
 
 ### Fixed
+- Fixed a bug with loading metadata lists. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
 
 
 ## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23
