@@ -217,11 +217,6 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         return fut.result()
 
     def shutdown(self, wait: bool = True, *, cancel_futures: bool = False) -> None:
-        if cancel_futures:
-            # cancel_futures was added in Python 3.9, ignoring it as 3.8 is supported:
-            logging.warning(
-                "The provided cancel_futures argument is ignored by MultiprocessingExecutor."
-            )
-        super().shutdown(wait=wait)
+        super().shutdown(wait=wait, cancel_futures=cancel_futures)
         if self._mp_logging_handler_pool is not None:
             self._mp_logging_handler_pool.close()
