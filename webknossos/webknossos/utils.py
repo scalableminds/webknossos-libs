@@ -139,20 +139,20 @@ def infer_metadata_type(value: Union[str, int, float, Sequence[str]]) -> str:
 
 
 def parse_metadata_value(
-    value: str, ts_type: str
+    value: Union[str, List[str]], ts_type: str
 ) -> Union[str, int, float, Sequence[str]]:
     if ts_type == "string[]":
-        result = list(value)
+        return list(str(v) for v in value)
     elif ts_type == "number":
+        assert not isinstance(value, list)
         try:
-            result = int(value)
+            return int(value)
         except ValueError:
-            result = float(value)
+            return float(value)
     elif ts_type == "string":
-        result = value
+        return str(value)
     else:
         raise ValueError(f"Unknown metadata type {ts_type}")
-    return result
 
 
 def wait_and_ensure_success(
