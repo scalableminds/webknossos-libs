@@ -2,7 +2,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v9/annotations/570ba0092a7c0e980056fe9b/info?timestamp=1737379983000
+        /api/v9/annotations/570ba0092a7c0e980056fe9b/info?timestamp=1738236191000
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -22,7 +22,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 20 Jan 2025 13:33:02 GMT
+        date: Thu, 30 Jan 2025 11:23:10 GMT
         content-type: application/json
         content-length: '1929'
       body:
