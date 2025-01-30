@@ -1,13 +1,15 @@
 import itertools
 import os
+from collections.abc import Iterator, Iterable
 from pathlib import Path
-from typing import Iterable, Iterator
 
 import pytest
 from upath import UPath
 
 import webknossos as wk
 from webknossos.utils import is_remote_path
+
+pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture
