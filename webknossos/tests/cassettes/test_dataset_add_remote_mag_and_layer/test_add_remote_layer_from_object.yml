@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:19 GMT
         content-type: application/json
         content-length: '682'
       body:
@@ -54,13 +54,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:19 GMT
         content-type: application/json
-        content-length: '1478'
+        content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738083350394,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246699107,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -84,13 +84,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/json
-        content-length: '1476'
+        content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738083350740,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246700495,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -115,17 +115,17 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"0dk2nWzKMx7luCVd7z2zfQ"}'
+        data: '{"token":"4HX97Di2GOdn8l6S432t1Q"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -147,7 +147,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/octet-stream
         content-length: '1000'
       body:
@@ -157,7 +157,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -179,7 +179,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/octet-stream
         content-length: '360'
       body:
@@ -189,7 +189,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -211,7 +211,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/octet-stream
         content-length: '120'
       body:
@@ -221,7 +221,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -243,7 +243,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/octet-stream
         content-length: '20'
       body:
@@ -252,7 +252,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -274,7 +274,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/octet-stream
         content-length: '6'
       body:
@@ -283,7 +283,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -305,7 +305,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:50 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/octet-stream
         content-length: '4000'
       body:
@@ -315,7 +315,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -337,7 +337,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:51 GMT
+        date: Thu, 30 Jan 2025 14:18:20 GMT
         content-type: application/octet-stream
         content-length: '1440'
       body:
@@ -347,7 +347,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -369,7 +369,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:51 GMT
+        date: Thu, 30 Jan 2025 14:18:21 GMT
         content-type: application/octet-stream
         content-length: '480'
       body:
@@ -379,7 +379,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -401,7 +401,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:51 GMT
+        date: Thu, 30 Jan 2025 14:18:21 GMT
         content-type: application/octet-stream
         content-length: '80'
       body:
@@ -411,7 +411,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=0dk2nWzKMx7luCVd7z2zfQ
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=4HX97Di2GOdn8l6S432t1Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -433,7 +433,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:51 GMT
+        date: Thu, 30 Jan 2025 14:18:21 GMT
         content-type: application/octet-stream
         content-length: '24'
       body:
@@ -464,13 +464,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         content-type: application/json
-        content-length: '1478'
+        content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738083350740,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246700495,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -495,13 +495,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         content-type: application/json
-        content-length: '1476'
+        content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738083352750,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246702611,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
@@ -526,7 +526,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -558,7 +558,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -590,7 +590,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -666,7 +666,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -742,7 +742,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -818,7 +818,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -894,7 +894,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -970,7 +970,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -1046,7 +1046,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1122,7 +1122,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1198,7 +1198,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1274,7 +1274,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Jan 2025 16:55:52 GMT
+        date: Thu, 30 Jan 2025 14:18:22 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
