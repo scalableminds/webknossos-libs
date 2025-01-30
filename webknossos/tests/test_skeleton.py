@@ -452,3 +452,26 @@ def test_add_tree_with_group() -> None:
     skeleton_a = create_dummy_skeleton()
 
     skeleton_a.add_tree(tree)
+
+
+def test_behave_like_nx_graph() -> None:
+    s = wk.Skeleton((1, 1, 1), dataset_name="test_dataset")
+    g = s.add_group("test")
+    tree = g.add_tree("t")
+    node1 = tree.add_node((1, 2, 3))
+    node2 = tree.add_node((4, 5, 6))
+    tree.add_edge(node1, node2)
+
+    for node, node_data in tree.nodes(data=True):
+        assert isinstance(node, wk.Node)
+        assert isinstance(node_data, dict)
+    assert len(tree.nodes) == 2
+
+    # remove nodes with position (1,2,3)
+    nodes_to_remove = []
+    for node, node_data in tree.nodes(data=True):
+        if node_data["position"].to_tuple() == (1, 2, 3):
+            nodes_to_remove.append(node)
+    for node in nodes_to_remove:
+        tree.remove_node(node)
+    assert len(tree.nodes) == 1
