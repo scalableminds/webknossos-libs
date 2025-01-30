@@ -1,6 +1,6 @@
 FROM python:3.11
 
-COPY --from=ghcr.io/astral-sh/uv:0.4.20 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.22 /uv /bin/uv
 
 RUN mkdir /cluster_tools
 COPY . /cluster_tools
