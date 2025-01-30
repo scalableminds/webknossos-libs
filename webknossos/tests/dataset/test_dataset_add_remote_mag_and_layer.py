@@ -1,5 +1,6 @@
 import itertools
 import os
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Iterable
 
@@ -9,11 +10,14 @@ from upath import UPath
 import webknossos as wk
 from webknossos.utils import is_remote_path
 
+pytestmark = [pytest.mark.use_proxay]
 
-def get_sample_remote_dataset() -> wk.Dataset:
-    return wk.Dataset.download(
+
+@pytest.fixture
+def sample_remote_dataset(tmp_path: Path) -> Iterator[wk.Dataset]:
+    yield wk.Dataset.download(
         "l4_sample",
-        path="testoutput/l4_sample",
+        path=tmp_path / "l4_sample",
         bbox=wk.BoundingBox((3457, 3323, 1204), (10, 10, 10)),
     )
 
@@ -22,16 +26,16 @@ pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture(scope="module")
-def sample_layer_and_mag_name() -> Iterable[tuple[str, str]]:
+def sample_layer_and_mag_name() -> list[tuple[str, str]]:
     layer_names = ["color", "segmentation"]
     mag_names = ["1", "2-2-1", "4-4-1"]
-    return itertools.product(layer_names, mag_names)
+    return list(itertools.product(layer_names, mag_names))
 
 
 def test_add_remote_mags_from_mag_view(
+    sample_remote_dataset: wk.Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    sample_remote_dataset = get_sample_remote_dataset()
     remote_dataset = wk.Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
@@ -59,9 +63,9 @@ def test_add_remote_mags_from_mag_view(
 
 
 def test_add_remote_mags_from_path(
+    sample_remote_dataset: wk.Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    sample_remote_dataset = get_sample_remote_dataset()
     remote_dataset = wk.Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
@@ -89,8 +93,7 @@ def test_add_remote_mags_from_path(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-def test_add_remote_layer_from_object() -> None:
-    sample_remote_dataset = get_sample_remote_dataset()
+def test_add_remote_layer_from_object(sample_remote_dataset: wk.Dataset) -> None:
     remote_dataset = wk.Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
@@ -105,8 +108,7 @@ def test_add_remote_layer_from_object() -> None:
         ), "Added layer should have a remote path matching the remote layer added."
 
 
-def test_add_remote_layer_from_path() -> None:
-    sample_remote_dataset = get_sample_remote_dataset()
+def test_add_remote_layer_from_path(sample_remote_dataset: wk.Dataset) -> None:
     remote_dataset = wk.Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )

@@ -29,11 +29,11 @@ services:
       POSTGRES_PASSWORD: postgres
 
   fossildb:
-    image: scalableminds/fossildb:0.1.32
+    image: scalableminds/fossildb:0.1.34
     command:
       - fossildb
       - -c
-      - skeletons,skeletonUpdates,volumes,volumeData,volumeUpdates,volumeSegmentIndex,editableMappings,editableMappingUpdates,editableMappingsInfo,editableMappingsAgglomerateToGraph,editableMappingsSegmentToAgglomerate
+      - skeletons,volumes,volumeData,volumeSegmentIndex,editableMappingsInfo,editableMappingsAgglomerateToGraph,editableMappingsSegmentToAgglomerate,annotations,annotationUpdates
     user: ${USER_UID:-1000}:${USER_GID:-1000}
 
   redis:
