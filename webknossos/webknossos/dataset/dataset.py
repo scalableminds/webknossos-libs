@@ -601,12 +601,12 @@ class Dataset:
                 name=dataset_name, organization_id=organization_id
             ).keys()
         )
-        if (
+        if len(possible_ids) == 0 and (
             dataset_id := current_context.api_client_with_auth.dataset_id_from_name(
                 dataset_name, organization_id
             )
-        ) and dataset_id not in possible_ids:
-            possible_ids.insert(0, dataset_id)
+        ):
+            possible_ids.append(dataset_id)
 
         if len(possible_ids) == 0:
             raise ValueError(
