@@ -142,8 +142,7 @@ def parse_metadata_value(
     value: str, ts_type: str
 ) -> Union[str, int, float, Sequence[str]]:
     if ts_type == "string[]":
-        result = json.loads(value, parse_int=str, parse_float=str)
-        assert isinstance(result, list), f"Expected a list, got {type(result)}"
+        result = list(value)
     elif ts_type == "number":
         try:
             result = int(value)
