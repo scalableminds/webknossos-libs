@@ -244,7 +244,7 @@ class View:
         data: np.ndarray,
         *,
         allow_resize: Optional[bool] = None,
-        allow_unaligned: bool = True,
+        allow_unaligned: Optional[bool] = None,
         json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -327,6 +327,9 @@ class View:
                 )
         if allow_resize is None:
             allow_resize = False
+
+        if allow_unaligned is None:
+            allow_unaligned = not allow_resize
 
         if all(
             i is None
