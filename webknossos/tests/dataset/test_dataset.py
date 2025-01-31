@@ -1946,7 +1946,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         .get_or_add_mag(
             "1",
             chunk_shape=Vec3Int.full(8),
-            chunks_per_shard=(4 if data_format == DataFormat.WKW else 1),
+            chunks_per_shard=(4 if data_format != DataFormat.Zarr else 1),
         )
     )
 
