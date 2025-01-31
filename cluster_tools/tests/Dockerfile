@@ -1,4 +1,6 @@
-FROM python:3.11
+ARG PYTHON_VERSION="3.11"
+
+FROM python:${PYTHON_VERSION}
 
 COPY --from=ghcr.io/astral-sh/uv:0.4.20 /uv /bin/uv
 
