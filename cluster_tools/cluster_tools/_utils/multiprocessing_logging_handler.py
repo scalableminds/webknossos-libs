@@ -52,22 +52,22 @@ class _MultiprocessingLoggingHandler(logging.Handler):
                 record = self.queue.get(timeout=0.2)
                 if record is not None:
                     self.wrapped_handler.emit(record)
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            # The following errors pop up quite often.
-            # It seems that they can be safely ignored, though.
-            # The reason for those might be that the sending end was closed.
-            except (
-                BrokenPipeError,
-                EOFError,
-                ConnectionResetError,
-                multiprocessing.managers.RemoteError,
-            ):
-                break
             except QueueEmpty:
                 # This case is reached when the timeout in queue.get is hit. Pass, to
                 # check whether the handler was closed.
                 pass
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            # # The following errors pop up quite often.
+            # # It seems that they can be safely ignored, though.
+            # # The reason for those might be that the sending end was closed.
+            # except (
+            #     BrokenPipeError,
+            #     EOFError,
+            #     ConnectionResetError,
+            #     multiprocessing.managers.RemoteError,
+            # ):
+            #     break
             except Exception:
                 traceback.print_exc(file=sys.stderr)
 
