@@ -2833,7 +2833,12 @@ def test_remote_dataset_access_metadata() -> None:
 
     ds.metadata["key"] = "value"
     assert ds.metadata["key"] == "value"
-    assert len(ds.metadata) == 1
+
+    ds.metadata["number"] = 42
+    assert ds.metadata["number"] == 42
+
+    ds.metadata["list"] = ["a", "b", "c"]
+    assert ds.metadata["list"] == ["a", "b", "c"]
 
     assert len(ds.folder.metadata) == 1
 

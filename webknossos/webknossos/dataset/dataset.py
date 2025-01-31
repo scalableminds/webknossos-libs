@@ -587,11 +587,21 @@ class Dataset:
         dataset_name: str,
         organization_id: str,
     ) -> str:
+        from ..client.context import _get_context
+
+        current_context = _get_context()
         possible_ids = list(
             cls.get_remote_datasets(
                 name=dataset_name, organization_id=organization_id
             ).keys()
         )
+        if len(possible_ids) == 0 and (
+            dataset_id := current_context.api_client_with_auth.dataset_id_from_name(
+                dataset_name, organization_id
+            )
+        ):
+            possible_ids.append(dataset_id)
+
         if len(possible_ids) == 0:
             raise ValueError(
                 f"Dataset {dataset_name} not found in organization {organization_id}."

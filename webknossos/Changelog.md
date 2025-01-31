@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.5...HEAD)
 
 ### Breaking Changes
 - Changed writing behavior. There is a new argument `allow_resize` for `MagView.write` and `View.write`, which defaults to `False`. If set to `True`, the bounding box of underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing.
@@ -108,11 +108,25 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 
 ### Added
-- Added support for python 3.13. [#1240](https://github.com/scalableminds/webknossos-libs/pull/1240)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.16.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.5) - 2025-01-30
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.4...v0.16.5)
+
+### Added
+- Added support for python 3.13. [#1240](https://github.com/scalableminds/webknossos-libs/pull/1240)
+
+### Changed
+- When iterating over `Tree.nodes(data=True)` the nodes data dict was empty. To enable easier access to the data stored in each Node the properties of a Node are included in its data dict now. [#1241](https://github.com/scalableminds/webknossos-libs/pull/1241)
+- `Dataset.open_remote()` adds another method to disambiguate dataset_name and organization_id. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
+
+### Fixed
+- Fixed a bug with loading metadata lists. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
+
 
 
 ## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23

@@ -33,7 +33,10 @@ class _NodeDict(MutableMapping):
         self._id_to_node: Dict[int, Node] = {}
 
     def __getitem__(self, key: Union[Node, int]) -> Any:
-        return self._id_to_attrs[_get_id(key)]
+        return {
+            **self._id_to_attrs[_get_id(key)],
+            **self._id_to_node[_get_id(key)].get_dict(),
+        }
 
     def __setitem__(self, key: Union[Node, int], value: Dict) -> None:
         key_id = _get_id(key)
