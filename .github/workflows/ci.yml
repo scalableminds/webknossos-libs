@@ -86,7 +86,11 @@ jobs:
           ./kind create cluster --config=tests/cluster-config.yaml
           ./kind export kubeconfig
 
-          docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
+          docker build \
+            --build-arg PYTHON_VERSION=${{ matrix.python-version }} \
+            -f tests/Dockerfile \
+            -t scalableminds/cluster-tools:latest \
+            .
           ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
