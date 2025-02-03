@@ -198,6 +198,8 @@ jobs:
 
       - name: Python tests
         timeout-minutes: 30
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: ./test.sh -vv -s --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
       - name: Check if git is dirty

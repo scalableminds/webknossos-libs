@@ -78,10 +78,10 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             initializer=initializer,
             initargs=initargs,
         )
-        if self._mp_context.get_start_method() == "fork":
-            self._mp_logging_handler_pool = None
-        else:
-            self._mp_logging_handler_pool = _MultiprocessingLoggingHandlerPool()
+        # if self._mp_context.get_start_method() == "fork":
+        #     self._mp_logging_handler_pool = None
+        # else:
+        #     self._mp_logging_handler_pool = _MultiprocessingLoggingHandlerPool()
 
     @classmethod
     def as_completed(cls, futs: List[Future[_T]]) -> Iterator[Future[_T]]:
