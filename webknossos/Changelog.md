@@ -10,17 +10,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.5...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added support for python 3.13. [#1240](https://github.com/scalableminds/webknossos-libs/pull/1240)
 
 ### Changed
 
 ### Fixed
 - Fixed a misleading error message when Dataset.open() can't find a valid dataset. [#1246](https://github.com/scalableminds/webknossos-libs/pull/1246)
+
+
+## [0.16.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.5) - 2025-01-30
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.4...v0.16.5)
+
+### Added
+- Added support for python 3.13. [#1240](https://github.com/scalableminds/webknossos-libs/pull/1240)
+
+### Changed
+- When iterating over `Tree.nodes(data=True)` the nodes data dict was empty. To enable easier access to the data stored in each Node the properties of a Node are included in its data dict now. [#1241](https://github.com/scalableminds/webknossos-libs/pull/1241)
+- `Dataset.open_remote()` adds another method to disambiguate dataset_name and organization_id. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
+
+### Fixed
+- Fixed a bug with loading metadata lists. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
 
 
 ## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23
@@ -51,7 +64,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
 - Fixed an issue when shallow copying datasets with a remote mag. [#1224](https://github.com/scalableminds/webknossos-libs/pull/1224)
-
 
 
 ## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18

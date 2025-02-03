@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 import attr
 
@@ -81,3 +81,18 @@ class Node:
 
     def __hash__(self) -> int:
         return self._id
+
+    def get_dict(self) -> Dict[str, Any]:
+        return {
+            "position": self.position,
+            "comment": self.comment,
+            "radius": self.radius,
+            "rotation": self.rotation,
+            "inVp": self.inVp,
+            "inMag": self.inMag,
+            "bitDepth": self.bitDepth,
+            "interpolation": self.interpolation,
+            "time": self.time,
+            "is_branchpoint": self.is_branchpoint,
+            "branchpoint_time": self.branchpoint_time,
+        }

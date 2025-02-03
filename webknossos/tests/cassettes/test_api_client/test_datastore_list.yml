@@ -21,11 +21,11 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 20 Jan 2025 13:33:02 GMT
+        date: Thu, 30 Jan 2025 14:35:19 GMT
         content-type: application/json
-        content-length: '147'
+        content-length: '129'
       body:
         encoding: utf8
         data: >-
-          [{"name":"localhost","url":"http://localhost:9000","isScratch":false,"allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]
+          [{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false}]
         compression: none
