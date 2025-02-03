@@ -1637,14 +1637,14 @@ wheels = [
 
 [[package]]
 name = "pytest-split"
-version = "0.9.0"
+version = "0.10.0"
 source = { registry = "https://pypi.scm.io/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5e/a9/7b8327a605a48d5094b331de10e01f1f1aec0cb8c5790b5e4d98ac327f05/pytest_split-0.9.0.tar.gz", hash = "sha256:ca52527e4d9024f6ec3aba723527bd276d12096024999b1f5b8445a38da1e81c", size = 13599 }
+sdist = { url = "https://files.pythonhosted.org/packages/46/d7/e30ba44adf83f15aee3f636daea54efadf735769edc0f0a7d98163f61038/pytest_split-0.10.0.tar.gz", hash = "sha256:adf80ba9fef7be89500d571e705b4f963dfa05038edf35e4925817e6b34ea66f", size = 13903 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6b/67/8cff7bf04d78ac7fbb88b0985061347943dc3cbeafada27b4accb4527579/pytest_split-0.9.0-py3-none-any.whl", hash = "sha256:9e197df601828d76a1ab615158d9c6253ec9f96e46c1d3ea27187aa5ac0ef9de", size = 11790 },
+    { url = "https://files.pythonhosted.org/packages/d6/a7/cad88e9c1109a5c2a320d608daa32e5ee008ccbc766310f54b1cd6b3d69c/pytest_split-0.10.0-py3-none-any.whl", hash = "sha256:466096b086a7147bcd423c6e6c2e57fc62af1c5ea2e256b4ed50fc030fc3dddc", size = 11961 },
 ]
 
 [[package]]
@@ -2466,7 +2466,7 @@ dev = [
     { name = "mypy", specifier = "~=1.10.0" },
     { name = "pytest", specifier = "~=8.3.2" },
     { name = "pytest-custom-exit-code", specifier = "~=0.3.0" },
-    { name = "pytest-split", specifier = "~=0.9.0" },
+    { name = "pytest-split", specifier = "~=0.10.0" },
     { name = "pytest-sugar", specifier = "~=1.0.0" },
     { name = "pytest-timeout", specifier = "~=2.3.0" },
     { name = "pytest-timestamper", specifier = "~=0.0.10" },
