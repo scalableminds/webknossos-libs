@@ -348,10 +348,6 @@ class Dataset:
                 raise FileNotFoundError(
                     f"Cannot open read-only dataset, could not find data at {self.path}."
                 )
-            if voxel_size_with_unit is _UNSPECIFIED_SCALE_FROM_OPEN:
-                raise FileNotFoundError(
-                    f"Could not find a valid dataset at {self.path}."
-                )
 
         dataset_existed_already = stored_dataset_properties is not None
         if dataset_existed_already:
@@ -471,10 +467,16 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        return cls(
-            dataset_path,
-            voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
-            exist_ok=True,
+        if (
+            path := strip_trailing_slash(UPath(dataset_path)) / PROPERTIES_FILE_NAME
+        ).exists():
+            return cls(
+                dataset_path,
+                voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
+                exist_ok=True,
+            )
+        raise FileNotFoundError(
+            f"Could not find a valid `datasource-properties.json` file at {path}."
         )
 
     @classmethod
