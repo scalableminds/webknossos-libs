@@ -49,7 +49,7 @@ jobs:
         with:
           version: "0.5.26"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "cluster_tools/uv.lock"
       
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -173,7 +173,7 @@ jobs:
           # Install a specific version of uv.
           version: "0.5.26"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "webknossos/uv.lock"
 
       - name: Install proxay
         run: npm install -g proxay
