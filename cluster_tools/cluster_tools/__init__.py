@@ -1,4 +1,3 @@
-import warnings
 from typing import Any, Literal, overload
 
 from cluster_tools.executor_protocol import Executor
@@ -16,9 +15,6 @@ from cluster_tools.schedulers.cluster_executor import (
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
 from cluster_tools.schedulers.slurm import SlurmExecutor
-
-# For backwards-compatibility, remove in version 2.0:
-WrappedProcessPoolExecutor = MultiprocessingExecutor
 
 
 def _noop() -> bool:
@@ -86,19 +82,7 @@ def get_executor(
 
 @overload
 def get_executor(
-    environment: Literal["test_pickling"], **kwargs: Any
-) -> MultiprocessingPickleExecutor: ...
-
-
-@overload
-def get_executor(
     environment: Literal["sequential"], **kwargs: Any
-) -> SequentialExecutor: ...
-
-
-@overload
-def get_executor(
-    environment: Literal["debug_sequential"], **kwargs: Any
 ) -> SequentialExecutor: ...
 
 
@@ -133,20 +117,4 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         return SequentialPickleExecutor(**kwargs)
     elif environment == "multiprocessing_with_pickling":
         return MultiprocessingPickleExecutor(**kwargs)
-    elif environment == "test_pickling":
-        # For backwards-compatibility, remove in version 2.0:
-        warnings.warn(
-            "The test_pickling execution strategy is deprecated and will be removed in version 2.0. Use multiprocessing_with_pickling instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return MultiprocessingPickleExecutor(**kwargs)
-    elif environment == "debug_sequential":
-        # For backwards-compatibility, remove in version 2.0:
-        warnings.warn(
-            "The debug_sequential execution strategy is deprecated and will be removed in version 2.0. Use sequential instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return SequentialExecutor(**kwargs)
     raise Exception("Unknown executor: {}".format(environment))
