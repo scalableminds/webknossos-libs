@@ -515,79 +515,88 @@ class PimsImages:
         copy_to_view returns an iterable of image shapes and largest segment ids. When using this
         method a manual update of the bounding box and the largest segment id might be necessary.
         """
-        absolute_bbox = args
-        relative_bbox = absolute_bbox.offset(-mag_view.bounding_box.topleft)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=".*is not aligned with the shard shape.*",
+                category=UserWarning,
+                module="webknossos",
+            )
+            absolute_bbox = args
+            relative_bbox = absolute_bbox.offset(-mag_view.bounding_box.topleft)
 
-        assert all(
-            size == 1
-            for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
-            if axis not in ("x", "y", "z")
-        ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
+            assert all(
+                size == 1
+                for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
+                if axis not in ("x", "y", "z")
+            ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
 
-        # z_start and z_end are relative to the bounding box of the mag_view
-        # to access the correct data from the images
-        z_start, z_end = relative_bbox.get_bounds("z")
-        shapes = []
-        max_value = 0
+            # z_start and z_end are relative to the bounding box of the mag_view
+            # to access the correct data from the images
+            z_start, z_end = relative_bbox.get_bounds("z")
+            shapes = []
+            max_value = 0
 
-        with self._open_images() as images:
-            if self._iter_axes and self._iter_loop_size is not None:
-                # select the range of images that represents one xyz combination in the mag_view
-                lower_bounds = sum(
-                    self._iter_loop_size[axis_name]
-                    * relative_bbox.get_bounds(axis_name)[0]
-                    for axis_name in self._iter_axes[:-1]
-                )
-                upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
-                images = images[lower_bounds:upper_bounds]
-            if self._flip_z:
-                images = images[::-1]
+            with self._open_images() as images:
+                if self._iter_axes and self._iter_loop_size is not None:
+                    # select the range of images that represents one xyz combination in the mag_view
+                    lower_bounds = sum(
+                        self._iter_loop_size[axis_name]
+                        * relative_bbox.get_bounds(axis_name)[0]
+                        for axis_name in self._iter_axes[:-1]
+                    )
+                    upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
+                    images = images[lower_bounds:upper_bounds]
+                if self._flip_z:
+                    images = images[::-1]
 
-            with mag_view.get_buffered_slice_writer(
-                # Previously only z_start and its end were important, now the slice writer needs to know
-                # which axis is currently written.
-                absolute_bounding_box=absolute_bbox,
-                buffer_size=absolute_bbox.get_shape("z"),
-            ) as writer:
-                for image_slice in images[z_start:z_end]:
-                    image_slice = np.array(image_slice)
-                    # place channels first
-                    if "c" in self._bundle_axes:
-                        if hasattr(self, "_init_c_axis") and self._init_c_axis:
-                            # Bugfix for ImageIOReader which misses channel axis sometimes,
-                            # assuming channels come last. _init_c_axis is set in __init__().
-                            # This might get fixed via
-                            image_slice = image_slice[0]
-                        image_slice = np.moveaxis(
-                            image_slice,
-                            source=self._bundle_axes.index("c"),
-                            destination=0,
-                        )
-                        if self._channel is not None:
-                            image_slice = image_slice[self._channel : self._channel + 1]
-                        elif self._first_n_channels is not None:
-                            image_slice = image_slice[: self._first_n_channels]
-                        assert image_slice.shape[0] == self.num_channels, (
-                            f"Image shape {image_slice.shape} does not fit to the number of channels "
-                            + f"{self.num_channels} which are expected in the first axis."
-                        )
+                with mag_view.get_buffered_slice_writer(
+                    # Previously only z_start and its end were important, now the slice writer needs to know
+                    # which axis is currently written.
+                    absolute_bounding_box=absolute_bbox,
+                    buffer_size=absolute_bbox.get_shape("z"),
+                ) as writer:
+                    for image_slice in images[z_start:z_end]:
+                        image_slice = np.array(image_slice)
+                        # place channels first
+                        if "c" in self._bundle_axes:
+                            if hasattr(self, "_init_c_axis") and self._init_c_axis:
+                                # Bugfix for ImageIOReader which misses channel axis sometimes,
+                                # assuming channels come last. _init_c_axis is set in __init__().
+                                # This might get fixed via
+                                image_slice = image_slice[0]
+                            image_slice = np.moveaxis(
+                                image_slice,
+                                source=self._bundle_axes.index("c"),
+                                destination=0,
+                            )
+                            if self._channel is not None:
+                                image_slice = image_slice[
+                                    self._channel : self._channel + 1
+                                ]
+                            elif self._first_n_channels is not None:
+                                image_slice = image_slice[: self._first_n_channels]
+                            assert image_slice.shape[0] == self.num_channels, (
+                                f"Image shape {image_slice.shape} does not fit to the number of channels "
+                                + f"{self.num_channels} which are expected in the first axis."
+                            )
 
-                    if self._flip_x:
-                        image_slice = np.flip(image_slice, -2)
-                    if self._flip_y:
-                        image_slice = np.flip(image_slice, -1)
+                        if self._flip_x:
+                            image_slice = np.flip(image_slice, -2)
+                        if self._flip_y:
+                            image_slice = np.flip(image_slice, -1)
 
-                    if dtype is not None:
-                        image_slice = image_slice.astype(dtype, order="F")
+                        if dtype is not None:
+                            image_slice = image_slice.astype(dtype, order="F")
 
-                    max_value = max(max_value, image_slice.max())
-                    if self._swap_xy is False:
-                        image_slice = np.moveaxis(image_slice, -1, -2)
+                        max_value = max(max_value, image_slice.max())
+                        if self._swap_xy is False:
+                            image_slice = np.moveaxis(image_slice, -1, -2)
 
-                    shapes.append(image_slice.shape[-2:])
-                    writer.send(image_slice)
+                        shapes.append(image_slice.shape[-2:])
+                        writer.send(image_slice)
 
-            return dimwise_max(shapes), max_value
+                return dimwise_max(shapes), max_value
 
     def get_possible_layers(self) -> Optional[Dict["str", List[int]]]:
         if len(self._possible_layers) == 0:

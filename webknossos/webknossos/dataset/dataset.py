@@ -1577,7 +1577,7 @@ class Dataset:
         array_info = _find_array_info(self.path / layer_name)
         assert (
             array_info is not None
-        ), f"Could not find any valid mags in {self.path /layer_name}. Cannot add layer."
+        ), f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
 
         num_channels = kwargs.pop("num_channels", array_info.num_channels)
         dtype_per_channel = kwargs.pop("dtype_per_channel", array_info.voxel_type)
