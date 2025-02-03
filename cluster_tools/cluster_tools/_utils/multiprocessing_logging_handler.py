@@ -41,6 +41,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
         self._queue_thread.daemon = True
         self._queue_thread.start()
         self._usage_counter = 1
+        print("GO", self._usage_counter)
 
     def _receive(self) -> None:
         while True:
@@ -77,6 +78,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
 
     def increment_usage(self) -> None:
         self._usage_counter += 1
+        print("increment_usage", self._usage_counter)
 
     def decrement_usage(self) -> None:
         self._usage_counter -= 1

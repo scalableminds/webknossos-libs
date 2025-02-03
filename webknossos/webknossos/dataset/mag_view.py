@@ -312,7 +312,7 @@ class MagView(View):
         if allow_resize is None:
             allow_resize = False
         if allow_unaligned is None:
-            allow_unaligned = not allow_resize
+            allow_unaligned = False
 
         if all(
             i is None
