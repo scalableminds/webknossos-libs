@@ -1,7 +1,6 @@
 import functools
 import logging
 import multiprocessing
-import os
 import sys
 import threading
 import traceback
@@ -42,23 +41,17 @@ class _MultiprocessingLoggingHandler(logging.Handler):
         self._queue_thread.daemon = True
         self._queue_thread.start()
         self._usage_counter = 1
-        print("GO", self._usage_counter, os.getpid())
 
     def _receive(self) -> None:
         while True:
             try:
                 if self._is_closed and self.queue.empty():
-                    print(self._is_closed, self.queue.empty())
                     break
 
                 # Avoid getting stuck if the handler was closed by setting a timeout
                 record = self.queue.get(timeout=0.2)
                 if record is not None:
                     self.wrapped_handler.emit(record)
-            except QueueEmpty:
-                # This case is reached when the timeout in queue.get is hit. Pass, to
-                # check whether the handler was closed.
-                pass
             except (KeyboardInterrupt, SystemExit):
                 raise
             # The following errors pop up quite often.
@@ -71,6 +64,10 @@ class _MultiprocessingLoggingHandler(logging.Handler):
                 multiprocessing.managers.RemoteError,
             ):
                 break
+            except QueueEmpty:
+                # This case is reached when the timeout in queue.get is hit. Pass, to
+                # check whether the handler was closed.
+                pass
             except Exception:
                 traceback.print_exc(file=sys.stderr)
 
@@ -79,11 +76,9 @@ class _MultiprocessingLoggingHandler(logging.Handler):
 
     def increment_usage(self) -> None:
         self._usage_counter += 1
-        print("increment_usage", self._usage_counter)
 
     def decrement_usage(self) -> None:
         self._usage_counter -= 1
-        print("decrement_usage", self._usage_counter)
         if self._usage_counter == 0:
             # unwrap inner handler:
             root_logger = getLogger()
@@ -91,29 +86,18 @@ class _MultiprocessingLoggingHandler(logging.Handler):
             root_logger.addHandler(self.wrapped_handler)
 
             self._is_closed = True
-            print("_is_closed", self._is_closed)
             self._queue_thread.join(30)
-            print("join")
             self._manager.shutdown()
-            print("shutdown")
             self.wrapped_handler.close()
-            print("wrapped_handler.close")
             super().close()
-            print("super.close")
 
     def close(self) -> None:
         if not self._is_closed:
-            print("CLOSE")
             self._is_closed = True
-            print("_is_closed", self._is_closed)
             self._queue_thread.join(30)
-            print("join")
             self._manager.shutdown()
-            print("shutdown")
             self.wrapped_handler.close()
-            print("wrapped_handler.close")
             super().close()
-            print("super.close")
 
 
 def _setup_logging_multiprocessing(
@@ -124,8 +108,6 @@ def _setup_logging_multiprocessing(
     so that log messages are piped to the original loggers in the main process.
     """
     warnings.filters = filters
-
-    print("SETUP", os.getpid())
 
     root_logger = getLogger()
     for handler in root_logger.handlers:
