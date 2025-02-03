@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a misleading error message when Dataset.open() can't find a valid dataset. [#1246](https://github.com/scalableminds/webknossos-libs/pull/1246)
 
 
 ## [0.16.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.6) - 2025-02-03
@@ -37,7 +38,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug with loading metadata lists. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
-
 
 
 ## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23
@@ -68,7 +68,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
 - Fixed an issue when shallow copying datasets with a remote mag. [#1224](https://github.com/scalableminds/webknossos-libs/pull/1224)
-
 
 
 ## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18
