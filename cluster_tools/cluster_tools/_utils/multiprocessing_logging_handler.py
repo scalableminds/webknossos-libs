@@ -88,19 +88,29 @@ class _MultiprocessingLoggingHandler(logging.Handler):
             root_logger.addHandler(self.wrapped_handler)
 
             self._is_closed = True
-            print("shutdown")
+            print("_is_closed", self._is_closed)
             self._queue_thread.join(30)
+            print("join")
             self._manager.shutdown()
+            print("shutdown")
+            self.wrapped_handler.close()
+            print("wrapped_handler.close")
             super().close()
+            print("super.close")
 
     def close(self) -> None:
         if not self._is_closed:
+            print("CLOSE")
             self._is_closed = True
-            print("close")
+            print("_is_closed", self._is_closed)
             self._queue_thread.join(30)
+            print("join")
             self._manager.shutdown()
+            print("shutdown")
             self.wrapped_handler.close()
+            print("wrapped_handler.close")
             super().close()
+            print("super.close")
 
 
 def _setup_logging_multiprocessing(
