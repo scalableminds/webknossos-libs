@@ -1,6 +1,7 @@
 import functools
 import logging
 import multiprocessing
+import os
 import sys
 import threading
 import traceback
@@ -41,7 +42,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
         self._queue_thread.daemon = True
         self._queue_thread.start()
         self._usage_counter = 1
-        print("GO", self._usage_counter)
+        print("GO", self._usage_counter, os.getpid())
 
     def _receive(self) -> None:
         while True:
@@ -123,6 +124,8 @@ def _setup_logging_multiprocessing(
     so that log messages are piped to the original loggers in the main process.
     """
     warnings.filters = filters
+
+    print("SETUP", os.getpid())
 
     root_logger = getLogger()
     for handler in root_logger.handlers:
