@@ -31,7 +31,7 @@ class SequentialExecutor(MultiprocessingExecutor):
     ) -> None:
         super().__init__(
             max_workers=1,
-            start_method=start_method,
+            start_method="forkserver",
             mp_context=mp_context,
             initializer=initializer,
             initargs=initargs,
