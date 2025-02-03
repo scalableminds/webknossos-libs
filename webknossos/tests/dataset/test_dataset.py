@@ -2887,3 +2887,8 @@ def test_remote_dataset_urls() -> None:
         f"http://localhost:9000/datasets/l4_sample-{dataset_id}/view#2786,4326,1816,0,3"
     )
     assert ds6.url == ds.url
+
+
+def test_dataset_open_wrong_path() -> None:
+    with pytest.raises(FileNotFoundError):
+        Dataset.open("wrong_path")
