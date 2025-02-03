@@ -46,6 +46,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
         while True:
             try:
                 if self._is_closed and self.queue.empty():
+                    print(self._is_closed, self.queue.empty())
                     break
 
                 # Avoid getting stuck if the handler was closed by setting a timeout
@@ -58,16 +59,16 @@ class _MultiprocessingLoggingHandler(logging.Handler):
                 pass
             except (KeyboardInterrupt, SystemExit):
                 raise
-            # # The following errors pop up quite often.
-            # # It seems that they can be safely ignored, though.
-            # # The reason for those might be that the sending end was closed.
-            # except (
-            #     BrokenPipeError,
-            #     EOFError,
-            #     ConnectionResetError,
-            #     multiprocessing.managers.RemoteError,
-            # ):
-            #     break
+            # The following errors pop up quite often.
+            # It seems that they can be safely ignored, though.
+            # The reason for those might be that the sending end was closed.
+            except (
+                BrokenPipeError,
+                EOFError,
+                ConnectionResetError,
+                multiprocessing.managers.RemoteError,
+            ):
+                break
             except Exception:
                 traceback.print_exc(file=sys.stderr)
 
@@ -79,6 +80,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
 
     def decrement_usage(self) -> None:
         self._usage_counter -= 1
+        print("decrement_usage", self._usage_counter)
         if self._usage_counter == 0:
             # unwrap inner handler:
             root_logger = getLogger()
@@ -86,14 +88,16 @@ class _MultiprocessingLoggingHandler(logging.Handler):
             root_logger.addHandler(self.wrapped_handler)
 
             self._is_closed = True
-            self._queue_thread.join()
+            print("shutdown")
+            self._queue_thread.join(30)
             self._manager.shutdown()
             super().close()
 
     def close(self) -> None:
         if not self._is_closed:
             self._is_closed = True
-            self._queue_thread.join()
+            print("close")
+            self._queue_thread.join(30)
             self._manager.shutdown()
             self.wrapped_handler.close()
             super().close()
