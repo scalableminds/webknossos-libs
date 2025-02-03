@@ -18,11 +18,12 @@ For the WEBKNOSSOS server, please refer to https://github.com/scalableminds/webk
     - up/downsample layers
     - compress layers 
     - add/remove magnifications
-    - execute any of the `wkCuber` operations from your code
+- Command line tool (CLI) for manipulating and creating WEBKNOSSOS datasets
 - manipulation of WEBKNOSSOS skeleton annotations (*.nml) as Python objects
     - access to nodes, comments, trees, bounding boxes, metadata, etc.
     - create new skeleton annotation from Graph structures or Python objects
 - interaction, connection & scripting with your WEBKNOSSOS instance over the REST API
+    - list datastets, annotations, and tasks
     - up- & downloading annotations and datasets
 
 Please refer to [the documentation for further instructions](https://docs.webknossos.org/webknossos-py).
