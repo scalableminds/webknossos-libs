@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.7...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.7) - 2025-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.6...v0.16.7)
+
+### Fixed
 - Fixed a misleading error message when Dataset.open() can't find a valid dataset. [#1246](https://github.com/scalableminds/webknossos-libs/pull/1246)
+
 
 
 ## [0.16.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.6) - 2025-02-03
