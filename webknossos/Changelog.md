@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...HEAD)
 
 ### Breaking Changes
 - Changed writing behavior. There is a new argument `allow_resize` for `MagView.write` and `View.write`, which defaults to `False`. If set to `True`, the bounding box of underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing.
@@ -112,7 +112,18 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.8) - 2025-02-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.7...v0.16.8)
+
+
+## [0.16.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.7) - 2025-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.6...v0.16.7)
+
+### Fixed
 - Fixed a misleading error message when Dataset.open() can't find a valid dataset. [#1246](https://github.com/scalableminds/webknossos-libs/pull/1246)
+
 
 
 ## [0.16.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.6) - 2025-02-03

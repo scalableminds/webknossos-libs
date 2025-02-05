@@ -215,7 +215,7 @@ nav:
       - Volume Annotation: webknossos/tutorial_volume_annotation.md
       - Data Sharing: webknossos/tutorial_data_sharing.md
       - Automation: webknossos/tutorial_automation.md
-      # - Today I Learned: webknossos/today_i_learned.md
+      - Today I Learned: webknossos/today_i_learned.md
     - Reference:
       - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
       - Changelog: webknossos/CHANGELOG.released.md
