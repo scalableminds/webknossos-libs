@@ -22,7 +22,6 @@ from ..utils import (
     get_executor_for_args,
     get_rich_progress,
     wait_and_ensure_success,
-    warn_deprecated,
 )
 from ._array import ArrayInfo, BaseArray
 from .data_format import DataFormat
@@ -243,9 +242,7 @@ class View:
         self,
         data: np.ndarray,
         *,
-        allow_resize: Optional[bool] = None,
-        allow_unaligned: Optional[bool] = None,
-        json_update_allowed: Optional[bool] = None,
+        allow_unaligned: bool = False,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
@@ -261,11 +258,8 @@ class View:
             data (np.ndarray): The data to write. For single-channel data, shape should
                 be (x, y, y). For multi-channel data, shape should be (channels, x, y, z).
                 Shape must match the target region size.
-            allow_resize (bool, optional): If True, allows updating the layer's bounding
-                box if the write extends beyond it. Defaults to False.
             allow_unaligned (bool, optional): If True, allows writing data to without
-                being aligned to the shard shape. Defaults to True.
-            json_update_allowed (bool, optional): Deprecated, use allow_resize instead.
+                being aligned to the shard shape. Defaults to False.
             relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
             absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
@@ -317,20 +311,6 @@ class View:
         if self.read_only:
             raise RuntimeError("Cannot write data to an read_only View")
 
-        if json_update_allowed is not None:
-            warn_deprecated("json_update_allowed", "allow_resize")
-            if allow_resize is None:
-                allow_resize = json_update_allowed
-            else:
-                raise ValueError(
-                    "Cannot specify both `json_update_allowed` and `allow_resize` arguments."
-                )
-        if allow_resize is None:
-            allow_resize = False
-
-        if allow_unaligned is None:
-            allow_unaligned = False
-
         if all(
             i is None
             for i in [
@@ -379,13 +359,21 @@ class View:
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
-        if self._data_format in (DataFormat.Zarr, DataFormat.Zarr3):
-            if not allow_unaligned:
+        if not allow_unaligned:
+            if self._data_format == DataFormat.WKW and not self._is_compressed():
+                try:
+                    self._check_shard_alignment(current_mag_bbox)
+                except ValueError:
+                    shard_shape = self.info.shard_shape
+                    warnings.warn(
+                        f"The bounding box to write {current_mag_bbox} is not aligned with the shard shape {shard_shape}. "
+                        "This was supported for uncompressed WKW datasets, but is deprecated now because of concurrency issues. "
+                        "Please use an explicit `allow_unaligned` argument to fix this."
+                    )
+            else:
                 self._check_shard_alignment(current_mag_bbox)
-            self._array.write(current_mag_bbox, data)
-        elif self._is_compressed():
-            if not allow_unaligned:
-                self._check_shard_alignment(current_mag_bbox)
+
+        if self._is_compressed():
             for current_mag_bbox, chunked_data in self._prepare_compressed_write(
                 current_mag_bbox, data
             ):
@@ -398,12 +386,10 @@ class View:
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
         if shard_bbox.intersected_with(self.bounding_box.in_mag(self._mag)) != bbox:
-            warnings.warn(
+            raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
                 + "Performance will be degraded as existing shard data has to be read, combined and "
                 + f"written as whole shards. Bounding box: {self.bounding_box}",
-                category=UserWarning,
-                stacklevel=2,
             )
 
     def _prepare_compressed_write(
@@ -825,6 +811,7 @@ class View:
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
+        allow_unaligned: bool = False,
     ) -> "BufferedSliceWriter":
         """Get a buffered writer for efficiently writing data slices.
 
@@ -850,6 +837,7 @@ class View:
                 relative_bounding_box. Defaults to None.
             use_logging (bool): Whether to enable logging of write operations.
                 Defaults to False.
+            allow_unaligned (bool): Whether to allow unaligned writes. Defaults to False.
 
         Returns:
             BufferedSliceWriter: A writer object for buffered slice writing.
@@ -895,6 +883,7 @@ class View:
             relative_bounding_box=relative_bounding_box,
             absolute_bounding_box=absolute_bounding_box,
             use_logging=use_logging,
+            allow_unaligned=allow_unaligned,
         )
 
     def get_buffered_slice_reader(

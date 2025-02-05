@@ -3,6 +3,9 @@ set -eEuo pipefail
 
 source local_wk_setup.sh
 
+# Using forkserver instead of spawn is faster
+export MULTIPROCESSING_DEFAULT_START_METHOD=forkserver
+
 # Note that pytest should be executed via `python -m`, since
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports

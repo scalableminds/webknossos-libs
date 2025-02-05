@@ -261,7 +261,7 @@ class MagView(View):
         data: np.ndarray,
         *,
         allow_resize: Optional[bool] = None,
-        allow_unaligned: Optional[bool] = None,
+        allow_unaligned: bool = False,
         json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -276,7 +276,7 @@ class MagView(View):
         Args:
             data: Numpy array containing the volumetric data to write. Shape must match the target region.
             allow_resize: If True, allows updating the layer's bounding box if the write extends beyond it. Defaults to False.
-            allow_unaligned: If True, allows writing data to without being aligned to the shard shape. Defaults to True.
+            allow_unaligned: If True, allows writing data to without being aligned to the shard shape. Defaults to False.
             json_update_allowed: Deprecated, use allow_resize.
             relative_offset: Optional offset relative to the view's position in Mag(1) coordinates.
             absolute_offset: Optional absolute position in Mag(1) coordinates.
@@ -311,8 +311,6 @@ class MagView(View):
                 )
         if allow_resize is None:
             allow_resize = False
-        if allow_unaligned is None:
-            allow_unaligned = False
 
         if all(
             i is None
@@ -350,7 +348,6 @@ class MagView(View):
 
         super().write(
             data,
-            allow_resize=allow_resize,
             allow_unaligned=allow_unaligned,
             absolute_bounding_box=mag1_bbox,
         )

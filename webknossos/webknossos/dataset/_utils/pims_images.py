@@ -550,11 +550,21 @@ class PimsImages:
                 if self._flip_z:
                     images = images[::-1]
 
+                assert absolute_bbox.topleft_xyz.z % mag_view.info.shard_shape.z == 0, (
+                    "The bounding box is not aligned with the shard shape in z dimension. "
+                    + f"Got offset {absolute_bbox.topleft_xyz.z} and shard shape {mag_view.info.shard_shape.z}."
+                )
+                assert absolute_bbox.size_xyz.z % mag_view.info.shard_shape.z == 0, (
+                    "The bounding box is not aligned with the shard shape in z dimension. "
+                    + f"Got size {absolute_bbox.size_xyz.z} and shard shape {mag_view.info.shard_shape.z}."
+                )
+
                 with mag_view.get_buffered_slice_writer(
                     # Previously only z_start and its end were important, now the slice writer needs to know
                     # which axis is currently written.
                     absolute_bounding_box=absolute_bbox,
                     buffer_size=absolute_bbox.get_shape("z"),
+                    allow_unaligned=True,
                 ) as writer:
                     for image_slice in images[z_start:z_end]:
                         image_slice = np.array(image_slice)

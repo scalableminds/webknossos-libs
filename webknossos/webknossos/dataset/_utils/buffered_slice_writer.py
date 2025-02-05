@@ -44,6 +44,7 @@ class BufferedSliceWriter:
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
         use_logging: bool = False,
+        allow_unaligned: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_writer()`"""
 
@@ -51,6 +52,7 @@ class BufferedSliceWriter:
         self._buffer_size = buffer_size
         self._dtype = self._view.get_dtype()
         self._use_logging = use_logging
+        self._allow_unaligned = allow_unaligned
         self._bbox: NDBoundingBox
         self._slices_to_write: List[np.ndarray] = []
         self._current_slice: Optional[int] = None
@@ -66,20 +68,30 @@ class BufferedSliceWriter:
         assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
         self.dimension = dimension
 
-        view_chunk_depth = self._view.info.chunk_shape[dimension]
+        view_shard_depth = self._view.info.chunk_shape[dimension]
         if (
             self._bbox is not None
-            and self._bbox.topleft_xyz[self.dimension] % view_chunk_depth != 0
+            and self._bbox.topleft_xyz[self.dimension] % view_shard_depth != 0
         ):
-            warnings.warn(
-                "[WARNING] Using an offset that doesn't align with the datataset's chunk size, "
-                + "will slow down the buffered slice writer, because twice as many chunks will be written.",
+            msg = (
+                "Using an offset that doesn't align with the datataset's shard shape, "
+                + "will slow down the buffered slice writer, because twice as many shards will be written. "
+                + f"Got offset {self._bbox.topleft_xyz[self.dimension]} and shard depth {view_shard_depth}."
             )
-        if buffer_size >= view_chunk_depth and buffer_size % view_chunk_depth > 0:
-            warnings.warn(
-                "[WARNING] Using a buffer size that doesn't align with the datataset's chunk size, "
-                + "will slow down the buffered slice writer.",
+            if allow_unaligned:
+                warnings.warn(msg, category=UserWarning)
+            else:
+                raise ValueError(msg)
+        if buffer_size >= view_shard_depth and buffer_size % view_shard_depth > 0:
+            msg = (
+                "Using a buffer size that doesn't align with the datataset's shard shape, "
+                + "will slow down the buffered slice writer. "
+                + f"Got buffer size {buffer_size} and shard depth {view_shard_depth}."
             )
+            if allow_unaligned:
+                warnings.warn(msg, category=UserWarning)
+            else:
+                raise ValueError(msg)
 
     def _flush_buffer(self) -> None:
         if len(self._slices_to_write) == 0:
@@ -190,6 +202,7 @@ class BufferedSliceWriter:
                 self._view.write(
                     data,
                     absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self._view._mag),
+                    allow_unaligned=self._allow_unaligned,
                 )
                 del data
 
