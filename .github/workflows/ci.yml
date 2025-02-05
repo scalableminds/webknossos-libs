@@ -157,7 +157,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10", "3.9"]
+        python-version: ["3.12", "3.13", "3.11", "3.10", "3.9"]
         group: [1, 2, 3]
       fail-fast: false
     defaults:
@@ -193,19 +193,9 @@ jobs:
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./typecheck.sh
 
-        
-        # - name: Some tests
-        #   timeout-minutes: 10
-        #   run: ./test.sh -vv -s tests/dataset/test_dataset.py::test_chunking_wk tests/dataset/test_dataset.py::test_chunking_wkw_wrong_chunk_shape
-        
       - name: Patch fork
-        if: ${{ matrix.python-version == '3.13' }}
         run: |
-          sed -i '67i \ \ \ \ \ \ \ \ import traceback; traceback.print_stack()' /home/runner/.local/share/uv/python/cpython-3.13.1-linux-x86_64-gnu/lib/python3.13/multiprocessing/popen_fork.py
-          cat /home/runner/.local/share/uv/python/cpython-3.13.1-linux-x86_64-gnu/lib/python3.13/multiprocessing/popen_fork.py
-        
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
+          sed -i '66i \ \ \ \ \ \ \ \ import traceback; traceback.print_stack()' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
       - name: Python tests
         timeout-minutes: 30
