@@ -34,6 +34,8 @@ class _MultiprocessingLoggingHandler(logging.Handler):
             self.setFormatter(self.wrapped_handler.formatter)
         self.filters = self.wrapped_handler.filters
 
+        # Make sure to use a multiprocessing context with
+        # explicit start method to avoid unwanted forks
         self._manager = multiprocessing.get_context(
             os.environ.get("MULTIPROCESSING_DEFAULT_START_METHOD", "spawn")
         ).Manager()

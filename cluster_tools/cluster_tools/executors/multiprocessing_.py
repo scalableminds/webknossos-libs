@@ -185,9 +185,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
-        args: Iterable[
-            _S
-        ],  # TODO change: allow more than one arg per call #noqa: FIX002 Line contains TODO
+        args: Iterable[_S],
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
     ) -> List[Future[_T]]:
         if output_pickle_path_getter is not None:
