@@ -99,6 +99,7 @@ dev-dependencies = [
     "pytest-custom-exit-code ~=0.3.0",
     "pytest-split ~=0.10.0",
     "pytest-sugar ~=1.0.0",
+    "pytest-timeout ~=2.3.0",
     "pytest-timestamper ~=0.0.10",
     "types-python-dateutil ~=2.9",
     "ruff ~=0.6.0",
