@@ -1,6 +1,7 @@
 import functools
 import logging
 import multiprocessing
+import os
 import sys
 import threading
 import traceback
@@ -33,9 +34,9 @@ class _MultiprocessingLoggingHandler(logging.Handler):
             self.setFormatter(self.wrapped_handler.formatter)
         self.filters = self.wrapped_handler.filters
 
-        print(multiprocessing.get_start_method())
-        multiprocessing.set_start_method("spawn")
-        self._manager = multiprocessing.Manager()
+        self._manager = multiprocessing.get_context(
+            os.environ.get("MULTIPROCESSING_DEFAULT_START_METHOD", "spawn")
+        ).Manager()
         self.queue = self._manager.Queue(-1)
         self._is_closed = False
         # Use thread to asynchronously receive messages from the queue
