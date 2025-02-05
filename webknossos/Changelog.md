@@ -13,7 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...HEAD)
 
 ### Breaking Changes
-- Changed writing behavior. There is a new argument `allow_resize` for `MagView.write` and `View.write`, which defaults to `False`. If set to `True`, the bounding box of underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing.
+- Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
 - Removed deprecated functions, properties and arguments:
   - Functions:
     - `open_annotation`, use `Annotation.load()` instead
@@ -79,6 +79,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `offset` in `MagView.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
     - `args` in `MagView.compress`, use `executor` instead
     - `offset` in `View.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `json_update_allowed` in `View.write`, not supported anymore
     - `offset` in `View.read`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
     - `offset` in `View.get_view`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
     - `offset` in `View.get_buffered_slice_writer`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
@@ -101,10 +102,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `buffer_size` in `View.get_buffered_slice_writer` is now computed from the shard shape
 - Moved from positional argument to keyword-only argument:
   - `json_update_allowed` in `MagView.write`
-  - `json_update_allowed` in `View.write`
 - Added arguments:
   - `allow_resize` in `MagView.write` with default `False`
-  - `allow_resize` in `View.write` with default `False`
+  - `allow_unaligned` in `MagView.write` with default `False`
 
 
 ### Added
