@@ -33,6 +33,8 @@ class _MultiprocessingLoggingHandler(logging.Handler):
             self.setFormatter(self.wrapped_handler.formatter)
         self.filters = self.wrapped_handler.filters
 
+        print(multiprocessing.get_start_method())
+        multiprocessing.set_start_method("spawn")
         self._manager = multiprocessing.Manager()
         self.queue = self._manager.Queue(-1)
         self._is_closed = False
