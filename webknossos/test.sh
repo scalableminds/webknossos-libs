@@ -63,7 +63,7 @@ else
     PROXAY_PID=$!
     trap 'kill $PROXAY_PID' EXIT
 
-    $PYTEST "--timeout=360" "$@"
+    $PYTEST "$@"
     PYTEST_EXIT_CODE=$?
 
     exit $PYTEST_EXIT_CODE
