@@ -204,8 +204,9 @@ jobs:
           sed -i '67i \ \ \ \ \ \ \ \ import traceback; traceback.print_stack()' /home/runner/.local/share/uv/python/cpython-3.13.1-linux-x86_64-gnu/lib/python3.13/multiprocessing/popen_fork.py
           cat /home/runner/.local/share/uv/python/cpython-3.13.1-linux-x86_64-gnu/lib/python3.13/multiprocessing/popen_fork.py
         
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+
       - name: Python tests
         timeout-minutes: 30
         env:
