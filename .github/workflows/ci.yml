@@ -193,9 +193,9 @@ jobs:
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./typecheck.sh
 
-      - name: Patch fork
+      - name: Patch Python standard library to assert that fork is not allowed
         run: |
-          sed -i '66i \ \ \ \ \ \ \ \ import traceback; traceback.print_stack()' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
+          sed -i '66i \ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
       - name: Python tests
         timeout-minutes: 30
