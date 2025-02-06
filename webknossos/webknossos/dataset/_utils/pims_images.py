@@ -349,7 +349,7 @@ class PimsImages:
         if import_exceptions:
             import_exception_string = "\n\t" + "\n\t".join(import_exceptions)
             warnings.warn(
-                f"Not all pims readers could be imported: {import_exception_string}\nInstall the readers you need or use 'webknossos[all]' to install all readers.",
+                f"[WARNING] Not all pims readers could be imported: {import_exception_string}\nInstall the readers you need or use 'webknossos[all]' to install all readers.",
                 category=UserWarning,
             )
 

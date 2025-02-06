@@ -366,7 +366,7 @@ class View:
                 except ValueError:
                     shard_shape = self.info.shard_shape
                     warnings.warn(
-                        f"The bounding box to write {current_mag_bbox} is not aligned with the shard shape {shard_shape}. "
+                        f"[WARNING] The bounding box to write {current_mag_bbox} is not aligned with the shard shape {shard_shape}. "
                         "This was supported for uncompressed WKW datasets, but is deprecated now because of concurrency issues. "
                         "Please use an explicit `allow_unaligned` argument to fix this."
                     )

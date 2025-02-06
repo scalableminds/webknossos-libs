@@ -79,7 +79,7 @@ class BufferedSliceWriter:
                 + f"Got offset {self._bbox.topleft_xyz[self.dimension]} and shard depth {view_shard_depth}."
             )
             if allow_unaligned:
-                warnings.warn(msg, category=UserWarning)
+                warnings.warn("[WARNING] " + msg, category=UserWarning)
             else:
                 raise ValueError(msg)
         if buffer_size >= view_shard_depth and buffer_size % view_shard_depth > 0:
@@ -89,7 +89,7 @@ class BufferedSliceWriter:
                 + f"Got buffer size {buffer_size} and shard depth {view_shard_depth}."
             )
             if allow_unaligned:
-                warnings.warn(msg, category=UserWarning)
+                warnings.warn("[WARNING] " + msg, category=UserWarning)
             else:
                 raise ValueError(msg)
 

@@ -555,14 +555,15 @@ class TensorStoreArray(BaseArray):
                 }
             ).result()
             if array.domain != current_array.domain:
-                warnings.warn(
-                    f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({array.domain} != {current_array.domain}) was found in the currently persisted metadata."
+                raise RuntimeError(
+                    f"While resizing the Zarr array at {self._path}, a differing shape ({array.domain} != {current_array.domain}) was found in the currently persisted metadata."
                     + "This is likely happening because multiple processes changed the metadata of this array."
                 )
 
             if warn:
                 warnings.warn(
-                    f"[WARNING] Resizing Zarr array from `{array.domain}` to `{new_domain}`."
+                    f"[INFO] Resizing Zarr array from `{array.domain}` to `{new_domain}`.",
+                    category=UserWarning,
                 )
 
             self._cached_array = array.resize(

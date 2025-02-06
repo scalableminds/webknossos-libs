@@ -375,7 +375,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
 def test_view_read(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         wk_view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -392,7 +392,7 @@ def test_view_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         wk_view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -438,7 +438,7 @@ def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) ->
         data_format, output_path, "view_dataset_out_of_bounds"
     )
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -1071,7 +1071,7 @@ def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
         data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
         allow_resize=True,
     )
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
         for_each_chunking_advanced(ds, view)
 
@@ -1275,7 +1275,7 @@ def test_get_view() -> None:
 
     assert mag.bounding_box.bottomright == Vec3Int(110, 220, 330)
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         # Therefore, creating a view with a size of (16, 16, 16) is now allowed
         wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
     assert wk_view.bounding_box == BoundingBox((10, 20, 30), (16, 16, 16))
@@ -1288,7 +1288,7 @@ def test_get_view() -> None:
     # But setting "read_only=True" still works
     mag.get_view(size=(26, 36, 46), absolute_offset=(0, 0, 0), read_only=True)
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         # Creating this subview works because the subview is completely inside the 'wk_view'.
         # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
         sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
@@ -1483,7 +1483,7 @@ def test_writing_subset_of_compressed_data_single_channel(
     # View here covers an additional edge case
     with pytest.warns(UserWarning):
         view = compressed_mag.get_view(absolute_offset=(50, 60, 70), size=(50, 60, 70))
-    with pytest.raises(ValueError, match="not aligned with the shard shape"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         view.write(relative_offset=(10, 20, 30), data=write_data2)
     view.write(relative_offset=(10, 20, 30), data=write_data2, allow_unaligned=True)
 
@@ -1522,13 +1522,13 @@ def test_writing_subset_of_compressed_data(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
-    with pytest.raises(ValueError, match="not aligned with the shard shape"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         compressed_mag.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-    with pytest.raises(UserWarning, match="not aligned with the shard shape"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         compressed_mag.write(
             relative_offset=(20, 40, 60),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
@@ -1588,7 +1588,7 @@ def test_writing_subset_of_chunked_compressed_data(
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
     )
 
-    with pytest.raises(ValueError, match="not aligned with the shard shape"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
         compressed_view.write(absolute_offset=(10, 20, 30), data=write_data2)
@@ -1596,7 +1596,7 @@ def test_writing_subset_of_chunked_compressed_data(
         absolute_offset=(10, 20, 30), data=write_data2, allow_unaligned=True
     )
 
-    with pytest.raises(ValueError, match="not aligned with the shard shape"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         # Advanced case:
         # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
         compressed_view.write(
@@ -1606,7 +1606,7 @@ def test_writing_subset_of_chunked_compressed_data(
     compressed_view.write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
-        # allow_unaligned=True,
+        allow_unaligned=True,
     )
 
     np.array_equal(
@@ -1678,7 +1678,7 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     original_mag_2 = original_layer.add_mag(2)
     original_mag_2.write(data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8))
     original_mag_4 = original_layer.add_mag(4)
-    original_mag_4.write(data=(np.random.rand(2, 5, 7) * 255).astype(np.uint8))
+    original_mag_4.write(data=(np.random.rand(3, 5, 8) * 255).astype(np.uint8))
 
     ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer(
@@ -2173,7 +2173,7 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
     with pytest.raises(RuntimeError):
         v_read.write(data=new_data)
 
-    v_write.write(data=new_data)
+    v_write.write(data=new_data, allow_unaligned=True)
 
     assure_exported_properties(ds)
 
