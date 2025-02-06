@@ -199,12 +199,13 @@ def test_buffered_slice_writer_unaligned(
     shape = (512, 512, 31)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
-    with mag1.get_buffered_slice_writer(
-        absolute_offset=offset, buffer_size=32, allow_unaligned=True
-    ) as writer:
-        for z in range(0, shape[2]):
-            section = data[:, :, z]
-            writer.send(section)
+    with pytest.warns(UserWarning, match=".*align with the datataset's shard shape.*"):
+        with mag1.get_buffered_slice_writer(
+            absolute_offset=offset, buffer_size=32, allow_unaligned=True
+        ) as writer:
+            for z in range(0, shape[2]):
+                section = data[:, :, z]
+                writer.send(section)
 
     written_data = mag1.read(absolute_offset=offset, size=shape)
     assert np.all(
