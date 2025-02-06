@@ -405,7 +405,7 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     np.random.seed(1234)
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
 
-    wk_view.write(write_data)
+    wk_view.write(write_data, allow_unaligned=True)
 
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert np.array_equal(data, write_data)
@@ -427,7 +427,7 @@ def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
 
     # write: wk, read: zarr
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data, absolute_offset=(0, 0, 0))
+    mag.write(write_data, absolute_offset=(0, 0, 0), allow_unaligned=True)
     data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10].read().result()
     assert np.array_equal(data, write_data)
 
@@ -1430,13 +1430,16 @@ def test_writing_subset_of_compressed_data_multi_channel(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
-        write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-        compressed_mag.get_view(relative_offset=(50, 60, 70), size=(50, 60, 70)).write(
-            relative_offset=(10, 20, 30), data=write_data2
-        )
+    write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    # Writing unaligned data to a compressed dataset works because the data gets
+    # padded, but it requires an explicit allow_unaligned=True flag
+    # Writing compressed data directly to "compressed_mag" also works, but using a
+    # View here covers an additional edge case
+    with pytest.warns(UserWarning):
+        view = compressed_mag.get_view(relative_offset=(50, 60, 70), size=(50, 60, 70))
+    with pytest.raises(ValueError):
+        view.write(relative_offset=(10, 20, 30), data=write_data2)
+    view.write(relative_offset=(10, 20, 30), data=write_data2, allow_unaligned=True)
 
     assert np.array_equal(
         write_data2,
@@ -1472,13 +1475,17 @@ def test_writing_subset_of_compressed_data_single_channel(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
-        write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-        compressed_mag.get_view(absolute_offset=(50, 60, 70), size=(50, 60, 70)).write(
-            relative_offset=(10, 20, 30), data=write_data2
-        )
+    write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
+    # Writing unaligned data to a compressed dataset works because the data gets
+    # padded, but it requires an explicit allow_unaligned=True flag
+    # Writing compressed data directly to "compressed_mag" also works, but using a
+    # View here covers an additional edge case
+    with pytest.warns(UserWarning):
+        view = compressed_mag.get_view(absolute_offset=(50, 60, 70), size=(50, 60, 70))
+    with pytest.raises(ValueError, match="not aligned with the shard shape"):
+        view.write(relative_offset=(10, 20, 30), data=write_data2)
+    view.write(relative_offset=(10, 20, 30), data=write_data2, allow_unaligned=True)
 
     assert np.array_equal(
         write_data2,
@@ -1515,40 +1522,41 @@ def test_writing_subset_of_compressed_data(
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.raises(ValueError, match="not aligned with the shard shape"):
         compressed_mag.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.raises(UserWarning, match="not aligned with the shard shape"):
         compressed_mag.write(
             relative_offset=(20, 40, 60),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-        assert compressed_mag.bounding_box == BoundingBox(
-            topleft=(
-                0,
-                0,
-                0,
-            ),
-            size=(120 * 2, 140 * 2, 160 * 2),
-        )
-        # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
-        # This write operation writes unaligned data into the bottom-right corner of the MagView.
-        compressed_mag.write(
-            absolute_offset=(128, 128, 128),
-            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
-        )
-        # This also works for normal Views but they only use the bounding box at the time of creation as reference.
-        compressed_mag.get_view().write(
-            absolute_offset=(128, 128, 128),
-            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
-        )
+    assert compressed_mag.bounding_box == BoundingBox(
+        topleft=(
+            0,
+            0,
+            0,
+        ),
+        size=(120 * 2, 140 * 2, 160 * 2),
+    )
+    # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
+    # This write operation writes unaligned data into the bottom-right corner of the MagView.
+    compressed_mag.write(
+        absolute_offset=(128, 128, 128),
+        data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+    )
 
-        # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
-        compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
+    # This also works for normal Views but they only use the bounding box at the time of creation as reference.
+    compressed_mag.get_view().write(
+        absolute_offset=(128, 128, 128),
+        data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+    )
+
+    # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
+    compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1558,8 +1566,8 @@ def test_writing_subset_of_chunked_compressed_data(
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
     chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
 
-    # create uncompressed dataset
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
     mag_view = (
         Dataset(ds_path, voxel_size=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, data_format=data_format)
@@ -1580,18 +1588,26 @@ def test_writing_subset_of_chunked_compressed_data(
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
     )
 
-    with pytest.warns(UserWarning, match="not aligned with the shard shape"):
+    with pytest.raises(ValueError, match="not aligned with the shard shape"):
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
-        write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
         compressed_view.write(absolute_offset=(10, 20, 30), data=write_data2)
+    compressed_view.write(
+        absolute_offset=(10, 20, 30), data=write_data2, allow_unaligned=True
+    )
 
+    with pytest.raises(ValueError, match="not aligned with the shard shape"):
         # Advanced case:
         # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
         compressed_view.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
         )
+    compressed_view.write(
+        absolute_offset=(10, 20, 30),
+        data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
+        # allow_unaligned=True,
+    )
 
     np.array_equal(
         write_data2,
@@ -1632,7 +1648,7 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
 
     # write data in symlink layer
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data)
+    mag.write(write_data, allow_unaligned=True)
 
     assert np.array_equal(
         mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data
@@ -1692,7 +1708,9 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     # Note: The written data is fully inside the bounding box of the original data.
     # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
     write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    symlink_mag_2.write(absolute_offset=(0, 0, 0), data=write_data)
+    symlink_mag_2.write(
+        absolute_offset=(0, 0, 0), data=write_data, allow_unaligned=True
+    )
 
     assert np.array_equal(
         symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data
@@ -2146,6 +2164,7 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
         data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8),
         absolute_offset=(10, 20, 30),
         allow_resize=True,
+        allow_unaligned=True,
     )
     v_write = mag.get_view()
     v_read = mag.get_view(read_only=True)
@@ -2765,13 +2784,15 @@ def test_can_compress_mag8() -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     layer.bounding_box = BoundingBox((0, 0, 0), (12240, 12240, 685))
     for mag in ["1", "2-2-1", "4-4-1", "8-8-2"]:
-        layer.add_mag(mag)
+        layer.add_mag(mag, compress=False)
 
     assert layer.bounding_box == BoundingBox((0, 0, 0), (12240, 12240, 685))
 
     mag_view = layer.get_mag("8-8-2")
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
-    mag_view.write(data_to_write, absolute_offset=(11264, 11264, 0))
+    mag_view.write(
+        data_to_write, absolute_offset=(11264, 11264, 0), allow_unaligned=True
+    )
     mag_view.compress()
 
 

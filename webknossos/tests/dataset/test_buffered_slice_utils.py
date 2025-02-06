@@ -1,5 +1,6 @@
 import warnings
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -59,41 +60,46 @@ def test_buffered_slice_writer() -> None:
     test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
     for i in np.arange(35):
         test_img_3d[:, :, i] = test_img
-    assert np.array_equal(test_img_3d, read_data), (
-        "The data from the disk is not the same " "as the data that should be written."
-    )
+    assert np.array_equal(
+        test_img_3d, read_data
+    ), "The data from the disk is not the same as the data that should be written."
 
 
-def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
+@pytest.mark.parametrize("dim", [0, 1, 2])
+def test_buffered_slice_writer_along_different_axis(
+    tmp_path: Path, dim: Literal[0, 1, 2]
+) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
     cube_size_without_channel = test_cube.shape[1:]
     offset = Vec3Int(64, 96, 32)
 
-    for dim in [0, 1, 2]:
-        ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
-        layer = ds.add_layer(
-            "color",
-            COLOR_CATEGORY,
-            num_channels=test_cube.shape[0],
-            bounding_box=BoundingBox(offset, cube_size_without_channel),
-        )
-        mag_view = layer.add_mag(1, chunks_per_shard=(32, 32, 1))
+    chunks_per_shard = [32, 32, 32]
+    chunks_per_shard[dim] = 1
 
-        with mag_view.get_buffered_slice_writer(
-            absolute_offset=offset, buffer_size=5, dimension=dim
-        ) as writer:
-            for i in range(cube_size_without_channel[dim]):
-                if dim == 0:
-                    current_slice = test_cube[:, i, :, :]
-                elif dim == 1:
-                    current_slice = test_cube[:, :, i, :]
-                else:  # dim == 2
-                    current_slice = test_cube[:, :, :, i]
-                writer.send(current_slice)
-        assert np.array_equal(
-            mag_view.read(absolute_offset=offset, size=cube_size_without_channel),
-            test_cube,
-        )
+    ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        num_channels=test_cube.shape[0],
+        bounding_box=BoundingBox(offset, cube_size_without_channel),
+    )
+    mag_view = layer.add_mag(1, chunks_per_shard=chunks_per_shard)
+
+    with mag_view.get_buffered_slice_writer(
+        absolute_offset=offset, buffer_size=5, dimension=dim, allow_unaligned=True
+    ) as writer:
+        for i in range(cube_size_without_channel[dim]):
+            if dim == 0:
+                current_slice = test_cube[:, i, :, :]
+            elif dim == 1:
+                current_slice = test_cube[:, :, i, :]
+            else:  # dim == 2
+                current_slice = test_cube[:, :, :, i]
+            writer.send(current_slice)
+    assert np.array_equal(
+        mag_view.read(absolute_offset=offset, size=cube_size_without_channel),
+        test_cube,
+    )
 
 
 def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
@@ -184,7 +190,7 @@ def test_buffered_slice_writer_unaligned(
     # data is left untouched by the buffered slice writer.
     ones_at_z32 = np.ones((512, 512, 4), dtype=np.uint8)
     ones_offset = (0, 0, 32)
-    mag1.write(ones_at_z32, absolute_offset=ones_offset)
+    mag1.write(ones_at_z32, absolute_offset=ones_offset, allow_unaligned=True)
 
     # Allocate some data (~ 8 MB). Note that this will write
     # from z=1 to z=31 (i.e., 31 slices instead of 32 which
@@ -193,14 +199,12 @@ def test_buffered_slice_writer_unaligned(
     shape = (512, 512, 31)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("default", module="webknossos", message=r"\[WARNING\]")
-        with mag1.get_buffered_slice_writer(
-            absolute_offset=offset, buffer_size=32
-        ) as writer:
-            for z in range(0, shape[2]):
-                section = data[:, :, z]
-                writer.send(section)
+    with mag1.get_buffered_slice_writer(
+        absolute_offset=offset, buffer_size=32, allow_unaligned=True
+    ) as writer:
+        for z in range(0, shape[2]):
+            section = data[:, :, z]
+            writer.send(section)
 
     written_data = mag1.read(absolute_offset=offset, size=shape)
     assert np.all(
@@ -213,7 +217,7 @@ def test_buffered_slice_writer_unaligned(
     ), "The BufferedSliceWriter seems to have overwritten older data."
 
 
-def test_buffered_slice_writer_should_warn_about_unaligned_usage(
+def test_buffered_slice_writer_should_raise_unaligned_usage(
     tmp_path: Path,
 ) -> None:
     # Create DS
@@ -233,8 +237,10 @@ def test_buffered_slice_writer_should_warn_about_unaligned_usage(
     shape = (512, 512, 32)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
-    with warnings.catch_warnings(record=True) as recorded_warnings:
-        warnings.filterwarnings("default", module="webknossos", message=r"\[WARNING\]")
+    with pytest.raises(
+        ValueError,
+        match=".*Using an offset that doesn't align with the datataset's shard shape.*",
+    ):
         # Write some slices
         with mag1.get_buffered_slice_writer(
             absolute_offset=offset, buffer_size=35
@@ -242,19 +248,6 @@ def test_buffered_slice_writer_should_warn_about_unaligned_usage(
             for z in range(0, shape[2]):
                 section = data[:, :, z]
                 writer.send(section)
-
-        warning1 = recorded_warnings[0]
-        warning2 = recorded_warnings[1]
-        assert issubclass(warning1.category, UserWarning) and "Using an offset" in str(
-            warning1.message
-        )
-        assert issubclass(
-            warning2.category, UserWarning
-        ) and "Using a buffer size" in str(warning2.message)
-
-    written_data = mag1.read(absolute_offset=offset, size=shape)
-
-    assert np.all(data == written_data)
 
 
 def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
