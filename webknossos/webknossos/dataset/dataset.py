@@ -136,7 +136,7 @@ _ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$"
 # This regex matches any character that is not allowed in a layer name.
 _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
-SAFE_LARGE_XY: int = 10000000000  # 10 billion
+SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:

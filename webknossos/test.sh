@@ -3,7 +3,7 @@ set -eEuo pipefail
 
 source local_wk_setup.sh
 
-# Using forkserver instead of spawn is faster
+# Using forkserver instead of spawn is faster. Fork should never be used due to potential deadlock problems.
 export MULTIPROCESSING_DEFAULT_START_METHOD=forkserver
 
 # Note that pytest should be executed via `python -m`, since

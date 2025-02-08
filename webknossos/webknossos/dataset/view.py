@@ -367,7 +367,7 @@ class View:
                     shard_shape = self.info.shard_shape
                     warnings.warn(
                         f"[WARNING] The bounding box to write {current_mag_bbox} is not aligned with the shard shape {shard_shape}. "
-                        "This was supported for uncompressed WKW datasets, but is deprecated now because of concurrency issues. "
+                        "This was supported for uncompressed WKW datasets, but is deprecated now because of issues with performance and concurrent writes. "
                         "Please use an explicit `allow_unaligned` argument to fix this."
                     )
             else:
@@ -382,7 +382,7 @@ class View:
             self._array.write(current_mag_bbox, data)
 
     def _check_shard_alignment(self, bbox: NDBoundingBox) -> None:
-        """Check that the bounding box is aling with the shard grid"""
+        """Check that the bounding box is aligned with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
         if shard_bbox.intersected_with(self.bounding_box.in_mag(self._mag)) != bbox:

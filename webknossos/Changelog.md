@@ -13,7 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...HEAD)
 
 ### Breaking Changes
-- Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
+- Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of the underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
 - Removed deprecated functions, properties and arguments:
   - Functions:
     - `open_annotation`, use `Annotation.load()` instead
