@@ -368,7 +368,7 @@ class View:
                     warnings.warn(
                         f"[WARNING] The bounding box to write {current_mag_bbox} is not aligned with the shard shape {shard_shape}. "
                         "This was supported for uncompressed WKW datasets, but is deprecated now because of issues with performance and concurrent writes. "
-                        "Please use an explicit `allow_unaligned` argument to fix this."
+                        "Either, ensure that you write shard-aligned chunks OR pass allow_unaligned=True. When using the latter, take care to not write concurrently."
                     )
             else:
                 self._check_shard_alignment(current_mag_bbox)
@@ -389,7 +389,8 @@ class View:
             raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
                 + "Performance will be degraded as existing shard data has to be read, combined and "
-                + f"written as whole shards. Bounding box: {self.bounding_box}",
+                + "written as whole shards. Additionally, writing without shard alignment data can lead to "
+                + f"issues when writing in parallel. Bounding box: {self.bounding_box}",
             )
 
     def _prepare_compressed_write(

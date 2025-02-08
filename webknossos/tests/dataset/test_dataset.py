@@ -20,7 +20,6 @@ from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
-    SegmentationLayer,
     View,
 )
 from webknossos.dataset._array import DataFormat
@@ -32,7 +31,7 @@ from webknossos.dataset.properties import (
     SegmentationLayerProperties,
     dataset_converter,
 )
-from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
     is_remote_path,
@@ -735,7 +734,10 @@ def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_write_layer(data_format: DataFormat, output_path: Path) -> None:
+@pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
+def test_write_layer(
+    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
@@ -746,16 +748,25 @@ def test_write_layer(data_format: DataFormat, output_path: Path) -> None:
         category=COLOR_CATEGORY,
         data=data,
         data_format=data_format,
+        absolute_offset=absolute_offset,
     )
 
     np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
+    if absolute_offset is not None:
+        assert layer.bounding_box.topleft_xyz == absolute_offset
+    assert layer.bounding_box.size_xyz == Vec3Int(data.shape)
 
 
 @pytest.mark.parametrize(
     "data_format,output_path",
     [(DataFormat.Zarr3, TESTOUTPUT_DIR), (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR)],
 )
-def test_write_layer_5d(data_format: DataFormat, output_path: Path) -> None:
+@pytest.mark.parametrize("absolute_offset", [None, (3, 12, 12, 12)])
+def test_write_layer_5d(
+    data_format: DataFormat,
+    output_path: Path,
+    absolute_offset: Optional[VecIntLike],
+) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
@@ -768,9 +779,13 @@ def test_write_layer_5d(data_format: DataFormat, output_path: Path) -> None:
         data_format=data_format,
         axes=("c", "t", "x", "y", "z"),
         chunks_per_shard=(4, 4, 4),
+        absolute_offset=absolute_offset,
     )
 
     np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
+    if absolute_offset is not None:
+        assert layer.bounding_box.topleft.to_tuple() == absolute_offset
+    assert layer.bounding_box.size.to_tuple() == data.shape[1:]
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -951,7 +966,7 @@ def test_no_largest_segment_id() -> None:
     ds = Dataset.open(ds_path)
 
     assert (
-        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id is None
+        ds.get_layer("segmentation").as_segmentation_layer().largest_segment_id is None
     )
 
     assure_exported_properties(ds)
@@ -1644,7 +1659,7 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
     assert len(ds.layers) == 2
     assert len(ds.get_layer("color").mags) == 1
 
-    assert cast(SegmentationLayer, symlink_segmentation_layer).largest_segment_id == 999
+    assert symlink_segmentation_layer.as_segmentation_layer().largest_segment_id == 999
 
     # write data in symlink layer
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
@@ -2420,10 +2435,9 @@ def test_get_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
-    segmentation_layer = cast(
-        SegmentationLayer,
-        ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999),
-    )
+    segmentation_layer = ds.add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    ).as_segmentation_layer()
     assert segmentation_layer.largest_segment_id == 999
     segmentation_layer.largest_segment_id = 123
     assert segmentation_layer.largest_segment_id == 123
@@ -2435,10 +2449,9 @@ def test_refresh_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
-    segmentation_layer = cast(
-        SegmentationLayer,
-        ds.add_layer("segmentation", SEGMENTATION_CATEGORY),
-    )
+    segmentation_layer = ds.add_layer(
+        "segmentation", SEGMENTATION_CATEGORY
+    ).as_segmentation_layer()
     mag = segmentation_layer.add_mag(Mag(1))
 
     assert segmentation_layer.largest_segment_id is None
@@ -2538,8 +2551,9 @@ def test_add_copy_layer(data_format: DataFormat, output_path: Path) -> None:
     ds.add_copy_layer(copy_path / "segmentation")
     assert len(ds.layers) == 2
     assert (
-        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id == 999
+        ds.get_layer("segmentation").as_segmentation_layer().largest_segment_id == 999
     )
+
     color_layer = ds.get_layer("color")
     assert color_layer.bounding_box == BoundingBox(
         topleft=(10, 20, 30), size=(32, 64, 128)
@@ -2668,21 +2682,18 @@ def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
         data_format=data_format,
     )
     color_layer1.add_mag(1)
-    segmentation_layer1 = cast(
-        SegmentationLayer,
-        ds.add_layer(
-            "segmentation1",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="uint8",
-            largest_segment_id=999,
-            data_format=data_format,
-        ),
-    )
+    segmentation_layer1 = ds.add_layer(
+        "segmentation1",
+        SEGMENTATION_CATEGORY,
+        dtype_per_channel="uint8",
+        largest_segment_id=999,
+        data_format=data_format,
+    ).as_segmentation_layer()
     segmentation_layer1.add_mag(1)
     color_layer2 = ds.add_layer_like(color_layer1, "color2")
-    segmentation_layer2 = cast(
-        SegmentationLayer, ds.add_layer_like(segmentation_layer1, "segmentation2")
-    )
+    segmentation_layer2 = ds.add_layer_like(
+        segmentation_layer1, "segmentation2"
+    ).as_segmentation_layer()
 
     assert color_layer1.name == "color1"
     assert color_layer2.name == "color2"

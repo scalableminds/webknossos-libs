@@ -1458,6 +1458,13 @@ class Layer:
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return None
 
+    def as_segmentation_layer(self) -> "SegmentationLayer":
+        """Casts into SegmentationLayer."""
+        if isinstance(self, SegmentationLayer):
+            return self
+        else:
+            raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
+
     @classmethod
     def _ensure_layer(cls, layer: Union[str, PathLike, "Layer"]) -> "Layer":
         if isinstance(layer, Layer):

@@ -343,7 +343,8 @@ class MagView(View):
                 self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
             else:
                 raise ValueError(
-                    f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. Please use `allow_resize=True` or manually allow_resize the bounding box beforehand."
+                    f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. "
+                    + "Please use `allow_resize=True` or explicitly resize the bounding box beforehand."
                 )
 
         super().write(

@@ -1972,6 +1972,7 @@ class Dataset:
         chunk_shape: Optional[Vec3IntLike] = None,
         chunks_per_shard: Optional[Vec3IntLike] = None,
         axes: Optional[Iterable[str]] = None,
+        absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,
     ) -> Layer:
         if axes is not None:
             axes = tuple(axes)
@@ -1979,7 +1980,7 @@ class Dataset:
             if "c" in axes:
                 assert axes[0] == "c"
                 bbox = NDBoundingBox(
-                    VecInt.zeros(axes[1:]),
+                    absolute_offset or VecInt.zeros(axes[1:]),
                     VecInt(data.shape[1:], axes=axes[1:]),
                     axes=axes[1:],
                     index=tuple(range(1, len(axes))),
@@ -1987,7 +1988,7 @@ class Dataset:
                 num_channels = data.shape[0]
             else:
                 bbox = NDBoundingBox(
-                    VecInt.zeros(axes),
+                    absolute_offset or VecInt.zeros(axes),
                     VecInt(data.shape, axes=axes),
                     axes=axes,
                     index=tuple(range(1, len(axes) + 1)),
@@ -2001,11 +2002,13 @@ class Dataset:
                 shape = data.shape
                 while len(shape) < 3:
                     shape = shape + (1,)
-                bbox = BoundingBox(Vec3Int.zeros(), Vec3Int(shape))
+                bbox = BoundingBox(absolute_offset or Vec3Int.zeros(), Vec3Int(shape))
                 num_channels = 1
             elif data.ndim == 4:
                 axes = ("c", "x", "y", "z")
-                bbox = BoundingBox(Vec3Int.zeros(), Vec3Int(data.shape[1:]))
+                bbox = BoundingBox(
+                    absolute_offset or Vec3Int.zeros(), Vec3Int(data.shape[1:])
+                )
                 num_channels = data.shape[0]
             else:
                 raise ValueError(
