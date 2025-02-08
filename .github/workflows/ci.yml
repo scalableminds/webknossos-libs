@@ -195,7 +195,8 @@ jobs:
 
       - name: Patch Python standard library to assert that fork is not allowed
         run: |
-          sed -i '66i \ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
+          sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
+          cat /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
       - name: Python tests
         timeout-minutes: 30
