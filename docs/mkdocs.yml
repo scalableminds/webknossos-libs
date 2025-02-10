@@ -57,12 +57,6 @@ extra:
       link: https://medium.com/webknossos
   generator: false
 
-extra_javascript:
-  - javascript/algolia.js
-
-extra_css:
-  - css/algolia.css
-
 plugins:
   # - gen-files:
   #     scripts:
