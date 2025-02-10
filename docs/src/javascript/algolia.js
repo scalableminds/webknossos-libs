@@ -1,6 +1,6 @@
 docsearch({
-    container: '#docsearch',
-    appId: '74VN1YECLR',
-    indexName: 'gpt-index',
-    apiKey: 'c4b0e099fa9004f69855e474b3e7d3bb',
+  container: "#docsearch",
+  appId: "5OBUZXDP92",
+  indexName: "docs_webknossos",
+  apiKey: "45d3657a69b5ae7591223a54fe299dbb",
 });
