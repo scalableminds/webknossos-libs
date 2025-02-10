@@ -323,7 +323,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -334,6 +334,9 @@ wheels = [
 name = "cluster-tools"
 version = "0.0.0"
 source = { editable = "../cluster_tools" }
+dependencies = [
+    { name = "typing-extensions" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -341,6 +344,7 @@ requires-dist = [
     { name = "cluster-tools", extras = ["kubernetes"], marker = "extra == 'all'" },
     { name = "distributed", marker = "extra == 'kubernetes'", specifier = "~=2023.9.1" },
     { name = "kubernetes", marker = "extra == 'dask'", specifier = "~=27.2.0" },
+    { name = "typing-extensions", specifier = "~=4.12.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -349,7 +353,6 @@ dev = [
     { name = "mypy", specifier = "~=1.0.0" },
     { name = "pytest", specifier = "~=8.3.3" },
     { name = "ruff", specifier = "~=0.5.0" },
-    { name = "typing-extensions", specifier = "~=4.12.0" },
 ]
 
 [[package]]
@@ -546,7 +549,7 @@ name = "importlib-metadata"
 version = "8.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.10'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c0/bd/fa8ce65b0a7d4b6d143ec23b0f5fd3f7ab80121078c465bc02baeaab22dc/importlib_metadata-8.4.0.tar.gz", hash = "sha256:9a547d3bc3608b025f93d403fdd1aae741c24fbb8314df4b155675742ce303c5", size = 54320 }
 wheels = [
@@ -770,7 +773,7 @@ version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
     { name = "ghp-import" },
     { name = "importlib-metadata", marker = "python_full_version < '3.10'" },
     { name = "jinja2" },
@@ -1766,14 +1769,14 @@ requires-dist = [
     { name = "pims", specifier = "~=0.7.0" },
     { name = "pooch", marker = "extra == 'examples'", specifier = "~=1.5.2" },
     { name = "psutil", specifier = "~=6.0.0" },
-    { name = "pylibczirw", marker = "extra == 'czi'", specifier = "==4.1.1" },
+    { name = "pylibczirw", marker = "extra == 'czi'", specifier = "==4.1.3" },
     { name = "python-dateutil", specifier = "~=2.8.0" },
     { name = "python-dotenv", specifier = "~=1.0.1" },
     { name = "rich", specifier = "~=13.8.0" },
     { name = "s3fs", marker = "extra == 'examples'", specifier = ">=2023.9.0" },
     { name = "scikit-image", marker = "extra == 'examples'", specifier = "~=0.24.0" },
     { name = "scikit-learn", marker = "extra == 'examples'", specifier = "~=1.5.1" },
-    { name = "scipy", specifier = "~=1.13" },
+    { name = "scipy", specifier = ">=1.13" },
     { name = "tabulate", marker = "extra == 'examples'", specifier = ">=0.9.0" },
     { name = "tensorstore", specifier = "~=0.1.69" },
     { name = "tifffile", marker = "extra == 'tifffile'", specifier = ">=2024.8.24" },
@@ -1798,7 +1801,7 @@ dev = [
     { name = "mypy", specifier = "~=1.10.0" },
     { name = "pytest", specifier = "~=8.3.2" },
     { name = "pytest-custom-exit-code", specifier = "~=0.3.0" },
-    { name = "pytest-split", specifier = "~=0.9.0" },
+    { name = "pytest-split", specifier = "~=0.10.0" },
     { name = "pytest-sugar", specifier = "~=1.0.0" },
     { name = "pytest-timeout", specifier = "~=2.3.0" },
     { name = "pytest-timestamper", specifier = "~=0.0.10" },
