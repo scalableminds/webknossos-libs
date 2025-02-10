@@ -1,0 +1,21 @@
+:root {
+    --docsearch-primary-color: #5660ff;
+    --docsearch-logo-color: #5660ff;
+    --docsearch-searchbox-height: 48px;
+}
+
+.DocSearch-Button {
+    height: 24px !important;
+}
+
+.DocSearch-Button-Key {
+    height: 14px !important;
+}
+
+.DocSearch-Search-Icon {
+    transform: scale(0.8);
+  }
+
+  .DocSearch-Button-Placeholder {
+    font-size: 0.75rem !important
+  }

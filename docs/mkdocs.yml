@@ -61,7 +61,7 @@ extra_javascript:
   - javascript/algolia.js
 
 extra_css:
-  - css/algolia.css
+  - css/customize-algolia.css
 
 plugins:
   # - gen-files:
