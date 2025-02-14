@@ -1886,8 +1886,14 @@ class Dataset:
             )
 
             with warnings.catch_warnings():
-                # For n-d datasets, the `axisOrder` property is stored with mags.
-                # At this point, we don't have any mags yet, so we can't compare the persisted properties.
+                # We need to catch and ignore a warning here about comparing persisted properties.
+                # The problem is that there is an `axisOrder` property that goes in the datasource-properties.json
+                # file, but is only stored in a mag object. However, at first we don't have any mags
+                # so there is no place to store them. When we add the first mag and update the properties,
+                # there is a check that reads the properties first and compares them to the current state.
+                # This check fails because the axisOrder property hasn't been stored in the properties file.
+                # It is safe to ignore this warning because it is only an intermediate problem in this function.
+                # At the end of this function, the properties are complete and consistent.
                 warnings.filterwarnings(
                     "ignore",
                     message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
