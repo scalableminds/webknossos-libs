@@ -46,9 +46,9 @@ from ..geometry import (
     NDBoundingBox,
     Vec3Int,
     Vec3IntLike,
-    VecInt,
     VecIntLike,
 )
+from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
@@ -1980,47 +1980,9 @@ class Dataset:
         axes: Optional[Iterable[str]] = None,
         absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,
     ) -> Layer:
-        if axes is not None:
-            axes = tuple(axes)
-            assert len(axes) == data.ndim
-            if "c" in axes:
-                assert axes[0] == "c"
-                bbox = NDBoundingBox(
-                    absolute_offset or VecInt.zeros(axes[1:]),
-                    VecInt(data.shape[1:], axes=axes[1:]),
-                    axes=axes[1:],
-                    index=tuple(range(1, len(axes))),
-                )
-                num_channels = data.shape[0]
-            else:
-                bbox = NDBoundingBox(
-                    absolute_offset or VecInt.zeros(axes),
-                    VecInt(data.shape, axes=axes),
-                    axes=axes,
-                    index=tuple(range(1, len(axes) + 1)),
-                )
-                num_channels = 1
-        else:
-            if data.ndim == 0:
-                raise ValueError("Scalar values are not supported.")
-            elif data.ndim <= 3:
-                axes = ("x", "y", "z")
-                shape = data.shape
-                while len(shape) < 3:
-                    shape = shape + (1,)
-                bbox = BoundingBox(absolute_offset or Vec3Int.zeros(), Vec3Int(shape))
-                num_channels = 1
-            elif data.ndim == 4:
-                axes = ("c", "x", "y", "z")
-                bbox = BoundingBox(
-                    absolute_offset or Vec3Int.zeros(), Vec3Int(data.shape[1:])
-                )
-                num_channels = data.shape[0]
-            else:
-                raise ValueError(
-                    "axes must be provided for arrays with more than 4 dimensions."
-                )
-
+        bbox, num_channels = derive_nd_bounding_box_from_shape(
+            data.shape, axes=axes, absolute_offset=absolute_offset
+        )
         layer = self.add_layer(
             layer_name,
             category,
