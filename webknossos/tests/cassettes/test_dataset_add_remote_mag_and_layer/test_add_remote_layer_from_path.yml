@@ -18,16 +18,18 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:22 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/json
         content-length: '682'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1740127701187,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
         compression: none
   - request:
       method: GET
@@ -49,18 +51,20 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:22 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/json
         content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246702611,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1740131991708,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -81,16 +85,18 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:22 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/json
         content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246703167,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1740131992068,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -112,20 +118,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:22 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"YcRJ5WllkVuSaqLRoIU-YA"}'
+        data: '{"token":"BfaHx9eFICTcWkBKM2PjaQ"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -140,6 +148,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -147,7 +156,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:22 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1000'
       body:
@@ -157,7 +167,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -172,6 +182,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -179,7 +190,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:22 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '360'
       body:
@@ -189,7 +201,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -204,6 +216,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -211,7 +224,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:22 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '120'
       body:
@@ -221,7 +235,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -236,6 +250,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -243,7 +258,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:23 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '20'
       body:
@@ -252,7 +268,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -267,6 +283,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -274,7 +291,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:23 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '6'
       body:
@@ -283,7 +301,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -298,6 +316,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -305,7 +324,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:23 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '4000'
       body:
@@ -315,7 +335,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -330,6 +350,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -337,7 +358,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:23 GMT
+        date: Fri, 21 Feb 2025 09:59:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1440'
       body:
@@ -347,7 +369,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -362,6 +384,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -369,7 +392,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:23 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '480'
       body:
@@ -379,7 +403,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -394,6 +418,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -401,7 +426,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '80'
       body:
@@ -411,7 +437,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=YcRJ5WllkVuSaqLRoIU-YA
+        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3&token=BfaHx9eFICTcWkBKM2PjaQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -426,6 +452,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -433,7 +460,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '24'
       body:
@@ -459,18 +487,20 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
         content-type: application/json
         content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246703167,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1740131992068,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -492,16 +522,18 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
         content-type: application/json
         content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1738246705349,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1740131993576,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
@@ -512,7 +544,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept-encoding: identity
         accept: '*/*'
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -521,12 +553,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -544,7 +577,7 @@ http_interactions:
         range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -553,76 +586,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
-        connection: close
-        content-type: application/json
-        content-length: '1152'
-      body:
-        encoding: utf8
-        data: >-
-          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
-        compression: none
-  - request:
-      method: HEAD
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept-encoding: identity
-        accept: '*/*'
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
-        connection: close
-        content-type: application/json
-        content-length: '1152'
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        range: bytes=0-1151
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -640,7 +610,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -649,12 +619,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -716,7 +687,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -725,12 +696,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -792,7 +764,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -801,12 +773,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -868,7 +841,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -877,12 +850,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -944,7 +918,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -953,12 +927,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -1012,70 +987,6 @@ http_interactions:
           </html>
         compression: none
   - request:
-      method: HEAD
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        accept-encoding: identity
-        accept: '*/*'
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:24 GMT
-        connection: close
-        content-type: application/json
-        content-length: '1152'
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
-      headers:
-        host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        range: bytes=0-1151
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:25 GMT
-        connection: close
-        content-type: application/json
-        content-length: '1152'
-      body:
-        encoding: utf8
-        data: >-
-          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
-        compression: none
-  - request:
       method: GET
       path: /data/zarr/Organization_X/l4_sample/segmentation/1
       headers:
@@ -1084,7 +995,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -1093,12 +1004,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:25 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -1160,7 +1072,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -1169,12 +1081,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:25 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1236,7 +1149,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -1245,12 +1158,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:25 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1312,7 +1226,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -1321,12 +1235,13 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:25 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1388,7 +1303,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.10 aiohttp/3.10.9
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -1397,12 +1312,887 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:25 GMT
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1302'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/16-16-4” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: HEAD
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        accept-encoding: identity
+        accept: '*/*'
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1152'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        range: bytes=0-1151
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1152'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/1
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1289'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/2-2-1
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1293'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/2-2-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/4-4-1
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1293'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/4-4-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/8-8-2
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1293'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/8-8-2” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/color/16-16-4
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1295'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/16-16-4” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: HEAD
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        accept-encoding: identity
+        accept: '*/*'
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1152'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      headers:
+        host: localhost:9000
+        range: bytes=0-1151
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1152'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/1
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1296'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1300'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/2-2-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1300'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/4-4-1” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
+        connection: close
+        content-type: text/html; charset=UTF-8
+        content-length: '1300'
+      body:
+        encoding: utf8
+        data: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+              <title>WEBKNOSSOS Datastore</title>
+              <meta name="robot" content="noindex" />
+              <script type="text/javascript">
+                // forward to path with trailing slash
+                if (!window.location.pathname.endsWith('/')) {
+                  var url = window.location.protocol + '//' + 
+                            window.location.host + 
+                            window.location.pathname + '/' + 
+                            window.location.search;
+                  window.location.replace(url);
+                }
+              </script>
+              
+              <style>
+                * {
+                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+                  sans-serif;
+                  text-align: center
+                }
+                
+                ul {
+                  list-style: none;
+                }
+
+                p#hint {
+                  color: #777;
+                  margin-top: 4em
+                }
+              </style>
+            </head>
+            <body>
+              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/8-8-2” folder.</p>
+              <p>The following are the contents of the folder:</p>
+              <ul>
+                
+                  <li><a href=".zarray">.zarray</a></li>
+                
+              </ul>
+            </body>
+          </html>
+        compression: none
+  - request:
+      method: GET
+      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Fri, 21 Feb 2025 09:59:52 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
