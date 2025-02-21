@@ -152,10 +152,6 @@ def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
-_UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
-    "_UNSPECIFIED_SCALE_FROM_OPEN", var_name="_UNSPECIFIED_SCALE_FROM_OPEN"
-)
-
 
 class Dataset:
     """A dataset is the entry point of the Dataset API.
@@ -330,6 +326,8 @@ class Dataset:
             AssertionError: If opening existing dataset with mismatched voxel size or name
 
         """
+        self._read_only = read_only
+        self.path: Path = strip_trailing_slash(UPath(dataset_path))
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -338,12 +336,9 @@ class Dataset:
         elif voxel_size is not None:
             voxel_size_with_unit = VoxelSize(voxel_size)
 
-        self._read_only = read_only
-        self.path: Path = strip_trailing_slash(UPath(dataset_path))
-
         stored_dataset_properties: Optional[DatasetProperties] = None
         try:
-            stored_dataset_properties = self._load_properties()
+            stored_dataset_properties = self._load_properties(self.path)
         except FileNotFoundError:
             if read_only:
                 raise FileNotFoundError(
@@ -356,6 +351,7 @@ class Dataset:
                 raise RuntimeError(
                     f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
                 )
+            assert stored_dataset_properties is not None # for mypy to get the type of dataset_properties right
             dataset_properties = stored_dataset_properties
 
         else:
@@ -401,6 +397,26 @@ class Dataset:
                 )
             )
 
+        self._init_from_properties(dataset_properties)
+
+        if dataset_existed_already:
+            if voxel_size_with_unit is None:
+                raise ValueError(
+                    "Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
+                    + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
+                )
+            else:
+                if self.voxel_size_with_unit != voxel_size_with_unit:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
+                    )
+            if name is not None:
+                if self.name != name:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the names do not match ({self.name} != {name})"
+                    )
+
+    def _init_from_properties(self, dataset_properties: DatasetProperties) -> "Dataset":
         assert dataset_properties is not None
         self._properties = dataset_properties
         self._last_read_properties = copy.deepcopy(self._properties)
@@ -431,28 +447,12 @@ class Dataset:
                         if mag_prop.mag == mag
                     )
                     mag_prop.path = str(layer.mags[mag].path)
-
-        if dataset_existed_already:
-            if voxel_size_with_unit is None:
-                raise ValueError(
-                    "Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
-                    + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
-                )
-            elif voxel_size_with_unit == _UNSPECIFIED_SCALE_FROM_OPEN:
-                pass
-            else:
-                if self.voxel_size_with_unit != voxel_size_with_unit:
-                    raise RuntimeError(
-                        f"Cannot open Dataset: The dataset {self.path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
-                    )
-            if name is not None:
-                if self.name != name:
-                    raise RuntimeError(
-                        f"Cannot open Dataset: The dataset {self.path} already exists, but the names do not match ({self.name} != {name})"
-                    )
+        return self
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
+    def open(
+        cls, dataset_path: Union[str, PathLike], read_only: bool = False
+    ) -> "Dataset":
         """
         To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
         This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
@@ -461,17 +461,14 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        if (
-            path := strip_trailing_slash(UPath(dataset_path)) / PROPERTIES_FILE_NAME
-        ).exists():
-            return cls(
-                dataset_path,
-                voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
-                exist_ok=True,
-            )
-        raise FileNotFoundError(
-            f"Could not find a valid `datasource-properties.json` file at {path}."
-        )
+
+        dataset_path = strip_trailing_slash(UPath(dataset_path))
+        dataset_properties = cls._load_properties(dataset_path)
+
+        dataset = cls.__new__(cls)
+        dataset.path = dataset_path
+        dataset._read_only = read_only
+        return dataset._init_from_properties(dataset_properties)
 
     @classmethod
     def announce_manual_upload(
@@ -2661,19 +2658,20 @@ class Dataset:
         if self._read_only:
             raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
-    def _load_properties(self) -> DatasetProperties:
+    @staticmethod
+    def _load_properties(dataset_path: Path) -> DatasetProperties:
         try:
-            data = json.loads((self.path / PROPERTIES_FILE_NAME).read_bytes())
+            data = json.loads((dataset_path / PROPERTIES_FILE_NAME).read_bytes())
         except FileNotFoundError:
             raise FileNotFoundError(
-                f"Cannot read dataset at {self.path}. datasource-properties.json file not found."
+                f"Cannot read dataset at {dataset_path}. datasource-properties.json file not found."
             )
         return dataset_converter.structure(data, DatasetProperties)
 
     def _export_as_json(self) -> None:
         self._ensure_writable()
 
-        properties_on_disk = self._load_properties()
+        properties_on_disk = self._load_properties(self.path)
         try:
             if properties_on_disk != self._last_read_properties:
                 warnings.warn(
@@ -2839,13 +2837,11 @@ class RemoteDataset(Dataset):
             Do not call this constructor directly, use Dataset.open_remote() instead.
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
+        self.path = dataset_path
+        self._read_only = True
         try:
-            super().__init__(
-                dataset_path,
-                voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
-                exist_ok=True,
-                read_only=True,
-            )
+            dataset_properties = self._load_properties(self.path)
+            self._init_from_properties(dataset_properties)
         except FileNotFoundError as e:
             if hasattr(self, "_properties"):
                 warnings.warn(
@@ -2860,7 +2856,7 @@ class RemoteDataset(Dataset):
         self._context = context
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":  # noqa: ARG003 Unused class method argument: `dataset_path`
+    def open(cls, dataset_path: Union[str, PathLike], read_only: bool = True) -> "Dataset":  # noqa: ARG003
         """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 
