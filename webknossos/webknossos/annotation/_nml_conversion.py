@@ -19,6 +19,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
     from ..skeleton import Skeleton
 
     skeleton = Skeleton(
+        dataset_id=nml.parameters.dataset_id,
         dataset_name=nml.parameters.name,
         voxel_size=nml.parameters.scale,
         organization_id=nml.parameters.organization,

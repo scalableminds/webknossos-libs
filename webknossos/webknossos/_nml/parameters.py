@@ -15,6 +15,7 @@ class Parameters(NamedTuple):
     scale: Vector3  # dataset voxel_size
     description: Optional[str] = None
     organization: Optional[str] = None
+    dataset_id: Optional[str] = None
     offset: Optional[Vector3] = None  # deprecated. Kept for backward compatibility.
     time: Optional[int] = (
         None  # UNIX timestamp marking the creation time & date of an annotation.
@@ -240,6 +241,7 @@ class Parameters(NamedTuple):
             name=experiment_element.get("name", "Unnamed Experiment"),
             description=experiment_element.get("description"),
             organization=experiment_element.get("organization"),
+            dataset_id=experiment_element.get("datasetId"),
             scale=(
                 float(scale_element.get("x", 0)),
                 float(scale_element.get("y", 0)),
