@@ -2859,8 +2859,10 @@ class RemoteDataset(Dataset):
 
     @classmethod
     def open(
-        cls, dataset_path: Union[str, PathLike], read_only: bool = True
-    ) -> "Dataset":  # noqa: ARG003
+        cls,
+        dataset_path: Union[str, PathLike],  # noqa: ARG003
+        read_only: bool = True,  # noqa: ARG003
+    ) -> "Dataset":
         """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 
