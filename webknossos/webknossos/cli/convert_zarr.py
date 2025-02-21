@@ -60,7 +60,7 @@ def _zarr_chunk_converter(
         source_data = np.flip(source_data, flip_axes)
 
     contiguous_chunk = source_data.copy(order="F")
-    target_mag_view.write(contiguous_chunk, bounding_box.topleft)
+    target_mag_view.write(data=contiguous_chunk, absolute_offset=bounding_box.topleft)
 
     return source_data.max()
 

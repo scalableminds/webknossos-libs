@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 
 import pytest
 
+import cluster_tools.executors
+import cluster_tools.schedulers
+
 if TYPE_CHECKING:
     from distributed import LocalCluster
 
@@ -253,6 +256,9 @@ def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
 
     with exc:
         durations = [5, 0]
+        # Slurm can be a bit slow to start up, so we need to increase the sleep time
+        if isinstance(exc, cluster_tools.SlurmExecutor):
+            durations = [20, 0]
         futures = [exc.submit(sleep, n) for n in durations]
         # For synchronous executors, the futures should be completed after submit returns.
         # .as_completed() would return them in reverse order in that case.

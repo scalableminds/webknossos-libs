@@ -1,8 +1,7 @@
 import itertools
 import os
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Iterable
 
 import pytest
 from upath import UPath
@@ -73,6 +72,7 @@ def test_add_remote_mags_from_path(
         remote_dataset.get_layer(layer).get_mag(mag)
         for layer, mag in sample_layer_and_mag_name
     ]
+    print(sample_remote_mags)
     for remote_mag in sample_remote_mags:
         mag_path = remote_mag.path
         layer_type = remote_mag.layer.category

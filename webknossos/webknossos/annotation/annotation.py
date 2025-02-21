@@ -85,7 +85,7 @@ from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
 from ..dataset.properties import DatasetProperties, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
-from ..utils import get_executor_for_args, time_since_epoch_in_ms, warn_deprecated
+from ..utils import get_executor_for_args, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
 logger = logging.getLogger(__name__)
@@ -275,20 +275,6 @@ class Annotation:
             )
 
     @property
-    def username(self) -> Optional[str]:
-        """Deprecated property for accessing owner_name.
-
-        Use owner_name instead.
-        """
-        warn_deprecated("username", "owner_name")
-        return self.owner_name
-
-    @username.setter
-    def username(self, username: str) -> None:
-        warn_deprecated("username", "owner_name")
-        self.owner_name = username
-
-    @property
     def dataset_name(self) -> str:
         """Name of the dataset this annotation belongs to.
 
@@ -323,18 +309,6 @@ class Annotation:
     @voxel_size.setter
     def voxel_size(self, voxel_size: Tuple[float, float, float]) -> None:
         self.skeleton.voxel_size = voxel_size
-
-    @property
-    def scale(self) -> Tuple[float, float, float]:
-        """Deprecated, please use `voxel_size`."""
-        warn_deprecated("scale", "voxel_size")
-        return self.voxel_size
-
-    @scale.setter
-    def scale(self, scale: Tuple[float, float, float]) -> None:
-        """Deprecated, please use `voxel_size`."""
-        warn_deprecated("scale", "voxel_size")
-        self.voxel_size = scale
 
     @property
     def organization_id(self) -> Optional[str]:
@@ -406,7 +380,6 @@ class Annotation:
     def download(
         cls,
         annotation_id_or_url: str,
-        annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
         *,
         skip_volume_data: bool = False,
@@ -417,7 +390,6 @@ class Annotation:
     def download(
         cls,
         annotation_id_or_url: str,
-        annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
         *,
         skip_volume_data: bool = False,
@@ -428,7 +400,6 @@ class Annotation:
     def download(
         cls,
         annotation_id_or_url: str,
-        annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
         *,
         skip_volume_data: bool = False,
@@ -439,7 +410,6 @@ class Annotation:
         Args:
             annotation_id_or_url: Either an annotation ID or complete WEBKNOSSOS URL.
                 Example URL: https://webknossos.org/annotations/[id]
-            annotation_type: Deprecated. Type of annotation (no longer required).
             webknossos_url: Optional custom WEBKNOSSOS instance URL.
             skip_volume_data: If True, omits downloading volume layer data.
             _return_context: Internal use only.
@@ -466,7 +436,7 @@ class Annotation:
 
         match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
         if match is not None:
-            assert webknossos_url is None and annotation_type is None, (
+            assert webknossos_url is None, (
                 "When Annotation.download() is be called with an annotation url, "
                 + "e.g. Annotation.download('https://webknossos.org/annotations/6114d9410100009f0096c640'), "
                 + "annotation_type and webknossos_url must not be set."
@@ -476,11 +446,6 @@ class Annotation:
         else:
             annotation_id = annotation_id_or_url
 
-        if annotation_type is not None:
-            warnings.warn(
-                "[DEPRECATION] `annotation_type` is deprecated for Annotation.download(), it should be omitted.",
-                DeprecationWarning,
-            )
         if webknossos_url is not None:
             webknossos_url = webknossos_url.rstrip("/")
         if webknossos_url is not None and webknossos_url != _get_context().url:
@@ -518,7 +483,6 @@ class Annotation:
     def open_as_remote_dataset(
         cls,
         annotation_id_or_url: str,
-        annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
     ) -> Dataset:
         """Opens an annotation directly as a remote dataset from WEBKNOSSOS.
@@ -530,8 +494,6 @@ class Annotation:
         Args:
             annotation_id_or_url: Either an annotation ID or complete WEBKNOSSOS URL.
                 Example URL: https://webknossos.org/annotations/[id]
-            annotation_type: ⚠️ Deprecated and no longer required.
-                Optional type of annotation (Explorational, Task, etc.).
             webknossos_url: Optional custom WEBKNOSSOS instance URL.
 
         Returns:
@@ -560,7 +522,6 @@ class Annotation:
             context,
         ) = Annotation.download(
             annotation_id_or_url=annotation_id_or_url,
-            annotation_type=annotation_type,
             webknossos_url=webknossos_url,
             skip_volume_data=True,
             _return_context=True,
@@ -1419,16 +1380,3 @@ _ANNOTATION_URL_REGEX = re.compile(
     + rf"((?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/)?"
     + r"(?P<annotation_id>[0-9A-Fa-f]*)"
 )
-
-
-def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
-    """Deprecated."""
-    if Path(annotation_path).exists():
-        warn_deprecated("open_annotation", "Annotation.load")
-        return Annotation.load(annotation_path)
-    else:
-        assert isinstance(
-            annotation_path, str
-        ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
-        warn_deprecated("open_annotation", "Annotation.download")
-        return Annotation.download(annotation_path)

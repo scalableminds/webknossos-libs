@@ -556,6 +556,7 @@ def test_merge_fallback_no_fallback_layer(
             "fallback_layer",
             SEGMENTATION_CATEGORY,
             dtype_per_channel=fallback_layer_data.dtype,
+            data_format=DataFormat.WKW,
         )
         .add_mag(
             1,
@@ -565,7 +566,9 @@ def test_merge_fallback_no_fallback_layer(
         )
     )
 
-    fallback_mag.write(absolute_offset=(0,) * 3, data=fallback_layer_data)
+    fallback_mag.write(
+        absolute_offset=(0,) * 3, data=fallback_layer_data, allow_resize=True
+    )
 
     annotation_zip_path = tmp_path / "annotation.zip"
     annotation_data = np.ones((32, 32, 32), dtype=fallback_layer_data.dtype) * 2
@@ -582,6 +585,7 @@ def test_merge_fallback_no_fallback_layer(
         tmp_layer = tmp_dataset.add_layer(
             "Volume",
             SEGMENTATION_CATEGORY,
+            data_format=DataFormat.WKW,
             dtype_per_channel=annotation_data.dtype,
             largest_segment_id=largest_segment_id,
         )
@@ -590,7 +594,7 @@ def test_merge_fallback_no_fallback_layer(
             1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3, compress=True
         )
 
-        mag1.write(absolute_offset=topleft, data=annotation_data)
+        mag1.write(absolute_offset=topleft, data=annotation_data, allow_resize=True)
 
         volume_layer_zip = tmp_ds_dir / "data_Volume.zip"
 
@@ -658,4 +662,4 @@ def test_merge_fallback_no_fallback_layer(
         .squeeze(0)
     )
 
-    assert (merged_data == expected_data).all()
+    np.testing.assert_array_equal(merged_data, expected_data)

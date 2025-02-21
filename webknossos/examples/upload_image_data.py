@@ -24,25 +24,13 @@ def main() -> None:
 
     # The example microscopy data has two channels
     # Channel 0 contains cell membranes, channel 1 contains nuclei.
-    layer_membranes = ds.add_layer(
-        "cell_membranes",
-        COLOR_CATEGORY,
-        dtype_per_layer=img.dtype,
-    )
-
-    layer_membranes.add_mag(1, compress=True).write(img[0, :])
+    layer_membranes = ds.write_layer("cell_membranes", COLOR_CATEGORY, data=img[0, :])
 
     layer_membranes.default_view_configuration = LayerViewConfiguration(
         color=(17, 212, 17), intensity_range=(0, 16000)
     )
 
-    layer_nuclei = ds.add_layer(
-        "nuclei",
-        COLOR_CATEGORY,
-        dtype_per_layer=img.dtype,
-    )
-
-    layer_nuclei.add_mag(1, compress=True).write(img[1, :])
+    layer_nuclei = ds.write_layer("nuclei", COLOR_CATEGORY, data=img[1, :])
 
     layer_nuclei.default_view_configuration = LayerViewConfiguration(
         color=(212, 17, 17), intensity_range=(3000, 30000)

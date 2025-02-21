@@ -129,5 +129,8 @@ class Vec3Int(VecInt):
     def full(cls, an_int: int, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(an_int, an_int, an_int)
 
+    def __repr__(self) -> str:
+        return f"Vec3Int({self.x},{self.y},{self.z})"
+
 
 Vec3IntLike = Union[Vec3Int, Tuple[int, int, int], np.ndarray, Iterable[int]]

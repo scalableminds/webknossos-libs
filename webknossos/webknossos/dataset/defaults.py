@@ -35,12 +35,11 @@ def _rebuild_sslcontext(
 
 copyreg.pickle(ssl.SSLContext, _save_sslcontext)
 
-DEFAULT_WKW_FILE_LEN = 32
 DEFAULT_CHUNK_SHAPE = Vec3Int.full(32)
 DEFAULT_DATA_FORMAT = (
     DataFormat(os.environ["WK_DEFAULT_DATA_FORMAT"])
     if "WK_DEFAULT_DATA_FORMAT" in os.environ
-    else DataFormat.WKW
+    else DataFormat.Zarr3
 )
 DEFAULT_CHUNKS_PER_SHARD = (
     Vec3Int.from_str(os.environ["WK_DEFAULT_CHUNKS_PER_SHARD"])

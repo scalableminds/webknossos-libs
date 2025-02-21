@@ -35,14 +35,14 @@ def test_upsampling(tmp_path: Path) -> None:
     mag.write(
         absolute_offset=(10 * 4, 20 * 4, 40 * 2),
         data=(np.random.rand(46, 45, 27) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     layer.upsample(
         from_mag=Mag([4, 4, 2]),
         finest_mag=Mag(1),
         compress=False,
         sampling_mode=SamplingModes.ANISOTROPIC,
-        buffer_edge_len=64,
-        args=None,
+        buffer_shape=(64, 64, 64),
     )
 
     assert layer.get_mag("2").read().mean() == layer.get_mag("1").read().mean()
@@ -72,6 +72,7 @@ def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
     mag2.write(
         absolute_offset=offset,
         data=(np.random.rand(*BUFFER_SHAPE) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     mag1 = layer._initialize_mag_from_other_mag("1-1-2", mag2, use_compress)
 
@@ -126,7 +127,10 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
     )
     mag2 = layer.add_mag("2", chunks_per_shard=32)
 
-    mag2.write(source_data)
+    mag2.write(
+        source_data,
+        allow_resize=True,
+    )
     assert np.any(source_data != 0)
 
     layer._initialize_mag_from_other_mag("1", mag2, False)
