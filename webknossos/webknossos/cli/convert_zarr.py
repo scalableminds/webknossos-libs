@@ -95,7 +95,7 @@ def convert_zarr(
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
         "segmentation" if is_segmentation_layer else "color",
-        dtype_per_layer=np.dtype(input_dtype),
+        dtype_per_channel=np.dtype(input_dtype),
         num_channels=1,
         largest_segment_id=0,
         data_format=data_format,

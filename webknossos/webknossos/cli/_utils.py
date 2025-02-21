@@ -8,8 +8,7 @@ from typing import Optional, Tuple, Union
 import numpy as np
 from upath import UPath
 
-from webknossos.webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
-
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 
 VoxelSizeTuple = namedtuple("VoxelSizeTuple", ("x", "y", "z"))

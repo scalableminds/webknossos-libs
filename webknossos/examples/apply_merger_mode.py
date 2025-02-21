@@ -56,7 +56,7 @@ def main() -> None:
     out_layer = dataset.add_layer(
         "segmentation_remapped",
         wk.SEGMENTATION_CATEGORY,
-        dtype_per_layer=in_layer.dtype_per_layer,
+        dtype_per_channel=in_layer.dtype_per_channel,
         largest_segment_id=in_layer.largest_segment_id,
     )
     out_mag1 = out_layer.add_mag("1")

@@ -142,7 +142,7 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
     print("writing source_data shape", source_data.shape)
     assert np.any(source_data != 0)
-    layer = ds.write_layer("color", COLOR_CATEGORY, data=source_data)
+    layer = ds.write_layer("color", COLOR_CATEGORY, data=source_data, downsample=False)
 
     mag2 = layer._initialize_mag_from_other_mag("2", layer.get_mag("1"), False)
 

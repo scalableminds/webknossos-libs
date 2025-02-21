@@ -92,7 +92,7 @@ def convert_raw(
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
         "color",
-        dtype_per_layer=np.dtype(input_dtype),
+        dtype_per_channel=np.dtype(input_dtype),
         num_channels=1,
         data_format=data_format,
     )

@@ -528,7 +528,7 @@ class MagView(View):
         compressed_mag = compressed_layer.get_or_add_mag(
             mag=self.mag,
             chunk_shape=self.info.chunk_shape,
-            chunks_per_shard=self.info.chunks_per_shard,
+            shard_shape=self.info.shard_shape,
             compress=True,
         )
 

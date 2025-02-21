@@ -192,7 +192,7 @@ class Layer:
             dataset (Dataset): Parent dataset containing this layer
             path (Path): Filesystem path to this layer's data
             category (LayerCategoryType): Category of data (e.g. color, segmentation)
-            dtype_per_layer (str): Data type used for the entire layer
+            dtype_per_layer (str): Deprecated, use dtype_per_channel. Data type used for the entire layer
             dtype_per_channel (np.dtype): Data type used per channel
             num_channels (int): Number of channels in the layer
             data_format (DataFormat): Format used to store the data
@@ -384,12 +384,14 @@ class Layer:
 
     @property
     def dtype_per_layer(self) -> str:
-        """Gets the data type used for the entire layer.
+        """Deprecated, use dtype_per_channel instead.
+        Gets the data type used for the entire layer.
 
         Returns:
             str: Data type string (e.g. "uint8")
         """
 
+        warn_deprecated("dtype_per_layer", "dtype_per_channel")
         return _dtype_per_channel_to_dtype_per_layer(
             self.dtype_per_channel, self.num_channels
         )
@@ -1480,7 +1482,7 @@ class Layer:
         return self.add_mag(
             new_mag_name,
             chunk_shape=other_mag.info.chunk_shape,
-            chunks_per_shard=other_mag.info.chunks_per_shard,
+            shard_shape=other_mag.info.shard_shape,
             compress=compress,
         )
 

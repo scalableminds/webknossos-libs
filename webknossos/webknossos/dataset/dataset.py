@@ -1262,7 +1262,7 @@ class Dataset:
         Args:
             layer_name: Name for the new layer
             category: Either 'color' or 'segmentation'
-            dtype_per_layer: Optional data type for entire layer, e.g. np.uint8
+            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer, e.g. np.uint8
             dtype_per_channel: Optional data type per channel, e.g. np.uint8
             num_channels: Number of channels (default 1)
             data_format: Format to store data ('wkw', 'zarr', 'zarr3')
@@ -1325,6 +1325,7 @@ class Dataset:
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
+            warn_deprecated("dtype_per_layer", "dtype_per_channel")
             dtype_per_layer = _properties_floating_type_to_python_type.get(
                 dtype_per_layer,  # type: ignore[arg-type]
                 dtype_per_layer,  # type: ignore[arg-type]
@@ -1406,7 +1407,7 @@ class Dataset:
         Args:
             layer_name: Name of the layer to get or create
             category: Layer category ('color' or 'segmentation')
-            dtype_per_layer: Optional data type for entire layer
+            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer
             dtype_per_channel: Optional data type per channel
             num_channels: Optional number of channels
             data_format: Format to store data ('wkw', 'zarr', etc.)
@@ -1453,6 +1454,7 @@ class Dataset:
                 dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
 
             if dtype_per_layer is not None:
+                warn_deprecated("dtype_per_layer", "dtype_per_channel")
                 dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
 
             if dtype_per_channel is not None or dtype_per_layer is not None:
@@ -1816,9 +1818,9 @@ class Dataset:
                     chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
                 if shard_shape is None:
                     if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE.with_z(1)
+                        shard_shape = DEFAULT_SHARD_SHAPE.with_z(chunk_shape.z)
                     else:
-                        shard_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
+                        shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
 
             if shard_shape is None and layer.data_format == DataFormat.Zarr3:
                 shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES

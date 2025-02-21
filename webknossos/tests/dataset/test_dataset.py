@@ -302,7 +302,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer="uint48",
+        dtype_per_channel="uint16",
         num_channels=3,
         data_format=DataFormat.WKW,
     )
@@ -339,46 +339,49 @@ def test_create_dataset_with_explicit_header_fields() -> None:
 
 
 def test_deprecated_chunks_per_shard() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
 
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    ds.add_layer(
-        "color",
-        COLOR_CATEGORY,
-        dtype_per_layer="uint48",
-        num_channels=3,
-        data_format=DataFormat.WKW,
-    )
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        ds.add_layer(
+            "color",
+            COLOR_CATEGORY,
+            dtype_per_channel="uint16",
+            num_channels=3,
+            data_format=DataFormat.WKW,
+        )
 
-    ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
-    ds.get_layer("color").add_mag("2-2-1")
+        ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
+        ds.get_layer("color").add_mag("2-2-1")
 
-    assert (ds_path / "color" / "1" / "header.wkw").exists()
-    assert (ds_path / "color" / "2-2-1" / "header.wkw").exists()
+        assert (ds_path / "color" / "1" / "header.wkw").exists()
+        assert (ds_path / "color" / "2-2-1" / "header.wkw").exists()
 
-    assert len(ds.layers) == 1
-    assert len(ds.get_layer("color").mags) == 2
+        assert len(ds.layers) == 1
+        assert len(ds.get_layer("color").mags) == 2
 
-    assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
-    assert ds.get_layer("color")._properties.element_class == "uint48"
-    assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
-    assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(4096)
-    assert ds.get_layer("color").get_mag(1).info.chunks_per_shard.xyz == Vec3Int.full(
-        64
-    )
-    assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz == Vec3Int.full(
-        32
-    )  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1").info.shard_shape.xyz == Vec3Int.full(
-        1024
-    )  # defaults are used
-    assert ds.get_layer("color").get_mag(
-        "2-2-1"
-    ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
+        assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
+        assert ds.get_layer("color")._properties.element_class == "uint48"
+        assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
+        assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(
+            4096
+        )
+        assert ds.get_layer("color").get_mag(
+            1
+        ).info.chunks_per_shard.xyz == Vec3Int.full(64)
+        assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.chunk_shape.xyz == Vec3Int.full(32)  # defaults are used
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.shard_shape.xyz == Vec3Int.full(1024)  # defaults are used
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
+        assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
-    assure_exported_properties(ds)
+        assure_exported_properties(ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -398,7 +401,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
     ds1.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer="float",
+        dtype_per_channel="float",
         num_channels=1,
         data_format=data_format,
     )
@@ -408,7 +411,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
     ds2.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        dtype_per_layer="uint8",
+        dtype_per_channel="uint8",
         largest_segment_id=100000,
         data_format=data_format,
     ).add_mag("1")
@@ -755,7 +758,7 @@ def test_wkw_write_multi_channel_uint16(
         "color",
         COLOR_CATEGORY,
         num_channels=3,
-        dtype_per_layer="uint48",
+        dtype_per_channel="uint16",
         data_format=data_format,
     ).add_mag("1")
 
@@ -886,7 +889,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_layer="uint8",
+        dtype_per_channel="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -898,7 +901,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_layer="uint8",
+        dtype_per_channel="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -907,11 +910,11 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     assert layer.data_format == data_format
 
     with pytest.raises(AssertionError):
-        # The layer "color" did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
+        # The layer "color" did exist before but with another dtype (this would work the same for 'category' and 'num_channels')
         ds.get_or_add_layer(
             "color",
             COLOR_CATEGORY,
-            dtype_per_layer="uint16",
+            dtype_per_channel="uint16",
             num_channels=1,
             data_format=data_format,
         )
@@ -1372,101 +1375,107 @@ def test_get_view() -> None:
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    with pytest.raises(TypeError):
-        # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        with pytest.raises(TypeError):
+            # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+            ds.add_layer(
+                "color",
+                COLOR_CATEGORY,
+                dtype_per_layer="uint30",
+                num_channels=3,
+            )
+        with pytest.raises(TypeError):
+            # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
+            ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=3)
         ds.add_layer(
-            "color",
-            COLOR_CATEGORY,
-            dtype_per_layer="uint30",
-            num_channels=3,
-        )
-    with pytest.raises(TypeError):
-        # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
-        ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=3)
-    ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=4
-    )  # "int"/"int64" works with 4 channels
+            "color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=4
+        )  # "int"/"int64" works with 4 channels
 
-    assure_exported_properties(ds)
+        assure_exported_properties(ds)
 
 
 def test_adding_layer_with_valid_dtype_per_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
-    ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
-    ds.add_layer("color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3)
-    ds.add_layer("color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3)
-    ds.add_layer(
-        "seg1",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="float",
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg2",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel=float,
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg3",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel=float,
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg4",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="double",
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg5",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="float",
-        num_channels=3,
-        largest_segment_id=100000,
-    )
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
+        ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
+        ds.add_layer(
+            "color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3
+        )
+        ds.add_layer(
+            "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
+        )
+        ds.add_layer(
+            "seg1",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="float",
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg2",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=float,
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg3",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=float,
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg4",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="double",
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg5",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="float",
+            num_channels=3,
+            largest_segment_id=100000,
+        )
 
-    with open(
-        ds_path / "datasource-properties.json",
-        "r",
-        encoding="utf-8",
-    ) as f:
-        data = json.load(f)
-        # The order of the layers in the properties equals the order of creation
-        assert data["dataLayers"][0]["elementClass"] == "uint24"
-        assert data["dataLayers"][1]["elementClass"] == "uint8"
-        assert data["dataLayers"][2]["elementClass"] == "uint24"
-        assert data["dataLayers"][3]["elementClass"] == "uint24"
-        assert data["dataLayers"][4]["elementClass"] == "float"
-        assert data["dataLayers"][5]["elementClass"] == "float"
-        assert data["dataLayers"][6]["elementClass"] == "float"
-        assert data["dataLayers"][7]["elementClass"] == "double"
-        assert data["dataLayers"][8]["elementClass"] == "float96"
+        with open(
+            ds_path / "datasource-properties.json",
+            "r",
+            encoding="utf-8",
+        ) as f:
+            data = json.load(f)
+            # The order of the layers in the properties equals the order of creation
+            assert data["dataLayers"][0]["elementClass"] == "uint24"
+            assert data["dataLayers"][1]["elementClass"] == "uint8"
+            assert data["dataLayers"][2]["elementClass"] == "uint24"
+            assert data["dataLayers"][3]["elementClass"] == "uint24"
+            assert data["dataLayers"][4]["elementClass"] == "float"
+            assert data["dataLayers"][5]["elementClass"] == "float"
+            assert data["dataLayers"][6]["elementClass"] == "float"
+            assert data["dataLayers"][7]["elementClass"] == "double"
+            assert data["dataLayers"][8]["elementClass"] == "float96"
 
-    reopened_ds = Dataset.open(
-        ds_path
-    )  # reopen the dataset to check if the data is read from the properties correctly
-    assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
-    assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
-    assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
-    assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
-    # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-    assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
-    assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
+        reopened_ds = Dataset.open(
+            ds_path
+        )  # reopen the dataset to check if the data is read from the properties correctly
+        assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
+        assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
+        assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
+        assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
+        # Note that 'float' and 'double' are stored as 'float32' and 'float64'
+        assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
+        assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
 
-    assure_exported_properties(ds)
+        assure_exported_properties(ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1972,7 +1981,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_1 = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer=np.uint8,
+        dtype_per_channel=np.uint8,
         num_channels=1,
         data_format=data_format,
     )
@@ -1981,7 +1990,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_2 = ds.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        dtype_per_layer=np.uint32,
+        dtype_per_channel=np.uint32,
         largest_segment_id=0,
         data_format=data_format,
     )
@@ -2084,8 +2093,11 @@ def test_dataset_conversion_from_wkw_to_zarr(
     converted_path = prepare_dataset_path(data_format, output_path, "converted")
 
     input_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+    print(input_ds.get_layer("color").get_mag("1").info.chunk_shape)
     converted_ds = input_ds.copy_dataset(
-        converted_path, data_format=data_format, shard_shape=32
+        converted_path,
+        data_format=data_format,
+        shard_shape=8 if data_format == DataFormat.Zarr else 32,
     )
 
     if data_format == DataFormat.Zarr:
@@ -2725,7 +2737,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
     color_layer1 = ds.add_layer(
         "color1",
         COLOR_CATEGORY,
-        dtype_per_layer="uint24",
+        dtype_per_channel="uint8",
         num_channels=3,
         data_format=data_format,
     )
