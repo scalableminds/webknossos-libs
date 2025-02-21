@@ -79,7 +79,11 @@ class MagView(View):
         ```python
         # Create a dataset with a segmentation layer
         ds = Dataset("path/to/dataset", voxel_size=(1, 1, 1))
-        layer = ds.add_layer("segmentation", SEGMENTATION_CATEGORY)
+        layer = ds.add_layer(
+            "segmentation",
+            SEGMENTATION_CATEGORY,
+            bounding_box=BoundingBox((100, 200, 300), (512, 512, 512)),
+        )
 
         # Add and work with magnification levels
         mag1 = layer.add_mag(Mag(1))
@@ -274,14 +278,27 @@ class MagView(View):
         coordinates are expected to be in Mag(1) space, regardless of the current magnification level.
 
         Args:
-            data: Numpy array containing the volumetric data to write. Shape must match the target region.
-            allow_resize: If True, allows updating the layer's bounding box if the write extends beyond it. Defaults to False.
-            allow_unaligned: If True, allows writing data to without being aligned to the shard shape. Defaults to False.
+            data (np.ndarray): The data to write. For 3D data, shape should
+                be (x, y, z). For multi-channel 3D data, shape should be (channels, x, y, z).
+                For n-dimensional data, the axes must match the bounding box axes of the layer.
+                Shape must match the target region size.
+            allow_resize: If True, allows updating the layer's bounding box if the write
+                extends beyond it.
+                Must not be set to True, when writing to the same magnification level in parallel.
+                For one-off writes, consider using `Dataset.write_layer`.
+                Defaults to False.
+            allow_unaligned (bool, optional): If True, allows writing data to without
+                being aligned to the shard shape.
+                Defaults to False.
             json_update_allowed: Deprecated, use allow_resize.
-            relative_offset: Optional offset relative to the view's position in Mag(1) coordinates.
-            absolute_offset: Optional absolute position in Mag(1) coordinates.
-            relative_bounding_box: Optional bounding box relative to view's position in Mag(1) coordinates.
-            absolute_bounding_box: Optional absolute bounding box in Mag(1) coordinates.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
 
         Examples:
             ```python

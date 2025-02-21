@@ -255,8 +255,9 @@ class View:
         can be specified using either offset parameters or bounding boxes.
 
         Args:
-            data (np.ndarray): The data to write. For single-channel data, shape should
-                be (x, y, y). For multi-channel data, shape should be (channels, x, y, z).
+            data (np.ndarray): The data to write. For 3D data, shape should
+                be (x, y, z). For multi-channel 3D data, shape should be (channels, x, y, z).
+                For n-dimensional data, the axes must match the bounding box axes of the layer.
                 Shape must match the target region size.
             allow_unaligned (bool, optional): If True, allows writing data to without
                 being aligned to the shard shape. Defaults to False.
