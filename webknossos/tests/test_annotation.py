@@ -21,6 +21,7 @@ def test_annotation_from_wkw_zip_file() -> None:
 
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert annotation.organization_id == "scalable_minds"
+    assert annotation.dataset_id == "67b7c81b0100004d00f5ab31"
     assert annotation.owner_name == "Philipp Otto"
     assert annotation.annotation_id == "61c20205010000cc004a6356"
     assert "timestamp" in annotation.metadata
@@ -32,6 +33,7 @@ def test_annotation_from_wkw_zip_file() -> None:
 
     assert copied_annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert copied_annotation.organization_id == "scalable_minds"
+    assert copied_annotation.dataset_id == "67b7c81b0100004d00f5ab31"
     assert copied_annotation.owner_name == "Philipp Otto"
     assert copied_annotation.annotation_id == "61c20205010000cc004a6356"
     assert "timestamp" in copied_annotation.metadata
@@ -97,14 +99,14 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
     # Read from first layer
     with annotation.temporary_volume_layer_copy(
-        volume_layer_name=volume_names[0]
+            volume_layer_name=volume_names[0]
     ) as layer:
         read_voxel = layer.get_finest_mag().read(
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
         assert (
-            read_voxel == 7718
+                read_voxel == 7718
         ), f"Expected to see voxel id 7718, but saw {read_voxel} instead."
 
         read_voxel = layer.get_finest_mag().read(
@@ -115,19 +117,19 @@ def test_annotation_from_file_with_multi_volume() -> None:
         # However, this is fallback data which is not included in this annotation.
         # Therefore, we expect to read a 0 here.
         assert (
-            read_voxel == 0
+                read_voxel == 0
         ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
 
     # Read from second layer
     with annotation.temporary_volume_layer_copy(
-        volume_layer_name=volume_names[1]
+            volume_layer_name=volume_names[1]
     ) as layer:
         read_voxel = layer.get_finest_mag().read(
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
         assert (
-            read_voxel == 1
+                read_voxel == 1
         ), f"Expected to see voxel id 1, but saw {read_voxel} instead."
 
         read_voxel = layer.get_finest_mag().read(
@@ -135,13 +137,13 @@ def test_annotation_from_file_with_multi_volume() -> None:
             size=(1, 1, 1),
         )
         assert (
-            read_voxel == 0
+                read_voxel == 0
         ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
 
     # Reading from not-existing layer should raise an error
     with pytest.raises(AssertionError):
         with annotation.temporary_volume_layer_copy(
-            volume_layer_name="not existing name"
+                volume_layer_name="not existing name"
         ) as layer:
             pass
 
@@ -171,8 +173,8 @@ def test_annotation_upload_download_roundtrip() -> None:
     # assert (annotated_data == 1).all()
     assert mag_view.read(absolute_offset=(0, 0, 0), size=(16, 16, 4))[0, 0, 0, 0] == 0
     assert (
-        mag_view.read(absolute_offset=(3600, 3488, 1024), size=(16, 16, 4))[0, 0, 0, 0]
-        == 1
+            mag_view.read(absolute_offset=(3600, 3488, 1024), size=(16, 16, 4))[0, 0, 0, 0]
+            == 1
     )
     segment_info = annotation.get_volume_layer_segments("Volume")[1]
     assert segment_info.anchor_position == (3395, 3761, 1024)
@@ -248,8 +250,8 @@ def test_bounding_box_roundtrip() -> None:
 
     # task bounding box is appended to user bounding boxes when uploading a normal annotation:
     assert (
-        annotation_after.user_bounding_boxes
-        == annotation_before.user_bounding_boxes + [annotation_before.task_bounding_box]
+            annotation_after.user_bounding_boxes
+            == annotation_before.user_bounding_boxes + [annotation_before.task_bounding_box]
     )
 
 
@@ -287,3 +289,31 @@ def test_nml_with_volumes(nml_path: Path) -> None:
     assert segment_info[2504698] == wk.SegmentInformation(
         name="test_segment", anchor_position=Vec3Int(3581, 3585, 1024), color=None
     )
+
+
+# Regression test for: https://github.com/scalableminds/webknossos-libs/pull/1256
+@pytest.mark.use_proxay
+def test_dataset_access_via_annotation(tmp_path: Path) -> None:
+    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
+    token = os.getenv("WK_TOKEN")
+    with wk.webknossos_context("http://localhost:9000", token):
+        dataset_to_reupload = wk.Dataset.download(
+            url, path=Path(tmp_path) / "sample_ds", bbox=wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
+        )
+        renameable_dataset = dataset_to_reupload.upload("name_to_replace")
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    annotation_from_file = wk.Annotation.load(path)
+    annotation_from_file.organization_id = "Organization_X"
+    annotation_from_file.dataset_name = renameable_dataset.name
+    annotation_from_file.dataset_id = renameable_dataset._dataset_id
+    test_token = os.getenv("WK_TOKEN")
+    with wk.webknossos_context("http://localhost:9000", test_token):
+        url = annotation_from_file.upload()
+        annotation = wk.Annotation.download(url)
+    assert annotation.dataset_name == "name_to_replace"
+    assert len(list(annotation.skeleton.flattened_trees())) == 1
+
+    renameable_dataset.name = "replaced_name"
+    # Test whether the DS can still be accessed via the annotation after the renaming.
+    dataset_from_annotation = annotation.get_remote_annotation_dataset()
+    assert dataset_from_annotation._dataset_id == renameable_dataset._dataset_id
