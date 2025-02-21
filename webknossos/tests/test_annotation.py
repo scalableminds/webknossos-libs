@@ -99,14 +99,14 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
     # Read from first layer
     with annotation.temporary_volume_layer_copy(
-            volume_layer_name=volume_names[0]
+        volume_layer_name=volume_names[0]
     ) as layer:
         read_voxel = layer.get_finest_mag().read(
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
         assert (
-                read_voxel == 7718
+            read_voxel == 7718
         ), f"Expected to see voxel id 7718, but saw {read_voxel} instead."
 
         read_voxel = layer.get_finest_mag().read(
@@ -117,19 +117,19 @@ def test_annotation_from_file_with_multi_volume() -> None:
         # However, this is fallback data which is not included in this annotation.
         # Therefore, we expect to read a 0 here.
         assert (
-                read_voxel == 0
+            read_voxel == 0
         ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
 
     # Read from second layer
     with annotation.temporary_volume_layer_copy(
-            volume_layer_name=volume_names[1]
+        volume_layer_name=volume_names[1]
     ) as layer:
         read_voxel = layer.get_finest_mag().read(
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
         assert (
-                read_voxel == 1
+            read_voxel == 1
         ), f"Expected to see voxel id 1, but saw {read_voxel} instead."
 
         read_voxel = layer.get_finest_mag().read(
@@ -137,13 +137,13 @@ def test_annotation_from_file_with_multi_volume() -> None:
             size=(1, 1, 1),
         )
         assert (
-                read_voxel == 0
+            read_voxel == 0
         ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
 
     # Reading from not-existing layer should raise an error
     with pytest.raises(AssertionError):
         with annotation.temporary_volume_layer_copy(
-                volume_layer_name="not existing name"
+            volume_layer_name="not existing name"
         ) as layer:
             pass
 
@@ -173,8 +173,8 @@ def test_annotation_upload_download_roundtrip() -> None:
     # assert (annotated_data == 1).all()
     assert mag_view.read(absolute_offset=(0, 0, 0), size=(16, 16, 4))[0, 0, 0, 0] == 0
     assert (
-            mag_view.read(absolute_offset=(3600, 3488, 1024), size=(16, 16, 4))[0, 0, 0, 0]
-            == 1
+        mag_view.read(absolute_offset=(3600, 3488, 1024), size=(16, 16, 4))[0, 0, 0, 0]
+        == 1
     )
     segment_info = annotation.get_volume_layer_segments("Volume")[1]
     assert segment_info.anchor_position == (3395, 3761, 1024)
@@ -250,8 +250,8 @@ def test_bounding_box_roundtrip() -> None:
 
     # task bounding box is appended to user bounding boxes when uploading a normal annotation:
     assert (
-            annotation_after.user_bounding_boxes
-            == annotation_before.user_bounding_boxes + [annotation_before.task_bounding_box]
+        annotation_after.user_bounding_boxes
+        == annotation_before.user_bounding_boxes + [annotation_before.task_bounding_box]
     )
 
 
@@ -298,7 +298,9 @@ def test_dataset_access_via_annotation(tmp_path: Path) -> None:
     token = os.getenv("WK_TOKEN")
     with wk.webknossos_context("http://localhost:9000", token):
         dataset_to_reupload = wk.Dataset.download(
-            url, path=Path(tmp_path) / "sample_ds", bbox=wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
+            url,
+            path=Path(tmp_path) / "sample_ds",
+            bbox=wk.BoundingBox((3164, 3212, 1017), (10, 10, 10)),
         )
         renameable_dataset = dataset_to_reupload.upload("name_to_replace")
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
