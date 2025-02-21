@@ -27,6 +27,7 @@ from webknossos import BoundingBox, DataFormat, Dataset
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
+from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
 
 runner = CliRunner()
 
@@ -560,8 +561,8 @@ def test_merge_fallback_no_fallback_layer(
         )
         .add_mag(
             1,
-            chunk_shape=(32,) * 3,
-            chunks_per_shard=(1,) * 3,
+            chunk_shape=DEFAULT_CHUNK_SHAPE,
+            shard_shape=DEFAULT_CHUNK_SHAPE,
             compress=use_compression,
         )
     )
@@ -591,7 +592,10 @@ def test_merge_fallback_no_fallback_layer(
         )
 
         mag1 = tmp_layer.add_mag(
-            1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3, compress=True
+            1,
+            chunk_shape=DEFAULT_CHUNK_SHAPE,
+            shard_shape=DEFAULT_CHUNK_SHAPE,
+            compress=True,
         )
 
         mag1.write(absolute_offset=topleft, data=annotation_data, allow_resize=True)

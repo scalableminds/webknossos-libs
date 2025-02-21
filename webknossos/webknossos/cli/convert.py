@@ -7,18 +7,19 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos.dataset.length_unit import LengthUnit
-from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
-from webknossos.geometry.vec3_int import Vec3Int
-
-from ..dataset import DataFormat, Dataset
+from ..dataset import DataFormat, Dataset, LengthUnit
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
+from ..geometry import Vec3Int
 from ..utils import get_executor_for_args
 from ._utils import (
     DistributionStrategy,
     LayerCategory,
     VoxelSizeTuple,
     parse_path,
+    parse_vec3int,
     parse_voxel_size,
+    prepare_shard_shape,
 )
 
 
@@ -82,20 +83,29 @@ def main(
         ),
     ] = None,
     chunk_shape: Annotated[
-        Optional[str],
+        Vec3Int,
         typer.Option(
-            help="Chunk shape of the target dataset. Should be a comma separated string "
-            "(e.g. 64,64,64).",
-            parser=Vec3Int.from_str,
+            help="Number of voxels to be stored as a chunk in the output format "
+            "(e.g. `32` or `32,32,32`).",
+            parser=parse_vec3int,
+            metavar="Vec3Int",
+        ),
+    ] = DEFAULT_CHUNK_SHAPE,
+    shard_shape: Annotated[
+        Optional[Vec3Int],
+        typer.Option(
+            help="Number of voxels to be stored as a shard in the output format "
+            "(e.g. `1024` or `1024,1024,1024`).",
+            parser=parse_vec3int,
             metavar="Vec3Int",
         ),
     ] = None,
     chunks_per_shard: Annotated[
-        Optional[str],
+        Optional[Vec3Int],
         typer.Option(
-            help="Shard shape of the target dataset. Should be a comma separated string "
-            "(e.g. 64,64,64).",
-            parser=Vec3Int.from_str,
+            help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
+            "(e.g. `32` or `32,32,32`).",
+            parser=parse_vec3int,
             metavar="Vec3Int",
         ),
     ] = None,
@@ -136,6 +146,12 @@ def main(
 ) -> None:
     """Automatic detection of an image stack and conversion to a WEBKNOSSOS dataset."""
 
+    shard_shape = prepare_shard_shape(
+        chunk_shape=chunk_shape,
+        shard_shape=shard_shape,
+        chunks_per_shard=chunks_per_shard,
+    )
+
     executor_args = Namespace(
         jobs=jobs,
         distribution_strategy=distribution_strategy.value,
@@ -149,8 +165,8 @@ def main(
             target,
             name=name,
             voxel_size_with_unit=voxel_size_with_unit,
-            chunk_shape=chunk_shape,  # type: ignore
-            chunks_per_shard=chunks_per_shard,  # type: ignore
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
             data_format=data_format,
             executor=executor,
             compress=compress,

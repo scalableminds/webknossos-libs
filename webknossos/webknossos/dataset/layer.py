@@ -52,11 +52,11 @@ from ..utils import (
     named_partial,
     rmtree,
     strip_trailing_slash,
+    warn_deprecated,
 )
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
-    DEFAULT_CHUNKS_PER_SHARD,
-    DEFAULT_CHUNKS_PER_SHARD_ZARR,
+    DEFAULT_SHARD_SHAPE,
 )
 from .mag_view import MagView, _find_mag_path
 
@@ -153,14 +153,31 @@ def _get_sharding_parameters(
     *,
     chunk_shape: Optional[Union[Vec3IntLike, int]],
     chunks_per_shard: Optional[Union[Vec3IntLike, int]],
+    shard_shape: Optional[Union[Vec3IntLike, int]],
 ) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
     if chunk_shape is not None:
         chunk_shape = Vec3Int.from_vec_or_int(chunk_shape)
+    else:
+        chunk_shape = DEFAULT_CHUNK_SHAPE
 
-    if chunks_per_shard is not None:
-        chunks_per_shard = Vec3Int.from_vec_or_int(chunks_per_shard)
+    if shard_shape is not None and chunks_per_shard is not None:
+        raise ValueError(
+            "shard_shape and chunks_per_shard must not be specified at the same time."
+        )
 
-    return (chunk_shape, chunks_per_shard)
+    elif shard_shape is not None:
+        shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+        if shard_shape % chunk_shape != Vec3Int.zeros():
+            raise ValueError(
+                f"The chunk_shape {chunk_shape} must be a multiple of the shard_shape {shard_shape}."
+            )
+    elif chunks_per_shard is not None:
+        warn_deprecated("chunks_per_shard", "shard_shape")
+        shard_shape = Vec3Int.from_vec_or_int(chunks_per_shard) * (
+            chunk_shape or DEFAULT_CHUNK_SHAPE
+        )
+
+    return (chunk_shape, shard_shape)
 
 
 class Layer:
@@ -482,22 +499,23 @@ class Layer:
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        *,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,  # DEFAULT_CHUNK_SHAPE,
-        chunks_per_shard: Optional[
-            Union[int, Vec3IntLike]
-        ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = True,
     ) -> MagView:
         """Creates and adds a new magnification level to the layer.
 
         The new magnification can be configured with various storage parameters to
-        optimize performance, notably `chunk_shape`, `chunks_per_shard` and `compress`. Note that writing data which is not aligned with the blocks on disk may result in
+        optimize performance, notably `chunk_shape`, `shard_shape` and `compress`. Note that writing data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
 
         Args:
             mag: Identifier for new magnification level
             chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64)
-            chunks_per_shard: Number of chunks per shard file
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified.
+            chunks_per_shard: Deprecated, use shard_shape. Number of chunks per shards. If specified, shard_shape must not be specified.
             compress: Whether to enable compression. Defaults to True.
 
         Returns:
@@ -512,17 +530,18 @@ class Layer:
         mag = Mag(mag)
         compression_mode = compress
 
-        chunk_shape, chunks_per_shard = _get_sharding_parameters(
+        chunk_shape, shard_shape = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
         )
         if chunk_shape is None:
             chunk_shape = DEFAULT_CHUNK_SHAPE
-        if chunks_per_shard is None:
+        if shard_shape is None:
             if self.data_format == DataFormat.Zarr:
-                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR
+                shard_shape = DEFAULT_CHUNK_SHAPE
             else:
-                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
+                shard_shape = DEFAULT_SHARD_SHAPE
 
         if chunk_shape not in (Vec3Int.full(32), Vec3Int.full(64)):
             warnings.warn(
@@ -537,7 +556,7 @@ class Layer:
             self,
             mag,
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compression_mode=compression_mode,
             path=mag_path,
         )
@@ -673,7 +692,9 @@ class Layer:
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        *,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
     ) -> MagView:
@@ -687,9 +708,10 @@ class Layer:
         # normalize the name of the mag
         mag = Mag(mag)
 
-        chunk_shape, chunks_per_shard = _get_sharding_parameters(
+        chunk_shape, shard_shape = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
         )
 
         if mag in self._mags.keys():
@@ -701,8 +723,8 @@ class Layer:
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk sizes do not match"
                 )
             if (
-                chunks_per_shard is not None
-                and self._mags[mag].info.chunks_per_shard != chunks_per_shard
+                shard_shape is not None
+                and self._mags[mag].info.shard_shape != shard_shape
             ):
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunks per shard do not match"
@@ -719,7 +741,7 @@ class Layer:
             return self.add_mag(
                 mag,
                 chunk_shape=chunk_shape,
-                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
                 compress=compress if compress is not None else True,
             )
 
@@ -750,6 +772,7 @@ class Layer:
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
         extend_layer_bounding_box: bool = True,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
         executor: Optional[Executor] = None,
@@ -763,10 +786,19 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
+        chunk_shape = Vec3Int(chunk_shape or foreign_mag_view.info.chunk_shape)
+        if chunks_per_shard is not None:
+            if shard_shape is None:
+                shard_shape = Vec3Int(chunks_per_shard) * chunk_shape
+            else:
+                raise ValueError(
+                    "shard_shape and chunks_per_shard must not be specified at the same time."
+                )
+
         mag_view = self.add_mag(
             mag=foreign_mag_view.mag,
-            chunk_shape=chunk_shape or foreign_mag_view.info.chunk_shape,
-            chunks_per_shard=chunks_per_shard or foreign_mag_view.info.chunks_per_shard,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape or foreign_mag_view.info.shard_shape,
             compress=(
                 compress
                 if compress is not None

@@ -19,7 +19,7 @@ from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 
 from ..dataset import COLOR_CATEGORY, DataFormat, Dataset, View
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, time_start, time_stop
 from ._utils import (
@@ -29,6 +29,7 @@ from ._utils import (
     parse_path,
     parse_vec3int,
     parse_voxel_size,
+    prepare_shard_shape,
 )
 
 KNOSSOS_CUBE_EDGE_LEN = 128
@@ -182,7 +183,7 @@ def convert_knossos(
     voxel_size_with_unit: VoxelSize,
     data_format: DataFormat,
     chunk_shape: Vec3Int,  # in target-mag
-    chunks_per_shard: Vec3Int,
+    shard_shape: Vec3Int,
     mag: Mag = Mag(1),
     args: Optional[Namespace] = None,
 ) -> None:
@@ -216,13 +217,13 @@ def convert_knossos(
         )
 
     target_mag = target_layer.get_or_add_mag(
-        mag, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
+        mag, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
     with get_executor_for_args(args) as executor:
         target_mag.for_each_chunk(
             partial(convert_cube_job, source_knossos_info),
-            chunk_shape=chunk_shape * mag * chunks_per_shard,
+            chunk_shape=shard_shape * mag,
             executor=executor,
             progress_desc=f"Converting knossos layer {layer_name}",
         )
@@ -284,15 +285,24 @@ def main(
             metavar="Vec3Int",
         ),
     ] = DEFAULT_CHUNK_SHAPE,
-    chunks_per_shard: Annotated[
-        Vec3Int,
+    shard_shape: Annotated[
+        Optional[Vec3Int],
         typer.Option(
-            help="Number of chunks to be stored as a shard in the output format "
+            help="Number of voxels to be stored as a shard in the output format "
+            "(e.g. `1024` or `1024,1024,1024`).",
+            parser=parse_vec3int,
+            metavar="Vec3Int",
+        ),
+    ] = None,
+    chunks_per_shard: Annotated[
+        Optional[Vec3Int],
+        typer.Option(
+            help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
             "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
-    ] = DEFAULT_CHUNKS_PER_SHARD,
+    ] = None,
     mag: Annotated[
         Mag,
         typer.Option(
@@ -327,6 +337,12 @@ def main(
 ) -> None:
     """Convert your KNOSSOS dataset to a WEBKNOSOOS dataset."""
 
+    shard_shape = prepare_shard_shape(
+        chunk_shape=chunk_shape,
+        shard_shape=shard_shape,
+        chunks_per_shard=chunks_per_shard,
+    )
+
     executor_args = Namespace(
         jobs=jobs,
         distribution_strategy=distribution_strategy.value,
@@ -342,7 +358,7 @@ def main(
         voxel_size_with_unit,
         data_format,
         chunk_shape,
-        chunks_per_shard,
+        shard_shape or DEFAULT_SHARD_SHAPE,
         mag,
         executor_args,
     )

@@ -3,10 +3,12 @@
 from collections import namedtuple
 from enum import Enum
 from os import environ
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from upath import UPath
+
+from webknossos.webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
 
 from ..geometry import BoundingBox, Mag, Vec3Int
 
@@ -220,3 +222,29 @@ def pad_or_crop_to_size_and_topleft(
     )
 
     return cube_data
+
+
+def prepare_shard_shape(
+    *,
+    chunk_shape: Optional[Vec3Int],
+    shard_shape: Optional[Vec3Int],
+    chunks_per_shard: Optional[Vec3Int],
+) -> Optional[Vec3Int]:
+    if chunk_shape is None:
+        chunk_shape = DEFAULT_CHUNK_SHAPE
+
+    if shard_shape is not None and chunks_per_shard is not None:
+        raise ValueError(
+            "shard_shape and chunks_per_shard must not be specified at the same time."
+        )
+
+    if shard_shape is None:
+        if chunks_per_shard is None:
+            return None
+        return chunk_shape * chunks_per_shard
+    else:
+        if shard_shape % chunk_shape != Vec3Int.zeros():
+            raise ValueError(
+                f"The shard_shape {shard_shape} must be cleanly divisble by the chunk_shape {chunk_shape}."
+            )
+        return shard_shape

@@ -121,20 +121,34 @@ class MagView(View):
         cls,
         layer: "Layer",
         mag: Mag,
+        *,
         chunk_shape: Vec3Int,
-        chunks_per_shard: Vec3Int,
+        shard_shape: Optional[Vec3Int] = None,
+        chunks_per_shard: Optional[Vec3Int] = None,
         compression_mode: bool,
         path: Optional[LazyPath] = None,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
+        if chunks_per_shard is None:
+            if shard_shape is None:
+                raise ValueError("Please provide shard_shape or chunks_per_shard.")
+        else:
+            if shard_shape is not None:
+                raise ValueError(
+                    "shard_shape or chunks_per_shard must not be provided at the same time."
+                )
+            else:
+                warn_deprecated("chunks_per_shard", "shard_shape")
+                shard_shape = chunk_shape * chunks_per_shard
+
         array_info = ArrayInfo(
             data_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
             chunk_shape=chunk_shape,
-            shard_shape=chunk_shape * chunks_per_shard,
+            shard_shape=shard_shape,
             compression_mode=compression_mode,
             axis_order=VecInt(
                 0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes

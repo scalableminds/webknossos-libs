@@ -32,7 +32,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         category="segmentation",
         topleft=(100, 100, 55),
         chunk_shape=(8, 8, 8),
-        chunks_per_shard=(8, 8, 8),
+        shard_shape=(64, 64, 64),
     )
     assert layer.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
     data = layer.get_finest_mag().read()[0, :, :]
@@ -52,7 +52,7 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
             topleft=(2, 55, 100, 100),
             data_format="zarr3",
             chunk_shape=(8, 8, 8),
-            chunks_per_shard=(8, 8, 8),
+            shard_shape=(64, 64, 64),
             executor=executor,
         )
     assert layer.bounding_box.topleft == wk.VecInt(

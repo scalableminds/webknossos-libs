@@ -101,7 +101,7 @@ def download_dataset(
                 mag,
                 compress=True,
                 chunk_shape=Vec3Int.full(32),
-                chunks_per_shard=_DOWNLOAD_CHUNK_SHAPE // 32,
+                shard_shape=_DOWNLOAD_CHUNK_SHAPE,
             )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
             download_chunk_shape_in_mag = _DOWNLOAD_CHUNK_SHAPE * mag.to_vec3_int()
