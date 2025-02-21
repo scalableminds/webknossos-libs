@@ -351,7 +351,9 @@ class Dataset:
                 raise RuntimeError(
                     f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
                 )
-            assert stored_dataset_properties is not None # for mypy to get the type of dataset_properties right
+            assert (
+                stored_dataset_properties is not None
+            )  # for mypy to get the type of dataset_properties right
             dataset_properties = stored_dataset_properties
 
         else:
@@ -2856,7 +2858,9 @@ class RemoteDataset(Dataset):
         self._context = context
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike], read_only: bool = True) -> "Dataset":  # noqa: ARG003
+    def open(
+        cls, dataset_path: Union[str, PathLike], read_only: bool = True
+    ) -> "Dataset":  # noqa: ARG003
         """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 
