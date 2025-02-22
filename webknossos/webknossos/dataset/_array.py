@@ -852,7 +852,7 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.data_format == DataFormat.Zarr
         assert array_info.chunks_per_shard == Vec3Int.full(
             1
-        ), "Zarr2 storage doesn't support sharding yet"
+        ), "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]

@@ -66,8 +66,7 @@ def main() -> None:
         segmentation_layer = new_dataset.add_layer(
             "segmentation",
             wk.SEGMENTATION_CATEGORY,
-            segmentation.dtype,
-            compressed=True,
+            dtype_per_channel=segmentation.dtype,
             largest_segment_id=int(segmentation.max()),
         )
         segmentation_layer.bounding_box = dataset.layers["color"].bounding_box

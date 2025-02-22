@@ -125,7 +125,7 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
         dtype_per_channel="uint8",
         num_channels=num_channels,
     )
-    mag2 = layer.add_mag("2", chunks_per_shard=32)
+    mag2 = layer.add_mag("2")
 
     mag2.write(
         source_data,
