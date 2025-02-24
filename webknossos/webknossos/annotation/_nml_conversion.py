@@ -1,6 +1,7 @@
 import colorsys
 import itertools
 import warnings
+from sys import stderr
 from typing import TYPE_CHECKING, List, Tuple
 
 import networkx as nx
@@ -121,7 +122,8 @@ def _random_color_rgba() -> Tuple[float, float, float, float]:
 def annotation_to_nml(
     annotation: "Annotation",
 ) -> wknml.Nml:
-    nmlParameters = wknml.Parameters(
+    nml_parameters = wknml.Parameters(
+        dataset_id=annotation.dataset_id,
         name=annotation.dataset_name,
         scale=annotation.voxel_size,
         description=annotation.description,
@@ -133,6 +135,9 @@ def annotation_to_nml(
         taskBoundingBox=annotation.task_bounding_box,
         userBoundingBoxes=annotation.user_bounding_boxes,
     )
+    print("--------------------------------------------------------------", file=stderr)
+    print(annotation.dataset_id, file=stderr)
+    print("--------------------------------------------------------------", file=stderr)
 
     comments = [
         wknml.Comment(node.id, node.comment)
@@ -200,7 +205,7 @@ def annotation_to_nml(
 
     nml = wknml.Nml(
         meta=meta,
-        parameters=nmlParameters,
+        parameters=nml_parameters,
         trees=trees,
         branchpoints=branchpoints,
         comments=comments,

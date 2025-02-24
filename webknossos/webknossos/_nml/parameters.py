@@ -88,6 +88,7 @@ class Parameters(NamedTuple):
                     "name": self.name,
                     "organization": self.organization,
                     "description": self.description,
+                    "datasetId": self.dataset_id,
                 }
             ),
         )
