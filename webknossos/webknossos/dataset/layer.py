@@ -12,10 +12,9 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.client.context import _get_context
-from webknossos.dataset.defaults import SSL_CONTEXT
-
+from ..client.context import _get_context
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry.mag import MagLike
 from ._array import ArrayException, TensorStoreArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
@@ -27,6 +26,7 @@ from ._downsampling_utils import (
 )
 from ._upsampling_utils import upsample_cube_job
 from .data_format import DataFormat
+from .defaults import SSL_CONTEXT
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     LayerProperties,
@@ -449,7 +449,7 @@ class Layer:
         """
         return self._mags
 
-    def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagView:
+    def get_mag(self, mag: MagLike) -> MagView:
         """Gets the MagView for the specified magnification level.
 
         Returns a view of the data at the requested magnification level. The mag
@@ -481,7 +481,7 @@ class Layer:
 
     def add_mag(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,  # DEFAULT_CHUNK_SHAPE,
         chunks_per_shard: Optional[
             Union[int, Vec3IntLike]
@@ -575,7 +575,7 @@ class Layer:
 
     def add_mag_for_existing_files(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
     ) -> MagView:
         """Creates a MagView for existing data files.
 
@@ -627,7 +627,7 @@ class Layer:
 
     def add_existing_remote_mag_view(
         self,
-        mag_view_maybe: Union[int, str, list, tuple, np.ndarray, Mag, MagView],
+        mag_view_maybe: Union[MagLike, MagView],
     ) -> MagView:
         """Adds a remote magnification view to this layer.
 
@@ -672,7 +672,7 @@ class Layer:
 
     def get_or_add_mag(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
@@ -723,7 +723,7 @@ class Layer:
                 compress=compress if compress is not None else True,
             )
 
-    def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
+    def delete_mag(self, mag: MagLike) -> None:
         """
         Deletes the MagView from the `datasource-properties.json` and the data from disk.
 
@@ -893,7 +893,7 @@ class Layer:
 
     def add_mag_from_zarrarray(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
         path: PathLike,
         move: bool = False,
         extend_layer_bounding_box: bool = True,
@@ -935,17 +935,13 @@ class Layer:
 
             return mag_view
 
-    def _create_dir_for_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> Path:
+    def _create_dir_for_mag(self, mag: MagLike) -> Path:
         mag_name = Mag(mag).to_layer_name()
         full_path = self.path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
         return full_path
 
-    def _assert_mag_does_not_exist_yet(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> None:
+    def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:
         """Verifies a magnification does not already exist.
 
         Args:

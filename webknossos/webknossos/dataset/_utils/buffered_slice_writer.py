@@ -9,9 +9,7 @@ from typing import TYPE_CHECKING, Generator, List, Optional, Type
 import numpy as np
 import psutil
 
-from webknossos.geometry.nd_bounding_box import NDBoundingBox
-
-from ...geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ...geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
     from ..view import View

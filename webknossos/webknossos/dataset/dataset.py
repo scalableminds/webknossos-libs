@@ -48,6 +48,7 @@ from ..geometry import (
     Vec3IntLike,
     VecIntLike,
 )
+from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._metadata import DatasetMetadata
@@ -1613,7 +1614,7 @@ class Dataset:
         category: Optional[LayerCategoryType] = "color",
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
-        mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
+        mag: MagLike = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = True,
@@ -1978,17 +1979,20 @@ class Dataset:
         chunks_per_shard: Optional[Vec3IntLike] = None,
         axes: Optional[Iterable[str]] = None,
         absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,
+        mag: MagLike = Mag(1),
     ) -> Layer:
+        mag = Mag(mag)
         bbox, num_channels = derive_nd_bounding_box_from_shape(
             data.shape, axes=axes, absolute_offset=absolute_offset
         )
+        mag1_bbox = bbox.with_size_xyz(bbox.size_xyz * mag.to_vec3_int())
         layer = self.add_layer(
             layer_name,
             category,
             data_format=data_format,
             num_channels=num_channels,
             dtype_per_channel=data.dtype,
-            bounding_box=bbox,
+            bounding_box=mag1_bbox,
         )
 
         with warnings.catch_warnings():
@@ -2000,13 +2004,13 @@ class Dataset:
                 category=UserWarning,
                 module="webknossos",
             )
-            mag = layer.add_mag(
-                1,
+            mag_view = layer.add_mag(
+                mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=True,
             )
-        mag.write(data, absolute_bounding_box=layer.bounding_box)
+        mag_view.write(data, absolute_bounding_box=layer.bounding_box)
 
         if downsample:
             layer.downsample()

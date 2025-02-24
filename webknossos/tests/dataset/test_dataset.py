@@ -755,6 +755,36 @@ def test_write_layer(
     if absolute_offset is not None:
         assert layer.bounding_box.topleft_xyz == absolute_offset
     assert layer.bounding_box.size_xyz == Vec3Int(data.shape)
+    assert Mag(2) in layer.mags  # did downsample
+    assert Mag(4) in layer.mags  # did downsample
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+@pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
+def test_write_layer_mag2(
+    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
+    ds = Dataset(ds_path, voxel_size=(12, 12, 24))
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(128, 128, 128) * 255).astype(np.uint8)
+    layer = ds.write_layer(
+        "color",
+        category=COLOR_CATEGORY,
+        data=data,
+        data_format=data_format,
+        absolute_offset=absolute_offset,
+        mag=(2, 2, 1),
+    )
+
+    np.testing.assert_array_equal(layer.get_mag((2, 2, 1)).read().squeeze(), data)
+    if absolute_offset is not None:
+        assert layer.bounding_box.topleft_xyz == absolute_offset  # in mag1
+    assert layer.bounding_box.size_xyz == Vec3Int(data.shape) * Vec3Int(
+        2, 2, 1
+    )  # in mag1
+    assert Mag((4, 4, 2)) in layer.mags  # did downsample
 
 
 @pytest.mark.parametrize(
