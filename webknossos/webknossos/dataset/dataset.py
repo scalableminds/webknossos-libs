@@ -1971,14 +1971,14 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
-        data: np.ndarray,
+        data: np.ndarray,  # in specified mag
         *,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         downsample: bool = True,
         chunk_shape: Optional[Vec3IntLike] = None,
         chunks_per_shard: Optional[Vec3IntLike] = None,
         axes: Optional[Iterable[str]] = None,
-        absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,
+        absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,  # in mag1
         mag: MagLike = Mag(1),
     ) -> Layer:
         mag = Mag(mag)
