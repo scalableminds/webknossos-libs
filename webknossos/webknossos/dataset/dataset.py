@@ -100,7 +100,7 @@ from .layer import (
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
     _dtype_per_layer_to_dtype_per_channel,
-    _get_sharding_parameters,
+    _get_shard_shape,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
@@ -1678,12 +1678,6 @@ class Dataset:
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-        chunk_shape, shard_shape = _get_sharding_parameters(
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-            shard_shape=shard_shape,
-        )
-
         if category is None:
             image_path_for_category_guess: Path
             if isinstance(images, str) or isinstance(images, PathLike):
@@ -1814,16 +1808,43 @@ class Dataset:
                 DataFormat.Zarr,
                 DataFormat.Zarr3,
             ):
-                if chunk_shape is None:
-                    chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
+                chunk_shape = (
+                    DEFAULT_CHUNK_SHAPE.with_z(1)
+                    if chunk_shape is None
+                    else Vec3Int(chunk_shape)
+                )
+                shard_shape = _get_shard_shape(
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    shard_shape=shard_shape,
+                )
                 if shard_shape is None:
                     if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE.with_z(chunk_shape.z)
+                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES.with_z(
+                            chunk_shape.z
+                        )
                     else:
                         shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
-
-            if shard_shape is None and layer.data_format == DataFormat.Zarr3:
-                shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES
+                else:
+                    shard_shape = Vec3Int(shard_shape)
+            else:
+                chunk_shape = (
+                    DEFAULT_CHUNK_SHAPE if chunk_shape is None else Vec3Int(chunk_shape)
+                )
+                shard_shape = _get_shard_shape(
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    shard_shape=shard_shape,
+                )
+                if shard_shape is None:
+                    if layer.data_format == DataFormat.Zarr3:
+                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES
+                    elif layer.data_format == DataFormat.Zarr:
+                        shard_shape = DEFAULT_CHUNK_SHAPE
+                    else:
+                        shard_shape = DEFAULT_SHARD_SHAPE
+                else:
+                    shard_shape = Vec3Int(shard_shape)
 
             mag = Mag(mag)
 
@@ -1885,7 +1906,7 @@ class Dataset:
                     layer.bounding_box = BoundingBox.from_ndbbox(layer.bounding_box)
                 else:
                     raise RuntimeError(
-                        "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
+                        f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                     )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
