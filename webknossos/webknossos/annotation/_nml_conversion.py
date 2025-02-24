@@ -1,7 +1,6 @@
 import colorsys
 import itertools
 import warnings
-from sys import stderr
 from typing import TYPE_CHECKING, List, Tuple
 
 import networkx as nx
@@ -135,9 +134,6 @@ def annotation_to_nml(
         taskBoundingBox=annotation.task_bounding_box,
         userBoundingBoxes=annotation.user_bounding_boxes,
     )
-    print("--------------------------------------------------------------", file=stderr)
-    print(annotation.dataset_id, file=stderr)
-    print("--------------------------------------------------------------", file=stderr)
 
     comments = [
         wknml.Comment(node.id, node.comment)
