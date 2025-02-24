@@ -21,6 +21,7 @@ def test_annotation_from_wkw_zip_file() -> None:
 
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert annotation.organization_id == "scalable_minds"
+    assert annotation.dataset_id == "67b7c81b0100004d00f5ab31"
     assert annotation.owner_name == "Philipp Otto"
     assert annotation.annotation_id == "61c20205010000cc004a6356"
     assert "timestamp" in annotation.metadata
@@ -32,6 +33,7 @@ def test_annotation_from_wkw_zip_file() -> None:
 
     assert copied_annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert copied_annotation.organization_id == "scalable_minds"
+    assert copied_annotation.dataset_id == "67b7c81b0100004d00f5ab31"
     assert copied_annotation.owner_name == "Philipp Otto"
     assert copied_annotation.annotation_id == "61c20205010000cc004a6356"
     assert "timestamp" in copied_annotation.metadata
