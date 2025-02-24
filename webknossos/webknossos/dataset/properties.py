@@ -17,17 +17,16 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from webknossos.dataset.length_unit import (
-    _LENGTH_UNIT_TO_NANOMETER,
-    LengthUnit,
-    length_unit_from_str,
-)
-
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
 from ._array import ArrayException, BaseArray
 from .data_format import DataFormat
 from .layer_categories import LayerCategoryType
+from .length_unit import (
+    _LENGTH_UNIT_TO_NANOMETER,
+    LengthUnit,
+    length_unit_from_str,
+)
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
 DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value

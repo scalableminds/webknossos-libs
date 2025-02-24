@@ -48,6 +48,7 @@ from ..geometry import (
     Vec3IntLike,
     VecIntLike,
 )
+from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._metadata import DatasetMetadata
@@ -1620,7 +1621,7 @@ class Dataset:
         category: Optional[LayerCategoryType] = "color",
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
-        mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
+        mag: MagLike = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
@@ -2005,7 +2006,7 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
-        data: np.ndarray,
+        data: np.ndarray,  # in specified mag
         *,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         downsample: bool = True,
@@ -2013,18 +2014,35 @@ class Dataset:
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         axes: Optional[Iterable[str]] = None,
-        absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,
+        absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,  # in mag1
+        mag: MagLike = Mag(1),
     ) -> Layer:
+        """Write a numpy array to a new layer and downsample.
+
+        Args:
+            layer_name: Name of the new layer.
+            category: Category of the new layer.
+            data: The data to write.
+            data_format: Format to store the data. Defaults to zarr3.
+            downsample: Whether to downsample the data. Defaults to True.
+            chunk_shape: Shape of chunks for storage.
+            chunks_per_shard: Number of chunks per shard.
+            axes: The axes of the data for non-3D data.
+            absolute_offset: The offset of the data. Specified in Mag 1.
+            mag: Magnification to write the data at.
+        """
+        mag = Mag(mag)
         bbox, num_channels = derive_nd_bounding_box_from_shape(
             data.shape, axes=axes, absolute_offset=absolute_offset
         )
+        mag1_bbox = bbox.with_size_xyz(bbox.size_xyz * mag.to_vec3_int())
         layer = self.add_layer(
             layer_name,
             category,
             data_format=data_format,
             num_channels=num_channels,
             dtype_per_channel=data.dtype,
-            bounding_box=bbox,
+            bounding_box=mag1_bbox,
         )
 
         with warnings.catch_warnings():
@@ -2036,14 +2054,14 @@ class Dataset:
                 category=UserWarning,
                 module="webknossos",
             )
-            mag = layer.add_mag(
-                1,
+            mag_view = layer.add_mag(
+                mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 shard_shape=shard_shape,
                 compress=True,
             )
-        mag.write(data, absolute_bounding_box=layer.bounding_box)
+        mag_view.write(data, absolute_bounding_box=layer.bounding_box)
 
         if downsample:
             layer.downsample()
