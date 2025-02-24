@@ -528,7 +528,9 @@ class Layer:
         compression_mode = compress
 
         chunk_shape = (
-            DEFAULT_CHUNK_SHAPE if chunk_shape is None else Vec3Int(chunk_shape)
+            DEFAULT_CHUNK_SHAPE
+            if chunk_shape is None
+            else Vec3Int.from_vec_or_int(chunk_shape)
         )
         shard_shape = _get_shard_shape(
             chunk_shape=chunk_shape,
@@ -706,15 +708,16 @@ class Layer:
         # normalize the name of the mag
         mag = Mag(mag)
 
-        chunk_shape = Vec3Int(chunk_shape or self._mags[mag].info.chunk_shape)
-        shard_shape = _get_shard_shape(
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-            shard_shape=shard_shape,
-        )
-
         if mag in self._mags.keys():
             mag_view = self._mags[mag]
+            chunk_shape = Vec3Int.from_vec_or_int(
+                chunk_shape or mag_view.info.chunk_shape
+            )
+            shard_shape = _get_shard_shape(
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
+            )
             if chunk_shape is not None and mag_view.info.chunk_shape != chunk_shape:
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk shapes do not match. Expected {mag_view.info.chunk_shape}, got {chunk_shape}."
@@ -729,6 +732,12 @@ class Layer:
                 )
             return self.get_mag(mag)
         else:
+            chunk_shape = Vec3Int.from_vec_or_int(chunk_shape or DEFAULT_CHUNK_SHAPE)
+            shard_shape = _get_shard_shape(
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
+            )
             return self.add_mag(
                 mag,
                 chunk_shape=chunk_shape,
@@ -777,10 +786,12 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        chunk_shape = Vec3Int(chunk_shape or foreign_mag_view.info.chunk_shape)
+        chunk_shape = Vec3Int.from_vec_or_int(
+            chunk_shape or foreign_mag_view.info.chunk_shape
+        )
         if chunks_per_shard is not None:
             if shard_shape is None:
-                shard_shape = Vec3Int(chunks_per_shard) * chunk_shape
+                shard_shape = Vec3Int.from_vec_or_int(chunks_per_shard) * chunk_shape
             else:
                 raise ValueError(
                     "shard_shape and chunks_per_shard must not be specified at the same time."
@@ -1392,7 +1403,7 @@ class Layer:
                 if buffer_shape is None:
                     buffer_shape = determine_buffer_shape(prev_mag_view.info)
                 else:
-                    buffer_shape = Vec3Int(buffer_shape)
+                    buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
                 func = named_partial(
                     upsample_cube_job,
                     mag_factors=mag_factors,

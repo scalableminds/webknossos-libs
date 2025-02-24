@@ -1811,7 +1811,7 @@ class Dataset:
                 chunk_shape = (
                     DEFAULT_CHUNK_SHAPE.with_z(1)
                     if chunk_shape is None
-                    else Vec3Int(chunk_shape)
+                    else Vec3Int.from_vec_or_int(chunk_shape)
                 )
                 shard_shape = _get_shard_shape(
                     chunk_shape=chunk_shape,
@@ -1826,10 +1826,12 @@ class Dataset:
                     else:
                         shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
                 else:
-                    shard_shape = Vec3Int(shard_shape)
+                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
             else:
                 chunk_shape = (
-                    DEFAULT_CHUNK_SHAPE if chunk_shape is None else Vec3Int(chunk_shape)
+                    DEFAULT_CHUNK_SHAPE
+                    if chunk_shape is None
+                    else Vec3Int.from_vec_or_int(chunk_shape)
                 )
                 shard_shape = _get_shard_shape(
                     chunk_shape=chunk_shape,
@@ -1844,7 +1846,7 @@ class Dataset:
                     else:
                         shard_shape = DEFAULT_SHARD_SHAPE
                 else:
-                    shard_shape = Vec3Int(shard_shape)
+                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
 
             mag = Mag(mag)
 
