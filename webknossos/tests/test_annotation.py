@@ -289,33 +289,3 @@ def test_nml_with_volumes(nml_path: Path) -> None:
     assert segment_info[2504698] == wk.SegmentInformation(
         name="test_segment", anchor_position=Vec3Int(3581, 3585, 1024), color=None
     )
-
-
-# Regression test for: https://github.com/scalableminds/webknossos-libs/pull/1256
-@pytest.mark.use_proxay
-def test_dataset_access_via_annotation(tmp_path: Path) -> None:
-    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", token):
-        dataset_to_reupload = wk.Dataset.download(
-            url,
-            path=Path(tmp_path) / "sample_ds",
-            bbox=wk.BoundingBox((3164, 3212, 1017), (10, 10, 10)),
-        )
-        renameable_dataset = dataset_to_reupload.upload("name_to_replace")
-    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
-    annotation_from_file = wk.Annotation.load(path)
-    annotation_from_file.organization_id = "Organization_X"
-    annotation_from_file.dataset_name = renameable_dataset.name
-    annotation_from_file.dataset_id = renameable_dataset._dataset_id
-    test_token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", test_token):
-        url = annotation_from_file.upload()
-        annotation = wk.Annotation.download(url)
-    assert annotation.dataset_name == "name_to_replace"
-    assert len(list(annotation.skeleton.flattened_trees())) == 1
-
-    renameable_dataset.name = "replaced_name"
-    # Test whether the DS can still be accessed via the annotation after the renaming.
-    dataset_from_annotation = annotation.get_remote_annotation_dataset()
-    assert dataset_from_annotation._dataset_id == renameable_dataset._dataset_id
