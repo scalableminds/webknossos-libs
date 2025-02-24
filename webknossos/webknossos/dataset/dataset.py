@@ -1981,6 +1981,20 @@ class Dataset:
         absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,  # in mag1
         mag: MagLike = Mag(1),
     ) -> Layer:
+        """Write a numpy array to a new layer and downsample.
+
+        Args:
+            layer_name: Name of the new layer.
+            category: Category of the new layer.
+            data: The data to write.
+            data_format: Format to store the data. Defaults to zarr3.
+            downsample: Whether to downsample the data. Defaults to True.
+            chunk_shape: Shape of chunks for storage.
+            chunks_per_shard: Number of chunks per shard.
+            axes: The axes of the data for non-3D data.
+            absolute_offset: The offset of the data. Specified in Mag 1.
+            mag: Magnification to write the data at.
+        """
         mag = Mag(mag)
         bbox, num_channels = derive_nd_bounding_box_from_shape(
             data.shape, axes=axes, absolute_offset=absolute_offset
