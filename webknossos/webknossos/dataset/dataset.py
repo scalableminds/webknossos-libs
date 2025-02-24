@@ -2009,9 +2009,9 @@ class Dataset:
         *,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         downsample: bool = True,
-        chunk_shape: Optional[Vec3IntLike] = None,
-        shard_shape: Optional[Vec3IntLike] = None,
-        chunks_per_shard: Optional[Vec3IntLike] = None,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         axes: Optional[Iterable[str]] = None,
         absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,
     ) -> Layer:
