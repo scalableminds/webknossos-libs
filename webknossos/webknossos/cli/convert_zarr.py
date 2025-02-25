@@ -17,7 +17,11 @@ from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 
 from ..dataset import DataFormat, Dataset, MagView, SegmentationLayer
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD,
+    DEFAULT_DATA_FORMAT,
+)
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, wait_and_ensure_success
 from ._utils import (
@@ -172,7 +176,7 @@ def main(
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = "wkw",  # type:ignore
+    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
     chunk_shape: Annotated[
         Vec3Int,
         typer.Option(
