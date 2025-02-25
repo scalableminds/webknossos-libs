@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.9...HEAD)
 
 ### Breaking Changes
 - Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of the underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
@@ -112,6 +112,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.9) - 2025-02-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...v0.16.9)
+
+### Fixed
+- Fixed opening a renamed dataset via an annotation link. [#1256](https://github.com/scalableminds/webknossos-libs/pull/1256)
+
 
 
 ## [0.16.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.8) - 2025-02-04
