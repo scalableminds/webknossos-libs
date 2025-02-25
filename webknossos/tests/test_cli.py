@@ -23,7 +23,7 @@ from tests.constants import (
     TESTDATA_DIR,
     use_minio,
 )
-from webknossos import BoundingBox, DataFormat, Dataset
+from webknossos import BoundingBox, DataFormat, Dataset, Mag
 from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
@@ -132,6 +132,30 @@ def test_check_equality() -> None:
         f"{str(TESTDATA_DIR / 'simple_wkw_dataset')} are equal"
         in result.stdout.replace("\n", "")
     )
+
+
+def test_copy_dataset(tmp_path: Path) -> None:
+    """Tests the functionality of copy_dataset subcommand."""
+
+    result_without_args = runner.invoke(app, ["copy-dataset"])
+    assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "copy-dataset",
+            str(TESTDATA_DIR / "simple_wkw_dataset"),
+            str(tmp_path / "simple_wkw_dataset"),
+            "--data-format",
+            "zarr3",
+        ],
+    )
+    assert result.exit_code == 0
+    # verify that data is
+    target_ds = Dataset.open(tmp_path / "simple_wkw_dataset")
+    target_layer = target_ds.get_layer("color")
+    assert target_layer.data_format == DataFormat.Zarr3
+    assert Mag(1) in target_layer.mags
 
 
 def test_check_not_equal() -> None:
