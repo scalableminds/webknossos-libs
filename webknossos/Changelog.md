@@ -108,6 +108,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 
 ### Added
+- Added the `webknossos copy-dataset` CLI command. [#1259](https://github.com/scalableminds/webknossos-libs/pull/1259)
 
 ### Changed
 
