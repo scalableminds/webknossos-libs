@@ -2229,6 +2229,10 @@ class Dataset:
         layer.bounding_box = foreign_layer.bounding_box
 
         for mag_view in foreign_layer.mags.values():
+            progress_desc = (
+                f"Copying {mag_view.layer.name}/{mag_view.mag.to_layer_name()}"
+            )
+
             layer.add_copy_mag(
                 mag_view,
                 extend_layer_bounding_box=False,
@@ -2237,6 +2241,7 @@ class Dataset:
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
                 executor=executor,
+                progress_desc=progress_desc,
             )
 
         return layer
