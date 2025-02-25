@@ -9,6 +9,7 @@ from . import (
     convert_knossos,
     convert_raw,
     convert_zarr,
+    copy_dataset,
     download,
     downsample,
     export_wkw_as_tiff,
@@ -25,6 +26,7 @@ app.command("convert")(convert.main)
 app.command("convert-knossos")(convert_knossos.main)
 app.command("convert-raw")(convert_raw.main)
 app.command("convert-zarr")(convert_zarr.main)
+app.command("copy-dataset")(copy_dataset.main)
 app.command("download")(download.main)
 app.command("downsample")(downsample.main)
 app.command("export-wkw-as-tiff")(export_wkw_as_tiff.main)
