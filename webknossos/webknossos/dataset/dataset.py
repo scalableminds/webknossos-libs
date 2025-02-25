@@ -1619,6 +1619,7 @@ class Dataset:
         ## add_layer arguments
         layer_name: str,
         category: Optional[LayerCategoryType] = "color",
+        *,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
         mag: MagLike = Mag(1),
@@ -1626,7 +1627,6 @@ class Dataset:
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         compress: bool = True,
-        *,
         ## other arguments
         topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)
         swap_xy: bool = False,
@@ -2601,7 +2601,7 @@ class Dataset:
             else:
                 new_layer = new_dataset.add_layer_like(layer, layer_name)
                 for mag_view in layer.mags.values():
-                    new_layer.add_symlink_mag(mag_view, make_relative)
+                    new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
 
                 # copy all other directories with a dir scan
                 copy_directory_with_symlinks(
