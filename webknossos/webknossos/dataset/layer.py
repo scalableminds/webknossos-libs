@@ -770,6 +770,7 @@ class Layer:
     def add_copy_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        *,
         extend_layer_bounding_box: bool = True,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
@@ -825,6 +826,7 @@ class Layer:
     def add_symlink_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        *,
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
@@ -866,6 +868,7 @@ class Layer:
     def add_remote_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
@@ -901,6 +904,7 @@ class Layer:
     def add_fs_copy_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
@@ -929,6 +933,7 @@ class Layer:
         self,
         mag: MagLike,
         path: PathLike,
+        *,
         move: bool = False,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
