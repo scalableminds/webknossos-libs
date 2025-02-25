@@ -12,11 +12,12 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 - `webknossos convert-raw`: Converts a RAW image file to a WEBKNOSSOS dataset
 - `webknossos convert-zarr`: Converts a Zarr dataset to a WEBKNOSSOS dataset 
 - `webknossos copy-dataset`: Makes a copy of a WEBKNOSSOS dataset
-- `webknossos download`: Download a dataset from a WEBKNOSSOS server as WKW format
+- `webknossos download`: Download a dataset from a WEBKNOSSOS server
 - `webknossos downsample`: Downsample a WEBKNOSSOS dataset
 - `webknossos merge-fallback`: Merge a volume layer of a WEBKNOSSOS dataset with an annotation
 - `webknossos upload`: Upload a local WEBKNOSSOS dataset to a remote location
 - `webknossos upsample`: Upsample a WEBKNOSSOS dataset
+- `webknossos export-as-tiff`: Export a part of a WEBKNOSSOS dataset as a TIFF sequence
 
 ## Supported input formats
 

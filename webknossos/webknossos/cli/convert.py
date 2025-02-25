@@ -8,7 +8,7 @@ import typer
 from typing_extensions import Annotated
 
 from ..dataset import DataFormat, Dataset, LengthUnit
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 from ..geometry import Vec3Int
 from ..utils import get_executor_for_args
@@ -74,7 +74,7 @@ def main(
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = "wkw",  # type:ignore
+    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
     name: Annotated[
         Optional[str],
         typer.Option(

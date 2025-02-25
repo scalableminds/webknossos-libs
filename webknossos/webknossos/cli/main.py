@@ -12,7 +12,7 @@ from . import (
     copy_dataset,
     download,
     downsample,
-    export_wkw_as_tiff,
+    export_as_tiff,
     merge_fallback,
     upload,
     upsample,
@@ -29,7 +29,8 @@ app.command("convert-zarr")(convert_zarr.main)
 app.command("copy-dataset")(copy_dataset.main)
 app.command("download")(download.main)
 app.command("downsample")(downsample.main)
-app.command("export-wkw-as-tiff")(export_wkw_as_tiff.main)
+app.command("export-wkw-as-tiff")(export_as_tiff.main)
+app.command("export-as-tiff")(export_as_tiff.main)
 app.command("merge-fallback")(merge_fallback.main)
 app.command("upload")(upload.main)
 app.command("upsample")(upsample.main)
