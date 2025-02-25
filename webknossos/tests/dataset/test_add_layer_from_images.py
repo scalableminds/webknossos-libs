@@ -32,7 +32,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         category="segmentation",
         topleft=(100, 100, 55),
         chunk_shape=(8, 8, 8),
-        chunks_per_shard=(8, 8, 8),
+        shard_shape=(64, 64, 64),
     )
     assert layer.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
     data = layer.get_finest_mag().read()[0, :, :]
@@ -52,7 +52,7 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
             topleft=(2, 55, 100, 100),
             data_format="zarr3",
             chunk_shape=(8, 8, 8),
-            chunks_per_shard=(8, 8, 8),
+            shard_shape=(64, 64, 64),
             executor=executor,
         )
     assert layer.bounding_box.topleft == wk.VecInt(
@@ -373,7 +373,7 @@ TEST_IMAGES_ARGS: list[
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0420.dm4",
         "slice_0420.dm4",
-        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (8192, 8192, 1),
@@ -381,7 +381,7 @@ TEST_IMAGES_ARGS: list[
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0073.dm3",
         "slice_0073.dm3",
-        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (4096, 4096, 1),
@@ -392,7 +392,7 @@ TEST_IMAGES_ARGS: list[
             "https://static.webknossos.org/data/webknossos-libs/slice_0074.dm3",
         ],
         ["slice_0073.dm3", "slice_0074.dm3"],
-        {"data_format": "zarr"},  # using zarr to allow smaller chunking
+        {"data_format": "zarr3"},  # using zarr to allow smaller chunking
         "uint16",
         1,
         (4096, 4096, 2),
@@ -400,7 +400,7 @@ TEST_IMAGES_ARGS: list[
     (
         "https://static.webknossos.org/data/wklibs-samples/dnasample1.zip",
         "dnasample1.dm3",
-        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "int16",
         1,
         (4096, 4096, 1),
