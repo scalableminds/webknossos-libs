@@ -14,7 +14,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Breaking Changes
 - Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of the underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
-- Deprecated `chunks_per_shard` arguments in favor of `shard_shape`, which equals to `shard_shape = chunk_shape * chunks_per_shard`.
+- Deprecated `chunks_per_shard` arguments in favor of `shard_shape`, which equals to `shard_shape = chunk_shape * chunks_per_shard`. The shard shape is more intuitive, because it directly defines the size of shards instead of being a factor of the chunk shape.
+- Deprecated `dtype_per_layer` argument, because it promotes the use of uncommon dtypes and leads to confusion with the other `dtype_per_channel` argument. With this change only the use of `dtype_per_channel` encouraged.
 - Removed deprecated functions, properties and arguments:
   - Functions:
     - `open_annotation`, use `Annotation.load()` instead
