@@ -1,4 +1,4 @@
-"""This module checks equality of two different WEBKNOSSOS datasets."""
+"""This module copies a WEBKNOSSOS datasets."""
 
 import logging
 from argparse import Namespace
