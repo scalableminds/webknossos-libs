@@ -2,15 +2,17 @@ import math
 import re
 from functools import total_ordering
 from math import log2
-from typing import Any, Iterator, List, Optional, Tuple, cast
+from typing import Any, Iterator, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
 
 from .vec3_int import Vec3Int, Vec3IntLike
 
+MagLike = Union[int, str, list, tuple, np.ndarray, "Mag"]
 
-def _import_mag(mag_like: Any) -> Vec3Int:
+
+def _import_mag(mag_like: MagLike) -> Vec3Int:
     as_vec3_int: Optional[Vec3Int] = None
 
     if isinstance(mag_like, Mag):

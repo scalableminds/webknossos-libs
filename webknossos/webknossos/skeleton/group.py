@@ -6,7 +6,6 @@ from boltons.strutils import unit_len
 
 import webknossos._nml as wknml
 
-from ..utils import warn_deprecated
 from .tree import Tree
 
 if TYPE_CHECKING:
@@ -180,16 +179,6 @@ class Group:
             self._child_trees.add(new_tree)
             return new_tree
 
-    def add_graph(
-        self,
-        name: str,
-        color: Optional[Union[Vector4, Vector3]] = None,
-        _enforced_id: Optional[int] = None,
-    ) -> Tree:
-        """Deprecated, please use `add_tree`."""
-        warn_deprecated("add_graph()", "add_tree()")
-        return self.add_tree(name_or_tree=name, color=color, _enforced_id=_enforced_id)
-
     def remove_tree_by_id(self, tree_id: int) -> None:
         self._child_trees.remove(self.get_tree_by_id(tree_id))
 
@@ -222,12 +211,6 @@ class Group:
         """Returns all (immediate) tree children as an iterator.
         Use flattened_trees if you also need trees within subgroups."""
         return (child for child in self._child_trees)
-
-    @property
-    def graphs(self) -> Iterator[Tree]:
-        """Deprecated, please use `trees`."""
-        warn_deprecated("graphs", "trees")
-        return self.trees
 
     @property
     def groups(self) -> Iterator["Group"]:
@@ -280,11 +263,6 @@ class Group:
         """Returns the highest tree id of all trees within this group (and its subgroups)."""
         return max((tree.id for tree in self.flattened_trees()), default=0)
 
-    def get_max_graph_id(self) -> int:
-        """Deprecated, please use `get_max_tree_id`."""
-        warn_deprecated("get_max_graph_id()", "get_max_tree_id()")
-        return self.get_max_tree_id()
-
     def get_max_node_id(self) -> int:
         """Returns the highest node id of all nodes of all trees within this group (and its subgroups)."""
         return max(
@@ -311,11 +289,6 @@ class Group:
         yield from self.trees
         for group in self.groups:
             yield from group.flattened_trees()
-
-    def flattened_graphs(self) -> Iterator[Tree]:
-        """Deprecated, please use `flattened_trees`."""
-        warn_deprecated("flattened_graphs()", "flattened_trees()")
-        return self.flattened_trees()
 
     def flattened_groups(self) -> Iterator["Group"]:
         """Returns an iterator of all groups within this group (and its subgroups)."""
@@ -398,11 +371,6 @@ class Group:
             return True
         except ValueError:
             return False
-
-    def get_graph_by_id(self, graph_id: int) -> Tree:
-        """Deprecated, please use `get_tree_by_id`."""
-        warn_deprecated("get_graph_by_id()", "get_tree_by_id()")
-        return self.get_tree_by_id(graph_id)
 
     def get_group_by_id(self, group_id: int) -> "Group":
         """Returns the group which has the specified group id."""

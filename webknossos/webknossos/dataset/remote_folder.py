@@ -2,10 +2,9 @@ from typing import Dict, Iterable, List, Optional, Sequence, Union
 
 import attr
 
-from webknossos.dataset._metadata import FolderMetadata
-from webknossos.utils import infer_metadata_type
-
 from ..client.api_client.models import ApiFolder, ApiFolderWithParent, ApiMetadata
+from ..utils import infer_metadata_type
+from ._metadata import FolderMetadata
 
 
 def _get_folder_path(

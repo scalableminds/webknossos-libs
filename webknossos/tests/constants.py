@@ -48,6 +48,7 @@ def use_minio() -> Iterator[None]:
             yield
         finally:
             minio_process.terminate()
+            sleep(1)
             rmtree(minio_path)
     else:
         container_name = "minio"

@@ -11,8 +11,8 @@ from typing import (
     Union,
 )
 
-from webknossos.client.api_client.models import ApiDataset, ApiFolder, ApiMetadata
-from webknossos.utils import infer_metadata_type, parse_metadata_value
+from ..client.api_client.models import ApiDataset, ApiFolder, ApiMetadata
+from ..utils import infer_metadata_type, parse_metadata_value
 
 _T = TypeVar("_T", bound="Metadata")
 

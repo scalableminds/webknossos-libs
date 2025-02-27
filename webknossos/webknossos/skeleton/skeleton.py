@@ -6,7 +6,6 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 import attr
 import networkx as nx
 
-from ..utils import warn_deprecated
 from .group import Group
 
 Vector3 = Tuple[float, float, float]
@@ -100,18 +99,6 @@ class Skeleton(Group):
         self._element_id_generator = itertools.count()
         self._skeleton = self
         super().__attrs_post_init__()  # sets self._id
-
-    @property
-    def scale(self) -> Tuple[float, float, float]:
-        """Deprecated, please use `voxel_size`."""
-        warn_deprecated("scale", "voxel_size")
-        return self.voxel_size
-
-    @scale.setter
-    def scale(self, scale: Tuple[float, float, float]) -> None:
-        """Deprecated, please use `voxel_size`."""
-        warn_deprecated("scale", "voxel_size")
-        self.voxel_size = scale
 
     @staticmethod
     def load(file_path: Union[PathLike, str]) -> "Skeleton":
@@ -271,14 +258,3 @@ class Skeleton(Group):
                     id_node_dict[old_id] = node
                 for edge in tree.edges():
                     wk_tree.add_edge(id_node_dict[edge[0]], id_node_dict[edge[1]])
-
-    @staticmethod
-    def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
-        """Deprecated. Use Skeleton.load instead."""
-        warn_deprecated("Skeleton.from_path", "Skeleton.load")
-        return Skeleton.load(file_path)
-
-    def write(self, out_path: PathLike) -> None:
-        """Deprecated. Use Skeleton.save instead."""
-        warn_deprecated("Skeleton.write", "skeleton.save")
-        self.save(out_path)

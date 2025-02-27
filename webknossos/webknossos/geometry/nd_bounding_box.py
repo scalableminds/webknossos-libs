@@ -913,3 +913,55 @@ class NDBoundingBox:
             return self.with_topleft_xyz(self.topleft_xyz + Vec3Int(vector))
         except AssertionError:
             return self.with_topleft(self.topleft + VecInt(vector, axes=self.axes))
+
+
+def derive_nd_bounding_box_from_shape(
+    data_shape: tuple[int, ...],
+    *,
+    axes: Optional[Iterable[str]] = None,
+    absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,
+) -> tuple[NDBoundingBox, int]:
+    data_ndim = len(data_shape)
+    if axes is not None:
+        axes = tuple(axes)
+        assert len(axes) == data_ndim
+        if "c" in axes:
+            assert axes[0] == "c"
+            bbox = NDBoundingBox(
+                absolute_offset or VecInt.zeros(axes[1:]),
+                VecInt(data_shape[1:], axes=axes[1:]),
+                axes=axes[1:],
+                index=tuple(range(1, len(axes))),
+            )
+            num_channels = data_shape[0]
+        else:
+            bbox = NDBoundingBox(
+                absolute_offset or VecInt.zeros(axes),
+                VecInt(data_shape, axes=axes),
+                axes=axes,
+                index=tuple(range(1, len(axes) + 1)),
+            )
+            num_channels = 1
+    else:
+        from .bounding_box import BoundingBox
+
+        if data_ndim == 0:
+            raise ValueError("Scalar values are not supported.")
+        elif data_ndim <= 3:
+            axes = ("x", "y", "z")
+            shape = data_shape
+            while len(shape) < 3:
+                shape = shape + (1,)
+            bbox = BoundingBox(absolute_offset or Vec3Int.zeros(), Vec3Int(shape))
+            num_channels = 1
+        elif data_ndim == 4:
+            axes = ("c", "x", "y", "z")
+            bbox = BoundingBox(
+                absolute_offset or Vec3Int.zeros(), Vec3Int(data_shape[1:])
+            )
+            num_channels = data_shape[0]
+        else:
+            raise ValueError(
+                "axes must be provided for arrays with more than 4 dimensions."
+            )
+    return bbox, num_channels

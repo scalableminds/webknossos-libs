@@ -15,7 +15,11 @@ from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 
 from ..dataset import DataFormat, Dataset, MagView, SamplingModes
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD,
+    DEFAULT_DATA_FORMAT,
+)
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
     get_executor_for_args,
@@ -61,7 +65,7 @@ def _raw_chunk_converter(
     contiguous_chunk = source_data[(slice(None),) + bounding_box.to_slices()].copy(
         order="F"
     )
-    target_mag_view.write(contiguous_chunk, bounding_box.topleft)
+    target_mag_view.write(data=contiguous_chunk, absolute_offset=bounding_box.topleft)
 
 
 def convert_raw(
@@ -186,7 +190,7 @@ def main(
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = "wkw",  # type:ignore
+    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
     chunk_shape: Annotated[
         Vec3Int,
         typer.Option(

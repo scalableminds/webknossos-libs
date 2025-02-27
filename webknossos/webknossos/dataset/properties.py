@@ -17,17 +17,16 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from webknossos.dataset.length_unit import (
+from ..geometry import Mag, NDBoundingBox, Vec3Int
+from ..utils import snake_to_camel_case
+from ._array import ArrayException, BaseArray
+from .data_format import DataFormat
+from .layer_categories import LayerCategoryType
+from .length_unit import (
     _LENGTH_UNIT_TO_NANOMETER,
     LengthUnit,
     length_unit_from_str,
 )
-
-from ..geometry import Mag, NDBoundingBox, Vec3Int
-from ..utils import snake_to_camel_case, warn_deprecated
-from ._array import ArrayException, BaseArray
-from .data_format import DataFormat
-from .layer_categories import LayerCategoryType
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
 DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
@@ -159,11 +158,6 @@ class MagViewProperties:
     cube_length: Optional[int] = None
     axis_order: Optional[Dict[str, int]] = None
 
-    @property
-    def resolution(self) -> Mag:
-        warn_deprecated("resolution", "mag")
-        return self.mag
-
 
 @attr.define
 class AxisProperties:
@@ -182,11 +176,6 @@ class LayerProperties:
     mags: List[MagViewProperties]
     num_channels: Optional[int] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None
-
-    @property
-    def resolutions(self) -> List[MagViewProperties]:
-        warn_deprecated("resolutions", "mags")
-        return self.mags
 
 
 @attr.define
