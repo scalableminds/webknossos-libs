@@ -430,7 +430,7 @@ class TensorStoreArray(BaseArray):
             parsed_url = urlparse(str(path))
             kvstore_spec: dict[str, Any] = {
                 "driver": "s3",
-                "path": parsed_url.path,
+                "path": parsed_url.path.lstrip("/"),
                 "bucket": parsed_url.netloc,
             }
             if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
@@ -469,7 +469,7 @@ class TensorStoreArray(BaseArray):
                     "kvstore": uri,
                 },
                 open=True,
-                create=True,
+                create=False,
             ).result()  # check that everything exists
             return cls(path, _array)
         except Exception as exc:

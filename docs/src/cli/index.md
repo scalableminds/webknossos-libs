@@ -11,6 +11,7 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 - `webknossos convert-knossos`: Converts a KNOSSOS dataset to a WEBKNOSSOS dataset
 - `webknossos convert-raw`: Converts a RAW image file to a WEBKNOSSOS dataset
 - `webknossos convert-zarr`: Converts a Zarr dataset to a WEBKNOSSOS dataset 
+- `webknossos copy-dataset`: Makes a copy of a WEBKNOSSOS dataset
 - `webknossos download`: Download a dataset from a WEBKNOSSOS server
 - `webknossos downsample`: Downsample a WEBKNOSSOS dataset
 - `webknossos merge-fallback`: Merge a volume layer of a WEBKNOSSOS dataset with an annotation
@@ -61,7 +62,12 @@ webknossos convert-knossos --layer-name color --voxel-size 11.24,11.24,25 data/s
 # Convert RAW file to wkw file
 webknossos convert-raw --layer-name color --voxel-size 10,10,30 --dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
 
-
+# Copy a local dataset to a remote storage
+AWS_ACCESS_KEY_ID=XXX AWS_SECRET_ACCESS_KEY=XXX \
+webknossos copy-dataset \
+  --data-format zarr3 \
+  --jobs 4 \
+  data/source s3://webknossos-bucket/target
 ```
 
 ### Parallelization

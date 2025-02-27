@@ -777,6 +777,7 @@ class Layer:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
         executor: Optional[Executor] = None,
+        progress_desc: Optional[str] = None,
     ) -> MagView:
         """
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
@@ -814,11 +815,14 @@ class Layer:
                 foreign_mag_view.layer.bounding_box
             )
 
+        if progress_desc is None:
+            progress_desc = f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}"
+
         foreign_mag_view.for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
-            progress_desc=f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}",
+            progress_desc=progress_desc,
         )
 
         return mag_view
