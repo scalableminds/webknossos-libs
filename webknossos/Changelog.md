@@ -77,6 +77,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `args` in `Layer.upsample`, use `executor` instead
     - `min_mag` in `Layer.upsample`, use `finest_mag` instead
     - `offset` in `MagView.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `json_update_allowed` in `MagView.write`, use `allow_resize` instead
     - `args` in `MagView.compress`, use `executor` instead
     - `offset` in `View.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
     - `json_update_allowed` in `View.write`, not supported anymore
@@ -100,8 +101,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `compress` in `Layer.upsample` is now `True`
   - `buffer_size` in `View.get_buffered_slice_reader` is now computed from the shard shape
   - `buffer_size` in `View.get_buffered_slice_writer` is now computed from the shard shape
-- Moved from positional argument to keyword-only argument:
-  - `json_update_allowed` in `MagView.write`
 - Added arguments:
   - `allow_resize` in `MagView.write` with default `False`
   - `allow_unaligned` in `MagView.write` with default `False`

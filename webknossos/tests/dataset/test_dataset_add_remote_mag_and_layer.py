@@ -72,7 +72,6 @@ def test_add_remote_mags_from_path(
         remote_dataset.get_layer(layer).get_mag(mag)
         for layer, mag in sample_layer_and_mag_name
     ]
-    print(sample_remote_mags)
     for remote_mag in sample_remote_mags:
         mag_path = remote_mag.path
         layer_type = remote_mag.layer.category

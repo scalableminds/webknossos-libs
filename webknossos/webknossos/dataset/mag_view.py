@@ -17,7 +17,6 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
-    warn_deprecated,
 )
 from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
@@ -264,9 +263,8 @@ class MagView(View):
         self,
         data: np.ndarray,
         *,
-        allow_resize: Optional[bool] = None,
+        allow_resize: bool = False,
         allow_unaligned: bool = False,
-        json_update_allowed: Optional[bool] = None,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
@@ -290,7 +288,6 @@ class MagView(View):
             allow_unaligned (bool, optional): If True, allows writing data to without
                 being aligned to the shard shape.
                 Defaults to False.
-            json_update_allowed: Deprecated, use allow_resize.
             relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
             absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
@@ -317,18 +314,6 @@ class MagView(View):
             - For compressed data, writing may be slower due to compression
             - Large writes may temporarily increase memory usage
         """
-
-        if json_update_allowed is not None:
-            warn_deprecated("json_update_allowed", "allow_resize")
-            if allow_resize is None:
-                allow_resize = json_update_allowed
-            else:
-                raise ValueError(
-                    "Cannot specify both `json_update_allowed` and `allow_resize` arguments."
-                )
-        if allow_resize is None:
-            allow_resize = False
-
         if all(
             i is None
             for i in [

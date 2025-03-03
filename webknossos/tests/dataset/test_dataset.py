@@ -24,6 +24,7 @@ from webknossos.dataset import (
 )
 from webknossos.dataset._array import DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
+from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
 from webknossos.dataset.properties import (
     DatasetProperties,
     DatasetViewConfiguration,
@@ -269,7 +270,7 @@ def test_ome_ngff_metadata(output_path: Path) -> None:
 
 
 def test_create_default_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.Zarr3, TESTOUTPUT_DIR)
+    ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
 
