@@ -452,6 +452,7 @@ class MagView(View):
 
     def compress(
         self,
+        *,
         target_path: Optional[Union[str, Path]] = None,
         executor: Optional[Executor] = None,
     ) -> None:

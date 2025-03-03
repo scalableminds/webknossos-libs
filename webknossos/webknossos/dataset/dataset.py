@@ -798,6 +798,7 @@ class Dataset:
     def download(
         cls,
         dataset_name_or_url: str,
+        *,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
@@ -1172,6 +1173,7 @@ class Dataset:
     def upload(
         self,
         new_dataset_name: Optional[str] = None,
+        *,
         layers_to_link: Optional[List[Union["LayerToLink", Layer]]] = None,
         jobs: Optional[int] = None,
     ) -> "RemoteDataset":
@@ -2163,6 +2165,7 @@ class Dataset:
         self,
         foreign_layer: Union[str, Path, Layer],
         new_layer_name: Optional[str] = None,
+        *,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
@@ -2245,8 +2248,9 @@ class Dataset:
     def add_symlink_layer(
         self,
         foreign_layer: Union[str, Path, Layer],
-        make_relative: bool = False,
         new_layer_name: Optional[str] = None,
+        *,
+        make_relative: bool = False,
     ) -> Layer:
         """Create symbolic link to layer from another dataset.
 
@@ -2447,6 +2451,7 @@ class Dataset:
     def copy_dataset(
         self,
         new_dataset_path: Union[str, Path],
+        *,
         voxel_size: Optional[Tuple[float, float, float]] = None,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
@@ -2454,7 +2459,6 @@ class Dataset:
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
         executor: Optional[Executor] = None,
-        *,
         voxel_size_with_unit: Optional[VoxelSize] = None,
     ) -> "Dataset":
         """
@@ -2539,6 +2543,7 @@ class Dataset:
     def shallow_copy_dataset(
         self,
         new_dataset_path: Union[str, PathLike],
+        *,
         name: Optional[str] = None,
         make_relative: bool = False,
         layers_to_ignore: Optional[Iterable[str]] = None,
@@ -2622,6 +2627,7 @@ class Dataset:
 
     def compress(
         self,
+        *,
         executor: Optional[Executor] = None,
     ) -> None:
         """Compress all uncompressed magnifications in-place.
@@ -2651,6 +2657,7 @@ class Dataset:
 
     def downsample(
         self,
+        *,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
         coarsest_mag: Optional[Mag] = None,
         executor: Optional[Executor] = None,
@@ -2780,6 +2787,7 @@ class Dataset:
 
     @staticmethod
     def get_remote_datasets(
+        *,
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
         name: Optional[str] = None,
