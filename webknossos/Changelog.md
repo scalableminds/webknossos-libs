@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,30 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.10) - 2025-02-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.9...v0.16.10)
+
+
+## [0.16.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.9) - 2025-02-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...v0.16.9)
+
+### Fixed
+- Fixed opening a renamed dataset via an annotation link. [#1256](https://github.com/scalableminds/webknossos-libs/pull/1256)
+
+
+
+## [0.16.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.8) - 2025-02-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.7...v0.16.8)
+
+
+## [0.16.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.7) - 2025-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.6...v0.16.7)
+
+### Fixed
+- Fixed a misleading error message when Dataset.open() can't find a valid dataset. [#1246](https://github.com/scalableminds/webknossos-libs/pull/1246)
+
 
 
 ## [0.16.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.6) - 2025-02-03
@@ -37,7 +61,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug with loading metadata lists. [#1247](https://github.com/scalableminds/webknossos-libs/pull/1247)
-
 
 
 ## [0.16.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.4) - 2025-01-23
@@ -68,7 +91,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed Mag setup for non-public datasets. [#1222](https://github.com/scalableminds/webknossos-libs/pull/1222)
 - Fixed an issue when shallow copying datasets with a remote mag. [#1224](https://github.com/scalableminds/webknossos-libs/pull/1224)
-
 
 
 ## [0.16.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.2) - 2024-12-18

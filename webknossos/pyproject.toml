@@ -30,7 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13", 
 ]
 
-requires-python = ">=3.9,<=3.13"
+requires-python = ">=3.9,<3.14"
 
 dependencies = [
     "aiohttp ~=3.10.5",
@@ -97,7 +97,7 @@ dev-dependencies = [
     "mypy ~=1.10.0",
     "pytest ~=8.3.2",
     "pytest-custom-exit-code ~=0.3.0",
-    "pytest-split ~=0.9.0",
+    "pytest-split ~=0.10.0",
     "pytest-sugar ~=1.0.0",
     "pytest-timeout ~=2.3.0",
     "pytest-timestamper ~=0.0.10",
@@ -187,6 +187,11 @@ testpaths = ["tests"]
 [build-system]
 requires = ["setuptools>=70.0", "wheel; python_version>='3.12'"]
 build-backend = "setuptools.build_meta"
+
+# This is a fix for an issue in setuptools. See: https://github.com/pypa/setuptools/issues/4759
+# This shoulde be removed when the issue is resolved.
+[tool.setuptools]
+license-files = []
 
 [tool.setuptools.packages.find]
 where = ["."]
