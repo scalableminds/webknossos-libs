@@ -67,8 +67,8 @@ def main() -> None:
 
     copy_of_dataset = dataset.copy_dataset(
         "testoutput/copy_of_dataset",
-        chunk_shape=8,
-        chunks_per_shard=8,
+        chunk_shape=(8, 8, 8),
+        shard_shape=(64, 64, 64),
         compress=True,
     )
     new_layer = dataset.add_layer(

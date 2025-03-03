@@ -56,9 +56,9 @@ from ._utils import pims_images
 from .defaults import (
     DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
-    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
-    DEFAULT_CHUNKS_PER_SHARD_ZARR,
     DEFAULT_DATA_FORMAT,
+    DEFAULT_SHARD_SHAPE,
+    DEFAULT_SHARD_SHAPE_FROM_IMAGES,
     PROPERTIES_FILE_NAME,
     SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
@@ -101,7 +101,7 @@ from .layer import (
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
     _dtype_per_layer_to_dtype_per_channel,
-    _get_sharding_parameters,
+    _get_shard_shape,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
@@ -798,6 +798,7 @@ class Dataset:
     def download(
         cls,
         dataset_name_or_url: str,
+        *,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
@@ -868,6 +869,7 @@ class Dataset:
         layer_category: Optional[LayerCategoryType] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = True,
         swap_xy: bool = False,
@@ -906,8 +908,9 @@ class Dataset:
             layer_name: Optional name for layer(s)
             layer_category: Optional category override (LayerCategoryType.color / LayerCategoryType.segmentation)
             data_format: Format to store data in ('wkw'/'zarr')
-            chunk_shape: Optional shape of chunks to store data in
-            chunks_per_shard: Optional number of chunks per shard
+            chunk_shape: Optional. Shape of chunks to store data in
+            shard_shape: Optional. Shape of shards to store data in
+            chunks_per_shard: Deprecated, use shard_shape. Optional. number of chunks per shard
             compress: Whether to compress the data
             swap_xy: Whether to swap x and y axes
             flip_x: Whether to flip the x axis
@@ -1031,6 +1034,7 @@ class Dataset:
                         category=layer_category,
                         data_format=data_format,
                         chunk_shape=chunk_shape,
+                        shard_shape=shard_shape,
                         chunks_per_shard=chunks_per_shard,
                         compress=compress,
                         swap_xy=swap_xy,
@@ -1169,6 +1173,7 @@ class Dataset:
     def upload(
         self,
         new_dataset_name: Optional[str] = None,
+        *,
         layers_to_link: Optional[List[Union["LayerToLink", Layer]]] = None,
         jobs: Optional[int] = None,
     ) -> "RemoteDataset":
@@ -1245,6 +1250,7 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
+        *,
         dtype_per_layer: Optional[DTypeLike] = None,
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
@@ -1259,7 +1265,7 @@ class Dataset:
         Args:
             layer_name: Name for the new layer
             category: Either 'color' or 'segmentation'
-            dtype_per_layer: Optional data type for entire layer, e.g. np.uint8
+            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer, e.g. np.uint8
             dtype_per_channel: Optional data type per channel, e.g. np.uint8
             num_channels: Number of channels (default 1)
             data_format: Format to store data ('wkw', 'zarr', 'zarr3')
@@ -1322,6 +1328,7 @@ class Dataset:
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
+            warn_deprecated("dtype_per_layer", "dtype_per_channel")
             dtype_per_layer = _properties_floating_type_to_python_type.get(
                 dtype_per_layer,  # type: ignore[arg-type]
                 dtype_per_layer,  # type: ignore[arg-type]
@@ -1388,6 +1395,7 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
+        *,
         dtype_per_layer: Optional[DTypeLike] = None,
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
@@ -1402,7 +1410,7 @@ class Dataset:
         Args:
             layer_name: Name of the layer to get or create
             category: Layer category ('color' or 'segmentation')
-            dtype_per_layer: Optional data type for entire layer
+            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer
             dtype_per_channel: Optional data type per channel
             num_channels: Optional number of channels
             data_format: Format to store data ('wkw', 'zarr', etc.)
@@ -1449,6 +1457,7 @@ class Dataset:
                 dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
 
             if dtype_per_layer is not None:
+                warn_deprecated("dtype_per_layer", "dtype_per_channel")
                 dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
 
             if dtype_per_channel is not None or dtype_per_layer is not None:
@@ -1612,13 +1621,14 @@ class Dataset:
         ## add_layer arguments
         layer_name: str,
         category: Optional[LayerCategoryType] = "color",
+        *,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
         mag: MagLike = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = True,
-        *,
         ## other arguments
         topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)
         swap_xy: bool = False,
@@ -1654,7 +1664,7 @@ class Dataset:
         * `category`: `color` by default, may be set to "segmentation"
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data
-        * `chunk_shape`, `chunks_per_shard`, `compress`: adjust how the data is stored on disk
+        * `chunk_shape`, `chunks_per_shard`, `shard_shape`, `compress`: adjust how the data is stored on disk
         * `topleft`: set an offset in Mag(1) to start writing the data, only affecting the output
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to reverse the respective axis before writing to disk
@@ -1671,11 +1681,6 @@ class Dataset:
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-        chunk_shape, chunks_per_shard = _get_sharding_parameters(
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-        )
-
         if category is None:
             image_path_for_category_guess: Path
             if isinstance(images, str) or isinstance(images, PathLike):
@@ -1806,13 +1811,45 @@ class Dataset:
                 DataFormat.Zarr,
                 DataFormat.Zarr3,
             ):
-                if chunk_shape is None:
-                    chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
-                if chunks_per_shard is None:
-                    chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR.with_z(1)
-
-            if chunks_per_shard is None and layer.data_format == DataFormat.Zarr3:
-                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+                chunk_shape = (
+                    DEFAULT_CHUNK_SHAPE.with_z(1)
+                    if chunk_shape is None
+                    else Vec3Int.from_vec_or_int(chunk_shape)
+                )
+                shard_shape = _get_shard_shape(
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    shard_shape=shard_shape,
+                )
+                if shard_shape is None:
+                    if layer.data_format == DataFormat.Zarr3:
+                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES.with_z(
+                            chunk_shape.z
+                        )
+                    else:
+                        shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
+                else:
+                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+            else:
+                chunk_shape = (
+                    DEFAULT_CHUNK_SHAPE
+                    if chunk_shape is None
+                    else Vec3Int.from_vec_or_int(chunk_shape)
+                )
+                shard_shape = _get_shard_shape(
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    shard_shape=shard_shape,
+                )
+                if shard_shape is None:
+                    if layer.data_format == DataFormat.Zarr3:
+                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES
+                    elif layer.data_format == DataFormat.Zarr:
+                        shard_shape = DEFAULT_CHUNK_SHAPE
+                    else:
+                        shard_shape = DEFAULT_SHARD_SHAPE
+                else:
+                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
 
             mag = Mag(mag)
 
@@ -1829,7 +1866,7 @@ class Dataset:
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
-                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
                 compress=compress,
             )
 
@@ -1874,7 +1911,7 @@ class Dataset:
                     layer.bounding_box = BoundingBox.from_ndbbox(layer.bounding_box)
                 else:
                     raise RuntimeError(
-                        "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
+                        f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                     )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
@@ -1975,8 +2012,9 @@ class Dataset:
         *,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         downsample: bool = True,
-        chunk_shape: Optional[Vec3IntLike] = None,
-        chunks_per_shard: Optional[Vec3IntLike] = None,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         axes: Optional[Iterable[str]] = None,
         absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,  # in mag1
         mag: MagLike = Mag(1),
@@ -1989,8 +2027,9 @@ class Dataset:
             data: The data to write.
             data_format: Format to store the data. Defaults to zarr3.
             downsample: Whether to downsample the data. Defaults to True.
-            chunk_shape: Shape of chunks for storage.
-            chunks_per_shard: Number of chunks per shard.
+            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
+            chunks_per_shard: Deprecated, use shard_shape. Number of chunks per shards. If specified, shard_shape must not be specified.
             axes: The axes of the data for non-3D data.
             absolute_offset: The offset of the data. Specified in Mag 1.
             mag: Magnification to write the data at.
@@ -2022,6 +2061,7 @@ class Dataset:
                 mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
                 compress=True,
             )
         mag_view.write(data, absolute_bounding_box=layer.bounding_box)
@@ -2125,7 +2165,9 @@ class Dataset:
         self,
         foreign_layer: Union[str, Path, Layer],
         new_layer_name: Optional[str] = None,
+        *,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
@@ -2140,7 +2182,8 @@ class Dataset:
             foreign_layer: Layer to copy (path or Layer object)
             new_layer_name: Optional name for the new layer, uses original name if None
             chunk_shape: Optional shape of chunks for storage
-            chunks_per_shard: Optional number of chunks per shard
+            shard_shape: Optional shape of shards for storage
+            chunks_per_shard: Deprecated, use shard_shape. Optional number of chunks per shard
             data_format: Optional format to store copied data ('wkw', 'zarr', etc.)
             compress: Optional whether to compress copied data
             executor: Optional executor for parallel copying
@@ -2194,6 +2237,7 @@ class Dataset:
                 mag_view,
                 extend_layer_bounding_box=False,
                 chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
                 executor=executor,
@@ -2204,8 +2248,9 @@ class Dataset:
     def add_symlink_layer(
         self,
         foreign_layer: Union[str, Path, Layer],
-        make_relative: bool = False,
         new_layer_name: Optional[str] = None,
+        *,
+        make_relative: bool = False,
     ) -> Layer:
         """Create symbolic link to layer from another dataset.
 
@@ -2406,13 +2451,14 @@ class Dataset:
     def copy_dataset(
         self,
         new_dataset_path: Union[str, Path],
+        *,
         voxel_size: Optional[Tuple[float, float, float]] = None,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
         executor: Optional[Executor] = None,
-        *,
         voxel_size_with_unit: Optional[VoxelSize] = None,
     ) -> "Dataset":
         """
@@ -2423,7 +2469,8 @@ class Dataset:
             new_dataset_path: Path where new dataset should be created
             voxel_size: Optional tuple of floats (x,y,z) specifying voxel size in nanometers
             chunk_shape: Optional shape of chunks for data storage
-            chunks_per_shard: Optional number of chunks per shard
+            shard_shape: Optional shape of shards for data storage
+            chunks_per_shard: Deprecated, use shard_shape. Optional number of chunks per shard
             data_format: Optional format to store data ('wkw', 'zarr', 'zarr3')
             compress: Optional whether to compress data
             executor: Optional executor for parallel copying
@@ -2455,11 +2502,6 @@ class Dataset:
             For remote datasets, use data_format='zarr'.
         """
 
-        chunk_shape, chunks_per_shard = _get_sharding_parameters(
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-        )
-
         new_dataset_path = UPath(new_dataset_path)
 
         if data_format == DataFormat.WKW:
@@ -2489,6 +2531,7 @@ class Dataset:
                 new_ds.add_copy_layer(
                     layer,
                     chunk_shape=chunk_shape,
+                    shard_shape=shard_shape,
                     chunks_per_shard=chunks_per_shard,
                     data_format=data_format,
                     compress=compress,
@@ -2500,6 +2543,7 @@ class Dataset:
     def shallow_copy_dataset(
         self,
         new_dataset_path: Union[str, PathLike],
+        *,
         name: Optional[str] = None,
         make_relative: bool = False,
         layers_to_ignore: Optional[Iterable[str]] = None,
@@ -2563,7 +2607,7 @@ class Dataset:
             else:
                 new_layer = new_dataset.add_layer_like(layer, layer_name)
                 for mag_view in layer.mags.values():
-                    new_layer.add_symlink_mag(mag_view, make_relative)
+                    new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
 
                 # copy all other directories with a dir scan
                 copy_directory_with_symlinks(
@@ -2583,6 +2627,7 @@ class Dataset:
 
     def compress(
         self,
+        *,
         executor: Optional[Executor] = None,
     ) -> None:
         """Compress all uncompressed magnifications in-place.
@@ -2612,6 +2657,7 @@ class Dataset:
 
     def downsample(
         self,
+        *,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
         coarsest_mag: Optional[Mag] = None,
         executor: Optional[Executor] = None,
@@ -2741,6 +2787,7 @@ class Dataset:
 
     @staticmethod
     def get_remote_datasets(
+        *,
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
         name: Optional[str] = None,

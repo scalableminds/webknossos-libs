@@ -6,9 +6,9 @@ from typing import List, Optional, TypeVar, Union, cast
 import numpy as np
 from rich.progress import track
 
-from webknossos.dataset.length_unit import length_unit_from_str
-
 from ..dataset import Dataset, LayerCategoryType
+from ..dataset.layer import _element_class_to_dtype_per_channel
+from ..dataset.length_unit import length_unit_from_str
 from ..dataset.properties import LayerViewConfiguration, VoxelSize, dataset_converter
 from ..geometry import BoundingBox, Mag, Vec3Int
 from .context import _get_context
@@ -69,11 +69,16 @@ def download_dataset(
         ), f"The provided layer name {layer_name} was found multiple times in the requested dataset."
         api_data_layer = matching_api_data_layers[0]
         category = cast(LayerCategoryType, api_data_layer.category)
+        element_class = api_data_layer.element_class
+        num_channels = 3 if element_class == "uint24" else 1
+        dtype_per_channel = _element_class_to_dtype_per_channel(
+            element_class, num_channels
+        )
         layer = dataset.add_layer(
             layer_name=layer_name,
             category=category,
-            dtype_per_layer=api_data_layer.element_class,
-            num_channels=3 if api_data_layer.element_class == "uint24" else 1,
+            dtype_per_channel=dtype_per_channel,
+            num_channels=num_channels,
             largest_segment_id=api_data_layer.largest_segment_id,
         )
 
@@ -101,7 +106,7 @@ def download_dataset(
                 mag,
                 compress=True,
                 chunk_shape=Vec3Int.full(32),
-                chunks_per_shard=_DOWNLOAD_CHUNK_SHAPE // 32,
+                shard_shape=_DOWNLOAD_CHUNK_SHAPE,
             )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
             download_chunk_shape_in_mag = _DOWNLOAD_CHUNK_SHAPE * mag.to_vec3_int()

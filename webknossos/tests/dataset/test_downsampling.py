@@ -75,7 +75,7 @@ def downsample_test_helper(
 
     source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(
-        target_path, chunk_shape=chunk_shape, chunks_per_shard=16
+        target_path, chunk_shape=chunk_shape, shard_shape=chunk_shape * 16
     )
 
     target_layer = target_ds.get_layer("color")
@@ -140,19 +140,11 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
     ).astype("uint8")
 
     ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
-    layer = ds.add_layer(
-        "color",
-        COLOR_CATEGORY,
-        dtype_per_channel="uint8",
-        num_channels=num_channels,
-    )
-    mag1 = layer.add_mag("1", chunks_per_shard=32)
-
     print("writing source_data shape", source_data.shape)
-    mag1.write(source_data, allow_resize=True)
     assert np.any(source_data != 0)
+    layer = ds.write_layer("color", COLOR_CATEGORY, data=source_data, downsample=False)
 
-    mag2 = layer._initialize_mag_from_other_mag("2", mag1, False)
+    mag2 = layer._initialize_mag_from_other_mag("2", layer.get_mag("1"), False)
 
     downsample_cube_job(
         (layer.get_mag("1").get_view(), layer.get_mag("2").get_view(), 0),
@@ -364,7 +356,7 @@ def test_default_anisotropic_voxel_size(tmp_path: Path) -> None:
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8), allow_resize=True
     )
 
-    layer.downsample(Mag(1), None, "median", True)
+    layer.downsample(from_mag=Mag(1), interpolation_mode="median", compress=True)
     assert sorted(layer.mags.keys()) == [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]
 
 
@@ -427,7 +419,7 @@ def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
 def test_downsample_compressed(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(1, chunk_shape=8, chunks_per_shard=8, compress=False)
+    mag = layer.add_mag(1, chunk_shape=8, shard_shape=64, compress=False)
     mag.write(
         data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8), allow_resize=True
     )
@@ -454,7 +446,7 @@ def test_downsample_compressed(tmp_path: Path) -> None:
 def test_downsample_2d(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(1, chunk_shape=8, chunks_per_shard=8)
+    mag = layer.add_mag(1, chunk_shape=8, shard_shape=64)
     # write 2D data with all values set to "123"
     mag.write(data=(np.ones((100, 100, 1)) * 123).astype(np.uint8), allow_resize=True)
     with pytest.warns(Warning):

@@ -94,9 +94,9 @@ def default_chunk_config(
     data_format: DataFormat, chunk_shape: int = 32
 ) -> Tuple[Vec3Int, Vec3Int]:
     if data_format == DataFormat.Zarr:
-        return (Vec3Int.full(chunk_shape * 8), Vec3Int.full(1))
+        return (Vec3Int.full(chunk_shape * 8), Vec3Int.full(chunk_shape * 8))
     else:
-        return (Vec3Int.full(chunk_shape), Vec3Int.full(8))
+        return (Vec3Int.full(chunk_shape), Vec3Int.full(chunk_shape * 8))
 
 
 def advanced_chunk_job(args: Tuple[View, int]) -> None:
@@ -287,8 +287,10 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     assert layer.data_format == data_format
     assert mag_view.info.chunk_shape.xyz == Vec3Int.full(32)
     if data_format == DataFormat.Zarr:
+        assert mag_view.info.shard_shape.xyz == Vec3Int.full(32)
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(1)
     else:
+        assert mag_view.info.shard_shape.xyz == Vec3Int.full(1024)
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
     assert mag_view.info.num_channels == 1
     assert mag_view.info.compression_mode == True
@@ -301,12 +303,12 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer="uint48",
+        dtype_per_channel="uint16",
         num_channels=3,
         data_format=DataFormat.WKW,
     )
 
-    ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
+    ds.get_layer("color").add_mag("1", chunk_shape=64, shard_shape=4096)
     ds.get_layer("color").add_mag("2-2-1")
 
     assert (ds_path / "color" / "1" / "header.wkw").exists()
@@ -318,6 +320,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
     assert ds.get_layer("color")._properties.element_class == "uint48"
     assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
+    assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(4096)
     assert ds.get_layer("color").get_mag(1).info.chunks_per_shard.xyz == Vec3Int.full(
         64
     )
@@ -325,12 +328,61 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz == Vec3Int.full(
         32
     )  # defaults are used
+    assert ds.get_layer("color").get_mag("2-2-1").info.shard_shape.xyz == Vec3Int.full(
+        1024
+    )  # defaults are used
     assert ds.get_layer("color").get_mag(
         "2-2-1"
     ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
     assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
     assure_exported_properties(ds)
+
+
+def test_deprecated_chunks_per_shard() -> None:
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        ds.add_layer(
+            "color",
+            COLOR_CATEGORY,
+            dtype_per_channel="uint16",
+            num_channels=3,
+            data_format=DataFormat.WKW,
+        )
+
+        ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
+        ds.get_layer("color").add_mag("2-2-1")
+
+        assert (ds_path / "color" / "1" / "header.wkw").exists()
+        assert (ds_path / "color" / "2-2-1" / "header.wkw").exists()
+
+        assert len(ds.layers) == 1
+        assert len(ds.get_layer("color").mags) == 2
+
+        assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
+        assert ds.get_layer("color")._properties.element_class == "uint48"
+        assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
+        assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(
+            4096
+        )
+        assert ds.get_layer("color").get_mag(
+            1
+        ).info.chunks_per_shard.xyz == Vec3Int.full(64)
+        assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.chunk_shape.xyz == Vec3Int.full(32)  # defaults are used
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.shard_shape.xyz == Vec3Int.full(1024)  # defaults are used
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
+        assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
+
+        assure_exported_properties(ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -350,7 +402,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
     ds1.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer="float",
+        dtype_per_channel="float",
         num_channels=1,
         data_format=data_format,
     )
@@ -360,7 +412,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
     ds2.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        "uint8",
+        dtype_per_channel="uint8",
         largest_segment_id=100000,
         data_format=data_format,
     ).add_mag("1")
@@ -546,7 +598,7 @@ def test_view_write_allow_unaligned(data_format: DataFormat, output_path: Path) 
     mag = layer.add_mag(
         "1",
         chunk_shape=(8, 8, 8),
-        chunks_per_shard=(1, 1, 1) if data_format == DataFormat.Zarr else (2, 2, 2),
+        shard_shape=(8, 8, 8) if data_format == DataFormat.Zarr else (16, 16, 16),
     )
 
     np.random.seed(1234)
@@ -707,7 +759,7 @@ def test_wkw_write_multi_channel_uint16(
         "color",
         COLOR_CATEGORY,
         num_channels=3,
-        dtype_per_layer="uint48",
+        dtype_per_channel="uint16",
         data_format=data_format,
     ).add_mag("1")
 
@@ -809,7 +861,7 @@ def test_write_layer_5d(
         data=data,
         data_format=data_format,
         axes=("c", "t", "x", "y", "z"),
-        chunks_per_shard=(4, 4, 4),
+        shard_shape=(128, 128, 128),
         absolute_offset=absolute_offset,
     )
 
@@ -868,7 +920,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_layer="uint8",
+        dtype_per_channel="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -880,7 +932,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_layer="uint8",
+        dtype_per_channel="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -889,11 +941,11 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     assert layer.data_format == data_format
 
     with pytest.raises(AssertionError):
-        # The layer "color" did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
+        # The layer "color" did exist before but with another dtype (this would work the same for 'category' and 'num_channels')
         ds.get_or_add_layer(
             "color",
             COLOR_CATEGORY,
-            dtype_per_layer="uint16",
+            dtype_per_channel="uint16",
             num_channels=1,
             data_format=data_format,
         )
@@ -927,13 +979,13 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
 
     assert Mag(1) not in layer.mags.keys()
 
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 32)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 32)
 
     # The mag did not exist before
     mag = layer.get_or_add_mag(
         "1",
         chunk_shape=chunk_shape,
-        chunks_per_shard=chunks_per_shard,
+        shard_shape=shard_shape,
         compress=True,
     )
     assert Mag(1) in layer.mags.keys()
@@ -944,7 +996,7 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
     layer.get_or_add_mag(
         "1",
         chunk_shape=chunk_shape,
-        chunks_per_shard=chunks_per_shard,
+        shard_shape=shard_shape,
         compress=True,
     )
     assert Mag(1) in layer.mags.keys()
@@ -952,11 +1004,11 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
     assert mag.info.data_format == data_format
 
     with pytest.raises(ValueError):
-        # The mag "1" did exist before but with another 'chunk_shape' (this would work the same for 'chunks_per_shard' and 'compress')
+        # The mag "1" did exist before but with another 'chunk_shape' (this would work the same for 'shard_shape' and 'compress')
         layer.get_or_add_mag(
             "1",
             chunk_shape=Vec3Int.full(64),
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
 
@@ -1063,13 +1115,12 @@ def test_properties_with_segmentation() -> None:
 def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
-    shard_shape = chunk_shape * chunks_per_shard
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(
         "1",
-        chunks_per_shard=chunks_per_shard,
+        shard_shape=shard_shape,
         chunk_shape=chunk_shape,
     )
 
@@ -1111,7 +1162,7 @@ def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
     ).add_mag(
         "1",
         chunk_shape=8,
-        chunks_per_shard=8,
+        shard_shape=64,
     )
     mag.write(
         data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
@@ -1132,7 +1183,7 @@ def test_chunking_wkw_wrong_chunk_shape(
         data_format, output_path, "chunking_with_wrong_chunk_shape"
     )
     ds = Dataset(ds_path, voxel_size=(1, 1, 2))
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
@@ -1142,7 +1193,7 @@ def test_chunking_wkw_wrong_chunk_shape(
     ).add_mag(
         "1",
         chunk_shape=chunk_shape,
-        chunks_per_shard=chunks_per_shard,
+        shard_shape=shard_shape,
     )
     mag.write(
         data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
@@ -1355,101 +1406,107 @@ def test_get_view() -> None:
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    with pytest.raises(TypeError):
-        # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        with pytest.raises(TypeError):
+            # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+            ds.add_layer(
+                "color",
+                COLOR_CATEGORY,
+                dtype_per_layer="uint30",
+                num_channels=3,
+            )
+        with pytest.raises(TypeError):
+            # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
+            ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=3)
         ds.add_layer(
-            "color",
-            COLOR_CATEGORY,
-            dtype_per_layer="uint30",
-            num_channels=3,
-        )
-    with pytest.raises(TypeError):
-        # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
-        ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=3)
-    ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=4
-    )  # "int"/"int64" works with 4 channels
+            "color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=4
+        )  # "int"/"int64" works with 4 channels
 
-    assure_exported_properties(ds)
+        assure_exported_properties(ds)
 
 
 def test_adding_layer_with_valid_dtype_per_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
-    ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
-    ds.add_layer("color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3)
-    ds.add_layer("color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3)
-    ds.add_layer(
-        "seg1",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="float",
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg2",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel=float,
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg3",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel=float,
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg4",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="double",
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg5",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="float",
-        num_channels=3,
-        largest_segment_id=100000,
-    )
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
+        ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
+        ds.add_layer(
+            "color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3
+        )
+        ds.add_layer(
+            "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
+        )
+        ds.add_layer(
+            "seg1",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="float",
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg2",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=float,
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg3",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=float,
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg4",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="double",
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg5",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="float",
+            num_channels=3,
+            largest_segment_id=100000,
+        )
 
-    with open(
-        ds_path / "datasource-properties.json",
-        "r",
-        encoding="utf-8",
-    ) as f:
-        data = json.load(f)
-        # The order of the layers in the properties equals the order of creation
-        assert data["dataLayers"][0]["elementClass"] == "uint24"
-        assert data["dataLayers"][1]["elementClass"] == "uint8"
-        assert data["dataLayers"][2]["elementClass"] == "uint24"
-        assert data["dataLayers"][3]["elementClass"] == "uint24"
-        assert data["dataLayers"][4]["elementClass"] == "float"
-        assert data["dataLayers"][5]["elementClass"] == "float"
-        assert data["dataLayers"][6]["elementClass"] == "float"
-        assert data["dataLayers"][7]["elementClass"] == "double"
-        assert data["dataLayers"][8]["elementClass"] == "float96"
+        with open(
+            ds_path / "datasource-properties.json",
+            "r",
+            encoding="utf-8",
+        ) as f:
+            data = json.load(f)
+            # The order of the layers in the properties equals the order of creation
+            assert data["dataLayers"][0]["elementClass"] == "uint24"
+            assert data["dataLayers"][1]["elementClass"] == "uint8"
+            assert data["dataLayers"][2]["elementClass"] == "uint24"
+            assert data["dataLayers"][3]["elementClass"] == "uint24"
+            assert data["dataLayers"][4]["elementClass"] == "float"
+            assert data["dataLayers"][5]["elementClass"] == "float"
+            assert data["dataLayers"][6]["elementClass"] == "float"
+            assert data["dataLayers"][7]["elementClass"] == "double"
+            assert data["dataLayers"][8]["elementClass"] == "float96"
 
-    reopened_ds = Dataset.open(
-        ds_path
-    )  # reopen the dataset to check if the data is read from the properties correctly
-    assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
-    assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
-    assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
-    assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
-    # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-    assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
-    assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
+        reopened_ds = Dataset.open(
+            ds_path
+        )  # reopen the dataset to check if the data is read from the properties correctly
+        assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
+        assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
+        assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
+        assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
+        # Note that 'float' and 'double' are stored as 'float32' and 'float64'
+        assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
+        assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
 
-    assure_exported_properties(ds)
+        assure_exported_properties(ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1457,7 +1514,7 @@ def test_writing_subset_of_compressed_data_multi_channel(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
@@ -1467,7 +1524,7 @@ def test_writing_subset_of_compressed_data_multi_channel(
         .add_mag(
             "1",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
@@ -1502,7 +1559,7 @@ def test_writing_subset_of_compressed_data_single_channel(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
@@ -1512,7 +1569,7 @@ def test_writing_subset_of_compressed_data_single_channel(
         .add_mag(
             "1",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
@@ -1548,7 +1605,7 @@ def test_writing_subset_of_compressed_data(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     mag_view = (
@@ -1557,7 +1614,7 @@ def test_writing_subset_of_compressed_data(
         .add_mag(
             "2",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
@@ -1610,7 +1667,7 @@ def test_writing_subset_of_chunked_compressed_data(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
@@ -1620,7 +1677,7 @@ def test_writing_subset_of_chunked_compressed_data(
         .add_mag(
             "1",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
@@ -1955,7 +2012,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_1 = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer=np.uint8,
+        dtype_per_channel=np.uint8,
         num_channels=1,
         data_format=data_format,
     )
@@ -1964,7 +2021,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_2 = ds.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        dtype_per_layer=np.uint32,
+        dtype_per_channel=np.uint32,
         largest_segment_id=0,
         data_format=data_format,
     )
@@ -2006,14 +2063,14 @@ def test_dataset_conversion_wkw_only() -> None:
         largest_segment_id=1000000000,
     )
     seg_layer.add_mag(
-        "1", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "1", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8),
         allow_resize=True,
     )
     seg_layer.add_mag(
-        "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "2", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8),
@@ -2021,14 +2078,14 @@ def test_dataset_conversion_wkw_only() -> None:
     )
     wk_color_layer = origin_ds.add_layer("layer2", COLOR_CATEGORY, num_channels=3)
     wk_color_layer.add_mag(
-        "1", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "1", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
         allow_resize=True,
     )
     wk_color_layer.add_mag(
-        "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "2", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8),
@@ -2067,8 +2124,11 @@ def test_dataset_conversion_from_wkw_to_zarr(
     converted_path = prepare_dataset_path(data_format, output_path, "converted")
 
     input_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+    print(input_ds.get_layer("color").get_mag("1").info.chunk_shape)
     converted_ds = input_ds.copy_dataset(
-        converted_path, data_format=data_format, chunks_per_shard=1
+        converted_path,
+        data_format=data_format,
+        shard_shape=8 if data_format == DataFormat.Zarr else 32,
     )
 
     if data_format == DataFormat.Zarr:
@@ -2122,7 +2182,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         .get_or_add_mag(
             "1",
             chunk_shape=Vec3Int.full(8),
-            chunks_per_shard=(4 if data_format != DataFormat.Zarr else 1),
+            shard_shape=(32 if data_format != DataFormat.Zarr else 8),
         )
     )
 
@@ -2160,7 +2220,7 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     ds_path = prepare_dataset_path(
         data_format, output_path, "zipped_chunking_source_invalid"
     )
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
     test_cases_wk = [
         (10, 20, 30),
         (64, 64, 100),
@@ -2171,12 +2231,12 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer1 = ds.get_or_add_layer("color1", COLOR_CATEGORY, data_format=data_format)
     source_mag_view = layer1.get_or_add_mag(
-        1, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
+        1, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
     layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY, data_format=data_format)
     target_mag_view = layer2.get_or_add_mag(
-        1, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
+        1, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
     source_view = source_mag_view.get_view(
@@ -2228,9 +2288,9 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
 def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
     mag = ds.add_layer("color", category="color", data_format=data_format).add_mag(
-        "2-2-1", chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
+        "2-2-1", chunk_shape=chunk_shape, shard_shape=shard_shape
     )  # cube_size = 8*8 = 64
 
     write_positions = [
@@ -2708,7 +2768,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
     color_layer1 = ds.add_layer(
         "color1",
         COLOR_CATEGORY,
-        dtype_per_layer="uint24",
+        dtype_per_channel="uint8",
         num_channels=3,
         data_format=data_format,
     )
@@ -2875,13 +2935,13 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
         data_format=input_layer.data_format,
     )
 
-    chunks_per_shard = None
+    shard_shape = None
     if data_format == DataFormat.Zarr3:
         # Writing compressed zarr with large shard shape is slow
         # compare https://github.com/scalableminds/webknossos-libs/issues/964
-        chunks_per_shard = (4, 4, 4)
+        shard_shape = (128, 128, 128)
 
-    test_mag = test_layer.add_mag("1", chunks_per_shard=chunks_per_shard)
+    test_mag = test_layer.add_mag("1", shard_shape=shard_shape)
     test_mag.write(
         absolute_offset=(0, 0, 0),
         # assuming the layer has 3 channels:
@@ -2913,14 +2973,14 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     input_dataset = Dataset.open(ds_path)
     input_layer = input_dataset.get_layer("color")
 
-    chunks_per_shard = None
+    shard_shape = None
     if data_format == DataFormat.Zarr3:
         # Writing compressed zarr with large shard shape is slow
         # compare https://github.com/scalableminds/webknossos-libs/issues/964
-        chunks_per_shard = (4, 4, 4)
+        shard_shape = (128, 128, 128)
 
     # Adding additional mags to the input dataset for testing
-    input_layer.add_mag("2-2-1", chunks_per_shard=chunks_per_shard)
+    input_layer.add_mag("2-2-1", shard_shape=shard_shape)
     input_layer.redownsample()
     assert len(input_layer.mags) == 2
     # Use the mag with the best resolution
@@ -2937,9 +2997,7 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
         data_format=input_layer.data_format,
     )
     # Create the same mag in the new output dataset
-    output_mag = output_layer.add_mag(
-        finest_input_mag.mag, chunks_per_shard=chunks_per_shard
-    )
+    output_mag = output_layer.add_mag(finest_input_mag.mag, shard_shape=shard_shape)
     # Copying some data into the output dataset
     input_data = finest_input_mag.read(absolute_offset=(0, 0, 0), size=(24, 24, 24))
     output_mag.write(absolute_offset=(0, 0, 0), data=input_data, allow_resize=True)
@@ -2977,7 +3035,7 @@ def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
     ds_path = prepare_dataset_path(data_format, REMOTE_TESTOUTPUT_DIR, "copied")
     Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
         ds_path,
-        chunks_per_shard=1,
+        shard_shape=32,
         data_format=data_format,
     )
     if data_format == DataFormat.Zarr:
@@ -2992,13 +3050,13 @@ def test_wkw_copy_to_remote_dataset() -> None:
 
     # Fails with explicit data_format=wkw ...
     with pytest.raises(AssertionError):
-        wkw_ds.copy_dataset(ds_path, chunks_per_shard=1, data_format=DataFormat.WKW)
+        wkw_ds.copy_dataset(ds_path, shard_shape=32, data_format=DataFormat.WKW)
 
     # ... and with implicit data_format=wkw from the source layers.
     with pytest.raises(AssertionError):
         wkw_ds.copy_dataset(
             ds_path,
-            chunks_per_shard=1,
+            shard_shape=32,
         )
 
 

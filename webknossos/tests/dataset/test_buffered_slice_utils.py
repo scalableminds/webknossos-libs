@@ -30,7 +30,7 @@ def test_buffered_slice_writer() -> None:
         dtype_per_channel=dtype,
         bounding_box=BoundingBox(origin, (24, 24, 35)),
     )
-    mag_view = layer.add_mag(mag, chunks_per_shard=(32, 32, 1))
+    mag_view = layer.add_mag(mag, shard_shape=(1024, 1024, 32))
 
     with mag_view.get_buffered_slice_writer(absolute_offset=origin) as writer:
         for i in range(13):
@@ -73,8 +73,8 @@ def test_buffered_slice_writer_along_different_axis(
     cube_size_without_channel = test_cube.shape[1:]
     offset = Vec3Int(64, 96, 32)
 
-    chunks_per_shard = [32, 32, 32]
-    chunks_per_shard[dim] = 1
+    shard_shape = [1024, 1024, 1024]
+    shard_shape[dim] = 32
 
     ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
     layer = ds.add_layer(
@@ -83,7 +83,7 @@ def test_buffered_slice_writer_along_different_axis(
         num_channels=test_cube.shape[0],
         bounding_box=BoundingBox(offset, cube_size_without_channel),
     )
-    mag_view = layer.add_mag(1, chunks_per_shard=chunks_per_shard)
+    mag_view = layer.add_mag(1, shard_shape=shard_shape)
 
     with mag_view.get_buffered_slice_writer(
         absolute_offset=offset, buffer_size=5, dimension=dim, allow_unaligned=True
@@ -115,7 +115,7 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
             num_channels=3,
             bounding_box=BoundingBox(offset, cube_size_without_channel),
         )
-        mag_view = layer.add_mag(1, chunks_per_shard=(32, 32, 1))
+        mag_view = layer.add_mag(1, shard_shape=(1024, 1024, 32))
         mag_view.write(test_cube, absolute_offset=offset)
 
         with (
@@ -156,7 +156,7 @@ def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), shape),
     )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), shard_shape=(256, 256, 256))
 
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
@@ -184,7 +184,7 @@ def test_buffered_slice_writer_unaligned(
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (513, 513, 36)),
     )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), shard_shape=(256, 256, 256))
 
     # Write some data to z=32. We will check that this
     # data is left untouched by the buffered slice writer.
@@ -230,7 +230,7 @@ def test_buffered_slice_writer_should_raise_unaligned_usage(
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (513, 513, 33)),
     )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(8, 8, 8))
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), shard_shape=(256, 256, 256))
 
     offset = (1, 1, 1)
 
@@ -261,7 +261,7 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), shard_shape=(128, 128, 128))
     assert mag1.info.shard_shape[2] == 32 * 4
 
     # Allocate some data (~ 3 MB) that covers multiple shards (also in z)
@@ -292,7 +292,7 @@ def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -
         num_channels=3,
         bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), chunks_per_shard=(4, 4, 4))
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 32), shard_shape=(128, 128, 128))
 
     # Allocate some data (~ 3 MB) that covers multiple shards (also in z)
     shape = (3, 160, 150, 140)
@@ -319,7 +319,7 @@ def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (512, 512, 40)),
     )
-    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 8), chunks_per_shard=(8, 8, 1))
+    mag1 = layer.add_mag("1", chunk_shape=(32, 32, 8), shard_shape=(256, 256, 8))
 
     # Allocate some data (~ 8 MB)
     shape = (512, 512, 32)
