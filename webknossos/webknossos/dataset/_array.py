@@ -469,7 +469,7 @@ class TensorStoreArray(BaseArray):
                     "kvstore": uri,
                 },
                 open=True,
-                create=True,
+                create=False,
             ).result()  # check that everything exists
             return cls(path, _array)
         except Exception as exc:

@@ -1624,8 +1624,8 @@ class Dataset:
         ## add_mag arguments
         mag: MagLike = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
-        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = True,
         ## other arguments
         topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)

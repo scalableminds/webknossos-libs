@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...HEAD)
 
 ### Breaking Changes
 - Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of the underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
@@ -79,6 +79,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `args` in `Layer.upsample`, use `executor` instead
     - `min_mag` in `Layer.upsample`, use `finest_mag` instead
     - `offset` in `MagView.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+<<<<<<< HEAD
+=======
+    - `json_update_allowed` in `MagView.write`, use `allow_resize` instead
+>>>>>>> origin/master
     - `args` in `MagView.compress`, use `executor` instead
     - `offset` in `View.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
     - `json_update_allowed` in `View.write`, not supported anymore
@@ -102,6 +106,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `compress` in `Layer.upsample` is now `True`
   - `buffer_size` in `View.get_buffered_slice_reader` is now computed from the shard shape
   - `buffer_size` in `View.get_buffered_slice_writer` is now computed from the shard shape
+<<<<<<< HEAD
 - Moved from positional argument to keyword-only argument:
   - `json_update_allowed` in `MagView.write`
   - `dtype_per_layer`, `dtype_per_channel`, `num_channels`, `data_format`, `bounding_box` in `Dataset.add_layer`
@@ -137,6 +142,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Newly deprecated properties:
   - `Layer.dtype_per_layer`
 
+=======
+- Added arguments:
+  - `allow_resize` in `MagView.write` with default `False`
+  - `allow_unaligned` in `MagView.write` with default `False`
+>>>>>>> origin/master
 
 
 ### Added
@@ -145,6 +155,18 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.10) - 2025-02-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.9...v0.16.10)
+
+
+## [0.16.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.9) - 2025-02-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...v0.16.9)
+
+### Fixed
+- Fixed opening a renamed dataset via an annotation link. [#1256](https://github.com/scalableminds/webknossos-libs/pull/1256)
+
 
 
 ## [0.16.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.8) - 2025-02-04

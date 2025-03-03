@@ -1335,7 +1335,7 @@ class Layer:
                 - 'isotropic': Equal upsampling in all dimensions
                 - 'constant_z': Only upsamples x/y dimensions. z remains unchanged.
             align_with_other_layers: Whether to align mags with others. Defaults to True.
-            buffer_shape (Optional[Vec3Int]): Shape of processing buffer.
+            buffer_shape (Optional[Vec3IntLike]): Shape of processing buffer.
             executor (Optional[Executor]): Executor for parallel processing.
 
         Raises:
