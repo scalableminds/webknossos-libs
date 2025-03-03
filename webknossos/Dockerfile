@@ -1,6 +1,6 @@
 FROM python:3.12
 
-COPY --from=ghcr.io/astral-sh/uv:0.4.20 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.26 /uv /bin/uv
 
 RUN mkdir /webknossos
 COPY webknossos/webknossos /webknossos/webknossos
