@@ -10,6 +10,9 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...HEAD)
 
 ### Breaking Changes
+- The deprecated executor `WrappedProcessPoolExecutor` was removed. Use `MultiprocessingExecutor` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
+- The deprecated execution strategy `test_pickling` was removed. Use `multiprocessing_with_pickling` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
+- The deprecated execution strategy `debug_sequential` was removed. Use `sequential` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
 
 ### Added
 
