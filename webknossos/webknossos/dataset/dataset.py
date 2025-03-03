@@ -2171,6 +2171,7 @@ class Dataset:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
+        exists_ok: bool = False,
         executor: Optional[Executor] = None,
     ) -> Layer:
         """Copy layer from another dataset to this one.
@@ -2186,6 +2187,7 @@ class Dataset:
             chunks_per_shard: Deprecated, use shard_shape. Optional number of chunks per shard
             data_format: Optional format to store copied data ('wkw', 'zarr', etc.)
             compress: Optional whether to compress copied data
+            exists_ok: Whether to overwrite existing layers
             executor: Optional executor for parallel copying
 
         Returns:
@@ -2217,20 +2219,30 @@ class Dataset:
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
 
-        if new_layer_name in self.layers.keys():
-            raise IndexError(
-                f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+        if exists_ok:
+            layer = self.get_or_add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype_per_channel=foreign_layer.dtype_per_channel,
+                num_channels=foreign_layer.num_channels,
+                data_format=data_format or foreign_layer.data_format,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
             )
-
-        layer = self.add_layer(
-            new_layer_name,
-            category=foreign_layer.category,
-            dtype_per_channel=foreign_layer.dtype_per_channel,
-            num_channels=foreign_layer.num_channels,
-            data_format=data_format or foreign_layer.data_format,
-            largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
-        )
-        layer.bounding_box = foreign_layer.bounding_box
+        else:
+            if new_layer_name in self.layers.keys():
+                raise IndexError(
+                    f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+                )
+            layer = self.add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype_per_channel=foreign_layer.dtype_per_channel,
+                num_channels=foreign_layer.num_channels,
+                data_format=data_format or foreign_layer.data_format,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
+            )
 
         for mag_view in foreign_layer.mags.values():
             progress_desc = (
@@ -2244,6 +2256,7 @@ class Dataset:
                 shard_shape=shard_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
+                exists_ok=exists_ok,
                 executor=executor,
                 progress_desc=progress_desc,
             )
@@ -2463,6 +2476,7 @@ class Dataset:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
+        exists_ok: bool = False,
         executor: Optional[Executor] = None,
         voxel_size_with_unit: Optional[VoxelSize] = None,
     ) -> "Dataset":
@@ -2478,6 +2492,7 @@ class Dataset:
             chunks_per_shard: Deprecated, use shard_shape. Optional number of chunks per shard
             data_format: Optional format to store data ('wkw', 'zarr', 'zarr3')
             compress: Optional whether to compress data
+            exists_ok: Whether to overwrite existing datasets and layers
             executor: Optional executor for parallel copying
             voxel_size_with_unit: Optional voxel size specification with units
 
@@ -2512,13 +2527,13 @@ class Dataset:
         if data_format == DataFormat.WKW:
             assert is_fs_path(
                 new_dataset_path
-            ), "Cannot create WKW-based remote datasets. Use `data_format='zarr'` instead."
+            ), "Cannot create WKW-based remote datasets. Use `data_format='zarr3'` instead."
         if data_format is None and any(
             layer.data_format == DataFormat.WKW for layer in self.layers.values()
         ):
             assert is_fs_path(
                 new_dataset_path
-            ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr'`."
+            ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
 
         if voxel_size_with_unit is None:
             if voxel_size is None:
@@ -2528,7 +2543,7 @@ class Dataset:
         new_ds = Dataset(
             new_dataset_path,
             voxel_size_with_unit=voxel_size_with_unit,
-            exist_ok=False,
+            exist_ok=exists_ok,
         )
 
         with get_executor_for_args(None, executor) as executor:
@@ -2540,6 +2555,7 @@ class Dataset:
                     chunks_per_shard=chunks_per_shard,
                     data_format=data_format,
                     compress=compress,
+                    exists_ok=exists_ok,
                     executor=executor,
                 )
         new_ds._export_as_json()

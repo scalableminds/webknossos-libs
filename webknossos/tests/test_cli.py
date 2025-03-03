@@ -157,6 +157,19 @@ def test_copy_dataset(tmp_path: Path) -> None:
     assert target_layer.data_format == DataFormat.Zarr3
     assert Mag(1) in target_layer.mags
 
+    result = runner.invoke(
+        app,
+        [
+            "copy-dataset",
+            str(TESTDATA_DIR / "simple_wkw_dataset"),
+            str(tmp_path / "simple_wkw_dataset"),
+            "--data-format",
+            "zarr3",
+            "--exists-ok",
+        ],
+    )
+    assert result.exit_code == 0
+
 
 def test_check_not_equal() -> None:
     """Tests that the check_equality subcommand detects differing datasets."""

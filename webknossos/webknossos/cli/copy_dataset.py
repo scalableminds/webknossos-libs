@@ -58,6 +58,9 @@ def main(
             metavar="Vec3Int",
         ),
     ] = None,
+    exists_ok: Annotated[
+        bool, typer.Option(help="Whether it should overwrite an existing dataset.")
+    ] = False,
     jobs: Annotated[
         int,
         typer.Option(
@@ -106,5 +109,6 @@ def main(
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
             data_format=data_format,
+            exists_ok=exists_ok,
             executor=executor,
         )
