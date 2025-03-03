@@ -776,7 +776,9 @@ class Layer:
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
+        exists_ok: bool = False,
         executor: Optional[Executor] = None,
+        progress_desc: Optional[str] = None,
     ) -> MagView:
         """
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
@@ -785,7 +787,6 @@ class Layer:
         """
         self.dataset._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
-        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
         chunk_shape = Vec3Int.from_vec_or_int(
             chunk_shape or foreign_mag_view.info.chunk_shape
@@ -798,27 +799,39 @@ class Layer:
                     "shard_shape and chunks_per_shard must not be specified at the same time."
                 )
 
-        mag_view = self.add_mag(
-            mag=foreign_mag_view.mag,
-            chunk_shape=chunk_shape,
-            shard_shape=shard_shape or foreign_mag_view.info.shard_shape,
-            compress=(
-                compress
-                if compress is not None
-                else foreign_mag_view.info.compression_mode
-            ),
+        compress = (
+            compress if compress is not None else foreign_mag_view.info.compression_mode
         )
+        shard_shape = shard_shape or foreign_mag_view.info.shard_shape
+        if exists_ok:
+            mag_view = self.get_or_add_mag(
+                mag=foreign_mag_view.mag,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                compress=compress,
+            )
+        else:
+            self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+            mag_view = self.add_mag(
+                mag=foreign_mag_view.mag,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                compress=compress,
+            )
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
                 foreign_mag_view.layer.bounding_box
             )
 
+        if progress_desc is None:
+            progress_desc = f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}"
+
         foreign_mag_view.for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
-            progress_desc=f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}",
+            progress_desc=progress_desc,
         )
 
         return mag_view

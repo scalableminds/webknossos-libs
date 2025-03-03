@@ -3060,6 +3060,16 @@ def test_wkw_copy_to_remote_dataset() -> None:
         )
 
 
+def test_copy_dataset_exists_ok() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied")
+    wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+
+    wkw_ds.copy_dataset(ds_path, data_format=DataFormat.Zarr3)
+    with pytest.raises(RuntimeError):
+        wkw_ds.copy_dataset(ds_path, data_format=DataFormat.Zarr3)
+    wkw_ds.copy_dataset(ds_path, data_format=DataFormat.Zarr3, exists_ok=True)
+
+
 @pytest.mark.use_proxay
 def test_remote_dataset_access_metadata() -> None:
     ds = Dataset.open_remote("l4_sample", "Organization_X")
