@@ -1010,6 +1010,7 @@ class Layer:
 
     def downsample(
         self,
+        *,
         from_mag: Optional[Mag] = None,
         coarsest_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
@@ -1139,6 +1140,7 @@ class Layer:
         self,
         from_mag: Mag,
         target_mag: Mag,
+        *,
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
@@ -1222,6 +1224,7 @@ class Layer:
 
     def redownsample(
         self,
+        *,
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
@@ -1259,6 +1262,7 @@ class Layer:
         self,
         from_mag: Mag,
         target_mags: List[Mag],
+        *,
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
@@ -1318,6 +1322,7 @@ class Layer:
     def upsample(
         self,
         from_mag: Mag,
+        *,
         finest_mag: Mag = Mag(1),
         compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
@@ -1339,7 +1344,7 @@ class Layer:
                 - 'isotropic': Equal upsampling in all dimensions
                 - 'constant_z': Only upsamples x/y dimensions. z remains unchanged.
             align_with_other_layers: Whether to align mags with others. Defaults to True.
-            buffer_shape (Optional[Vec3Int]): Shape of processing buffer.
+            buffer_shape (Optional[Vec3IntLike]): Shape of processing buffer.
             executor (Optional[Executor]): Executor for parallel processing.
 
         Raises:
@@ -1600,7 +1605,10 @@ class SegmentationLayer(Layer):
         return np.max(view.read(), initial=0)
 
     def refresh_largest_segment_id(
-        self, chunk_shape: Optional[Vec3Int] = None, executor: Optional[Executor] = None
+        self,
+        *,
+        chunk_shape: Optional[Vec3Int] = None,
+        executor: Optional[Executor] = None,
     ) -> None:
         """Updates largest_segment_id based on actual data content.
 

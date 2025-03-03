@@ -10,12 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...HEAD)
 
 ### Breaking Changes
 - Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of the underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
 - Deprecated `chunks_per_shard` arguments in favor of `shard_shape`, which equals to `shard_shape = chunk_shape * chunks_per_shard`. The shard shape is more intuitive, because it directly defines the size of shards instead of being a factor of the chunk shape.
-- Deprecated `dtype_per_layer` argument, because it promotes the use of uncommon dtypes and leads to confusion with the other `dtype_per_channel` argument. With this change only the use of `dtype_per_channel` encouraged.
+- Deprecated `dtype_per_layer` argument, because it promotes the use of uncommon dtypes and leads to confusion with the other `dtype_per_channel` argument. With this change only the use of `dtype_per_channel` is encouraged.
 - Removed deprecated functions, properties and arguments:
   - Functions:
     - `open_annotation`, use `Annotation.load()` instead
@@ -79,6 +79,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `args` in `Layer.upsample`, use `executor` instead
     - `min_mag` in `Layer.upsample`, use `finest_mag` instead
     - `offset` in `MagView.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `json_update_allowed` in `MagView.write`, use `allow_resize` instead
     - `args` in `MagView.compress`, use `executor` instead
     - `offset` in `View.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
     - `json_update_allowed` in `View.write`, not supported anymore
@@ -104,9 +105,18 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `buffer_size` in `View.get_buffered_slice_writer` is now computed from the shard shape
 - Moved from positional argument to keyword-only argument:
   - `json_update_allowed` in `MagView.write`
+  - `organization_id`, `sharing_token`, `webknossos_url`, `bbox`, `layers`, `mags`, `path`, `exist_ok` in `Dataset.download`
+  - `layers_to_link`, `jobs` in `Dataset.upload`
   - `dtype_per_layer`, `dtype_per_channel`, `num_channels`, `data_format`, `bounding_box` in `Dataset.add_layer`
   - `dtype_per_layer`, `dtype_per_channel`, `num_channels`, `data_format` in `Dataset.get_or_add_layer`
   - `data_format`, `mag`, `chunk_shape`, `chunks_per_shard`, `shard_shape`, `compress` in `Dataset.add_layer_from_images`
+  - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `data_format`, `compress`, `executor` in `Dataset.add_copy_layer`
+  - `organization_id`, `tags`, `name`, `folder_id` in `Dataset.get_remote_datasets`
+  - `make_relative` in `Dataset.add_symlink_layer`
+  - `name`, `make_relative`, `layers_to_ignore` in `Dataset.shallow_copy_dataset`
+  - `executor` in `Dataset.compress`
+  - `sampling_mode`, `coarsest_mag`, `executor` in `Dataset.downsample`
+  - `voxel_size`, `chunk_shape`, `shard_shape`, `chunks_per_shard`, `data_format`, `compress`, `executor`, `voxel_size_with_unit` in `Dataset.copy_dataset`
   - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compress` in `Layer.add_mag`
   - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compress` in `Layer.get_or_add_mag`
   - `extend_layer_bounding_box`, `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compress`, `executor` in `Layer.add_copy_mag`
@@ -114,7 +124,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `extend_layer_bounding_box` in `Layer.add_remote_mag`
   - `extend_layer_bounding_box` in `Layer.add_fs_copy_mag`
   - `move`, `extend_layer_bounding_box` in `Layer.add_mag_from_zarrarray`
+  - `from_mag`, `coarsest_mag`, `interpolation_mode`, `compress`, `sampling_mode`, `align_with_other_layers`, `buffer_shape`, `force_sampling_scheme`, `allow_overwrite`, `only_setup_mags`, `executor` in `Layer.downsample`
+  - `interpolation_mode`, `compress`, `buffer_shape`, `allow_overwrite`, `only_setup_mag`, `executor` in `Layer.downsample_mag`
+  - `interpolation_mode`, `compress`, `buffer_shape`, `executor` in `Layer.redownsample`
+  - `interpolation_mode`, `compress`, `buffer_shape`, `allow_overwrite`, `only_setup_mags`, `executor` in `Layer.downsample_mag_list`
+  - `finest_mag`, `compress`, `sampling_mode`, `align_with_other_layers`, `buffer_shape`, `executor` in `Layer.upsample`
+  - `chunk_shape`, `executor` in `SegmentationLayer.refresh_largest_segment_id`
   - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compression_mode`, `path` in `MagView.create`
+  - `target_path`, `executor` in `MagView.compress`
 - Added arguments:
   - `allow_resize` in `MagView.write` with default `False`
   - `allow_unaligned` in `MagView.write` with default `False`
@@ -132,11 +149,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `chunks_per_shard` in `Layer.get_or_add_mag`, use `shard_shape` instead
   - `chunks_per_shard` in `Layer.add_copy_mag`, use `shard_shape` instead
   - `chunks_per_shard` in `MagView.create`, use `shard_shape` instead
-  
-
 - Newly deprecated properties:
   - `Layer.dtype_per_layer`
-
 
 
 ### Added
@@ -146,6 +160,18 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [0.16.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.10) - 2025-02-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.9...v0.16.10)
+
+
+## [0.16.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.9) - 2025-02-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.8...v0.16.9)
+
+### Fixed
+- Fixed opening a renamed dataset via an annotation link. [#1256](https://github.com/scalableminds/webknossos-libs/pull/1256)
+
 
 
 ## [0.16.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.8) - 2025-02-04

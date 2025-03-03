@@ -356,7 +356,7 @@ def test_default_anisotropic_voxel_size(tmp_path: Path) -> None:
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8), allow_resize=True
     )
 
-    layer.downsample(Mag(1), None, "median", True)
+    layer.downsample(from_mag=Mag(1), interpolation_mode="median", compress=True)
     assert sorted(layer.mags.keys()) == [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]
 
 

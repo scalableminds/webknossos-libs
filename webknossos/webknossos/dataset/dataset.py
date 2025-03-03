@@ -798,6 +798,7 @@ class Dataset:
     def download(
         cls,
         dataset_name_or_url: str,
+        *,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
@@ -1172,6 +1173,7 @@ class Dataset:
     def upload(
         self,
         new_dataset_name: Optional[str] = None,
+        *,
         layers_to_link: Optional[List[Union["LayerToLink", Layer]]] = None,
         jobs: Optional[int] = None,
     ) -> "RemoteDataset":
@@ -1624,8 +1626,8 @@ class Dataset:
         ## add_mag arguments
         mag: MagLike = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
-        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = True,
         ## other arguments
         topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)
@@ -2025,8 +2027,9 @@ class Dataset:
             data: The data to write.
             data_format: Format to store the data. Defaults to zarr3.
             downsample: Whether to downsample the data. Defaults to True.
-            chunk_shape: Shape of chunks for storage.
-            chunks_per_shard: Number of chunks per shard.
+            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
+            chunks_per_shard: Deprecated, use shard_shape. Number of chunks per shards. If specified, shard_shape must not be specified.
             axes: The axes of the data for non-3D data.
             absolute_offset: The offset of the data. Specified in Mag 1.
             mag: Magnification to write the data at.
@@ -2162,6 +2165,7 @@ class Dataset:
         self,
         foreign_layer: Union[str, Path, Layer],
         new_layer_name: Optional[str] = None,
+        *,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
@@ -2249,8 +2253,9 @@ class Dataset:
     def add_symlink_layer(
         self,
         foreign_layer: Union[str, Path, Layer],
-        make_relative: bool = False,
         new_layer_name: Optional[str] = None,
+        *,
+        make_relative: bool = False,
     ) -> Layer:
         """Create symbolic link to layer from another dataset.
 
@@ -2451,6 +2456,7 @@ class Dataset:
     def copy_dataset(
         self,
         new_dataset_path: Union[str, Path],
+        *,
         voxel_size: Optional[Tuple[float, float, float]] = None,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         shard_shape: Optional[Union[Vec3IntLike, int]] = None,
@@ -2458,7 +2464,6 @@ class Dataset:
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
         executor: Optional[Executor] = None,
-        *,
         voxel_size_with_unit: Optional[VoxelSize] = None,
     ) -> "Dataset":
         """
@@ -2543,6 +2548,7 @@ class Dataset:
     def shallow_copy_dataset(
         self,
         new_dataset_path: Union[str, PathLike],
+        *,
         name: Optional[str] = None,
         make_relative: bool = False,
         layers_to_ignore: Optional[Iterable[str]] = None,
@@ -2626,6 +2632,7 @@ class Dataset:
 
     def compress(
         self,
+        *,
         executor: Optional[Executor] = None,
     ) -> None:
         """Compress all uncompressed magnifications in-place.
@@ -2655,6 +2662,7 @@ class Dataset:
 
     def downsample(
         self,
+        *,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
         coarsest_mag: Optional[Mag] = None,
         executor: Optional[Executor] = None,
@@ -2784,6 +2792,7 @@ class Dataset:
 
     @staticmethod
     def get_remote_datasets(
+        *,
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
         name: Optional[str] = None,
