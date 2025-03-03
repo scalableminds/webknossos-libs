@@ -2025,8 +2025,9 @@ class Dataset:
             data: The data to write.
             data_format: Format to store the data. Defaults to zarr3.
             downsample: Whether to downsample the data. Defaults to True.
-            chunk_shape: Shape of chunks for storage.
-            chunks_per_shard: Number of chunks per shard.
+            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
+            chunks_per_shard: Deprecated, use shard_shape. Number of chunks per shards. If specified, shard_shape must not be specified.
             axes: The axes of the data for non-3D data.
             absolute_offset: The offset of the data. Specified in Mag 1.
             mag: Magnification to write the data at.
