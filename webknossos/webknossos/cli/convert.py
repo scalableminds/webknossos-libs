@@ -7,11 +7,10 @@ from typing import Any, Optional
 import typer
 from typing_extensions import Annotated
 
-from webknossos.dataset.length_unit import LengthUnit
-from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
-from webknossos.geometry.vec3_int import Vec3Int
-
-from ..dataset import DataFormat, Dataset
+from ..dataset import DataFormat, Dataset, LengthUnit
+from ..dataset.defaults import DEFAULT_DATA_FORMAT
+from ..dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
+from ..geometry.vec3_int import Vec3Int
 from ..utils import get_executor_for_args
 from ._utils import (
     DistributionStrategy,
@@ -73,7 +72,7 @@ def main(
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = "wkw",  # type:ignore
+    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
     name: Annotated[
         Optional[str],
         typer.Option(

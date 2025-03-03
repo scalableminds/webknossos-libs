@@ -2,7 +2,6 @@ import logging
 import operator
 import re
 import warnings
-from argparse import Namespace
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -13,10 +12,9 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.client.context import _get_context
-from webknossos.dataset.defaults import SSL_CONTEXT
-
+from ..client.context import _get_context
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry.mag import MagLike
 from ._array import ArrayException, TensorStoreArray
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
@@ -28,6 +26,7 @@ from ._downsampling_utils import (
 )
 from ._upsampling_utils import upsample_cube_job
 from .data_format import DataFormat
+from .defaults import SSL_CONTEXT
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     LayerProperties,
@@ -53,7 +52,6 @@ from ..utils import (
     named_partial,
     rmtree,
     strip_trailing_slash,
-    warn_deprecated,
 )
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -155,24 +153,12 @@ def _get_sharding_parameters(
     *,
     chunk_shape: Optional[Union[Vec3IntLike, int]],
     chunks_per_shard: Optional[Union[Vec3IntLike, int]],
-    chunk_size: Optional[Union[Vec3IntLike, int]],  # deprecated
-    block_len: Optional[int],  # deprecated
-    file_len: Optional[int],  # deprecated
 ) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
     if chunk_shape is not None:
         chunk_shape = Vec3Int.from_vec_or_int(chunk_shape)
-    elif chunk_size is not None:
-        warn_deprecated("chunk_size", "chunk_shape")
-        chunk_shape = Vec3Int.from_vec_or_int(chunk_size)
-    elif block_len is not None:
-        warn_deprecated("block_len", "chunk_shape")
-        chunk_shape = Vec3Int.full(block_len)
 
     if chunks_per_shard is not None:
         chunks_per_shard = Vec3Int.from_vec_or_int(chunks_per_shard)
-    elif file_len is not None:
-        warn_deprecated("file_len", "chunks_per_shard")
-        chunks_per_shard = Vec3Int.full(file_len)
 
     return (chunk_shape, chunks_per_shard)
 
@@ -463,7 +449,7 @@ class Layer:
         """
         return self._mags
 
-    def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagView:
+    def get_mag(self, mag: MagLike) -> MagView:
         """Gets the MagView for the specified magnification level.
 
         Returns a view of the data at the requested magnification level. The mag
@@ -493,48 +479,26 @@ class Layer:
         """
         return self.get_mag(min(self.mags.keys()))
 
-    def get_best_mag(self) -> MagView:
-        """Gets the finest magnification view (deprecated).
-
-        Deprecated method name. Please use get_finest_mag() instead.
-
-        Returns:
-            MagView: View of finest magnification level.
-
-        Deprecated:
-            Use get_finest_mag() instead.
-        """
-        warn_deprecated("get_best_mag()", "get_finest_mag()")
-        return self.get_finest_mag()
-
     def add_mag(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,  # DEFAULT_CHUNK_SHAPE,
         chunks_per_shard: Optional[
             Union[int, Vec3IntLike]
         ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
-        compress: bool = False,
-        *,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
-        block_len: Optional[int] = None,  # deprecated
-        file_len: Optional[int] = None,  # deprecated
+        compress: bool = True,
     ) -> MagView:
         """Creates and adds a new magnification level to the layer.
 
         The new magnification can be configured with various storage parameters to
-        optimize performance, notably `chunk_shape`, `chunks_per_shard` and `compress`. Note that writing compressed data which is not aligned with the blocks on disk may result in
-        diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
-        you can call mag.compress() after all the data was written
+        optimize performance, notably `chunk_shape`, `chunks_per_shard` and `compress`. Note that writing data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions.
 
         Args:
             mag: Identifier for new magnification level
             chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64)
             chunks_per_shard: Number of chunks per shard file
-            compress: Whether to enable compression
-            chunk_size: Deprecated, use chunk_shape
-            block_len: Deprecated, use chunk_shape
-            file_len: Deprecated, use chunks_per_shard
+            compress: Whether to enable compression. Defaults to True.
 
         Returns:
             MagView: View of newly created magnification level
@@ -551,9 +515,6 @@ class Layer:
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
-            chunk_size=chunk_size,
-            block_len=block_len,
-            file_len=file_len,
         )
         if chunk_shape is None:
             chunk_shape = DEFAULT_CHUNK_SHAPE
@@ -581,7 +542,9 @@ class Layer:
             path=mag_path,
         )
 
-        mag_view._array.ensure_size(self.bounding_box.align_with_mag(mag).in_mag(mag))
+        mag_view._array.ensure_size(
+            self.bounding_box.align_with_mag(mag, ceil=True).in_mag(mag)
+        )
 
         self._mags[mag] = mag_view
         mag_array_info = mag_view.info
@@ -612,7 +575,7 @@ class Layer:
 
     def add_mag_for_existing_files(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
     ) -> MagView:
         """Creates a MagView for existing data files.
 
@@ -664,7 +627,7 @@ class Layer:
 
     def add_existing_remote_mag_view(
         self,
-        mag_view_maybe: Union[int, str, list, tuple, np.ndarray, Mag, MagView],
+        mag_view_maybe: Union[MagLike, MagView],
     ) -> MagView:
         """Adds a remote magnification view to this layer.
 
@@ -709,14 +672,10 @@ class Layer:
 
     def get_or_add_mag(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
-        *,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
-        block_len: Optional[int] = None,  # deprecated
-        file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag and adds it to the dataset, in case it did not exist before.
@@ -727,14 +686,10 @@ class Layer:
 
         # normalize the name of the mag
         mag = Mag(mag)
-        compression_mode = compress
 
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
-            chunk_size=chunk_size,
-            block_len=block_len,
-            file_len=file_len,
         )
 
         if mag in self._mags.keys():
@@ -753,8 +708,8 @@ class Layer:
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunks per shard do not match"
                 )
             if (
-                compression_mode is not None
-                and self._mags[mag].info.compression_mode != compression_mode
+                compress is not None
+                and self._mags[mag].info.compression_mode != compress
             ):
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match"
@@ -765,10 +720,10 @@ class Layer:
                 mag,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
-                compress=compression_mode or False,
+                compress=compress if compress is not None else True,
             )
 
-    def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
+    def delete_mag(self, mag: MagLike) -> None:
         """
         Deletes the MagView from the `datasource-properties.json` and the data from disk.
 
@@ -938,7 +893,7 @@ class Layer:
 
     def add_mag_from_zarrarray(
         self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        mag: MagLike,
         path: PathLike,
         move: bool = False,
         extend_layer_bounding_box: bool = True,
@@ -980,17 +935,13 @@ class Layer:
 
             return mag_view
 
-    def _create_dir_for_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> Path:
+    def _create_dir_for_mag(self, mag: MagLike) -> Path:
         mag_name = Mag(mag).to_layer_name()
         full_path = self.path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
         return full_path
 
-    def _assert_mag_does_not_exist_yet(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> None:
+    def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:
         """Verifies a magnification does not already exist.
 
         Args:
@@ -1024,7 +975,6 @@ class Layer:
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
-        args: Optional[Namespace] = None,  # deprecated
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
         executor: Optional[Executor] = None,
@@ -1045,7 +995,6 @@ class Layer:
             align_with_other_layers (Union[bool, Dataset]): Whether to align with other layers. True by default.
             buffer_shape (Optional[Vec3Int]): Shape of processing buffer. Defaults to None.
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
-            args (Optional[Namespace]): Deprecated argument handler.
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
             only_setup_mags (bool): Only create mags without data. False by default.
             executor (Optional[Executor]): Executor for parallel processing. None by default.
@@ -1138,7 +1087,6 @@ class Layer:
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 buffer_shape=buffer_shape,
-                args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
                 executor=executor,
@@ -1151,7 +1099,6 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
-        args: Optional[Namespace] = None,  # deprecated
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
         executor: Optional[Executor] = None,
@@ -1164,7 +1111,6 @@ class Layer:
             interpolation_mode: Method for interpolation ("median", "mode", "nearest", "bilinear", "bicubic")
             compress: Whether to compress target data
             buffer_shape: Shape of processing buffer
-            args: Deprecated, use executor
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
             executor: Executor for parallel processing
@@ -1173,12 +1119,6 @@ class Layer:
             AssertionError: If from_mag doesn't exist or target exists without overwrite"""
 
         self._dataset._ensure_writable()
-
-        if args is not None:
-            warn_deprecated(
-                "args argument",
-                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
-            )
 
         assert (
             from_mag in self.mags.keys()
@@ -1219,7 +1159,7 @@ class Layer:
         )
 
         # perform downsampling
-        with get_executor_for_args(args, executor) as executor:
+        with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_buffer_shape(prev_mag_view.info)
             func = named_partial(
@@ -1242,7 +1182,6 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
-        args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
     ) -> None:
         """Recompute all downsampled magnifications from base mag.
@@ -1254,7 +1193,6 @@ class Layer:
             interpolation_mode: Method for interpolation
             compress: Whether to compress recomputed data
             buffer_shape: Shape of processing buffer
-            args: Deprecated, use executor
             executor: Executor for parallel processing
         """
 
@@ -1270,7 +1208,6 @@ class Layer:
             interpolation_mode=interpolation_mode,
             compress=compress,
             buffer_shape=buffer_shape,
-            args=args,
             allow_overwrite=True,
             executor=executor,
         )
@@ -1282,7 +1219,6 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
-        args: Optional[Namespace] = None,  # deprecated
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
         executor: Optional[Executor] = None,
@@ -1298,7 +1234,6 @@ class Layer:
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
             compress (bool): Whether to compress outputs. Defaults to True.
             buffer_shape (Optional[Vec3Int]): Shape of processing buffer.
-            args (Optional[Namespace]): Deprecated, use executor.
             allow_overwrite (bool): Whether to allow overwriting mags. Defaults to False.
             only_setup_mags (bool): Only create mag structures without data. Defaults to False.
             executor (Optional[Executor]): Executor for parallel processing.
@@ -1331,7 +1266,6 @@ class Layer:
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 buffer_shape=buffer_shape,
-                args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
                 executor=executor,
@@ -1342,15 +1276,11 @@ class Layer:
         self,
         from_mag: Mag,
         finest_mag: Mag = Mag(1),
-        compress: bool = False,
+        compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
-        buffer_shape: Optional[Vec3Int] = None,
-        buffer_edge_len: Optional[int] = None,
-        args: Optional[Namespace] = None,  # deprecated
+        buffer_shape: Optional[Vec3IntLike] = None,
         executor: Optional[Executor] = None,
-        *,
-        min_mag: Optional[Mag] = None,
     ) -> None:
         """Upsample data to finer magnifications.
 
@@ -1360,17 +1290,14 @@ class Layer:
         Args:
             from_mag (Mag): Source coarse magnification
             finest_mag (Mag): Target finest magnification (default Mag(1))
-            compress (bool): Whether to compress upsampled data. Defaults to False.
+            compress (bool): Whether to compress upsampled data. Defaults to True.
             sampling_mode (Union[str, SamplingModes]): How dimensions should be upsampled:
                 - 'anisotropic': Equalizes voxel dimensions based on voxel_size
                 - 'isotropic': Equal upsampling in all dimensions
                 - 'constant_z': Only upsamples x/y dimensions. z remains unchanged.
             align_with_other_layers: Whether to align mags with others. Defaults to True.
-            buffer_shape (Optional[Vec3Int]): Shape of processing buffer.
-            buffer_edge_len (Optional[int]): Deprecated, use buffer_shape.
-            args (Optional[Namespace]): Deprecated, use executor.
+            buffer_shape (Optional[Vec3IntLike]): Shape of processing buffer.
             executor (Optional[Executor]): Executor for parallel processing.
-            min_mag (Optional[Mag]): Deprecated, use finest_mag.
 
         Raises:
             AssertionError: If from_mag doesn't exist or finest_mag invalid
@@ -1379,22 +1306,9 @@ class Layer:
 
         self._dataset._ensure_writable()
 
-        if args is not None:
-            warn_deprecated(
-                "args argument",
-                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
-            )
-
         assert (
             from_mag in self.mags.keys()
         ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-
-        if min_mag is not None:
-            warn_deprecated("upsample(min_mag=…)", "upsample(finest_mag=…)")
-            assert finest_mag == Mag(
-                1
-            ), "Cannot set both min_mag and finest_mag, please only use finest_mag."
-            finest_mag = min_mag
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -1412,9 +1326,6 @@ class Layer:
             raise AttributeError(
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
-
-        if buffer_shape is None and buffer_edge_len is not None:
-            buffer_shape = Vec3Int.full(buffer_edge_len)
 
         dataset_to_align_with = self._get_dataset_from_align_with_other_layers(
             align_with_other_layers
@@ -1450,9 +1361,11 @@ class Layer:
             target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
-            with get_executor_for_args(args, executor) as actual_executor:
+            with get_executor_for_args(None, executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                else:
+                    buffer_shape = Vec3Int(buffer_shape)
                 func = named_partial(
                     upsample_cube_job,
                     mag_factors=mag_factors,
@@ -1540,6 +1453,13 @@ class Layer:
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return None
+
+    def as_segmentation_layer(self) -> "SegmentationLayer":
+        """Casts into SegmentationLayer."""
+        if isinstance(self, SegmentationLayer):
+            return self
+        else:
+            raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
 
     @classmethod
     def _ensure_layer(cls, layer: Union[str, PathLike, "Layer"]) -> "Layer":

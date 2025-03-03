@@ -24,7 +24,7 @@ from tests.constants import (
     use_minio,
 )
 from webknossos import BoundingBox, DataFormat, Dataset
-from webknossos.cli.export_wkw_as_tiff import _make_tiff_name
+from webknossos.cli.export_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 
@@ -125,7 +125,7 @@ def test_check_equality() -> None:
             str(TESTDATA_DIR / "simple_wkw_dataset"),
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.stdout
     assert (
         f"The datasets {str(TESTDATA_DIR / 'simple_wkw_dataset')} and "
         f"{str(TESTDATA_DIR / 'simple_wkw_dataset')} are equal"
@@ -153,7 +153,7 @@ def test_check_not_equal() -> None:
                 str(tmp_path),
             ],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 1, result.stdout
         assert (
             f"The datasets {str(TESTDATA_DIR / 'simple_wkw_dataset')} and "
             f"{str(TESTDATA_DIR / 'simple_wkw_dataset')} are equal"
@@ -174,7 +174,7 @@ def test_compress() -> None:
 
         result = runner.invoke(app, ["compress", "testdata/simple_wkw_dataset"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stdout
 
 
 def test_compress_with_args() -> None:
@@ -196,7 +196,7 @@ def test_compress_with_args() -> None:
             ],
         )
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stdout
 
         result_with_wrong_mag = runner.invoke(
             app,
@@ -235,7 +235,7 @@ def test_convert() -> None:
             ],
         )
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stdout
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
@@ -258,7 +258,7 @@ def test_convert_single_file() -> None:
             ],
         )
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stdout
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
@@ -285,7 +285,7 @@ def test_convert_with_all_params() -> None:
                 ],
             )
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stdout
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
 
 
@@ -301,7 +301,7 @@ def test_download_dataset(url: str) -> None:
     """Tests the functionality of download subcommand."""
 
     result = runner.invoke(app, ["download"])
-    assert result.exit_code == 2
+    assert result.exit_code == 2, result.stdout
 
     with tmp_cwd():
         result = runner.invoke(
@@ -317,7 +317,7 @@ def test_download_dataset(url: str) -> None:
                 "testoutput/",
             ],
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stdout
         assert (Path("testoutput") / PROPERTIES_FILE_NAME).exists()
 
 
@@ -368,7 +368,7 @@ def test_export_tiff_stack(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         [
-            "export-wkw-as-tiff",
+            "export-as-tiff",
             "--layer-name",
             "color",
             "--name",
@@ -382,7 +382,7 @@ def test_export_tiff_stack(tmp_path: Path) -> None:
         ],
     )
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.stdout
 
     test_mag_view = Dataset.open(source_path).get_layer("color").get_mag("1")
 
@@ -420,7 +420,7 @@ def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         [
-            "export-wkw-as-tiff",
+            "export-as-tiff",
             "--layer-name",
             "color",
             "--name",
@@ -436,7 +436,7 @@ def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
         ],
     )
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.stdout
 
     tile_bbox = BoundingBox(bbox.topleft, (17, 17, 1))
     test_mag_view = Dataset.open(source_path).get_layer("color").get_mag("1")
@@ -484,7 +484,7 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         [
-            "export-wkw-as-tiff",
+            "export-as-tiff",
             "--layer-name",
             "color",
             "--name",
@@ -500,7 +500,7 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
         ],
     )
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.stdout
 
     tile_bbox = BoundingBox(bbox.topleft, (8, 8, 1))
     test_mag_view = Dataset.open(source_path).get_layer("color").get_mag("1")
@@ -556,6 +556,7 @@ def test_merge_fallback_no_fallback_layer(
             "fallback_layer",
             SEGMENTATION_CATEGORY,
             dtype_per_channel=fallback_layer_data.dtype,
+            data_format=DataFormat.WKW,
         )
         .add_mag(
             1,
@@ -565,7 +566,9 @@ def test_merge_fallback_no_fallback_layer(
         )
     )
 
-    fallback_mag.write(absolute_offset=(0,) * 3, data=fallback_layer_data)
+    fallback_mag.write(
+        absolute_offset=(0,) * 3, data=fallback_layer_data, allow_resize=True
+    )
 
     annotation_zip_path = tmp_path / "annotation.zip"
     annotation_data = np.ones((32, 32, 32), dtype=fallback_layer_data.dtype) * 2
@@ -582,6 +585,7 @@ def test_merge_fallback_no_fallback_layer(
         tmp_layer = tmp_dataset.add_layer(
             "Volume",
             SEGMENTATION_CATEGORY,
+            data_format=DataFormat.WKW,
             dtype_per_channel=annotation_data.dtype,
             largest_segment_id=largest_segment_id,
         )
@@ -590,7 +594,7 @@ def test_merge_fallback_no_fallback_layer(
             1, chunk_shape=(32,) * 3, chunks_per_shard=(1,) * 3, compress=True
         )
 
-        mag1.write(absolute_offset=topleft, data=annotation_data)
+        mag1.write(absolute_offset=topleft, data=annotation_data, allow_resize=True)
 
         volume_layer_zip = tmp_ds_dir / "data_Volume.zip"
 
@@ -643,7 +647,7 @@ def test_merge_fallback_no_fallback_layer(
         ],
     )
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.stdout
 
     expected_data = fallback_layer_data
     expected_data[
@@ -658,4 +662,4 @@ def test_merge_fallback_no_fallback_layer(
         .squeeze(0)
     )
 
-    assert (merged_data == expected_data).all()
+    np.testing.assert_array_equal(merged_data, expected_data)

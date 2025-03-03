@@ -1,6 +1,5 @@
 import logging
 import warnings
-from argparse import Namespace
 from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
@@ -18,7 +17,6 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
-    warn_deprecated,
 )
 from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
 from .properties import MagViewProperties
@@ -80,7 +78,11 @@ class MagView(View):
         ```python
         # Create a dataset with a segmentation layer
         ds = Dataset("path/to/dataset", voxel_size=(1, 1, 1))
-        layer = ds.add_layer("segmentation", SEGMENTATION_CATEGORY)
+        layer = ds.add_layer(
+            "segmentation",
+            SEGMENTATION_CATEGORY,
+            bounding_box=BoundingBox((100, 200, 300), (512, 512, 512)),
+        )
 
         # Add and work with magnification levels
         mag1 = layer.add_mag(Mag(1))
@@ -185,28 +187,6 @@ class MagView(View):
         # but the Layer's bbox is used:
         return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
 
-    @property
-    def global_offset(self) -> Vec3Int:
-        """⚠️ Deprecated, use `Vec3Int.zeros()` instead."""
-        warnings.warn(
-            "[DEPRECATION] mag_view.global_offset is deprecated. "
-            + "Since this is a MagView, please use "
-            + "Vec3Int.zeros() instead.",
-            DeprecationWarning,
-        )
-        return Vec3Int.zeros()
-
-    @property
-    def size(self) -> VecInt:
-        """⚠️ Deprecated, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright` instead."""
-        warnings.warn(
-            "[DEPRECATION] mag_view.size is deprecated. "
-            + "Since this is a MagView, please use "
-            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead.",
-            DeprecationWarning,
-        )
-        return self.bounding_box.in_mag(self._mag).bottomright
-
     # Own methods:
 
     @property
@@ -282,9 +262,9 @@ class MagView(View):
     def write(
         self,
         data: np.ndarray,
-        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
-        json_update_allowed: bool = True,
         *,
+        allow_resize: bool = False,
+        allow_unaligned: bool = False,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
@@ -296,13 +276,26 @@ class MagView(View):
         coordinates are expected to be in Mag(1) space, regardless of the current magnification level.
 
         Args:
-            data: Numpy array containing the volumetric data to write. Shape must match the target region.
-            offset: ⚠️ Deprecated. Use relative_offset or absolute_offset instead.
-            json_update_allowed: If True, allows updating the layer's bounding box if the write extends beyond it.
-            relative_offset: Optional offset relative to the view's position in Mag(1) coordinates.
-            absolute_offset: Optional absolute position in Mag(1) coordinates.
-            relative_bounding_box: Optional bounding box relative to view's position in Mag(1) coordinates.
-            absolute_bounding_box: Optional absolute bounding box in Mag(1) coordinates.
+            data (np.ndarray): The data to write. For 3D data, shape should
+                be (x, y, z). For multi-channel 3D data, shape should be (channels, x, y, z).
+                For n-dimensional data, the axes must match the bounding box axes of the layer.
+                Shape must match the target region size.
+            allow_resize: If True, allows updating the layer's bounding box if the write
+                extends beyond it.
+                Must not be set to True, when writing to the same magnification level in parallel.
+                For one-off writes, consider using `Dataset.write_layer`.
+                Defaults to False.
+            allow_unaligned (bool, optional): If True, allows writing data to without
+                being aligned to the shard shape.
+                Defaults to False.
+            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+                to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
 
         Examples:
             ```python
@@ -321,26 +314,9 @@ class MagView(View):
             - For compressed data, writing may be slower due to compression
             - Large writes may temporarily increase memory usage
         """
-        if offset is not None:
-            if self._mag == Mag(1):
-                alternative = "Since this is a MagView in Mag(1), please use mag_view.write(absolute_offset=my_vec)"
-            else:
-                alternative = (
-                    "Since this is a MagView, please use the coordinates in Mag(1) instead, e.g. "
-                    + "mag_view.write(absolute_offset=my_vec * mag_view.mag.to_vec3_int())"
-                )
-
-            warnings.warn(
-                "[DEPRECATION] Using mag_view.write(offset=my_vec) is deprecated. "
-                + "Please use relative_offset or absolute_offset instead. "
-                + alternative,
-                DeprecationWarning,
-            )
-
         if all(
             i is None
             for i in [
-                offset,
                 absolute_offset,
                 relative_offset,
                 absolute_bounding_box,
@@ -355,7 +331,6 @@ class MagView(View):
             data_shape = Vec3Int(data.shape[-3:])
 
         mag1_bbox = self._get_mag1_bbox(
-            abs_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
             abs_mag1_bbox=absolute_bounding_box,
@@ -365,154 +340,19 @@ class MagView(View):
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
-        if json_update_allowed and not self.bounding_box.contains_bbox(mag1_bbox):
-            self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
+        if not self.bounding_box.contains_bbox(mag1_bbox):
+            if allow_resize:
+                self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
+            else:
+                raise ValueError(
+                    f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. "
+                    + "Please use `allow_resize=True` or explicitly resize the bounding box beforehand."
+                )
 
         super().write(
             data,
-            json_update_allowed=json_update_allowed,
+            allow_unaligned=allow_unaligned,
             absolute_bounding_box=mag1_bbox,
-        )
-
-    def read(
-        self,
-        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
-        size: Optional[
-            Vec3IntLike
-        ] = None,  # usually in mag1, in current mag if offset is given
-        *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-    ) -> np.ndarray:
-        """Read volumetric data from the magnification level.
-
-        This method reads data from the dataset at the specified location. All offset and bounding box
-        coordinates are expected to be in Mag(1) space, regardless of the current magnification level.
-
-        Args:
-            offset: ⚠️ Deprecated. Use relative_offset or absolute_offset instead.
-            size: Size of region to read. In Mag(1) coordinates unless used with deprecated offset.
-            relative_offset: Optional offset relative to the view's position in Mag(1) coordinates.
-            absolute_offset: Optional absolute position in Mag(1) coordinates.
-            relative_bounding_box: Optional bounding box relative to view's position in Mag(1) coordinates.
-            absolute_bounding_box: Optional absolute bounding box in Mag(1) coordinates.
-
-        Returns:
-            np.ndarray: The volumetric data as a numpy array.
-
-        Examples:
-            ```python
-            # Read data at absolute position
-            data = mag1.read(absolute_offset=(100, 200, 300), size=(512, 512, 512))
-
-            # Read using bounding box
-            bbox = BoundingBox((0, 0, 0), (100, 100, 100))
-            data = mag2.read(absolute_bounding_box=bbox)
-            ```
-
-        Notes:
-            - At least one of offset/bounding_box parameters must be provided
-            - Coordinates are automatically scaled based on magnification
-            - For compressed data, reading includes decompression time
-            - Large reads may temporarily increase memory usage
-        """
-        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
-
-        if (
-            relative_offset is not None
-            or absolute_offset is not None
-            or absolute_bounding_box is not None
-            or relative_bounding_box is not None
-        ) or (
-            offset is None
-            and size is None
-            and relative_offset is None
-            and absolute_offset is None
-            and absolute_bounding_box is None
-            and relative_bounding_box is None
-        ):
-            return super().read(
-                offset,
-                size,
-                relative_offset=relative_offset,
-                absolute_offset=absolute_offset,
-                absolute_bounding_box=absolute_bounding_box,
-                relative_bounding_box=relative_bounding_box,
-            )
-        else:
-            with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore", category=UserWarning, module="webknossos"
-                )
-                view = self.get_view(offset=Vec3Int.zeros(), read_only=True)
-            return view.read(offset, size)
-
-    def get_view(
-        self,
-        offset: Optional[Vec3IntLike] = None,
-        size: Optional[Vec3IntLike] = None,
-        *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        read_only: Optional[bool] = None,
-    ) -> View:
-        """Get a restricted view of this magnification level.
-
-        Creates a new View object that represents a subset of this magnification level's data.
-        The view can be used to read/write data within its bounds. All offset and bounding box
-        coordinates are expected to be in Mag(1) space, regardless of the current magnification level.
-
-        Args:
-            offset: ⚠️ Deprecated. Use relative_offset or absolute_offset instead.
-            size: Size of region to view. In Mag(1) coordinates unless used with deprecated offset.
-            relative_offset: Optional offset relative to the view's position in Mag(1) coordinates.
-            absolute_offset: Optional absolute position in Mag(1) coordinates.
-            relative_bounding_box: Optional bounding box relative to view's position in Mag(1) coordinates.
-            absolute_bounding_box: Optional absolute bounding box in Mag(1) coordinates.
-            read_only: If True, the view will be read-only. If None, determined by context.
-
-        Returns:
-            View: A new View object representing the specified region.
-
-        Examples:
-            ```python
-            # Get view at absolute position
-            view = mag1.get_view(absolute_offset=(100, 200, 300), size=(512, 512, 512))
-            data = view.read()  # Read from the view
-            view.write(data)    # Write to the view
-
-            # Get view using bounding box
-            bbox = BoundingBox((0, 0, 0), (100, 100, 100))
-            view = mag2.get_view(absolute_bounding_box=bbox)
-            ```
-
-        Notes:
-            - Views are lightweight objects that don't copy data
-            - Read-only views prevent accidental data modification
-            - Views can be used for efficient parallel processing
-            - Coordinates are automatically scaled based on magnification
-        """
-        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
-
-        # This has other defaults than the View implementation
-        # (all deprecations are handled in the superclass)
-        bb = self.bounding_box.in_mag(self._mag)
-        if offset is not None and size is None:
-            offset = Vec3Int(offset)
-            size = bb.bottomright - offset
-
-        return super().get_view(
-            None if offset is None else Vec3Int(offset) - bb.topleft,
-            size,
-            relative_offset=relative_offset,
-            absolute_offset=absolute_offset,
-            relative_bounding_box=relative_bounding_box,
-            absolute_bounding_box=absolute_bounding_box,
-            read_only=read_only,
         )
 
     def get_bounding_boxes_on_disk(
@@ -598,7 +438,6 @@ class MagView(View):
     def compress(
         self,
         target_path: Optional[Union[str, Path]] = None,
-        args: Optional[Namespace] = None,  # deprecated
         executor: Optional[Executor] = None,
     ) -> None:
         """Compresses the files on disk.
@@ -608,7 +447,6 @@ class MagView(View):
 
         Args:
             target_path: Optional path to write compressed data. If None, compresses in-place.
-            args: ⚠️ Deprecated. Use executor parameter instead.
             executor: Optional executor for parallel compression.
 
         Examples:
@@ -625,12 +463,6 @@ class MagView(View):
             - Compressed data may have slower read/write speeds
         """
         from .dataset import Dataset
-
-        if args is not None:
-            warn_deprecated(
-                "args argument",
-                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
-            )
 
         path = self._path.resolve()
         if target_path is None:
@@ -676,7 +508,7 @@ class MagView(View):
                 self.name, str(uncompressed_full_path)
             )
         )
-        with get_executor_for_args(args, executor) as executor:
+        with get_executor_for_args(None, executor) as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()
             except NotImplementedError:

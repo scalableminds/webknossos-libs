@@ -59,7 +59,7 @@ def main() -> None:
         dtype_per_layer=in_layer.dtype_per_layer,
         largest_segment_id=in_layer.largest_segment_id,
     )
-    out_mag1 = out_layer.add_mag("1", compress=True)
+    out_mag1 = out_layer.add_mag("1")
     out_layer.bounding_box = in_layer.bounding_box
 
     ###################

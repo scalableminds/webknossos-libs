@@ -1,8 +1,7 @@
 import itertools
 import os
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Iterable
 
 import pytest
 from upath import UPath

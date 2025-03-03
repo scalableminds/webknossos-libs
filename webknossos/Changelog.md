@@ -13,6 +13,98 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...HEAD)
 
 ### Breaking Changes
+- Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of the underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
+- Removed deprecated functions, properties and arguments:
+  - Functions:
+    - `open_annotation`, use `Annotation.load()` instead
+    - `Dataset.get_color_layer`, use `Dataset.get_color_layers()` instead
+    - `Dataset.get_segmentation_layer`, use `Dataset.get_segmentation_layers()` instead
+    - `Dataset.create`, use `Dataset.__init__` instead
+    - `Dataset.get_or_create`, use `Dataset.__init__` with `exist_ok=True` instead
+    - `Layer.get_best_mag`, use `Layer.get_finest_mag` instead
+    - `View.read_bbox`, use `read` with `relative_bounding_box` or `absolute_bounding_box` instead
+    - `View.__enter__` and `View.__exit__`, context managers are not needed anymore
+    - `open_nml`, use `Skeleton.load()` instead
+    - `Group.add_graph`, use `Group.add_tree` instead
+    - `Group.get_max_graph_id`, use `Group.get_max_tree_id` instead
+    - `Group.flattened_graphs`, use `Group.flattened_trees` instead
+    - `Group.get_graph_by_id`, use `Group.get_tree_by_id` instead
+    - `Skeleton.from_path`, use `Skeleton.load()` instead
+    - `Skeleton.write`, use `Skeleton.save()` instead
+  - Properties:
+    - `Annotation.username`, use `Annotation.owner_name` instead
+    - `Annotation.scale`, use `Annotation.voxel_size` instead
+    - `Annotation.user_id`, use `Annotation.owner_id` instead
+    - `ArrayInfo.shard_size`, use `ArrayInfo.shard_shape` instead
+    - `Dataset.scale`, use `Dataset.voxel_size` instead
+    - `MagView.global_offset`, always `(0, 0, 0, ...)`
+    - `MagView.size`, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright`
+    - `MagViewProperties.resolution`, use `MagViewProperties.mag` instead
+    - `LayerProperties.resolutions`, use `LayerProperties.mags` instead
+    - `View.header`, use `View.info` instead
+    - `View.global_offset`, use `view.bounding_box.in_mag(view.mag).topleft` instead
+    - `View.size`, use `view.bounding_box.in_mag(view.mag).size` instead
+    - `Group.graphs`, use `Group.trees`
+    - `Skeleton.scale`, use `Skeleton.voxel_size` instead
+  - Arguments:
+    - `annotation_type` in `Annotation.download`, not needed anymore
+    - `annotation_type` in `Annotation.open_as_remote_dataset`, not needed anymore
+    - `size` in `BufferedSliceReader.__init__`, use `relative_bounding_box` or `absolute_bounding_box` instead
+    - `offset` in `BufferedSliceReader.__init__`, use `relative_bounding_box` or `absolute_bounding_box` instead
+    - `offset` in `BufferedSliceWriter.__init__`, use `relative_bounding_box` or `absolute_bounding_box` instead
+    - `json_update_allowed` in `BufferedSliceWriter.__init__`, not supported anymore
+    - `offset` in `BufferedSliceWriter.reset_offset`, use `relative_offset` or `absolute_offset` instead
+    - `scale` in `Dataset.__init__`, use `voxel_size` or `voxel_size_with_unit` instead
+    - `dtype` in `Dataset.add_layer`, use `dtype_per_channel` instead
+    - `dtype` in `Dataset.get_or_add_layer`, use `dtype_per_channel` instead
+    - `chunk_size` in `Dataset.add_layer_from_images`, use `chunk_shape` instead
+    - `chunk_size` in `Dataset.copy_dataset`, use `chunk_shape` instead
+    - `block_len` in `Dataset.copy_dataset`, use `chunk_shape` instead
+    - `file_len` in `Dataset.copy_dataset`, use `chunks_per_shard` instead
+    - `args` in `Dataset.copy_dataset`, use `executor` instead
+    - `chunk_size` in `Layer.add_mag`, use `chunk_shape` instead
+    - `block_len` in `Layer.add_mag`, use `chunk_shape` instead
+    - `file_len` in `Layer.add_mag`, use `chunks_per_shard` instead
+    - `chunk_size` in `Layer.get_or_add_mag`, use `chunk_shape` instead
+    - `block_len` in `Layer.get_or_add_mag`, use `chunk_shape` instead
+    - `file_len` in `Layer.get_or_add_mag`, use `chunks_per_shard` instead
+    - `args` in `Layer.downsample`, use `executor` instead
+    - `args` in `Layer.downsample_mag`, use `executor` instead
+    - `args` in `Layer.redownsample`, use `executor` instead
+    - `args` in `Layer.downsample_mag_list`, use `executor` instead
+    - `args` in `Layer.downsample_mag_list`, use `executor` instead
+    - `buffer_edge_len` in `Layer.upsample`, use `buffer_shape` instead
+    - `args` in `Layer.upsample`, use `executor` instead
+    - `min_mag` in `Layer.upsample`, use `finest_mag` instead
+    - `offset` in `MagView.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `json_update_allowed` in `MagView.write`, use `allow_resize` instead
+    - `args` in `MagView.compress`, use `executor` instead
+    - `offset` in `View.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `json_update_allowed` in `View.write`, not supported anymore
+    - `offset` in `View.read`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `offset` in `View.get_view`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `offset` in `View.get_buffered_slice_writer`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `offset` in `View.get_buffered_slice_reader`, use `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `size` in `View.get_buffered_slice_reader`, use `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `chunk_size` in `View.for_each_chunk`, use `chunk_shape` instead
+    - `source_chunk_size` in `View.for_zipped_chunks`, use `source_chunk_shape` instead
+    - `target_chunk_size` in `View.for_zipped_chunks`, use `target_chunk_shape` instead
+    - `args` in `View.content_is_equal`, use `executor` instead
+  - Classes:
+    - `Graph`, use `Tree` instead
+- Changed defaults:
+  - `exist_ok` in `Dataset.__init__` is now `False`
+  - `compress` in `Dataset.from_images` is now `True`
+  - `compress` in `Dataset.add_layer_from_images` is now `True`
+  - `DEFAULT_DATA_FORMAT` is now `Zarr3`
+  - `compress` in `Layer.add_mag` is now `True`
+  - `compress` in `Layer.upsample` is now `True`
+  - `buffer_size` in `View.get_buffered_slice_reader` is now computed from the shard shape
+  - `buffer_size` in `View.get_buffered_slice_writer` is now computed from the shard shape
+- Added arguments:
+  - `allow_resize` in `MagView.write` with default `False`
+  - `allow_unaligned` in `MagView.write` with default `False`
+
 
 ### Added
 

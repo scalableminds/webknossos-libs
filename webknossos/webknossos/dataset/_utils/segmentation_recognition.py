@@ -3,9 +3,9 @@ from pathlib import Path
 
 import numpy as np
 
-from webknossos.dataset.layer_categories import LayerCategoryType
-from webknossos.dataset.mag_view import MagView
-from webknossos.geometry.vec3_int import Vec3Int
+from ...geometry.vec3_int import Vec3Int
+from ..layer_categories import LayerCategoryType
+from ..mag_view import MagView
 
 NUM_SAMPLES = 20
 THRESHOLD = (

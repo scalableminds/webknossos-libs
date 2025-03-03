@@ -51,7 +51,7 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--voxel_size",
         "-s",
-        help="Voxel size of the dataset in nm (e.g. 11.2,11.2,25). --scale is deprecated",
+        help="Voxel size of the dataset in nm (e.g. 11.2,11.2,25).",
         required=True,
         type=parse_voxel_size,
     )
@@ -65,8 +65,8 @@ def move_by_one(
 ) -> None:
     chunk_view, i = args
     del i
-    size = chunk_view.size
-    dst_offset = chunk_view.global_offset
+    size = chunk_view.bounding_box.size
+    dst_offset = chunk_view.bounding_box.topleft
 
     src_offset = (
         dst_offset[0],
@@ -74,8 +74,8 @@ def move_by_one(
         dst_offset[2] + 1,
     )
 
-    data = src_mag.read(src_offset, size)
-    chunk_view.write(data)
+    data = src_mag.read(absolute_offset=src_offset, size=size)
+    chunk_view.write(data, absolute_offset=(0, 0, 0))
 
 
 def main() -> None:
