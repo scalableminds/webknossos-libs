@@ -598,7 +598,7 @@ class Dataset:
         cls,
         dataset_name: str,
         organization_id: str,
-    ) -> str:
+    ) -> Optional[str]:
         from ..client.context import _get_context
 
         current_context = _get_context()
@@ -607,17 +607,18 @@ class Dataset:
                 name=dataset_name, organization_id=organization_id
             ).keys()
         )
-        if len(possible_ids) == 0 and (
-            dataset_id := current_context.api_client_with_auth.dataset_id_from_name(
+        if len(possible_ids) == 0:
+            dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
                 dataset_name, organization_id
             )
-        ):
-            possible_ids.append(dataset_id)
+            if dataset_id is not None:
+                possible_ids.append(dataset_id)
 
         if len(possible_ids) == 0:
-            raise ValueError(
-                f"Dataset {dataset_name} not found in organization {organization_id}."
+            logger.warning(
+                "The dataset name and organization ID do not match any dataset."
             )
+            return None
         elif len(possible_ids) > 1:
             logger.warning(
                 f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
@@ -3264,7 +3265,7 @@ class RemoteDataset(Dataset):
         )
 
         with context:
-            client = _get_api_client()
+            client = _get_api_client(True)
             dataset = ApiDatasetExploreAndAddRemote(
                 UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
             )
