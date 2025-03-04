@@ -43,7 +43,12 @@ def main() -> None:
     # data.shape -> (1, 2, 5, 100, 400) # first value is the channel dimension
 
     # Write some data to a given position
-    mag_view.write(data, absolute_bounding_box=read_bbox.offset((2, 0, 0, 0)))
+    mag_view.write(
+        data,
+        absolute_bounding_box=read_bbox.offset((2, 0, 0, 0)),
+        allow_resize=True,
+        allow_unaligned=True,
+    )
 
 
 if __name__ == "__main__":

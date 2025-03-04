@@ -15,7 +15,11 @@ from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
 
 from ..dataset import DataFormat, Dataset, MagView, SamplingModes
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
+from ..dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_DATA_FORMAT,
+    DEFAULT_SHARD_SHAPE,
+)
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
     get_executor_for_args,
@@ -32,6 +36,7 @@ from ._utils import (
     parse_path,
     parse_vec3int,
     parse_voxel_size,
+    prepare_shard_shape,
 )
 
 logger = logging.getLogger(__name__)
@@ -61,7 +66,7 @@ def _raw_chunk_converter(
     contiguous_chunk = source_data[(slice(None),) + bounding_box.to_slices()].copy(
         order="F"
     )
-    target_mag_view.write(contiguous_chunk, bounding_box.topleft)
+    target_mag_view.write(data=contiguous_chunk, absolute_offset=bounding_box.topleft)
 
 
 def convert_raw(
@@ -72,7 +77,7 @@ def convert_raw(
     shape: Vec3Int,
     data_format: DataFormat,
     chunk_shape: Vec3Int,
-    chunks_per_shard: Vec3Int,
+    shard_shape: Vec3Int,
     order: Literal["C", "F"] = "F",
     voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
@@ -88,7 +93,7 @@ def convert_raw(
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
         "color",
-        dtype_per_layer=np.dtype(input_dtype),
+        dtype_per_channel=np.dtype(input_dtype),
         num_channels=1,
         data_format=data_format,
     )
@@ -96,7 +101,7 @@ def convert_raw(
     wk_mag = wk_layer.get_or_add_mag(
         "1",
         chunk_shape=chunk_shape,
-        chunks_per_shard=chunks_per_shard,
+        shard_shape=shard_shape,
         compress=compress,
     )
 
@@ -113,7 +118,7 @@ def convert_raw(
                     order=order,
                     flip_axes=flip_axes,
                 ),
-                wk_layer.bounding_box.chunk(chunk_shape=chunk_shape * chunks_per_shard),
+                wk_layer.bounding_box.chunk(chunk_shape=shard_shape),
             ),
             executor=executor,
         )
@@ -186,7 +191,7 @@ def main(
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
-    ] = "wkw",  # type:ignore
+    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
     chunk_shape: Annotated[
         Vec3Int,
         typer.Option(
@@ -196,15 +201,24 @@ def main(
             metavar="Vec3Int",
         ),
     ] = DEFAULT_CHUNK_SHAPE,
-    chunks_per_shard: Annotated[
-        Vec3Int,
+    shard_shape: Annotated[
+        Optional[Vec3Int],
         typer.Option(
-            help="Number of chunks to be stored as a shard in the output format "
+            help="Number of voxels to be stored as a shard in the output format "
+            "(e.g. `1024` or `1024,1024,1024`).",
+            parser=parse_vec3int,
+            metavar="Vec3Int",
+        ),
+    ] = None,
+    chunks_per_shard: Annotated[
+        Optional[Vec3Int],
+        typer.Option(
+            help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
             "(e.g. `32` or `32,32,32`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
-    ] = DEFAULT_CHUNKS_PER_SHARD,
+    ] = None,
     max_mag: Annotated[
         Optional[Mag],
         typer.Option(
@@ -261,6 +275,12 @@ def main(
 ) -> None:
     """Converts a RAW file into a WEBKNOSSOS dataset."""
 
+    shard_shape = prepare_shard_shape(
+        chunk_shape=chunk_shape,
+        shard_shape=shard_shape,
+        chunks_per_shard=chunks_per_shard,
+    )
+
     if flip_axes is not None:
         for index in flip_axes:
             assert (
@@ -287,7 +307,7 @@ def main(
         shape,
         data_format,
         chunk_shape,
-        chunks_per_shard,
+        shard_shape or DEFAULT_SHARD_SHAPE,
         order.value,
         voxel_size_with_unit,
         flip_axes,

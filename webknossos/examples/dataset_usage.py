@@ -22,7 +22,11 @@ def main() -> None:
 
     dataset = wk.Dataset("testoutput/my_new_dataset", voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
-        layer_name="color", category="color", dtype_per_channel="uint8", num_channels=3
+        layer_name="color",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=3,
+        bounding_box=wk.BoundingBox((10, 20, 30), (512, 512, 32)),
     )
     mag1 = layer.add_mag("1")
     mag2 = layer.add_mag("2")
@@ -37,11 +41,13 @@ def main() -> None:
         absolute_offset=(10, 20, 30),
         # assuming the layer has 3 channels:
         data=(np.random.rand(3, 512, 512, 32) * 255).astype(np.uint8),
+        allow_unaligned=True,
     )
 
     mag2.write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 256, 256, 16) * 255).astype(np.uint8),
+        allow_unaligned=True,
     )
 
     ##########################
@@ -61,8 +67,8 @@ def main() -> None:
 
     copy_of_dataset = dataset.copy_dataset(
         "testoutput/copy_of_dataset",
-        chunk_shape=8,
-        chunks_per_shard=8,
+        chunk_shape=(8, 8, 8),
+        shard_shape=(64, 64, 64),
         compress=True,
     )
     new_layer = dataset.add_layer(

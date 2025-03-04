@@ -3,12 +3,14 @@ set -eEuo pipefail
 
 source local_wk_setup.sh
 
+# Using forkserver instead of spawn is faster. Fork should never be used due to potential deadlock problems.
+export MULTIPROCESSING_DEFAULT_START_METHOD=forkserver
 
 # Note that pytest should be executed via `python -m`, since
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports
 # refer to the checked out (and potentially modified) code.
-PYTEST="uv run --all-extras --frozen python -m pytest --suppress-no-test-exit-code"
+PYTEST="uv run --all-extras --python ${PYTHON_VERSION:-3.13} -m pytest --suppress-no-test-exit-code -vv"
 
 # Within the tests folder is a binaryData folder of the local running webknossos instance. This folder is cleaned up before running the tests.
 # This find command gets all directories in binaryData/Organization_X except for the l4_sample and e2006_knossos directories and deletes them.

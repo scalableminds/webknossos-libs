@@ -12,6 +12,12 @@ Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), wh
 
 from .data_format import DataFormat
 from .dataset import Dataset, RemoteDataset
+from .defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
+    DEFAULT_DATA_FORMAT,
+    DEFAULT_SHARD_SHAPE,
+)
 from .layer import Layer, SegmentationLayer
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .length_unit import LengthUnit

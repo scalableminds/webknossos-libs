@@ -4,6 +4,5 @@ from .annotation import (
     AnnotationState,
     AnnotationType,
     SegmentInformation,
-    open_annotation,
 )
 from .annotation_info import AnnotationInfo

@@ -27,7 +27,7 @@ from typing_extensions import Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import is_fs_path, warn_deprecated
+from ..utils import is_fs_path
 from .data_format import DataFormat
 
 
@@ -50,11 +50,6 @@ class ArrayInfo:
     dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
     axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
     compression_mode: bool = False
-
-    @property
-    def shard_size(self) -> Vec3Int:
-        warn_deprecated("shard_size", "shard_shape")
-        return self.shard_shape
 
     @property
     def chunks_per_shard(self) -> Vec3Int:
@@ -435,7 +430,7 @@ class TensorStoreArray(BaseArray):
             parsed_url = urlparse(str(path))
             kvstore_spec: dict[str, Any] = {
                 "driver": "s3",
-                "path": parsed_url.path,
+                "path": parsed_url.path.lstrip("/"),
                 "bucket": parsed_url.netloc,
             }
             if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
@@ -560,14 +555,15 @@ class TensorStoreArray(BaseArray):
                 }
             ).result()
             if array.domain != current_array.domain:
-                warnings.warn(
-                    f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({array.domain} != {current_array.domain}) was found in the currently persisted metadata."
+                raise RuntimeError(
+                    f"While resizing the Zarr array at {self._path}, a differing shape ({array.domain} != {current_array.domain}) was found in the currently persisted metadata."
                     + "This is likely happening because multiple processes changed the metadata of this array."
                 )
 
             if warn:
                 warnings.warn(
-                    f"[WARNING] Resizing Zarr array from `{array.domain}` to `{new_domain}`."
+                    f"[INFO] Resizing Zarr array from `{array.domain}` to `{new_domain}`.",
+                    category=UserWarning,
                 )
 
             self._cached_array = array.resize(
@@ -582,9 +578,10 @@ class TensorStoreArray(BaseArray):
             # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
             data = data.reshape((1,) + data.shape)
 
-        assert data.ndim == len(bbox) + 1
+        assert (
+            data.ndim == len(bbox) + 1
+        ), "The data has to have the same number of dimensions as the bounding box."
 
-        self.ensure_size(bbox, warn=True)
         array = self._array
 
         requested_domain = tensorstore.IndexDomain(
@@ -855,7 +852,7 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.data_format == DataFormat.Zarr
         assert array_info.chunks_per_shard == Vec3Int.full(
             1
-        ), "Zarr2 storage doesn't support sharding yet"
+        ), "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]

@@ -6,6 +6,7 @@ from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
 import pytest
+from cluster_tools import get_executor
 from jsonschema import validate
 from upath import UPath
 
@@ -19,11 +20,11 @@ from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
-    SegmentationLayer,
     View,
 )
 from webknossos.dataset._array import DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
+from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
 from webknossos.dataset.properties import (
     DatasetProperties,
     DatasetViewConfiguration,
@@ -31,10 +32,9 @@ from webknossos.dataset.properties import (
     SegmentationLayerProperties,
     dataset_converter,
 )
-from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
-    get_executor_for_args,
     is_remote_path,
     named_partial,
     rmtree,
@@ -94,9 +94,9 @@ def default_chunk_config(
     data_format: DataFormat, chunk_shape: int = 32
 ) -> Tuple[Vec3Int, Vec3Int]:
     if data_format == DataFormat.Zarr:
-        return (Vec3Int.full(chunk_shape * 8), Vec3Int.full(1))
+        return (Vec3Int.full(chunk_shape * 8), Vec3Int.full(chunk_shape * 8))
     else:
-        return (Vec3Int.full(chunk_shape), Vec3Int.full(8))
+        return (Vec3Int.full(chunk_shape), Vec3Int.full(chunk_shape * 8))
 
 
 def advanced_chunk_job(args: Tuple[View, int]) -> None:
@@ -111,7 +111,7 @@ def advanced_chunk_job(args: Tuple[View, int]) -> None:
 
 
 def for_each_chunking_with_wrong_chunk_shape(view: View) -> None:
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
@@ -133,7 +133,7 @@ def for_each_chunking_with_wrong_chunk_shape(view: View) -> None:
 
 
 def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         view.for_each_chunk(
             advanced_chunk_job,
             executor=executor,
@@ -270,11 +270,11 @@ def test_ome_ngff_metadata(output_path: Path) -> None:
 
 
 def test_create_default_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
 
-    assert layer.data_format == DataFormat.WKW
+    assert layer.data_format == DataFormat.Zarr3
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)
@@ -287,20 +287,28 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     assert layer.data_format == data_format
     assert mag_view.info.chunk_shape.xyz == Vec3Int.full(32)
     if data_format == DataFormat.Zarr:
+        assert mag_view.info.shard_shape.xyz == Vec3Int.full(32)
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(1)
     else:
+        assert mag_view.info.shard_shape.xyz == Vec3Int.full(1024)
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
     assert mag_view.info.num_channels == 1
-    assert mag_view.info.compression_mode == False
+    assert mag_view.info.compression_mode == True
 
 
 def test_create_dataset_with_explicit_header_fields() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
 
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="uint48", num_channels=3)
+    ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel="uint16",
+        num_channels=3,
+        data_format=DataFormat.WKW,
+    )
 
-    ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
+    ds.get_layer("color").add_mag("1", chunk_shape=64, shard_shape=4096)
     ds.get_layer("color").add_mag("2-2-1")
 
     assert (ds_path / "color" / "1" / "header.wkw").exists()
@@ -312,6 +320,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
     assert ds.get_layer("color")._properties.element_class == "uint48"
     assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
+    assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(4096)
     assert ds.get_layer("color").get_mag(1).info.chunks_per_shard.xyz == Vec3Int.full(
         64
     )
@@ -319,12 +328,61 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz == Vec3Int.full(
         32
     )  # defaults are used
+    assert ds.get_layer("color").get_mag("2-2-1").info.shard_shape.xyz == Vec3Int.full(
+        1024
+    )  # defaults are used
     assert ds.get_layer("color").get_mag(
         "2-2-1"
     ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
     assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
     assure_exported_properties(ds)
+
+
+def test_deprecated_chunks_per_shard() -> None:
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        ds.add_layer(
+            "color",
+            COLOR_CATEGORY,
+            dtype_per_channel="uint16",
+            num_channels=3,
+            data_format=DataFormat.WKW,
+        )
+
+        ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
+        ds.get_layer("color").add_mag("2-2-1")
+
+        assert (ds_path / "color" / "1" / "header.wkw").exists()
+        assert (ds_path / "color" / "2-2-1" / "header.wkw").exists()
+
+        assert len(ds.layers) == 1
+        assert len(ds.get_layer("color").mags) == 2
+
+        assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
+        assert ds.get_layer("color")._properties.element_class == "uint48"
+        assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
+        assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(
+            4096
+        )
+        assert ds.get_layer("color").get_mag(
+            1
+        ).info.chunks_per_shard.xyz == Vec3Int.full(64)
+        assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.chunk_shape.xyz == Vec3Int.full(32)  # defaults are used
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.shard_shape.xyz == Vec3Int.full(1024)  # defaults are used
+        assert ds.get_layer("color").get_mag(
+            "2-2-1"
+        ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
+        assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
+
+        assure_exported_properties(ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -344,7 +402,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
     ds1.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer="float",
+        dtype_per_channel="float",
         num_channels=1,
         data_format=data_format,
     )
@@ -354,7 +412,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
     ds2.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        "uint8",
+        dtype_per_channel="uint8",
         largest_segment_id=100000,
         data_format=data_format,
     ).add_mag("1")
@@ -369,7 +427,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
 def test_view_read(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         wk_view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -386,7 +444,7 @@ def test_view_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         wk_view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -399,7 +457,7 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     np.random.seed(1234)
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
 
-    wk_view.write(write_data)
+    wk_view.write(write_data, allow_unaligned=True)
 
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert np.array_equal(data, write_data)
@@ -421,7 +479,7 @@ def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
 
     # write: wk, read: zarr
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data, absolute_offset=(0, 0, 0))
+    mag.write(write_data, absolute_offset=(0, 0, 0), allow_unaligned=True)
     data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10].read().result()
     assert np.array_equal(data, write_data)
 
@@ -432,7 +490,7 @@ def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) ->
         data_format, output_path, "view_dataset_out_of_bounds"
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         view = (
             Dataset.open(ds_path)
             .get_layer("color")
@@ -459,7 +517,7 @@ def test_mag_view_write_out_of_bounds(
 
     assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 24)
     mag_view.write(
-        np.zeros((3, 1, 1, 48), dtype=np.uint8)
+        np.zeros((3, 1, 1, 48), dtype=np.uint8), allow_resize=True, allow_unaligned=True
     )  # this is bigger than the bounding_box
     assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 48)
 
@@ -474,12 +532,15 @@ def test_mag_view_write_out_of_bounds_mag2(
 
     ds = Dataset.open(ds_path)
     color_layer = ds.get_layer("color")
-    mag_view = color_layer.get_or_add_mag("2-2-1")
+    mag_view = color_layer.get_or_add_mag("2-2-1", compress=False)
 
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
     assert color_layer.bounding_box.size == Vec3Int(24, 24, 24)
     mag_view.write(
-        np.zeros((3, 50, 1, 48), dtype=np.uint8), absolute_offset=(20, 20, 10)
+        np.zeros((3, 50, 1, 48), dtype=np.uint8),
+        absolute_offset=(20, 20, 10),
+        allow_resize=True,
+        allow_unaligned=True,
     )  # this is bigger than the bounding_box
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
     assert color_layer.bounding_box.size == Vec3Int(120, 24, 58)
@@ -488,22 +549,117 @@ def test_mag_view_write_out_of_bounds_mag2(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_view_write_allow_resize(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer("color", COLOR_CATEGORY)
+    mag = layer.add_mag("1")
+
+    np.random.seed(1234)
+    write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
+    # this should fail
+    with pytest.raises(
+        ValueError, match=".*does not fit in the layer's bounding box.*"
+    ):
+        mag.write(absolute_offset=(0, 0, 0), data=write_data)
+
+    # this should go through
+    mag.write(absolute_offset=(0, 0, 0), data=write_data, allow_resize=True)
+
+    assert layer.bounding_box == BoundingBox((0, 0, 0), (10, 10, 10))
+    data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)).squeeze(0)
+    np.testing.assert_array_equal(data, write_data)
+
+    # override with same bbox
+    mag.write(
+        absolute_offset=(0, 0, 0),
+        data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
+    )
+
+    # resize to larger bbox
+    mag.write(
+        absolute_offset=(10, 10, 10),
+        data=(np.random.rand(5, 5, 5) * 255).astype(np.uint8),
+        allow_resize=True,
+        allow_unaligned=True,
+    )
+    assert layer.bounding_box == BoundingBox((0, 0, 0), (15, 15, 15))
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_view_write_allow_unaligned(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
+        "color",
+        COLOR_CATEGORY,
+        bounding_box=BoundingBox((0, 0, 0), (32, 32, 32)),
+        data_format=data_format,
+    )
+    mag = layer.add_mag(
+        "1",
+        chunk_shape=(8, 8, 8),
+        shard_shape=(8, 8, 8) if data_format == DataFormat.Zarr else (16, 16, 16),
+    )
+
+    np.random.seed(1234)
+    write_data = (np.random.rand(4, 4, 4) * 255).astype(np.uint8)
+
+    # this should fail
+    with pytest.raises(ValueError, match=".*is not aligned with the shard shape.*"):
+        mag.write(absolute_offset=(0, 0, 0), data=write_data)
+
+    # this should go through
+    mag.write(absolute_offset=(0, 0, 0), data=write_data, allow_unaligned=True)
+
+    data = mag.read(absolute_offset=(0, 0, 0), size=(4, 4, 4)).squeeze(0)
+    np.testing.assert_array_equal(data, write_data)
+
+    # override a whole shard
+    mag.write(
+        absolute_offset=(16, 16, 16),
+        data=(np.random.rand(16, 16, 16) * 255).astype(np.uint8),
+    )
+
+    # override multiple shards
+    mag.write(
+        absolute_offset=(16, 16, 0),
+        data=(np.random.rand(16, 16, 32) * 255).astype(np.uint8),
+    )
+
+    # override the whole bbox
+    mag.write(
+        absolute_offset=(0, 0, 0),
+        data=(np.random.rand(32, 32, 32) * 255).astype(np.uint8),
+    )
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
     path_a = prepare_dataset_path(data_format, output_path / "a")
     path_b = prepare_dataset_path(data_format, output_path / "b")
     mag_a = (
         Dataset(path_a, voxel_size=(1, 1, 1))
-        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_layer(
+            "color",
+            COLOR_CATEGORY,
+            data_format=data_format,
+            bounding_box=BoundingBox((0, 0, 0), data.shape),
+        )
         .get_or_add_mag("1")
     )
     mag_b = (
         Dataset(path_b, voxel_size=(1, 1, 1))
-        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_layer(
+            "color",
+            COLOR_CATEGORY,
+            data_format=data_format,
+            bounding_box=BoundingBox((0, 0, 0), data.shape),
+        )
         .get_or_add_mag("1")
     )
-
-    np.random.seed(1234)
-    data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
 
     mag_a.write(data)
     mag_b.write(data)
@@ -521,20 +677,23 @@ def test_update_new_bounding_box_offset(
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
-    mag = color_layer.add_mag("1")
+    mag = color_layer.add_mag("1", compress=False)
 
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
 
     np.random.seed(1234)
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(
-        write_data, absolute_offset=(10, 10, 10)
+        write_data,
+        absolute_offset=(10, 10, 10),
+        allow_resize=True,
+        allow_unaligned=True,
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
     assert color_layer.bounding_box.topleft == Vec3Int(10, 10, 10)
     assert color_layer.bounding_box.size == Vec3Int(10, 10, 10)
 
     mag.write(
-        write_data, absolute_offset=(5, 5, 20)
+        write_data, absolute_offset=(5, 5, 20), allow_resize=True, allow_unaligned=True
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
     assert color_layer.bounding_box.topleft == Vec3Int(5, 5, 10)
     assert color_layer.bounding_box.size == Vec3Int(15, 15, 20)
@@ -546,8 +705,16 @@ def test_chunked_compressed_write() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     mag = (
         Dataset(ds_path, voxel_size=(1, 1, 1))
-        .get_or_add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
-        .get_or_add_mag("1", compress=True)
+        .get_or_add_layer(
+            "color",
+            COLOR_CATEGORY,
+            data_format=DataFormat.WKW,
+            bounding_box=BoundingBox(Vec3Int(1019, 1019, 1019), Vec3Int(10, 10, 10)),
+        )
+        .get_or_add_mag(
+            "1",
+            compress=True,
+        )
     )
 
     np.random.seed(1234)
@@ -575,7 +742,7 @@ def test_write_multi_channel_uint8(data_format: DataFormat, output_path: Path) -
 
     data = get_multichanneled_data(np.uint8)
 
-    mag.write(data)
+    mag.write(data, allow_resize=True)
 
     assert np.array_equal(data, mag.read())
 
@@ -592,13 +759,13 @@ def test_wkw_write_multi_channel_uint16(
         "color",
         COLOR_CATEGORY,
         num_channels=3,
-        dtype_per_layer="uint48",
+        dtype_per_channel="uint16",
         data_format=data_format,
     ).add_mag("1")
 
     data = get_multichanneled_data(np.uint16)
 
-    mag.write(data)
+    mag.write(data, allow_resize=True)
     written_data = mag.read()
 
     assert np.array_equal(data, written_data)
@@ -617,6 +784,91 @@ def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
     with pytest.raises(AssertionError):
         # size
         mag.read(absolute_offset=(0, 0, 0), size=(0, 0, 0))
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+@pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
+def test_write_layer(
+    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(128, 128, 128) * 255).astype(np.uint8)
+    layer = ds.write_layer(
+        "color",
+        category=COLOR_CATEGORY,
+        data=data,
+        data_format=data_format,
+        absolute_offset=absolute_offset,
+    )
+
+    np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
+    if absolute_offset is not None:
+        assert layer.bounding_box.topleft_xyz == absolute_offset
+    assert layer.bounding_box.size_xyz == Vec3Int(data.shape)
+    assert Mag(2) in layer.mags  # did downsample
+    assert Mag(4) in layer.mags  # did downsample
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+@pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
+def test_write_layer_mag2(
+    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
+    ds = Dataset(ds_path, voxel_size=(12, 12, 24))
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(128, 128, 128) * 255).astype(np.uint8)
+    layer = ds.write_layer(
+        "color",
+        category=COLOR_CATEGORY,
+        data=data,
+        data_format=data_format,
+        absolute_offset=absolute_offset,
+        mag=(2, 2, 1),
+    )
+
+    np.testing.assert_array_equal(layer.get_mag((2, 2, 1)).read().squeeze(), data)
+    if absolute_offset is not None:
+        assert layer.bounding_box.topleft_xyz == absolute_offset  # in mag1
+    assert layer.bounding_box.size_xyz == Vec3Int(data.shape) * Vec3Int(
+        2, 2, 1
+    )  # in mag1
+    assert Mag((4, 4, 2)) in layer.mags  # did downsample
+
+
+@pytest.mark.parametrize(
+    "data_format,output_path",
+    [(DataFormat.Zarr3, TESTOUTPUT_DIR), (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR)],
+)
+@pytest.mark.parametrize("absolute_offset", [None, (3, 12, 12, 12)])
+def test_write_layer_5d(
+    data_format: DataFormat,
+    output_path: Path,
+    absolute_offset: Optional[VecIntLike],
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(3, 2, 128, 128, 128) * 255).astype(np.uint8)
+    layer = ds.write_layer(
+        "color",
+        category=COLOR_CATEGORY,
+        data=data,
+        data_format=data_format,
+        axes=("c", "t", "x", "y", "z"),
+        shard_shape=(128, 128, 128),
+        absolute_offset=absolute_offset,
+    )
+
+    np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
+    if absolute_offset is not None:
+        assert layer.bounding_box.topleft.to_tuple() == absolute_offset
+    assert layer.bounding_box.size.to_tuple() == data.shape[1:]
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -650,7 +902,9 @@ def test_num_channel_mismatch_assertion(
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)  # 3 channels
 
     with pytest.raises(AssertionError):
-        mag.write(write_data)  # there is a mismatch between the number of channels
+        mag.write(
+            write_data, allow_resize=True
+        )  # there is a mismatch between the number of channels
 
     assure_exported_properties(ds)
 
@@ -666,7 +920,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_layer="uint8",
+        dtype_per_channel="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -678,7 +932,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_layer="uint8",
+        dtype_per_channel="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -687,11 +941,11 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
     assert layer.data_format == data_format
 
     with pytest.raises(AssertionError):
-        # The layer "color" did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
+        # The layer "color" did exist before but with another dtype (this would work the same for 'category' and 'num_channels')
         ds.get_or_add_layer(
             "color",
             COLOR_CATEGORY,
-            dtype_per_layer="uint16",
+            dtype_per_channel="uint16",
             num_channels=1,
             data_format=data_format,
         )
@@ -725,14 +979,14 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
 
     assert Mag(1) not in layer.mags.keys()
 
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 32)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 32)
 
     # The mag did not exist before
     mag = layer.get_or_add_mag(
         "1",
         chunk_shape=chunk_shape,
-        chunks_per_shard=chunks_per_shard,
-        compress=False,
+        shard_shape=shard_shape,
+        compress=True,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
@@ -742,20 +996,20 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
     layer.get_or_add_mag(
         "1",
         chunk_shape=chunk_shape,
-        chunks_per_shard=chunks_per_shard,
-        compress=False,
+        shard_shape=shard_shape,
+        compress=True,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
     assert mag.info.data_format == data_format
 
     with pytest.raises(ValueError):
-        # The mag "1" did exist before but with another 'chunk_shape' (this would work the same for 'chunks_per_shard' and 'compress')
+        # The mag "1" did exist before but with another 'chunk_shape' (this would work the same for 'shard_shape' and 'compress')
         layer.get_or_add_mag(
             "1",
             chunk_shape=Vec3Int.full(64),
-            chunks_per_shard=chunks_per_shard,
-            compress=False,
+            shard_shape=shard_shape,
+            compress=True,
         )
 
     assure_exported_properties(layer.dataset)
@@ -795,7 +1049,7 @@ def test_no_largest_segment_id() -> None:
     ds = Dataset.open(ds_path)
 
     assert (
-        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id is None
+        ds.get_layer("segmentation").as_segmentation_layer().largest_segment_id is None
     )
 
     assure_exported_properties(ds)
@@ -861,21 +1115,20 @@ def test_properties_with_segmentation() -> None:
 def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
-    shard_shape = chunk_shape * chunks_per_shard
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(
         "1",
-        chunks_per_shard=chunks_per_shard,
+        shard_shape=shard_shape,
         chunk_shape=chunk_shape,
     )
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
-    mag.write(absolute_offset=(70, 80, 90), data=original_data)
+    mag.write(absolute_offset=(70, 80, 90), data=original_data, allow_resize=True)
 
     # Test with executor
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         mag.for_each_chunk(
             chunk_job,
             chunk_shape=shard_shape,
@@ -884,7 +1137,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
     # Reset the data
-    mag.write(absolute_offset=(70, 80, 90), data=original_data)
+    mag.write(absolute_offset=(70, 80, 90), data=original_data, allow_resize=True)
 
     # Test without executor
     mag.for_each_chunk(
@@ -909,10 +1162,13 @@ def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
     ).add_mag(
         "1",
         chunk_shape=8,
-        chunks_per_shard=8,
+        shard_shape=64,
     )
-    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
-    with pytest.warns(UserWarning, match="block alignment"):
+    mag.write(
+        data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
         for_each_chunking_advanced(ds, view)
 
@@ -927,7 +1183,7 @@ def test_chunking_wkw_wrong_chunk_shape(
         data_format, output_path, "chunking_with_wrong_chunk_shape"
     )
     ds = Dataset(ds_path, voxel_size=(1, 1, 2))
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
@@ -937,9 +1193,12 @@ def test_chunking_wkw_wrong_chunk_shape(
     ).add_mag(
         "1",
         chunk_shape=chunk_shape,
-        chunks_per_shard=chunks_per_shard,
+        shard_shape=shard_shape,
     )
-    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
+    mag.write(
+        data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
     view = mag.get_view()
 
     for_each_chunking_with_wrong_chunk_shape(view)
@@ -1104,7 +1363,7 @@ def test_get_view() -> None:
     np.random.seed(1234)
     write_data = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     # This operation updates the bounding box of the dataset according to the written data
-    mag.write(write_data, absolute_offset=(10, 20, 30))
+    mag.write(write_data, absolute_offset=(10, 20, 30), allow_resize=True)
 
     with pytest.raises(AssertionError):
         # The offset and size default to (0, 0, 0).
@@ -1113,7 +1372,7 @@ def test_get_view() -> None:
 
     assert mag.bounding_box.bottomright == Vec3Int(110, 220, 330)
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         # Therefore, creating a view with a size of (16, 16, 16) is now allowed
         wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
     assert wk_view.bounding_box == BoundingBox((10, 20, 30), (16, 16, 16))
@@ -1126,7 +1385,7 @@ def test_get_view() -> None:
     # But setting "read_only=True" still works
     mag.get_view(size=(26, 36, 46), absolute_offset=(0, 0, 0), read_only=True)
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         # Creating this subview works because the subview is completely inside the 'wk_view'.
         # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
         sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
@@ -1147,101 +1406,107 @@ def test_get_view() -> None:
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    with pytest.raises(TypeError):
-        # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        with pytest.raises(TypeError):
+            # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+            ds.add_layer(
+                "color",
+                COLOR_CATEGORY,
+                dtype_per_layer="uint30",
+                num_channels=3,
+            )
+        with pytest.raises(TypeError):
+            # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
+            ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=3)
         ds.add_layer(
-            "color",
-            COLOR_CATEGORY,
-            dtype_per_layer="uint30",
-            num_channels=3,
-        )
-    with pytest.raises(TypeError):
-        # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
-        ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=3)
-    ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=4
-    )  # "int"/"int64" works with 4 channels
+            "color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=4
+        )  # "int"/"int64" works with 4 channels
 
-    assure_exported_properties(ds)
+        assure_exported_properties(ds)
 
 
 def test_adding_layer_with_valid_dtype_per_layer() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
-    ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
-    ds.add_layer("color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3)
-    ds.add_layer("color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3)
-    ds.add_layer(
-        "seg1",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="float",
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg2",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel=float,
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg3",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel=float,
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg4",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="double",
-        num_channels=1,
-        largest_segment_id=100000,
-    )
-    ds.add_layer(
-        "seg5",
-        SEGMENTATION_CATEGORY,
-        dtype_per_channel="float",
-        num_channels=3,
-        largest_segment_id=100000,
-    )
+    with pytest.warns(DeprecationWarning):
+        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
+        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+        ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
+        ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
+        ds.add_layer(
+            "color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3
+        )
+        ds.add_layer(
+            "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
+        )
+        ds.add_layer(
+            "seg1",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="float",
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg2",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=float,
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg3",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=float,
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg4",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="double",
+            num_channels=1,
+            largest_segment_id=100000,
+        )
+        ds.add_layer(
+            "seg5",
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel="float",
+            num_channels=3,
+            largest_segment_id=100000,
+        )
 
-    with open(
-        ds_path / "datasource-properties.json",
-        "r",
-        encoding="utf-8",
-    ) as f:
-        data = json.load(f)
-        # The order of the layers in the properties equals the order of creation
-        assert data["dataLayers"][0]["elementClass"] == "uint24"
-        assert data["dataLayers"][1]["elementClass"] == "uint8"
-        assert data["dataLayers"][2]["elementClass"] == "uint24"
-        assert data["dataLayers"][3]["elementClass"] == "uint24"
-        assert data["dataLayers"][4]["elementClass"] == "float"
-        assert data["dataLayers"][5]["elementClass"] == "float"
-        assert data["dataLayers"][6]["elementClass"] == "float"
-        assert data["dataLayers"][7]["elementClass"] == "double"
-        assert data["dataLayers"][8]["elementClass"] == "float96"
+        with open(
+            ds_path / "datasource-properties.json",
+            "r",
+            encoding="utf-8",
+        ) as f:
+            data = json.load(f)
+            # The order of the layers in the properties equals the order of creation
+            assert data["dataLayers"][0]["elementClass"] == "uint24"
+            assert data["dataLayers"][1]["elementClass"] == "uint8"
+            assert data["dataLayers"][2]["elementClass"] == "uint24"
+            assert data["dataLayers"][3]["elementClass"] == "uint24"
+            assert data["dataLayers"][4]["elementClass"] == "float"
+            assert data["dataLayers"][5]["elementClass"] == "float"
+            assert data["dataLayers"][6]["elementClass"] == "float"
+            assert data["dataLayers"][7]["elementClass"] == "double"
+            assert data["dataLayers"][8]["elementClass"] == "float96"
 
-    reopened_ds = Dataset.open(
-        ds_path
-    )  # reopen the dataset to check if the data is read from the properties correctly
-    assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
-    assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
-    assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
-    assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
-    # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-    assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
-    assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
-    assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
+        reopened_ds = Dataset.open(
+            ds_path
+        )  # reopen the dataset to check if the data is read from the properties correctly
+        assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
+        assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
+        assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
+        assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
+        # Note that 'float' and 'double' are stored as 'float32' and 'float64'
+        assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
+        assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
+        assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
 
-    assure_exported_properties(ds)
+        assure_exported_properties(ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1249,7 +1514,7 @@ def test_writing_subset_of_compressed_data_multi_channel(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
@@ -1259,22 +1524,25 @@ def test_writing_subset_of_compressed_data_multi_channel(
         .add_mag(
             "1",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
-    mag_view.write(write_data1)
+    mag_view.write(write_data1, allow_resize=True, allow_unaligned=True)
 
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-        compressed_mag.get_view(relative_offset=(50, 60, 70), size=(50, 60, 70)).write(
-            relative_offset=(10, 20, 30), data=write_data2
-        )
+    write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    # Writing unaligned data to a compressed dataset works because the data gets
+    # padded, but it requires an explicit allow_unaligned=True flag
+    # Writing compressed data directly to "compressed_mag" also works, but using a
+    # View here covers an additional edge case
+    with pytest.warns(UserWarning):
+        view = compressed_mag.get_view(relative_offset=(50, 60, 70), size=(50, 60, 70))
+    with pytest.raises(ValueError):
+        view.write(relative_offset=(10, 20, 30), data=write_data2)
+    view.write(relative_offset=(10, 20, 30), data=write_data2, allow_unaligned=True)
 
     assert np.array_equal(
         write_data2,
@@ -1291,7 +1559,7 @@ def test_writing_subset_of_compressed_data_single_channel(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
@@ -1301,22 +1569,26 @@ def test_writing_subset_of_compressed_data_single_channel(
         .add_mag(
             "1",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
-    mag_view.write(write_data1)
+    mag_view.write(write_data1, allow_resize=True)
 
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-        compressed_mag.get_view(absolute_offset=(50, 60, 70), size=(50, 60, 70)).write(
-            relative_offset=(10, 20, 30), data=write_data2
-        )
+    write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
+    # Writing unaligned data to a compressed dataset works because the data gets
+    # padded, but it requires an explicit allow_unaligned=True flag
+    # Writing compressed data directly to "compressed_mag" also works, but using a
+    # View here covers an additional edge case
+    with pytest.warns(UserWarning):
+        view = compressed_mag.get_view(absolute_offset=(50, 60, 70), size=(50, 60, 70))
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
+        view.write(relative_offset=(10, 20, 30), data=write_data2)
+    view.write(relative_offset=(10, 20, 30), data=write_data2, allow_unaligned=True)
 
     assert np.array_equal(
         write_data2,
@@ -1333,7 +1605,7 @@ def test_writing_subset_of_compressed_data(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     mag_view = (
@@ -1342,49 +1614,52 @@ def test_writing_subset_of_compressed_data(
         .add_mag(
             "2",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
-    mag_view.write((np.random.rand(120, 140, 160) * 255).astype(np.uint8))
+    mag_view.write(
+        (np.random.rand(120, 140, 160) * 255).astype(np.uint8), allow_resize=True
+    )
 
     # open compressed dataset
     compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         compressed_mag.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         compressed_mag.write(
             relative_offset=(20, 40, 60),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
-        assert compressed_mag.bounding_box == BoundingBox(
-            topleft=(
-                0,
-                0,
-                0,
-            ),
-            size=(120 * 2, 140 * 2, 160 * 2),
-        )
-        # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
-        # This write operation writes unaligned data into the bottom-right corner of the MagView.
-        compressed_mag.write(
-            absolute_offset=(128, 128, 128),
-            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
-        )
-        # This also works for normal Views but they only use the bounding box at the time of creation as reference.
-        compressed_mag.get_view().write(
-            absolute_offset=(128, 128, 128),
-            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
-        )
+    assert compressed_mag.bounding_box == BoundingBox(
+        topleft=(
+            0,
+            0,
+            0,
+        ),
+        size=(120 * 2, 140 * 2, 160 * 2),
+    )
+    # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
+    # This write operation writes unaligned data into the bottom-right corner of the MagView.
+    compressed_mag.write(
+        absolute_offset=(128, 128, 128),
+        data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+    )
 
-        # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
-        compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
+    # This also works for normal Views but they only use the bounding box at the time of creation as reference.
+    compressed_mag.get_view().write(
+        absolute_offset=(128, 128, 128),
+        data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+    )
+
+    # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
+    compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1392,21 +1667,21 @@ def test_writing_subset_of_chunked_compressed_data(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
 
-    # create uncompressed dataset
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
     mag_view = (
         Dataset(ds_path, voxel_size=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, data_format=data_format)
         .add_mag(
             "1",
             chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
+            shard_shape=shard_shape,
             compress=True,
         )
     )
-    mag_view.write(write_data1)
+    mag_view.write(write_data1, allow_resize=True, allow_unaligned=True)
 
     # open compressed dataset
     compressed_view = (
@@ -1416,18 +1691,26 @@ def test_writing_subset_of_chunked_compressed_data(
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
-        write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
         compressed_view.write(absolute_offset=(10, 20, 30), data=write_data2)
+    compressed_view.write(
+        absolute_offset=(10, 20, 30), data=write_data2, allow_unaligned=True
+    )
 
+    with pytest.raises(ValueError, match=".*not aligned with the shard shape.*"):
         # Advanced case:
         # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
         compressed_view.write(
             absolute_offset=(10, 20, 30),
             data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
         )
+    compressed_view.write(
+        absolute_offset=(10, 20, 30),
+        data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
+        allow_unaligned=True,
+    )
 
     np.array_equal(
         write_data2,
@@ -1464,11 +1747,11 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
     assert len(ds.layers) == 2
     assert len(ds.get_layer("color").mags) == 1
 
-    assert cast(SegmentationLayer, symlink_segmentation_layer).largest_segment_id == 999
+    assert symlink_segmentation_layer.as_segmentation_layer().largest_segment_id == 999
 
     # write data in symlink layer
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data)
+    mag.write(write_data, allow_unaligned=True)
 
     assert np.array_equal(
         mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data
@@ -1487,7 +1770,10 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
 
     original_ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     original_layer = original_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8"
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel="uint8",
+        bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
     )
     original_layer.add_mag(1).write(
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
@@ -1495,10 +1781,15 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     original_mag_2 = original_layer.add_mag(2)
     original_mag_2.write(data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8))
     original_mag_4 = original_layer.add_mag(4)
-    original_mag_4.write(data=(np.random.rand(2, 5, 7) * 255).astype(np.uint8))
+    original_mag_4.write(data=(np.random.rand(3, 5, 8) * 255).astype(np.uint8))
 
     ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
-    layer = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel="uint8")
+    layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel="uint8",
+        bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
+    )
     layer.add_mag(1).write(
         absolute_offset=(6, 6, 6),
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8),
@@ -1520,7 +1811,9 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     # Note: The written data is fully inside the bounding box of the original data.
     # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
     write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    symlink_mag_2.write(absolute_offset=(0, 0, 0), data=write_data)
+    symlink_mag_2.write(
+        absolute_offset=(0, 0, 0), data=write_data, allow_unaligned=True
+    )
 
     assert np.array_equal(
         symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data
@@ -1575,7 +1868,11 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
     original_ds = Dataset(original_ds_path, voxel_size=(1, 1, 1))
     original_layer = original_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel="uint8",
+        data_format=data_format,
+        bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
     )
     original_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     original_mag = original_layer.add_mag(1)
@@ -1595,7 +1892,12 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
     # Write new data in copied layer
     new_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    copy_mag.write(absolute_offset=(0, 0, 0), data=new_data)
+    copy_mag.write(
+        absolute_offset=(0, 0, 0),
+        data=new_data,
+        allow_resize=True,
+        allow_unaligned=True,
+    )
 
     assert np.array_equal(
         copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
@@ -1613,7 +1915,11 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
     original_ds = Dataset(original_ds_path, voxel_size=(1, 1, 1))
     original_layer = original_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel="uint8",
+        data_format=data_format,
+        bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
     )
     original_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     original_mag = original_layer.add_mag(1)
@@ -1633,7 +1939,12 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
     # Write new data in copied layer
     new_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    copy_mag.write(absolute_offset=(0, 0, 0), data=new_data)
+    copy_mag.write(
+        absolute_offset=(0, 0, 0),
+        data=new_data,
+        allow_resize=True,
+        allow_unaligned=True,
+    )
 
     assert np.array_equal(
         copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
@@ -1660,7 +1971,7 @@ def test_search_dataset_also_for_long_layer_name(
     assert not long_mag_file_path.exists()
 
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data, absolute_offset=(20, 20, 20))
+    mag.write(write_data, absolute_offset=(20, 20, 20), allow_resize=True)
 
     assert np.array_equal(
         mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)),
@@ -1687,16 +1998,6 @@ def test_search_dataset_also_for_long_layer_name(
     assure_exported_properties(layer.dataset)
 
 
-def test_outdated_dtype_parameter() -> None:
-    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "outdated_dtype")
-    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    with pytest.raises(ValueError):
-        ds.get_or_add_layer("color", COLOR_CATEGORY, dtype=np.uint8, num_channels=1)
-
-    with pytest.raises(ValueError):
-        ds.add_layer("color", COLOR_CATEGORY, dtype=np.uint8, num_channels=1)
-
-
 @pytest.mark.parametrize("make_relative", [True, False])
 @pytest.mark.parametrize(
     "data_format", DATA_FORMATS
@@ -1711,7 +2012,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_1 = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_layer=np.uint8,
+        dtype_per_channel=np.uint8,
         num_channels=1,
         data_format=data_format,
     )
@@ -1720,7 +2021,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_2 = ds.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        dtype_per_layer=np.uint32,
+        dtype_per_channel=np.uint32,
         largest_segment_id=0,
         data_format=data_format,
     )
@@ -1762,29 +2063,33 @@ def test_dataset_conversion_wkw_only() -> None:
         largest_segment_id=1000000000,
     )
     seg_layer.add_mag(
-        "1", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "1", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     seg_layer.add_mag(
-        "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "2", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     wk_color_layer = origin_ds.add_layer("layer2", COLOR_CATEGORY, num_channels=3)
     wk_color_layer.add_mag(
-        "1", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "1", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     wk_color_layer.add_mag(
-        "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "2", chunk_shape=Vec3Int.full(8), shard_shape=Vec3Int.full(128)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     converted_ds = origin_ds.copy_dataset(converted_path)
 
@@ -1819,8 +2124,11 @@ def test_dataset_conversion_from_wkw_to_zarr(
     converted_path = prepare_dataset_path(data_format, output_path, "converted")
 
     input_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+    print(input_ds.get_layer("color").get_mag("1").info.chunk_shape)
     converted_ds = input_ds.copy_dataset(
-        converted_path, data_format=data_format, chunks_per_shard=1
+        converted_path,
+        data_format=data_format,
+        shard_shape=8 if data_format == DataFormat.Zarr else 32,
     )
 
     if data_format == DataFormat.Zarr:
@@ -1856,7 +2164,10 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         num_channels=3,
         data_format=data_format,
     ).add_mag("1")
-    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
+    mag.write(
+        data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
     source_view = mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
 
     target_mag = (
@@ -1871,14 +2182,14 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         .get_or_add_mag(
             "1",
             chunk_shape=Vec3Int.full(8),
-            chunks_per_shard=(4 if data_format == DataFormat.WKW else 1),
+            shard_shape=(32 if data_format != DataFormat.Zarr else 8),
         )
     )
 
     target_mag.layer.bounding_box = BoundingBox((0, 0, 0), (256, 256, 256))
     target_view = target_mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
 
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         func = named_partial(
             copy_and_transform_job, name="foo", val=42
         )  # curry the function with further arguments
@@ -1909,7 +2220,7 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     ds_path = prepare_dataset_path(
         data_format, output_path, "zipped_chunking_source_invalid"
     )
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
     test_cases_wk = [
         (10, 20, 30),
         (64, 64, 100),
@@ -1920,12 +2231,12 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer1 = ds.get_or_add_layer("color1", COLOR_CATEGORY, data_format=data_format)
     source_mag_view = layer1.get_or_add_mag(
-        1, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
+        1, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
     layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY, data_format=data_format)
     target_mag_view = layer2.get_or_add_mag(
-        1, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
+        1, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
     source_view = source_mag_view.get_view(
@@ -1934,7 +2245,7 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     layer2.bounding_box = BoundingBox((0, 0, 0), (300, 300, 300))
     target_view = target_mag_view.get_view()
 
-    with get_executor_for_args(None) as executor:
+    with get_executor("sequential") as executor:
         for test_case in test_cases_wk:
             with pytest.raises(AssertionError):
                 source_view.for_zipped_chunks(
@@ -1958,15 +2269,17 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
     mag.write(
         data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8),
         absolute_offset=(10, 20, 30),
+        allow_resize=True,
+        allow_unaligned=True,
     )
     v_write = mag.get_view()
     v_read = mag.get_view(read_only=True)
 
     new_data = (np.random.rand(1, 5, 6, 7) * 255).astype(np.uint8)
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         v_read.write(data=new_data)
 
-    v_write.write(data=new_data)
+    v_write.write(data=new_data, allow_unaligned=True)
 
     assure_exported_properties(ds)
 
@@ -1975,9 +2288,9 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
 def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
-    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, shard_shape = default_chunk_config(data_format, 8)
     mag = ds.add_layer("color", category="color", data_format=data_format).add_mag(
-        "2-2-1", chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
+        "2-2-1", chunk_shape=chunk_shape, shard_shape=shard_shape
     )  # cube_size = 8*8 = 64
 
     write_positions = [
@@ -1988,7 +2301,12 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
     data_size = Vec3Int(10, 20, 30)
     write_data = (np.random.rand(*data_size) * 255).astype(np.uint8)
     for offset in write_positions:
-        mag.write(absolute_offset=offset * mag.mag.to_vec3_int(), data=write_data)
+        mag.write(
+            absolute_offset=offset * mag.mag.to_vec3_int(),
+            data=write_data,
+            allow_resize=True,
+            allow_unaligned=True,
+        )
 
     if is_remote_path(output_path):
         with pytest.warns(UserWarning, match=".*can be slow.*"):
@@ -2035,12 +2353,15 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_compression(data_format: DataFormat, output_path: Path) -> None:
-    new_dataset_path = copy_simple_dataset(data_format, output_path)
-    mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
+    new_dataset_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(new_dataset_path, voxel_size=(2, 2, 1))
+    mag1 = ds.add_layer(
+        "color", COLOR_CATEGORY, num_channels=3, data_format=data_format
+    ).add_mag(1, compress=False)
 
     # writing unaligned data to an uncompressed dataset
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
-    mag1.write(write_data, absolute_offset=(60, 80, 100))
+    mag1.write(write_data, absolute_offset=(60, 80, 100), allow_resize=True)
 
     assert not mag1._is_compressed()
 
@@ -2067,11 +2388,10 @@ def test_compression(data_format: DataFormat, output_path: Path) -> None:
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
     )
 
-    with pytest.warns(UserWarning, match="block alignment"):
-        # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
-        mag1.write(
-            (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
-        )
+    # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+    mag1.write(
+        (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+    )
 
     assure_exported_properties(mag1.layer.dataset)
 
@@ -2206,10 +2526,9 @@ def test_get_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
-    segmentation_layer = cast(
-        SegmentationLayer,
-        ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999),
-    )
+    segmentation_layer = ds.add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    ).as_segmentation_layer()
     assert segmentation_layer.largest_segment_id == 999
     segmentation_layer.largest_segment_id = 123
     assert segmentation_layer.largest_segment_id == 123
@@ -2221,16 +2540,15 @@ def test_refresh_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
-    segmentation_layer = cast(
-        SegmentationLayer,
-        ds.add_layer("segmentation", SEGMENTATION_CATEGORY),
-    )
+    segmentation_layer = ds.add_layer(
+        "segmentation", SEGMENTATION_CATEGORY
+    ).as_segmentation_layer()
     mag = segmentation_layer.add_mag(Mag(1))
 
     assert segmentation_layer.largest_segment_id is None
 
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    mag.write(data=write_data)
+    mag.write(data=write_data, allow_resize=True)
 
     segmentation_layer.refresh_largest_segment_id()
 
@@ -2284,6 +2602,7 @@ def test_read_bbox() -> None:
     mag.write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(50, 60, 70) * 255).astype(np.uint8),
+        allow_resize=True,
     )
 
     assert np.array_equal(
@@ -2309,6 +2628,7 @@ def test_add_copy_layer(data_format: DataFormat, output_path: Path) -> None:
     original_color_layer.add_mag(1).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     other_ds.add_layer(
         "segmentation",
@@ -2322,8 +2642,9 @@ def test_add_copy_layer(data_format: DataFormat, output_path: Path) -> None:
     ds.add_copy_layer(copy_path / "segmentation")
     assert len(ds.layers) == 2
     assert (
-        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id == 999
+        ds.get_layer("segmentation").as_segmentation_layer().largest_segment_id == 999
     )
+
     color_layer = ds.get_layer("color")
     assert color_layer.bounding_box == BoundingBox(
         topleft=(10, 20, 30), size=(32, 64, 128)
@@ -2354,7 +2675,7 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(1)
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    mag.write(data=write_data)
+    mag.write(data=write_data, allow_resize=True)
 
     if output_path == REMOTE_TESTOUTPUT_DIR:
         # Cannot rename layers on remote storage
@@ -2447,26 +2768,23 @@ def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
     color_layer1 = ds.add_layer(
         "color1",
         COLOR_CATEGORY,
-        dtype_per_layer="uint24",
+        dtype_per_channel="uint8",
         num_channels=3,
         data_format=data_format,
     )
     color_layer1.add_mag(1)
-    segmentation_layer1 = cast(
-        SegmentationLayer,
-        ds.add_layer(
-            "segmentation1",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="uint8",
-            largest_segment_id=999,
-            data_format=data_format,
-        ),
-    )
+    segmentation_layer1 = ds.add_layer(
+        "segmentation1",
+        SEGMENTATION_CATEGORY,
+        dtype_per_channel="uint8",
+        largest_segment_id=999,
+        data_format=data_format,
+    ).as_segmentation_layer()
     segmentation_layer1.add_mag(1)
     color_layer2 = ds.add_layer_like(color_layer1, "color2")
-    segmentation_layer2 = cast(
-        SegmentationLayer, ds.add_layer_like(segmentation_layer1, "segmentation2")
-    )
+    segmentation_layer2 = ds.add_layer_like(
+        segmentation_layer1, "segmentation2"
+    ).as_segmentation_layer()
 
     assert color_layer1.name == "color1"
     assert color_layer2.name == "color2"
@@ -2516,7 +2834,7 @@ def test_pickle_view() -> None:
     mag1 = ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
 
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
-    mag1.write(data_to_write)
+    mag1.write(data_to_write, allow_resize=True)
     assert mag1._cached_array is not None
 
     with (ds_path / "save.p").open("wb") as f_write:
@@ -2568,13 +2886,15 @@ def test_can_compress_mag8() -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     layer.bounding_box = BoundingBox((0, 0, 0), (12240, 12240, 685))
     for mag in ["1", "2-2-1", "4-4-1", "8-8-2"]:
-        layer.add_mag(mag)
+        layer.add_mag(mag, compress=False)
 
     assert layer.bounding_box == BoundingBox((0, 0, 0), (12240, 12240, 685))
 
     mag_view = layer.get_mag("8-8-2")
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
-    mag_view.write(data_to_write, absolute_offset=(11264, 11264, 0))
+    mag_view.write(
+        data_to_write, absolute_offset=(11264, 11264, 0), allow_unaligned=True
+    )
     mag_view.compress()
 
 
@@ -2615,17 +2935,18 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
         data_format=input_layer.data_format,
     )
 
-    chunks_per_shard = None
+    shard_shape = None
     if data_format == DataFormat.Zarr3:
         # Writing compressed zarr with large shard shape is slow
         # compare https://github.com/scalableminds/webknossos-libs/issues/964
-        chunks_per_shard = (4, 4, 4)
+        shard_shape = (128, 128, 128)
 
-    test_mag = test_layer.add_mag("1", chunks_per_shard=chunks_per_shard)
+    test_mag = test_layer.add_mag("1", shard_shape=shard_shape)
     test_mag.write(
         absolute_offset=(0, 0, 0),
         # assuming the layer has 3 channels:
         data=(np.random.rand(3, 24, 24, 24) * 255).astype(np.uint8),
+        allow_resize=True,
     )
     test_layer.downsample(coarsest_mag=Mag(2))
 
@@ -2652,14 +2973,14 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     input_dataset = Dataset.open(ds_path)
     input_layer = input_dataset.get_layer("color")
 
-    chunks_per_shard = None
+    shard_shape = None
     if data_format == DataFormat.Zarr3:
         # Writing compressed zarr with large shard shape is slow
         # compare https://github.com/scalableminds/webknossos-libs/issues/964
-        chunks_per_shard = (4, 4, 4)
+        shard_shape = (128, 128, 128)
 
     # Adding additional mags to the input dataset for testing
-    input_layer.add_mag("2-2-1", chunks_per_shard=chunks_per_shard)
+    input_layer.add_mag("2-2-1", shard_shape=shard_shape)
     input_layer.redownsample()
     assert len(input_layer.mags) == 2
     # Use the mag with the best resolution
@@ -2676,12 +2997,10 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
         data_format=input_layer.data_format,
     )
     # Create the same mag in the new output dataset
-    output_mag = output_layer.add_mag(
-        finest_input_mag.mag, chunks_per_shard=chunks_per_shard
-    )
+    output_mag = output_layer.add_mag(finest_input_mag.mag, shard_shape=shard_shape)
     # Copying some data into the output dataset
     input_data = finest_input_mag.read(absolute_offset=(0, 0, 0), size=(24, 24, 24))
-    output_mag.write(absolute_offset=(0, 0, 0), data=input_data)
+    output_mag.write(absolute_offset=(0, 0, 0), data=input_data, allow_resize=True)
     # Downsampling the layer to the magnification used in the input dataset
     output_layer.downsample(
         from_mag=output_mag.mag,
@@ -2716,7 +3035,7 @@ def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
     ds_path = prepare_dataset_path(data_format, REMOTE_TESTOUTPUT_DIR, "copied")
     Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
         ds_path,
-        chunks_per_shard=1,
+        shard_shape=32,
         data_format=data_format,
     )
     if data_format == DataFormat.Zarr:
@@ -2731,14 +3050,24 @@ def test_wkw_copy_to_remote_dataset() -> None:
 
     # Fails with explicit data_format=wkw ...
     with pytest.raises(AssertionError):
-        wkw_ds.copy_dataset(ds_path, chunks_per_shard=1, data_format=DataFormat.WKW)
+        wkw_ds.copy_dataset(ds_path, shard_shape=32, data_format=DataFormat.WKW)
 
     # ... and with implicit data_format=wkw from the source layers.
     with pytest.raises(AssertionError):
         wkw_ds.copy_dataset(
             ds_path,
-            chunks_per_shard=1,
+            shard_shape=32,
         )
+
+
+def test_copy_dataset_exists_ok() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied")
+    wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+
+    wkw_ds.copy_dataset(ds_path, data_format=DataFormat.Zarr3)
+    with pytest.raises(RuntimeError):
+        wkw_ds.copy_dataset(ds_path, data_format=DataFormat.Zarr3)
+    wkw_ds.copy_dataset(ds_path, data_format=DataFormat.Zarr3, exists_ok=True)
 
 
 @pytest.mark.use_proxay

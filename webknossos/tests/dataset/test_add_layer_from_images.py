@@ -32,7 +32,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         category="segmentation",
         topleft=(100, 100, 55),
         chunk_shape=(8, 8, 8),
-        chunks_per_shard=(8, 8, 8),
+        shard_shape=(64, 64, 64),
     )
     assert layer.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
     data = layer.get_finest_mag().read()[0, :, :]
@@ -52,7 +52,7 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
             topleft=(2, 55, 100, 100),
             data_format="zarr3",
             chunk_shape=(8, 8, 8),
-            chunks_per_shard=(8, 8, 8),
+            shard_shape=(64, 64, 64),
             executor=executor,
         )
     assert layer.bounding_box.topleft == wk.VecInt(
@@ -264,7 +264,7 @@ def download_and_unpack(
 
 BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]] = [
     (
-        "https://samples.scif.io/wtembryo.zip",
+        "https://static.webknossos.org/data/wklibs-samples/wtembryo.zip",
         "wtembryo.mov",
         {},
         "uint8",
@@ -273,7 +273,7 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
         1,
     ),
     (
-        "https://samples.scif.io/wtembryo.zip",
+        "https://static.webknossos.org/data/wklibs-samples/wtembryo.zip",
         "wtembryo.mov",
         {"timepoint": 50, "swap_xy": True},
         "uint8",
@@ -282,7 +282,7 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
         1,
     ),
     (
-        "https://samples.scif.io/HEART.zip",
+        "https://static.webknossos.org/data/wklibs-samples/HEART.zip",
         "HEART.SEQ",
         {"flip_z": True},
         "uint8",
@@ -291,7 +291,7 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
         1,
     ),
     (
-        "https://samples.scif.io/sdub.zip",
+        "https://static.webknossos.org/data/wklibs-samples/sdub.zip",
         "sdub*.pic",
         {"timepoint": 3},
         "uint8",
@@ -300,7 +300,7 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
         1,
     ),
     (
-        "https://samples.scif.io/test-avi.zip",
+        "https://static.webknossos.org/data/wklibs-samples/test-avi.zip",
         "t1-rendering.avi",
         {},
         "uint8",
@@ -373,7 +373,7 @@ TEST_IMAGES_ARGS: list[
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0420.dm4",
         "slice_0420.dm4",
-        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (8192, 8192, 1),
@@ -381,7 +381,7 @@ TEST_IMAGES_ARGS: list[
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0073.dm3",
         "slice_0073.dm3",
-        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (4096, 4096, 1),
@@ -392,15 +392,15 @@ TEST_IMAGES_ARGS: list[
             "https://static.webknossos.org/data/webknossos-libs/slice_0074.dm3",
         ],
         ["slice_0073.dm3", "slice_0074.dm3"],
-        {"data_format": "zarr"},  # using zarr to allow smaller chunking
+        {"data_format": "zarr3"},  # using zarr to allow smaller chunking
         "uint16",
         1,
         (4096, 4096, 2),
     ),
     (
-        "https://samples.scif.io/dnasample1.zip",
+        "https://static.webknossos.org/data/wklibs-samples/dnasample1.zip",
         "dnasample1.dm3",
-        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "int16",
         1,
         (4096, 4096, 1),
@@ -408,7 +408,7 @@ TEST_IMAGES_ARGS: list[
     (
         # published with CC0 license, taken from
         # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
-        "https://figshare.com/ndownloader/files/8909407",
+        "https://static.webknossos.org/data/wklibs-samples/embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
         "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
         {},
         "uint16",
@@ -416,7 +416,7 @@ TEST_IMAGES_ARGS: list[
         (512, 512, 30),
     ),
     (
-        "https://samples.scif.io/test-gif.zip",
+        "https://static.webknossos.org/data/wklibs-samples/test-gif.zip",
         "scifio-test.gif",
         {},
         "uint8",
@@ -424,7 +424,7 @@ TEST_IMAGES_ARGS: list[
         (500, 500, 1),
     ),
     (
-        "https://samples.scif.io/test-jpeg2000.zip",
+        "https://static.webknossos.org/data/wklibs-samples/test-jpeg2000.zip",
         "scifio-test.jp2",
         {},
         "uint8",
@@ -432,7 +432,7 @@ TEST_IMAGES_ARGS: list[
         (500, 500, 1),
     ),
     (
-        "https://samples.scif.io/test-jpg.zip",
+        "https://static.webknossos.org/data/wklibs-samples/test-jpg.zip",
         "scifio-test.jpg",
         {"flip_x": True, "batch_size": 2048},
         "uint8",
@@ -440,7 +440,7 @@ TEST_IMAGES_ARGS: list[
         (500, 500, 1),
     ),
     (
-        "https://samples.scif.io/test-png.zip",
+        "https://static.webknossos.org/data/wklibs-samples/test-png.zip",
         "scifio-test.png",
         {"flip_y": True},
         "uint8",

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,155 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [2.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.0) - 2025-03-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...v2.0.0)
+
+### Breaking Changes
+- Changed writing behavior. There is a new argument `allow_resize` for `MagView.write`, which defaults to `False`. If set to `True`, the bounding box of the underlying `Layer` will be resized to fit the to-be-written data. That largely mirrors the previous behavior. However, it is not safe for concurrent operations, so it is disabled by default. It is recommended to set the `Layer.bounding_box` to the desired size before writing. Additionally, by default, writes need to be aligned with the underlying shard grid to guard against concurrency issues and avoid performance footguns. There is a new argument `allow_unaligned`, which defaults to `False`. If set to `True`, the check for shard alignment is skipped.
+- Deprecated `chunks_per_shard` arguments in favor of `shard_shape`, which equals to `shard_shape = chunk_shape * chunks_per_shard`. The shard shape is more intuitive, because it directly defines the size of shards instead of being a factor of the chunk shape.
+- Deprecated `dtype_per_layer` argument, because it promotes the use of uncommon dtypes and leads to confusion with the other `dtype_per_channel` argument. With this change only the use of `dtype_per_channel` is encouraged.
+- Removed deprecated functions, properties and arguments:
+  - Functions:
+    - `open_annotation`, use `Annotation.load()` instead
+    - `Dataset.get_color_layer`, use `Dataset.get_color_layers()` instead
+    - `Dataset.get_segmentation_layer`, use `Dataset.get_segmentation_layers()` instead
+    - `Dataset.create`, use `Dataset.__init__` instead
+    - `Dataset.get_or_create`, use `Dataset.__init__` with `exist_ok=True` instead
+    - `Layer.get_best_mag`, use `Layer.get_finest_mag` instead
+    - `View.read_bbox`, use `read` with `relative_bounding_box` or `absolute_bounding_box` instead
+    - `View.__enter__` and `View.__exit__`, context managers are not needed anymore
+    - `open_nml`, use `Skeleton.load()` instead
+    - `Group.add_graph`, use `Group.add_tree` instead
+    - `Group.get_max_graph_id`, use `Group.get_max_tree_id` instead
+    - `Group.flattened_graphs`, use `Group.flattened_trees` instead
+    - `Group.get_graph_by_id`, use `Group.get_tree_by_id` instead
+    - `Skeleton.from_path`, use `Skeleton.load()` instead
+    - `Skeleton.write`, use `Skeleton.save()` instead
+  - Properties:
+    - `Annotation.username`, use `Annotation.owner_name` instead
+    - `Annotation.scale`, use `Annotation.voxel_size` instead
+    - `Annotation.user_id`, use `Annotation.owner_id` instead
+    - `ArrayInfo.shard_size`, use `ArrayInfo.shard_shape` instead
+    - `Dataset.scale`, use `Dataset.voxel_size` instead
+    - `MagView.global_offset`, always `(0, 0, 0, ...)`
+    - `MagView.size`, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright`
+    - `MagViewProperties.resolution`, use `MagViewProperties.mag` instead
+    - `LayerProperties.resolutions`, use `LayerProperties.mags` instead
+    - `View.header`, use `View.info` instead
+    - `View.global_offset`, use `view.bounding_box.in_mag(view.mag).topleft` instead
+    - `View.size`, use `view.bounding_box.in_mag(view.mag).size` instead
+    - `Group.graphs`, use `Group.trees`
+    - `Skeleton.scale`, use `Skeleton.voxel_size` instead
+  - Arguments:
+    - `annotation_type` in `Annotation.download`, not needed anymore
+    - `annotation_type` in `Annotation.open_as_remote_dataset`, not needed anymore
+    - `size` in `BufferedSliceReader.__init__`, use `relative_bounding_box` or `absolute_bounding_box` instead
+    - `offset` in `BufferedSliceReader.__init__`, use `relative_bounding_box` or `absolute_bounding_box` instead
+    - `offset` in `BufferedSliceWriter.__init__`, use `relative_bounding_box` or `absolute_bounding_box` instead
+    - `json_update_allowed` in `BufferedSliceWriter.__init__`, not supported anymore
+    - `offset` in `BufferedSliceWriter.reset_offset`, use `relative_offset` or `absolute_offset` instead
+    - `scale` in `Dataset.__init__`, use `voxel_size` or `voxel_size_with_unit` instead
+    - `dtype` in `Dataset.add_layer`, use `dtype_per_channel` instead
+    - `dtype` in `Dataset.get_or_add_layer`, use `dtype_per_channel` instead
+    - `chunk_size` in `Dataset.add_layer_from_images`, use `chunk_shape` instead
+    - `chunk_size` in `Dataset.copy_dataset`, use `chunk_shape` instead
+    - `block_len` in `Dataset.copy_dataset`, use `chunk_shape` instead
+    - `file_len` in `Dataset.copy_dataset`, use `chunks_per_shard` instead
+    - `args` in `Dataset.copy_dataset`, use `executor` instead
+    - `chunk_size` in `Layer.add_mag`, use `chunk_shape` instead
+    - `block_len` in `Layer.add_mag`, use `chunk_shape` instead
+    - `file_len` in `Layer.add_mag`, use `chunks_per_shard` instead
+    - `chunk_size` in `Layer.get_or_add_mag`, use `chunk_shape` instead
+    - `block_len` in `Layer.get_or_add_mag`, use `chunk_shape` instead
+    - `file_len` in `Layer.get_or_add_mag`, use `chunks_per_shard` instead
+    - `args` in `Layer.downsample`, use `executor` instead
+    - `args` in `Layer.downsample_mag`, use `executor` instead
+    - `args` in `Layer.redownsample`, use `executor` instead
+    - `args` in `Layer.downsample_mag_list`, use `executor` instead
+    - `args` in `Layer.downsample_mag_list`, use `executor` instead
+    - `buffer_edge_len` in `Layer.upsample`, use `buffer_shape` instead
+    - `args` in `Layer.upsample`, use `executor` instead
+    - `min_mag` in `Layer.upsample`, use `finest_mag` instead
+    - `offset` in `MagView.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `json_update_allowed` in `MagView.write`, use `allow_resize` instead
+    - `args` in `MagView.compress`, use `executor` instead
+    - `offset` in `View.write`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `json_update_allowed` in `View.write`, not supported anymore
+    - `offset` in `View.read`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `offset` in `View.get_view`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `offset` in `View.get_buffered_slice_writer`, use `relative_offset`, `absolute_offset`, `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `offset` in `View.get_buffered_slice_reader`, use `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `size` in `View.get_buffered_slice_reader`, use `relative_bounding_box`, or `absolute_bounding_box` instead
+    - `chunk_size` in `View.for_each_chunk`, use `chunk_shape` instead
+    - `source_chunk_size` in `View.for_zipped_chunks`, use `source_chunk_shape` instead
+    - `target_chunk_size` in `View.for_zipped_chunks`, use `target_chunk_shape` instead
+    - `args` in `View.content_is_equal`, use `executor` instead
+  - Classes:
+    - `Graph`, use `Tree` instead
+- Changed defaults:
+  - `exist_ok` in `Dataset.__init__` is now `False`
+  - `compress` in `Dataset.from_images` is now `True`
+  - `compress` in `Dataset.add_layer_from_images` is now `True`
+  - `DEFAULT_DATA_FORMAT` is now `Zarr3`
+  - `compress` in `Layer.add_mag` is now `True`
+  - `compress` in `Layer.upsample` is now `True`
+  - `buffer_size` in `View.get_buffered_slice_reader` is now computed from the shard shape
+  - `buffer_size` in `View.get_buffered_slice_writer` is now computed from the shard shape
+- Moved from positional argument to keyword-only argument:
+  - `json_update_allowed` in `MagView.write`
+  - `organization_id`, `sharing_token`, `webknossos_url`, `bbox`, `layers`, `mags`, `path`, `exist_ok` in `Dataset.download`
+  - `layers_to_link`, `jobs` in `Dataset.upload`
+  - `dtype_per_layer`, `dtype_per_channel`, `num_channels`, `data_format`, `bounding_box` in `Dataset.add_layer`
+  - `dtype_per_layer`, `dtype_per_channel`, `num_channels`, `data_format` in `Dataset.get_or_add_layer`
+  - `data_format`, `mag`, `chunk_shape`, `chunks_per_shard`, `shard_shape`, `compress` in `Dataset.add_layer_from_images`
+  - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `data_format`, `compress`, `executor` in `Dataset.add_copy_layer`
+  - `organization_id`, `tags`, `name`, `folder_id` in `Dataset.get_remote_datasets`
+  - `make_relative` in `Dataset.add_symlink_layer`
+  - `name`, `make_relative`, `layers_to_ignore` in `Dataset.shallow_copy_dataset`
+  - `executor` in `Dataset.compress`
+  - `sampling_mode`, `coarsest_mag`, `executor` in `Dataset.downsample`
+  - `voxel_size`, `chunk_shape`, `shard_shape`, `chunks_per_shard`, `data_format`, `compress`, `executor`, `voxel_size_with_unit` in `Dataset.copy_dataset`
+  - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compress` in `Layer.add_mag`
+  - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compress` in `Layer.get_or_add_mag`
+  - `extend_layer_bounding_box`, `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compress`, `executor` in `Layer.add_copy_mag`
+  - `make_relative`, `extend_layer_bounding_box` in `Layer.add_symlink_mag`
+  - `extend_layer_bounding_box` in `Layer.add_remote_mag`
+  - `extend_layer_bounding_box` in `Layer.add_fs_copy_mag`
+  - `move`, `extend_layer_bounding_box` in `Layer.add_mag_from_zarrarray`
+  - `from_mag`, `coarsest_mag`, `interpolation_mode`, `compress`, `sampling_mode`, `align_with_other_layers`, `buffer_shape`, `force_sampling_scheme`, `allow_overwrite`, `only_setup_mags`, `executor` in `Layer.downsample`
+  - `interpolation_mode`, `compress`, `buffer_shape`, `allow_overwrite`, `only_setup_mag`, `executor` in `Layer.downsample_mag`
+  - `interpolation_mode`, `compress`, `buffer_shape`, `executor` in `Layer.redownsample`
+  - `interpolation_mode`, `compress`, `buffer_shape`, `allow_overwrite`, `only_setup_mags`, `executor` in `Layer.downsample_mag_list`
+  - `finest_mag`, `compress`, `sampling_mode`, `align_with_other_layers`, `buffer_shape`, `executor` in `Layer.upsample`
+  - `chunk_shape`, `executor` in `SegmentationLayer.refresh_largest_segment_id`
+  - `chunk_shape`, `shard_shape`, `chunks_per_shard`, `compression_mode`, `path` in `MagView.create`
+  - `target_path`, `executor` in `MagView.compress`
+- Added arguments:
+  - `allow_resize` in `MagView.write` with default `False`
+  - `allow_unaligned` in `MagView.write` with default `False`
+  - `shard_shape` in `Dataset.from_images`
+  - `shard_shape` in `Dataset.add_layer_from_images`
+  - `shard_shape` in `Dataset.copy_dataset`
+- Newly deprecated arguments:
+  - `chunks_per_shard` in `Dataset.from_images`, use `shard_shape` instead
+  - `dtype_per_layer` in `Dataset.add_layer`, use `dtype_per_channel` instead
+  - `dtype_per_layer` in `Dataset.get_or_add_layer`, use `dtype_per_channel` instead
+  - `chunks_per_shard` in `Dataset.add_layer_from_images`, use `shard_shape` instead
+  - `chunks_per_shard` in `Dataset.copy_dataset`, use `shard_shape` instead
+  - `dtype_per_layer` in `Layer.__init__`, use `dtype_per_channel` instead
+  - `chunks_per_shard` in `Layer.add_mag`, use `shard_shape` instead
+  - `chunks_per_shard` in `Layer.get_or_add_mag`, use `shard_shape` instead
+  - `chunks_per_shard` in `Layer.add_copy_mag`, use `shard_shape` instead
+  - `chunks_per_shard` in `MagView.create`, use `shard_shape` instead
+- Newly deprecated properties:
+  - `Layer.dtype_per_layer`
+
+
+### Added
+- Added the `webknossos copy-dataset` CLI command. [#1259](https://github.com/scalableminds/webknossos-libs/pull/1259)
+- Added `Dataset.write_layer` method for writing entire layers in one go. [#1242](https://github.com/scalableminds/webknossos-libs/pull/1242)
 
 
 ## [0.16.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.10) - 2025-02-26

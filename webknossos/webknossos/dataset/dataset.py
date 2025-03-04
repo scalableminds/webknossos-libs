@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import warnings
-from argparse import Namespace
 from contextlib import nullcontext
 from datetime import datetime
 from enum import Enum, unique
@@ -41,16 +40,25 @@ from ..client.api_client.models import (
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
 )
-from ..geometry import Vec3Int, Vec3IntLike, VecIntLike
+from ..geometry import (
+    BoundingBox,
+    Mag,
+    NDBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+    VecIntLike,
+)
+from ..geometry.mag import MagLike
+from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
 from .defaults import (
     DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
-    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
-    DEFAULT_CHUNKS_PER_SHARD_ZARR,
     DEFAULT_DATA_FORMAT,
+    DEFAULT_SHARD_SHAPE,
+    DEFAULT_SHARD_SHAPE_FROM_IMAGES,
     PROPERTIES_FILE_NAME,
     SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
@@ -68,7 +76,6 @@ if TYPE_CHECKING:
     from ..administration.user import Team
     from ..client._upload_dataset import LayerToLink
 
-from ..geometry import BoundingBox, Mag, NDBoundingBox
 from ..utils import (
     copy_directory_with_symlinks,
     copytree,
@@ -94,7 +101,7 @@ from .layer import (
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
     _dtype_per_layer_to_dtype_per_channel,
-    _get_sharding_parameters,
+    _get_shard_shape,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
@@ -109,7 +116,6 @@ from .properties import (
     _properties_floating_type_to_python_type,
     dataset_converter,
 )
-from .view import _BLOCK_ALIGNMENT_WARNING
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +137,8 @@ _ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$"
 # This regex matches any character that is not allowed in a layer name.
 _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
+SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
+
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
     for f in layer_path.iterdir():
@@ -144,10 +152,6 @@ def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
 
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
-
-_UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
-    "_UNSPECIFIED_SCALE_FROM_OPEN", var_name="_UNSPECIFIED_SCALE_FROM_OPEN"
-)
 
 
 class Dataset:
@@ -296,10 +300,9 @@ class Dataset:
         dataset_path: Union[str, PathLike],
         voxel_size: Optional[Tuple[float, float, float]] = None,  # in nanometers
         name: Optional[str] = None,
-        exist_ok: bool = _UNSET,
+        exist_ok: bool = False,
         *,
         voxel_size_with_unit: Optional[VoxelSize] = None,
-        scale: Optional[Tuple[float, float, float]] = None,
         read_only: bool = False,
     ) -> None:
         """Create a new dataset or open an existing one.
@@ -308,7 +311,6 @@ class Dataset:
         If the dataset already exists and exist_ok is True, it is opened (the provided voxel_size
         and name are asserted to match the existing dataset).
 
-        Currently, `exist_ok=True` is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need
         the creation behavior.
 
@@ -318,7 +320,6 @@ class Dataset:
             name: Optional name for the dataset, defaults to last part of dataset_path if not provided
             exist_ok: Whether to open an existing dataset at the path rather than failing
             voxel_size_with_unit: Optional voxel size with unit specification
-            scale: Deprecated, use voxel_size instead
             read_only: Whether to open dataset in read-only mode
 
         Raises:
@@ -326,23 +327,19 @@ class Dataset:
             AssertionError: If opening existing dataset with mismatched voxel size or name
 
         """
-
-        if count_defined_values((voxel_size, voxel_size_with_unit, scale)) > 1:
-            raise ValueError(
-                "Please supply exactly one of voxel_size, voxel_size_with_unit, or scale (deprecated)."
-            )
-        if scale is not None:
-            warn_deprecated("scale", "voxel_size")
-            voxel_size_with_unit = VoxelSize(scale)
-        elif voxel_size is not None:
-            voxel_size_with_unit = VoxelSize(voxel_size)
-
         self._read_only = read_only
         self.path: Path = strip_trailing_slash(UPath(dataset_path))
 
+        if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
+            raise ValueError(
+                "Please supply exactly one of voxel_size or voxel_size_with_unit."
+            )
+        elif voxel_size is not None:
+            voxel_size_with_unit = VoxelSize(voxel_size)
+
         stored_dataset_properties: Optional[DatasetProperties] = None
         try:
-            stored_dataset_properties = self._load_properties()
+            stored_dataset_properties = self._load_properties(self.path)
         except FileNotFoundError:
             if read_only:
                 raise FileNotFoundError(
@@ -351,17 +348,13 @@ class Dataset:
 
         dataset_existed_already = stored_dataset_properties is not None
         if dataset_existed_already:
-            if exist_ok == _UNSET:
-                warnings.warn(
-                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {self.path} without setting exist_ok=True. "
-                    + "This will fail in future releases, please supply exist_ok=True explicitly then.",
-                    DeprecationWarning,
-                )
-                exist_ok = True
             if not exist_ok:
                 raise RuntimeError(
                     f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
                 )
+            assert (
+                stored_dataset_properties is not None
+            )  # for mypy to get the type of dataset_properties right
             dataset_properties = stored_dataset_properties
 
         else:
@@ -407,6 +400,26 @@ class Dataset:
                 )
             )
 
+        self._init_from_properties(dataset_properties)
+
+        if dataset_existed_already:
+            if voxel_size_with_unit is None:
+                raise ValueError(
+                    "Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
+                    + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
+                )
+            else:
+                if self.voxel_size_with_unit != voxel_size_with_unit:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
+                    )
+            if name is not None:
+                if self.name != name:
+                    raise RuntimeError(
+                        f"Cannot open Dataset: The dataset {self.path} already exists, but the names do not match ({self.name} != {name})"
+                    )
+
+    def _init_from_properties(self, dataset_properties: DatasetProperties) -> "Dataset":
         assert dataset_properties is not None
         self._properties = dataset_properties
         self._last_read_properties = copy.deepcopy(self._properties)
@@ -437,28 +450,12 @@ class Dataset:
                         if mag_prop.mag == mag
                     )
                     mag_prop.path = str(layer.mags[mag].path)
-
-        if dataset_existed_already:
-            if voxel_size_with_unit is None:
-                raise ValueError(
-                    "Please always supply the voxel_size or voxel_size_with_unit when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
-                    + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
-                )
-            elif voxel_size_with_unit == _UNSPECIFIED_SCALE_FROM_OPEN:
-                pass
-            else:
-                if self.voxel_size_with_unit != voxel_size_with_unit:
-                    raise RuntimeError(
-                        f"Cannot open Dataset: The dataset {self.path} already exists, but the voxel_sizes do not match ({self.voxel_size_with_unit} != {voxel_size_with_unit})"
-                    )
-            if name is not None:
-                if self.name != name:
-                    raise RuntimeError(
-                        f"Cannot open Dataset: The dataset {self.path} already exists, but the names do not match ({self.name} != {name})"
-                    )
+        return self
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
+    def open(
+        cls, dataset_path: Union[str, PathLike], read_only: bool = False
+    ) -> "Dataset":
         """
         To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
         This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
@@ -467,17 +464,14 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        if (
-            path := strip_trailing_slash(UPath(dataset_path)) / PROPERTIES_FILE_NAME
-        ).exists():
-            return cls(
-                dataset_path,
-                voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
-                exist_ok=True,
-            )
-        raise FileNotFoundError(
-            f"Could not find a valid `datasource-properties.json` file at {path}."
-        )
+
+        dataset_path = strip_trailing_slash(UPath(dataset_path))
+        dataset_properties = cls._load_properties(dataset_path)
+
+        dataset = cls.__new__(cls)
+        dataset.path = dataset_path
+        dataset._read_only = read_only
+        return dataset._init_from_properties(dataset_properties)
 
     @classmethod
     def announce_manual_upload(
@@ -805,6 +799,7 @@ class Dataset:
     def download(
         cls,
         dataset_name_or_url: str,
+        *,
         organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
@@ -875,8 +870,9 @@ class Dataset:
         layer_category: Optional[LayerCategoryType] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
-        compress: bool = False,
+        compress: bool = True,
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -913,8 +909,9 @@ class Dataset:
             layer_name: Optional name for layer(s)
             layer_category: Optional category override (LayerCategoryType.color / LayerCategoryType.segmentation)
             data_format: Format to store data in ('wkw'/'zarr')
-            chunk_shape: Optional shape of chunks to store data in
-            chunks_per_shard: Optional number of chunks per shard
+            chunk_shape: Optional. Shape of chunks to store data in
+            shard_shape: Optional. Shape of shards to store data in
+            chunks_per_shard: Deprecated, use shard_shape. Optional. number of chunks per shard
             compress: Whether to compress the data
             swap_xy: Whether to swap x and y axes
             flip_x: Whether to flip the x axis
@@ -1038,6 +1035,7 @@ class Dataset:
                         category=layer_category,
                         data_format=data_format,
                         chunk_shape=chunk_shape,
+                        shard_shape=shard_shape,
                         chunks_per_shard=chunks_per_shard,
                         compress=compress,
                         swap_xy=swap_xy,
@@ -1085,12 +1083,6 @@ class Dataset:
         """
 
         return self._properties.scale.to_nanometer()
-
-    @property
-    def scale(self) -> Tuple[float, float, float]:
-        """Deprecated, use `voxel_size` instead."""
-        warn_deprecated("scale", "voxel_size")
-        return self.voxel_size
 
     @property
     def voxel_size_with_unit(self) -> VoxelSize:
@@ -1182,6 +1174,7 @@ class Dataset:
     def upload(
         self,
         new_dataset_name: Optional[str] = None,
+        *,
         layers_to_link: Optional[List[Union["LayerToLink", Layer]]] = None,
         jobs: Optional[int] = None,
     ) -> "RemoteDataset":
@@ -1258,6 +1251,7 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
+        *,
         dtype_per_layer: Optional[DTypeLike] = None,
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
@@ -1272,7 +1266,7 @@ class Dataset:
         Args:
             layer_name: Name for the new layer
             category: Either 'color' or 'segmentation'
-            dtype_per_layer: Optional data type for entire layer, e.g. np.uint8
+            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer, e.g. np.uint8
             dtype_per_channel: Optional data type per channel, e.g. np.uint8
             num_channels: Number of channels (default 1)
             data_format: Format to store data ('wkw', 'zarr', 'zarr3')
@@ -1321,10 +1315,6 @@ class Dataset:
             layer_name
         ), f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
 
-        if "dtype" in kwargs:
-            raise ValueError(
-                f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
-            )
         if num_channels is None:
             num_channels = 1
 
@@ -1339,6 +1329,7 @@ class Dataset:
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
+            warn_deprecated("dtype_per_layer", "dtype_per_channel")
             dtype_per_layer = _properties_floating_type_to_python_type.get(
                 dtype_per_layer,  # type: ignore[arg-type]
                 dtype_per_layer,  # type: ignore[arg-type]
@@ -1405,6 +1396,7 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
+        *,
         dtype_per_layer: Optional[DTypeLike] = None,
         dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
@@ -1419,7 +1411,7 @@ class Dataset:
         Args:
             layer_name: Name of the layer to get or create
             category: Layer category ('color' or 'segmentation')
-            dtype_per_layer: Optional data type for entire layer
+            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer
             dtype_per_channel: Optional data type per channel
             num_channels: Optional number of channels
             data_format: Format to store data ('wkw', 'zarr', etc.)
@@ -1447,10 +1439,6 @@ class Dataset:
             For existing layers, the parameters are validated against the layer properties.
         """
 
-        if "dtype" in kwargs:
-            raise ValueError(
-                f"Called Dataset.get_or_add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
-            )
         if layer_name in self.layers.keys():
             assert (
                 num_channels is None
@@ -1470,6 +1458,7 @@ class Dataset:
                 dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
 
             if dtype_per_layer is not None:
+                warn_deprecated("dtype_per_layer", "dtype_per_channel")
                 dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
 
             if dtype_per_channel is not None or dtype_per_layer is not None:
@@ -1598,7 +1587,7 @@ class Dataset:
         array_info = _find_array_info(self.path / layer_name)
         assert (
             array_info is not None
-        ), f"Could not find any valid mags in {self.path /layer_name}. Cannot add layer."
+        ), f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
 
         num_channels = kwargs.pop("num_channels", array_info.num_channels)
         dtype_per_channel = kwargs.pop("dtype_per_channel", array_info.voxel_type)
@@ -1633,13 +1622,14 @@ class Dataset:
         ## add_layer arguments
         layer_name: str,
         category: Optional[LayerCategoryType] = "color",
+        *,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
-        mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
+        mag: MagLike = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
-        compress: bool = False,
-        *,
+        compress: bool = True,
         ## other arguments
         topleft: VecIntLike = Vec3Int.zeros(),  # in Mag(1)
         swap_xy: bool = False,
@@ -1656,7 +1646,6 @@ class Dataset:
         max_layers: int = 20,
         truncate_rgba_to_rgb: bool = True,
         executor: Optional[Executor] = None,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
         """
         Creates a new layer called `layer_name` with mag `mag` from `images`.
@@ -1676,7 +1665,7 @@ class Dataset:
         * `category`: `color` by default, may be set to "segmentation"
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data
-        * `chunk_shape`, `chunks_per_shard`, `compress`: adjust how the data is stored on disk
+        * `chunk_shape`, `chunks_per_shard`, `shard_shape`, `compress`: adjust how the data is stored on disk
         * `topleft`: set an offset in Mag(1) to start writing the data, only affecting the output
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to reverse the respective axis before writing to disk
@@ -1693,14 +1682,6 @@ class Dataset:
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-        chunk_shape, chunks_per_shard = _get_sharding_parameters(
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-            chunk_size=chunk_size,
-            block_len=None,
-            file_len=None,
-        )
-
         if category is None:
             image_path_for_category_guess: Path
             if isinstance(images, str) or isinstance(images, PathLike):
@@ -1827,24 +1808,66 @@ class Dataset:
             expected_bbox = pims_image_sequence.expected_bbox
 
             # When the expected bbox is 2D the chunk_shape is set to 2D too.
-            if (
-                expected_bbox.get_shape("z") == 1
-                and layer.data_format == DataFormat.Zarr
+            if expected_bbox.get_shape("z") == 1 and layer.data_format in (
+                DataFormat.Zarr,
+                DataFormat.Zarr3,
             ):
-                if chunk_shape is None:
-                    chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
-                if chunks_per_shard is None:
-                    chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR.with_z(1)
-
-            if chunks_per_shard is None and layer.data_format == DataFormat.Zarr3:
-                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+                chunk_shape = (
+                    DEFAULT_CHUNK_SHAPE.with_z(1)
+                    if chunk_shape is None
+                    else Vec3Int.from_vec_or_int(chunk_shape)
+                )
+                shard_shape = _get_shard_shape(
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    shard_shape=shard_shape,
+                )
+                if shard_shape is None:
+                    if layer.data_format == DataFormat.Zarr3:
+                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES.with_z(
+                            chunk_shape.z
+                        )
+                    else:
+                        shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
+                else:
+                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+            else:
+                chunk_shape = (
+                    DEFAULT_CHUNK_SHAPE
+                    if chunk_shape is None
+                    else Vec3Int.from_vec_or_int(chunk_shape)
+                )
+                shard_shape = _get_shard_shape(
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    shard_shape=shard_shape,
+                )
+                if shard_shape is None:
+                    if layer.data_format == DataFormat.Zarr3:
+                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES
+                    elif layer.data_format == DataFormat.Zarr:
+                        shard_shape = DEFAULT_CHUNK_SHAPE
+                    else:
+                        shard_shape = DEFAULT_SHARD_SHAPE
+                else:
+                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
 
             mag = Mag(mag)
-            layer.bounding_box = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
+
+            # Setting a large enough bounding box, because the exact bounding box
+            # cannot be know a priori all the time. It will be replaced with the
+            # correct bounding box after reading through all actual images.
+            safe_expected_bbox = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
+            safe_size = safe_expected_bbox.size.with_replaced(
+                safe_expected_bbox.axes.index("x"), SAFE_LARGE_XY
+            ).with_replaced(safe_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+            safe_expected_bbox = safe_expected_bbox.with_size(safe_size)
+            layer.bounding_box = safe_expected_bbox
+
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
-                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
                 compress=compress,
             )
 
@@ -1889,7 +1912,7 @@ class Dataset:
                     layer.bounding_box = BoundingBox.from_ndbbox(layer.bounding_box)
                 else:
                     raise RuntimeError(
-                        "Attempted to create a WKW Dataset, but the given image data has additional axes other than x, y, and z. Please use `data_format='zarr3'` instead."
+                        f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                     )
 
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
@@ -1901,20 +1924,17 @@ class Dataset:
             )
 
             with warnings.catch_warnings():
-                # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
-                # However, dataset borders might change between different parallelized writes, when sizes differ.
-                # For differing sizes, a separate warning is thrown, so block alignment warnings can be ignored:
+                # We need to catch and ignore a warning here about comparing persisted properties.
+                # The problem is that there is an `axisOrder` property that goes in the datasource-properties.json
+                # file, but is only stored in a mag object. However, at first we don't have any mags
+                # so there is no place to store them. When we add the first mag and update the properties,
+                # there is a check that reads the properties first and compares them to the current state.
+                # This check fails because the axisOrder property hasn't been stored in the properties file.
+                # It is safe to ignore this warning because it is only an intermediate problem in this function.
+                # At the end of this function, the properties are complete and consistent.
                 warnings.filterwarnings(
                     "ignore",
-                    message=_BLOCK_ALIGNMENT_WARNING,
-                    category=UserWarning,
-                    module="webknossos",
-                )
-                # There are race-conditions about setting the bbox of the layer.
-                # The bbox is set correctly afterwards, ignore errors here:
-                warnings.filterwarnings(
-                    "ignore",
-                    message=".*properties were found on disk which are newer than the ones that were seen last time.*",
+                    message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
                     category=UserWarning,
                     module="webknossos",
                 )
@@ -1985,22 +2005,72 @@ class Dataset:
         assert first_layer is not None
         return first_layer
 
-    def get_segmentation_layer(self) -> SegmentationLayer:
-        """
-        Deprecated, please use `get_segmentation_layers()`.
+    def write_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        data: np.ndarray,  # in specified mag
+        *,
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
+        downsample: bool = True,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
+        axes: Optional[Iterable[str]] = None,
+        absolute_offset: Optional[Union[Vec3IntLike, VecIntLike]] = None,  # in mag1
+        mag: MagLike = Mag(1),
+    ) -> Layer:
+        """Write a numpy array to a new layer and downsample.
 
-        Returns the only segmentation layer.
-        Fails with a IndexError if there are multiple segmentation layers or none.
+        Args:
+            layer_name: Name of the new layer.
+            category: Category of the new layer.
+            data: The data to write.
+            data_format: Format to store the data. Defaults to zarr3.
+            downsample: Whether to downsample the data. Defaults to True.
+            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
+            chunks_per_shard: Deprecated, use shard_shape. Number of chunks per shards. If specified, shard_shape must not be specified.
+            axes: The axes of the data for non-3D data.
+            absolute_offset: The offset of the data. Specified in Mag 1.
+            mag: Magnification to write the data at.
         """
+        mag = Mag(mag)
+        bbox, num_channels = derive_nd_bounding_box_from_shape(
+            data.shape, axes=axes, absolute_offset=absolute_offset
+        )
+        mag1_bbox = bbox.with_size_xyz(bbox.size_xyz * mag.to_vec3_int())
+        layer = self.add_layer(
+            layer_name,
+            category,
+            data_format=data_format,
+            num_channels=num_channels,
+            dtype_per_channel=data.dtype,
+            bounding_box=mag1_bbox,
+        )
 
-        warnings.warn(
-            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers().",
-            DeprecationWarning,
-        )
-        return cast(
-            SegmentationLayer,
-            self._get_layer_by_category(SEGMENTATION_CATEGORY),
-        )
+        with warnings.catch_warnings():
+            # For n-d datasets, the `axisOrder` property is stored with mags.
+            # At this point, we don't have any mags yet, so we can't compare the persisted properties.
+            warnings.filterwarnings(
+                "ignore",
+                message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
+                category=UserWarning,
+                module="webknossos",
+            )
+            mag_view = layer.add_mag(
+                mag,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
+                compress=True,
+            )
+        mag_view.write(data, absolute_bounding_box=layer.bounding_box)
+
+        if downsample:
+            layer.downsample()
+
+        return layer
 
     def get_segmentation_layers(self) -> List[SegmentationLayer]:
         """Get all segmentation layers in the dataset.
@@ -2028,19 +2098,6 @@ class Dataset:
             for layer in self.layers.values()
             if layer.category == SEGMENTATION_CATEGORY
         ]
-
-    def get_color_layer(self) -> Layer:
-        """
-        Deprecated, please use `get_color_layers()`.
-
-        Returns the only color layer.
-        Fails with a RuntimeError if there are multiple color layers or none.
-        """
-        warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers().",
-            DeprecationWarning,
-        )
-        return self._get_layer_by_category(COLOR_CATEGORY)
 
     def get_color_layers(self) -> List[Layer]:
         """Get all color layers in the dataset.
@@ -2109,10 +2166,13 @@ class Dataset:
         self,
         foreign_layer: Union[str, Path, Layer],
         new_layer_name: Optional[str] = None,
+        *,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
+        exists_ok: bool = False,
         executor: Optional[Executor] = None,
     ) -> Layer:
         """Copy layer from another dataset to this one.
@@ -2124,9 +2184,11 @@ class Dataset:
             foreign_layer: Layer to copy (path or Layer object)
             new_layer_name: Optional name for the new layer, uses original name if None
             chunk_shape: Optional shape of chunks for storage
-            chunks_per_shard: Optional number of chunks per shard
+            shard_shape: Optional shape of shards for storage
+            chunks_per_shard: Deprecated, use shard_shape. Optional number of chunks per shard
             data_format: Optional format to store copied data ('wkw', 'zarr', etc.)
             compress: Optional whether to compress copied data
+            exists_ok: Whether to overwrite existing layers
             executor: Optional executor for parallel copying
 
         Returns:
@@ -2158,29 +2220,46 @@ class Dataset:
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
 
-        if new_layer_name in self.layers.keys():
-            raise IndexError(
-                f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+        if exists_ok:
+            layer = self.get_or_add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype_per_channel=foreign_layer.dtype_per_channel,
+                num_channels=foreign_layer.num_channels,
+                data_format=data_format or foreign_layer.data_format,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
+            )
+        else:
+            if new_layer_name in self.layers.keys():
+                raise IndexError(
+                    f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+                )
+            layer = self.add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype_per_channel=foreign_layer.dtype_per_channel,
+                num_channels=foreign_layer.num_channels,
+                data_format=data_format or foreign_layer.data_format,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
             )
 
-        layer = self.add_layer(
-            new_layer_name,
-            category=foreign_layer.category,
-            dtype_per_channel=foreign_layer.dtype_per_channel,
-            num_channels=foreign_layer.num_channels,
-            data_format=data_format or foreign_layer.data_format,
-            largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
-        )
-        layer.bounding_box = foreign_layer.bounding_box
-
         for mag_view in foreign_layer.mags.values():
+            progress_desc = (
+                f"Copying {mag_view.layer.name}/{mag_view.mag.to_layer_name()}"
+            )
+
             layer.add_copy_mag(
                 mag_view,
                 extend_layer_bounding_box=False,
                 chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
+                exists_ok=exists_ok,
                 executor=executor,
+                progress_desc=progress_desc,
             )
 
         return layer
@@ -2188,8 +2267,9 @@ class Dataset:
     def add_symlink_layer(
         self,
         foreign_layer: Union[str, Path, Layer],
-        make_relative: bool = False,
         new_layer_name: Optional[str] = None,
+        *,
+        make_relative: bool = False,
     ) -> Layer:
         """Create symbolic link to layer from another dataset.
 
@@ -2390,18 +2470,16 @@ class Dataset:
     def copy_dataset(
         self,
         new_dataset_path: Union[str, Path],
+        *,
         voxel_size: Optional[Tuple[float, float, float]] = None,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
-        args: Optional[Namespace] = None,  # deprecated
+        exists_ok: bool = False,
         executor: Optional[Executor] = None,
-        *,
         voxel_size_with_unit: Optional[VoxelSize] = None,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
-        block_len: Optional[int] = None,  # deprecated
-        file_len: Optional[int] = None,  # deprecated
     ) -> "Dataset":
         """
         Creates an independent copy of the dataset with all layers at a new location.
@@ -2411,16 +2489,13 @@ class Dataset:
             new_dataset_path: Path where new dataset should be created
             voxel_size: Optional tuple of floats (x,y,z) specifying voxel size in nanometers
             chunk_shape: Optional shape of chunks for data storage
-            chunks_per_shard: Optional number of chunks per shard
+            shard_shape: Optional shape of shards for data storage
+            chunks_per_shard: Deprecated, use shard_shape. Optional number of chunks per shard
             data_format: Optional format to store data ('wkw', 'zarr', 'zarr3')
             compress: Optional whether to compress data
+            exists_ok: Whether to overwrite existing datasets and layers
             executor: Optional executor for parallel copying
             voxel_size_with_unit: Optional voxel size specification with units
-            **kwargs: Additional deprecated arguments:
-                - chunk_size: Use chunk_shape instead
-                - block_len: Use chunk_shape instead
-                - file_len: Use chunks_per_shard instead
-                - args: Use executor instead
 
         Returns:
             Dataset: The newly created copy
@@ -2448,32 +2523,18 @@ class Dataset:
             For remote datasets, use data_format='zarr'.
         """
 
-        if args is not None:
-            warn_deprecated(
-                "args argument",
-                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
-            )
-
-        chunk_shape, chunks_per_shard = _get_sharding_parameters(
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-            chunk_size=chunk_size,
-            block_len=block_len,
-            file_len=file_len,
-        )
-
         new_dataset_path = UPath(new_dataset_path)
 
         if data_format == DataFormat.WKW:
             assert is_fs_path(
                 new_dataset_path
-            ), "Cannot create WKW-based remote datasets. Use `data_format='zarr'` instead."
+            ), "Cannot create WKW-based remote datasets. Use `data_format='zarr3'` instead."
         if data_format is None and any(
             layer.data_format == DataFormat.WKW for layer in self.layers.values()
         ):
             assert is_fs_path(
                 new_dataset_path
-            ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr'`."
+            ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
 
         if voxel_size_with_unit is None:
             if voxel_size is None:
@@ -2483,17 +2544,19 @@ class Dataset:
         new_ds = Dataset(
             new_dataset_path,
             voxel_size_with_unit=voxel_size_with_unit,
-            exist_ok=False,
+            exist_ok=exists_ok,
         )
 
-        with get_executor_for_args(args, executor) as executor:
+        with get_executor_for_args(None, executor) as executor:
             for layer in self.layers.values():
                 new_ds.add_copy_layer(
                     layer,
                     chunk_shape=chunk_shape,
+                    shard_shape=shard_shape,
                     chunks_per_shard=chunks_per_shard,
                     data_format=data_format,
                     compress=compress,
+                    exists_ok=exists_ok,
                     executor=executor,
                 )
         new_ds._export_as_json()
@@ -2502,6 +2565,7 @@ class Dataset:
     def shallow_copy_dataset(
         self,
         new_dataset_path: Union[str, PathLike],
+        *,
         name: Optional[str] = None,
         make_relative: bool = False,
         layers_to_ignore: Optional[Iterable[str]] = None,
@@ -2565,7 +2629,7 @@ class Dataset:
             else:
                 new_layer = new_dataset.add_layer_like(layer, layer_name)
                 for mag_view in layer.mags.values():
-                    new_layer.add_symlink_mag(mag_view, make_relative)
+                    new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
 
                 # copy all other directories with a dir scan
                 copy_directory_with_symlinks(
@@ -2585,6 +2649,7 @@ class Dataset:
 
     def compress(
         self,
+        *,
         executor: Optional[Executor] = None,
     ) -> None:
         """Compress all uncompressed magnifications in-place.
@@ -2614,6 +2679,7 @@ class Dataset:
 
     def downsample(
         self,
+        *,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
         coarsest_mag: Optional[Mag] = None,
         executor: Optional[Executor] = None,
@@ -2673,38 +2739,6 @@ class Dataset:
                 f"Failed to get segmentation layer: There are multiple {category} layer."
             )
 
-    @classmethod
-    def create(
-        cls,
-        dataset_path: Union[str, PathLike],
-        voxel_size: Tuple[float, float, float],
-        name: Optional[str] = None,
-    ) -> "Dataset":
-        """
-        **Deprecated**, please use the constructor `Dataset()` instead.
-        """
-        warnings.warn(
-            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset().",
-            DeprecationWarning,
-        )
-        return cls(dataset_path, voxel_size, name, exist_ok=False)
-
-    @classmethod
-    def get_or_create(
-        cls,
-        dataset_path: Union[str, Path],
-        voxel_size: Tuple[float, float, float],
-        name: Optional[str] = None,
-    ) -> "Dataset":
-        """
-        **Deprecated**, please use the constructor `Dataset()` instead.
-        """
-        warnings.warn(
-            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True).",
-            DeprecationWarning,
-        )
-        return cls(dataset_path, voxel_size, name, exist_ok=True)
-
     def __repr__(self) -> str:
         return f"Dataset({repr(self.path)})"
 
@@ -2712,19 +2746,20 @@ class Dataset:
         if self._read_only:
             raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
-    def _load_properties(self) -> DatasetProperties:
+    @staticmethod
+    def _load_properties(dataset_path: Path) -> DatasetProperties:
         try:
-            data = json.loads((self.path / PROPERTIES_FILE_NAME).read_bytes())
+            data = json.loads((dataset_path / PROPERTIES_FILE_NAME).read_bytes())
         except FileNotFoundError:
             raise FileNotFoundError(
-                f"Cannot read dataset at {self.path}. datasource-properties.json file not found."
+                f"Cannot read dataset at {dataset_path}. datasource-properties.json file not found."
             )
         return dataset_converter.structure(data, DatasetProperties)
 
     def _export_as_json(self) -> None:
         self._ensure_writable()
 
-        properties_on_disk = self._load_properties()
+        properties_on_disk = self._load_properties(self.path)
         try:
             if properties_on_disk != self._last_read_properties:
                 warnings.warn(
@@ -2774,6 +2809,7 @@ class Dataset:
 
     @staticmethod
     def get_remote_datasets(
+        *,
         organization_id: Optional[str] = None,
         tags: Optional[Union[str, Sequence[str]]] = None,
         name: Optional[str] = None,
@@ -2890,13 +2926,11 @@ class RemoteDataset(Dataset):
             Do not call this constructor directly, use Dataset.open_remote() instead.
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
+        self.path = dataset_path
+        self._read_only = True
         try:
-            super().__init__(
-                dataset_path,
-                voxel_size_with_unit=_UNSPECIFIED_SCALE_FROM_OPEN,
-                exist_ok=True,
-                read_only=True,
-            )
+            dataset_properties = self._load_properties(self.path)
+            self._init_from_properties(dataset_properties)
         except FileNotFoundError as e:
             if hasattr(self, "_properties"):
                 warnings.warn(
@@ -2911,7 +2945,11 @@ class RemoteDataset(Dataset):
         self._context = context
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":  # noqa: ARG003 Unused class method argument: `dataset_path`
+    def open(
+        cls,
+        dataset_path: Union[str, PathLike],  # noqa: ARG003
+        read_only: bool = True,  # noqa: ARG003
+    ) -> "Dataset":
         """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 

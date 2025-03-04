@@ -185,9 +185,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
-        args: Iterable[
-            _S
-        ],  # TODO change: allow more than one arg per call #noqa: FIX002 Line contains TODO
+        args: Iterable[_S],
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
     ) -> List[Future[_T]]:
         if output_pickle_path_getter is not None:
@@ -217,11 +215,6 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         return fut.result()
 
     def shutdown(self, wait: bool = True, *, cancel_futures: bool = False) -> None:
-        if cancel_futures:
-            # cancel_futures was added in Python 3.9, ignoring it as 3.8 is supported:
-            logging.warning(
-                "The provided cancel_futures argument is ignored by MultiprocessingExecutor."
-            )
-        super().shutdown(wait=wait)
+        super().shutdown(wait=wait, cancel_futures=cancel_futures)
         if self._mp_logging_handler_pool is not None:
             self._mp_logging_handler_pool.close()
