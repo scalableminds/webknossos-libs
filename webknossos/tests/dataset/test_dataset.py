@@ -20,6 +20,7 @@ from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
+    RemoteDataset,
     View,
 )
 from webknossos.dataset._array import DataFormat
@@ -1038,6 +1039,15 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
         assert data["dataLayers"][0].get("numChannels") == 1
 
     assure_exported_properties(ds)
+
+
+def test_explore_and_add_remote() -> None:
+    remote_ds = RemoteDataset.explore_and_add_remote(
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
+        "added_remote_ds",
+        "/Datasets",
+    )
+    assert remote_ds.name == "added_remote_ds"
 
 
 def test_no_largest_segment_id() -> None:
