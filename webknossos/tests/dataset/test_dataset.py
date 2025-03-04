@@ -1,5 +1,6 @@
 import itertools
 import json
+import os
 import pickle
 from pathlib import Path
 from typing import Iterator, Optional, Tuple, cast
@@ -16,6 +17,7 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
+from webknossos.client.context import webknossos_context
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -42,11 +44,10 @@ from webknossos.utils import (
     snake_to_camel_case,
 )
 
-
-@pytest.fixture(autouse=True, scope="module")
-def start_minio() -> Iterator[None]:
-    with use_minio():
-        yield
+# @pytest.fixture(autouse=True, scope="module")
+# def start_minio() -> Iterator[None]:
+#     with use_minio():
+#         yield
 
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
@@ -1041,13 +1042,15 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
     assure_exported_properties(ds)
 
 
+@pytest.mark.use_proxay
 def test_explore_and_add_remote() -> None:
-    remote_ds = RemoteDataset.explore_and_add_remote(
-        "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
-        "added_remote_ds",
-        "/Datasets",
-    )
-    assert remote_ds.name == "added_remote_ds"
+    with webknossos_context("http://localhost:9000", os.environ.get("WK_TOKEN")):
+        remote_ds = RemoteDataset.explore_and_add_remote(
+            "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
+            "added_remote_ds",
+            "/Datasets",
+        )
+        assert remote_ds.name == "added_remote_ds"
 
 
 def test_no_largest_segment_id() -> None:
