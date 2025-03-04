@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an issue with `RemoteDataset.explore_and_add_remote()` where including a remote dataset failed. [#1261](https://github.com/scalableminds/webknossos-libs/pull/1261)
 
 
 ## [2.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.0) - 2025-03-04
