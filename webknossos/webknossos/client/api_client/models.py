@@ -261,11 +261,11 @@ class ApiUser:
 @attr.s(auto_attribs=True)
 class ApiUserCompact:
     id: str
-    email: str
     first_name: str
     last_name: str
-    is_admin: bool
-    is_dataset_manager: bool
+    email: Optional[str] = None
+    is_admin: Optional[bool] = None
+    is_dataset_manager: Optional[bool] = None
 
 
 @attr.s(auto_attribs=True)
@@ -296,9 +296,9 @@ class ApiProject:
     name: str
     team: str
     team_name: str
-    owner: Optional[ApiUserCompact]  # None in case you have no read access on the owner
     priority: int
     paused: bool
+    owner: Optional[ApiUserCompact]  # None in case you have no read access on the owner
     expected_time: Optional[int] = None
 
 
@@ -311,7 +311,7 @@ class ApiAnnotation:
     description: str
     state: str
     modified: int
-    data_store: ApiDataStore
+    data_store: Optional[ApiDataStore] = None
     tracing_time: Optional[int] = None  # millis
 
 

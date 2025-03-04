@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 import attr
 
@@ -38,8 +38,8 @@ class AnnotationInfo:
             else None,
             modified=api_annotation.modified,
         )
-    
-     @classmethod
+
+    @classmethod
     def get_remote_annotations(
         cls, is_finished: Optional[bool] = False, owner: Optional[str] = None
     ) -> List["AnnotationInfo"]:
