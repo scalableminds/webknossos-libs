@@ -7,18 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...HEAD)
 
 ### Breaking Changes
-- The deprecated executor `WrappedProcessPoolExecutor` was removed. Use `MultiprocessingExecutor` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
-- The deprecated execution strategy `test_pickling` was removed. Use `multiprocessing_with_pickling` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
-- The deprecated execution strategy `debug_sequential` was removed. Use `sequential` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+
+## [2.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.0) - 2025-03-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.16.10...v2.0.0)
+
+### Breaking Changes
+- The deprecated executor `WrappedProcessPoolExecutor` was removed. Use `MultiprocessingExecutor` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
+- The deprecated execution strategy `test_pickling` was removed. Use `multiprocessing_with_pickling` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
+- The deprecated execution strategy `debug_sequential` was removed. Use `sequential` instead. [#1244](https://github.com/scalableminds/webknossos-libs/pull/1244)
 
 
 ## [0.16.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.16.10) - 2025-02-26
