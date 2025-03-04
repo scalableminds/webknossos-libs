@@ -128,6 +128,16 @@ class WkApiClient(AbstractApiClient):
             dataset,
         )
 
+    def annotation_list(self, is_finished: Optional[bool]) -> List[ApiAnnotation]:
+        route = "/annotations/readable"
+        return self._get_json(
+            route,
+            List[ApiAnnotation],
+            query={
+                "isFinished": is_finished,
+            },
+        )
+
     def datastore_list(self) -> List[ApiDataStore]:
         route = "/datastores"
         return self._get_json(route, List[ApiDataStore])
