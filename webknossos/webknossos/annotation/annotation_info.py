@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import attr
 
@@ -38,3 +38,21 @@ class AnnotationInfo:
             else None,
             modified=api_annotation.modified,
         )
+
+    @classmethod
+    def get_remote_annotations(
+        cls, is_finished: Optional[bool] = False, owner: Optional[str] = None
+    ) -> List["AnnotationInfo"]:
+        """Returns a list of AnnotationInfo objects for all annotations that belong to the current user (if owner is None).
+        If owner is not None, only annotations of the specified owner are returned."""
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(True)
+        if owner is None:
+            owner = client.user_current().id
+
+        return [
+            cls._from_api_annotation(api_annotation)
+            for api_annotation in client.annotation_list(is_finished)
+            if api_annotation.owner.id == owner
+        ]
