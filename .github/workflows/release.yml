@@ -4,7 +4,7 @@ on:
   workflow_dispatch: 
     inputs:
       version:
-        description: "Version of the new release (e.g. `0.0.1`)"
+        description: "Version of the new release (e.g. `2.0.1`)"
         required: true
 
 jobs:
@@ -16,7 +16,6 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        ref: ${{ startsWith(github.event.inputs.version, '0.') && 'support-0.x' || 'master' }}
         token: ${{ secrets.NORMANRZ_PAT }}
 
     - uses: actions/setup-python@v4
