@@ -3295,18 +3295,15 @@ class RemoteDataset(Dataset):
             The dataset files must be accessible from the WEBKNOSSOS server
             for this to work. The data will be streamed directly from the source.
         """
-        from ..client.context import _get_api_client, _get_context
+        from ..client.context import _get_context
 
         context = _get_context()
+        dataset = ApiDatasetExploreAndAddRemote(
+            UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+        )
+        context.api_client_with_auth.dataset_explore_and_add_remote(dataset)
 
-        with nullcontext():
-            client = _get_api_client(True)
-            dataset = ApiDatasetExploreAndAddRemote(
-                UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
-            )
-            client.dataset_explore_and_add_remote(dataset)
-
-            return cls.open_remote(dataset_name, context.organization_id, context.token)
+        return cls.open_remote(dataset_name, context.organization_id, context.token)
 
     @property
     def folder(self) -> RemoteFolder:
