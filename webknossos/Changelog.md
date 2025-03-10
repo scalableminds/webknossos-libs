@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added `get_remote_annotations()` to AnnotationInfo class to get a list of all remote Annotations of the current user. [#1262](https://github.com/scalableminds/webknossos-libs/pull/1262)
+- Adds the field `totalFileSizeInBytes` to the dataset upload information. [#1264](https://github.com/scalableminds/webknossos-libs/pull/1264)
 
 ### Changed
 
