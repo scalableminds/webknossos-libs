@@ -15,10 +15,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `get_remote_annotations()` to AnnotationInfo class to get a list of all remote Annotations of the current user. [#1262](https://github.com/scalableminds/webknossos-libs/pull/1262)
 
 ### Changed
 
 ### Fixed
+- Fixed an issue with `RemoteDataset.explore_and_add_remote()` where including a remote dataset failed. [#1261](https://github.com/scalableminds/webknossos-libs/pull/1261)
 
 
 ## [2.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.0) - 2025-03-04

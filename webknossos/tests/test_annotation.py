@@ -176,6 +176,18 @@ def test_dataset_access_via_annotation(tmp_path: Path) -> None:
     assert annotation.dataset_id == renameable_dataset._dataset_id
 
 
+def test_remote_annotation_list() -> None:
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    annotation_from_file = wk.Annotation.load(path)
+    annotation_from_file.organization_id = "Organization_X"
+    test_token = os.getenv("WK_TOKEN")
+    with wk.webknossos_context("http://localhost:9000", test_token):
+        annotation_from_file.upload()
+        annotations = wk.AnnotationInfo.get_remote_annotations()
+
+    assert annotation_from_file.name in [a.name for a in annotations]
+
+
 @pytest.mark.use_proxay
 def test_annotation_upload_download_roundtrip() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
