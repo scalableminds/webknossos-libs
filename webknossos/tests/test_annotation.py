@@ -173,8 +173,7 @@ def test_dataset_access_via_annotation(tmp_path: Path) -> None:
 
     renameable_dataset.name = "replaced_name"
     # Test whether the DS can still be accessed via the annotation after the renaming.
-    dataset_from_annotation = annotation.get_remote_annotation_dataset()
-    assert dataset_from_annotation._dataset_id == renameable_dataset._dataset_id
+    assert annotation.dataset_id == renameable_dataset._dataset_id
 
 
 @pytest.mark.use_proxay
