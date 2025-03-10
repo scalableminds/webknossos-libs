@@ -35,6 +35,52 @@ from ..mag_view import MagView
 pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
 
 
+def _pims_imports() -> Optional[str]:
+    import_exceptions = []
+
+    try:
+        from .pims_czi_reader import PimsCziReader  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsCziReader: {import_error.msg}")
+
+    try:
+        from .pims_dm_readers import (  # noqa: F401 unused-import
+            PimsDm3Reader,
+            PimsDm4Reader,
+        )
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsDmReaders: {import_error.msg}")
+
+    try:
+        from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
+            PimsImagejTiffReader,
+        )
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsImagejTiffReader: {import_error.msg}")
+
+    try:
+        from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
+
+    if import_exceptions:
+        import_exception_string = "".join(
+            f"\t- {import_exception}\n" for import_exception in import_exceptions
+        )
+
+        return import_exception_string
+    return None
+
+
+if (errors := _pims_imports()) is not None:
+    warnings.warn(
+        f"[WARNING] Not all pims readers could be imported:\n{errors}Install the readers you need or use 'webknossos[all]' to install all readers.",
+        category=UserWarning,
+        source=None,
+        stacklevel=2,
+    )
+
+
 def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
     return dim_size == 1 or (dim_size == 3 and dtype == np.dtype("uint8"))
 
@@ -319,40 +365,6 @@ class PimsImages:
     def _try_open_pims_images(
         self, original_images: Union[str, List[str]], exceptions: List[Exception]
     ) -> Optional[pims.FramesSequence]:
-        import_exceptions = []
-
-        try:
-            from .pims_czi_reader import PimsCziReader  # noqa: F401 unused-import
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsCziReader: {import_error.msg}")
-
-        try:
-            from .pims_dm_readers import (  # noqa: F401 unused-import
-                PimsDm3Reader,
-                PimsDm4Reader,
-            )
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsDmReaders: {import_error.msg}")
-
-        try:
-            from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
-                PimsImagejTiffReader,
-            )
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsImagejTiffReader: {import_error.msg}")
-
-        try:
-            from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
-
-        if import_exceptions:
-            import_exception_string = "\n\t" + "\n\t".join(import_exceptions)
-            warnings.warn(
-                f"[WARNING] Not all pims readers could be imported: {import_exception_string}\nInstall the readers you need or use 'webknossos[all]' to install all readers.",
-                category=UserWarning,
-            )
-
         if self._use_bioformats:
             return None
 
