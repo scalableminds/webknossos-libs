@@ -633,7 +633,7 @@ class Dataset:
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
         dataset_id: Optional[str] = None,
-    ) -> Tuple[ContextManager, str, str, str, Optional[str]]:
+    ) -> Tuple[ContextManager, Optional[str], str, str, Optional[str]]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -783,6 +783,9 @@ class Dataset:
             dataset_id,
         )
 
+        if dataset_id is None:
+            raise RuntimeError("Remote Dataset was not found.")
+
         with context_manager:
             wk_context = _get_context()
             api_dataset_info = wk_context.api_client.dataset_info(
@@ -842,6 +845,9 @@ class Dataset:
         ) = cls._parse_remote(
             dataset_name_or_url, organization_id, sharing_token, webknossos_url
         )
+
+        if dataset_id is None:
+            raise RuntimeError("Remote Dataset was not found.")
 
         if isinstance(layers, str):
             layers = [layers]
