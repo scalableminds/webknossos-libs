@@ -1,3 +1,4 @@
+import json
 import warnings
 from pathlib import Path
 from shutil import copytree
@@ -8,7 +9,6 @@ import pytest
 from cluster_tools import SequentialExecutor
 from tifffile import TiffFile
 
-import webknossos as wk
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset
 
@@ -21,7 +21,7 @@ def ignore_warnings() -> Iterator:
 
 
 def test_compare_tifffile(tmp_path: Path) -> None:
-    ds = wk.Dataset.from_images(
+    ds = Dataset.from_images(
         TESTDATA_DIR / "tiff",
         tmp_path,
         (1, 1, 1),
@@ -29,7 +29,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         layer_name="tiff_stack",
         layer_category="segmentation",
         shard_shape=(256, 256, 256),
-        map_filepath_to_layer_name=wk.Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
+        map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
     )
     assert len(ds.layers) == 1
     assert "tiff_stack" in ds.layers
@@ -41,7 +41,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
 
 
 def test_multiple_multitiffs(tmp_path: Path) -> None:
-    ds = wk.Dataset.from_images(
+    ds = Dataset.from_images(
         TESTDATA_DIR / "various_tiff_formats",
         tmp_path,
         (1, 1, 1),
@@ -71,9 +71,18 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         assert layer.num_channels == channels
         assert layer.bounding_box.size == size
 
+        # Check that the zarr.json metadata is correct
+        mag1 = layer.get_finest_mag()
+        array_shape = json.loads((mag1.path / "zarr.json").read_bytes())["shape"]
+        shard_aligned_bottomright = layer.bounding_box.with_bottomright_xyz(
+            layer.bounding_box.bottomright_xyz.ceildiv(mag1.info.shard_shape)
+            * mag1.info.shard_shape
+        ).bottomright
+        assert array_shape == [channels] + shard_aligned_bottomright.to_list()
+
 
 def test_from_dicom_images(tmp_path: Path) -> None:
-    ds = wk.Dataset.from_images(
+    ds = Dataset.from_images(
         TESTDATA_DIR / "dicoms",
         tmp_path,
         (1, 1, 1),
@@ -97,7 +106,7 @@ def test_no_slashes_in_layername(tmp_path: Path) -> None:
 
     for strategy in Dataset.ConversionLayerMapping:
         with SequentialExecutor() as executor:
-            dataset = wk.Dataset.from_images(
+            dataset = Dataset.from_images(
                 tmp_path / "tiff",
                 tmp_path / str(strategy),
                 voxel_size=(10, 10, 10),
