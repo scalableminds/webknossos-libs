@@ -593,7 +593,7 @@ class Dataset:
         cls,
         dataset_name: str,
         organization_id: str,
-    ) -> Optional[str]:
+    ) -> str:
         from ..client.context import _get_context
 
         current_context = _get_context()
@@ -607,16 +607,11 @@ class Dataset:
                 dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
                     dataset_name, organization_id
                 )
-            except UnexpectedStatusError:
-                dataset_id = None
-            if dataset_id is not None:
                 possible_ids.append(dataset_id)
-
-        if len(possible_ids) == 0:
-            logger.warning(
-                "The dataset name and organization ID do not match any dataset."
-            )
-            return None
+            except UnexpectedStatusError:
+                raise ValueError(
+                    f"Dataset {dataset_name} not found in organization {organization_id}"
+                )
         elif len(possible_ids) > 1:
             logger.warning(
                 f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
@@ -633,7 +628,7 @@ class Dataset:
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
         dataset_id: Optional[str] = None,
-    ) -> Tuple[ContextManager, Optional[str], str, str, Optional[str]]:
+    ) -> Tuple[ContextManager, str, str, str, Optional[str]]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -783,9 +778,6 @@ class Dataset:
             dataset_id,
         )
 
-        if dataset_id is None:
-            raise RuntimeError("Remote Dataset was not found.")
-
         with context_manager:
             wk_context = _get_context()
             api_dataset_info = wk_context.api_client.dataset_info(
@@ -845,9 +837,6 @@ class Dataset:
         ) = cls._parse_remote(
             dataset_name_or_url, organization_id, sharing_token, webknossos_url
         )
-
-        if dataset_id is None:
-            raise RuntimeError("Remote Dataset was not found.")
 
         if isinstance(layers, str):
             layers = [layers]
@@ -3306,20 +3295,18 @@ class RemoteDataset(Dataset):
             The dataset files must be accessible from the WEBKNOSSOS server
             for this to work. The data will be streamed directly from the source.
         """
-        from ..client.context import _get_api_client
+        from ..client.context import _get_api_client, _get_context
 
-        (context, dataset_id, directory_name, organisation_id, sharing_token) = (
-            cls._parse_remote(dataset_name)
-        )
+        context = _get_context()
 
-        with context:
+        with nullcontext():
             client = _get_api_client(True)
             dataset = ApiDatasetExploreAndAddRemote(
                 UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
             )
             client.dataset_explore_and_add_remote(dataset)
 
-            return cls.open_remote(dataset_name, organisation_id, sharing_token)
+            return cls.open_remote(dataset_name, context.organization_id, context.token)
 
     @property
     def folder(self) -> RemoteFolder:
