@@ -164,6 +164,7 @@ class ApiReserveDatasetUploadInformation:
     name: str
     organization: str
     total_file_count: int
+    total_file_size_in_bytes: int
     initial_teams: List[str]
     layers_to_link: Optional[List[ApiLinkedLayerIdentifier]] = None
     folder_id: Optional[str] = None
