@@ -35,6 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ..client.api_client.errors import UnexpectedStatusError
 from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
@@ -602,9 +603,12 @@ class Dataset:
             ).keys()
         )
         if len(possible_ids) == 0:
-            dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
-                dataset_name, organization_id
-            )
+            try:
+                dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
+                    dataset_name, organization_id
+                )
+            except UnexpectedStatusError:
+                dataset_id = None
             if dataset_id is not None:
                 possible_ids.append(dataset_id)
 

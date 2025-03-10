@@ -44,10 +44,11 @@ from webknossos.utils import (
     snake_to_camel_case,
 )
 
-# @pytest.fixture(autouse=True, scope="module")
-# def start_minio() -> Iterator[None]:
-#     with use_minio():
-#         yield
+
+@pytest.fixture(autouse=True, scope="module")
+def start_minio() -> Iterator[None]:
+    with use_minio():
+        yield
 
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
@@ -1048,7 +1049,7 @@ def test_explore_and_add_remote() -> None:
         remote_ds = RemoteDataset.explore_and_add_remote(
             "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
             "added_remote_ds",
-            "/Datasets",
+            "/Organization_X",
         )
         assert remote_ds.name == "added_remote_ds"
 

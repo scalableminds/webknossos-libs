@@ -29,7 +29,6 @@ from webknossos.client.api_client.models import (
 
 from ...utils import time_since_epoch_in_ms
 from ._abstract_api_client import AbstractApiClient
-from .errors import UnexpectedStatusError
 
 
 class WkApiClient(AbstractApiClient):
@@ -73,14 +72,9 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{dataset_id}"
         return self._get_json(route, ApiDataset, query={"sharingToken": sharing_token})
 
-    def dataset_id_from_name(
-        self, directory_name: str, organization_id: str
-    ) -> Optional[str]:
-        try:
-            route = f"/datasets/disambiguate/{organization_id}/{directory_name}/toId"
-            return self._get_json(route, ApiDatasetId).id
-        except UnexpectedStatusError:
-            return None
+    def dataset_id_from_name(self, directory_name: str, organization_id: str) -> str:
+        route = f"/datasets/disambiguate/{organization_id}/{directory_name}/toId"
+        return self._get_json(route, ApiDatasetId).id
 
     def dataset_list(
         self,
