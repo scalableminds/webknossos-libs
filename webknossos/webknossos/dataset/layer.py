@@ -357,9 +357,6 @@ class Layer:
 
     @bounding_box.setter
     def bounding_box(self, bbox: NDBoundingBox) -> None:
-        """
-        Updates the offset and size of the bounding box of this layer in the properties.
-        """
         """Updates the offset and size of the bounding box of this layer in the properties."""
         self.dataset._ensure_writable()
         assert bbox.topleft.is_positive(), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
