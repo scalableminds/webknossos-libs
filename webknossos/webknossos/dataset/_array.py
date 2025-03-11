@@ -1,5 +1,4 @@
 import re
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -99,12 +98,7 @@ class BaseArray(ABC):
         pass
 
     @abstractmethod
-    def ensure_size(
-        self,
-        new_bbox: NDBoundingBox,
-        align_with_shards: bool = True,
-        warn: bool = False,
-    ) -> None:
+    def resize(self, new_bbox: NDBoundingBox) -> None:
         pass
 
     @abstractmethod
@@ -206,12 +200,7 @@ class WKWArray(BaseArray):
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
         self._wkw_dataset.write(Vec3Int(bbox.topleft), data)
 
-    def ensure_size(
-        self,
-        new_bbox: NDBoundingBox,
-        align_with_shards: bool = True,
-        warn: bool = False,
-    ) -> None:
+    def resize(self, new_bbox: NDBoundingBox) -> None:
         pass
 
     def _list_files(self) -> Iterator[Path]:
@@ -511,19 +500,13 @@ class TensorStoreArray(BaseArray):
             out = np.expand_dims(out, 0)
         return out
 
-    def ensure_size(
-        self,
-        new_bbox: NDBoundingBox,
-        align_with_shards: bool = True,
-        warn: bool = False,
-    ) -> None:
+    def resize(self, new_bbox: NDBoundingBox) -> None:
         array = self._array
 
-        new_bbox = new_bbox.with_bottomright(
-            (
-                max(array.domain.exclusive_max[i + 1], new_bbox.bottomright[i])
-                for i in range(len(new_bbox))
-            )
+        # Align with shards
+        shard_shape = self.info.shard_shape
+        new_bbox = new_bbox.with_bottomright_xyz(
+            new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
         )
         new_domain = tensorstore.IndexDomain(
             new_bbox.ndim + 1,
@@ -531,22 +514,8 @@ class TensorStoreArray(BaseArray):
             implicit_upper_bounds=tuple(True for _ in range(new_bbox.ndim + 1)),
             labels=array.domain.labels,
         )
-        if new_domain != array.domain:
-            if align_with_shards:
-                shard_shape = self.info.shard_shape
-                new_aligned_bbox = new_bbox.with_bottomright_xyz(
-                    new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
-                )
-                new_domain = tensorstore.IndexDomain(
-                    new_aligned_bbox.ndim + 1,
-                    shape=(self.info.num_channels,)
-                    + new_aligned_bbox.bottomright.to_tuple(),
-                    implicit_upper_bounds=tuple(
-                        True for _ in range(new_aligned_bbox.ndim + 1)
-                    ),
-                    labels=array.domain.labels,
-                )
 
+        if new_domain != array.domain:
             # Check on-disk for changes to shape
             current_array = tensorstore.open(
                 {
@@ -560,17 +529,10 @@ class TensorStoreArray(BaseArray):
                     + "This is likely happening because multiple processes changed the metadata of this array."
                 )
 
-            if warn:
-                warnings.warn(
-                    f"[INFO] Resizing Zarr array from `{array.domain}` to `{new_domain}`.",
-                    category=UserWarning,
-                )
-
             self._cached_array = array.resize(
                 inclusive_min=None,
                 exclusive_max=new_domain.exclusive_max,
                 resize_metadata_only=True,
-                expand_only=True,
             ).result()
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
