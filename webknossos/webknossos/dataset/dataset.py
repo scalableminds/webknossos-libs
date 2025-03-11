@@ -35,6 +35,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ..client.api_client.errors import UnexpectedStatusError
 from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
@@ -601,17 +602,16 @@ class Dataset:
                 name=dataset_name, organization_id=organization_id
             ).keys()
         )
-        if len(possible_ids) == 0 and (
-            dataset_id := current_context.api_client_with_auth.dataset_id_from_name(
-                dataset_name, organization_id
-            )
-        ):
-            possible_ids.append(dataset_id)
-
         if len(possible_ids) == 0:
-            raise ValueError(
-                f"Dataset {dataset_name} not found in organization {organization_id}."
-            )
+            try:
+                dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
+                    dataset_name, organization_id
+                )
+                possible_ids.append(dataset_id)
+            except UnexpectedStatusError:
+                raise ValueError(
+                    f"Dataset {dataset_name} not found in organization {organization_id}"
+                )
         elif len(possible_ids) > 1:
             logger.warning(
                 f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
@@ -3295,20 +3295,15 @@ class RemoteDataset(Dataset):
             The dataset files must be accessible from the WEBKNOSSOS server
             for this to work. The data will be streamed directly from the source.
         """
-        from ..client.context import _get_api_client
+        from ..client.context import _get_context
 
-        (context, dataset_id, directory_name, organisation_id, sharing_token) = (
-            cls._parse_remote(dataset_name)
+        context = _get_context()
+        dataset = ApiDatasetExploreAndAddRemote(
+            UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
         )
+        context.api_client_with_auth.dataset_explore_and_add_remote(dataset)
 
-        with context:
-            client = _get_api_client()
-            dataset = ApiDatasetExploreAndAddRemote(
-                UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
-            )
-            client.dataset_explore_and_add_remote(dataset)
-
-            return cls.open_remote(dataset_name, organisation_id, sharing_token)
+        return cls.open_remote(dataset_name, context.organization_id, context.token)
 
     @property
     def folder(self) -> RemoteFolder:
