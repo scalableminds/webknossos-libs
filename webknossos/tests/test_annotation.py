@@ -176,6 +176,7 @@ def test_dataset_access_via_annotation(tmp_path: Path) -> None:
     assert annotation.dataset_id == renameable_dataset._dataset_id
 
 
+@pytest.mark.use_proxay
 def test_remote_annotation_list() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     annotation_from_file = wk.Annotation.load(path)
