@@ -98,12 +98,7 @@ class BaseArray(ABC):
         pass
 
     @abstractmethod
-    def resize(
-        self,
-        new_bbox: NDBoundingBox,
-        *,
-        expand_only: bool = True,
-    ) -> None:
+    def resize(self, new_bbox: NDBoundingBox) -> None:
         pass
 
     @abstractmethod
@@ -205,12 +200,7 @@ class WKWArray(BaseArray):
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
         self._wkw_dataset.write(Vec3Int(bbox.topleft), data)
 
-    def resize(
-        self,
-        new_bbox: NDBoundingBox,
-        *,
-        expand_only: bool = True,
-    ) -> None:
+    def resize(self, new_bbox: NDBoundingBox) -> None:
         pass
 
     def _list_files(self) -> Iterator[Path]:
@@ -510,21 +500,8 @@ class TensorStoreArray(BaseArray):
             out = np.expand_dims(out, 0)
         return out
 
-    def resize(
-        self,
-        new_bbox: NDBoundingBox,
-        *,
-        expand_only: bool = True,
-    ) -> None:
+    def resize(self, new_bbox: NDBoundingBox) -> None:
         array = self._array
-
-        if expand_only:
-            new_bbox = new_bbox.with_bottomright(
-                (
-                    max(array.domain.exclusive_max[i + 1], new_bbox.bottomright[i])
-                    for i in range(len(new_bbox))
-                )
-            )
 
         # Align with shards
         shard_shape = self.info.shard_shape
@@ -556,7 +533,6 @@ class TensorStoreArray(BaseArray):
                 inclusive_min=None,
                 exclusive_max=new_domain.exclusive_max,
                 resize_metadata_only=True,
-                expand_only=expand_only,
             ).result()
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:

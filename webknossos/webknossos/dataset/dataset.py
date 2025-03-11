@@ -1947,15 +1947,12 @@ class Dataset:
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                layer._set_bounding_box(
-                    layer.bounding_box.with_size_xyz(
-                        Vec3Int(
-                            pims_images.dimwise_max(shapes)
-                            + (layer.bounding_box.get_shape("z"),)
-                        )
-                        * mag.to_vec3_int().with_z(1)
-                    ),
-                    expand_only=False,
+                layer.bounding_box = layer.bounding_box.with_size_xyz(
+                    Vec3Int(
+                        pims_images.dimwise_max(shapes)
+                        + (layer.bounding_box.get_shape("z"),)
+                    )
+                    * mag.to_vec3_int().with_z(1)
                 )
             if expected_bbox != layer.bounding_box:
                 warnings.warn(
