@@ -357,15 +357,13 @@ class Layer:
 
     @bounding_box.setter
     def bounding_box(self, bbox: NDBoundingBox) -> None:
-        """
-        Updates the offset and size of the bounding box of this layer in the properties.
-        """
+        """Updates the offset and size of the bounding box of this layer in the properties."""
         self.dataset._ensure_writable()
         assert bbox.topleft.is_positive(), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
-            mag._array.ensure_size(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
+            mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property
     def category(self) -> LayerCategoryType:
@@ -561,7 +559,7 @@ class Layer:
             path=mag_path,
         )
 
-        mag_view._array.ensure_size(
+        mag_view._array.resize(
             self.bounding_box.align_with_mag(mag, ceil=True).in_mag(mag)
         )
 

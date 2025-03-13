@@ -218,7 +218,7 @@ class NDBoundingBox:
         """
         return attr.evolve(self, is_visible=is_visible)
 
-    def with_color(self: _T, color: Optional[Tuple[float, float, float, float]]) -> _T:
+    def with_color(self: _T, color: Tuple[float, float, float, float]) -> _T:
         """
         Returns a new instance of NDBoundingBox with the specified color.
 
@@ -232,7 +232,10 @@ class NDBoundingBox:
         return attr.evolve(self, color=color)
 
     def with_bounds(
-        self: _T, axis: str, new_topleft: Optional[int], new_size: Optional[int]
+        self: _T,
+        axis: str,
+        new_topleft: Optional[int] = None,
+        new_size: Optional[int] = None,
     ) -> _T:
         """
         Returns a new NDBoundingBox object with updated bounds along the specified axis.
