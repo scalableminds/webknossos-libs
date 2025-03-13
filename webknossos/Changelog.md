@@ -10,18 +10,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.1...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `get_remote_annotations()` to AnnotationInfo class to get a list of all remote Annotations of the current user. [#1262](https://github.com/scalableminds/webknossos-libs/pull/1262)
 - Adds the field `totalFileSizeInBytes` to the dataset upload information. [#1264](https://github.com/scalableminds/webknossos-libs/pull/1264)
+- Added tests for NDBoundingBox and VecInt classes. [#1268](https://github.com/scalableminds/webknossos-libs/pull/1268)
 
 ### Changed
 
 ### Fixed
+
+
+## [2.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.1) - 2025-03-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...v2.0.1)
+
+### Added
+- Added `get_remote_annotations()` to AnnotationInfo class to get a list of all remote Annotations of the current user. [#1262](https://github.com/scalableminds/webknossos-libs/pull/1262)
+
+### Fixed
 - Fixed an issue with `RemoteDataset.explore_and_add_remote()` where including a remote dataset failed. [#1261](https://github.com/scalableminds/webknossos-libs/pull/1261)
+- Fixed an issue with the Zarr array's shape when using `Dataset.from_images`. [#1267](https://github.com/scalableminds/webknossos-libs/pull/1267)
+
 
 
 ## [2.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.0) - 2025-03-04
