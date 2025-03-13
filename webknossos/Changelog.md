@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Adds the field `totalFileSizeInBytes` to the dataset upload information. [#1264](https://github.com/scalableminds/webknossos-libs/pull/1264)
 - Added tests for NDBoundingBox and VecInt classes. [#1268](https://github.com/scalableminds/webknossos-libs/pull/1268)
 
 ### Changed
