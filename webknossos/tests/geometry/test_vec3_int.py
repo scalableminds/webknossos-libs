@@ -1,6 +1,6 @@
 import numpy as np
 
-from webknossos.geometry import Mag, Vec3Int, VecInt
+from webknossos.geometry import Mag, Vec3Int
 
 
 def test_with() -> None:
@@ -65,7 +65,6 @@ def test_method_arithmetic() -> None:
 
 
 def test_repr() -> None:
-    assert str(VecInt(1, 2, axes=("x", "y"))) == "VecInt(1,2, axes=('x', 'y'))"
     assert str(Vec3Int(1, 2, 3)) == "Vec3Int(1,2,3)"
 
 

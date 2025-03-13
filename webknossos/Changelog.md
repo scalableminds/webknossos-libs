@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added tests for NDBoundingBox and VecInt classes. [#1268](https://github.com/scalableminds/webknossos-libs/pull/1268)
 
 ### Changed
 
