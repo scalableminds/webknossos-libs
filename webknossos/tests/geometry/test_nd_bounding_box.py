@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from hypothesis import given, infer
 
-from webknossos import Mag, NDBoundingBox
+from webknossos.geometry import Mag, NDBoundingBox, VecInt
 
 
 def test_align_with_mag_ceiled() -> None:
@@ -176,54 +176,104 @@ def test_with_bounds() -> None:
     )
 
 
-# def test_contains() -> None:
-#     assert NDBoundingBox((1, 1, 1), (5, 5, 5)).contains((2, 2, 2))
-#     assert NDBoundingBox((1, 1, 1), (5, 5, 5)).contains((1, 1, 1))
-
-#     # top-left is inclusive, bottom-right is exclusive
-#     assert not NDBoundingBox((1, 1, 1), (5, 5, 5)).contains((6, 6, 6))
-#     assert not NDBoundingBox((1, 1, 1), (5, 5, 5)).contains((20, 20, 20))
-
-#     # nd-array may contain float values
-#     assert NDBoundingBox((1, 1, 1), (5, 5, 5)).contains(np.array([5.5, 5.5, 5.5]))
-#     assert not NDBoundingBox((1, 1, 1), (5, 5, 5)).contains(np.array([6.0, 6.0, 6.0]))
-
-
-# @given(bb=infer, mag=infer, ceil=infer)
-# def test_align_with_mag_against_numpy_implementation(
-#     bb: NDBoundingBox,
-#     mag: Mag,
-#     ceil: bool,
-# ) -> None:
-#     try:
-#         slow_np_result = bb._align_with_mag_slow(mag, ceil)
-#     # Very large numbers don't fit into the C-int anymore:
-#     except OverflowError:
-#         bb.align_with_mag(mag, ceil)
-#     else:
-#         # The slower numpy implementation is wrong for very large numbers:
-#         # Floating point precision for 64 bit floats is not capable of representing
-#         # numbers larger than 2**53 accurately.
-#         if all(i < 2**53 for i in bb.bottomright):
-#             assert bb.align_with_mag(mag, ceil) == slow_np_result
-
-
-# def test_negative_size() -> None:
-#     assert NDBoundingBox((10, 10, 10), (-5, 5, 5)) == NDBoundingBox(
-#         (5, 10, 10), (5, 5, 5)
-#     )
-#     assert NDBoundingBox((10, 10, 10), (-5, 5, -5)) == NDBoundingBox(
-#         (5, 10, 5), (5, 5, 5)
-#     )
-#     assert NDBoundingBox((10, 10, 10), (-5, 5, -50)) == NDBoundingBox(
-#         (5, 10, -40), (5, 5, 50)
-#     )
+def test_contains() -> None:
+    assert NDBoundingBox(
+        (1, 1, 1, 1, 1),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ).contains(VecInt((1, 1, 1, 1, 1), ("x", "y", "z", "t", "s")))
+    assert NDBoundingBox(
+        (1, 1, 1, 1, 1),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ).contains(VecInt((5, 5, 5, 5, 5), ("x", "y", "z", "t", "s")))
+    assert not NDBoundingBox(
+        (1, 1, 1, 1, 1),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ).contains(VecInt((6, 6, 6, 6, 6), ("x", "y", "z", "t", "s")))
+    assert not NDBoundingBox(
+        (1, 1, 1, 1, 1),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ).contains(VecInt((20, 20, 20, 20, 20), ("x", "y", "z", "t", "s")))
+    assert NDBoundingBox(
+        (1, 1, 1, 1, 1),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ).contains(np.array([5.5, 5.5, 5.5, 5.5, 5.5]))
+    assert not NDBoundingBox(
+        (1, 1, 1, 1, 1),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ).contains(np.array([6.0, 6.0, 6.0, 6.0, 6.0]))
 
 
-# @given(bbox=infer)
-# def test_negative_inversion(
-#     bbox: NDBoundingBox,
-# ) -> None:
-#     """Flipping the topleft and bottomright (by padding both with the negative size)
-#     results in the original bbox, as negative sizes are converted to positive ones."""
-#     assert bbox == bbox.padded_with_margins(-bbox.size, -bbox.size)
+@given(bb=infer, mag=infer, ceil=infer)
+def test_align_with_mag_against_numpy_implementation(
+    bb: NDBoundingBox,
+    mag: Mag,
+    ceil: bool,
+) -> None:
+    try:
+        slow_np_result = bb._align_with_mag_slow(mag, ceil)
+    # Very large numbers don't fit into the C-int anymore:
+    except OverflowError:
+        bb.align_with_mag(mag, ceil)
+    else:
+        # The slower numpy implementation is wrong for very large numbers:
+        # Floating point precision for 64 bit floats is not capable of representing
+        # numbers larger than 2**53 accurately.
+        if all(i < 2**53 for i in bb.bottomright):
+            assert bb.align_with_mag(mag, ceil) == slow_np_result
+
+
+def test_negative_size() -> None:
+    assert NDBoundingBox(
+        (10, 10, 10, 10, 10),
+        (-5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ) == NDBoundingBox(
+        (5, 10, 10, 10, 10),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+    assert NDBoundingBox(
+        (10, 10, 10, 10, 10),
+        (-5, 5, -5, 5, -5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ) == NDBoundingBox(
+        (5, 10, 5, 10, 5),
+        (5, 5, 5, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+    assert NDBoundingBox(
+        (10, 10, 10, 10, 10),
+        (-5, 5, -50, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    ) == NDBoundingBox(
+        (5, 10, -40, 10, 10),
+        (5, 5, 50, 5, 5),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+
+
+@given(bbox=infer)
+def test_negative_inversion(
+    bbox: NDBoundingBox,
+) -> None:
+    """Flipping the topleft and bottomright (by padding both with the negative size)
+    results in the original bbox, as negative sizes are converted to positive ones."""
+    assert bbox == bbox.padded_with_margins(-bbox.size, -bbox.size)
