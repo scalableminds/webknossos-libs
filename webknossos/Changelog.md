@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.2...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [2.0.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.2) - 2025-03-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.1...v2.0.2)
 
 ### Added
 - Added tests for NDBoundingBox and VecInt classes. [#1268](https://github.com/scalableminds/webknossos-libs/pull/1268)
@@ -22,6 +32,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed issues with tiff conversion for tiff files that don't use pages for z and other axes. [#1269](https://github.com/scalableminds/webknossos-libs/pull/1269)
+
 
 
 ## [2.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.1) - 2025-03-11
