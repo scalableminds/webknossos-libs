@@ -52,6 +52,62 @@ def test_align_with_mag_ceiled() -> None:
     )
 
 
+def test_xyz_properties() -> None:
+    bb = NDBoundingBox(
+        (1, 2, 3, 4, 5),
+        (6, 7, 8, 9, 10),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+    assert bb.size_xyz == VecInt(x=6, y=7, z=8)
+    assert bb.topleft_xyz == VecInt(x=1, y=2, z=3)
+    assert bb.bottomright_xyz == VecInt(x=7, y=9, z=11)
+    assert bb.index_xyz == VecInt(x=1, y=2, z=3)
+    bb2 = NDBoundingBox(
+        (1, 2, 3, 4, 5),
+        (6, 7, 8, 9, 10),
+        ("z", "t", "s", "x", "y"),
+        (1, 2, 3, 4, 5),
+    )
+    assert bb2.size_xyz == VecInt(x=9, y=10, z=6)
+    assert bb2.topleft_xyz == VecInt(x=4, y=5, z=1)
+    assert bb2.bottomright_xyz == VecInt(x=13, y=15, z=7)
+    assert bb2.index_xyz == VecInt(x=4, y=5, z=1)
+
+
+def test_xyz_methods() -> None:
+    bb = NDBoundingBox(
+        (1, 2, 3, 4, 5),
+        (6, 7, 8, 9, 10),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+    assert bb.with_size_xyz((10, 11, 12)) == NDBoundingBox(
+        (1, 2, 3, 4, 5),
+        (10, 11, 12, 9, 10),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+    assert bb.with_topleft_xyz((10, 11, 12)) == NDBoundingBox(
+        (10, 11, 12, 4, 5),
+        (6, 7, 8, 9, 10),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+    assert bb.with_bottomright_xyz((10, 11, 12)) == NDBoundingBox(
+        (1, 2, 3, 4, 5),
+        (9, 9, 9, 9, 10),
+        ("x", "y", "z", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+    assert bb.with_index_xyz((3, 2, 1)) == NDBoundingBox(
+        (3, 2, 1, 4, 5),
+        (8, 7, 6, 9, 10),
+        ("z", "y", "x", "t", "s"),
+        (1, 2, 3, 4, 5),
+    )
+
+
 def test_align_with_mag_floored() -> None:
     assert NDBoundingBox(
         (1, 1, 1, 1, 1),
