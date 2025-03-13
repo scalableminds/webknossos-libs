@@ -13,133 +13,100 @@ except ImportError as e:
         "Cannot import tifffile, please install it e.g. using 'webknossos[tifffile]'"
     ) from e
 
-ChunkCoords = tuple[int, ...]
-Selection = tuple[slice, ...]
+
+# This indexing function is adapted from zarr-python to work with tiffile's aszarr function
+# See https://github.com/zarr-developers/zarr-python/blob/main/src/zarr/core/indexing.py
+class _ChunkProjection(NamedTuple):
+    chunk_coords: tuple[int, ...]
+    chunk_selection: tuple[Union[slice, int], ...]
+    out_selection: tuple[Union[slice, None], ...]
 
 
-class _ChunkDimProjection(NamedTuple):
-    dim_chunk_ix: int
-    dim_chunk_sel: Union[slice, int]
-    dim_out_sel: Union[slice, None]
+def _chunk_indexing(
+    selection: tuple[Union[slice, int], ...],
+    shape: tuple[int, ...],
+    chunk_shape: tuple[int, ...],
+) -> Iterator[_ChunkProjection]:
+    from itertools import product
 
+    class ChunkDimProjection(NamedTuple):
+        dim_chunk_ix: int
+        dim_chunk_sel: Union[slice, int]
+        dim_out_sel: Union[slice, None]
 
-def _ceildiv(a, b):
-    from math import ceil
+    def ceildiv(a: int, b: int) -> int:
+        return -(a // -b)
 
-    return ceil(a / b)
-
-
-class _SliceDimIndexer:
-    dim_sel: slice
-    dim_len: int
-    dim_chunk_len: int
-
-    start: int
-    stop: int
-
-    def __init__(self, dim_sel: slice, dim_len: int, dim_chunk_len: int):
-        self.start, self.stop, step = dim_sel.indices(dim_len)
+    def slice_dim_indexer(
+        dim_sel: slice, dim_len: int, dim_chunk_len: int
+    ) -> Iterator[ChunkDimProjection]:
+        start, stop, step = dim_sel.indices(dim_len)
         assert step == 1
 
-        self.dim_len = dim_len
-        self.dim_chunk_len = dim_chunk_len
-
-    def __iter__(self) -> Iterator[_ChunkDimProjection]:
         # figure out the range of chunks we need to visit
-        dim_chunk_ix_from = self.start // self.dim_chunk_len
-        dim_chunk_ix_to = _ceildiv(self.stop, self.dim_chunk_len)
+        dim_chunk_ix_from = start // dim_chunk_len
+        dim_chunk_ix_to = ceildiv(stop, dim_chunk_len)
 
         # iterate over chunks in range
         for dim_chunk_ix in range(dim_chunk_ix_from, dim_chunk_ix_to):
             # compute offsets for chunk within overall array
-            dim_offset = dim_chunk_ix * self.dim_chunk_len
-            dim_limit = min(self.dim_len, (dim_chunk_ix + 1) * self.dim_chunk_len)
+            dim_offset = dim_chunk_ix * dim_chunk_len
+            dim_limit = min(dim_len, (dim_chunk_ix + 1) * dim_chunk_len)
 
             # determine chunk length, accounting for trailing chunk
             dim_chunk_len = dim_limit - dim_offset
 
-            if self.start < dim_offset:
+            if start < dim_offset:
                 # selection starts before current chunk
                 dim_chunk_sel_start = 0
-                remainder = (dim_offset - self.start) % 1
+                remainder = (dim_offset - start) % 1
                 if remainder:
                     dim_chunk_sel_start += 1 - remainder
                 # compute number of previous items, provides offset into output array
-                dim_out_offset = dim_offset - self.start
+                dim_out_offset = dim_offset - start
 
             else:
                 # selection starts within current chunk
-                dim_chunk_sel_start = self.start - dim_offset
+                dim_chunk_sel_start = start - dim_offset
                 dim_out_offset = 0
 
-            if self.stop > dim_limit:
+            if stop > dim_limit:
                 # selection ends after current chunk
                 dim_chunk_sel_stop = dim_chunk_len
 
             else:
                 # selection ends within current chunk
-                dim_chunk_sel_stop = self.stop - dim_offset
+                dim_chunk_sel_stop = stop - dim_offset
 
             dim_chunk_sel = slice(dim_chunk_sel_start, dim_chunk_sel_stop, 1)
             dim_chunk_nitems = dim_chunk_sel_stop - dim_chunk_sel_start
             dim_out_sel = slice(dim_out_offset, dim_out_offset + dim_chunk_nitems)
 
-            yield _ChunkDimProjection(dim_chunk_ix, dim_chunk_sel, dim_out_sel)
+            yield ChunkDimProjection(dim_chunk_ix, dim_chunk_sel, dim_out_sel)
 
+    def int_dim_indexer(
+        dim_sel: int, dim_chunk_len: int
+    ) -> Iterator[ChunkDimProjection]:
+        dim_chunk_ix = dim_sel // dim_chunk_len
+        dim_offset = dim_chunk_ix * dim_chunk_len
+        yield ChunkDimProjection(dim_chunk_ix, dim_sel - dim_offset, None)
 
-class _IntDimIndexer:
-    dim_sel: int
-    dim_len: int
-    dim_chunk_len: int
+    # setup per-dimension indexers
+    dim_indexers = [
+        slice_dim_indexer(dim_sel, dim_len, dim_chunk_len)
+        if isinstance(dim_sel, slice)
+        else int_dim_indexer(dim_sel, dim_chunk_len)
+        for dim_sel, dim_len, dim_chunk_len in zip(selection, shape, chunk_shape)
+    ]
 
-    def __init__(self, dim_sel: int, dim_len: int, dim_chunk_len: int) -> None:
-        self.dim_sel = dim_sel
-        self.dim_len = dim_len
-        self.dim_chunk_len = dim_chunk_len
+    for dim_projections in product(*dim_indexers):
+        chunk_coords = tuple(p.dim_chunk_ix for p in dim_projections)
+        chunk_selection = tuple(p.dim_chunk_sel for p in dim_projections)
+        out_selection = tuple(
+            p.dim_out_sel for p in dim_projections if p.dim_out_sel is not None
+        )
 
-    def __iter__(self) -> Iterator[_ChunkDimProjection]:
-        dim_chunk_ix = self.dim_sel // self.dim_chunk_len
-        dim_offset = dim_chunk_ix * self.dim_chunk_len
-        dim_chunk_sel = self.dim_sel - dim_offset
-        dim_out_sel = None
-        yield _ChunkDimProjection(dim_chunk_ix, dim_chunk_sel, dim_out_sel)
-
-
-class _ChunkProjection(NamedTuple):
-    chunk_coords: ChunkCoords
-    chunk_selection: tuple[Union[slice, int], ...]
-    out_selection: tuple[Union[slice, None], ...]
-
-
-class BasicIndexer:
-    dim_indexers: list[_SliceDimIndexer]
-    shape: ChunkCoords
-
-    def __init__(
-        self,
-        selection: tuple[Union[slice, int], ...],
-        shape: ChunkCoords,
-        chunk_shape: ChunkCoords,
-    ):
-        # setup per-dimension indexers
-        self.dim_indexers = [
-            _SliceDimIndexer(dim_sel, dim_len, dim_chunk_len)
-            if isinstance(dim_sel, slice)
-            else _IntDimIndexer(dim_sel, dim_len, dim_chunk_len)
-            for dim_sel, dim_len, dim_chunk_len in zip(selection, shape, chunk_shape)
-        ]
-
-    def __iter__(self) -> Iterator[_ChunkProjection]:
-        from itertools import product
-
-        for dim_projections in product(*self.dim_indexers):
-            chunk_coords = tuple(p.dim_chunk_ix for p in dim_projections)
-            chunk_selection = tuple(p.dim_chunk_sel for p in dim_projections)
-            out_selection = tuple(
-                p.dim_out_sel for p in dim_projections if p.dim_out_sel is not None
-            )
-
-            yield _ChunkProjection(chunk_coords, chunk_selection, out_selection)
+        yield _ChunkProjection(chunk_coords, chunk_selection, out_selection)
 
 
 class PimsTiffReader(FramesSequenceND):
@@ -150,7 +117,6 @@ class PimsTiffReader(FramesSequenceND):
     # class_priority is used in pims to pick the reader with the highest priority.
     # We decided to use a custom reader for tiff files to support images with more than 3 dimensions out of the box.
     # Default is 10, and bioformats priority is 2.
-    # Our custom reader for imagej_tiff has priority 20.
     # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
     class_priority = 19
 
@@ -190,9 +156,25 @@ class PimsTiffReader(FramesSequenceND):
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
         _tiff = tifffile.TiffFile(self.path).series[0]
+
+        # We are using aszarr because it provides a chunked interface
+        # to the tiff file's content. However, we don't want to add
+        # zarr-python as a dependency. So we just implement the indexing
+        # ourselves and rely on the fact that tifffile isn't using more
+        # complex zarr features such as compressors, filters, F-order, fillvalue etc.
         zarr_store = _tiff.aszarr()
         zarray = json.loads(zarr_store[".zarray"])
 
+        assert zarray["zarr_format"] == 2
+        assert zarray["order"] == "C"
+        assert np.dtype(zarray["dtype"]) == self._dtype
+        assert zarray.get("compressor") is None
+        assert zarray.get("filters") in (None, [])
+        assert zarray["fill_value"] == 0
+        array_shape = tuple(zarray["shape"])
+        chunk_shape = tuple(zarray["chunks"])
+
+        # Prepare output array for this frame
         out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
         out = np.zeros(out_shape, dtype=self._dtype)
 
@@ -203,26 +185,23 @@ class PimsTiffReader(FramesSequenceND):
             if axis in self.bundle_axes and axis not in self._other_axes
         )
 
-        selector_list: list[Union[slice, int]] = []
-        for axis in self._tiff_axes:
-            if axis in broadcast_axes:
-                selector_list.append(slice(None))  # broadcast
-            else:
-                selector_list.append(ind[axis])
-        selector = tuple(selector_list)
-        print(self._tiff_axes, self.sizes, selector)
-        array_shape = tuple(zarray["shape"])
-        chunk_shape = tuple(zarray["chunks"])
-        for chunk_proj in BasicIndexer(selector, array_shape, chunk_shape):
-            print(chunk_proj)
+        # Prepare selection of the data to read for this frame
+        selection: tuple[Union[slice, int], ...] = tuple(
+            slice(None) if axis in broadcast_axes else ind[axis]
+            for axis in self._tiff_axes
+        )
+
+        for chunk_projection in _chunk_indexing(selection, array_shape, chunk_shape):
+            # read data from zarr store
             chunk_data = (
-                zarr_store[".".join(map(str, chunk_proj.chunk_coords))]
+                zarr_store[".".join(map(str, chunk_projection.chunk_coords))]
                 .ravel()
                 .reshape(chunk_shape)
             )
-            chunk_slice = chunk_data[chunk_proj.chunk_selection]
-            print(chunk_slice.shape)
-            out[chunk_proj.out_selection] = chunk_slice
+            # write in output array
+            out[chunk_projection.out_selection] = chunk_data[
+                chunk_projection.chunk_selection
+            ]
 
         return out
 
