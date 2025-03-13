@@ -335,13 +335,6 @@ class PimsImages:
             import_exceptions.append(f"PimsDmReaders: {import_error.msg}")
 
         try:
-            from .pims_imagej_tiff_reader import (  # noqa: F401 unused-import
-                PimsImagejTiffReader,
-            )
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsImagejTiffReader: {import_error.msg}")
-
-        try:
             from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
         except ImportError as import_error:
             import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
