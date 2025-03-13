@@ -17,8 +17,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Removed `PimsImagejTiffReader` in favor of the unified `PimsTiffReader`. [#1269](https://github.com/scalableminds/webknossos-libs/pull/1269)
 
 ### Fixed
+- Fixed issues with tiff conversion for tiff files that don't use pages for z and other axes. [#1269](https://github.com/scalableminds/webknossos-libs/pull/1269)
 
 
 ## [2.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.1) - 2025-03-11
