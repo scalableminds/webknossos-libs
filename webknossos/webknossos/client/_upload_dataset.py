@@ -79,6 +79,7 @@ def _walk(
 def upload_dataset(
     dataset: Dataset,
     new_dataset_name: Optional[str] = None,
+    datastore_url: Optional[str] = None,
     layers_to_link: Optional[List[LayerToLink]] = None,
     jobs: Optional[int] = None,
 ) -> str:
@@ -110,7 +111,7 @@ def upload_dataset(
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
     datastore_token = context.datastore_required_token
-    datastore_url = _cached_get_upload_datastore(context)
+    datastore_url = datastore_url or _cached_get_upload_datastore(context)
     datastore_api_client = context.get_datastore_api_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:

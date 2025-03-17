@@ -533,6 +533,7 @@ class Dataset:
         cls,
         dataset_name: str,
         organization: str,
+        datastore_url: Optional[str] = None,
         token: Optional[str] = None,
     ) -> None:
         """Trigger a manual reload of the dataset's properties.
@@ -562,7 +563,7 @@ class Dataset:
         from ..client.context import _get_context
 
         context = _get_context()
-        upload_url = _cached_get_upload_datastore(context)
+        upload_url = datastore_url or _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
