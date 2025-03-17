@@ -524,7 +524,6 @@ class Dataset:
             initial_team_ids=initial_team_ids,
             folder_id=folder_id,
         )
-        token = token or context.datastore_token
         upload_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
@@ -563,7 +562,6 @@ class Dataset:
         from ..client.context import _get_context
 
         context = _get_context()
-        token = token or context.datastore_token
         upload_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)

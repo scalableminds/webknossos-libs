@@ -138,18 +138,18 @@ def upload_dataset(
             folder_id=None,
             initial_teams=[],
         ),
-        token=datastore_token,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
         with Resumable(
-            f"{datastore_url}/data/datasets?token={datastore_token}",
+            f"{datastore_url}/data/datasets",
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "owningOrganization": context.organization_id,
                 "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
+            headers={"x-auth-token": datastore_token},
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _,
             relative_path: f"{upload_id}/{relative_path.as_posix()}",
@@ -166,7 +166,6 @@ def upload_dataset(
 
     datastore_api_client.dataset_finish_upload(
         ApiDatasetUploadInformation(upload_id),
-        datastore_token,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 
