@@ -533,8 +533,8 @@ class Dataset:
         cls,
         dataset_name: str,
         organization: str,
-        datastore_url: Optional[str] = None,
         token: Optional[str] = None,
+        datastore_url: Optional[str] = None,
     ) -> None:
         """Trigger a manual reload of the dataset's properties.
 

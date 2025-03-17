@@ -79,9 +79,9 @@ def _walk(
 def upload_dataset(
     dataset: Dataset,
     new_dataset_name: Optional[str] = None,
-    datastore_url: Optional[str] = None,
     layers_to_link: Optional[List[LayerToLink]] = None,
     jobs: Optional[int] = None,
+    datastore_url: Optional[str] = None,
 ) -> str:
     if new_dataset_name is None:
         new_dataset_name = dataset.name
@@ -139,6 +139,7 @@ def upload_dataset(
             folder_id=None,
             initial_teams=[],
         ),
+        token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
@@ -167,6 +168,7 @@ def upload_dataset(
 
     datastore_api_client.dataset_finish_upload(
         ApiDatasetUploadInformation(upload_id),
+        token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 

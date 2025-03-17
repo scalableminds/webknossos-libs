@@ -31,8 +31,8 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_finish_upload(
         self,
         upload_information: ApiDatasetUploadInformation,
+        token: Optional[str],
         retry_count: int,
-        token: Optional[str] = None,
     ) -> None:
         route = "/datasets/finishUpload"
         self._post_json(
@@ -46,8 +46,8 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_reserve_upload(
         self,
         reserve_upload_information: ApiReserveDatasetUploadInformation,
+        token: Optional[str],
         retry_count: int,
-        token: Optional[str] = None,
     ) -> None:
         route = "/datasets/reserveUpload"
         self._post_json(
@@ -70,7 +70,7 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_reserve_manual_upload(
         self,
         dataset_announce: ApiDatasetAnnounceUpload,
-        token: Optional[str] = None,
+        token: Optional[str],
     ) -> None:
         route = "/datasets/reserveManualUpload"
         query: Query = {"token": token}
@@ -82,13 +82,13 @@ class DatastoreApiClient(AbstractApiClient):
         directory_name: str,
         data_layer_name: str,
         mag: str,
+        token: Optional[str],
         x: int,
         y: int,
         z: int,
         width: int,
         height: int,
         depth: int,
-        token: Optional[str] = None,
     ) -> Tuple[bytes, str]:
         route = f"/datasets/{organization_id}/{directory_name}/layers/{data_layer_name}/data"
         query: Query = {
