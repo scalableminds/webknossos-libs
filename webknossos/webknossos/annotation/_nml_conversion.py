@@ -1,7 +1,7 @@
 import colorsys
 import itertools
 import warnings
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple, Union
 
 import networkx as nx
 import numpy as np
@@ -68,6 +68,29 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
         )
 
     return skeleton
+
+
+def _dict_to_metadata_entry_list(
+    metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]],
+) -> List[wknml.MetadataEntry]:
+    metadata_entry_list = []
+    if metadata is not None:
+        for key, value in metadata.items():
+            if isinstance(value, str):
+                metadata_entry_list.append(
+                    wknml.MetadataEntry(key=key, type="str", value=value)
+                )
+            elif isinstance(value, int) or isinstance(value, float):
+                metadata_entry_list.append(
+                    wknml.MetadataEntry(key=key, type="number", value=value)
+                )
+            elif isinstance(value, Sequence):
+                metadata_entry_list.append(
+                    wknml.MetadataEntry(key=key, type="list", value=value)
+                )
+            else:
+                raise ValueError(f"Unsupported metadata type: {type(value)}")
+    return metadata_entry_list
 
 
 def _nml_tree_to_wk_tree(
@@ -155,6 +178,7 @@ def annotation_to_nml(
         nodes, edges = _extract_nodes_and_edges_from_tree(tree)
         color = tree.color or _random_color_rgba()
         name = tree.name or f"tree{tree.id}"
+        metadata = _dict_to_metadata_entry_list(tree.metadata) or []
 
         trees.append(
             wknml.Tree(
@@ -164,6 +188,7 @@ def annotation_to_nml(
                 name=name,
                 groupId=tree.group.id if tree.group != annotation.skeleton else None,
                 color=color,
+                metadata=metadata,
             )
         )
 
@@ -181,6 +206,7 @@ def annotation_to_nml(
                     name=segment_info.name,
                     anchor_position=segment_info.anchor_position,
                     color=segment_info.color,
+                    metadata=_dict_to_metadata_entry_list(segment_info.metadata),
                 )
                 for segment_id, segment_info in volume.segments.items()
             ],
