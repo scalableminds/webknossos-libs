@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.3...HEAD)
 
 ### Breaking Changes
 
@@ -20,6 +20,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
 
 ### Fixed
+
+
+## [2.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.3) - 2025-03-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.2...v2.0.3)
 
 
 ## [2.0.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.2) - 2025-03-13
