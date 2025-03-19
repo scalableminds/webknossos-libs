@@ -2407,12 +2407,12 @@ class Dataset:
             mag.path = str(foreign_layer.mags[mag.mag].path)
         layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
-        self._layers[new_layer_name] = self._initialize_layer_from_properties(
-            layer_properties
-        )
+        new_layer = self._initialize_layer_from_properties(layer_properties)
+        new_layer._resolved_path = foreign_layer_path
+        self._layers[new_layer_name] = new_layer
 
         self._export_as_json()
-        return self.layers[new_layer_name]
+        return new_layer
 
     def add_fs_copy_layer(
         self,
