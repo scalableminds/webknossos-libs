@@ -329,6 +329,7 @@ class Dataset:
 
         """
         self._read_only = read_only
+        self._resolved_path: Optional[Path] = None
         self.path: Path = strip_trailing_slash(UPath(dataset_path))
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
@@ -472,7 +473,14 @@ class Dataset:
         dataset = cls.__new__(cls)
         dataset.path = dataset_path
         dataset._read_only = read_only
+        dataset._resolved_path = None
         return dataset._init_from_properties(dataset_properties)
+
+    @property
+    def resolved_path(self) -> Path:
+        if self._resolved_path is None:
+            self._resolved_path = self.path.resolve()
+        return self._resolved_path
 
     @classmethod
     def announce_manual_upload(
@@ -2795,7 +2803,7 @@ class Dataset:
 
         for layer in self.layers.values():
             # Only write out OME metadata if the layer is a child of the dataset
-            if layer.path.resolve().parent == self.path:
+            if layer.resolved_path.parent == self.resolved_path:
                 write_ome_metadata(self, layer)
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:

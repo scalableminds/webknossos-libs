@@ -216,6 +216,7 @@ class Layer:
             properties.element_class, properties.num_channels
         )
         self._mags: Dict[Mag, MagView] = {}
+        self._resolved_path: Optional[Path] = None
 
         for mag in properties.mags:
             self._setup_mag(Mag(mag.mag), mag.path)
@@ -259,6 +260,12 @@ class Layer:
             if maybe_layer_path and is_remote
             else self.dataset.path / self.name
         )
+
+    @property
+    def resolved_path(self) -> Path:
+        if self._resolved_path is None:
+            self._resolved_path = self.path.resolve()
+        return self._resolved_path
 
     @property
     def is_remote_to_dataset(self) -> bool:
