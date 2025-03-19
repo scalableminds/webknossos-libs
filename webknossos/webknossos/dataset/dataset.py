@@ -2795,7 +2795,7 @@ class Dataset:
 
         for layer in self.layers.values():
             # Only write out OME metadata if the layer is a child of the dataset
-            if not is_fs_path(layer.path) or layer.path.resolve().parent == self.path:
+            if layer.path.resolve().parent == self.path:
                 write_ome_metadata(self, layer)
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
