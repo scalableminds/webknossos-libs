@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.4...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [2.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.4) - 2025-03-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.3...v2.0.4)
+
+### Changed
 - For Zarr3 datasets, the OME-Zarr 0.5 metadata is now written. [#1272](https://github.com/scalableminds/webknossos-libs/pull/1272)
 
 ### Fixed
-- Fixed an issue where it was attempted to overwrite the OME-Zarr metadata for symlinked layers. [#1272](https://github.com/scalableminds/webknossos-libs/pull/1272) 
+- Fixed an issue where it was attempted to overwrite the OME-Zarr metadata for symlinked layers. [#1272](https://github.com/scalableminds/webknossos-libs/pull/1272)
+
 
 
 ## [2.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.3) - 2025-03-18
