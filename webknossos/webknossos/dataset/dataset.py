@@ -66,7 +66,7 @@ from .defaults import (
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
-from .ome_metadata import write_ome_0_4_metadata
+from .ome_metadata import write_ome_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
@@ -2794,7 +2794,9 @@ class Dataset:
                 json.dump({"zarr_format": 3, "node_type": "group"}, outfile, indent=4)
 
         for layer in self.layers.values():
-            write_ome_0_4_metadata(self, layer)
+            # Only write out OME metadata if the layer is a child of the dataset
+            if not is_fs_path(layer.path) or layer.path.resolve().parent == self.path:
+                write_ome_metadata(self, layer)
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
         if properties.category == COLOR_CATEGORY:
