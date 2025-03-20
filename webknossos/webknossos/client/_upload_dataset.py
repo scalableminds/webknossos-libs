@@ -132,6 +132,7 @@ def upload_dataset(
             new_dataset_name,
             context.organization_id,
             total_file_count=len(file_infos),
+            total_file_size_in_bytes=total_file_size,
             layers_to_link=[
                 layer.as_api_linked_layer_identifier() for layer in layers_to_link
             ],
@@ -158,8 +159,8 @@ def upload_dataset(
             client=httpx.Client(timeout=None),
         ) as session:
             progress_task = progress.add_task("Dataset Upload", total=total_file_size)
-            for file_path, relative_path, _ in file_infos:
-                resumable_file = session.add_file(file_path, relative_path)
+            for file_path, relative_path, size in file_infos:
+                resumable_file = session.add_file(file_path, relative_path, size)
                 resumable_file.chunk_completed.register(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )

@@ -83,7 +83,7 @@ class Resumable:
         self.chunk_completed = CallbackDispatcher()
 
     def add_file(
-        self, path: Union[PathLike, str], relative_path: Optional[Path]
+        self, path: Union[PathLike, str], relative_path: Optional[Path], size: int
     ) -> ResumableFile:
         file = ResumableFile(
             Path(path),
