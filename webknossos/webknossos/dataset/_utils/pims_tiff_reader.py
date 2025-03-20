@@ -162,7 +162,9 @@ class PimsTiffReader(FramesSequenceND):
         # zarr-python as a dependency. So we just implement the indexing
         # ourselves and rely on the fact that tifffile isn't using more
         # complex zarr features such as compressors, filters, F-order, fillvalue etc.
-        zarr_store = _tiff.aszarr()
+        zarr_store = _tiff.aszarr(
+            level=0
+        )  # for multi-scale tiffs, we use the highest resolution
         zarray = json.loads(zarr_store[".zarray"])
 
         assert zarray["zarr_format"] == 2
