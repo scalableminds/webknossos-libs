@@ -157,8 +157,13 @@ class _WebknossosContext:
         return _cached__get_api_client(self.url, self.required_token, self.timeout)
 
     def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
+        headers = None
+        if self.datastore_token is not None:
+            headers = {"X-Auth-Token": self.datastore_token}
         return DatastoreApiClient(
-            datastore_base_url=datastore_url, timeout_seconds=self.timeout
+            datastore_base_url=datastore_url,
+            timeout_seconds=self.timeout,
+            headers=headers,
         )
 
 

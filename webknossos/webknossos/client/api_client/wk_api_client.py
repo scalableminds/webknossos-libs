@@ -176,6 +176,12 @@ class WkApiClient(AbstractApiClient):
             route, ApiAnnotationUploadResult, data, files
         )
 
+    def annotation_edit(
+        self, annotation_typ: str, annotation_id: str, annotation: ApiAnnotation
+    ) -> None:
+        route = f"/annotations/{annotation_typ}/{annotation_id}/edit"
+        self._patch_json(route, annotation)
+
     def annotation_infos_by_task(self, task_id: str) -> List[ApiAnnotation]:
         route = f"/tasks/{task_id}/annotations"
         return self._get_json(route, List[ApiAnnotation])
