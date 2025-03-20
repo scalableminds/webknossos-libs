@@ -12,6 +12,53 @@ if TYPE_CHECKING:
     from .layer import Layer
 
 
+def get_ome_0_5_multiscale_metadata(
+    dataset: "Dataset", layer: "Layer"
+) -> Dict[str, Any]:
+    return {
+        "ome": {
+            "version": "0.5",
+            "multiscales": [
+                {
+                    "axes": [
+                        {"name": "c", "type": "channel"},
+                        {
+                            "name": "x",
+                            "type": "space",
+                            "unit": "nanometer",
+                        },
+                        {
+                            "name": "y",
+                            "type": "space",
+                            "unit": "nanometer",
+                        },
+                        {
+                            "name": "z",
+                            "type": "space",
+                            "unit": "nanometer",
+                        },
+                    ],
+                    "datasets": [
+                        {
+                            "path": mag.path.name,
+                            "coordinateTransformations": [
+                                {
+                                    "type": "scale",
+                                    "scale": [1.0]
+                                    + (
+                                        np.array(dataset.voxel_size) * mag.mag.to_np()
+                                    ).tolist(),
+                                }
+                            ],
+                        }
+                        for mag in layer.mags.values()
+                    ],
+                }
+            ],
+        }
+    }
+
+
 def get_ome_0_4_multiscale_metadata(
     dataset: "Dataset", layer: "Layer"
 ) -> Dict[str, Any]:
@@ -57,7 +104,7 @@ def get_ome_0_4_multiscale_metadata(
     }
 
 
-def write_ome_0_4_metadata(dataset: "Dataset", layer: "Layer") -> None:
+def write_ome_metadata(dataset: "Dataset", layer: "Layer") -> None:
     if not is_writable_path(layer.path):
         return
     if layer.data_format == DataFormat.Zarr3:
@@ -66,7 +113,7 @@ def write_ome_0_4_metadata(dataset: "Dataset", layer: "Layer") -> None:
                 {
                     "zarr_format": 3,
                     "node_type": "group",
-                    "attributes": get_ome_0_4_multiscale_metadata(dataset, layer),
+                    "attributes": get_ome_0_5_multiscale_metadata(dataset, layer),
                 },
                 outfile,
                 indent=4,
