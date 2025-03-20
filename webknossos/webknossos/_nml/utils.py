@@ -22,3 +22,9 @@ def as_int_unless_none(val: Optional[str]) -> Optional[int]:
     if val is None:
         return None
     return int(val)
+
+
+def as_float_unless_none(val: Optional[str]) -> Optional[float]:
+    if val is None:
+        return None
+    return float(val)

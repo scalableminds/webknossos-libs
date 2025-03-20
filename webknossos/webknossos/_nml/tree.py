@@ -4,6 +4,7 @@ from xml.etree.ElementTree import Element
 from loxun import XmlWriter
 
 from .edge import Edge
+from .metadata_entry import MetadataEntry
 from .node import Node
 from .utils import Vector4, enforce_not_null
 
@@ -16,6 +17,7 @@ class Tree(NamedTuple):
     name: str
     nodes: List[Node]
     edges: List[Edge]
+    metadata: List[MetadataEntry]
     groupId: Optional[int] = None
 
     def _dump(self, xf: XmlWriter) -> None:
@@ -41,6 +43,10 @@ class Tree(NamedTuple):
         for edge in self.edges:
             edge._dump(xf)
         xf.endTag()  # edges
+        xf.startTag("metadata")
+        for metadata_entry in self.metadata:
+            metadata_entry._dump(xf)
+        xf.endTag()  # metadata
         xf.endTag()  # thing
 
     @classmethod
@@ -70,6 +76,7 @@ class Tree(NamedTuple):
         return cls(
             nodes=[],
             edges=[],
+            metadata=[],
             id=int(enforce_not_null(nml_tree.get("id"))),
             name=name,
             groupId=groupId if groupId >= 0 else None,

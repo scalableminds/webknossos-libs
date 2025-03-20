@@ -14,16 +14,19 @@
       <edge source="2" target="3" />
       <edge source="2" target="4" />
     </edges>
+    <metadata />
   </thing>
   <thing color.a="1.0" color.b="0.6720369436532944" color.g="0.0037728487955197565" color.r="0.9340851110768926" groupId="5" id="6" name="Tree in Group">
     <nodes>
       <node id="7" x="10.0" y="3.0" z="4.0" />
     </nodes>
     <edges />
+    <metadata />
   </thing>
   <thing color.a="1.0" color.b="0.7224589094338263" color.g="0.20806732150346996" color.r="0.45167026054501613" groupId="8" id="9" name="Tree in nested group">
     <nodes />
     <edges />
+    <metadata />
   </thing>
   <branchpoints>
     <branchpoint id="2" />
