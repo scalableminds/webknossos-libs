@@ -300,7 +300,10 @@ def test_nml_with_volumes(nml_path: Path) -> None:
     segment_info = a.get_volume_layer_segments("segmentation")
     assert set(segment_info) == set([2504698])
     assert segment_info[2504698] == wk.SegmentInformation(
-        name="test_segment", anchor_position=Vec3Int(3581, 3585, 1024), color=None
+        name="test_segment",
+        anchor_position=Vec3Int(3581, 3585, 1024),
+        color=None,
+        metadata={},
     )
 
 
@@ -315,7 +318,7 @@ def test_segment_metadata(tmp_path: Path) -> None:
     tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
     assert (
         tmp_annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
-            "test"
+            "test_segment"
         ]
         == "test"
     )
