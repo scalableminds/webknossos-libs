@@ -66,7 +66,7 @@ from .defaults import (
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
-from .ome_metadata import write_ome_0_4_metadata
+from .ome_metadata import write_ome_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
@@ -329,6 +329,7 @@ class Dataset:
 
         """
         self._read_only = read_only
+        self._resolved_path: Optional[Path] = None
         self.path: Path = strip_trailing_slash(UPath(dataset_path))
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
@@ -472,7 +473,14 @@ class Dataset:
         dataset = cls.__new__(cls)
         dataset.path = dataset_path
         dataset._read_only = read_only
+        dataset._resolved_path = None
         return dataset._init_from_properties(dataset_properties)
+
+    @property
+    def resolved_path(self) -> Path:
+        if self._resolved_path is None:
+            self._resolved_path = self.path.resolve()
+        return self._resolved_path
 
     @classmethod
     def announce_manual_upload(
@@ -2403,12 +2411,12 @@ class Dataset:
             mag.path = str(foreign_layer.mags[mag.mag].path)
         layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
-        self._layers[new_layer_name] = self._initialize_layer_from_properties(
-            layer_properties
-        )
+        new_layer = self._initialize_layer_from_properties(layer_properties)
+        new_layer._resolved_path = foreign_layer_path
+        self._layers[new_layer_name] = new_layer
 
         self._export_as_json()
-        return self.layers[new_layer_name]
+        return new_layer
 
     def add_fs_copy_layer(
         self,
@@ -2798,7 +2806,9 @@ class Dataset:
                 json.dump({"zarr_format": 3, "node_type": "group"}, outfile, indent=4)
 
         for layer in self.layers.values():
-            write_ome_0_4_metadata(self, layer)
+            # Only write out OME metadata if the layer is a child of the dataset
+            if layer.resolved_path.parent == self.resolved_path:
+                write_ome_metadata(self, layer)
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
         if properties.category == COLOR_CATEGORY:

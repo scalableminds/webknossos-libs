@@ -230,7 +230,7 @@ def test_create_dataset_with_layer_and_mag(
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_ome_ngff_metadata(output_path: Path) -> None:
+def test_ome_ngff_0_4_metadata(output_path: Path) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
@@ -270,6 +270,84 @@ def test_ome_ngff_metadata(output_path: Path) -> None:
             ).read_bytes()
         ),
     )
+
+
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_ome_ngff_0_5_metadata(output_path: Path) -> None:
+    ds_path = prepare_dataset_path(DataFormat.Zarr3, output_path)
+    ds = Dataset(ds_path, voxel_size=(11, 11, 28))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
+    layer.add_mag("1")
+    layer.add_mag("2-2-1")
+
+    assert (ds_path / "zarr.json").exists()
+    assert (ds_path / "color" / "zarr.json").exists()
+    assert (ds_path / "color" / "1" / "zarr.json").exists()
+    assert (ds_path / "color" / "2-2-1" / "zarr.json").exists()
+
+    zattrs = json.loads((ds_path / "color" / "zarr.json").read_bytes())["attributes"]
+    assert zattrs["ome"]["version"] == "0.5"
+    assert len(zattrs["ome"]["multiscales"][0]["datasets"]) == 2
+    assert zattrs["ome"]["multiscales"][0]["datasets"][0]["coordinateTransformations"][
+        0
+    ]["scale"] == [
+        1,
+        11,
+        11,
+        28,
+    ]
+    assert zattrs["ome"]["multiscales"][0]["datasets"][1]["coordinateTransformations"][
+        0
+    ]["scale"] == [
+        1,
+        22,
+        22,
+        28,
+    ]
+
+    validate(
+        instance=zattrs,
+        schema=json.loads(
+            UPath(
+                "https://ngff.openmicroscopy.org/0.5/schemas/image.schema"
+            ).read_bytes()
+        ),
+    )
+
+
+def test_ome_ngff_0_5_metadata_symlink() -> None:
+    def recursive_chmod(ds_path: Path, mode: int) -> None:
+        # See https://docs.python.org/3/library/os.html#os.chmod for how to use mode
+        os.chmod(ds_path, mode)
+        for root, dirs, files in os.walk(ds_path):
+            root_path = Path(root)
+            for _dir in dirs:
+                path = root_path / _dir
+                os.chmod(path, mode)
+            for file in files:
+                path = root_path / file
+                os.chmod(path, mode)
+
+    ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "original")
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    ).add_mag(1)
+
+    # remove write permissions
+    recursive_chmod(ds_path, 0o555)
+    try:
+        symlink_path = prepare_dataset_path(
+            DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "with_symlink"
+        )
+        ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+
+        # add symlink color layer
+        ds.add_symlink_layer(ds_path / "color")
+
+    finally:
+        # restore write permissions
+        recursive_chmod(ds_path, 0o777)
 
 
 def test_create_default_layer() -> None:
