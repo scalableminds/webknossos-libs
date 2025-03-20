@@ -302,3 +302,33 @@ def test_nml_with_volumes(nml_path: Path) -> None:
     assert segment_info[2504698] == wk.SegmentInformation(
         name="test_segment", anchor_position=Vec3Int(3581, 3585, 1024), color=None
     )
+
+
+def test_segment_metadata(tmp_path: Path) -> None:
+    annotation = wk.Annotation.load(
+        TESTDATA_DIR / "annotations" / "nml_with_volumes.zip"
+    )
+    annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
+        "test_segment"
+    ] = "test"
+    annotation.save(tmp_path / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    assert (
+        tmp_annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
+            "test"
+        ]
+        == "test"
+    )
+
+
+def test_tree_metadata(tmp_path: Path) -> None:
+    annotation = wk.Annotation.load(
+        TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    )
+    list(annotation.skeleton.flattened_trees())[0].metadata["test_tree"] = "test"
+    annotation.save(tmp_path / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    assert (
+        list(tmp_annotation.skeleton.flattened_trees())[0].metadata["test_tree"]
+        == "test"
+    )

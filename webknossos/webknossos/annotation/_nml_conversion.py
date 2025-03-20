@@ -47,7 +47,10 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
             )
         else:
             new_tree = groups_by_id[nml_tree.groupId].add_tree(
-                nml_tree.name, _enforced_id=nml_tree.id, color=nml_tree.color
+                nml_tree.name,
+                _enforced_id=nml_tree.id,
+                color=nml_tree.color,
+                metadata={i.key: i.value for i in nml_tree.metadata},
             )
         _nml_tree_to_wk_tree(new_tree, nml_tree)
 
