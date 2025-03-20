@@ -159,8 +159,8 @@ def upload_dataset(
             client=httpx.Client(timeout=None),
         ) as session:
             progress_task = progress.add_task("Dataset Upload", total=total_file_size)
-            for file_path, relative_path, _ in file_infos:
-                resumable_file = session.add_file(file_path, relative_path)
+            for file_path, relative_path, size in file_infos:
+                resumable_file = session.add_file(file_path, relative_path, size)
                 resumable_file.chunk_completed.register(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
