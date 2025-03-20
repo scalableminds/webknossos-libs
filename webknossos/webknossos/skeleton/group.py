@@ -123,7 +123,7 @@ class Group:
         name_or_tree: Union[str, Tree],
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
-        metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]] = None,
+        metadata: Dict[str, Union[str, int, float, Sequence[str]]] = {},
     ) -> Tree:
         """Adds a new tree or copies an existing tree to this group.
 

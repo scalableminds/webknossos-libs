@@ -1,7 +1,7 @@
 import colorsys
 import itertools
 import warnings
-from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Sequence, Tuple, Union
 
 import networkx as nx
 import numpy as np
@@ -77,7 +77,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
 
 
 def _dict_to_metadata_entry_list(
-    metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]],
+    metadata: Dict[str, Union[str, int, float, Sequence[str]]],
 ) -> List[wknml.MetadataEntry]:
     metadata_entry_list = []
     if metadata is not None:

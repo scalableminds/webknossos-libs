@@ -158,7 +158,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,
         enforced_id: Optional[int] = None,  # noqa: ARG002 Unused method argument: `enforced_id`
-        metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]] = None,
+        metadata: Dict[str, Union[str, int, float, Sequence[str]]] = {},
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -183,7 +183,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,  # noqa: ARG003 Unused class method argument: `color`
         enforced_id: Optional[int] = None,
-        metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]] = None,  # noqa: ARG003 Unused class method argument: `metadata`
+        metadata: Dict[str, Union[str, int, float, Sequence[str]]] = {},  # noqa: ARG003 Unused class method argument: `metadata`
     ) -> "Tree":
         self = super().__new__(cls)
 
