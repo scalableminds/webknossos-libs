@@ -88,7 +88,7 @@ class Resumable:
         file = ResumableFile(
             Path(path),
             relative_path,
-            min(size, self.config.chunk_size),
+            self.config.chunk_size,
             self.config.generate_unique_identifier,
         )
         self.files.append(file)
