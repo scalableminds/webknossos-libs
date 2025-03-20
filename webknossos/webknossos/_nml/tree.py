@@ -43,6 +43,10 @@ class Tree(NamedTuple):
         for edge in self.edges:
             edge._dump(xf)
         xf.endTag()  # edges
+        xf.startTag("metadata")
+        for metadata_entry in self.metadata:
+            metadata_entry._dump(xf)
+        xf.endTag()  # metadata
         xf.endTag()  # thing
 
     @classmethod

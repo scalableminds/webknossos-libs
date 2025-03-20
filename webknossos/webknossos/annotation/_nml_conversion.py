@@ -40,7 +40,10 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
     for nml_tree in nml.trees:
         if nml_tree.groupId is None:
             new_tree = skeleton.add_tree(
-                nml_tree.name, _enforced_id=nml_tree.id, color=nml_tree.color
+                nml_tree.name,
+                _enforced_id=nml_tree.id,
+                color=nml_tree.color,
+                metadata={i.key: i.value for i in nml_tree.metadata},
             )
         else:
             new_tree = groups_by_id[nml_tree.groupId].add_tree(

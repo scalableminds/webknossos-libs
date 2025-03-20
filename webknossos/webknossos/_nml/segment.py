@@ -33,7 +33,7 @@ class Segment(NamedTuple):
                 "color.b": str(self.color[2]),
                 "color.a": str(self.color[3]),
             }
-        xf.tag(
+        xf.startTag(
             "segment",
             filter_none_values(
                 {
@@ -44,6 +44,11 @@ class Segment(NamedTuple):
                 }
             ),
         )
+        xf.startTag("metadata")
+        for metadata_entry in self.metadata:
+            metadata_entry._dump(xf)
+        xf.endTag()  # metadata
+        xf.endTag()  # segment
 
     @classmethod
     def _parse(cls, nml_segment: Element) -> "Segment":

@@ -1,5 +1,16 @@
 import copy
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Set, Tuple, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import attr
 from boltons.strutils import unit_len
@@ -112,6 +123,7 @@ class Group:
         name_or_tree: Union[str, Tree],
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
+        metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]] = None,
     ) -> Tree:
         """Adds a new tree or copies an existing tree to this group.
 
@@ -153,6 +165,7 @@ class Group:
                 group=self,
                 skeleton=self._skeleton,
                 enforced_id=_enforced_id,
+                metadata=metadata,
             )
             self._child_trees.add(new_tree)
 
