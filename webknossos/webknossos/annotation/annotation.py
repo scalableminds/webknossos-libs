@@ -58,6 +58,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
     Tuple,
     Union,
     cast,
@@ -73,6 +74,7 @@ from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
 
+from ..client.api_client.models import ApiAnnotation
 from ..dataset import (
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -403,6 +405,7 @@ class Annotation:
         webknossos_url: Optional[str] = None,
         *,
         skip_volume_data: bool = False,
+        retry_count: int = 5,
         _return_context: bool = False,
     ) -> Union["Annotation", Tuple["Annotation", ContextManager[None]]]:
         """Downloads an annotation from WEBKNOSSOS.
@@ -463,7 +466,9 @@ class Annotation:
         with context:
             client = _get_api_client()
             file_body, filename = client.annotation_download(
-                annotation_id, skip_volume_data=skip_volume_data
+                annotation_id,
+                skip_volume_data=skip_volume_data,
+                retry_count=retry_count,
             )
 
         if filename.endswith(".nml"):
@@ -1380,3 +1385,96 @@ _ANNOTATION_URL_REGEX = re.compile(
     + rf"((?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/)?"
     + r"(?P<annotation_id>[0-9A-Fa-f]*)"
 )
+
+
+class RemoteAnnotation(Annotation):
+    def __init__(
+        self,
+        annotation_id: str,
+        dataset_id: str,
+        organization_id: str,
+        *,
+        name: str,
+        skeleton: Skeleton,
+        owner_name: str,
+        time: Optional[int] = None,
+        edit_position: Optional[Vec3Int] = None,
+        edit_rotation: Optional[Vec3Int] = None,
+        zoom_level: Optional[int] = None,
+        task_bounding_box: Optional[NDBoundingBox] = None,
+        user_bounding_boxes: Optional[List[NDBoundingBox]] = None,
+        metadata: Dict[str, str] = {},
+    ) -> None:
+        """A remote Annotation instance.
+        Note: Please not initialize this class directly, use Annotation.open_as_remote_dataset() instead."""
+        self.annotation_id = annotation_id
+        self.dataset_id = dataset_id
+        self.organization_id = organization_id
+        self.name = name
+        self.skeleton = skeleton
+        self.owner_name = owner_name
+        self.time = time
+        self.edit_position = edit_position
+        self.edit_rotation = edit_rotation
+        self.zoom_level = zoom_level
+        self.task_bounding_box = task_bounding_box
+        self.user_bounding_boxes = user_bounding_boxes or []
+        self.metadata = metadata
+
+    def __repr__(self) -> str:
+        return f"RemoteAnnotation({self.name}, {self.annotation_id}, {self.dataset_id}, {self.organization_id})"
+
+    @property
+    def url(self) -> str:
+        from webknossos.client.context import _get_context
+
+        return f"{_get_context().url}/annotations/{self.annotation_id}"
+
+    @property
+    def name(self) -> str:
+        return self._get_annotation_info().name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self._set_annotation_info(name=value)
+
+    @property
+    def description(self) -> str:
+        return self._get_annotation_info().description
+
+    @description.setter
+    def description(self, value: str) -> None:
+        self._set_annotation_info(description=value)
+
+    def _get_annotation_info(self) -> ApiAnnotation:
+        from webknossos.client.context import _get_api_client
+
+        client = _get_api_client(True)
+        return client.annotation_info(self.annotation_id)
+
+    def _set_annotation_info(
+        self, name: Optional[str] = None, description: Optional[str] = None
+    ) -> None:
+        from webknossos.client.context import _get_api_client
+
+        client = _get_api_client(True)
+        annotation_info = self._get_annotation_info()
+        name = name if name is not None else annotation_info.name
+        description = (
+            description if description is not None else annotation_info.description
+        )
+        client.annotation_edit(
+            annotation_typ=annotation_info.typ,
+            annotation_id=self.annotation_id,
+            annotation=ApiAnnotation(
+                self.annotation_id,
+                annotation_info.typ,
+                annotation_info.owner,
+                name,
+                description,
+                annotation_info.state,
+                annotation_info.modified,
+                annotation_info.data_store,
+                annotation_info.tracing_time,
+            ),
+        )

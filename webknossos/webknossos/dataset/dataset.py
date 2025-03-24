@@ -532,7 +532,6 @@ class Dataset:
             initial_team_ids=initial_team_ids,
             folder_id=folder_id,
         )
-        token = token or context.token
         upload_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
@@ -543,6 +542,7 @@ class Dataset:
         dataset_name: str,
         organization: str,
         token: Optional[str] = None,
+        datastore_url: Optional[str] = None,
     ) -> None:
         """Trigger a manual reload of the dataset's properties.
 
@@ -571,8 +571,7 @@ class Dataset:
         from ..client.context import _get_context
 
         context = _get_context()
-        token = token or context.token
-        upload_url = _cached_get_upload_datastore(context)
+        upload_url = datastore_url or _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
         datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
 
@@ -1224,7 +1223,12 @@ class Dataset:
         )
 
         return self.open_remote(
-            upload_dataset(self, new_dataset_name, converted_layers_to_link, jobs)
+            upload_dataset(
+                self,
+                new_dataset_name,
+                layers_to_link=converted_layers_to_link,
+                jobs=jobs,
+            )
         )
 
     def get_layer(self, layer_name: str) -> Layer:
@@ -3313,7 +3317,9 @@ class RemoteDataset(Dataset):
         )
         context.api_client_with_auth.dataset_explore_and_add_remote(dataset)
 
-        return cls.open_remote(dataset_name, context.organization_id, context.token)
+        return cls.open_remote(
+            dataset_name, context.organization_id, context.datastore_token
+        )
 
     @property
     def folder(self) -> RemoteFolder:

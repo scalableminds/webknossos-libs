@@ -157,10 +157,12 @@ class WkApiClient(AbstractApiClient):
         )
 
     def annotation_download(
-        self, annotation_id: str, skip_volume_data: bool
+        self, annotation_id: str, skip_volume_data: bool, retry_count: int = 0
     ) -> Tuple[bytes, str]:
         route = f"/annotations/{annotation_id}/download"
-        return self._get_file(route, query={"skipVolumeData": skip_volume_data})
+        return self._get_file(
+            route, query={"skipVolumeData": skip_volume_data}, retry_count=retry_count
+        )
 
     def annotation_upload(
         self, file_body: bytes, filename: str, createGroupForEachFile: bool
@@ -175,6 +177,12 @@ class WkApiClient(AbstractApiClient):
         return self.post_multipart_with_json_response(
             route, ApiAnnotationUploadResult, data, files
         )
+
+    def annotation_edit(
+        self, annotation_typ: str, annotation_id: str, annotation: ApiAnnotation
+    ) -> None:
+        route = f"/annotations/{annotation_typ}/{annotation_id}/edit"
+        self._patch_json(route, annotation)
 
     def annotation_infos_by_task(self, task_id: str) -> List[ApiAnnotation]:
         route = f"/tasks/{task_id}/annotations"
