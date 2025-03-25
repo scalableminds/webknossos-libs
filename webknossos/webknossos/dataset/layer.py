@@ -1484,7 +1484,6 @@ class Layer:
         Returns:
             MagView: View of newly created magnification
         """
-        print("initialize_mag_from_other_mag, adding mag:", new_mag_name)
         return self.add_mag(
             new_mag_name,
             chunk_shape=other_mag.info.chunk_shape,
