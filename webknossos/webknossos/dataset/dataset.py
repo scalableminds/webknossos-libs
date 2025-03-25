@@ -2615,13 +2615,7 @@ class Dataset:
             copies of remote datasets or create shallow copies in remote locations.
         """
 
-        assert is_fs_path(
-            self.path
-        ), f"Cannot create symlinks to remote dataset {self.path}"
         new_dataset_path = UPath(new_dataset_path)
-        assert is_fs_path(
-            new_dataset_path
-        ), f"Cannot create symlink in remote path {new_dataset_path}"
         new_dataset = Dataset(
             new_dataset_path,
             voxel_size_with_unit=self.voxel_size_with_unit,
@@ -2632,7 +2626,9 @@ class Dataset:
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
             if is_remote_path(layer.path):
-                new_dataset.add_remote_layer(layer, layer_name)
+                new_layer = new_dataset.add_layer_like(layer, layer_name)
+                for mag_view in layer.mags.values():
+                    new_layer.add_remote_mag(mag_view)
             else:
                 new_layer = new_dataset.add_layer_like(layer, layer_name)
                 for mag_view in layer.mags.values():
