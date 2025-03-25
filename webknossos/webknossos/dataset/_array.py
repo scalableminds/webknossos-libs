@@ -288,8 +288,9 @@ class AWSCredentialManager:
         self.entries[key_hash] = key_tuple
         self._dump_credentials()
         return {
+            "type": "profile",
             "profile": f"profile-{key_hash}",
-            "filename": str(self.credentials_file_path),
+            "credentials_file": str(self.credentials_file_path),
         }
 
 
