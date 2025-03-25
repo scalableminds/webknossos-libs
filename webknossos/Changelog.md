@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an issue with uploading datasets where the dataset name is already in use. [#1275](https://github.com/scalableminds/webknossos-libs/pull/1275)
 
 
 ## [2.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.4) - 2025-03-19
