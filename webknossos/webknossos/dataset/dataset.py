@@ -1224,7 +1224,9 @@ class Dataset:
         )
 
         return self.open_remote(
-            upload_dataset(self, new_dataset_name, converted_layers_to_link, jobs)
+            dataset_id=upload_dataset(
+                self, new_dataset_name, converted_layers_to_link, jobs
+            )
         )
 
     def get_layer(self, layer_name: str) -> Layer:
