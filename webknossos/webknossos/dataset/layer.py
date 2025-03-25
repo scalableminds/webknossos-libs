@@ -226,42 +226,13 @@ class Layer:
 
     @property
     def path(self) -> Path:
-        """Gets the filesystem path to this layer's data.
-
-        The path is determined from the first mag's path parent directory if mags have paths,
-        otherwise uses the dataset path combined with layer name. Remote paths are handled
-        specially.
+        """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
+        Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
 
         Returns:
             Path: Filesystem path to this layer's data directory
-
-        Raises:
-            AssertionError: If mags in layer point to different layers
         """
-
-        # Assume that all mags belong to the same layer. If they have a path use them as this layers path.
-        # This is necessary for remote layer / mag support.
-        maybe_mag_path_str = (
-            self._properties.mags[0].path if len(self._properties.mags) > 0 else None
-        )
-        maybe_layer_path = (
-            strip_trailing_slash(UPath(maybe_mag_path_str)).parent
-            if maybe_mag_path_str
-            else None
-        )
-        for mag in self._properties.mags:
-            is_same_layer = (
-                mag.path is None or maybe_layer_path is None
-            ) or strip_trailing_slash(UPath(mag.path)).parent == maybe_layer_path
-            assert is_same_layer, "All mags of a layer must point to the same layer."
-        is_remote = maybe_layer_path and is_remote_path(maybe_layer_path)
-        if maybe_layer_path and is_remote:
-            if isinstance(self.dataset.path, UPath):
-                return UPath(maybe_layer_path, **self.dataset.path.storage_options)
-            else:
-                return maybe_layer_path
-        else:
-            return self.dataset.path / self.name
+        return self.dataset.path / self.name
 
     @property
     def resolved_path(self) -> Path:
@@ -314,13 +285,13 @@ class Layer:
         if layer_name == self.name:
             return
         self.dataset._ensure_writable()
-        assert layer_name not in self.dataset.layers.keys(), (
-            f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        )
+        assert (
+            layer_name not in self.dataset.layers.keys()
+        ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
         assert is_fs_path(self.path), f"Cannot rename remote layer {self.path}"
-        assert "/" not in layer_name, (
-            f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
-        )
+        assert (
+            "/" not in layer_name
+        ), f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
         self.path.rename(self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
@@ -368,9 +339,7 @@ class Layer:
     def bounding_box(self, bbox: NDBoundingBox) -> None:
         """Updates the offset and size of the bounding box of this layer in the properties."""
         self.dataset._ensure_writable()
-        assert bbox.topleft.is_positive(), (
-            f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
-        )
+        assert bbox.topleft.is_positive(), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
@@ -622,9 +591,9 @@ class Layer:
         """
         self.dataset._ensure_writable()
         mag = Mag(mag)
-        assert mag not in self.mags, (
-            f"Cannot add mag {mag} as it already exists for layer {self}"
-        )
+        assert (
+            mag not in self.mags
+        ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
@@ -689,15 +658,15 @@ class Layer:
             if isinstance(mag_view_maybe, MagView)
             else MagView._ensure_mag_view(mag_path)
         )
-        assert mag not in self.mags, (
-            f"Cannot add mag {mag} as it already exists for layer {self}"
-        )
+        assert (
+            mag not in self.mags
+        ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag, mag_path)
         # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag_view.mag,
-                path=mag_view.path,
+                path=str(mag_view.path),
                 cube_length=mag_view._properties.cube_length,
                 axis_order=mag_view._properties.axis_order,
             )
@@ -872,12 +841,12 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_fs_path(self.path), (
-            f"Cannot create symlinks in remote layer {self.path}"
-        )
-        assert is_fs_path(foreign_mag_view.path), (
-            f"Cannot create symlink to remote mag {foreign_mag_view.path}"
-        )
+        assert is_fs_path(
+            self.path
+        ), f"Cannot create symlinks in remote layer {self.path}"
+        assert is_fs_path(
+            foreign_mag_view.path
+        ), f"Cannot create symlink to remote mag {foreign_mag_view.path}"
 
         foreign_normalized_mag_path = (
             Path(relpath(foreign_mag_view.path, self.path))
@@ -911,9 +880,9 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_remote_path(foreign_mag_view.path), (
-            f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
-        )
+        assert is_remote_path(
+            foreign_mag_view.path
+        ), f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
         assert self.data_format == foreign_mag_view.info.data_format, (
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"
@@ -1092,14 +1061,14 @@ class Layer:
         """
 
         if from_mag is None:
-            assert len(self.mags.keys()) > 0, (
-                "Failed to downsample data because no existing mag was found."
-            )
+            assert (
+                len(self.mags.keys()) > 0
+            ), "Failed to downsample data because no existing mag was found."
             from_mag = max(self.mags.keys())
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if coarsest_mag is None:
             coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
@@ -1191,18 +1160,18 @@ class Layer:
 
         self._dataset._ensure_writable()
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
 
         assert from_mag <= target_mag
-        assert allow_overwrite or target_mag not in self.mags, (
-            "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
-        )
+        assert (
+            allow_overwrite or target_mag not in self.mags
+        ), "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
 
         prev_mag_view = self.mags[from_mag]
 
@@ -1316,9 +1285,9 @@ class Layer:
 
         See downsample_mag() for more details on parameters.
         """
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
         target_mags = sorted(target_mags, key=lambda m: m.to_list())
@@ -1380,9 +1349,9 @@ class Layer:
 
         self._dataset._ensure_writable()
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -1605,9 +1574,9 @@ class SegmentationLayer(Layer):
 
         self.dataset._ensure_writable()
         if largest_segment_id is not None and not isinstance(largest_segment_id, int):
-            assert largest_segment_id == int(largest_segment_id), (
-                f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
-            )
+            assert (
+                largest_segment_id == int(largest_segment_id)
+            ), f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
             largest_segment_id = int(largest_segment_id)
 
         self._properties.largest_segment_id = largest_segment_id

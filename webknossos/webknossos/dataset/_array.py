@@ -1,9 +1,9 @@
+import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
-import os
 from os.path import relpath
 from pathlib import Path
 from tempfile import mkdtemp
