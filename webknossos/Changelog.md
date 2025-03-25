@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.6...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [2.0.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.6) - 2025-03-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.5...v2.0.6)
+
+### Fixed
 - Fixed an issue with uploading datasets where the dataset name is already in use. [#1275](https://github.com/scalableminds/webknossos-libs/pull/1275)
+
 
 
 ## [2.0.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.5) - 2025-03-25
