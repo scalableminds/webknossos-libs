@@ -431,6 +431,8 @@ class TensorStoreArray(BaseArray):
                 kvstore_spec["aws_credentials"] = _aws_credential_manager.add(
                     path.storage_options["key"], path.storage_options["secret"]
                 )
+            else:
+                kvstore_spec["aws_credentials"] = {"type": "default"}
             return kvstore_spec
         else:
             return {
