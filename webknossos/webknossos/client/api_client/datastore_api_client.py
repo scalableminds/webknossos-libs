@@ -3,6 +3,7 @@ from typing import Dict, Optional, Tuple
 from webknossos.client.api_client.models import (
     ApiDatasetAnnounceUpload,
     ApiDatasetUploadInformation,
+    ApiDatasetUploadSuccess,
     ApiReserveDatasetUploadInformation,
 )
 
@@ -33,15 +34,17 @@ class DatastoreApiClient(AbstractApiClient):
         upload_information: ApiDatasetUploadInformation,
         token: Optional[str],
         retry_count: int,
-    ) -> None:
+    ) -> str:
         route = "/datasets/finishUpload"
-        self._post_json(
+        json = self._post_json_with_json_response(
             route,
             upload_information,
             query={"token": token},
             retry_count=retry_count,
             timeout_seconds=LONG_TIMEOUT_SECONDS,
+            response_type=ApiDatasetUploadSuccess,
         )
+        return json.new_dataset_id
 
     def dataset_reserve_upload(
         self,
