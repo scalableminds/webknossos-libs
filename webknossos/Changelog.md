@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.5...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Changed the default dimension separator for Zarr 2 arrays from `.` to `/`. [#1274](https://github.com/scalableminds/webknossos-libs/pull/1274)
 
 ### Fixed
+
+
+## [2.0.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.5) - 2025-03-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.4...v2.0.5)
+
+### Changed
+- Changed the default dimension separator for Zarr 2 arrays from `.` to `/`. [#1274](https://github.com/scalableminds/webknossos-libs/pull/1274)
 
 
 ## [2.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.4) - 2025-03-19
