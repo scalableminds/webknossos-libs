@@ -324,7 +324,11 @@ def rmtree(path: Path) -> None:
 
 def copytree(in_path: Path, out_path: Path) -> None:
     def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Tuple[str, ...]]]:
-        yield (path, tuple(p for p in path.parts if p not in base_path.parts))
+        # base_path.parts is a prefix of path.parts; strip it
+        assert len(path.parts) >= len(base_path.parts)
+        assert path.parts[: len(base_path.parts)] == base_path.parts
+        yield (path, path.parts[len(base_path.parts) :])
+
         if path.is_dir():
             for p in path.iterdir():
                 yield from _walk(p, base_path)
