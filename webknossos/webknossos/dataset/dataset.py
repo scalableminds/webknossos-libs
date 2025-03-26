@@ -624,7 +624,7 @@ class Dataset:
             logger.warning(
                 f"There are several datasets with same name '{dataset_name}' available online. Opened dataset with ID {possible_ids[0]}. "
                 "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
-                'of your datasets with `Dataset.get_remote_datasets(name=<dataset_name>).'
+                "of your datasets with `Dataset.get_remote_datasets(name=<dataset_name>)."
             )
         return possible_ids[0]
 
