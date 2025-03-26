@@ -91,10 +91,22 @@ class AbstractApiClient(ABC):
         return self._parse_json(response, response_type)
 
     def _post_json_with_json_response(
-        self, route: str, body_structured: Any, response_type: Type[T]
+        self,
+        route: str,
+        body_structured: Any,
+        response_type: Type[T],
+        query: Optional[Query] = None,
+        retry_count: int = 0,
+        timeout_seconds: Optional[float] = None,
     ) -> T:
         body_json = self._prepare_for_json(body_structured)
-        response = self._post(route, body_json=body_json)
+        response = self._post(
+            route,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+            body_json=body_json,
+        )
         return self._parse_json(response, response_type)
 
     def post_multipart_with_json_response(
