@@ -164,10 +164,10 @@ def upload_dataset(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
 
-    datastore_api_client.dataset_finish_upload(
+    dataset_id = datastore_api_client.dataset_finish_upload(
         ApiDatasetUploadInformation(upload_id),
         datastore_token,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 
-    return new_dataset_name
+    return dataset_id
