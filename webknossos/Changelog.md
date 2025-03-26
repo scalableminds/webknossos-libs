@@ -13,10 +13,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.5...HEAD)
 
 ### Breaking Changes
+- Dropped support for Python 3.9. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
 
 ### Added
 
 ### Changed
+- Upgraded `tensorstore` to `0.1.72`. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
 
 ### Fixed
 
