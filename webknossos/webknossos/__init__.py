@@ -24,9 +24,23 @@ Server interactions may require [authentication](webknossos/client/context.html)
 
 # The table above contains zero-width spaces in the code examples after each dot to enforce correct line-breaks.
 # ruff: noqa: F403
+import logging
+
+from packaging.version import Version
+
 from .administration import *
 from .annotation import *
 from .client import *
 from .dataset import *
 from .geometry import *
 from .skeleton import *
+from .utils import get_latest_version_from_pypi
+from .version import __version__ as current_version
+
+if not current_version == "0.0.0":
+    latest_version = get_latest_version_from_pypi()
+    if Version(current_version) < latest_version:
+        logger = logging.getLogger(__name__)
+        logger.warn(
+            f"Your current version {current_version} of the webknossos-libs is outdated. The latest version available on PyPI is {latest_version}. Consider upgrading to the latest version to avoid being out-of-sync with the latest WEBKNOSSOS features. See GitHub for full changelog of all releases (https://github.com/scalableminds/webknossos-libs/releases)."
+        )

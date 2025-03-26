@@ -32,8 +32,10 @@ from typing import (
 )
 
 import numpy as np
+import requests
 import rich
 from cluster_tools import Executor, get_executor
+from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
 
@@ -421,3 +423,26 @@ class NDArrayLike(Protocol):
 
     @property
     def dtype(self) -> np.dtype: ...
+
+
+def get_latest_version_from_pypi() -> Version:
+    """Get the latest version of the Webknossos package from PyPI."""
+
+    try:
+        response = requests.get("https://pypi.org/pypi/webknossos/json")
+        response.raise_for_status()
+        data = response.json()
+        releases = data["releases"]
+        versions = [Version(v) for v in releases.keys()]
+        latest_version = max(versions)
+
+        return latest_version
+
+    except requests.exceptions.HTTPError:
+        # Failed to get latest version from PyPI: {e}") from e
+        pass
+    except InvalidVersion:
+        # "Failed to parse latest version from PyPI: {e}") from e
+        pass
+
+    return Version("0.0.0")
