@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added support for metadata in segment and trees. [#1271](https://github.com/scalableminds/webknossos-libs/pull/1271)
 - Added a warning on import if a newer version of the `webknossos` package is available from PyPI. [#1280](https://github.com/scalableminds/webknossos-libs/pull/1280)
 
 ### Changed

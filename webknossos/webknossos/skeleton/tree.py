@@ -1,5 +1,14 @@
 from collections.abc import MutableMapping
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import networkx as nx
 import numpy as np
@@ -149,6 +158,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,
         enforced_id: Optional[int] = None,  # noqa: ARG002 Unused method argument: `enforced_id`
+        metadata: Dict[str, Union[str, int, float, Sequence[str]]] = {},
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -161,6 +171,7 @@ class Tree(nx.Graph):
         self.name = name
         self.group = group
         self.color = color
+        self.metadata = metadata
 
         # only used internally
         self._skeleton = skeleton
@@ -172,6 +183,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Optional[Vector4] = None,  # noqa: ARG003 Unused class method argument: `color`
         enforced_id: Optional[int] = None,
+        metadata: Dict[str, Union[str, int, float, Sequence[str]]] = {},  # noqa: ARG003 Unused class method argument: `metadata`
     ) -> "Tree":
         self = super().__new__(cls)
 
