@@ -19,7 +19,7 @@ from . import (
 )
 
 
-def version_callback(value: bool):
+def version_callback(value: bool) -> None:
     if value:
         from ..version import __version__
 
@@ -40,7 +40,7 @@ def main(
         help="Show the version and exit.",
         is_flag=True,
     ),
-):
+) -> None:
     """WEBKNOSSOS CLI tool."""
     pass
 
