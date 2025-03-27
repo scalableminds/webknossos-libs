@@ -18,7 +18,32 @@ from . import (
     upsample,
 )
 
+
+def version_callback(value: bool) -> None:
+    if value:
+        from ..version import __version__
+
+        typer.echo(__version__)
+        raise typer.Exit()
+
+
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_short=False)
+
+
+@app.callback()
+def main(
+    version: bool = typer.Option(
+        None,
+        "--version",
+        callback=version_callback,
+        is_eager=True,
+        help="Show the version and exit.",
+        is_flag=True,
+    ),
+) -> None:
+    """WEBKNOSSOS CLI tool."""
+    pass
+
 
 app.command("check-equality")(check_equality.main)
 app.command("compress")(compress.main)
