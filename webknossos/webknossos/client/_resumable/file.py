@@ -34,8 +34,8 @@ class ResumableFile:
     """A file to be uploaded in a resumable session.
 
     Args:
-        path (Union[str, pathlib.Path]): The path of the file
-        relative_path (Optional[pathlib.Path]): The relative path of the file
+        path (str | pathlib.Path): The path of the file
+        relative_path (pathlib.Path | None): The relative path of the file
         chunk_size (int): The size, in bytes, of chunks uploaded in a single request
 
     Attributes:

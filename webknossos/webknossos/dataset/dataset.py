@@ -12,12 +12,7 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Union, cast
 
 import attr
 import numpy as np
@@ -1051,7 +1046,7 @@ class Dataset:
         """Dictionary containing all layers of this dataset.
 
         Returns:
-            Dict[str, Layer]: Dictionary mapping layer names to Layer objects
+            dict[str, Layer]: Dictionary mapping layer names to Layer objects
 
         Examples:
             ```
@@ -1067,7 +1062,7 @@ class Dataset:
         """Size of each voxel in nanometers along each dimension (x, y, z).
 
         Returns:
-            Tuple[float, float, float]: Size of each voxel in nanometers for x,y,z dimensions
+            tuple[float, float, float]: Size of each voxel in nanometers for x,y,z dimensions
 
         Examples:
             ```
@@ -1125,7 +1120,7 @@ class Dataset:
         zoom level, rotation etc.
 
         Returns:
-            Optional[DatasetViewConfiguration]: Current view configuration if set
+            DatasetViewConfiguration | None: Current view configuration if set
 
         Examples:
             ```
@@ -2071,7 +2066,7 @@ class Dataset:
         Useful when a dataset contains multiple segmentation layers.
 
         Returns:
-            List[SegmentationLayer]: List of all segmentation layers in order
+            list[SegmentationLayer]: List of all segmentation layers in order
 
         Examples:
             Print all segmentation layer names:
@@ -2098,7 +2093,7 @@ class Dataset:
         Useful when a dataset contains multiple color layers.
 
         Returns:
-            List[Layer]: List of all color layers in order
+            list[Layer]: List of all color layers in order
 
         Examples:
             Print all color layer names:
@@ -3069,7 +3064,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Optional[str]: Current display name if set, None otherwise
+            str | None: Current display name if set, None otherwise
 
         Examples:
             ```
@@ -3091,7 +3086,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Optional[str]: Current display name if set, None otherwise
+            str | None: Current display name if set, None otherwise
 
         Examples:
             ```
@@ -3116,7 +3111,7 @@ class RemoteDataset(Dataset):
         with WEBKNOSSOS.
 
         Returns:
-            Optional[str]: Current description if set, None otherwise
+            str | None: Current description if set, None otherwise
 
         Examples:
             ```
@@ -3143,7 +3138,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Tuple[str, ...]: Currently assigned tags, in string tuple form
+            tuple[str, ...]: Currently assigned tags, in string tuple form
 
         Examples:
             ```
@@ -3222,7 +3217,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Tuple[Team, ...]: Teams currently having access
+            tuple[Team, ...]: Teams currently having access
 
         Examples:
             ```

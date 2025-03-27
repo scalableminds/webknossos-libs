@@ -79,7 +79,7 @@ class View:
         Args:
             path_to_mag_view (Path): Path to the magnification view directory.
             array_info (ArrayInfo): Information about the array structure and properties.
-            bounding_box (Optional[NDBoundingBox]): The bounding box in mag 1 absolute coordinates.
+            bounding_box (NDBoundingBox | None): The bounding box in mag 1 absolute coordinates.
                 Optional only for mag_view since it overwrites the bounding_box property.
             mag (Mag): Magnification level of the view.
             read_only (bool, optional): Whether the view is read-only. Defaults to False.
@@ -254,13 +254,13 @@ class View:
                 Shape must match the target region size.
             allow_unaligned (bool, optional): If True, allows writing data to without
                 being aligned to the shard shape. Defaults to False.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Raises:
@@ -457,15 +457,15 @@ class View:
         to read can be specified using either offset+size combinations or bounding boxes.
 
         Args:
-            size (Optional[Vec3IntLike], optional): Size of region to read. Specified in
+            size (Vec3IntLike | None, optional): Size of region to read. Specified in
                 Mag(1) coordinates. Defaults to None.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to the view's
+            relative_offset (Vec3IntLike | None, optional): Offset relative to the view's
                 position in Mag(1) coordinates. Must be used with size. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Must be used with size. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to the view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Returns:
@@ -584,9 +584,9 @@ class View:
         This ensures compatibility with operations that expect purely 3-dimensional input.
 
         Args:
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Returns:
@@ -652,17 +652,17 @@ class View:
         and can optionally be made read-only.
 
         Args:
-             size (Optional[Vec3IntLike], optional): Size of the new view. Must be specified
+             size (Vec3IntLike | None, optional): Size of the new view. Must be specified
                 when using any offset parameter. Defaults to None.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to current
+            relative_offset (Vec3IntLike | None, optional): Offset relative to current
                 view's position in Mag(1) coordinates. Must be used with size. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Must be used with size. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to current view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
-            read_only (Optional[bool], optional): Whether the new view should be read-only.
+            read_only (bool | None, optional): Whether the new view should be read-only.
                 If None, inherits from parent view. Defaults to None.
 
         Returns:
@@ -821,16 +821,16 @@ class View:
                 Defaults to the size of the shard in the `dimension`.
             dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
                 Defaults to 2 (z-axis).
-            relative_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates, relative
+            relative_offset (Vec3IntLike | None): Offset in mag1 coordinates, relative
                 to the current view's position. Mutually exclusive with absolute_offset.
                 Defaults to None.
-            absolute_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates in
+            absolute_offset (Vec3IntLike | None): Offset in mag1 coordinates in
                 absolute dataset coordinates. Mutually exclusive with relative_offset.
                 Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+            relative_bounding_box (NDBoundingBox | None): Bounding box in mag1
                 coordinates, relative to the current view's offset. Mutually exclusive
                 with absolute_bounding_box. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+            absolute_bounding_box (NDBoundingBox | None): Bounding box in mag1
                 coordinates in absolute dataset coordinates. Mutually exclusive with
                 relative_bounding_box. Defaults to None.
             use_logging (bool): Whether to enable logging of write operations.
@@ -904,10 +904,10 @@ class View:
                 Defaults to the size of the shard in the `dimension`.
             dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
                 Defaults to 2 (z-axis).
-            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates,
+            relative_bounding_box (NDBoundingBox | None): Bounding box in mag1 coordinates,
                 relative to the current view's offset. Mutually exclusive with
                 absolute_bounding_box. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates
+            absolute_bounding_box (NDBoundingBox | None): Bounding box in mag1 coordinates
                 in absolute dataset coordinates. Mutually exclusive with
                 relative_bounding_box. Defaults to None.
             use_logging (bool): Whether to enable logging of read operations.
@@ -966,15 +966,15 @@ class View:
         progress tracking and parallel execution.
 
         Args:
-            func_per_chunk (Callable[[Tuple[View, int]], None]): Function to apply to each chunk.
+            func_per_chunk (Callable[[tuple[View, int]], None]): Function to apply to each chunk.
                 Takes a tuple of (chunk_view, chunk_index) as argument. The chunk_index can be
                 used for progress tracking or logging.
-            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+            chunk_shape (Vec3IntLike | None, optional): Size of each chunk in Mag(1) coordinates.
                 If None, uses one chunk per file based on the dataset's file dimensions.
                 Defaults to None.
-            executor (Optional[Executor], optional): Executor for parallel processing.
+            executor (Executor | None, optional): Executor for parallel processing.
                 If None, processes chunks sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Examples:
@@ -982,7 +982,7 @@ class View:
             from webknossos.utils import named_partial
 
             # Define processing function
-            def process_chunk(args: Tuple[View, int], threshold: float) -> None:
+            def process_chunk(args: tuple[View, int], threshold: float) -> None:
                 chunk_view, chunk_idx = args
                 data = chunk_view.read()
                 # Process data...
@@ -1058,23 +1058,23 @@ class View:
         Args:
             func_per_chunk (Callable[[View], Any]): Function to apply to each chunk.
                 Takes a chunk view as argument and returns a result of any type.
-            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+            chunk_shape (Vec3IntLike | None, optional): Size of each chunk in Mag(1) coordinates.
                 If None, uses one chunk per file based on the dataset's file dimensions.
                 Defaults to None.
-            executor (Optional[Executor], optional): Executor for parallel processing.
+            executor (Executor | None, optional): Executor for parallel processing.
                 If None, processes chunks sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Returns:
-            List[Any]: List of results from processing each chunk, in chunk order.
+            list[Any]: List of results from processing each chunk, in chunk order.
 
         Examples:
             ```python
             from webknossos.utils import named_partial
 
             # Calculate statistics per chunk
-            def chunk_statistics(view: View, min_value: float) -> Dict[str, float]:
+            def chunk_statistics(view: View, min_value: float) -> dict[str, float]:
                 data = view.read()
                 return {
                     "mean": data[data > min_value].mean(),
@@ -1138,7 +1138,7 @@ class View:
 
         Args:
             chunk_shape (VecIntLike): Size of each chunk in Mag(1) coordinates.
-            chunk_border_alignments (Optional[VecIntLike], optional): Alignment of chunk
+            chunk_border_alignments (VecIntLike | None, optional): Alignment of chunk
                 borders in Mag(1) coordinates. If None, aligns to (0, 0, 0).
                 Defaults to None.
             read_only (bool, optional): Whether the generated chunks should be read-only.
@@ -1173,24 +1173,24 @@ class View:
         transform data between views of different magnifications, like downsampling.
 
         Args:
-            func_per_chunk (Callable[[Tuple[View, View, int]], None]): Function to apply
+            func_per_chunk (Callable[[tuple[View, View, int]], None]): Function to apply
                 to each chunk pair. Takes (source_chunk, target_chunk, index) as arguments.
             target_view (View): The target view to write transformed data to.
-            source_chunk_shape (Optional[Vec3IntLike], optional): Size of source chunks
+            source_chunk_shape (Vec3IntLike | None, optional): Size of source chunks
                 in Mag(1). If None, uses maximum of source and target file dimensions.
                 Defaults to None.
-            target_chunk_shape (Optional[Vec3IntLike], optional): Size of target chunks
+            target_chunk_shape (Vec3IntLike | None, optional): Size of target chunks
                 in Mag(1). If None, uses maximum of source and target file dimensions.
                 Defaults to None.
-            executor (Optional[Executor], optional): Executor for parallel processing.
+            executor (Executor | None, optional): Executor for parallel processing.
                 If None, processes chunks sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Examples:
             ```python
             # Downsample data from Mag(1) to Mag(2)
-            def downsample_chunk(args: Tuple[View, View, int]) -> None:
+            def downsample_chunk(args: tuple[View, View, int]) -> None:
                 source_chunk, target_chunk, idx = args
                 data = source_chunk.read()
                 downsampled = downsample_data(data)  # Your downsampling function
@@ -1287,9 +1287,9 @@ class View:
 
         Args:
             other (View): The view to compare against.
-            executor (Optional[Executor], optional): Executor for parallel comparison.
+            executor (Executor | None, optional): Executor for parallel comparison.
                 If None, compares sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Returns:

@@ -1,10 +1,7 @@
 import json
 import re
 from collections.abc import Callable, Generator, Iterable
-from typing import (
-    Union,
-    cast,
-)
+from typing import Union, cast
 
 import attr
 import numpy as np
@@ -37,12 +34,12 @@ class BoundingBox(NDBoundingBox):
     Attributes:
         topleft (Vec3Int): Top-left corner coordinates (inclusive)
         size (Vec3Int): Size of the bounding box in each dimension (width, height, depth)
-        axes (Tuple[str, str, str]): Names of the coordinate axes, defaults to ("x", "y", "z")
+        axes (tuple[str, str, str]): Names of the coordinate axes, defaults to ("x", "y", "z")
         index (Vec3Int): Index values for each dimension, defaults to (1, 2, 3)
         bottomright (Vec3Int): Bottom-right corner coordinates (exclusive), computed from topleft + size
-        name (Optional[str]): Optional name for the bounding box, defaults to "Unnamed Bounding Box"
+        name (str | None): Optional name for the bounding box, defaults to "Unnamed Bounding Box"
         is_visible (bool): Whether the bounding box should be visible, defaults to True
-        color (Optional[Tuple[float, float, float, float]]): Optional RGBA color values
+        color (tuple[float, float, float, float] | None): Optional RGBA color values
     """
 
     topleft: Vec3Int = attr.field(converter=Vec3Int)
@@ -120,7 +117,7 @@ class BoundingBox(NDBoundingBox):
         """Creates a BoundingBox from a 6-tuple of coordinates.
 
         Args:
-            tuple6 (Tuple[int, int, int, int, int, int]): A tuple containing
+            tuple6 (tuple[int, int, int, int, int, int]): A tuple containing
                 (x, y, z) coordinates followed by (width, height, depth) dimensions
 
         Returns:
@@ -133,7 +130,7 @@ class BoundingBox(NDBoundingBox):
         """Creates a BoundingBox from a 2-tuple of coordinates.
 
         Args:
-            tuple2 (Tuple[Vec3IntLike, Vec3IntLike]): A tuple containing
+            tuple2 (tuple[Vec3IntLike, Vec3IntLike]): A tuple containing
                 the topleft coordinates and size dimensions
 
         Returns:
@@ -216,7 +213,7 @@ class BoundingBox(NDBoundingBox):
 
         Returns:
             dict: A dictionary with keys:
-                - topLeft: List[int] of (x,y,z) coordinates
+                - topLeft: list[int] of (x,y,z) coordinates
                 - width: int width in x dimension
                 - height: int height in y dimension
                 - depth: int depth in z dimension
@@ -241,8 +238,8 @@ class BoundingBox(NDBoundingBox):
 
         Returns:
             dict: A dictionary with keys:
-                - topleft: List[int] of (x,y,z) coordinates
-                - size: List[int] of (width,height,depth) dimensions
+                - topleft: list[int] of (x,y,z) coordinates
+                - size: list[int] of (width,height,depth) dimensions
         """
         return {"topleft": self.topleft.to_list(), "size": self.size.to_list()}
 
@@ -265,7 +262,7 @@ class BoundingBox(NDBoundingBox):
         Creates a tuple containing the bounding box coordinates and dimensions.
 
         Returns:
-            Tuple[int, int, int, int, int, int]: A tuple containing:
+            tuple[int, int, int, int, int, int]: A tuple containing:
                 - First three values: (x,y,z) coordinates of topleft
                 - Last three values: (width,height,depth) dimensions
         """
@@ -420,7 +417,7 @@ class BoundingBox(NDBoundingBox):
         Args:
             chunk_shape (Vec3IntLike): Size of chunks to decompose into. Each chunk
                 will be at most this size.
-            chunk_border_alignments (Optional[Vec3IntLike]): If provided, all border
+            chunk_border_alignments (Vec3IntLike | None): If provided, all border
                 coordinates between chunks will be divisible by these values.
 
         Yields:

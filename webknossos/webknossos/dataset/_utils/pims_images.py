@@ -4,11 +4,7 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
 from os import PathLike
 from pathlib import Path
-from typing import (
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import TypeVar, Union, cast
 from urllib.error import HTTPError
 
 import numpy as np

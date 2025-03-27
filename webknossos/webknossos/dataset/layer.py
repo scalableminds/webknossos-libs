@@ -191,9 +191,9 @@ class Layer:
             dtype_per_channel (np.dtype): Data type used per channel
             num_channels (int): Number of channels in the layer
             data_format (DataFormat): Format used to store the data
-            default_view_configuration (Optional[LayerViewConfiguration]): View configuration
+            default_view_configuration (LayerViewConfiguration | None): View configuration
             read_only (bool): Whether layer is read-only
-            mags (Dict[Mag, MagView]): Dictionary of magnification levels
+            mags (dict[Mag, MagView]): Dictionary of magnification levels
 
         Args:
             dataset (Dataset): The parent dataset that contains this layer
@@ -441,7 +441,7 @@ class Layer:
         """Gets the default view configuration for this layer.
 
         Returns:
-            Optional[LayerViewConfiguration]: View configuration if set, otherwise None
+            LayerViewConfiguration | None: View configuration if set, otherwise None
         """
 
         return self._properties.default_view_configuration
@@ -1043,19 +1043,19 @@ class Layer:
         Different sampling modes control how dimensions are downsampled.
 
         Args:
-            from_mag (Optional[Mag]): Source magnification to downsample from. Defaults to highest existing mag.
-            coarsest_mag (Optional[Mag]): Target magnification to stop at. Defaults to calculated value.
+            from_mag (Mag | None): Source magnification to downsample from. Defaults to highest existing mag.
+            coarsest_mag (Mag | None): Target magnification to stop at. Defaults to calculated value.
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
                 Supported modes: "median", "mode", "nearest", "bilinear", "bicubic"
             compress (bool): Whether to compress the generated magnifications. Defaults to True.
-            sampling_mode (Union[str, SamplingModes]): How dimensions should be downsampled.
+            sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
-            align_with_other_layers (Union[bool, Dataset]): Whether to align with other layers. True by default.
-            buffer_shape (Optional[Vec3Int]): Shape of processing buffer. Defaults to None.
+            align_with_other_layers (bool | Dataset): Whether to align with other layers. True by default.
+            buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
             only_setup_mags (bool): Only create mags without data. False by default.
-            executor (Optional[Executor]): Executor for parallel processing. None by default.
+            executor (Executor | None): Executor for parallel processing. None by default.
 
         Raises:
             AssertionError: If from_mag does not exist
@@ -1294,10 +1294,10 @@ class Layer:
             target_mags (List[Mag]): Ordered list of target magnifications
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
             compress (bool): Whether to compress outputs. Defaults to True.
-            buffer_shape (Optional[Vec3Int]): Shape of processing buffer.
+            buffer_shape (Vec3Int | None): Shape of processing buffer.
             allow_overwrite (bool): Whether to allow overwriting mags. Defaults to False.
             only_setup_mags (bool): Only create mag structures without data. Defaults to False.
-            executor (Optional[Executor]): Executor for parallel processing.
+            executor (Executor | None): Executor for parallel processing.
 
         Raises:
             AssertionError: If from_mag doesn't exist or target mags not in ascending order
@@ -1353,13 +1353,13 @@ class Layer:
             from_mag (Mag): Source coarse magnification
             finest_mag (Mag): Target finest magnification (default Mag(1))
             compress (bool): Whether to compress upsampled data. Defaults to True.
-            sampling_mode (Union[str, SamplingModes]): How dimensions should be upsampled:
+            sampling_mode (str | SamplingModes): How dimensions should be upsampled:
                 - 'anisotropic': Equalizes voxel dimensions based on voxel_size
                 - 'isotropic': Equal upsampling in all dimensions
                 - 'constant_z': Only upsamples x/y dimensions. z remains unchanged.
             align_with_other_layers: Whether to align mags with others. Defaults to True.
-            buffer_shape (Optional[Vec3IntLike]): Shape of processing buffer.
-            executor (Optional[Executor]): Executor for parallel processing.
+            buffer_shape (Vec3IntLike | None): Shape of processing buffer.
+            executor (Executor | None): Executor for parallel processing.
 
         Raises:
             AssertionError: If from_mag doesn't exist or finest_mag invalid
@@ -1551,7 +1551,7 @@ class SegmentationLayer(Layer):
     - Provides methods for updating the largest segment ID
 
     Attributes:
-        largest_segment_id (Optional[int]): Highest segment ID present in data, or None if empty
+        largest_segment_id (int | None): Highest segment ID present in data, or None if empty
         category (LayerCategoryType): Always SEGMENTATION_CATEGORY for this class
 
     Note:
@@ -1572,7 +1572,7 @@ class SegmentationLayer(Layer):
         - Optimizing data structures
 
         Returns:
-            Optional[int]: The highest segment ID present, or None if no segments exist
+            int | None: The highest segment ID present, or None if no segments exist
         """
         return self._properties.largest_segment_id
 
@@ -1583,7 +1583,7 @@ class SegmentationLayer(Layer):
         Updates the stored largest segment ID value and persists it to properties.
 
         Args:
-            largest_segment_id (Optional[int]): New largest segment ID value to set.
+            largest_segment_id (int | None): New largest segment ID value to set.
                 Pass None to indicate no segments exist.
 
         Raises:

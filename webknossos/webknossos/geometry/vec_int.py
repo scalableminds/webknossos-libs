@@ -1,14 +1,7 @@
 import re
 from collections.abc import Callable, Iterable
 from operator import add, floordiv, mod, mul, sub
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Optional,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, cast
 
 import numpy as np
 
@@ -36,7 +29,7 @@ class VecInt(tuple):
     axis information. It allows for initialization with both positional and named arguments.
 
     Attributes:
-        axes (Tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
+        axes (tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
 
     Examples:
         Create a vector with 4 named dimensions:
@@ -302,10 +295,10 @@ class VecInt(tuple):
         Adds two VecInts or returns None if the other is None.
 
         Args:
-            other (Optional[VecInt]): The other vector to add.
+            other (VecInt | None): The other vector to add.
 
         Returns:
-            Optional[VecInt]: The sum of the two vectors or None if the other is None.
+            VecInt | None: The sum of the two vectors or None if the other is None.
         """
         return None if other is None else self + other
 
@@ -316,8 +309,8 @@ class VecInt(tuple):
         source so that the other elements move when necessary.
 
         Args:
-            source (Union[int, List[int]]): The index of the element to move.
-            target (Union[int, List[int]]): The index where the element should be moved to.
+            source (int | list[int]): The index of the element to move.
+            target (int | list[int]): The index where the element should be moved to.
 
         Returns:
             VecInt: A new vector with the moved element.
@@ -338,7 +331,7 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 0.
 
         Args:
-            axes (Tuple[str, ...]): The axes of the vector.
+            axes (tuple[str, ...]): The axes of the vector.
 
         Returns:
             VecInt: The new vector.
@@ -351,7 +344,7 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 1.
 
         Args:
-            axes (Tuple[str, ...]): The axes of the vector.
+            axes (tuple[str, ...]): The axes of the vector.
 
         Returns:
             VecInt: The new vector.
@@ -365,7 +358,7 @@ class VecInt(tuple):
 
         Args:
             an_int (int): The value to set all elements to.
-            axes (Tuple[str, ...]): The axes of the vector.
+            axes (tuple[str, ...]): The axes of the vector.
 
         Returns:
             VecInt: The new vector.

@@ -142,7 +142,7 @@ class NDBoundingBox:
         Returns a new instance of `NDBoundingBox` with the specified name.
 
         Args:
-            name (Optional[str]): The name to assign to the new `NDBoundingBox` instance.
+            name (str | None): The name to assign to the new `NDBoundingBox` instance.
 
         Returns:
             NDBoundingBox: A new instance of `NDBoundingBox` with the specified name.
@@ -217,7 +217,7 @@ class NDBoundingBox:
         Returns a new instance of NDBoundingBox with the specified color.
 
         Args:
-            color (Optional[Tuple[float, float, float, float]]): The color to set for the bounding box.
+            color (tuple[float, float, float, float] | None): The color to set for the bounding box.
                 The color should be specified as a tuple of four floats representing RGBA values.
 
         Returns:
@@ -236,8 +236,8 @@ class NDBoundingBox:
 
         Args:
             axis (str): The name of the axis to update.
-            new_topleft (Optional[int]): The new value for the top-left coordinate along the specified axis.
-            new_size (Optional[int]): The new size along the specified axis.
+            new_topleft (int | None): The new value for the top-left coordinate along the specified axis.
+            new_size (int | None): The new size along the specified axis.
 
         Returns:
             NDBoundingBox: A new NDBoundingBox object with updated bounds.
@@ -272,7 +272,7 @@ class NDBoundingBox:
             axis (str): The name of the axis to get the bounds for.
 
         Returns:
-            Tuple[int, int]: A tuple containing the top-left and bottom-right coordinates along the specified axis.
+            tuple[int, int]: A tuple containing the top-left and bottom-right coordinates along the specified axis.
         """
         try:
             index = self.axes.index(axis)
@@ -697,7 +697,7 @@ class NDBoundingBox:
         Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
         Args:
-            mag (Union[Mag, Vec3Int]): The magnification to align the bounding box to.
+            mag (Mag | Vec3Int): The magnification to align the bounding box to.
             ceil (bool): If True, the bounding box is enlarged when necessary. If False, it's shrunk when necessary.
 
         Returns:
@@ -780,7 +780,7 @@ class NDBoundingBox:
 
         Args:
             chunk_shape (VecIntLike): The size of the chunks to generate.
-            chunk_border_alignments (Optional[VecIntLike]): The alignment of the chunk borders.
+            chunk_border_alignments (VecIntLike | None): The alignment of the chunk borders.
 
 
         Yields:

@@ -51,12 +51,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import (
-    BinaryIO,
-    Union,
-    cast,
-    overload,
-)
+from typing import BinaryIO, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -1300,7 +1295,7 @@ class Annotation:
             volume_layer_id: ID of the target volume layer if multiple exist.
 
         Returns:
-            Dict[int, SegmentInformation]: Dictionary mapping segment IDs to their information.
+            dict[int, SegmentInformation]: Dictionary mapping segment IDs to their information.
 
         Raises:
             ValueError: If neither name nor ID is provided when multiple layers exist.
