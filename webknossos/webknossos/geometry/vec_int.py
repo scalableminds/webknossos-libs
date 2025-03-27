@@ -309,9 +309,7 @@ class VecInt(tuple):
         """
         return None if other is None else self + other
 
-    def moveaxis(
-        self: _T, source: int | list[int], target: int | list[int]
-    ) -> _T:
+    def moveaxis(self: _T, source: int | list[int], target: int | list[int]) -> _T:
         """
         Allows to move one element at index `source` to another index `target`. Similar to
         np.moveaxis, this is *not* a swap operation but instead it moves the specified
@@ -375,4 +373,4 @@ class VecInt(tuple):
         return cls((an_int for _ in range(len(axes))), axes=axes)
 
 
-VecIntLike = Union[VecInt, tuple[int, ...], np.ndarray, Iterable[int]]
+VecIntLike = VecInt | tuple[int, ...] | np.ndarray | Iterable[int]

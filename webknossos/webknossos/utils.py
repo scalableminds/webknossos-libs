@@ -8,7 +8,7 @@ import time
 import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from concurrent.futures import Future
-from contextlib import nullcontext
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
@@ -17,7 +17,6 @@ from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from typing import (
     Any,
-    ContextManager,
     Protocol,
     TypeVar,
 )
@@ -44,7 +43,7 @@ def time_stop(identifier: str) -> None:
 def get_executor_for_args(
     args: argparse.Namespace | None,
     executor: Executor | None = None,
-) -> ContextManager[Executor]:
+) -> AbstractContextManager[Executor]:
     if executor is not None:
         return nullcontext(enter_result=executor)
 
@@ -92,9 +91,7 @@ def get_executor_for_args(
             keep_logs=True,
         )
     else:
-        logging.error(
-            f"Unknown distribution strategy: {args.distribution_strategy}"
-        )
+        logging.error(f"Unknown distribution strategy: {args.distribution_strategy}")
 
     return executor
 
@@ -124,7 +121,7 @@ def infer_metadata_type(value: str | int | float | Sequence[str]) -> str:
         if all(isinstance(i, str) for i in value):
             return "string[]"
         raise ValueError(f"Unsupported metadata type: {type(value)}")
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return "number"
     raise ValueError(f"Unsupported metadata type: {type(value)}")
 
@@ -270,7 +267,7 @@ def is_fs_path(path: Path) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
     return not isinstance(path, UPath) or isinstance(
-        path, (PosixPath, WindowsPath, PosixUPath, WindowsUPath)
+        path, PosixPath | WindowsPath | PosixUPath | WindowsUPath
     )
 
 
@@ -392,8 +389,7 @@ class LazyReadOnlyDict(Mapping[K, V]):
         return self.func(self.entries[key])
 
     def __iter__(self) -> Iterator[K]:
-        for key in self.entries:
-            yield key
+        yield from self.entries
 
     def __len__(self) -> int:
         return len(self.entries)

@@ -9,7 +9,9 @@ from .utils import enforce_not_null, filter_none_values
 
 class Volume(NamedTuple):
     id: int
-    location: str | None  # path to a ZIP file containing a wK volume annotation, may be omitted when using skip_volume_data
+    location: (
+        str | None
+    )  # path to a ZIP file containing a wK volume annotation, may be omitted when using skip_volume_data
     # name of an already existing wK volume annotation segmentation layer:
     fallback_layer: str | None
     # older wk versions did not serialize the name which is why the name is optional:

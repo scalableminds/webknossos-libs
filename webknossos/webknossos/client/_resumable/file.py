@@ -1,4 +1,3 @@
-
 from collections import namedtuple
 from collections.abc import Callable
 from functools import partial

@@ -520,9 +520,7 @@ class MagView(View):
             compress=True,
         )
 
-        logging.info(
-            f"Compressing mag {self.name} in '{str(uncompressed_full_path)}'"
-        )
+        logging.info(f"Compressing mag {self.name} in '{str(uncompressed_full_path)}'")
         with get_executor_for_args(None, executor) as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()

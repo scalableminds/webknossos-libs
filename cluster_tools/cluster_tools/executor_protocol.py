@@ -1,8 +1,8 @@
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future
+from contextlib import AbstractContextManager
 from os import PathLike
 from typing import (
-    ContextManager,
     Protocol,
     TypeVar,
 )
@@ -14,7 +14,7 @@ _P = ParamSpec("_P")
 _S = TypeVar("_S")
 
 
-class Executor(Protocol, ContextManager["Executor"]):
+class Executor(Protocol, AbstractContextManager["Executor"]):
     @classmethod
     def as_completed(cls, futures: list[Future[_T]]) -> Iterator[Future[_T]]: ...
 

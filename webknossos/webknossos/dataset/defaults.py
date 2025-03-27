@@ -24,9 +24,7 @@ def _save_sslcontext(
     return _rebuild_sslcontext, (obj.protocol, cafile)
 
 
-def _rebuild_sslcontext(
-    protocol: ssl._SSLMethod, cafile: str | None
-) -> ssl.SSLContext:
+def _rebuild_sslcontext(protocol: ssl._SSLMethod, cafile: str | None) -> ssl.SSLContext:
     ssl_context = ssl.SSLContext(protocol)
     if cafile is not None:
         ssl_context.load_verify_locations(cafile=cafile)

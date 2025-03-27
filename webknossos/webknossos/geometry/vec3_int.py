@@ -134,4 +134,4 @@ class Vec3Int(VecInt):
         return f"Vec3Int({self.x},{self.y},{self.z})"
 
 
-Vec3IntLike = Union[Vec3Int, tuple[int, int, int], np.ndarray, Iterable[int]]
+Vec3IntLike = Vec3Int | tuple[int, int, int] | np.ndarray | Iterable[int]

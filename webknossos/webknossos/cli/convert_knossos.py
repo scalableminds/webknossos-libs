@@ -95,9 +95,7 @@ class KnossosDataset:
 
     def __get_cube_folder(self, cube_xyz: tuple[int, ...]) -> Path:
         x, y, z = cube_xyz
-        return (
-            self.root / f"x{x:04d}" / f"y{y:04d}" / f"z{z:04d}"
-        )
+        return self.root / f"x{x:04d}" / f"y{y:04d}" / f"z{z:04d}"
 
     def __get_cube_file_name(self, cube_xyz: tuple[int, ...]) -> Path:
         x, y, z = cube_xyz
@@ -106,9 +104,8 @@ class KnossosDataset:
     def __get_only_raw_file_path(self, cube_xyz: tuple[int, ...]) -> Path | None:
         cube_folder = self.__get_cube_folder(cube_xyz)
         raw_files = list(cube_folder.glob("*.raw"))
-        assert len(raw_files) <= 1, "Found %d .raw files in %s" % (
-            len(raw_files),
-            cube_folder,
+        assert len(raw_files) <= 1, (
+            f"Found {len(raw_files)} .raw files in {cube_folder}"
         )
         return raw_files[0] if len(raw_files) > 0 else None
 

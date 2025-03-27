@@ -44,7 +44,7 @@ import logging
 import re
 import warnings
 from collections.abc import Iterable, Iterator
-from contextlib import contextmanager, nullcontext
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
@@ -53,7 +53,6 @@ from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import (
     BinaryIO,
-    ContextManager,
     Union,
     cast,
     overload,
@@ -389,7 +388,7 @@ class Annotation:
         *,
         skip_volume_data: bool = False,
         _return_context: bool,
-    ) -> tuple["Annotation", ContextManager[None]]: ...
+    ) -> tuple["Annotation", AbstractContextManager[None]]: ...
 
     @classmethod
     def download(
@@ -399,7 +398,7 @@ class Annotation:
         *,
         skip_volume_data: bool = False,
         _return_context: bool = False,
-    ) -> Union["Annotation", tuple["Annotation", ContextManager[None]]]:
+    ) -> Union["Annotation", tuple["Annotation", AbstractContextManager[None]]]:
         """Downloads an annotation from WEBKNOSSOS.
 
         Args:
@@ -449,7 +448,7 @@ class Annotation:
                 + "Using no token, only public annotations can be downloaded. "
                 + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
             )
-            context: ContextManager[None] = webknossos_context(
+            context: AbstractContextManager[None] = webknossos_context(
                 webknossos_url, token=None
             )
         else:

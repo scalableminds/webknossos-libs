@@ -65,7 +65,8 @@ class View:
     def __init__(
         self,
         path_to_mag_view: LazyPath,
-        bounding_box: NDBoundingBox | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
+        bounding_box: NDBoundingBox
+        | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
         data_format: DataFormat,
         read_only: bool = False,
@@ -441,7 +442,8 @@ class View:
 
     def read(
         self,
-        size: Vec3IntLike | None = None,  # usually in mag1, in current mag if offset is given
+        size: Vec3IntLike
+        | None = None,  # usually in mag1, in current mag if offset is given
         *,
         relative_offset: Vec3IntLike | None = None,  # in mag1
         absolute_offset: Vec3IntLike | None = None,  # in mag1

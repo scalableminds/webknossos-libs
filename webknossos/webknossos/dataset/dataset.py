@@ -5,7 +5,7 @@ import logging
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from contextlib import nullcontext
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from enum import Enum, unique
 from itertools import product
@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    ContextManager,
     Union,
     cast,
 )
@@ -373,9 +372,7 @@ class Dataset:
             try:
                 self.path.mkdir(parents=True, exist_ok=True)
             except OSError as e:
-                raise type(e)(
-                    f"Creation of Dataset {self.path} failed. " + repr(e)
-                )
+                raise type(e)(f"Creation of Dataset {self.path} failed. " + repr(e))
 
             # Write empty properties to disk
             if voxel_size_with_unit is None:
@@ -448,9 +445,7 @@ class Dataset:
         return self
 
     @classmethod
-    def open(
-        cls, dataset_path: str | PathLike, read_only: bool = False
-    ) -> "Dataset":
+    def open(cls, dataset_path: str | PathLike, read_only: bool = False) -> "Dataset":
         """
         To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
         This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
@@ -629,7 +624,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[ContextManager, str, str, str, str | None]:
+    ) -> tuple[AbstractContextManager, str, str, str, str | None]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -708,7 +703,7 @@ class Dataset:
                 f"The supplied url {webknossos_url} does not match your current context {current_context.url}. "
                 + "In this case organization_id can not be inferred."
             )
-            context_manager: ContextManager[None] = webknossos_context(
+            context_manager: AbstractContextManager[None] = webknossos_context(
                 webknossos_url, token=None
             )
         else:
@@ -861,7 +856,8 @@ class Dataset:
         voxel_size: tuple[float, float, float] | None = None,
         name: str | None = None,
         *,
-        map_filepath_to_layer_name: ConversionLayerMapping | Callable[[Path], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
+        map_filepath_to_layer_name: ConversionLayerMapping
+        | Callable[[Path], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
         z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
         voxel_size_with_unit: VoxelSize | None = None,
         layer_name: str | None = None,
@@ -1242,9 +1238,7 @@ class Dataset:
             Use `layers` property to access all layers at once.
         """
         if layer_name not in self.layers.keys():
-            raise IndexError(
-                f"The layer {layer_name} is not a layer of this dataset"
-            )
+            raise IndexError(f"The layer {layer_name} is not a layer of this dataset")
         return self.layers[layer_name]
 
     def add_layer(
@@ -2913,7 +2907,7 @@ class RemoteDataset(Dataset):
         dataset_path: UPath,
         dataset_id: str,
         sharing_token: str | None,
-        context: ContextManager,
+        context: AbstractContextManager,
     ) -> None:
         """Initialize a remote dataset instance.
 

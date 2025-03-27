@@ -3,7 +3,6 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import (
     Any,
-    Union,
 )
 
 import attr
@@ -196,9 +195,7 @@ class VoxelSize:
 class DatasetProperties:
     id: dict[str, str]
     scale: VoxelSize
-    data_layers: list[
-        SegmentationLayerProperties | LayerProperties
-    ]
+    data_layers: list[SegmentationLayerProperties | LayerProperties]
     default_view_configuration: DatasetViewConfiguration | None = None
 
     def update_for_layer(
@@ -406,10 +403,7 @@ def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
 
 
 dataset_converter.register_structure_hook(
-    Union[
-        SegmentationLayerProperties,
-        LayerProperties,
-    ],
+    SegmentationLayerProperties | LayerProperties,
     disambiguate_layer_properties,
 )
 

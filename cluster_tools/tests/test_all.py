@@ -229,29 +229,22 @@ def test_process_id(exc_with_pickling: cluster_tools.Executor) -> None:
 
         should_differ = not isinstance(
             exc,
-            (
-                cluster_tools.SequentialExecutor,
-                cluster_tools.SequentialPickleExecutor,
-            ),
+            cluster_tools.SequentialExecutor | cluster_tools.SequentialPickleExecutor,
         )
 
         if should_differ:
-            assert inner_pid != outer_pid, (
-                f"Inner and outer pid should differ, but both are {inner_pid}."
-            )
+            assert (
+                inner_pid != outer_pid
+            ), f"Inner and outer pid should differ, but both are {inner_pid}."
         else:
-            assert inner_pid == outer_pid, (
-                f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
-            )
+            assert (
+                inner_pid == outer_pid
+            ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
 
 
 def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
     is_async = not isinstance(
-        exc,
-        (
-            cluster_tools.SequentialExecutor,
-            cluster_tools.SequentialPickleExecutor,
-        ),
+        exc, cluster_tools.SequentialExecutor | cluster_tools.SequentialPickleExecutor
     )
 
     with exc:
@@ -274,11 +267,7 @@ def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
 
 def test_map_to_futures(exc: cluster_tools.Executor) -> None:
     is_async = not isinstance(
-        exc,
-        (
-            cluster_tools.SequentialExecutor,
-            cluster_tools.SequentialPickleExecutor,
-        ),
+        exc, cluster_tools.SequentialExecutor | cluster_tools.SequentialPickleExecutor
     )
 
     with exc:
@@ -323,9 +312,9 @@ def test_map_to_futures_with_pickle_paths(
             assert set(results) == {1, 4}
 
         for number in numbers:
-            assert Path(output_pickle_path_getter(tmp_dir, number)).exists(), (
-                f"File for chunk {number} should exist."
-            )
+            assert Path(
+                output_pickle_path_getter(tmp_dir, number)
+            ).exists(), f"File for chunk {number} should exist."
 
 
 def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
@@ -385,7 +374,8 @@ def enum_consumer(value: DummyEnum) -> DummyEnum:
     "executor_key", ["multiprocessing_with_pickling", "sequential_with_pickling"]
 )
 def test_pickling(
-    executor_key: Literal["multiprocessing_with_pickling"] | Literal["sequential_with_pickling"],
+    executor_key: Literal["multiprocessing_with_pickling"]
+    | Literal["sequential_with_pickling"],
 ) -> None:
     with cluster_tools.get_executor(executor_key) as executor:
         future = executor.submit(enum_consumer, DummyEnum.BANANA)
@@ -398,9 +388,9 @@ def test_map_to_futures_with_sequential() -> None:
         futures = exc.map_to_futures(sleep, durations)
 
         for fut in futures:
-            assert fut.done(), (
-                "Future should immediately be finished after map_to_futures has returned"
-            )
+            assert (
+                fut.done()
+            ), "Future should immediately be finished after map_to_futures has returned"
 
         results = [f.result() for f in futures]
 

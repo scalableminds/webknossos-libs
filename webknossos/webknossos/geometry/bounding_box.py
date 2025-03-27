@@ -357,9 +357,7 @@ class BoundingBox(NDBoundingBox):
             bottomright = align(self.bottomright, np.floor)
         return attr.evolve(self, topleft=topleft, size=bottomright - topleft)
 
-    def align_with_mag(
-        self, mag: Mag | Vec3Int, ceil: bool = False
-    ) -> "BoundingBox":
+    def align_with_mag(self, mag: Mag | Vec3Int, ceil: bool = False) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
         Args:

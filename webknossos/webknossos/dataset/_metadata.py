@@ -59,9 +59,7 @@ class Metadata(MutableMapping):
                     client._put_json(f"{self._api_path}{self._id}", full_object)
                 self._has_changed = False
 
-    def __setitem__(
-        self, key: str, value: str | int | float | Sequence[str]
-    ) -> None:
+    def __setitem__(self, key: str, value: str | int | float | Sequence[str]) -> None:
         with self._recent_metadata() as metadata:
             metadata._has_changed = True
             metadata._mapping[key] = value

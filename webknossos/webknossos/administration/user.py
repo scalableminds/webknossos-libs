@@ -1,4 +1,3 @@
-
 import attr
 
 from ..client.api_client.models import (

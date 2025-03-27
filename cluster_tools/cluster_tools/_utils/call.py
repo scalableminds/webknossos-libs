@@ -30,11 +30,7 @@ class CommandError(Exception):
         self.stderr = stderr
 
     def __str__(self) -> str:
-        return "%s exited with status %i: %s" % (
-            repr(self.command),
-            self.code,
-            repr(self.stderr),
-        )
+        return f"{self.command!r} exited with status {self.code}: {self.stderr!r}"
 
 
 def chcall(command: str, stdin: str | None = None) -> tuple[str, str]:

@@ -176,9 +176,7 @@ class Parameters(NamedTuple):
         return [cls._parse_bounding_box(bb_element) for bb_element in bb_elements]
 
     @classmethod
-    def _parse_task_bounding_box(
-        cls, nml_parameters: Element
-    ) -> NDBoundingBox | None:
+    def _parse_task_bounding_box(cls, nml_parameters: Element) -> NDBoundingBox | None:
         bb_element = nml_parameters.find("taskBoundingBox")
         if bb_element is not None:
             return cls._parse_bounding_box(bb_element)

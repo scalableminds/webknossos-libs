@@ -1,4 +1,3 @@
-
 from webknossos.client.api_client.models import (
     ApiDatasetAnnounceUpload,
     ApiDatasetUploadInformation,

@@ -141,9 +141,9 @@ class ClusterExecutor(futures.Executor):
         )
 
         self.metadata = {}
-        assert not ("logging_config" in kwargs and "logging_setup_fn" in kwargs), (
-            "Specify either logging_config OR logging_setup_fn but not both at once"
-        )
+        assert not (
+            "logging_config" in kwargs and "logging_setup_fn" in kwargs
+        ), "Specify either logging_config OR logging_setup_fn but not both at once"
         if "logging_config" in kwargs:
             self.metadata["logging_config"] = kwargs["logging_config"]
         if "logging_setup_fn" in kwargs:
@@ -280,11 +280,11 @@ class ClusterExecutor(futures.Executor):
 
     @staticmethod
     def format_infile_name(cfut_dir: str, job_id: str) -> str:
-        return os.path.join(cfut_dir, "cfut.in.%s.pickle" % job_id)
+        return os.path.join(cfut_dir, f"cfut.in.{job_id}.pickle")
 
     @staticmethod
     def format_outfile_name(cfut_dir: str, job_id: str) -> str:
-        return os.path.join(cfut_dir, "cfut.out.%s.pickle" % job_id)
+        return os.path.join(cfut_dir, f"cfut.out.{job_id}.pickle")
 
     def get_python_executable(self) -> str:
         return sys.executable

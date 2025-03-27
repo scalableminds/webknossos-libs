@@ -1,11 +1,10 @@
 import warnings
 from collections.abc import Iterable, Iterator, Sequence
-from contextlib import contextmanager, nullcontext
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
 from os import PathLike
 from pathlib import Path
 from typing import (
-    ContextManager,
     TypeVar,
     Union,
     cast,
@@ -177,7 +176,7 @@ class PimsImages:
                 # dimensions as pims.FramesSequenceND does:
 
                 _allow_channels_first = not is_segmentation
-                if isinstance(images, (pims.ImageSequence, pims.ReaderSequence)):
+                if isinstance(images, pims.ImageSequence | pims.ReaderSequence):
                     _allow_channels_first = False
 
                 if len(images.shape) == 2:
@@ -271,7 +270,7 @@ class PimsImages:
 
     def _normalize_original_images(self) -> str | list[str]:
         original_images = self._original_images
-        if isinstance(original_images, (str, Path)):
+        if isinstance(original_images, str | Path):
             original_images_path = Path(original_images)
             if original_images_path.is_dir():
                 valid_suffixes = get_valid_pims_suffixes()
@@ -430,7 +429,7 @@ class PimsImages:
         after IDENTIFY AXIS ORDER of __init__() has run.
         For a 2D image this is achieved by wrapping it in a list.
         """
-        images_context_manager: ContextManager | None
+        images_context_manager: AbstractContextManager | None
         if isinstance(self._original_images, pims.FramesSequenceND):
             images_context_manager = nullcontext(enter_result=self._original_images)
         else:

@@ -26,9 +26,9 @@ def dump(*args: Any, **kwargs: Any) -> None:
 
 @warn_after("pickle.loads", WARNING_TIMEOUT)
 def loads(*args: Any, **kwargs: Any) -> Any:
-    assert "custom_main_path" not in kwargs, (
-        "loads does not implement support for the argument custom_main_path"
-    )
+    assert (
+        "custom_main_path" not in kwargs
+    ), "loads does not implement support for the argument custom_main_path"
     return pickle.loads(*args, **kwargs)
 
 
@@ -40,7 +40,7 @@ class _RenameUnpickler(pickle.Unpickler):
         if module == "__main__" and self.custom_main_path is not None:
             renamed_module = self.custom_main_path
 
-        return super(_RenameUnpickler, self).find_class(renamed_module, name)
+        return super().find_class(renamed_module, name)
 
 
 @warn_after("pickle.load", WARNING_TIMEOUT)
