@@ -58,7 +58,6 @@ from typing import (
     Iterator,
     List,
     Optional,
-    Sequence,
     Tuple,
     Union,
     cast,
@@ -483,6 +482,42 @@ class Annotation:
             return annotation, context
         else:
             return annotation
+
+    @classmethod
+    def open_remote(
+        cls,
+        annotation_id_or_url: str,
+        webknossos_url: Optional[str] = None,
+    ) -> "RemoteAnnotation":
+        (
+            annotation,
+            context,
+        ) = Annotation.download(
+            annotation_id_or_url=annotation_id_or_url,
+            webknossos_url=webknossos_url,
+            skip_volume_data=True,
+            _return_context=True,
+        )
+        assert annotation.annotation_id is not None
+        assert annotation.organization_id is not None
+        assert annotation.owner_name is not None
+
+        with context:
+            return RemoteAnnotation(
+                annotation.annotation_id,
+                annotation.organization_id,
+                annotation.dataset_id,
+                name=annotation.name,
+                skeleton=annotation.skeleton,
+                owner_name=annotation.owner_name,
+                time=annotation.time,
+                edit_position=annotation.edit_position,
+                edit_rotation=annotation.edit_rotation,
+                zoom_level=annotation.zoom_level,
+                metadata=annotation.metadata,
+                task_bounding_box=annotation.task_bounding_box,
+                user_bounding_boxes=annotation.user_bounding_boxes,
+            )
 
     @classmethod
     def open_as_remote_dataset(
@@ -1391,27 +1426,27 @@ class RemoteAnnotation(Annotation):
     def __init__(
         self,
         annotation_id: str,
-        dataset_id: str,
         organization_id: str,
+        dataset_id: Optional[str] = None,
         *,
         name: str,
         skeleton: Skeleton,
         owner_name: str,
         time: Optional[int] = None,
-        edit_position: Optional[Vec3Int] = None,
-        edit_rotation: Optional[Vec3Int] = None,
-        zoom_level: Optional[int] = None,
+        edit_position: Optional[Vector3] = None,
+        edit_rotation: Optional[Vector3] = None,
+        zoom_level: Optional[float] = None,
         task_bounding_box: Optional[NDBoundingBox] = None,
         user_bounding_boxes: Optional[List[NDBoundingBox]] = None,
         metadata: Dict[str, str] = {},
     ) -> None:
         """A remote Annotation instance.
-        Note: Please not initialize this class directly, use Annotation.open_as_remote_dataset() instead."""
+        Note: Please not initialize this class directly, use Annotation.open_remote() instead."""
         self.annotation_id = annotation_id
+        self.skeleton = skeleton
         self.dataset_id = dataset_id
         self.organization_id = organization_id
         self.name = name
-        self.skeleton = skeleton
         self.owner_name = owner_name
         self.time = time
         self.edit_position = edit_position
@@ -1422,7 +1457,7 @@ class RemoteAnnotation(Annotation):
         self.metadata = metadata
 
     def __repr__(self) -> str:
-        return f"RemoteAnnotation({self.name}, {self.annotation_id}, {self.dataset_id}, {self.organization_id})"
+        return f"RemoteAnnotation({self.url})"
 
     @property
     def url(self) -> str:
@@ -1436,20 +1471,23 @@ class RemoteAnnotation(Annotation):
 
     @name.setter
     def name(self, value: str) -> None:
+        assert isinstance(value, str), "Name must be a string."
         self._set_annotation_info(name=value)
 
     @property
-    def description(self) -> str:
+    def description(self) -> Optional[str]:
         return self._get_annotation_info().description
 
     @description.setter
     def description(self, value: str) -> None:
+        assert isinstance(value, str), "Description must be a string."
         self._set_annotation_info(description=value)
 
     def _get_annotation_info(self) -> ApiAnnotation:
         from webknossos.client.context import _get_api_client
 
         client = _get_api_client(True)
+        assert self.annotation_id is not None, "Annotation ID must be set."
         return client.annotation_info(self.annotation_id)
 
     def _set_annotation_info(
@@ -1463,18 +1501,24 @@ class RemoteAnnotation(Annotation):
         description = (
             description if description is not None else annotation_info.description
         )
+        assert self.annotation_id is not None, "Annotation ID must be set."
         client.annotation_edit(
             annotation_typ=annotation_info.typ,
             annotation_id=self.annotation_id,
             annotation=ApiAnnotation(
-                self.annotation_id,
-                annotation_info.typ,
-                annotation_info.owner,
-                name,
-                description,
-                annotation_info.state,
-                annotation_info.modified,
-                annotation_info.data_store,
-                annotation_info.tracing_time,
+                id=self.annotation_id,
+                typ=annotation_info.typ,
+                owner=annotation_info.owner,
+                name=name,
+                description=description,
+                state=annotation_info.state,
+                modified=annotation_info.modified,
+                data_store=annotation_info.data_store,
+                tracing_time=annotation_info.tracing_time,
             ),
+        )
+
+    def save(self, path: Union[str, PathLike]) -> None:
+        raise NotImplementedError(
+            "Remote annotations cannot be saved. Changes are applied ."
         )

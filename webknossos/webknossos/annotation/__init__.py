@@ -3,6 +3,7 @@ from .annotation import (
     Annotation,
     AnnotationState,
     AnnotationType,
+    RemoteAnnotation,
     SegmentInformation,
 )
 from .annotation_info import AnnotationInfo
