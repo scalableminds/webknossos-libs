@@ -1,4 +1,4 @@
-from typing import List, NamedTuple
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -9,7 +9,7 @@ from .utils import enforce_not_null
 class Group(NamedTuple):
     id: int
     name: str
-    children: List["Group"]  # type: ignore[misc]
+    children: list["Group"]  # type: ignore[misc]
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag("group", {"id": str(self.id), "name": self.name})

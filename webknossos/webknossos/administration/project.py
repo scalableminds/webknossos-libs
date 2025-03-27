@@ -1,5 +1,5 @@
 import warnings
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 import attr
 
@@ -19,10 +19,10 @@ class Project:
     name: str
     team_id: str
     team_name: str
-    owner_id: Optional[str]  # None in case you have no read access on the owner
+    owner_id: str | None  # None in case you have no read access on the owner
     priority: int
     paused: bool
-    expected_time: Optional[int]
+    expected_time: int | None
 
     @classmethod
     def get_by_id(cls, project_id: str) -> "Project":
@@ -36,7 +36,7 @@ class Project:
         api_project = _get_api_client(enforce_auth=True).project_info_by_name(name)
         return cls._from_api_project(api_project)
 
-    def get_tasks(self, fetch_all: bool = False) -> List["Task"]:
+    def get_tasks(self, fetch_all: bool = False) -> list["Task"]:
         """Returns the tasks of this project.
         Note: will fetch only the first 1000 entries by default, warns if that means some are missing.
         set parameter pass fetch_all=True to use pagination to fetch all tasks iteratively with pagination.
@@ -73,9 +73,9 @@ class Project:
 
     def get_owner(self) -> User:
         """Returns the user that is the owner of this task"""
-        assert (
-            self.owner_id is not None
-        ), "Project owner is None, you may not have enough access rights to read the project owner."
+        assert self.owner_id is not None, (
+            "Project owner is None, you may not have enough access rights to read the project owner."
+        )
         return User.get_by_id(self.owner_id)
 
     @classmethod

@@ -23,9 +23,9 @@ all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 [tool.uv]
 dev-dependencies = [
     "icecream ~=2.1.1",
-    "mypy ~=1.0.0",
+    "mypy ~=1.15.0",
     "pytest ~=8.3.3",
-    "ruff ~=0.5.0",
+    "ruff ~=0.11.0",
 ]
 
 [build-system]
@@ -81,7 +81,8 @@ target-version = "py310"
 # PERF = Perflint https://docs.astral.sh/ruff/rules/#perflint-perf
 # FIX = Flake8 fixme https://docs.astral.sh/ruff/rules/#flake8-fixme-fix
 # ARG = Flake8 unused-arguments https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
-select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG"]
+# UP = Pyupgrade https://docs.astral.sh/ruff/rules/#pyupgrade-up
+select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG", "UP"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

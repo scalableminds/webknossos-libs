@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -9,16 +9,14 @@ from .utils import enforce_not_null, filter_none_values
 
 class Volume(NamedTuple):
     id: int
-    location: Optional[
-        str
-    ]  # path to a ZIP file containing a wK volume annotation, may be omitted when using skip_volume_data
+    location: str | None  # path to a ZIP file containing a wK volume annotation, may be omitted when using skip_volume_data
     # name of an already existing wK volume annotation segmentation layer:
-    fallback_layer: Optional[str]
+    fallback_layer: str | None
     # older wk versions did not serialize the name which is why the name is optional:
-    name: Optional[str]
-    segments: List[Segment]
-    format: Optional[str] = None
-    largest_segment_id: Optional[int] = None
+    name: str | None
+    segments: list[Segment]
+    format: str | None = None
+    largest_segment_id: int | None = None
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag(

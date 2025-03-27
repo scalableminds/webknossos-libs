@@ -1,4 +1,5 @@
-from typing import Any, Callable, Generic, Optional, Type, TypeVar
+from collections.abc import Callable
+from typing import Any, Generic, Optional, Type, TypeVar
 
 T = TypeVar("T")
 KT = TypeVar("KT")
@@ -11,4 +12,4 @@ class cachedproperty(Generic[T, KT]):
 
     def __repr__(self) -> str: ...
 
-    def __get__(self, obj: Any, objtype: Optional[Type]) -> T: ...
+    def __get__(self, obj: Any, objtype: type | None) -> T: ...

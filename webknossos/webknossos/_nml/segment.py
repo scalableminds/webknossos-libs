@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -9,9 +9,9 @@ from .utils import Vector4, enforce_not_null, filter_none_values
 
 class Segment(NamedTuple):
     id: int
-    name: Optional[str]
-    anchor_position: Optional[Vec3Int]
-    color: Optional[Vector4]
+    name: str | None
+    anchor_position: Vec3Int | None
+    color: Vector4 | None
 
     def _dump(self, xf: XmlWriter) -> None:
         if self.anchor_position is None:

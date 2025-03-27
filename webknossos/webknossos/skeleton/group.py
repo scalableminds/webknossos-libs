@@ -1,5 +1,6 @@
 import copy
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Set, Tuple, Union, cast
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any, Union, cast
 
 import attr
 from boltons.strutils import unit_len
@@ -13,8 +14,8 @@ if TYPE_CHECKING:
     from .skeleton import Skeleton
 
 
-Vector3 = Tuple[float, float, float]
-Vector4 = Tuple[float, float, float, float]
+Vector3 = tuple[float, float, float]
+Vector4 = tuple[float, float, float, float]
 GroupOrTree = Union["Group", Tree]
 
 
@@ -83,18 +84,18 @@ class Group:
 
     _id: int = attr.ib(init=False)
     name: str
-    _child_groups: Set["Group"] = attr.ib(
+    _child_groups: set["Group"] = attr.ib(
         factory=set,
         init=False,
         repr=lambda children: f"<{unit_len(children, 'child group')}>",
     )
-    _child_trees: Set[Tree] = attr.ib(
+    _child_trees: set[Tree] = attr.ib(
         factory=set,
         init=False,
         repr=lambda children: f"<{unit_len(children, 'child tree')}>",
     )
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
-    _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
+    _enforced_id: int | None = attr.ib(None, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
@@ -109,9 +110,9 @@ class Group:
 
     def add_tree(
         self,
-        name_or_tree: Union[str, Tree],
-        color: Optional[Union[Vector4, Vector3]] = None,
-        _enforced_id: Optional[int] = None,
+        name_or_tree: str | Tree,
+        color: Vector4 | Vector3 | None = None,
+        _enforced_id: int | None = None,
     ) -> Tree:
         """Adds a new tree or copies an existing tree to this group.
 
@@ -142,8 +143,8 @@ class Group:
             already exists in this group.
         """
         if color is not None and len(color) == 3:
-            color = cast(Optional[Vector4], color + (1.0,))
-        color = cast(Optional[Vector4], color)
+            color = cast(Vector4 | None, color + (1.0,))
+        color = cast(Vector4 | None, color)
 
         if isinstance(name_or_tree, str):
             name = name_or_tree
@@ -165,9 +166,9 @@ class Group:
                 new_tree.color = color
 
             if _enforced_id is not None:
-                assert not self.has_tree_id(
-                    _enforced_id
-                ), "A tree with the specified _enforced_id already exists in this group."
+                assert not self.has_tree_id(_enforced_id), (
+                    "A tree with the specified _enforced_id already exists in this group."
+                )
                 new_tree._id = _enforced_id
 
             if self.has_tree_id(tree.id):
@@ -221,7 +222,7 @@ class Group:
     def add_group(
         self,
         name: str,
-        _enforced_id: Optional[int] = None,
+        _enforced_id: int | None = None,
     ) -> "Group":
         """Creates and adds a new subgroup to this group.
 

@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Optional, Sequence, TypeVar, Union
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, TypeVar
 
 from ..utils import LazyReadOnlyDict
 
@@ -16,10 +17,10 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
 
     def __init__(
         self,
-        name: Optional[str],
-        organization_id: Optional[str],
-        tags: Optional[Union[str, Sequence[str]]],
-        folder_id: Optional[str],
+        name: str | None,
+        organization_id: str | None,
+        tags: str | Sequence[str] | None,
+        folder_id: str | None,
     ) -> None:
         from ..administration.user import User
         from ..client.context import _get_api_client

@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional, Sequence, Union
+from collections.abc import Iterable, Sequence
 
 import attr
 
@@ -29,7 +29,7 @@ class RemoteFolder:
         from ..client.context import _get_api_client
 
         client = _get_api_client(enforce_auth=True)
-        folder_tree_response: List[ApiFolderWithParent] = client.folder_tree()
+        folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
 
         for folder_info in folder_tree_response:
             if folder_info.id == folder_id:
@@ -43,7 +43,7 @@ class RemoteFolder:
 
         path = path.rstrip("/")
         client = _get_api_client(enforce_auth=True)
-        folder_tree_response: List[ApiFolderWithParent] = client.folder_tree()
+        folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
 
         for folder_info in folder_tree_response:
             folder_path = _get_folder_path(folder_info, folder_tree_response)
@@ -58,7 +58,7 @@ class RemoteFolder:
 
     @metadata.setter
     def metadata(
-        self, metadata: Optional[Dict[str, Union[str, int, float, Sequence[str]]]]
+        self, metadata: dict[str, str | int | float | Sequence[str]] | None
     ) -> None:
         from ..client.context import _get_api_client
 

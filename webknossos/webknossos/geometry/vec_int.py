@@ -1,13 +1,10 @@
 import re
+from collections.abc import Callable, Iterable
 from operator import add, floordiv, mod, mul, sub
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Iterable,
-    List,
     Optional,
-    Tuple,
     TypeVar,
     Union,
     cast,
@@ -61,19 +58,19 @@ class VecInt(tuple):
         ```
     """
 
-    axes: Tuple[str, ...]
-    _c_pos: Optional[int]
-    _x_pos: Optional[int]
-    _y_pos: Optional[int]
-    _z_pos: Optional[int]
+    axes: tuple[str, ...]
+    _c_pos: int | None
+    _x_pos: int | None
+    _y_pos: int | None
+    _z_pos: int | None
 
     def __new__(
         cls,
         *args: Union["VecIntLike", Iterable[str], int],
-        axes: Optional[Iterable[str]] = None,
+        axes: Iterable[str] | None = None,
         **kwargs: int,
     ) -> "VecInt":
-        as_tuple: Optional[Tuple[int, ...]] = None
+        as_tuple: tuple[int, ...] | None = None
 
         if args:
             if isinstance(args[0], VecInt):
@@ -118,7 +115,7 @@ class VecInt(tuple):
 
         return self
 
-    def __getnewargs__(self) -> Tuple[Tuple[int, ...], Tuple[str, ...]]:
+    def __getnewargs__(self) -> tuple[tuple[int, ...], tuple[str, ...]]:
         return (self.to_tuple(), self.axes)
 
     @property
@@ -193,13 +190,13 @@ class VecInt(tuple):
         """
         return np.array(self)
 
-    def to_list(self) -> List[int]:
+    def to_list(self) -> list[int]:
         """
         Returns the vector as a list.
         """
         return list(self)
 
-    def to_tuple(self) -> Tuple[int, ...]:
+    def to_tuple(self) -> tuple[int, ...]:
         """
         Returns the vector as a tuple.
         """
@@ -240,9 +237,9 @@ class VecInt(tuple):
             other_imported = VecInt.full(other, axes=self.axes)
         else:
             other_imported = VecInt(other, axes=self.axes)
-            assert len(other_imported) == len(
-                self
-            ), f"{other} and {self} are not equally shaped."
+            assert len(other_imported) == len(self), (
+                f"{other} and {self} are not equally shaped."
+            )
         return self.__class__(
             **{
                 axis: fn(self[i], other_imported[i]) for i, axis in enumerate(self.axes)
@@ -298,9 +295,9 @@ class VecInt(tuple):
         return int(np.prod(self.to_np()))
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({','.join((str(element) for element in self))}, axes={self.axes})"
+        return f"{self.__class__.__name__}({','.join(str(element) for element in self)}, axes={self.axes})"
 
-    def add_or_none(self: _T, other: Optional["VecInt"]) -> Optional[_T]:
+    def add_or_none(self: _T, other: Optional["VecInt"]) -> _T | None:
         """
         Adds two VecInts or returns None if the other is None.
 
@@ -313,7 +310,7 @@ class VecInt(tuple):
         return None if other is None else self + other
 
     def moveaxis(
-        self: _T, source: Union[int, List[int]], target: Union[int, List[int]]
+        self: _T, source: int | list[int], target: int | list[int]
     ) -> _T:
         """
         Allows to move one element at index `source` to another index `target`. Similar to
@@ -338,7 +335,7 @@ class VecInt(tuple):
         return self.__class__(arr, axes=axes)
 
     @classmethod
-    def zeros(cls, axes: Tuple[str, ...]) -> "VecInt":
+    def zeros(cls, axes: tuple[str, ...]) -> "VecInt":
         """
         Returns a new ND Vector with all elements set to 0.
 
@@ -351,7 +348,7 @@ class VecInt(tuple):
         return cls((0 for _ in range(len(axes))), axes=axes)
 
     @classmethod
-    def ones(cls, axes: Tuple[str, ...]) -> "VecInt":
+    def ones(cls, axes: tuple[str, ...]) -> "VecInt":
         """
         Returns a new ND Vector with all elements set to 1.
 
@@ -364,7 +361,7 @@ class VecInt(tuple):
         return cls((1 for _ in range(len(axes))), axes=axes)
 
     @classmethod
-    def full(cls, an_int: int, axes: Tuple[str, ...]) -> "VecInt":
+    def full(cls, an_int: int, axes: tuple[str, ...]) -> "VecInt":
         """
         Returns a new ND Vector with all elements set to the same value.
 
@@ -378,4 +375,4 @@ class VecInt(tuple):
         return cls((an_int for _ in range(len(axes))), axes=axes)
 
 
-VecIntLike = Union[VecInt, Tuple[int, ...], np.ndarray, Iterable[int]]
+VecIntLike = Union[VecInt, tuple[int, ...], np.ndarray, Iterable[int]]

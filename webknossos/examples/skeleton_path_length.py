@@ -1,4 +1,3 @@
-from typing import Tuple
 
 import numpy as np
 
@@ -24,14 +23,14 @@ def calculate_path_length(annotation_url: str, auth_token: str) -> None:
 
 
 def calculate_path_length_for_tree(
-    tree: wk.Tree, voxel_size: Tuple[float, float, float]
+    tree: wk.Tree, voxel_size: tuple[float, float, float]
 ) -> float:
     # Auxiliary method calculate the maximum path length of a given tree
     # Assumes that the annotation does not contain any cycles
 
-    assert (
-        len(tree.nodes) > 1
-    ), "Each tree should have at least two nodes to calculate the path length"
+    assert len(tree.nodes) > 1, (
+        "Each tree should have at least two nodes to calculate the path length"
+    )
     result = 0
 
     # Iterate over all edges

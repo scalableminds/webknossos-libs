@@ -1,5 +1,5 @@
-from collections.abc import MutableMapping
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union
+from collections.abc import Iterator, MutableMapping
+from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 import numpy as np
@@ -11,11 +11,11 @@ if TYPE_CHECKING:
     from .group import Group
     from .skeleton import Skeleton
 
-Vector3 = Tuple[float, float, float]
-Vector4 = Tuple[float, float, float, float]
+Vector3 = tuple[float, float, float]
+Vector4 = tuple[float, float, float, float]
 
 
-def _get_id(node_or_id: Union[Node, int]) -> int:
+def _get_id(node_or_id: Node | int) -> int:
     if isinstance(node_or_id, Node):
         return node_or_id.id
     else:
@@ -29,16 +29,16 @@ class _NodeDict(MutableMapping):
     using `get_node()`. Iterating over the keys yields the `Node` objects."""
 
     def __init__(self) -> None:
-        self._id_to_attrs: Dict[int, Any] = {}
-        self._id_to_node: Dict[int, Node] = {}
+        self._id_to_attrs: dict[int, Any] = {}
+        self._id_to_node: dict[int, Node] = {}
 
-    def __getitem__(self, key: Union[Node, int]) -> Any:
+    def __getitem__(self, key: Node | int) -> Any:
         return {
             **self._id_to_attrs[_get_id(key)],
             **self._id_to_node[_get_id(key)].get_dict(),
         }
 
-    def __setitem__(self, key: Union[Node, int], value: Dict) -> None:
+    def __setitem__(self, key: Node | int, value: dict) -> None:
         key_id = _get_id(key)
         if key_id not in self._id_to_node:
             if isinstance(key, Node):
@@ -50,7 +50,7 @@ class _NodeDict(MutableMapping):
                 )
         self._id_to_attrs[key_id] = value
 
-    def __delitem__(self, key: Union[Node, int]) -> None:
+    def __delitem__(self, key: Node | int) -> None:
         del self._id_to_node[_get_id(key)]
         del self._id_to_attrs[_get_id(key)]
 
@@ -72,16 +72,16 @@ class _AdjDict(MutableMapping):
     See Tree.__init__ for more details"""
 
     def __init__(self, *, node_dict: _NodeDict) -> None:
-        self._id_to_attrs: Dict[int, Any] = {}
+        self._id_to_attrs: dict[int, Any] = {}
         self._node_dict = node_dict
 
-    def __getitem__(self, key: Union[Node, int]) -> Any:
+    def __getitem__(self, key: Node | int) -> Any:
         return self._id_to_attrs[_get_id(key)]
 
-    def __setitem__(self, key: Union[Node, int], value: Dict) -> None:
+    def __setitem__(self, key: Node | int, value: dict) -> None:
         self._id_to_attrs[_get_id(key)] = value
 
-    def __delitem__(self, key: Union[Node, int]) -> None:
+    def __delitem__(self, key: Node | int) -> None:
         del self._id_to_attrs[_get_id(key)]
 
     def __iter__(self) -> Iterator[Node]:
@@ -147,8 +147,8 @@ class Tree(nx.Graph):
         name: str,
         group: "Group",
         skeleton: "Skeleton",
-        color: Optional[Vector4] = None,
-        enforced_id: Optional[int] = None,  # noqa: ARG002 Unused method argument: `enforced_id`
+        color: Vector4 | None = None,
+        enforced_id: int | None = None,  # noqa: ARG002 Unused method argument: `enforced_id`
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -167,11 +167,11 @@ class Tree(nx.Graph):
 
     def __new__(
         cls,
-        name: str,  # noqa: ARG003 Unused class method argument: `name`
-        group: "Group",  # noqa: ARG003 Unused class method argument: `group`
+        name: str,  # noqa: ARG004 Unused static method argument: `name`
+        group: "Group",  # noqa: ARG004 Unused static method argument: `group`
         skeleton: "Skeleton",
-        color: Optional[Vector4] = None,  # noqa: ARG003 Unused class method argument: `color`
-        enforced_id: Optional[int] = None,
+        color: Vector4 | None = None,  # noqa: ARG004 Unused static method argument: `color`
+        enforced_id: int | None = None,
     ) -> "Tree":
         self = super().__new__(cls)
 
@@ -189,7 +189,7 @@ class Tree(nx.Graph):
 
         return self
 
-    def __getnewargs__(self) -> Tuple:
+    def __getnewargs__(self) -> tuple:
         # pickle.dump will pickle instances of Tree so that the following
         # tuple is passed as arguments to __new__.
         return (self.name, self.group, self._skeleton, self.color, self._id)
@@ -215,7 +215,7 @@ class Tree(nx.Graph):
     def adjlist_inner_dict_factory(self) -> _AdjDict:
         return _AdjDict(node_dict=self._node)
 
-    def __to_tuple_for_comparison(self) -> Tuple:
+    def __to_tuple_for_comparison(self) -> tuple:
         return (
             self.name,
             self.id,
@@ -268,17 +268,17 @@ class Tree(nx.Graph):
     def add_node(
         self,
         position: Vec3IntLike,
-        comment: Optional[str] = None,
-        radius: Optional[float] = None,
-        rotation: Optional[Vector3] = None,
-        inVp: Optional[int] = None,
-        inMag: Optional[int] = None,
-        bitDepth: Optional[int] = None,
-        interpolation: Optional[bool] = None,
-        time: Optional[int] = None,
+        comment: str | None = None,
+        radius: float | None = None,
+        rotation: Vector3 | None = None,
+        inVp: int | None = None,
+        inMag: int | None = None,
+        bitDepth: int | None = None,
+        interpolation: bool | None = None,
+        time: int | None = None,
         is_branchpoint: bool = False,
-        branchpoint_time: Optional[int] = None,
-        _enforced_id: Optional[int] = None,
+        branchpoint_time: int | None = None,
+        _enforced_id: int | None = None,
     ) -> Node:
         """Add a new node to the tree.
 

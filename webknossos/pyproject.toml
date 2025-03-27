@@ -93,7 +93,7 @@ dev-dependencies = [
     "icecream ~=2.1.1",
     "inducoapi ~=2.0.2",
     "jsonschema ~=4.6.0",
-    "mypy ~=1.10.0",
+    "mypy ~=1.15.0",
     "pytest ~=8.3.2",
     "pytest-custom-exit-code ~=0.3.0",
     "pytest-split ~=0.10.0",
@@ -101,7 +101,7 @@ dev-dependencies = [
     "pytest-timeout ~=2.3.0",
     "pytest-timestamper ~=0.0.10",
     "types-python-dateutil ~=2.9",
-    "ruff ~=0.6.0",
+    "ruff ~=0.11.0",
 ]
 
 [tool.uv.sources]
@@ -157,7 +157,8 @@ target-version = "py310"
 # PERF = Perflint https://docs.astral.sh/ruff/rules/#perflint-perf
 # FIX = Flake8 fixme https://docs.astral.sh/ruff/rules/#flake8-fixme-fix
 # ARG = Flake8 unused-arguments https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
-select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG", "T201"]
+# UP = Pyupgrade https://docs.astral.sh/ruff/rules/#pyupgrade-up
+select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG", "T201", "UP"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

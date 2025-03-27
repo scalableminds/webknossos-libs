@@ -4,16 +4,16 @@ import logging
 import re
 from argparse import Namespace
 from collections import namedtuple
+from collections.abc import Generator, Iterator
 from functools import partial
 from multiprocessing import cpu_count
 from os import sep
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Generator, Iterator, Optional, Tuple, Type, Union, cast
+from typing import Annotated, Any, cast
 
 import numpy as np
 import typer
-from typing_extensions import Annotated
 
 from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
@@ -47,12 +47,12 @@ KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
 class KnossosDataset:
-    def __init__(self, root: Union[str, Path], dtype: np.dtype):
+    def __init__(self, root: str | Path, dtype: np.dtype):
         self.root = Path(root)
         self.dtype = dtype
 
     def read(
-        self, offset: Tuple[int, int, int], shape: Tuple[int, int, int]
+        self, offset: tuple[int, int, int], shape: tuple[int, int, int]
     ) -> np.ndarray:
         assert offset[0] % KNOSSOS_CUBE_EDGE_LEN == 0
         assert offset[1] % KNOSSOS_CUBE_EDGE_LEN == 0
@@ -60,14 +60,14 @@ class KnossosDataset:
         assert shape == KNOSSOS_CUBE_SHAPE
         return self.read_cube(tuple(x // KNOSSOS_CUBE_EDGE_LEN for x in offset))
 
-    def write(self, offset: Tuple[int, int, int], data: np.ndarray) -> None:
+    def write(self, offset: tuple[int, int, int], data: np.ndarray) -> None:
         assert offset[0] % KNOSSOS_CUBE_EDGE_LEN == 0
         assert offset[1] % KNOSSOS_CUBE_EDGE_LEN == 0
         assert offset[2] % KNOSSOS_CUBE_EDGE_LEN == 0
         assert data.shape == KNOSSOS_CUBE_SHAPE
         self.write_cube(tuple(x // KNOSSOS_CUBE_EDGE_LEN for x in offset), data)
 
-    def read_cube(self, cube_xyz: Tuple[int, ...]) -> np.ndarray:
+    def read_cube(self, cube_xyz: tuple[int, ...]) -> np.ndarray:
         filename = self.__get_only_raw_file_path(cube_xyz)
         if filename is None:
             return np.zeros(KNOSSOS_CUBE_SHAPE, dtype=self.dtype)
@@ -82,7 +82,7 @@ class KnossosDataset:
             cube_data = cube_data.reshape(KNOSSOS_CUBE_SHAPE, order="F")
             return cube_data
 
-    def write_cube(self, cube_xyz: Tuple[int, ...], cube_data: np.ndarray) -> None:
+    def write_cube(self, cube_xyz: tuple[int, ...], cube_data: np.ndarray) -> None:
         filename = self.__get_only_raw_file_path(cube_xyz)
         if filename is None:
             filename = self.__get_cube_folder(cube_xyz) / self.__get_cube_file_name(
@@ -93,17 +93,17 @@ class KnossosDataset:
         with open(filename, "wb") as cube_file:
             cube_data.ravel(order="F").tofile(cube_file)
 
-    def __get_cube_folder(self, cube_xyz: Tuple[int, ...]) -> Path:
+    def __get_cube_folder(self, cube_xyz: tuple[int, ...]) -> Path:
         x, y, z = cube_xyz
         return (
-            self.root / "x{:04d}".format(x) / "y{:04d}".format(y) / "z{:04d}".format(z)
+            self.root / f"x{x:04d}" / f"y{y:04d}" / f"z{z:04d}"
         )
 
-    def __get_cube_file_name(self, cube_xyz: Tuple[int, ...]) -> Path:
+    def __get_cube_file_name(self, cube_xyz: tuple[int, ...]) -> Path:
         x, y, z = cube_xyz
-        return Path("cube_x{:04d}_y{:04d}_z{:04d}.raw".format(x, y, z))
+        return Path(f"cube_x{x:04d}_y{y:04d}_z{z:04d}.raw")
 
-    def __get_only_raw_file_path(self, cube_xyz: Tuple[int, ...]) -> Optional[Path]:
+    def __get_only_raw_file_path(self, cube_xyz: tuple[int, ...]) -> Path | None:
         cube_folder = self.__get_cube_folder(cube_xyz)
         raw_files = list(cube_folder.glob("*.raw"))
         assert len(raw_files) <= 1, "Found %d .raw files in %s" % (
@@ -115,13 +115,13 @@ class KnossosDataset:
     def list_files(self) -> Iterator[Path]:
         return self.root.glob("*/*/*/*.raw")
 
-    def __parse_cube_file_name(self, filename: Path) -> Optional[Tuple[int, int, int]]:
+    def __parse_cube_file_name(self, filename: Path) -> tuple[int, int, int] | None:
         m = KNOSSOS_CUBE_REGEX.search(str(filename))
         if m is None:
             return None
         return int(m.group(1)), int(m.group(2)), int(m.group(3))
 
-    def list_cubes(self) -> Generator[Tuple[int, int, int], Any, None]:
+    def list_cubes(self) -> Generator[tuple[int, int, int], Any, None]:
         return (
             f
             for f in (self.__parse_cube_file_name(f) for f in self.list_files())
@@ -132,7 +132,7 @@ class KnossosDataset:
         pass
 
     @staticmethod
-    def open(root: Union[str, Path], dtype: np.dtype) -> "KnossosDataset":
+    def open(root: str | Path, dtype: np.dtype) -> "KnossosDataset":
         return KnossosDataset(root, dtype)
 
     def __enter__(self) -> "KnossosDataset":
@@ -140,9 +140,9 @@ class KnossosDataset:
 
     def __exit__(
         self,
-        _type: Optional[Type[BaseException]],
-        _value: Optional[BaseException],
-        _tb: Optional[TracebackType],
+        _type: type[BaseException] | None,
+        _value: BaseException | None,
+        _tb: TracebackType | None,
     ) -> None:
         self.close()
 
@@ -152,12 +152,12 @@ def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:
 
 
 def convert_cube_job(
-    source_knossos_info: KnossosDatasetInfo, args: Tuple[View, int]
+    source_knossos_info: KnossosDatasetInfo, args: tuple[View, int]
 ) -> None:
     target_view, _ = args
 
     time_start(f"Converting of {target_view.bounding_box}")
-    cube_size = cast(Tuple[int, int, int], (KNOSSOS_CUBE_EDGE_LEN,) * 3)
+    cube_size = cast(tuple[int, int, int], (KNOSSOS_CUBE_EDGE_LEN,) * 3)
 
     offset = target_view.bounding_box.in_mag(target_view.mag).topleft_xyz
     size = target_view.bounding_box.in_mag(target_view.mag).size_xyz
@@ -189,7 +189,7 @@ def convert_knossos(
     chunk_shape: Vec3Int,  # in target-mag
     shard_shape: Vec3Int,
     mag: Mag = Mag(1),
-    args: Optional[Namespace] = None,
+    args: Namespace | None = None,
 ) -> None:
     """Performs the conversion of a KNOSSOS dataset to a WEBKNOSSOS dataset."""
 
@@ -290,7 +290,7 @@ def main(
         ),
     ] = DEFAULT_CHUNK_SHAPE,
     shard_shape: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Number of voxels to be stored as a shard in the output format "
             "(e.g. `1024` or `1024,1024,1024`).",
@@ -299,7 +299,7 @@ def main(
         ),
     ] = None,
     chunks_per_shard: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
             "(e.g. `32` or `32,32,32`).",
@@ -331,7 +331,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',

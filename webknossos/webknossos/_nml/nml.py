@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from typing import IO, BinaryIO, List, NamedTuple, Optional
+from typing import IO, BinaryIO, NamedTuple
 
 from loxun import XmlWriter
 
@@ -16,17 +16,17 @@ from .volume import Volume
 
 
 class Nml(NamedTuple):
-    meta: List[Meta]
+    meta: list[Meta]
     parameters: Parameters  # metadata for annotations
-    trees: List[Tree]
-    branchpoints: List[Branchpoint]
-    comments: List[Comment]
-    groups: List[Group]
-    volumes: List[
+    trees: list[Tree]
+    branchpoints: list[Branchpoint]
+    comments: list[Comment]
+    groups: list[Group]
+    volumes: list[
         Volume
     ] = []  # reference to any volume data that is part of this annotation
 
-    def get_meta(self, key: str) -> Optional[str]:
+    def get_meta(self, key: str) -> str | None:
         for entry in self.meta:
             if entry.name == key:
                 return entry.content
@@ -115,14 +115,14 @@ class Nml(NamedTuple):
                     current_tree = Tree._parse(elem)
                     trees.append(current_tree)
                 elif elem.tag == "node":
-                    assert (
-                        current_tree is not None
-                    ), "<node ...> tag needs to be child of a <thing ...> tag."
+                    assert current_tree is not None, (
+                        "<node ...> tag needs to be child of a <thing ...> tag."
+                    )
                     current_tree.nodes.append(Node._parse(elem))
                 elif elem.tag == "edge":
-                    assert (
-                        current_tree is not None
-                    ), "<edge ...> tag needs to be child of a <thing ...> tag."
+                    assert current_tree is not None, (
+                        "<edge ...> tag needs to be child of a <thing ...> tag."
+                    )
                     current_tree.edges.append(Edge._parse(elem))
                 elif elem.tag == "branchpoint":
                     branchpoints.append(Branchpoint._parse(elem))

@@ -1,7 +1,8 @@
+from collections.abc import Generator
 from logging import info
 from os import getpid
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, Optional, Type
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -19,8 +20,8 @@ class BufferedSliceReader:
         buffer_size: int = 32,
         dimension: int = 2,  # z
         *,
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
         use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_reader()`"""
@@ -62,7 +63,7 @@ class BufferedSliceReader:
 
     def __exit__(
         self,
-        _type: Optional[Type[BaseException]],
-        _value: Optional[BaseException],
-        _tb: Optional[TracebackType],
+        _type: type[BaseException] | None,
+        _value: BaseException | None,
+        _tb: TracebackType | None,
     ) -> None: ...

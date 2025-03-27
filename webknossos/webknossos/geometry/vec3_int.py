@@ -1,5 +1,6 @@
 import re
-from typing import Iterable, Optional, Tuple, Union, cast
+from collections.abc import Iterable
+from typing import Union, cast
 
 import numpy as np
 
@@ -12,7 +13,7 @@ class Vec3Int(VecInt):
     def __new__(
         cls,
         *args: Union["Vec3IntLike", Iterable[str], int],
-        axes: Optional[Iterable[str]] = ("x", "y", "z"),
+        axes: Iterable[str] | None = ("x", "y", "z"),
         **kwargs: int,
     ) -> "Vec3Int":
         """A 3D vector class that inherits from tuple with additional vector operations.
@@ -58,7 +59,7 @@ class Vec3Int(VecInt):
 
         return cast(Vec3Int, self)
 
-    def __getnewargs__(self) -> Tuple[Tuple[int, ...], Tuple[str, ...]]:
+    def __getnewargs__(self) -> tuple[tuple[int, ...], tuple[str, ...]]:
         return (self.to_tuple(), self.axes)
 
     @property
@@ -82,7 +83,7 @@ class Vec3Int(VecInt):
     def with_z(self, new_z: int) -> "Vec3Int":
         return Vec3Int.from_xyz(self.x, self.y, new_z)
 
-    def to_tuple(self) -> Tuple[int, int, int]:
+    def to_tuple(self) -> tuple[int, int, int]:
         return (self.x, self.y, self.z)
 
     @staticmethod
@@ -96,7 +97,7 @@ class Vec3Int(VecInt):
         return vec3int
 
     @staticmethod
-    def from_vec3_float(vec: Tuple[float, float, float]) -> "Vec3Int":
+    def from_vec3_float(vec: tuple[float, float, float]) -> "Vec3Int":
         return Vec3Int(int(vec[0]), int(vec[1]), int(vec[2]))
 
     @staticmethod
@@ -118,19 +119,19 @@ class Vec3Int(VecInt):
         return Vec3Int.full(int(string))
 
     @classmethod
-    def zeros(cls, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
+    def zeros(cls, _axes: tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(0, 0, 0)
 
     @classmethod
-    def ones(cls, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
+    def ones(cls, _axes: tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(1, 1, 1)
 
     @classmethod
-    def full(cls, an_int: int, _axes: Tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
+    def full(cls, an_int: int, _axes: tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
         return cls(an_int, an_int, an_int)
 
     def __repr__(self) -> str:
         return f"Vec3Int({self.x},{self.y},{self.z})"
 
 
-Vec3IntLike = Union[Vec3Int, Tuple[int, int, int], np.ndarray, Iterable[int]]
+Vec3IntLike = Union[Vec3Int, tuple[int, int, int], np.ndarray, Iterable[int]]

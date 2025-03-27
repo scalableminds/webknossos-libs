@@ -1,6 +1,7 @@
 import logging
 import multiprocessing
 import os
+from collections.abc import Callable, Iterable, Iterator
 from concurrent import futures
 from concurrent.futures import Future, ProcessPoolExecutor
 from functools import partial
@@ -8,12 +9,6 @@ from multiprocessing.context import BaseContext
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
     TypedDict,
     TypeVar,
     cast,
@@ -51,11 +46,11 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     def __init__(
         self,
         *,
-        max_workers: Optional[int] = None,
-        start_method: Optional[str] = None,
-        mp_context: Optional[BaseContext] = None,
-        initializer: Optional[Callable] = None,
-        initargs: Tuple = (),
+        max_workers: int | None = None,
+        start_method: str | None = None,
+        mp_context: BaseContext | None = None,
+        initializer: Callable | None = None,
+        initargs: tuple = (),
         **__kwargs: Any,
     ) -> None:
         if mp_context is None:
@@ -84,7 +79,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             self._mp_logging_handler_pool = _MultiprocessingLoggingHandlerPool()
 
     @classmethod
-    def as_completed(cls, futs: List[Future[_T]]) -> Iterator[Future[_T]]:
+    def as_completed(cls, futs: list[Future[_T]]) -> Iterator[Future[_T]]:
         return futures.as_completed(futs)
 
     def submit(  # type: ignore[override]
@@ -141,8 +136,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],
-        timeout: Optional[float] = None,
-        chunksize: Optional[int] = None,
+        timeout: float | None = None,
+        chunksize: int | None = None,
     ) -> Iterator[_T]:
         if chunksize is None:
             chunksize = 1
@@ -151,10 +146,10 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     @staticmethod
     def _setup_logging_and_execute(
         multiprocessing_logging_setup_fn: Callable[[], None],
-        fn: Callable[_P, Future[_T]],
+        fn: Callable[_P, _T],
         *args: Any,
         **kwargs: Any,
-    ) -> Future[_T]:
+    ) -> _T:
         multiprocessing_logging_setup_fn()
         return fn(*args, **kwargs)
 
@@ -186,8 +181,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         self,
         fn: Callable[[_S], _T],
         args: Iterable[_S],
-        output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
-    ) -> List[Future[_T]]:
+        output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+    ) -> list[Future[_T]]:
         if output_pickle_path_getter is not None:
             futs = [
                 self.submit(  # type: ignore[call-arg]

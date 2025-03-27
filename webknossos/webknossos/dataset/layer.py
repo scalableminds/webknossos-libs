@@ -5,7 +5,7 @@ import warnings
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 from cluster_tools import Executor
@@ -152,9 +152,9 @@ def _element_class_to_dtype_per_channel(
 def _get_shard_shape(
     *,
     chunk_shape: Vec3Int,
-    chunks_per_shard: Optional[Union[Vec3IntLike, int]],
-    shard_shape: Optional[Union[Vec3IntLike, int]],
-) -> Optional[Vec3Int]:
+    chunks_per_shard: Vec3IntLike | int | None,
+    shard_shape: Vec3IntLike | int | None,
+) -> Vec3Int | None:
     if shard_shape is not None and chunks_per_shard is not None:
         raise ValueError(
             "shard_shape and chunks_per_shard must not be specified at the same time."
@@ -215,8 +215,8 @@ class Layer:
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
             properties.element_class, properties.num_channels
         )
-        self._mags: Dict[Mag, MagView] = {}
-        self._resolved_path: Optional[Path] = None
+        self._mags: dict[Mag, MagView] = {}
+        self._resolved_path: Path | None = None
 
         for mag in properties.mags:
             self._setup_mag(Mag(mag.mag), mag.path)
@@ -312,13 +312,13 @@ class Layer:
         if layer_name == self.name:
             return
         self.dataset._ensure_writable()
-        assert (
-            layer_name not in self.dataset.layers.keys()
-        ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+        assert layer_name not in self.dataset.layers.keys(), (
+            f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+        )
         assert is_fs_path(self.path), f"Cannot rename remote layer {self.path}"
-        assert (
-            "/" not in layer_name
-        ), f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
+        assert "/" not in layer_name, (
+            f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
+        )
         self.path.rename(self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
@@ -366,7 +366,9 @@ class Layer:
     def bounding_box(self, bbox: NDBoundingBox) -> None:
         """Updates the offset and size of the bounding box of this layer in the properties."""
         self.dataset._ensure_writable()
-        assert bbox.topleft.is_positive(), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
+        assert bbox.topleft.is_positive(), (
+            f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
+        )
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
         for mag in self.mags.values():
@@ -435,7 +437,7 @@ class Layer:
         return self._properties.data_format
 
     @property
-    def default_view_configuration(self) -> Optional[LayerViewConfiguration]:
+    def default_view_configuration(self) -> LayerViewConfiguration | None:
         """Gets the default view configuration for this layer.
 
         Returns:
@@ -462,7 +464,7 @@ class Layer:
         return self.dataset.read_only
 
     @property
-    def mags(self) -> Dict[Mag, MagView]:
+    def mags(self) -> dict[Mag, MagView]:
         """
         Getter for dictionary containing all mags.
         """
@@ -486,7 +488,7 @@ class Layer:
         mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
-                "The mag {} is not a mag of this layer".format(mag.to_layer_name())
+                f"The mag {mag.to_layer_name()} is not a mag of this layer"
             )
         return self.mags[mag]
 
@@ -502,9 +504,9 @@ class Layer:
         self,
         mag: MagLike,
         *,
-        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
-        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
-        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        chunks_per_shard: int | Vec3IntLike | None = None,
         compress: bool = True,
     ) -> MagView:
         """Creates and adds a new magnification level to the layer.
@@ -618,9 +620,9 @@ class Layer:
         """
         self.dataset._ensure_writable()
         mag = Mag(mag)
-        assert (
-            mag not in self.mags
-        ), f"Cannot add mag {mag} as it already exists for layer {self}"
+        assert mag not in self.mags, (
+            f"Cannot add mag {mag} as it already exists for layer {self}"
+        )
         self._setup_mag(mag)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
@@ -651,7 +653,7 @@ class Layer:
 
     def add_existing_remote_mag_view(
         self,
-        mag_view_maybe: Union[MagLike, MagView],
+        mag_view_maybe: MagLike | MagView,
     ) -> MagView:
         """Adds a remote magnification view to this layer.
 
@@ -685,9 +687,9 @@ class Layer:
             if isinstance(mag_view_maybe, MagView)
             else MagView._ensure_mag_view(mag_path)
         )
-        assert (
-            mag not in self.mags
-        ), f"Cannot add mag {mag} as it already exists for layer {self}"
+        assert mag not in self.mags, (
+            f"Cannot add mag {mag} as it already exists for layer {self}"
+        )
         self._setup_mag(mag, mag_path)
         self._properties.mags.append(mag_view._properties)
         self.dataset._export_as_json()
@@ -698,10 +700,10 @@ class Layer:
         self,
         mag: MagLike,
         *,
-        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
-        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
-        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
-        compress: Optional[bool] = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        chunks_per_shard: Vec3IntLike | int | None = None,
+        compress: bool | None = None,
     ) -> MagView:
         """
         Creates a new mag and adds it to the dataset, in case it did not exist before.
@@ -760,7 +762,7 @@ class Layer:
         mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
-                "Deleting mag {} failed. There is no mag with this name".format(mag)
+                f"Deleting mag {mag} failed. There is no mag with this name"
             )
 
         full_path = self._mags[mag].path
@@ -774,16 +776,16 @@ class Layer:
 
     def add_copy_mag(
         self,
-        foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
-        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
-        shard_shape: Optional[Union[Vec3IntLike, int]] = None,
-        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
-        compress: Optional[bool] = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        chunks_per_shard: Vec3IntLike | int | None = None,
+        compress: bool | None = None,
         exists_ok: bool = False,
-        executor: Optional[Executor] = None,
-        progress_desc: Optional[str] = None,
+        executor: Executor | None = None,
+        progress_desc: str | None = None,
     ) -> MagView:
         """
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
@@ -843,7 +845,7 @@ class Layer:
 
     def add_symlink_mag(
         self,
-        foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
@@ -860,12 +862,12 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_fs_path(
-            self.path
-        ), f"Cannot create symlinks in remote layer {self.path}"
-        assert is_fs_path(
-            foreign_mag_view.path
-        ), f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+        assert is_fs_path(self.path), (
+            f"Cannot create symlinks in remote layer {self.path}"
+        )
+        assert is_fs_path(foreign_mag_view.path), (
+            f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+        )
 
         foreign_normalized_mag_path = (
             Path(relpath(foreign_mag_view.path, self.path))
@@ -885,7 +887,7 @@ class Layer:
 
     def add_remote_mag(
         self,
-        foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
@@ -899,9 +901,9 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_remote_path(
-            foreign_mag_view.path
-        ), f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
+        assert is_remote_path(foreign_mag_view.path), (
+            f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
+        )
         assert self.data_format == foreign_mag_view.info.data_format, (
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"
@@ -921,7 +923,7 @@ class Layer:
 
     def add_fs_copy_mag(
         self,
-        foreign_mag_view_or_path: Union[PathLike, str, MagView],
+        foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
@@ -1009,9 +1011,7 @@ class Layer:
         """
         if mag in self.mags.keys():
             raise IndexError(
-                "Adding mag {} failed. There is already a mag with this name".format(
-                    mag
-                )
+                f"Adding mag {mag} failed. There is already a mag with this name"
             )
 
     def _get_dataset_from_align_with_other_layers(
@@ -1025,17 +1025,17 @@ class Layer:
     def downsample(
         self,
         *,
-        from_mag: Optional[Mag] = None,
-        coarsest_mag: Optional[Mag] = None,
+        from_mag: Mag | None = None,
+        coarsest_mag: Mag | None = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
-        buffer_shape: Optional[Vec3Int] = None,
+        buffer_shape: Vec3Int | None = None,
         force_sampling_scheme: bool = False,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
-        executor: Optional[Executor] = None,
+        executor: Executor | None = None,
     ) -> None:
         """Downsample data from a source magnification to coarser magnifications.
 
@@ -1080,14 +1080,14 @@ class Layer:
         """
 
         if from_mag is None:
-            assert (
-                len(self.mags.keys()) > 0
-            ), "Failed to downsample data because no existing mag was found."
+            assert len(self.mags.keys()) > 0, (
+                "Failed to downsample data because no existing mag was found."
+            )
             from_mag = max(self.mags.keys())
 
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        )
 
         if coarsest_mag is None:
             coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
@@ -1101,7 +1101,7 @@ class Layer:
                 )
                 sampling_mode = SamplingModes.CONSTANT_Z
 
-        voxel_size: Optional[Tuple[float, float, float]] = None
+        voxel_size: tuple[float, float, float] | None = None
         if sampling_mode == SamplingModes.ANISOTROPIC:
             voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:
@@ -1157,10 +1157,10 @@ class Layer:
         *,
         interpolation_mode: str = "default",
         compress: bool = True,
-        buffer_shape: Optional[Vec3Int] = None,
+        buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
-        executor: Optional[Executor] = None,
+        executor: Executor | None = None,
     ) -> None:
         """Performs a single downsampling step between magnification levels.
 
@@ -1179,18 +1179,18 @@ class Layer:
 
         self._dataset._ensure_writable()
 
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        )
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
 
         assert from_mag <= target_mag
-        assert (
-            allow_overwrite or target_mag not in self.mags
-        ), "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
+        assert allow_overwrite or target_mag not in self.mags, (
+            "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
+        )
 
         prev_mag_view = self.mags[from_mag]
 
@@ -1241,8 +1241,8 @@ class Layer:
         *,
         interpolation_mode: str = "default",
         compress: bool = True,
-        buffer_shape: Optional[Vec3Int] = None,
-        executor: Optional[Executor] = None,
+        buffer_shape: Vec3Int | None = None,
+        executor: Executor | None = None,
     ) -> None:
         """Recompute all downsampled magnifications from base mag.
 
@@ -1275,14 +1275,14 @@ class Layer:
     def downsample_mag_list(
         self,
         from_mag: Mag,
-        target_mags: List[Mag],
+        target_mags: list[Mag],
         *,
         interpolation_mode: str = "default",
         compress: bool = True,
-        buffer_shape: Optional[Vec3Int] = None,
+        buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
-        executor: Optional[Executor] = None,
+        executor: Executor | None = None,
     ) -> None:
         """Downsample data iteratively through multiple magnification levels.
 
@@ -1304,9 +1304,9 @@ class Layer:
 
         See downsample_mag() for more details on parameters.
         """
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+        )
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
         target_mags = sorted(target_mags, key=lambda m: m.to_list())
@@ -1339,10 +1339,10 @@ class Layer:
         *,
         finest_mag: Mag = Mag(1),
         compress: bool = True,
-        sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
-        buffer_shape: Optional[Vec3IntLike] = None,
-        executor: Optional[Executor] = None,
+        buffer_shape: Vec3IntLike | None = None,
+        executor: Executor | None = None,
     ) -> None:
         """Upsample data to finer magnifications.
 
@@ -1368,13 +1368,13 @@ class Layer:
 
         self._dataset._ensure_writable()
 
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        )
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
-        voxel_size: Optional[Tuple[float, float, float]] = None
+        voxel_size: tuple[float, float, float] | None = None
         if sampling_mode == SamplingModes.ANISOTROPIC:
             voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:
@@ -1445,7 +1445,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, path: Optional[Union[str, PathLike]] = None) -> None:
+    def _setup_mag(self, mag: Mag, path: str | PathLike | None = None) -> None:
         """Initialize a magnification level when opening the Dataset.
 
         Does not create storage headers/metadata, e.g. wk_header.
@@ -1491,7 +1491,7 @@ class Layer:
             )
 
     def _initialize_mag_from_other_mag(
-        self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
+        self, new_mag_name: str | Mag, other_mag: MagView, compress: bool
     ) -> MagView:
         """Creates a new magnification based on settings from existing mag.
 
@@ -1513,7 +1513,7 @@ class Layer:
     def __repr__(self) -> str:
         return f"Layer({repr(self.name)}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
 
-    def _get_largest_segment_id_maybe(self) -> Optional[int]:
+    def _get_largest_segment_id_maybe(self) -> int | None:
         return None
 
     def as_segmentation_layer(self) -> "SegmentationLayer":
@@ -1562,7 +1562,7 @@ class SegmentationLayer(Layer):
     _properties: SegmentationLayerProperties
 
     @property
-    def largest_segment_id(self) -> Optional[int]:
+    def largest_segment_id(self) -> int | None:
         """Gets the largest segment ID present in the data.
 
         The largest segment ID is the highest numerical identifier assigned to any
@@ -1577,7 +1577,7 @@ class SegmentationLayer(Layer):
         return self._properties.largest_segment_id
 
     @largest_segment_id.setter
-    def largest_segment_id(self, largest_segment_id: Optional[int]) -> None:
+    def largest_segment_id(self, largest_segment_id: int | None) -> None:
         """Sets the largest segment ID.
 
         Updates the stored largest segment ID value and persists it to properties.
@@ -1592,9 +1592,9 @@ class SegmentationLayer(Layer):
 
         self.dataset._ensure_writable()
         if largest_segment_id is not None and not isinstance(largest_segment_id, int):
-            assert (
-                largest_segment_id == int(largest_segment_id)
-            ), f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
+            assert largest_segment_id == int(largest_segment_id), (
+                f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
+            )
             largest_segment_id = int(largest_segment_id)
 
         self._properties.largest_segment_id = largest_segment_id
@@ -1604,7 +1604,7 @@ class SegmentationLayer(Layer):
     def category(self) -> LayerCategoryType:
         return SEGMENTATION_CATEGORY
 
-    def _get_largest_segment_id_maybe(self) -> Optional[int]:
+    def _get_largest_segment_id_maybe(self) -> int | None:
         return self.largest_segment_id
 
     def _get_largest_segment_id(self, view: View) -> int:
@@ -1621,8 +1621,8 @@ class SegmentationLayer(Layer):
     def refresh_largest_segment_id(
         self,
         *,
-        chunk_shape: Optional[Vec3Int] = None,
-        executor: Optional[Executor] = None,
+        chunk_shape: Vec3Int | None = None,
+        executor: Executor | None = None,
     ) -> None:
         """Updates largest_segment_id based on actual data content.
 

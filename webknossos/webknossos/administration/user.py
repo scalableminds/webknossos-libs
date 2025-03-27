@@ -1,4 +1,3 @@
-from typing import Dict, List, Tuple
 
 import attr
 
@@ -23,13 +22,13 @@ class User:
     last_name: str
     created: int
     last_activity: int
-    teams: Tuple["Team", ...]
-    experiences: Dict[str, int]
+    teams: tuple["Team", ...]
+    experiences: dict[str, int]
     is_active: bool
     is_admin: bool
     is_dataset_manager: bool
 
-    def get_logged_times(self) -> List["LoggedTime"]:
+    def get_logged_times(self) -> list["LoggedTime"]:
         """Get the logged times of this user.
         Returns a list of `LoggedTime` objects where one represents one month."""
         client = _get_api_client(enforce_auth=True)
@@ -80,7 +79,7 @@ class User:
         return cls._from_api_user(api_user)
 
     @classmethod
-    def get_all_managed_users(cls) -> List["User"]:
+    def get_all_managed_users(cls) -> list["User"]:
         """Returns all users of whom the current user is admin or team-manager."""
         client = _get_api_client(enforce_auth=True)
         api_users = client.user_list()
@@ -123,7 +122,7 @@ class Team:
         raise KeyError(f"Could not find team {name}.")
 
     @classmethod
-    def get_list(cls) -> List["Team"]:
+    def get_list(cls) -> list["Team"]:
         """Returns all teams of the current user."""
         client = _get_api_client(enforce_auth=True)
         api_teams = client.team_list()

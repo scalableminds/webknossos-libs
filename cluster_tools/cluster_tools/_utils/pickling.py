@@ -1,6 +1,6 @@
 import pickle
 import sys
-from typing import Any, BinaryIO, Optional
+from typing import Any, BinaryIO
 
 from cluster_tools._utils.warning import warn_after
 
@@ -26,14 +26,14 @@ def dump(*args: Any, **kwargs: Any) -> None:
 
 @warn_after("pickle.loads", WARNING_TIMEOUT)
 def loads(*args: Any, **kwargs: Any) -> Any:
-    assert (
-        "custom_main_path" not in kwargs
-    ), "loads does not implement support for the argument custom_main_path"
+    assert "custom_main_path" not in kwargs, (
+        "loads does not implement support for the argument custom_main_path"
+    )
     return pickle.loads(*args, **kwargs)
 
 
 class _RenameUnpickler(pickle.Unpickler):
-    custom_main_path: Optional[str]
+    custom_main_path: str | None
 
     def find_class(self, module: str, name: str) -> Any:
         renamed_module = module
@@ -44,7 +44,7 @@ class _RenameUnpickler(pickle.Unpickler):
 
 
 @warn_after("pickle.load", WARNING_TIMEOUT)
-def load(f: BinaryIO, custom_main_path: Optional[str] = None) -> Any:
+def load(f: BinaryIO, custom_main_path: str | None = None) -> Any:
     unpickler = _RenameUnpickler(f)
     unpickler.custom_main_path = custom_main_path
     return unpickler.load()
