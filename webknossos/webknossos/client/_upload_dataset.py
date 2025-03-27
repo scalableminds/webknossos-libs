@@ -10,6 +10,7 @@ from uuid import uuid4
 import httpx
 
 from ..dataset import Dataset, Layer, RemoteDataset
+from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
@@ -17,7 +18,7 @@ from .api_client.models import (
     ApiLinkedLayerIdentifier,
     ApiReserveDatasetUploadInformation,
 )
-from .context import _get_context, _WebknossosContext
+from .context import _get_context, _WebknossosContext, webknossos_context
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 4
@@ -56,11 +57,8 @@ class LayerToLink(NamedTuple):
 
 @lru_cache(maxsize=None)
 def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
-    datastores = context.api_client_with_auth.datastore_list()
-    for datastore in datastores:
-        if datastore.allows_upload:
-            return datastore.url
-    raise ValueError("No datastore found where datasets can be uploaded.")
+    with webknossos_context(context.url, context.token):
+        return Datastore.get_upload_url()
 
 
 def _walk(
