@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Union,
     cast,
 )
 
@@ -1051,7 +1050,7 @@ class Dataset:
         """Dictionary containing all layers of this dataset.
 
         Returns:
-            Dict[str, Layer]: Dictionary mapping layer names to Layer objects
+            dict[str, Layer]: Dictionary mapping layer names to Layer objects
 
         Examples:
             ```
@@ -1067,7 +1066,7 @@ class Dataset:
         """Size of each voxel in nanometers along each dimension (x, y, z).
 
         Returns:
-            Tuple[float, float, float]: Size of each voxel in nanometers for x,y,z dimensions
+            tuple[float, float, float]: Size of each voxel in nanometers for x,y,z dimensions
 
         Examples:
             ```
@@ -1125,7 +1124,7 @@ class Dataset:
         zoom level, rotation etc.
 
         Returns:
-            Optional[DatasetViewConfiguration]: Current view configuration if set
+            DatasetViewConfiguration | None: Current view configuration if set
 
         Examples:
             ```
@@ -1169,7 +1168,7 @@ class Dataset:
         self,
         new_dataset_name: str | None = None,
         *,
-        layers_to_link: list[Union["LayerToLink", Layer]] | None = None,
+        layers_to_link: list["LayerToLink" | Layer] | None = None,
         jobs: int | None = None,
     ) -> "RemoteDataset":
         """Upload this dataset to webknossos.
@@ -1610,7 +1609,7 @@ class Dataset:
 
     def add_layer_from_images(
         self,
-        images: Union[str, "pims.FramesSequence", list[str | PathLike]],
+        images: str | "pims.FramesSequence" | list[str | PathLike],
         ## add_layer arguments
         layer_name: str,
         category: LayerCategoryType | None = "color",
@@ -2071,7 +2070,7 @@ class Dataset:
         Useful when a dataset contains multiple segmentation layers.
 
         Returns:
-            List[SegmentationLayer]: List of all segmentation layers in order
+            list[SegmentationLayer]: List of all segmentation layers in order
 
         Examples:
             Print all segmentation layer names:
@@ -2098,7 +2097,7 @@ class Dataset:
         Useful when a dataset contains multiple color layers.
 
         Returns:
-            List[Layer]: List of all color layers in order
+            list[Layer]: List of all color layers in order
 
         Examples:
             Print all color layer names:
@@ -3069,7 +3068,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Optional[str]: Current display name if set, None otherwise
+            str | None: Current display name if set, None otherwise
 
         Examples:
             ```
@@ -3091,7 +3090,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Optional[str]: Current display name if set, None otherwise
+            str | None: Current display name if set, None otherwise
 
         Examples:
             ```
@@ -3116,7 +3115,7 @@ class RemoteDataset(Dataset):
         with WEBKNOSSOS.
 
         Returns:
-            Optional[str]: Current description if set, None otherwise
+            str | None: Current description if set, None otherwise
 
         Examples:
             ```
@@ -3143,7 +3142,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Tuple[str, ...]: Currently assigned tags, in string tuple form
+            tuple[str, ...]: Currently assigned tags, in string tuple form
 
         Examples:
             ```
@@ -3222,7 +3221,7 @@ class RemoteDataset(Dataset):
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
-            Tuple[Team, ...]: Teams currently having access
+            tuple[Team, ...]: Teams currently having access
 
         Examples:
             ```
@@ -3252,7 +3251,7 @@ class RemoteDataset(Dataset):
         )
 
     @allowed_teams.setter
-    def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
+    def allowed_teams(self, allowed_teams: Sequence[str | "Team"]) -> None:
         """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
         from ..administration.user import Team
         from ..client.context import _get_api_client

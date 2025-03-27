@@ -1,6 +1,6 @@
 import copy
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, TypeAlias, cast
 
 import attr
 from boltons.strutils import unit_len
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 Vector3 = tuple[float, float, float]
 Vector4 = tuple[float, float, float, float]
-GroupOrTree = Union["Group", Tree]
+GroupOrTree: TypeAlias = "Group" | Tree
 
 
 @attr.define()

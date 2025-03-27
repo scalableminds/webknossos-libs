@@ -101,8 +101,8 @@ class Tree(nx.Graph):
         name (str): The name of the tree.
         group (Group): The group this tree belongs to.
         skeleton (Skeleton): The skeleton this tree is part of.
-        color (Optional[Vector4], optional): RGBA color values for the tree. Defaults to None.
-        enforced_id (Optional[int], optional): Specific ID to use for the tree. Defaults to None.
+        color (Vector4 | None, optional): RGBA color values for the tree. Defaults to None.
+        enforced_id (int | None, optional): Specific ID to use for the tree. Defaults to None.
 
     Returns:
         Tree: A new Tree instance that represents a collection of nodes and edges.
@@ -286,24 +286,24 @@ class Tree(nx.Graph):
 
         Args:
             position (Vec3IntLike): The 3D coordinates (x, y, z) of the node.
-            comment (Optional[str], optional): A text comment associated with the node.
+            comment (str | None, optional): A text comment associated with the node.
                 Visible in the WEBKNOSSOS UI. Defaults to None.
-            radius (Optional[float], optional): Node radius for visualization.
+            radius (float | None, optional): Node radius for visualization.
                 Defaults to None.
-            rotation (Optional[Vector3], optional): 3D rotation vector for the node.
+            rotation (Vector3 | None, optional): 3D rotation vector for the node.
                 Defaults to None.
-            inVp (Optional[int], optional): Viewport information. Defaults to None.
-            inMag (Optional[int], optional): Magnification level. Defaults to None.
-            bitDepth (Optional[int], optional): Bit depth for node data.
+            inVp (int | None, optional): Viewport information. Defaults to None.
+            inMag (int | None, optional): Magnification level. Defaults to None.
+            bitDepth (int | None, optional): Bit depth for node data.
                 Defaults to None.
-            interpolation (Optional[bool], optional): Whether to use interpolation.
+            interpolation (bool | None, optional): Whether to use interpolation.
                 Defaults to None.
-            time (Optional[int], optional): Timestamp for the node. Defaults to None.
+            time (int | None, optional): Timestamp for the node. Defaults to None.
             is_branchpoint (bool, optional): Whether this node is a branch point.
                 Defaults to False.
-            branchpoint_time (Optional[int], optional): Timestamp for branch point
+            branchpoint_time (int | None, optional): Timestamp for branch point
                 creation. Defaults to None.
-            _enforced_id (Optional[int], optional): Internal use only. Forces a
+            _enforced_id (int | None, optional): Internal use only. Forces a
                 specific node ID. Defaults to None.
 
         Returns:

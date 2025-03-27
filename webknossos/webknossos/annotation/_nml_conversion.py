@@ -219,7 +219,7 @@ def _extract_nodes_and_edges_from_tree(
     A utility to convert a single [NetworkX graph object](https://networkx.org/) into a list of `NmlNode` objects and `Edge` objects.
 
     Return
-        Tuple[List[NmlNode], List[Edge]]: A tuple containing both all nodes and all edges
+        tuple[list[NmlNode], list[Edge]]: A tuple containing both all nodes and all edges
     """
 
     node_nml = [

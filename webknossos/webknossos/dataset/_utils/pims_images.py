@@ -4,11 +4,7 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
 from os import PathLike
 from pathlib import Path
-from typing import (
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import TypeVar, cast
 from urllib.error import HTTPError
 
 import numpy as np
@@ -36,7 +32,7 @@ class PimsImages:
 
     def __init__(
         self,
-        images: Union[str, Path, "pims.FramesSequence", list[str | PathLike]],
+        images: str | Path | "pims.FramesSequence" | list[str | PathLike],
         channel: int | None,
         timepoint: int | None,
         czi_channel: int | None,

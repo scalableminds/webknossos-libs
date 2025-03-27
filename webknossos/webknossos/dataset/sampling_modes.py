@@ -1,5 +1,4 @@
 from enum import Enum, unique
-from typing import Union
 
 
 @unique
@@ -9,7 +8,7 @@ class SamplingModes(Enum):
     CONSTANT_Z = "constant_z"
 
     @classmethod
-    def parse(cls, mode: Union[str, "SamplingModes"]) -> "SamplingModes":
+    def parse(cls, mode: str | "SamplingModes") -> "SamplingModes":
         if mode == "auto":
             return cls.ANISOTROPIC
         else:

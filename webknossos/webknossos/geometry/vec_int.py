@@ -1,14 +1,7 @@
 import re
 from collections.abc import Callable, Iterable
 from operator import add, floordiv, mod, mul, sub
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Optional,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numpy as np
 
@@ -36,7 +29,7 @@ class VecInt(tuple):
     axis information. It allows for initialization with both positional and named arguments.
 
     Attributes:
-        axes (Tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
+        axes (tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
 
     Examples:
         Create a vector with 4 named dimensions:
@@ -66,7 +59,7 @@ class VecInt(tuple):
 
     def __new__(
         cls,
-        *args: Union["VecIntLike", Iterable[str], int],
+        *args: "VecIntLike" | Iterable[str] | int,
         axes: Iterable[str] | None = None,
         **kwargs: int,
     ) -> "VecInt":
@@ -231,7 +224,7 @@ class VecInt(tuple):
         return all(element == first for element in self)
 
     def _element_wise(
-        self: _T, other: Union[int, "VecIntLike"], fn: Callable[[int, Any], int]
+        self: _T, other: int | "VecIntLike", fn: Callable[[int, Any], int]
     ) -> _T:
         if isinstance(other, int):
             other_imported = VecInt.full(other, axes=self.axes)
@@ -250,39 +243,39 @@ class VecInt(tuple):
     # Note: When adding regular tuples the first tuple is extended with the second tuple.
     # For VecInt we want to add the elements at the same index.
     # Do not add VecInt to plain tuple! Hence the type:ignore)
-    def __add__(self: _T, other: Union[int, "VecIntLike"]) -> _T:  # type: ignore[override]
+    def __add__(self: _T, other: int | "VecIntLike") -> _T:  # type: ignore[override]
         return self._element_wise(other, add)
 
-    def __sub__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
+    def __sub__(self: _T, other: int | "VecIntLike") -> _T:
         return self._element_wise(other, sub)
 
     # Note: When multiplying regular tuples with an int those are repeated,
     # which is a different behavior in the superclass! Hence the type:ignore.
-    def __mul__(self: _T, other: Union[int, "VecIntLike"]) -> _T:  # type: ignore[override]
+    def __mul__(self: _T, other: int | "VecIntLike") -> _T:  # type: ignore[override]
         return self._element_wise(other, mul)
 
-    def __floordiv__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
+    def __floordiv__(self: _T, other: int | "VecIntLike") -> _T:
         return self._element_wise(other, floordiv)
 
-    def __mod__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
+    def __mod__(self: _T, other: int | "VecIntLike") -> _T:
         return self._element_wise(other, mod)
 
     def __neg__(self: _T) -> _T:
         return self.__class__((-elem for elem in self), axes=self.axes)
 
-    def ceildiv(self: _T, other: Union[int, "VecIntLike"]) -> _T:
+    def ceildiv(self: _T, other: int | "VecIntLike") -> _T:
         """
         Returns a new VecInt with the ceil division of each element by the other.
         """
         return (self + other - 1) // other
 
-    def pairmax(self: _T, other: Union[int, "VecIntLike"]) -> _T:
+    def pairmax(self: _T, other: int | "VecIntLike") -> _T:
         """
         Returns a new VecInt with the maximum of each pair of elements from the two vectors.
         """
         return self._element_wise(other, max)
 
-    def pairmin(self: _T, other: Union[int, "VecIntLike"]) -> _T:
+    def pairmin(self: _T, other: int | "VecIntLike") -> _T:
         """
         Returns a new VecInt with the minimum of each pair of elements from the two vectors.
         """
@@ -297,15 +290,15 @@ class VecInt(tuple):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({','.join(str(element) for element in self)}, axes={self.axes})"
 
-    def add_or_none(self: _T, other: Optional["VecInt"]) -> _T | None:
+    def add_or_none(self: _T, other: "VecInt" | None) -> _T | None:
         """
         Adds two VecInts or returns None if the other is None.
 
         Args:
-            other (Optional[VecInt]): The other vector to add.
+            other (VecInt | None): The other vector to add.
 
         Returns:
-            Optional[VecInt]: The sum of the two vectors or None if the other is None.
+            VecInt | None: The sum of the two vectors or None if the other is None.
         """
         return None if other is None else self + other
 
@@ -316,8 +309,8 @@ class VecInt(tuple):
         source so that the other elements move when necessary.
 
         Args:
-            source (Union[int, List[int]]): The index of the element to move.
-            target (Union[int, List[int]]): The index where the element should be moved to.
+            source (int | list[int]): The index of the element to move.
+            target (int | list[int]): The index where the element should be moved to.
 
         Returns:
             VecInt: A new vector with the moved element.
@@ -338,7 +331,7 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 0.
 
         Args:
-            axes (Tuple[str, ...]): The axes of the vector.
+            axes (tuple[str, ...]): The axes of the vector.
 
         Returns:
             VecInt: The new vector.
@@ -351,7 +344,7 @@ class VecInt(tuple):
         Returns a new ND Vector with all elements set to 1.
 
         Args:
-            axes (Tuple[str, ...]): The axes of the vector.
+            axes (tuple[str, ...]): The axes of the vector.
 
         Returns:
             VecInt: The new vector.
@@ -365,7 +358,7 @@ class VecInt(tuple):
 
         Args:
             an_int (int): The value to set all elements to.
-            axes (Tuple[str, ...]): The axes of the vector.
+            axes (tuple[str, ...]): The axes of the vector.
 
         Returns:
             VecInt: The new vector.

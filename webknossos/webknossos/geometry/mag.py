@@ -3,14 +3,14 @@ import re
 from collections.abc import Iterator
 from functools import total_ordering
 from math import log2
-from typing import Any, Union, cast
+from typing import Any, TypeAlias, cast
 
 import attr
 import numpy as np
 
 from .vec3_int import Vec3Int, Vec3IntLike
 
-MagLike = Union[int, str, list, tuple, np.ndarray, "Mag"]
+MagLike: TypeAlias = int | str | list | tuple | np.ndarray | "Mag"
 
 
 def _import_mag(mag_like: MagLike) -> Vec3Int:

@@ -1,6 +1,6 @@
 import re
 from collections.abc import Iterable
-from typing import Union, cast
+from typing import cast
 
 import numpy as np
 
@@ -12,7 +12,7 @@ _VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object
 class Vec3Int(VecInt):
     def __new__(
         cls,
-        *args: Union["Vec3IntLike", Iterable[str], int],
+        *args: "Vec3IntLike" | Iterable[str] | int,
         axes: Iterable[str] | None = ("x", "y", "z"),
         **kwargs: int,
     ) -> "Vec3Int":
@@ -101,7 +101,7 @@ class Vec3Int(VecInt):
         return Vec3Int(int(vec[0]), int(vec[1]), int(vec[2]))
 
     @staticmethod
-    def from_vec_or_int(vec_or_int: Union["Vec3IntLike", int]) -> "Vec3Int":
+    def from_vec_or_int(vec_or_int: "Vec3IntLike" | int) -> "Vec3Int":
         if isinstance(vec_or_int, int):
             return Vec3Int.full(vec_or_int)
 

@@ -3,7 +3,7 @@ import warnings
 from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import numpy as np
@@ -304,13 +304,13 @@ class MagView(View):
             allow_unaligned (bool, optional): If True, allows writing data to without
                 being aligned to the shard shape.
                 Defaults to False.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Examples:
@@ -635,7 +635,7 @@ class MagView(View):
             args: Tuple containing:
                 - other (MagView): Source view to merge from
                 - shard (NDBoundingBox): Target shard region
-                - bboxes (List[NDBoundingBox]): List of source bounding boxes
+                - bboxes (list[NDBoundingBox]): List of source bounding boxes
         """
         other, shard, bboxes = args
         data_buffer = self.read(absolute_bounding_box=shard)[0]
@@ -649,7 +649,7 @@ class MagView(View):
         self.write(data_buffer, absolute_offset=shard.topleft)
 
     @classmethod
-    def _ensure_mag_view(cls, mag_view: Union[str, PathLike, "MagView"]) -> "MagView":
+    def _ensure_mag_view(cls, mag_view: str | PathLike | "MagView") -> "MagView":
         """Ensure input is a MagView object, converting path-like objects if needed.
 
         Internal helper method that converts various input types into a MagView object.

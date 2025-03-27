@@ -108,7 +108,7 @@ class Skeleton(Group):
         that contains an NML file. The .zip file may also contain volume layers.
 
         Args:
-            file_path (Union[PathLike, str]): Path to the .nml or .zip file containing
+            file_path (PathLike | str): Path to the .nml or .zip file containing
                 the skeleton annotation.
 
         Returns:
@@ -145,7 +145,7 @@ class Skeleton(Group):
         you want to compress the data.
 
         Args:
-            out_path (Union[str, PathLike]): Destination path for the saved file.
+            out_path (str | PathLike): Destination path for the saved file.
                 Must end with either .nml or .zip extension.
 
         Raises:
@@ -187,7 +187,7 @@ class Skeleton(Group):
         dictionary mapping group names to lists of graphs.
 
         Args:
-            tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): Either:
+            tree_dict (list[nx.Graph] | dict[str, list[nx.Graph]]): Either:
                 - A list of NetworkX graphs to be added directly to the skeleton
                 - A dictionary mapping group names to lists of graphs, which will
                   create new groups with the specified names containing the graphs
