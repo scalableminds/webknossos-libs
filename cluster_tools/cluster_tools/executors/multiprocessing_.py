@@ -63,9 +63,9 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             else:
                 mp_context = multiprocessing.get_context("spawn")
         else:
-            assert (
-                start_method is None
-            ), "Cannot use both `start_method` and `mp_context` kwargs."
+            assert start_method is None, (
+                "Cannot use both `start_method` and `mp_context` kwargs."
+            )
 
         super().__init__(
             mp_context=mp_context,

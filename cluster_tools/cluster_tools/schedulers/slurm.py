@@ -227,9 +227,7 @@ class SlurmExecutor(ClusterExecutor):
         the job ID.
         """
 
-        filename = cls.get_temp_file_path(
-            cfut_dir, f"_temp_slurm{random_string()}.sh"
-        )
+        filename = cls.get_temp_file_path(cfut_dir, f"_temp_slurm{random_string()}.sh")
         with open(filename, "w", encoding="utf-8") as f:
             f.write(job)
 
@@ -323,7 +321,9 @@ class SlurmExecutor(ClusterExecutor):
 
             job_array_line = ""
             if job_count is not None:
-                job_array_line = f"#SBATCH --array=0-{array_index_end}{slurm_max_running_size_str}"
+                job_array_line = (
+                    f"#SBATCH --array=0-{array_index_end}{slurm_max_running_size_str}"
+                )
             script_lines = (
                 [
                     "#!/bin/sh",

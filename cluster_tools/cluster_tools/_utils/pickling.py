@@ -26,9 +26,9 @@ def dump(*args: Any, **kwargs: Any) -> None:
 
 @warn_after("pickle.loads", WARNING_TIMEOUT)
 def loads(*args: Any, **kwargs: Any) -> Any:
-    assert (
-        "custom_main_path" not in kwargs
-    ), "loads does not implement support for the argument custom_main_path"
+    assert "custom_main_path" not in kwargs, (
+        "loads does not implement support for the argument custom_main_path"
+    )
     return pickle.loads(*args, **kwargs)
 
 

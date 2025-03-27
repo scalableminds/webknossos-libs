@@ -192,9 +192,7 @@ class PBSExecutor(ClusterExecutor):
                     logging.error(f"Unhandled pbs job state? {job_state}")
                     return "ignore"
             else:
-                logging.error(
-                    f"Could not extract pbs job state? {stdout[0:10]}..."
-                )
+                logging.error(f"Could not extract pbs job state? {stdout[0:10]}...")
                 return "ignore"
 
     def get_pending_tasks(self) -> list:

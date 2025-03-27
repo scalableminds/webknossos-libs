@@ -29,9 +29,7 @@ def format_remote_exc() -> str:
     return "".join(traceback.format_exception(typ, value, tb))
 
 
-def get_custom_main_path(
-    workerid: str, executor: type[ClusterExecutor]
-) -> str | None:
+def get_custom_main_path(workerid: str, executor: type[ClusterExecutor]) -> str | None:
     custom_main_path = None
     main_meta_path = executor.get_main_meta_path(cfut_dir, workerid)
     if os.path.exists(main_meta_path):

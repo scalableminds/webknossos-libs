@@ -141,9 +141,9 @@ class ClusterExecutor(futures.Executor):
         )
 
         self.metadata = {}
-        assert not (
-            "logging_config" in kwargs and "logging_setup_fn" in kwargs
-        ), "Specify either logging_config OR logging_setup_fn but not both at once"
+        assert not ("logging_config" in kwargs and "logging_setup_fn" in kwargs), (
+            "Specify either logging_config OR logging_setup_fn but not both at once"
+        )
         if "logging_config" in kwargs:
             self.metadata["logging_config"] = kwargs["logging_config"]
         if "logging_setup_fn" in kwargs:
