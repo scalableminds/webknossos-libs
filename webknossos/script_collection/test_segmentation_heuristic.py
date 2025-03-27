@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-from typing import List
 
 import webknossos as wk
 from webknossos.dataset._utils.segmentation_recognition import (
@@ -15,9 +14,9 @@ def looks_like_remote_dataset(path: Path) -> bool:
 
 
 def main(path_to_datasets: Path) -> None:
-    wrongly_predicted: List[str] = []
-    correctly_predicted: List[str] = []
-    failures: List[str] = []
+    wrongly_predicted: list[str] = []
+    correctly_predicted: list[str] = []
+    failures: list[str] = []
     dataset_paths = [
         item
         for item in path_to_datasets.iterdir()

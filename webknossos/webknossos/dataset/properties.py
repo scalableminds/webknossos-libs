@@ -1,15 +1,8 @@
 import copy
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
 )
 
 import attr
@@ -33,10 +26,10 @@ DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
 
 
 def _extract_num_channels(
-    num_channels_in_properties: Optional[int],
+    num_channels_in_properties: int | None,
     path: Path,
     layer: str,
-    mag: Optional[Union[int, Mag]],
+    mag: int | Mag | None,
 ) -> int:
     # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'numChannels' in the
     # datasource-properties.json. In this case we need to extract the number of channels from the 'header.wkw'.
@@ -66,7 +59,7 @@ def _extract_num_channels(
     return array.info.num_channels
 
 
-def float_tpl(voxel_size: Union[List, Tuple]) -> Iterable:
+def float_tpl(voxel_size: list | tuple) -> Iterable:
     # Fix for mypy bug https://github.com/python/mypy/issues/5313.
     # Solution based on other issue for the same bug: https://github.com/python/mypy/issues/8389.
     return tuple(
@@ -78,7 +71,7 @@ def float_tpl(voxel_size: Union[List, Tuple]) -> Iterable:
     )
 
 
-_properties_floating_type_to_python_type: Dict[Union[str, type], np.dtype] = {
+_properties_floating_type_to_python_type: dict[str | type, np.dtype] = {
     "float": np.dtype("float32"),
     #  np.float: np.dtype("float32"),  # np.float is an alias for float
     float: np.dtype("float32"),
@@ -100,14 +93,14 @@ class DatasetViewConfiguration:
     Stores information on how the dataset is shown in webknossos by default.
     """
 
-    four_bit: Optional[bool] = None
-    interpolation: Optional[bool] = None
-    render_missing_data_black: Optional[bool] = None
-    loading_strategy: Optional[str] = None
-    segmentation_pattern_opacity: Optional[int] = None
-    zoom: Optional[float] = None
-    position: Optional[Tuple[int, int, int]] = None
-    rotation: Optional[Tuple[int, int, int]] = None
+    four_bit: bool | None = None
+    interpolation: bool | None = None
+    render_missing_data_black: bool | None = None
+    loading_strategy: str | None = None
+    segmentation_pattern_opacity: int | None = None
+    zoom: float | None = None
+    position: tuple[int, int, int] | None = None
+    rotation: tuple[int, int, int] | None = None
 
 
 @attr.define
@@ -116,35 +109,35 @@ class LayerViewConfiguration:
     Stores information on how the dataset is shown in webknossos by default.
     """
 
-    color: Optional[Tuple[int, int, int]] = None
+    color: tuple[int, int, int] | None = None
     """Color in RGB from 0 to 255. The WEBKNOSSOS default is [255, 255, 255]."""
 
-    alpha: Optional[float] = None
+    alpha: float | None = None
     """Alpha value from 0 to 100. The WEBKNOSSOS default is 100 except for segmentation
     layers where it is 20."""
 
-    intensity_range: Optional[Tuple[float, float]] = None
+    intensity_range: tuple[float, float] | None = None
     """Min and max data value range (dependent on the layer's data type). Can be used to threshold the value range.
     The WEBKNOSSOS default is the full value range."""
 
-    min: Optional[float] = None
+    min: float | None = None
     """Minimum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the min value of the `intensityRange` (if that is lower)."""
 
-    max: Optional[float] = None
+    max: float | None = None
     """Maximum data value that might be encountered. This will restrict the histogram in WEBKNOSSOS and possibly overwrite
     the max value of the `intensityRange` (if that is higher)."""
 
-    is_disabled: Optional[bool] = None
+    is_disabled: bool | None = None
     """Disable a layer. The WEBKNOSSOS default is False."""
 
-    is_inverted: Optional[bool] = None
+    is_inverted: bool | None = None
     """Invert a layer. The WEBKNOSSOS default is False."""
 
-    is_in_edit_mode: Optional[bool] = None
+    is_in_edit_mode: bool | None = None
     """Enable the histogram edit mode. The WEBKNOSSOS default is False."""
 
-    mapping: Optional[Dict[str, str]] = None
+    mapping: dict[str, str] | None = None
     """Enables ID mapping for a segmentation layer and applies the selected mapping by default. The default WK behavior is to disable ID mapping. Expected values is a Dict with {"name": my_mapping_name, "type": "HDF5"}."""
 
 
@@ -154,15 +147,15 @@ class LayerViewConfiguration:
 @attr.define
 class MagViewProperties:
     mag: Mag
-    path: Optional[str] = None
-    cube_length: Optional[int] = None
-    axis_order: Optional[Dict[str, int]] = None
+    path: str | None = None
+    cube_length: int | None = None
+    axis_order: dict[str, int] | None = None
 
 
 @attr.define
 class AxisProperties:
     name: str
-    bounds: Tuple[int, int]
+    bounds: tuple[int, int]
     index: int
 
 
@@ -173,23 +166,23 @@ class LayerProperties:
     bounding_box: NDBoundingBox
     element_class: str
     data_format: DataFormat
-    mags: List[MagViewProperties]
-    num_channels: Optional[int] = None
-    default_view_configuration: Optional[LayerViewConfiguration] = None
+    mags: list[MagViewProperties]
+    num_channels: int | None = None
+    default_view_configuration: LayerViewConfiguration | None = None
 
 
 @attr.define
 class SegmentationLayerProperties(LayerProperties):
-    largest_segment_id: Optional[int] = None
-    mappings: List[str] = []
+    largest_segment_id: int | None = None
+    mappings: list[str] = []
 
 
 @attr.define
 class VoxelSize:
-    factor: Tuple[float, float, float] = attr.field(converter=float_tpl)
+    factor: tuple[float, float, float] = attr.field(converter=float_tpl)
     unit: LengthUnit = DEFAULT_LENGTH_UNIT
 
-    def to_nanometer(self) -> Tuple[float, float, float]:
+    def to_nanometer(self) -> tuple[float, float, float]:
         conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self.unit]
         return (
             self.factor[0] * conversion_factor,
@@ -200,15 +193,10 @@ class VoxelSize:
 
 @attr.define
 class DatasetProperties:
-    id: Dict[str, str]
+    id: dict[str, str]
     scale: VoxelSize
-    data_layers: List[
-        Union[
-            SegmentationLayerProperties,
-            LayerProperties,
-        ]
-    ]
-    default_view_configuration: Optional[DatasetViewConfiguration] = None
+    data_layers: list[SegmentationLayerProperties | LayerProperties]
+    default_view_configuration: DatasetViewConfiguration | None = None
 
     def update_for_layer(
         self, layer_name: str, layer_properties: LayerProperties
@@ -232,7 +220,7 @@ dataset_converter.register_structure_hook(
 )
 
 
-def mag_unstructure(mag: Mag) -> List[int]:
+def mag_unstructure(mag: Mag) -> list[int]:
     return mag.to_list()
 
 
@@ -243,7 +231,7 @@ dataset_converter.register_structure_hook(
     LengthUnit, lambda d, _: length_unit_from_str(d)
 )
 
-vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()  # noqa: E731
+vec3int_to_array: Callable[[Vec3Int], list[int]] = lambda o: o.to_list()  # noqa: E731
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
 dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
@@ -293,8 +281,8 @@ for cls in [
 
 def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
     def __dataset_properties_pre_structure(
-        d: Dict[str, Any], type_value: Type[DatasetProperties]
-    ) -> Dict[str, Any]:
+        d: dict[str, Any], type_value: type[DatasetProperties]
+    ) -> dict[str, Any]:
         if isinstance(d["scale"], list):
             d["scale"] = {"unit": DEFAULT_LENGTH_UNIT_STR, "factor": d["scale"]}
         obj = converter_fn(d, type_value)
@@ -305,12 +293,12 @@ def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
 
 def layer_properties_post_unstructure(
     converter_fn: Callable[
-        [Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]
+        [LayerProperties | SegmentationLayerProperties], dict[str, Any]
     ],
-) -> Callable[[Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]]:
+) -> Callable[[LayerProperties | SegmentationLayerProperties], dict[str, Any]]:
     def __layer_properties_post_unstructure(
-        obj: Union[LayerProperties, SegmentationLayerProperties],
-    ) -> Dict[str, Any]:
+        obj: LayerProperties | SegmentationLayerProperties,
+    ) -> dict[str, Any]:
         d = converter_fn(obj)
         if d["dataFormat"] == "wkw":
             d["wkwResolutions"] = [
@@ -329,17 +317,17 @@ def layer_properties_post_unstructure(
 
 def layer_properties_pre_structure(
     converter_fn: Callable[
-        [Dict[str, Any], Type[Union[LayerProperties, SegmentationLayerProperties]]],
-        Union[LayerProperties, SegmentationLayerProperties],
+        [dict[str, Any], type[LayerProperties | SegmentationLayerProperties]],
+        LayerProperties | SegmentationLayerProperties,
     ],
 ) -> Callable[
-    [Any, Type[Union[LayerProperties, SegmentationLayerProperties]]],
-    Union[LayerProperties, SegmentationLayerProperties],
+    [Any, type[LayerProperties | SegmentationLayerProperties]],
+    LayerProperties | SegmentationLayerProperties,
 ]:
     def __layer_properties_pre_structure(
-        d: Dict[str, Any],
-        type_value: Type[Union[LayerProperties, SegmentationLayerProperties]],
-    ) -> Union[LayerProperties, SegmentationLayerProperties]:
+        d: dict[str, Any],
+        type_value: type[LayerProperties | SegmentationLayerProperties],
+    ) -> LayerProperties | SegmentationLayerProperties:
         if d["dataFormat"] == "wkw":
             d["mags"] = [
                 mag_view_properties_pre_structure(m) for m in d["wkwResolutions"]
@@ -352,9 +340,9 @@ def layer_properties_pre_structure(
         if len(d["mags"]) > 0:
             first_mag = d["mags"][0]
             if "axisOrder" in first_mag:
-                assert (
-                    first_mag["axisOrder"]["c"] == 0
-                ), "The channels c must have index 0 in axis order."
+                assert first_mag["axisOrder"]["c"] == 0, (
+                    "The channels c must have index 0 in axis order."
+                )
                 assert all(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
                 )
@@ -415,10 +403,7 @@ def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
 
 
 dataset_converter.register_structure_hook(
-    Union[
-        SegmentationLayerProperties,
-        LayerProperties,
-    ],
+    SegmentationLayerProperties | LayerProperties,
     disambiguate_layer_properties,
 )
 
@@ -451,13 +436,13 @@ dataset_converter.register_structure_hook(
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
-def mag_view_properties_post_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
+def mag_view_properties_post_unstructure(d: dict[str, Any]) -> dict[str, Any]:
     d["resolution"] = d["mag"]
     del d["mag"]
     return d
 
 
-def mag_view_properties_pre_structure(d: Dict[str, Any]) -> Dict[str, Any]:
+def mag_view_properties_pre_structure(d: dict[str, Any]) -> dict[str, Any]:
     d["mag"] = d["resolution"]
     del d["resolution"]
     return d

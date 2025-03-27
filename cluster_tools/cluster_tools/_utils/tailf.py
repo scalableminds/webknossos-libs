@@ -5,7 +5,8 @@
 import os
 import sys
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 
 class Tail:
@@ -58,11 +59,11 @@ class Tail:
     def check_file_validity(self, file_: str) -> None:
         """Check whether the a given file exists, readable and is a file"""
         if not os.access(file_, os.F_OK):
-            raise TailError("File '%s' does not exist" % (file_))
+            raise TailError(f"File '{file_}' does not exist")
         if not os.access(file_, os.R_OK):
-            raise TailError("File '%s' not readable" % (file_))
+            raise TailError(f"File '{file_}' not readable")
         if os.path.isdir(file_):
-            raise TailError("File '%s' is a directory" % (file_))
+            raise TailError(f"File '{file_}' is a directory")
 
 
 class TailError(Exception):

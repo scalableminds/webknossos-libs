@@ -48,8 +48,8 @@ There are the following four options to specify which server context to use:
 import os
 from contextlib import ContextDecorator
 from contextvars import ContextVar, Token
-from functools import lru_cache
-from typing import Any, List, Optional
+from functools import cache
+from typing import Any
 
 import attr
 from dotenv import load_dotenv
@@ -61,7 +61,7 @@ from .api_client import DatastoreApiClient, WkApiClient
 load_dotenv()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _cached_ask_for_token(webknossos_url: str) -> str:
     # TODO # noqa: FIX002 Line contains TODO
     # -validate token and ask again if necessary
@@ -75,23 +75,23 @@ def _cached_ask_for_token(webknossos_url: str) -> str:
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _cached_get_org(context: "_WebknossosContext") -> str:
     current_api_user = context.api_client_with_auth.user_current()
     return current_api_user.organization
 
 
 # TODO reset invalid tokens e.g. using cachetools # noqa: FIX002 Line contains TODO
-@lru_cache(maxsize=None)
+@cache
 def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
     api_datastore_token = context.api_client_with_auth.token_generate_for_data_store()
     return api_datastore_token.token
 
 
-@lru_cache(maxsize=None)
+@cache
 def _cached__get_api_client(
     webknossos_url: str,
-    token: Optional[str],
+    token: str | None,
     timeout: int,
 ) -> WkApiClient:
     """Generates a client which might contain an x-auth-token header."""
@@ -114,7 +114,7 @@ def _clear_all_context_caches() -> None:
 @attr.frozen
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL).rstrip("/")
-    token: Optional[str] = os.environ.get("WK_TOKEN", default=None)
+    token: str | None = os.environ.get("WK_TOKEN", default=None)
     timeout: int = int(os.environ.get("WK_TIMEOUT", default=DEFAULT_HTTP_TIMEOUT))
 
     # all properties are cached outside to allow re-usability
@@ -138,7 +138,7 @@ class _WebknossosContext:
         return _cached_get_org(self)
 
     @property
-    def datastore_token(self) -> Optional[str]:
+    def datastore_token(self) -> str | None:
         if self.token is None:
             return None
         else:
@@ -176,9 +176,9 @@ class webknossos_context(ContextDecorator):
 
     def __init__(
         self,
-        url: Optional[str] = None,
-        token: Optional[str] = None,
-        timeout: Optional[int] = None,
+        url: str | None = None,
+        token: str | None = None,
+        timeout: int | None = None,
     ) -> None:
         """Creates a new WEBKNOSSOS server context manager.
 
@@ -216,7 +216,7 @@ class webknossos_context(ContextDecorator):
         self._url = _get_context().url if url is None else url.rstrip("/")
         self._token = token
         self._timeout = _get_context().timeout if timeout is None else timeout
-        self._context_var_token_stack: List[Token[_WebknossosContext]] = []
+        self._context_var_token_stack: list[Token[_WebknossosContext]] = []
 
     def __enter__(self) -> None:
         context_var_token = _webknossos_context_var.set(

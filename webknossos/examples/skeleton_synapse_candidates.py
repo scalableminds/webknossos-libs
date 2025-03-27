@@ -12,8 +12,8 @@ For these candidates, new annotations are created which contain a node at the
 center position between the input nodes.
 """
 
+from collections.abc import Iterator
 from itertools import combinations
-from typing import Iterator, Tuple
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -25,7 +25,7 @@ def pairs_within_distance(
     pos_a: np.ndarray,
     pos_b: np.ndarray,
     max_distance: float,
-) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
+) -> Iterator[tuple[np.ndarray, np.ndarray]]:
     pos_a_kdtree = cKDTree(pos_a)
     pos_b_kdtree = cKDTree(pos_b)
     indexes = pos_a_kdtree.query_ball_tree(pos_b_kdtree, max_distance)

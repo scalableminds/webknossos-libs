@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -8,7 +8,7 @@ from .utils import as_int_unless_none, enforce_not_null
 
 class Branchpoint(NamedTuple):
     id: int
-    time: Optional[int]  # unix timestamp
+    time: int | None  # unix timestamp
 
     def _dump(self, xf: XmlWriter) -> None:
         props = {"id": str(self.id)}

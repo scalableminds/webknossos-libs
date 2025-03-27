@@ -1,12 +1,8 @@
+from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future
+from contextlib import AbstractContextManager
 from os import PathLike
 from typing import (
-    Callable,
-    ContextManager,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
     Protocol,
     TypeVar,
 )
@@ -18,9 +14,9 @@ _P = ParamSpec("_P")
 _S = TypeVar("_S")
 
 
-class Executor(Protocol, ContextManager["Executor"]):
+class Executor(Protocol, AbstractContextManager["Executor"]):
     @classmethod
-    def as_completed(cls, futures: List[Future[_T]]) -> Iterator[Future[_T]]: ...
+    def as_completed(cls, futures: list[Future[_T]]) -> Iterator[Future[_T]]: ...
 
     def submit(
         self,
@@ -34,15 +30,15 @@ class Executor(Protocol, ContextManager["Executor"]):
         self,
         fn: Callable[[_S], _T],
         args: Iterable[_S],
-        output_pickle_path_getter: Optional[Callable[[_S], PathLike]] = None,
-    ) -> List[Future[_T]]: ...
+        output_pickle_path_getter: Callable[[_S], PathLike] | None = None,
+    ) -> list[Future[_T]]: ...
 
     def map(
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],
-        timeout: Optional[float] = None,
-        chunksize: Optional[int] = None,
+        timeout: float | None = None,
+        chunksize: int | None = None,
     ) -> Iterator[_T]: ...
 
     def forward_log(self, fut: Future[_T]) -> _T: ...

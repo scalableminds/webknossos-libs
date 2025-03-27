@@ -1,8 +1,7 @@
 import subprocess
-from typing import Optional, Tuple
 
 
-def call(command: str, stdin: Optional[str] = None) -> Tuple[str, str, int]:
+def call(command: str, stdin: str | None = None) -> tuple[str, str, int]:
     """Invokes a shell command as a subprocess, optionally with some
     data sent to the standard input. Returns the standard output data,
     the standard error, and the return code.
@@ -31,14 +30,10 @@ class CommandError(Exception):
         self.stderr = stderr
 
     def __str__(self) -> str:
-        return "%s exited with status %i: %s" % (
-            repr(self.command),
-            self.code,
-            repr(self.stderr),
-        )
+        return f"{self.command!r} exited with status {self.code}: {self.stderr!r}"
 
 
-def chcall(command: str, stdin: Optional[str] = None) -> Tuple[str, str]:
+def chcall(command: str, stdin: str | None = None) -> tuple[str, str]:
     """Like ``call`` but raises an exception when the return code is
     nonzero. Only returns the stdout and stderr data.
     """

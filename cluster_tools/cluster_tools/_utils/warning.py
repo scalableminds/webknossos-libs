@@ -1,8 +1,9 @@
 import logging
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import Future
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from typing_extensions import ParamSpec
 
@@ -24,9 +25,7 @@ def warn_after(
 
             def warn_function() -> None:
                 logging.warning(
-                    "Function {} is taking suspiciously long (longer than {} seconds)".format(
-                        job, seconds
-                    )
+                    f"Function {job} is taking suspiciously long (longer than {seconds} seconds)"
                 )
                 exceeded_timeout[0] = True
 
@@ -38,9 +37,7 @@ def warn_after(
                 if exceeded_timeout[0]:
                     end_time = time.time()
                     logging.warning(
-                        "Function {} succeeded after all (took {} seconds)".format(
-                            job, int(end_time - start_time)
-                        )
+                        f"Function {job} succeeded after all (took {int(end_time - start_time)} seconds)"
                     )
             finally:
                 timer.cancel()
@@ -56,9 +53,7 @@ def enrich_future_with_uncaught_warning(f: Future) -> None:
         maybe_exception = future.exception()
         if maybe_exception is not None:
             logging.error(
-                "A future crashed with an exception: {}. Future: {}".format(
-                    maybe_exception, future
-                )
+                f"A future crashed with an exception: {maybe_exception}. Future: {future}"
             )
 
     if not hasattr(f, "is_wrapped_by_cluster_tools"):

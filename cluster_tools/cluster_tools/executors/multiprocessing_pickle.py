@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from concurrent.futures import Future
 from functools import partial
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from typing_extensions import ParamSpec
 

@@ -1,10 +1,11 @@
 import os
 import traceback
 import warnings
+from collections.abc import Generator
 from logging import error, info
 from os import getpid
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, List, Optional, Type
+from typing import TYPE_CHECKING
 
 import numpy as np
 import psutil
@@ -19,13 +20,8 @@ def log_memory_consumption(additional_output: str = "") -> None:
     pid = os.getpid()
     process = psutil.Process(pid)
     info(
-        "Currently consuming {:.2f} GB of memory ({:.2f} GB still available) "
-        "in process {}. {}".format(
-            process.memory_info().rss / 1024**3,
-            psutil.virtual_memory().available / 1024**3,
-            pid,
-            additional_output,
-        )
+        f"Currently consuming {process.memory_info().rss / 1024**3:.2f} GB of memory ({psutil.virtual_memory().available / 1024**3:.2f} GB still available) "
+        f"in process {pid}. {additional_output}"
     )
 
 
@@ -37,10 +33,10 @@ class BufferedSliceWriter:
         buffer_size: int = 32,
         dimension: int = 2,  # z
         *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
         use_logging: bool = False,
         allow_unaligned: bool = False,
     ) -> None:
@@ -52,9 +48,9 @@ class BufferedSliceWriter:
         self._use_logging = use_logging
         self._allow_unaligned = allow_unaligned
         self._bbox: NDBoundingBox
-        self._slices_to_write: List[np.ndarray] = []
-        self._current_slice: Optional[int] = None
-        self._buffer_start_slice: Optional[int] = None
+        self._slices_to_write: list[np.ndarray] = []
+        self._current_slice: int | None = None
+        self._buffer_start_slice: int | None = None
 
         self.reset_offset(
             relative_offset,
@@ -95,14 +91,14 @@ class BufferedSliceWriter:
         if len(self._slices_to_write) == 0:
             return
 
-        assert (
-            len(self._slices_to_write) <= self._buffer_size
-        ), "The WKW buffer is larger than the defined batch_size. The buffer should have been flushed earlier. This is probably a bug in the BufferedSliceWriter."
+        assert len(self._slices_to_write) <= self._buffer_size, (
+            "The WKW buffer is larger than the defined batch_size. The buffer should have been flushed earlier. This is probably a bug in the BufferedSliceWriter."
+        )
 
         uniq_dtypes = set(map(lambda _slice: _slice.dtype, self._slices_to_write))
-        assert (
-            len(uniq_dtypes) == 1
-        ), "The buffer of BufferedSliceWriter contains slices with differing dtype."
+        assert len(uniq_dtypes) == 1, (
+            "The buffer of BufferedSliceWriter contains slices with differing dtype."
+        )
         assert uniq_dtypes.pop() == self._dtype, (
             "The buffer of BufferedSliceWriter contains slices with a dtype "
             "which differs from the dtype with which the BufferedSliceWriter was instantiated."
@@ -110,16 +106,14 @@ class BufferedSliceWriter:
 
         if self._use_logging:
             info(
-                "({}) Writing {} slices at position {}.".format(
-                    getpid(), len(self._slices_to_write), self._buffer_start_slice
-                )
+                f"({getpid()}) Writing {len(self._slices_to_write)} slices at position {self._buffer_start_slice}."
             )
             log_memory_consumption()
 
         try:
-            assert (
-                self._buffer_start_slice is not None
-            ), "Failed to write buffer: The buffer_start_slice is not set."
+            assert self._buffer_start_slice is not None, (
+                "Failed to write buffer: The buffer_start_slice is not set."
+            )
             max_width = max(section.shape[-2] for section in self._slices_to_write)
             max_height = max(section.shape[-1] for section in self._slices_to_write)
             channel_count = self._slices_to_write[0].shape[0]
@@ -206,14 +200,8 @@ class BufferedSliceWriter:
 
         except Exception as exc:
             error(
-                "({}) An exception occurred in BufferedSliceWriter._flush_buffer with {} "
-                "slices at position {}. Original error is:\n{}:{}\n\nTraceback:".format(
-                    getpid(),
-                    len(self._slices_to_write),
-                    self._buffer_start_slice,
-                    type(exc).__name__,
-                    exc,
-                )
+                f"({getpid()}) An exception occurred in BufferedSliceWriter._flush_buffer with {len(self._slices_to_write)} "
+                f"slices at position {self._buffer_start_slice}. Original error is:\n{type(exc).__name__}:{exc}\n\nTraceback:"
             )
             traceback.print_tb(exc.__traceback__)
             error("\n")
@@ -243,10 +231,10 @@ class BufferedSliceWriter:
 
     def reset_offset(
         self,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
     ) -> None:
         if self._slices_to_write:
             self._flush_buffer()
@@ -284,8 +272,8 @@ class BufferedSliceWriter:
 
     def __exit__(
         self,
-        _type: Optional[Type[BaseException]],
-        _value: Optional[BaseException],
-        _tb: Optional[TracebackType],
+        _type: type[BaseException] | None,
+        _value: BaseException | None,
+        _tb: TracebackType | None,
     ) -> None:
         self._flush_buffer()

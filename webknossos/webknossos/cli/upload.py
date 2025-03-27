@@ -1,9 +1,8 @@
 """This module takes care of uploading datasets to a WEBKNOSSOS server."""
 
-from typing import Any, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..client import webknossos_context
 from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
@@ -31,7 +30,7 @@ def main(
         ),
     ] = DEFAULT_WEBKNOSSOS_URL,
     token: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Authentication token for WEBKNOSSOS instance "
             "(https://webknossos.org/auth/token).",
@@ -40,7 +39,7 @@ def main(
         ),
     ] = None,
     dataset_name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Alternative name to rename your dataset on upload to WEBKNOSSOS. "
             "(if not provided, current name of dataset is used)",

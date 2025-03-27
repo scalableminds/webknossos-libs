@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple, cast
+from typing import cast
 
 import fastremap
 
@@ -66,7 +66,7 @@ def main() -> None:
     # Apply remapping #
     ###################
 
-    def apply_mapping_for_chunk(args: Tuple[wk.View, wk.View, int]) -> None:
+    def apply_mapping_for_chunk(args: tuple[wk.View, wk.View, int]) -> None:
         (in_view, out_view, _) = args
         cube_data = in_view.read()[0]
         fastremap.remap(

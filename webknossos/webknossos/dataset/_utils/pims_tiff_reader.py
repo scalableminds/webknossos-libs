@@ -1,7 +1,8 @@
 import json
+from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import Iterator, NamedTuple, Set, Tuple, Union
+from typing import NamedTuple
 
 import numpy as np
 from pims import FramesSequenceND
@@ -18,12 +19,12 @@ except ImportError as e:
 # See https://github.com/zarr-developers/zarr-python/blob/main/src/zarr/core/indexing.py
 class _ChunkProjection(NamedTuple):
     chunk_coords: tuple[int, ...]
-    chunk_selection: tuple[Union[slice, int], ...]
-    out_selection: tuple[Union[slice, None], ...]
+    chunk_selection: tuple[slice | int, ...]
+    out_selection: tuple[slice | None, ...]
 
 
 def _chunk_indexing(
-    selection: tuple[Union[slice, int], ...],
+    selection: tuple[slice | int, ...],
     shape: tuple[int, ...],
     chunk_shape: tuple[int, ...],
 ) -> Iterator[_ChunkProjection]:
@@ -31,8 +32,8 @@ def _chunk_indexing(
 
     class ChunkDimProjection(NamedTuple):
         dim_chunk_ix: int
-        dim_chunk_sel: Union[slice, int]
-        dim_out_sel: Union[slice, None]
+        dim_chunk_sel: slice | int
+        dim_out_sel: slice | None
 
     def ceildiv(a: int, b: int) -> int:
         return -(a // -b)
@@ -111,7 +112,7 @@ def _chunk_indexing(
 
 class PimsTiffReader(FramesSequenceND):
     @classmethod
-    def class_exts(cls) -> Set[str]:
+    def class_exts(cls) -> set[str]:
         return {"tif", "tiff"}
 
     # class_priority is used in pims to pick the reader with the highest priority.
@@ -188,7 +189,7 @@ class PimsTiffReader(FramesSequenceND):
         )
 
         # Prepare selection of the data to read for this frame
-        selection: tuple[Union[slice, int], ...] = tuple(
+        selection: tuple[slice | int, ...] = tuple(
             slice(None) if axis in broadcast_axes else ind[axis]
             for axis in self._tiff_axes
         )
@@ -212,9 +213,9 @@ class PimsTiffReader(FramesSequenceND):
         return self._dtype
 
     @property
-    def shape(self) -> Tuple[int, ...]:
+    def shape(self) -> tuple[int, ...]:
         return self._tiff_shape
 
     @property
-    def frame_shape(self) -> Tuple[int, ...]:
+    def frame_shape(self) -> tuple[int, ...]:
         return self._shape

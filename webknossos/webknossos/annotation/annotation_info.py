@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import attr
 
 from ..client.api_client.models import ApiAnnotation
@@ -11,13 +9,13 @@ class AnnotationInfo:
     """Data class containing information about a WEBKNOSSOS annotation"""
 
     id: str
-    owner_id: Optional[str]
+    owner_id: str | None
     name: str
     description: str
     type: AnnotationType
     state: AnnotationState
-    duration_in_seconds: Optional[float]
-    modified: Optional[int]
+    duration_in_seconds: float | None
+    modified: int | None
 
     def download_annotation(self) -> Annotation:
         """Downloads and returns the annotation that is described by this AnnotationInfo object"""
@@ -41,8 +39,8 @@ class AnnotationInfo:
 
     @classmethod
     def get_remote_annotations(
-        cls, is_finished: Optional[bool] = False, owner: Optional[str] = None
-    ) -> List["AnnotationInfo"]:
+        cls, is_finished: bool | None = False, owner: str | None = None
+    ) -> list["AnnotationInfo"]:
         """Returns a list of AnnotationInfo objects for all annotations that belong to the current user (if owner is None).
         If owner is not None, only annotations of the specified owner are returned."""
         from ..client.context import _get_api_client

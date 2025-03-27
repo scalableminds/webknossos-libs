@@ -1,5 +1,5 @@
 import json
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 def get_ome_0_5_multiscale_metadata(
     dataset: "Dataset", layer: "Layer"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     return {
         "ome": {
             "version": "0.5",
@@ -61,7 +61,7 @@ def get_ome_0_5_multiscale_metadata(
 
 def get_ome_0_4_multiscale_metadata(
     dataset: "Dataset", layer: "Layer"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     return {
         "multiscales": [
             {

@@ -1,7 +1,7 @@
+from collections.abc import Iterator
 from contextlib import closing, contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import Iterator, Set
 
 import numpy as np
 from pims import FramesSequenceND
@@ -13,7 +13,7 @@ from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
 
 class PimsDm3Reader(FramesSequenceND):
     @classmethod
-    def class_exts(cls) -> Set[str]:
+    def class_exts(cls) -> set[str]:
         return {"dm3"}
 
     # class_priority is used in pims to pick the reader with the highest priority.
@@ -45,7 +45,7 @@ class PimsDm3Reader(FramesSequenceND):
 
 class PimsDm4Reader(FramesSequenceND):
     @classmethod
-    def class_exts(cls) -> Set[str]:
+    def class_exts(cls) -> set[str]:
         return {"dm4"}
 
     # class_priority is used in pims to pick the reader with the highest priority.

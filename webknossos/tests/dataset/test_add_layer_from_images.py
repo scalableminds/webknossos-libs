@@ -1,9 +1,10 @@
 import warnings
+from collections.abc import Iterator
 from pathlib import Path
 from shutil import copy
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any
 from zipfile import BadZipFile, ZipFile
 
 import httpx
@@ -70,8 +71,8 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
     )
 
 
-REPO_IMAGES_ARGS: List[
-    Tuple[Union[str, List[Path]], Dict[str, Any], str, int, int, Tuple[int, ...]]
+REPO_IMAGES_ARGS: list[
+    tuple[str | list[Path], dict[str, Any], str, int, int, tuple[int, ...]]
 ] = [
     (
         "testdata/tiff/test.*.tiff",
@@ -191,12 +192,12 @@ REPO_IMAGES_ARGS: List[
 
 def _test_repo_images(
     tmp_path: Path,
-    path: Union[str, list[Path]],
-    kwargs: Dict,
+    path: str | list[Path],
+    kwargs: dict,
     dtype: str,
     num_channels: int,
     num_layers: int,
-    size: Tuple[int, ...],
+    size: tuple[int, ...],
 ) -> wk.Dataset:
     with SequentialExecutor() as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
@@ -224,17 +225,17 @@ def _test_repo_images(
 def test_repo_images(
     tmp_path: Path,
     path: str,
-    kwargs: Dict,
+    kwargs: dict,
     dtype: str,
     num_channels: int,
     num_layers: int,
-    size: Tuple[int, ...],
+    size: tuple[int, ...],
 ) -> None:
     _test_repo_images(tmp_path, path, kwargs, dtype, num_channels, num_layers, size)
 
 
 def download_and_unpack(
-    url: Union[str, List[str]], out_path: Path, filename: Union[str, List[str]]
+    url: str | list[str], out_path: Path, filename: str | list[str]
 ) -> None:
     if isinstance(url, str):
         assert isinstance(filename, str)
@@ -315,10 +316,10 @@ def _test_bioformats(
     tmp_path: Path,
     url: str,
     filename: str,
-    kwargs: Dict,
+    kwargs: dict,
     dtype: str,
     num_channels: int,
-    size: Tuple[int, int, int],
+    size: tuple[int, int, int],
     num_layers: int,
 ) -> wk.Dataset:
     unzip_path = tmp_path / "unzip"
@@ -347,10 +348,10 @@ def test_bioformats(
     tmp_path: Path,
     url: str,
     filename: str,
-    kwargs: Dict,
+    kwargs: dict,
     dtype: str,
     num_channels: int,
-    size: Tuple[int, int, int],
+    size: tuple[int, int, int],
     num_layers: int,
 ) -> None:
     _test_bioformats(
@@ -362,8 +363,8 @@ def test_bioformats(
 # see https://scif.io/images.
 TEST_IMAGES_ARGS: list[
     tuple[
-        Union[str, list[str]],
-        Union[str, list[str]],
+        str | list[str],
+        str | list[str],
         dict,
         str,
         int,
@@ -452,16 +453,16 @@ TEST_IMAGES_ARGS: list[
 
 def _test_test_images(
     tmp_path: Path,
-    url: Union[str, List[str]],
-    filename: Union[str, List[str]],
-    kwargs: Dict,
+    url: str | list[str],
+    filename: str | list[str],
+    kwargs: dict,
     dtype: str,
     num_channels: int,
-    size: Tuple[int, int, int],
+    size: tuple[int, int, int],
 ) -> wk.Dataset:
     unzip_path = tmp_path / "unzip"
     download_and_unpack(url, unzip_path, filename)
-    path: Union[Path, List[Path]]
+    path: Path | list[Path]
     if isinstance(filename, list):
         layer_name = filename[0] + "..."
         path = [unzip_path / i for i in filename]
@@ -470,7 +471,7 @@ def _test_test_images(
         path = unzip_path / filename
     ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
-        l_bio: Optional[wk.Layer]
+        l_bio: wk.Layer | None
         try:
             l_bio = ds.add_layer_from_images(
                 path,
@@ -510,12 +511,12 @@ def _test_test_images(
 )
 def test_test_images(
     tmp_path: Path,
-    url: Union[str, List[str]],
-    filename: Union[str, List[str]],
-    kwargs: Dict,
+    url: str | list[str],
+    filename: str | list[str],
+    kwargs: dict,
     dtype: str,
     num_channels: int,
-    size: Tuple[int, int, int],
+    size: tuple[int, int, int],
 ) -> None:
     _test_test_images(tmp_path, url, filename, kwargs, dtype, num_channels, size)
 

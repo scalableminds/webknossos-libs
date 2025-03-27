@@ -2,20 +2,15 @@ import logging
 import os
 import re
 import signal
+from collections.abc import Callable, Iterable, Iterator
 from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
 from multiprocessing import Queue, get_context
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
     TypeVar,
     cast,
 )
@@ -41,7 +36,7 @@ def _run_in_nanny(
     queue: Queue, __fn: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs
 ) -> None:
     try:
-        __env = cast(Dict[str, str], kwargs.pop("__env"))
+        __env = cast(dict[str, str], kwargs.pop("__env"))
         for key, value in __env.items():
             os.environ[key] = value
 
@@ -82,7 +77,7 @@ def _parse_mem(size: str) -> int:
 def _handle_kill_through_weakref(
     executor_ref: "ReferenceType[DaskExecutor]",
     existing_sigint_handler: Any,
-    signum: Optional[int],
+    signum: int | None,
     frame: Any,
 ) -> None:
     executor = executor_ref()
@@ -107,12 +102,12 @@ class DaskExecutor(futures.Executor):
     """
 
     client: "Client"
-    pending_futures: Set[Future]
-    job_resources: Optional[Dict[str, Any]]
+    pending_futures: set[Future]
+    job_resources: dict[str, Any] | None
     is_shutting_down = False
 
     def __init__(
-        self, client: "Client", job_resources: Optional[Dict[str, Any]] = None
+        self, client: "Client", job_resources: dict[str, Any] | None = None
     ) -> None:
         try:
             import distributed  # noqa: F401 unused import
@@ -148,7 +143,7 @@ class DaskExecutor(futures.Executor):
     @classmethod
     def from_config(
         cls,
-        job_resources: Dict[str, str],
+        job_resources: dict[str, str],
         **_kwargs: Any,
     ) -> "DaskExecutor":
         from distributed import Client
@@ -162,7 +157,7 @@ class DaskExecutor(futures.Executor):
         return cls(client, job_resources=job_resources)
 
     @classmethod
-    def as_completed(cls, futures: List[Future[_T]]) -> Iterator[Future[_T]]:
+    def as_completed(cls, futures: list[Future[_T]]) -> Iterator[Future[_T]]:
         from distributed import as_completed
 
         return as_completed(futures)
@@ -183,7 +178,7 @@ class DaskExecutor(futures.Executor):
                 Callable[_P, _T],
                 partial(
                     MultiprocessingExecutor._execute_and_persist_function,
-                    output_pickle_path,
+                    Path(output_pickle_path),
                     __fn,
                 ),
             )
@@ -200,8 +195,8 @@ class DaskExecutor(futures.Executor):
         currently_available_workers = self.client.scheduler_info()["workers"]
 
         def check_resources(
-            job_resources: Optional[Dict[str, float]],
-            worker_resources: Optional[Dict[str, float]],
+            job_resources: dict[str, float] | None,
+            worker_resources: dict[str, float] | None,
         ) -> bool:
             if job_resources is None or len(job_resources) == 0:
                 return True
@@ -242,8 +237,8 @@ class DaskExecutor(futures.Executor):
         args: Iterable[
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
-        output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
-    ) -> List[Future[_T]]:
+        output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+    ) -> list[Future[_T]]:
         if output_pickle_path_getter is not None:
             futs = [
                 self.submit(  # type: ignore[call-arg]
@@ -264,8 +259,8 @@ class DaskExecutor(futures.Executor):
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],
-        timeout: Optional[float] = None,
-        chunksize: Optional[int] = None,
+        timeout: float | None = None,
+        chunksize: int | None = None,
     ) -> Iterator[_T]:
         if chunksize is None:
             chunksize = 1
@@ -277,7 +272,7 @@ class DaskExecutor(futures.Executor):
     def handle_kill(
         self,
         existing_sigint_handler: Any,
-        signum: Optional[int],
+        signum: int | None,
         frame: Any,
     ) -> None:
         if self.is_shutting_down:

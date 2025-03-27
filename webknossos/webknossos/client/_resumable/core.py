@@ -1,9 +1,10 @@
 import uuid
+from collections.abc import Callable, Sequence
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from functools import partial
 from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any
 
 import httpx
 
@@ -44,11 +45,11 @@ class Resumable:
         target: str,
         chunk_size: int = MiB,
         simultaneous_uploads: int = 3,
-        headers: Optional[Dict[str, Any]] = None,
+        headers: dict[str, Any] | None = None,
         test_chunks: bool = True,
         max_chunk_retries: int = 100,
         permanent_errors: Sequence[int] = (400, 404, 415, 500, 501),
-        query: Optional[Dict[str, Any]] = None,
+        query: dict[str, Any] | None = None,
         generate_unique_identifier: Callable[[Path, Path], str] = lambda _path,
         _relative_path: str(uuid.uuid4()),
         client: httpx.Client = httpx.Client(),
@@ -73,17 +74,17 @@ class Resumable:
         self.client = client
         self.client.headers.update(headers)
 
-        self.files: List[ResumableFile] = []
+        self.files: list[ResumableFile] = []
 
         self.executor = ThreadPoolExecutor(simultaneous_uploads)
-        self.futures: List[Future] = []
+        self.futures: list[Future] = []
 
         self.file_added = CallbackDispatcher()
         self.file_completed = CallbackDispatcher()
         self.chunk_completed = CallbackDispatcher()
 
     def add_file(
-        self, path: Union[PathLike, str], relative_path: Optional[Path]
+        self, path: PathLike | str, relative_path: Path | None
     ) -> ResumableFile:
         file = ResumableFile(
             Path(path),

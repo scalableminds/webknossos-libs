@@ -1,5 +1,6 @@
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Sequence
+from typing import Any
 
 import attr
 
@@ -8,7 +9,7 @@ class CallbackDispatcher:
     """Dispatch callbacks to registered targets."""
 
     def __init__(self) -> None:
-        self.targets: List[Callable] = []
+        self.targets: list[Callable] = []
 
     def register(self, callback: Callable) -> None:
         self.targets.append(callback)
@@ -29,9 +30,9 @@ class Config:
     target: str
     chunk_size: int
     simultaneous_uploads: int
-    headers: Dict[str, Any]
+    headers: dict[str, Any]
     test_chunks: bool
     max_chunk_retries: int
     permanent_errors: Sequence[int]
-    additional_query_params: Dict[str, Any]
+    additional_query_params: dict[str, Any]
     generate_unique_identifier: Callable[[Path, Path], str]

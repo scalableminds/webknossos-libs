@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import attr
 
@@ -7,7 +7,7 @@ from ..geometry import Vec3Int
 if TYPE_CHECKING:
     from .skeleton import Skeleton
 
-Vec3Float = Tuple[float, float, float]
+Vec3Float = tuple[float, float, float]
 
 
 # Defining an order on nodes is necessary to allow to sort them,
@@ -56,18 +56,18 @@ class Node:
     position: Vec3Int
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False, order=False)
     _id: int = attr.ib(init=False)
-    comment: Optional[str] = None
-    radius: Optional[float] = None
-    rotation: Optional[Vec3Float] = None
-    inVp: Optional[int] = None
-    inMag: Optional[int] = None
-    bitDepth: Optional[int] = None
-    interpolation: Optional[bool] = None
-    time: Optional[int] = None
+    comment: str | None = None
+    radius: float | None = None
+    rotation: Vec3Float | None = None
+    inVp: int | None = None
+    inMag: int | None = None
+    bitDepth: int | None = None
+    interpolation: bool | None = None
+    time: int | None = None
 
     is_branchpoint: bool = False
-    branchpoint_time: Optional[int] = None
-    _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
+    branchpoint_time: int | None = None
+    _enforced_id: int | None = attr.ib(None, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
@@ -82,7 +82,7 @@ class Node:
     def __hash__(self) -> int:
         return self._id
 
-    def get_dict(self) -> Dict[str, Any]:
+    def get_dict(self) -> dict[str, Any]:
         return {
             "position": self.position,
             "comment": self.comment,

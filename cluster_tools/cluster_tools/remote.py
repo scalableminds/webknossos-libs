@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 import traceback
-from typing import Any, Dict, Optional, Type
+from typing import Any
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.string_ import with_preliminary_postfix
@@ -14,7 +14,7 @@ from cluster_tools.schedulers.pbs import PBSExecutor
 from cluster_tools.schedulers.slurm import SlurmExecutor
 
 
-def get_executor_class(executor_key: str) -> Type[ClusterExecutor]:
+def get_executor_class(executor_key: str) -> type[ClusterExecutor]:
     return {
         "slurm": SlurmExecutor,
         "pbs": PBSExecutor,
@@ -29,21 +29,19 @@ def format_remote_exc() -> str:
     return "".join(traceback.format_exception(typ, value, tb))
 
 
-def get_custom_main_path(
-    workerid: str, executor: Type[ClusterExecutor]
-) -> Optional[str]:
+def get_custom_main_path(workerid: str, executor: type[ClusterExecutor]) -> str | None:
     custom_main_path = None
     main_meta_path = executor.get_main_meta_path(cfut_dir, workerid)
     if os.path.exists(main_meta_path):
-        with open(main_meta_path, "r", encoding="utf-8") as file:
+        with open(main_meta_path, encoding="utf-8") as file:
             custom_main_path = file.read()
     return custom_main_path
 
 
 def worker(
-    executor: Type[ClusterExecutor],
+    executor: type[ClusterExecutor],
     workerid: str,
-    job_array_index: Optional[int],
+    job_array_index: int | None,
     job_array_index_offset: str,
     cfut_dir: str,
 ) -> None:
@@ -75,9 +73,7 @@ def worker(
         setup_logging(meta_data, executor, cfut_dir)
 
         logging.info(
-            "Job computation started (jobid={}, workerid_with_idx={}).".format(
-                executor.get_current_job_id(), workerid_with_idx
-            )
+            f"Job computation started (jobid={executor.get_current_job_id()}, workerid_with_idx={workerid_with_idx})."
         )
         result = True, fun(*args, **kwargs)
         logging.info("Job computation completed.")
@@ -98,13 +94,13 @@ def worker(
     tempfile = str(destfile) + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
-    logging.debug("Pickle file written to {}.".format(tempfile))
+    logging.debug(f"Pickle file written to {tempfile}.")
     os.rename(tempfile, destfile)
-    logging.debug("Pickle file renamed to {}.".format(destfile))
+    logging.debug(f"Pickle file renamed to {destfile}.")
 
 
 def setup_logging(
-    meta_data: Dict[str, Any], executor: Type[ClusterExecutor], cfut_dir: str
+    meta_data: dict[str, Any], executor: type[ClusterExecutor], cfut_dir: str
 ) -> None:
     if "logging_setup_fn" in meta_data:
         logging.debug("Using supplied logging_setup_fn to setup logging.")
@@ -118,9 +114,7 @@ def setup_logging(
         logging_config = meta_data.get("logging_config", dict())
 
         logging.debug(
-            "Setting up logging.basicConfig (potentially overwriting logging configuration of the main script). Config: {}".format(
-                logging_config
-            )
+            f"Setting up logging.basicConfig (potentially overwriting logging configuration of the main script). Config: {logging_config}"
         )
 
         # Call basicConfig which is necessary for the logging to work.

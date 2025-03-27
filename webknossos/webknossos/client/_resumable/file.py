@@ -1,10 +1,8 @@
-from __future__ import division
-
 from collections import namedtuple
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 from threading import Lock
-from typing import Callable, List, Optional
 
 from .util import CallbackDispatcher
 
@@ -13,7 +11,7 @@ FileChunk = namedtuple("FileChunk", ["index", "size", "read"])
 
 def build_chunks(
     read_bytes: Callable[[int, int], bytes], file_size: int, chunk_size: int
-) -> List[FileChunk]:
+) -> list[FileChunk]:
     chunks = []
 
     index = 0
@@ -36,8 +34,8 @@ class ResumableFile:
     """A file to be uploaded in a resumable session.
 
     Args:
-        path (Union[str, pathlib.Path]): The path of the file
-        relative_path (Optional[pathlib.Path]): The relative path of the file
+        path (str | pathlib.Path): The path of the file
+        relative_path (pathlib.Path | None): The relative path of the file
         chunk_size (int): The size, in bytes, of chunks uploaded in a single request
 
     Attributes:
@@ -48,7 +46,7 @@ class ResumableFile:
     def __init__(
         self,
         path: Path,
-        relative_path: Optional[Path],
+        relative_path: Path | None,
         chunk_size: int,
         generate_unique_identifier: Callable[[Path, Path], str],
     ) -> None:

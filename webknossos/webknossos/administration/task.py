@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional, Union
 
 import attr
 
@@ -75,18 +74,18 @@ class Task:
         cls,
         task_type_id: str,
         project_name: str,
-        base_annotations: List[Annotation],
+        base_annotations: list[Annotation],
         needed_experience_domain: str,
         needed_experience_value: int,
         instances: int = 1,
-        script_id: Optional[str] = None,
-        bounding_box: Optional[BoundingBox] = None,
-    ) -> List["Task"]:
+        script_id: str | None = None,
+        bounding_box: BoundingBox | None = None,
+    ) -> list["Task"]:
         """Submits tasks in WEBKNOSSOS based on existing annotations, and returns the Task objects"""
 
-        assert (
-            len(base_annotations) > 0
-        ), "Must supply at least one base annotation to create tasks"
+        assert len(base_annotations) > 0, (
+            "Must supply at least one base annotation to create tasks"
+        )
 
         client = _get_api_client(enforce_auth=True)
         nml_task_parameters = ApiNmlTaskParameters(
@@ -122,19 +121,19 @@ class Task:
         needed_experience_domain: str,
         needed_experience_value: int,
         starting_position: Vec3Int,
-        dataset_name: Optional[Union[str, RemoteDataset]] = None,
+        dataset_name: str | RemoteDataset | None = None,
         starting_rotation: Vec3Int = Vec3Int(0, 0, 0),
         instances: int = 1,
-        dataset_id: Optional[Union[str, RemoteDataset]] = None,
-        script_id: Optional[str] = None,
-        bounding_box: Optional[BoundingBox] = None,
-    ) -> List["Task"]:
+        dataset_id: str | RemoteDataset | None = None,
+        script_id: str | None = None,
+        bounding_box: BoundingBox | None = None,
+    ) -> list["Task"]:
         """Submits tasks in WEBKNOSSOS based on a dataset, starting position + rotation, and returns the Task objects"""
 
         client = _get_api_client(enforce_auth=True)
-        assert (
-            dataset_id is not None or dataset_name is not None
-        ), "Please provide a dataset_id to create a task."
+        assert dataset_id is not None or dataset_name is not None, (
+            "Please provide a dataset_id to create a task."
+        )
         if dataset_id is not None:
             if isinstance(dataset_id, RemoteDataset):
                 dataset_id = dataset_id._dataset_id
@@ -189,7 +188,7 @@ class Task:
             TaskType._from_api_task_type(api_task.type),
         )
 
-    def get_annotation_infos(self) -> List[AnnotationInfo]:
+    def get_annotation_infos(self) -> list[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
         client = _get_api_client(enforce_auth=True)
         api_annotations = client.annotation_infos_by_task(self.task_id)
@@ -202,7 +201,7 @@ class Task:
     @classmethod
     def _handle_task_creation_result(
         cls, result: ApiTaskCreationResult
-    ) -> List["Task"]:
+    ) -> list["Task"]:
         if len(result.warnings) > 0:
             logger.warning(
                 f"There were {len(result.warnings)} warnings during task creation:"

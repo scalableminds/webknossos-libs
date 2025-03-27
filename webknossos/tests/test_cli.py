@@ -3,12 +3,12 @@
 import json
 import os
 import subprocess
+from collections.abc import Iterator
 from contextlib import contextmanager
 from math import ceil
 from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
-from typing import Iterator, Union
 
 import numpy as np
 import pytest
@@ -51,7 +51,7 @@ def minio_docker() -> Iterator[None]:
         yield
 
 
-def check_call(*args: Union[str, int, Path]) -> None:
+def check_call(*args: str | int | Path) -> None:
     try:
         subprocess.check_call([str(a) for a in args])
     except subprocess.CalledProcessError as err:
@@ -489,9 +489,9 @@ def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
                     / f"{x_tile_index + 1}.tiff"
                 )
 
-                assert (
-                    tiff_path.is_file()
-                ), f"Expected a tiff to be written at: {tiff_path}."
+                assert tiff_path.is_file(), (
+                    f"Expected a tiff to be written at: {tiff_path}."
+                )
 
                 test_image = np.array(Image.open(tiff_path)).T
 
@@ -553,9 +553,9 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                     / f"{x_tile_index + 1}.tiff"
                 )
 
-                assert (
-                    tiff_path.is_file()
-                ), f"Expected a tiff to be written at: {tiff_path}."
+                assert tiff_path.is_file(), (
+                    f"Expected a tiff to be written at: {tiff_path}."
+                )
 
                 test_image = np.array(Image.open(tiff_path)).T
 

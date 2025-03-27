@@ -1,8 +1,8 @@
 import json
 import warnings
+from collections.abc import Iterator
 from pathlib import Path
 from shutil import copytree
-from typing import Iterator
 
 import numpy as np
 import pytest
@@ -91,9 +91,9 @@ def test_from_dicom_images(tmp_path: Path) -> None:
     assert "dicoms" in ds.layers
     data = ds.layers["dicoms"].get_finest_mag().read()
     assert data.shape == (1, 274, 384, 10)
-    assert (
-        data.max() == 110
-    ), f"The maximum value of the image should be 127 but is {data.max()}"
+    assert data.max() == 110, (
+        f"The maximum value of the image should be 127 but is {data.max()}"
+    )
 
 
 def test_no_slashes_in_layername(tmp_path: Path) -> None:

@@ -2,7 +2,8 @@ import logging
 import os
 import threading
 import time
-from typing import TYPE_CHECKING, Callable, Dict
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cluster_tools.schedulers.cluster_executor import ClusterExecutor
@@ -28,8 +29,8 @@ class FileWaitThread(threading.Thread):
         threading.Thread.__init__(self)
         self.callback = callback
         self.interval = interval
-        self.waiting: Dict[str, str] = {}
-        self.retryMap: Dict[str, int] = {}
+        self.waiting: dict[str, str] = {}
+        self.retryMap: dict[str, int] = {}
         self.lock = threading.Lock()
         self.shutdown = False
         self.executor = executor
@@ -85,17 +86,11 @@ class FileWaitThread(threading.Thread):
                                 if self.retryMap[filename] <= FileWaitThread.MAX_RETRY:
                                     # Retry by looping again
                                     logging.warning(
-                                        "Job state is completed, but {} couldn't be found. Retrying {}/{}".format(
-                                            filename,
-                                            self.retryMap[filename],
-                                            FileWaitThread.MAX_RETRY,
-                                        )
+                                        f"Job state is completed, but {filename} couldn't be found. Retrying {self.retryMap[filename]}/{FileWaitThread.MAX_RETRY}"
                                     )
                                 else:
                                     logging.error(
-                                        "Job state is completed, but {} couldn't be found.".format(
-                                            filename
-                                        )
+                                        f"Job state is completed, but {filename} couldn't be found."
                                     )
                                     handle_completed_job(job_id, filename, True)
 

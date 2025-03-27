@@ -6,7 +6,7 @@ import re
 import sys
 from concurrent.futures import Future
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Literal
 from uuid import uuid4
 
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
@@ -18,7 +18,7 @@ def _volume_name_from_path(path: Path) -> str:
     return f"{(hash(str(path)) & sys.maxsize):016x}"
 
 
-def _deduplicate_mounts(mounts: List[Path]) -> List[Path]:
+def _deduplicate_mounts(mounts: list[Path]) -> list[Path]:
     unique_mounts = set(mounts)
     output = [
         mount
@@ -38,16 +38,16 @@ class KubernetesClient:
 
 
 class KubernetesExecutor(ClusterExecutor):
-    job_resources: Dict[str, Any]
+    job_resources: dict[str, Any]
 
     def __init__(
         self,
         debug: bool = False,
         keep_logs: bool = True,
-        cfut_dir: Optional[str] = None,
-        job_resources: Optional[Dict[str, Any]] = None,
-        job_name: Optional[str] = None,
-        additional_setup_lines: Optional[List[str]] = None,
+        cfut_dir: str | None = None,
+        job_resources: dict[str, Any] | None = None,
+        job_name: str | None = None,
+        additional_setup_lines: list[str] | None = None,
         **kwargs: Any,
     ):
         try:
@@ -84,10 +84,10 @@ class KubernetesExecutor(ClusterExecutor):
 
     @staticmethod
     def format_log_file_name(job_id_with_index: str, suffix: str = ".stdout") -> str:
-        return "kube.{}.log{}".format(str(job_id_with_index), suffix)
+        return f"kube.{str(job_id_with_index)}.log{suffix}"
 
     @staticmethod
-    def get_job_array_index() -> Optional[int]:
+    def get_job_array_index() -> int | None:
         # In kubernetes all jobs are array jobs. `JOB_COMPLETION_INDEX` is set by
         # kubernetes directly. Both variables should exist (if it is a kubernetes
         # job), but `JOB_IS_ARRAY_JOB` can be `False`.
@@ -121,9 +121,7 @@ class KubernetesExecutor(ClusterExecutor):
         job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
         print(
-            "Couldn't automatically cancel all Kubernetes jobs. The following jobs are still running on the cluster:\n{}".format(
-                job_ids
-            )
+            f"Couldn't automatically cancel all Kubernetes jobs. The following jobs are still running on the cluster:\n{job_ids}"
         )
 
     def ensure_kubernetes_namespace(self) -> None:
@@ -152,10 +150,10 @@ class KubernetesExecutor(ClusterExecutor):
     def inner_submit(
         self,
         cmdline: str,
-        job_name: Optional[str] = None,
-        additional_setup_lines: Optional[List[str]] = None,  # noqa:  ARG002 Unused method argument: `additional_setup_lines`
-        job_count: Optional[int] = None,
-    ) -> Tuple[List[Future[str]], List[Tuple[int, int]]]:
+        job_name: str | None = None,
+        additional_setup_lines: list[str] | None = None,  # noqa:  ARG002 Unused method argument: `additional_setup_lines`
+        job_count: int | None = None,
+    ) -> tuple[list[Future[str]], list[tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
         import kubernetes.client.models as kubernetes_models
@@ -318,7 +316,7 @@ class KubernetesExecutor(ClusterExecutor):
             for job in resp.items
         )
 
-    def get_pending_tasks(self) -> List[str]:
+    def get_pending_tasks(self) -> list[str]:
         kubernetes_client = KubernetesClient()
         resp = kubernetes_client.batch.list_namespaced_job(
             namespace=self.job_resources["namespace"]

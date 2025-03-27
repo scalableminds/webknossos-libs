@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -13,25 +13,25 @@ DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]
 class Parameters(NamedTuple):
     name: str  # dataset name
     scale: Vector3  # dataset voxel_size
-    description: Optional[str] = None
-    organization: Optional[str] = None
-    dataset_id: Optional[str] = None
-    offset: Optional[Vector3] = None  # deprecated. Kept for backward compatibility.
-    time: Optional[int] = (
+    description: str | None = None
+    organization: str | None = None
+    dataset_id: str | None = None
+    offset: Vector3 | None = None  # deprecated. Kept for backward compatibility.
+    time: int | None = (
         None  # UNIX timestamp marking the creation time & date of an annotation.
     )
-    editPosition: Optional[Vector3] = None
-    editRotation: Optional[Vector3] = None
-    zoomLevel: Optional[float] = None
-    taskBoundingBox: Optional[NDBoundingBox] = None
-    userBoundingBoxes: Optional[List[NDBoundingBox]] = None
+    editPosition: Vector3 | None = None
+    editRotation: Vector3 | None = None
+    zoomLevel: float | None = None
+    taskBoundingBox: NDBoundingBox | None = None
+    userBoundingBoxes: list[NDBoundingBox] | None = None
 
     def _dump_bounding_box(
         self,
         xf: XmlWriter,
         bounding_box: NDBoundingBox,
         tag_name: str,
-        bbox_id: Optional[int],  # user bounding boxes need an id
+        bbox_id: int | None,  # user bounding boxes need an id
     ) -> None:
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
 
@@ -169,16 +169,14 @@ class Parameters(NamedTuple):
         )
 
     @classmethod
-    def _parse_user_bounding_boxes(cls, nml_parameters: Element) -> List[NDBoundingBox]:
+    def _parse_user_bounding_boxes(cls, nml_parameters: Element) -> list[NDBoundingBox]:
         if nml_parameters.find("userBoundingBox") is None:
             return []
         bb_elements = nml_parameters.findall("userBoundingBox")
         return [cls._parse_bounding_box(bb_element) for bb_element in bb_elements]
 
     @classmethod
-    def _parse_task_bounding_box(
-        cls, nml_parameters: Element
-    ) -> Optional[NDBoundingBox]:
+    def _parse_task_bounding_box(cls, nml_parameters: Element) -> NDBoundingBox | None:
         bb_element = nml_parameters.find("taskBoundingBox")
         if bb_element is not None:
             return cls._parse_bounding_box(bb_element)
@@ -225,7 +223,7 @@ class Parameters(NamedTuple):
         if nml_parameters.find("time") is not None:
             time = int(enforce_not_null(nml_parameters.find("time")).get("ms", 0))
 
-        zoomLevel: Optional[float] = None
+        zoomLevel: float | None = None
         if nml_parameters.find("zoomLevel") is not None:
             zoom_str = enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)
             try:

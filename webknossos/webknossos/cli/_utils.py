@@ -3,7 +3,6 @@
 from collections import namedtuple
 from enum import Enum
 from os import environ
-from typing import Optional, Tuple, Union
 
 import numpy as np
 from upath import UPath
@@ -64,7 +63,7 @@ def parse_mag(mag_str: str) -> Mag:
     return Mag(mag_str)
 
 
-def parse_voxel_size(voxel_size_str: str) -> Tuple[float, float, float]:
+def parse_voxel_size(voxel_size_str: str) -> tuple[float, float, float]:
     """Parses str input to tuple of three floats."""
     try:
         result = tuple(float(x) for x in voxel_size_str.split(","))
@@ -80,7 +79,7 @@ def parse_voxel_size(voxel_size_str: str) -> Tuple[float, float, float]:
         ) from err
 
 
-def parse_vec3int(vec3int_like: Union[str, Vec3Int]) -> Vec3Int:
+def parse_vec3int(vec3int_like: str | Vec3Int) -> Vec3Int:
     """Parses str input to tuple of three integers."""
     try:
         if isinstance(vec3int_like, Vec3Int):
@@ -225,10 +224,10 @@ def pad_or_crop_to_size_and_topleft(
 
 def prepare_shard_shape(
     *,
-    chunk_shape: Optional[Vec3Int],
-    shard_shape: Optional[Vec3Int],
-    chunks_per_shard: Optional[Vec3Int],
-) -> Optional[Vec3Int]:
+    chunk_shape: Vec3Int | None,
+    shard_shape: Vec3Int | None,
+    chunks_per_shard: Vec3Int | None,
+) -> Vec3Int | None:
     if chunk_shape is None:
         chunk_shape = DEFAULT_CHUNK_SHAPE
 

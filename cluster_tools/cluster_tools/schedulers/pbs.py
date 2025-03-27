@@ -4,14 +4,14 @@ import logging
 import os
 import re
 from concurrent.futures import Future
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Literal
 
 from cluster_tools._utils.call import call, chcall
 from cluster_tools._utils.string_ import random_string
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 # qstat vs. checkjob
-PBS_STATES: Dict[str, List[str]] = {
+PBS_STATES: dict[str, list[str]] = {
     "Failure": [],
     "Success": [
         "C",  # Completed
@@ -36,7 +36,7 @@ class PBSExecutor(ClusterExecutor):
         return "pbs"
 
     @staticmethod
-    def get_job_array_index() -> Optional[int]:
+    def get_job_array_index() -> int | None:
         try:
             return int(os.environ["PBS_ARRAYID"])
         except KeyError:
@@ -57,7 +57,7 @@ class PBSExecutor(ClusterExecutor):
         return cls.get_current_job_id()
 
     def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002 Unused method argument: `args`, kwargs
-        scheduled_job_ids: List[Union[int, str]] = list(self.jobs.keys())
+        scheduled_job_ids: list[int | str] = list(self.jobs.keys())
 
         if len(scheduled_job_ids):
             # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be canceled individually,
@@ -87,11 +87,11 @@ class PBSExecutor(ClusterExecutor):
         """
 
         filename = self.get_temp_file_path(
-            self.cfut_dir, "_temp_pbs_{}.sh".format(random_string())
+            self.cfut_dir, f"_temp_pbs_{random_string()}.sh"
         )
         with open(filename, "w", encoding="utf-8") as f:
             f.write(job)
-        jobid_desc, _ = chcall("qsub -V {}".format(filename))
+        jobid_desc, _ = chcall(f"qsub -V {filename}")
         match = re.search("^[0-9]+", jobid_desc)
         assert match is not None
         jobid = match.group(0)
@@ -103,10 +103,10 @@ class PBSExecutor(ClusterExecutor):
     def inner_submit(
         self,
         cmdline: str,
-        job_name: Optional[str] = None,
-        additional_setup_lines: Optional[List[str]] = None,
-        job_count: Optional[int] = None,
-    ) -> Tuple[List[Future[str]], List[Tuple[int, int]]]:
+        job_name: str | None = None,
+        additional_setup_lines: list[str] | None = None,
+        job_count: int | None = None,
+    ) -> tuple[list[Future[str]], list[tuple[int, int]]]:
         """Starts a PBS job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -122,7 +122,7 @@ class PBSExecutor(ClusterExecutor):
             for resource, value in self.job_resources.items():
                 if resource == "time":
                     resource = "walltime"
-                specs.append("{}={}".format(resource, value))
+                specs.append(f"{resource}={value}")
             if len(specs) > 0:
                 job_resources_line = "#PBS -l {}".format(",".join(specs))
 
@@ -133,21 +133,21 @@ class PBSExecutor(ClusterExecutor):
                 # Explicitly, listing the index works, though.
                 job_array_line = "#PBS -t 0"
             else:
-                job_array_line = "#PBS -t 0-{}".format(job_count - 1)
+                job_array_line = f"#PBS -t 0-{job_count - 1}"
 
         script_lines = [
             "#!/bin/sh",
             "#PBS -j oe",  # join output and error stream
             # Apparently, it's important to have the -e line before -o
-            "#PBS -e {}".format(log_path),
-            "#PBS -o {}".format(log_path),
-            '#PBS -N "{}"'.format(job_name),
+            f"#PBS -e {log_path}",
+            f"#PBS -o {log_path}",
+            f'#PBS -N "{job_name}"',
             job_array_line,
             job_resources_line,
             *additional_setup_lines,
             "export PATH=$PBS_O_PATH",
             "cd $PBS_O_WORKDIR",
-            "{}".format(cmdline),
+            f"{cmdline}",
         ]
 
         job_id = self.submit_text("\n".join(script_lines))
@@ -165,13 +165,11 @@ class PBSExecutor(ClusterExecutor):
 
         # If the output file was not found, we determine the job status so that
         # we can recognize jobs which failed hard (in this case, they don't produce output files)
-        stdout, _, exit_code = call("qstat -f {}".format(job_id_with_index))
+        stdout, _, exit_code = call(f"qstat -f {job_id_with_index}")
 
         if exit_code != 0:
             logging.error(
-                "Couldn't call checkjob to determine job's status. {}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the pbs db. If this is the case, the process will hang forever.".format(
-                    job_id_with_index
-                )
+                f"Couldn't call checkjob to determine job's status. {job_id_with_index}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the pbs db. If this is the case, the process will hang forever."
             )
             return "ignore"
         else:
@@ -185,22 +183,18 @@ class PBSExecutor(ClusterExecutor):
                     return "ignore"
                 elif job_state in PBS_STATES["Unclear"]:
                     logging.warning(
-                        "The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(
-                            job_id_with_index, job_state
-                        )
+                        f"The job state for {job_id_with_index} is {job_state}. It's unclear whether the job will recover. Will wait further"
                     )
                     return "ignore"
                 elif job_state in PBS_STATES["Success"]:
                     return "completed"
                 else:
-                    logging.error("Unhandled pbs job state? {}".format(job_state))
+                    logging.error(f"Unhandled pbs job state? {job_state}")
                     return "ignore"
             else:
-                logging.error(
-                    "Could not extract pbs job state? {}...".format(stdout[0:10])
-                )
+                logging.error(f"Could not extract pbs job state? {stdout[0:10]}...")
                 return "ignore"
 
-    def get_pending_tasks(self) -> List:
+    def get_pending_tasks(self) -> list:
         # Not implemented, yet. Currently, this is only used for performance optimization.
         return []

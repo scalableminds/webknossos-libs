@@ -2,10 +2,10 @@ import os
 import shlex
 import subprocess
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from time import sleep
-from typing import Iterator
 
 from upath import UPath
 

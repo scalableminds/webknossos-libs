@@ -1,9 +1,9 @@
 import warnings
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Executor, Future, as_completed
 from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Optional, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from typing_extensions import ParamSpec
 
@@ -59,7 +59,7 @@ class SequentialExecutor(Executor):
         self,
         fn: Callable[[_S], _T],
         args: Iterable[_S],
-        output_pickle_path_getter: Optional[Callable[[_S], PathLike]] = None,
+        output_pickle_path_getter: Callable[[_S], PathLike] | None = None,
     ) -> list[Future[_T]]:
         if output_pickle_path_getter is not None:
             futs = [
@@ -81,8 +81,8 @@ class SequentialExecutor(Executor):
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],
-        timeout: Optional[float] = None,
-        chunksize: Optional[int] = None,
+        timeout: float | None = None,
+        chunksize: int | None = None,
     ) -> Iterator[_T]:
         if timeout is not None:
             warnings.warn(
