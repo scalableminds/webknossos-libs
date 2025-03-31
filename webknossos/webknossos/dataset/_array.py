@@ -842,7 +842,7 @@ class Zarr2Array(TensorStoreArray):
                         else None
                     ),
                     "filters": None,
-                    "dimension_separator": ".",
+                    "dimension_separator": "/",
                 },
                 "create": True,
             }

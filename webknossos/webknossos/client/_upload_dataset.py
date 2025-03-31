@@ -131,6 +131,7 @@ def upload_dataset(
             new_dataset_name,
             context.organization_id,
             total_file_count=len(file_infos),
+            total_file_size_in_bytes=total_file_size,
             layers_to_link=[
                 layer.as_api_linked_layer_identifier() for layer in layers_to_link
             ],
@@ -164,10 +165,10 @@ def upload_dataset(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
 
-    datastore_api_client.dataset_finish_upload(
+    dataset_id = datastore_api_client.dataset_finish_upload(
         ApiDatasetUploadInformation(upload_id),
         token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 
-    return new_dataset_name
+    return dataset_id

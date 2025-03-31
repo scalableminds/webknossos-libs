@@ -144,3 +144,11 @@ def test_upload_download_roundtrip(tmp_path: Path) -> None:
     data_original = ds_original.get_segmentation_layers()[0].get_finest_mag().read()
     data_roundtrip = ds_roundtrip.get_segmentation_layers()[0].get_finest_mag().read()
     assert np.array_equal(data_original, data_roundtrip)
+
+
+def test_upload_twice(tmp_path: Path) -> None:
+    ds_original = get_sample_dataset(tmp_path)
+    remote1 = ds_original.upload(new_dataset_name="test_upload_twice")
+    remote2 = ds_original.upload(new_dataset_name="test_upload_twice")
+    assert remote1.url != remote2.url
+    assert remote1.name == remote2.name

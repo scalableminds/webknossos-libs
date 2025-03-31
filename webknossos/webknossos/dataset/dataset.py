@@ -621,9 +621,9 @@ class Dataset:
                 )
         elif len(possible_ids) > 1:
             logger.warning(
-                f"The dataset name is ambiguous. Opened dataset with ID {possible_ids[0]}. "
+                f"There are several datasets with same name '{dataset_name}' available online. Opened dataset with ID {possible_ids[0]}. "
                 "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
-                'of your datasets with `Dataset.get_remote_datasets("{dataset_name}").'
+                "of your datasets with `Dataset.get_remote_datasets(name=<dataset_name>)."
             )
         return possible_ids[0]
 
@@ -1222,14 +1222,11 @@ class Dataset:
             ]
         )
 
-        return self.open_remote(
-            upload_dataset(
-                self,
-                new_dataset_name,
-                layers_to_link=converted_layers_to_link,
-                jobs=jobs,
-            )
+        dataset_id = upload_dataset(
+            self, new_dataset_name, converted_layers_to_link, jobs
         )
+
+        return self.open_remote(dataset_id=dataset_id)
 
     def get_layer(self, layer_name: str) -> Layer:
         """Get a specific layer from this dataset.
@@ -2828,10 +2825,10 @@ class Dataset:
         name: Optional[str] = None,
         folder_id: Optional[Union[RemoteFolder, str]] = None,
     ) -> Mapping[str, "RemoteDataset"]:
-        """Get available datasets from WEBKNOSSOS.
+        """Get all available datasets from the WEBKNOSSOS server.
 
         Returns a mapping of dataset ids to lazy-initialized RemoteDataset objects for all
-        datasets visible to the specified organization or current user.
+        datasets visible to the specified organization or current user. Datasets can be further filtered by tags, name or folder.
 
         Args:
             organization_id: Optional organization to get datasets from. Defaults to
@@ -2863,6 +2860,11 @@ class Dataset:
             ```
             published = Dataset.get_remote_datasets(tags="published")
             tagged = Dataset.get_remote_datasets(tags=["tag1", "tag2"])
+            ```
+
+            Filter datasets by name:
+            ```
+            fun_datasets = Dataset.get_remote_datasets(name="MyFunDataset")
             ```
 
         Note:

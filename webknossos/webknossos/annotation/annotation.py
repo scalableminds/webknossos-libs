@@ -58,6 +58,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
     Tuple,
     Union,
     cast,
@@ -106,6 +107,7 @@ class SegmentInformation:
     name: Optional[str]
     anchor_position: Optional[Vec3Int]
     color: Optional[Vector4]
+    metadata: Dict[str, Union[str, int, float, Sequence[str]]]
 
 
 @attr.define
@@ -639,6 +641,7 @@ class Annotation:
                         name=segment.name,
                         anchor_position=segment.anchor_position,
                         color=segment.color,
+                        metadata={i.key: i.value for i in segment.metadata},
                     )
             volume_layers.append(
                 _VolumeLayer(
