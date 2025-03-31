@@ -171,7 +171,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
-          version: "0.5.26"
+          version: "0.6.3"
 
       - name: Install proxay
         run: npm install -g proxay
@@ -211,7 +211,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
@@ -227,6 +227,22 @@ jobs:
         run: |
           git diff --no-ext-diff --exit-code
           [[ -z $(git status -s) ]]
+
+  coverage_report:
+    needs: [webknossos_linux]
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          # Install a specific version of uv.
+          version: "0.6.3"
+      - name: Generate coverage report
+        run: |
+          cd webknossos
+          uv run --frozen coverage combine ~/.local/share/coverage/*.coverage
+          uv run --frozen coverage report
 
   webknossos_cli_docker:
     needs: [cluster_tools, webknossos_linux]
