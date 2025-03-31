@@ -48,9 +48,6 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           version: "0.6.3"
-          enable-cache: true
-          cache-dependency-glob: "cluster_tools/uv.lock"
-          cache-local-path: "~/.local/share/uv"
       
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -175,9 +172,6 @@ jobs:
         with:
           # Install a specific version of uv.
           version: "0.5.26"
-          enable-cache: true
-          cache-dependency-glob: "webknossos/uv.lock"
-          cache-local-path: "~/.local/share/uv"
 
       - name: Install proxay
         run: npm install -g proxay
@@ -211,7 +205,16 @@ jobs:
           sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
           cat /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
+      - name: Python tests (with coverage)
+        if: ${{ matrix.python-version == '3.11' }}
+        timeout-minutes: 30
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos
+
       - name: Python tests
+        if: ${{ matrix.python-version != '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
