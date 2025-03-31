@@ -212,7 +212,7 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
           COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
           UV_CACHE_DIR: /tmp/.uv-cache
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+        run: uv run bash --all-extras --python ${{ matrix.python-version }} ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
@@ -220,7 +220,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           UV_CACHE_DIR: /tmp/.uv-cache
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run bash --all-extras --python ${{ matrix.python-version }} ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
       - name: Minimize uv cache
         run: uv cache prune --ci
