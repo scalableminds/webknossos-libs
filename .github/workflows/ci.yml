@@ -161,8 +161,6 @@ jobs:
     defaults:
       run:
         working-directory: webknossos
-    env:
-      UV_CACHE_DIR: /tmp/.uv-cache
 
     steps:
       - uses: actions/checkout@v3
@@ -172,6 +170,7 @@ jobs:
         with:
           # Install a specific version of uv.
           version: "0.6.3"
+          cache-local-path: /tmp/.uv-cache
 
       - name: Install proxay
         run: npm install -g proxay
@@ -211,6 +210,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
+          UV_CACHE_DIR: /tmp/.uv-cache
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
@@ -218,6 +218,7 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
+          UV_CACHE_DIR: /tmp/.uv-cache
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
       - name: Minimize uv cache
@@ -232,15 +233,18 @@ jobs:
     needs: [webknossos_linux]
     if: success()
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webknossos
     steps:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
           version: "0.6.3"
+
       - name: Generate coverage report
         run: |
-          cd webknossos
           uv run --frozen coverage combine ~/.local/share/coverage/*.coverage
           uv run --frozen coverage report
 
