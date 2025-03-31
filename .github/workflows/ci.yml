@@ -164,6 +164,8 @@ jobs:
     defaults:
       run:
         working-directory: webknossos
+    env:
+      UV_CACHE_DIR: /tmp/.uv-cache
 
     steps:
       - uses: actions/checkout@v3
@@ -182,6 +184,15 @@ jobs:
               
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
+
+      - name: Restore uv cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.uv-cache
+          key: uv-${{ matrix.python-version }}-${{ hashFiles('webknossos/uv.lock') }}
+          restore-keys: |
+            uv-${{ matrix.python-version }}-${{ hashFiles('webknossos/uv.lock') }}
+            uv-${{ matrix.python-version }}
       
       - name: Check formatting
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
@@ -205,6 +216,9 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+
+      - name: Minimize uv cache
+        run: uv cache prune --ci
 
       - name: Check if git is dirty
         run: |
