@@ -14,6 +14,7 @@ from multiprocessing import cpu_count
 from os.path import relpath
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
+from threading import Thread
 from typing import (
     Any,
     Callable,
@@ -31,9 +32,11 @@ from typing import (
     Union,
 )
 
+import httpx
 import numpy as np
 import rich
 from cluster_tools import Executor, get_executor
+from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
 
@@ -324,7 +327,11 @@ def rmtree(path: Path) -> None:
 
 def copytree(in_path: Path, out_path: Path) -> None:
     def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Tuple[str, ...]]]:
-        yield (path, tuple(p for p in path.parts if p not in base_path.parts))
+        # base_path.parts is a prefix of path.parts; strip it
+        assert len(path.parts) >= len(base_path.parts)
+        assert path.parts[: len(base_path.parts)] == base_path.parts
+        yield (path, path.parts[len(base_path.parts) :])
+
         if path.is_dir():
             for p in path.iterdir():
                 yield from _walk(p, base_path)
@@ -417,3 +424,52 @@ class NDArrayLike(Protocol):
 
     @property
     def dtype(self) -> np.dtype: ...
+
+
+def get_latest_version_from_pypi() -> Version:
+    """Get the latest version of the Webknossos package from PyPI."""
+
+    try:
+        response = httpx.get("https://pypi.org/pypi/webknossos/json")
+        response.raise_for_status()
+        data = response.json()
+        releases = data["releases"]
+        versions = [Version(v) for v in releases.keys()]
+        latest_version = max(versions)
+        return latest_version
+
+    except (httpx.HTTPError, InvalidVersion):
+        # Failed to get latest version from PyPI
+        pass
+
+    return Version("0.0.0")
+
+
+def check_version_in_background(current_version: str) -> None:
+    """
+    Schedule a non-blocking version check that will log a warning if the current version is outdated.
+    This function runs the check in a separate thread to avoid blocking the main application.
+    """
+
+    def check_version_in_thread() -> None:
+        try:
+            # Get the latest version
+            latest_version = get_latest_version_from_pypi()
+
+            # Compare versions and log warning if needed
+            if Version(current_version) < latest_version:
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"Your current version {current_version} of the webknossos-libs is outdated. "
+                    f"The latest version available on PyPI is {latest_version}. "
+                    f"Consider upgrading to the latest version to avoid being out-of-sync with "
+                    f"the latest WEBKNOSSOS features. See GitHub for full changelog of all "
+                    f"releases (https://github.com/scalableminds/webknossos-libs/releases)."
+                )
+        except Exception:
+            # Silently ignore any errors in version checking
+            pass
+
+    # Start the check in a daemon thread so it won't block program exit
+    t = Thread(target=check_version_in_thread, daemon=True)
+    t.start()
