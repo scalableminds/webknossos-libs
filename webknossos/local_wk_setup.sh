@@ -1,7 +1,11 @@
 function export_vars {
+    # Fetch current version of webknossos.org this can be replaced with a fixed version for testing
+    WK_VERSION=$(curl -s https://webknossos.org/api/buildinfo | tr ',"' "\n" | sed -n '/version/{n;n;p;q;}')
+
+    # Export the necessary environment variables
     export WK_TOKEN=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
     export WK_URL=http://localhost:9000
-    export DOCKER_TAG=master__32090
+    export DOCKER_TAG="master__${WK_VERSION}"
 }
 
 function ensure_local_test_wk {
@@ -54,13 +58,6 @@ function ensure_local_test_wk {
     fi
 
     curl -s -X POST -H "X-Auth-Token: $WK_TOKEN" localhost:9000/data/triggers/checkInboxBlocking
-
-    WK_ORG_VERSION="$(curl -s https://webknossos.org/api/buildinfo | tr ',"' "\n" | sed -n '/version/{n;n;p;q;}')"
-    LOCAL_VERSION="$(curl -s http://localhost:9000/api/buildinfo | tr ',"' "\n" | sed -n '/version/{n;n;p;q;}')"
-
-    if [ "$WK_ORG_VERSION" != "$LOCAL_VERSION" ]; then
-        echo "The local webknossos version is $LOCAL_VERSION, differing from the webknossos.org version $WK_ORG_VERSION"
-    fi
 }
 
 
