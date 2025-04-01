@@ -1,7 +1,7 @@
 import re
 from collections.abc import Callable, Iterable
 from operator import add, floordiv, mod, mul, sub
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, TypeAlias, TypeVar, Union, cast
 
 import numpy as np
 
@@ -59,7 +59,7 @@ class VecInt(tuple):
 
     def __new__(
         cls,
-        *args: Union["VecIntLike", Iterable[str], int],
+        *args: Union["VecIntLike", Iterable[str], int],  # noqa: UP007
         axes: Iterable[str] | None = None,
         **kwargs: int,
     ) -> "VecInt":
@@ -230,9 +230,9 @@ class VecInt(tuple):
             other_imported = VecInt.full(other, axes=self.axes)
         else:
             other_imported = VecInt(other, axes=self.axes)
-            assert len(other_imported) == len(self), (
-                f"{other} and {self} are not equally shaped."
-            )
+            assert len(other_imported) == len(
+                self
+            ), f"{other} and {self} are not equally shaped."
         return self.__class__(
             **{
                 axis: fn(self[i], other_imported[i]) for i, axis in enumerate(self.axes)
@@ -366,4 +366,4 @@ class VecInt(tuple):
         return cls((an_int for _ in range(len(axes))), axes=axes)
 
 
-VecIntLike = VecInt | tuple[int, ...] | np.ndarray | Iterable[int]
+VecIntLike: TypeAlias = VecInt | tuple[int, ...] | np.ndarray | Iterable[int]

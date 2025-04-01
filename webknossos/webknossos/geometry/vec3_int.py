@@ -1,6 +1,6 @@
 import re
 from collections.abc import Iterable
-from typing import Union, cast
+from typing import TypeAlias, Union, cast
 
 import numpy as np
 
@@ -134,4 +134,4 @@ class Vec3Int(VecInt):
         return f"Vec3Int({self.x},{self.y},{self.z})"
 
 
-Vec3IntLike = Vec3Int | tuple[int, int, int] | np.ndarray | Iterable[int]
+Vec3IntLike: TypeAlias = Vec3Int | tuple[int, int, int] | np.ndarray | Iterable[int]

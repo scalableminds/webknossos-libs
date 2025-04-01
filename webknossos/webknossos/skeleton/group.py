@@ -166,9 +166,9 @@ class Group:
                 new_tree.color = color
 
             if _enforced_id is not None:
-                assert not self.has_tree_id(_enforced_id), (
-                    "A tree with the specified _enforced_id already exists in this group."
-                )
+                assert not self.has_tree_id(
+                    _enforced_id
+                ), "A tree with the specified _enforced_id already exists in this group."
                 new_tree._id = _enforced_id
 
             if self.has_tree_id(tree.id):

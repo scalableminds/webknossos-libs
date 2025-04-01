@@ -233,12 +233,12 @@ class Annotation:
 
     def __attrs_post_init__(self) -> None:
         if self.skeleton is None:
-            assert self._dataset_name is not None, (
-                "Please either supply a skeleton or dataset_name for Annotation()."
-            )
-            assert self._voxel_size is not None, (
-                "Please supply a voxel_size for Annotation()."
-            )
+            assert (
+                self._dataset_name is not None
+            ), "Please either supply a skeleton or dataset_name for Annotation()."
+            assert (
+                self._voxel_size is not None
+            ), "Please supply a voxel_size for Annotation()."
             self.skeleton = Skeleton(
                 dataset_name=self._dataset_name,
                 voxel_size=self._voxel_size,
@@ -351,9 +351,9 @@ class Annotation:
             ```
         """
         annotation_path = Path(annotation_path)
-        assert annotation_path.exists(), (
-            f"Annotation path {annotation_path} does not exist."
-        )
+        assert (
+            annotation_path.exists()
+        ), f"Annotation path {annotation_path} does not exist."
         if annotation_path.suffix == ".zip":
             return cls._load_from_zip(annotation_path)
         elif annotation_path.suffix == ".nml":
@@ -458,9 +458,9 @@ class Annotation:
         if filename.endswith(".nml"):
             annotation = Annotation._load_from_nml(filename[:-4], BytesIO(file_body))
         else:
-            assert filename.endswith(".zip"), (
-                f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
-            )
+            assert filename.endswith(
+                ".zip"
+            ), f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
             annotation = Annotation._load_from_zip(BytesIO(file_body))
 
         if _return_context:
@@ -604,9 +604,9 @@ class Annotation:
                     largest_segment_id=volume.largest_segment_id,
                 )
             )
-        assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
-            "Some volume layers have the same id, this is not allowed."
-        )
+        assert len(set(i.id for i in volume_layers)) == len(
+            volume_layers
+        ), "Some volume layers have the same id, this is not allowed."
         if len(layers_without_location) > 0:
             warnings.warn(
                 "[INFO] Omitting the volume layer annotation data for layers "
@@ -628,9 +628,9 @@ class Annotation:
         paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
         nml_paths = [i for i in paths if i.suffix == ".nml"]
         assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
-        assert len(nml_paths) == 1, (
-            f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
-        )
+        assert (
+            len(nml_paths) == 1
+        ), f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
@@ -714,18 +714,18 @@ class Annotation:
             target,
             voxel_size=self.voxel_size,
         )
-        assert len(annotation_volumes) > 0, (
-            "Annotation does not contain any volume layers!"
-        )
+        assert (
+            len(annotation_volumes) > 0
+        ), "Annotation does not contain any volume layers!"
 
         if volume_layer_name is not None:
-            assert volume_layer_name in annotation_volumes, (
-                f'Volume layer name "{volume_layer_name}" not found in annotation'
-            )
+            assert (
+                volume_layer_name in annotation_volumes
+            ), f'Volume layer name "{volume_layer_name}" not found in annotation'
         else:
-            assert len(annotation_volumes) == 1, (
-                "Volume layer name was not provided and more than one volume layer found in annotation"
-            )
+            assert (
+                len(annotation_volumes) == 1
+            ), "Volume layer name was not provided and more than one volume layer found in annotation"
             volume_layer_name = annotation_volumes[0]
 
         volume_layer = self._get_volume_layer(volume_layer_name=volume_layer_name)
@@ -1017,14 +1017,14 @@ class Annotation:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
-            assert volume_layer_id not in [i.id for i in self._volume_layers], (
-                f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
-            )
+            assert (
+                volume_layer_id not in [i.id for i in self._volume_layers]
+            ), f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
         fallback_layer_name: str | None
         if isinstance(fallback_layer, Layer):
-            assert fallback_layer.category == SEGMENTATION_CATEGORY, (
-                "The fallback layer must be a segmentation layer."
-            )
+            assert (
+                fallback_layer.category == SEGMENTATION_CATEGORY
+            ), "The fallback layer must be a segmentation layer."
             fallback_layer_name = fallback_layer.name
         elif fallback_layer is not None:
             fallback_layer_name = str(fallback_layer)
@@ -1087,9 +1087,9 @@ class Annotation:
             fitting_volume_layers = [
                 i for i in self._volume_layers if i.name == volume_layer_name
             ]
-            assert len(fitting_volume_layers) != 0, (
-                f"The specified volume name {volume_layer_name} could not be found in this annotation."
-            )
+            assert (
+                len(fitting_volume_layers) != 0
+            ), f"The specified volume name {volume_layer_name} could not be found in this annotation."
             assert len(fitting_volume_layers) == 1, (
                 f"More than one volume annotation has the name {volume_layer_name}. "
                 + "Please specify the exact annotation via the volume_layer_id argument. "
@@ -1174,9 +1174,9 @@ class Annotation:
 
         largest_segment_id = volume_layer.largest_segment_id
 
-        assert volume_zip_path is not None, (
-            "The selected volume layer data is not available and cannot be exported."
-        )
+        assert (
+            volume_zip_path is not None
+        ), "The selected volume layer data is not available and cannot be exported."
 
         with volume_zip_path.open(mode="rb") as f:
             data_zip = ZipFile(f)
@@ -1186,9 +1186,9 @@ class Annotation:
                     for i in data_zip.filelist
                     if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
                 ]
-                assert len(wrong_files) == 0, (
-                    f"The annotation contains unexpected files: {wrong_files}"
-                )
+                assert (
+                    len(wrong_files) == 0
+                ), f"The annotation contains unexpected files: {wrong_files}"
                 data_zip.extractall(dataset.path / layer_name)
                 layer = cast(
                     SegmentationLayer,
@@ -1202,9 +1202,9 @@ class Annotation:
                 datasource_properties = dataset_converter.structure(
                     json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
                 )
-                assert len(datasource_properties.data_layers) == 1, (
-                    f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
-                )
+                assert (
+                    len(datasource_properties.data_layers) == 1
+                ), f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
                 layer_properties = datasource_properties.data_layers[0]
                 internal_layer_name = layer_properties.name
                 layer_properties.name = layer_name
