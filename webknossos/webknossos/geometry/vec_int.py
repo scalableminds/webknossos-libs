@@ -230,9 +230,9 @@ class VecInt(tuple):
             other_imported = VecInt.full(other, axes=self.axes)
         else:
             other_imported = VecInt(other, axes=self.axes)
-            assert len(other_imported) == len(
-                self
-            ), f"{other} and {self} are not equally shaped."
+            assert len(other_imported) == len(self), (
+                f"{other} and {self} are not equally shaped."
+            )
         return self.__class__(
             **{
                 axis: fn(self[i], other_imported[i]) for i, axis in enumerate(self.axes)

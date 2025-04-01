@@ -37,9 +37,9 @@ def _import_mag(mag_like: MagLike) -> Vec3Int:
             f"Mag must be int or a vector3 of ints or a string shaped like e.g. 2-2-1. Got: {mag_like}"
         )
     for m in as_vec3_int:
-        assert (
-            log2(m) % 1 == 0
-        ), f"Mag components must be power of 2, got {m} in {as_vec3_int}."
+        assert log2(m) % 1 == 0, (
+            f"Mag components must be power of 2, got {m} in {as_vec3_int}."
+        )
 
     return as_vec3_int
 

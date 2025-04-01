@@ -162,9 +162,9 @@ class BoundingBox(NDBoundingBox):
         """This function extracts a bounding box in the format `x_y_z_sx_sy_xz` which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
-        assert (
-            match is not None
-        ), f"Could not extract bounding box from {checkpoint_name}"
+        assert match is not None, (
+            f"Could not extract bounding box from {checkpoint_name}"
+        )
         bbox_tuple = tuple(int(value) for value in match.group().split("_"))
         return cls.from_tuple6(cast(tuple[int, int, int, int, int, int], bbox_tuple))
 
@@ -318,12 +318,12 @@ class BoundingBox(NDBoundingBox):
         """
         mag_vec = mag.to_vec3_int()
 
-        assert (
-            self.topleft % mag_vec == Vec3Int.zeros()
-        ), f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
-        assert (
-            self.bottomright % mag_vec == Vec3Int.zeros()
-        ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+        assert self.topleft % mag_vec == Vec3Int.zeros(), (
+            f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+        )
+        assert self.bottomright % mag_vec == Vec3Int.zeros(), (
+            f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+        )
 
         return attr.evolve(
             self,
@@ -389,9 +389,9 @@ class BoundingBox(NDBoundingBox):
         Note that the point may have float coordinates in the ndarray case"""
 
         if isinstance(coord, np.ndarray):
-            assert (
-                coord.shape == (3,)
-            ), f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
+            assert coord.shape == (3,), (
+                f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
+            )
             return cast(
                 bool,
                 np.all(coord >= self.topleft) and np.all(coord < self.bottomright),
@@ -440,9 +440,9 @@ class BoundingBox(NDBoundingBox):
         start_adjust = np.array([0, 0, 0])
         if chunk_border_alignments is not None:
             chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
-            assert np.all(
-                chunk_shape % chunk_border_alignments_array == 0
-            ), f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+            assert np.all(chunk_shape % chunk_border_alignments_array == 0), (
+                f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+            )
 
             # Move the start to be aligned correctly. This doesn't actually change
             # the start of the first chunk, because we'll intersect with `self`,

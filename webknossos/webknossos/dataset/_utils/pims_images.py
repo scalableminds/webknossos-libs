@@ -100,9 +100,9 @@ class PimsImages:
         #######################
 
         with self._open_images() as images:
-            assert isinstance(
-                images, pims.FramesSequence
-            ), f"{type(images)} does not inherit from pims.FramesSequence"
+            assert isinstance(images, pims.FramesSequence), (
+                f"{type(images)} does not inherit from pims.FramesSequence"
+            )
             self.dtype = images.dtype
 
             if isinstance(images, pims.FramesSequenceND):
@@ -250,9 +250,9 @@ class PimsImages:
 
         self._first_n_channels = None
         if self._channel is not None:
-            assert (
-                self._channel < self.num_channels
-            ), f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
+            assert self._channel < self.num_channels, (
+                f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
+            )
             self.num_channels = 1
         else:
             if self.num_channels == 2:
@@ -509,7 +509,9 @@ class PimsImages:
                 size == 1
                 for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
                 if axis not in ("x", "y", "z")
-            ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
+            ), (
+                "The delivered BoundingBox has to be flat except for x,y and z dimension."
+            )
 
             # z_start and z_end are relative to the bounding box of the mag_view
             # to access the correct data from the images
@@ -676,9 +678,9 @@ def _recursive_subclasses(cls: C) -> list[C]:
     ]
 
 
-def _get_all_pims_handlers() -> (
-    Iterable[type[pims.FramesSequence | pims.FramesSequenceND]]
-):
+def _get_all_pims_handlers() -> Iterable[
+    type[pims.FramesSequence | pims.FramesSequenceND]
+]:
     return chain(
         _recursive_subclasses(pims.FramesSequence),
         _recursive_subclasses(pims.FramesSequenceND),

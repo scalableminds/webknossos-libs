@@ -53,9 +53,9 @@ def calculate_mags_to_downsample(
             for mag in layer.mags.keys()
         )
     mags_to_align_with_by_max_dim = {mag.max_dim: mag for mag in mags_to_align_with}
-    assert len(mags_to_align_with) == len(
-        mags_to_align_with_by_max_dim
-    ), "Some layers contain different values for the same mag, this is not allowed."
+    assert len(mags_to_align_with) == len(mags_to_align_with_by_max_dim), (
+        "Some layers contain different values for the same mag, this is not allowed."
+    )
     while current_mag < coarsest_mag:
         if current_mag.max_dim * 2 in mags_to_align_with_by_max_dim:
             current_mag = mags_to_align_with_by_max_dim[current_mag.max_dim * 2]

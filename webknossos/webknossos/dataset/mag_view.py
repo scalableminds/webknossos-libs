@@ -270,9 +270,9 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(
-            array_wrapper, TensorStoreArray
-        ), f"Expected TensorStoreArray, got {type(array_wrapper)}"  # for typechecking
+        assert isinstance(array_wrapper, TensorStoreArray), (
+            f"Expected TensorStoreArray, got {type(array_wrapper)}"
+        )  # for typechecking
         return array_wrapper._array
 
     def write(
@@ -487,9 +487,9 @@ class MagView(View):
                 logging.info(f"Mag {self.name} is already compressed")
                 return
             else:
-                assert is_fs_path(
-                    path
-                ), "Cannot compress a remote mag without `target_path`."
+                assert is_fs_path(path), (
+                    "Cannot compress a remote mag without `target_path`."
+                )
         else:
             target_path = UPath(target_path)
 
@@ -589,15 +589,15 @@ class MagView(View):
             - Merging is parallelized using the provided executor
             - Updates layer bounding box if necessary
         """
-        assert all(
-            other.info.chunks_per_shard.to_np() == 1
-        ), "volume annotation must have file_len=1"
-        assert (
-            self.info.voxel_type == other.info.voxel_type
-        ), "Volume annotation must have same dtype as fallback layer"
-        assert (
-            self.mag == other.mag
-        ), f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+        assert all(other.info.chunks_per_shard.to_np() == 1), (
+            "volume annotation must have file_len=1"
+        )
+        assert self.info.voxel_type == other.info.voxel_type, (
+            "Volume annotation must have same dtype as fallback layer"
+        )
+        assert self.mag == other.mag, (
+            f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+        )
 
         logging.info("Scan disk for annotation shards.")
         bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
