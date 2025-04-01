@@ -8,6 +8,7 @@ from .comment import Comment
 from .edge import Edge
 from .group import Group
 from .meta import Meta
+from .metadata_entry import MetadataEntry
 from .node import Node
 from .parameters import Parameters
 from .segment import Segment
@@ -141,6 +142,21 @@ class Nml(NamedTuple):
                     if volumes[-1].segments is None:
                         volumes[-1].segments = []
                     volumes[-1].segments.append(segment)
+                elif elem.tag == "metadataEntry":
+                    metadata_entry = MetadataEntry._parse(elem)
+                    if element_stack[-3].tag == "thing":
+                        # Metadata for a tree
+                        assert current_tree is not None, (
+                            "Metadata entry found outside of a tree"
+                        )
+                        current_tree.metadata.append(metadata_entry)
+                    elif element_stack[-3].tag == "segment":
+                        # Metadata for a segment
+                        volumes[-1].segments[-1].metadata.append(metadata_entry)
+                    else:
+                        raise ValueError(
+                            f"Metadata entry found in unexpected location: {elem.element_stack[-3].tag}"
+                        )
             elif event == "end":
                 if elem.tag == "parameters":
                     parameters = Parameters._parse(elem)

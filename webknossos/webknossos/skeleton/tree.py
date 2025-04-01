@@ -1,4 +1,4 @@
-from collections.abc import Iterator, MutableMapping
+from collections.abc import Iterator, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any
 
 import networkx as nx
@@ -149,6 +149,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Vector4 | None = None,
         enforced_id: int | None = None,  # noqa: ARG002 Unused method argument: `enforced_id`
+        metadata: dict[str, str | int | float | Sequence[str]] = {},
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -161,6 +162,7 @@ class Tree(nx.Graph):
         self.name = name
         self.group = group
         self.color = color
+        self.metadata = metadata
 
         # only used internally
         self._skeleton = skeleton
@@ -172,6 +174,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Vector4 | None = None,  # noqa: ARG004 Unused static method argument: `color`
         enforced_id: int | None = None,
+        metadata: dict[str, str | int | float | Sequence[str]] = {},  # noqa: ARG004 Unused static method argument: `metadata`
     ) -> "Tree":
         self = super().__new__(cls)
 

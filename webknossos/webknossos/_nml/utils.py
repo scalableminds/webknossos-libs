@@ -22,3 +22,9 @@ def as_int_unless_none(val: str | None) -> int | None:
     if val is None:
         return None
     return int(val)
+
+
+def as_float_unless_none(val: str | None) -> float | None:
+    if val is None:
+        return None
+    return float(val)

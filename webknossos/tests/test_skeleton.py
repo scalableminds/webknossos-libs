@@ -285,16 +285,19 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
   <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="3" name="my_other_tree">
     <nodes />
     <edges />
+    <metadata />
   </thing>
   <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" id="4" name="top_level_tree">
     <nodes />
     <edges />
+    <metadata />
   </thing>
   <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="9" name="my_tree">
     <nodes>
       <node id="2" x="2.0" y="4.0" z="6.0" />
     </nodes>
     <edges />
+    <metadata />
   </thing>
   <branchpoints />
   <comments />

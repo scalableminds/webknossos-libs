@@ -1,5 +1,5 @@
 import copy
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, Any, Union, cast
 
 import attr
@@ -113,6 +113,7 @@ class Group:
         name_or_tree: str | Tree,
         color: Vector4 | Vector3 | None = None,
         _enforced_id: int | None = None,
+        metadata: dict[str, str | int | float | Sequence[str]] = {},
     ) -> Tree:
         """Adds a new tree or copies an existing tree to this group.
 
@@ -154,6 +155,7 @@ class Group:
                 group=self,
                 skeleton=self._skeleton,
                 enforced_id=_enforced_id,
+                metadata=metadata,
             )
             self._child_trees.add(new_tree)
 

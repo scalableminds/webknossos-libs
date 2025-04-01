@@ -43,7 +43,7 @@ import json
 import logging
 import re
 import warnings
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
@@ -94,6 +94,7 @@ class SegmentInformation:
     name: str | None
     anchor_position: Vec3Int | None
     color: Vector4 | None
+    metadata: dict[str, str | int | float | Sequence[str]]
 
 
 @attr.define
@@ -588,6 +589,7 @@ class Annotation:
                         name=segment.name,
                         anchor_position=segment.anchor_position,
                         color=segment.color,
+                        metadata={i.key: i.value for i in segment.metadata},
                     )
             volume_layers.append(
                 _VolumeLayer(
