@@ -58,7 +58,7 @@ def test_buffered_slice_writer() -> None:
     )
     # check if the data are correct
     test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
-    for i in np.arange(35):
+    for i in range(35):
         test_img_3d[:, :, i] = test_img
     assert np.array_equal(test_img_3d, read_data), (
         "The data from the disk is not the same as the data that should be written."
