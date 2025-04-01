@@ -12,7 +12,8 @@ For the WEBKNOSSOS server, please refer to https://github.com/scalableminds/webk
 
 ## Features
 
-- easy-to-use dataset API for reading/writing/editing raw 2D/3D image data and volume annotations/segmentation in WEBKNOSSOS wrap (*.wkw) format
+- easy-to-use dataset API for reading/writing/editing raw 2D/3D image data and volume annotations/segmentation in WEBKNOSSOS-compatiböe format
+    - convert from other formats, e.g. tiff stacks
     - add/remove layers
     - update metadata (`datasource-properties.json`) 
     - up/downsample layers
