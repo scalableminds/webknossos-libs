@@ -1,6 +1,6 @@
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from os.path import relpath
@@ -8,14 +8,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import (
     Any,
-    Dict,
-    Iterator,
-    List,
     Literal,
-    Optional,
-    Tuple,
-    Type,
-    Union,
 )
 from urllib.parse import urlparse
 
@@ -46,7 +39,7 @@ class ArrayInfo:
     chunk_shape: Vec3Int
     shard_shape: Vec3Int
     shape: VecInt = VecInt(c=1, x=1, y=1, z=1)
-    dimension_names: Tuple[str, ...] = ("c", "x", "y", "z")
+    dimension_names: tuple[str, ...] = ("c", "x", "y", "z")
     axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
     compression_mode: bool = False
 
@@ -110,7 +103,7 @@ class BaseArray(ABC):
         pass
 
     @staticmethod
-    def get_class(data_format: DataFormat) -> Type["BaseArray"]:
+    def get_class(data_format: DataFormat) -> type["BaseArray"]:
         if data_format == DataFormat.WKW:
             return WKWArray
         if data_format == DataFormat.Zarr3:
@@ -123,7 +116,7 @@ class BaseArray(ABC):
 class WKWArray(BaseArray):
     data_format = DataFormat.WKW
 
-    _cached_wkw_dataset: Optional[wkw.Dataset]
+    _cached_wkw_dataset: wkw.Dataset | None
 
     def __init__(self, path: Path):
         super().__init__(path)
@@ -158,22 +151,28 @@ class WKWArray(BaseArray):
     def create(cls, path: Path, array_info: ArrayInfo) -> "WKWArray":
         assert array_info.data_format == cls.data_format
 
-        assert array_info.chunk_shape.is_uniform(), f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
-        assert _is_power_of_two(
-            array_info.chunk_shape.x
-        ), f"`chunk_shape` needs to be a power of 2 for WKW storage. Got {array_info.chunk_shape.x}."
-        assert (
-            1 <= array_info.chunk_shape.x and array_info.chunk_shape.x <= 32768
-        ), f"`chunk_shape` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunk_shape.x}."
+        assert array_info.chunk_shape.is_uniform(), (
+            f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
+        )
+        assert _is_power_of_two(array_info.chunk_shape.x), (
+            f"`chunk_shape` needs to be a power of 2 for WKW storage. Got {array_info.chunk_shape.x}."
+        )
+        assert 1 <= array_info.chunk_shape.x and array_info.chunk_shape.x <= 32768, (
+            f"`chunk_shape` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunk_shape.x}."
+        )
 
-        assert array_info.chunks_per_shard.is_uniform(), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
-        assert _is_power_of_two(
-            array_info.chunks_per_shard.x
-        ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {array_info.chunks_per_shard.x}."
+        assert array_info.chunks_per_shard.is_uniform(), (
+            f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
+        )
+        assert _is_power_of_two(array_info.chunks_per_shard.x), (
+            f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {array_info.chunks_per_shard.x}."
+        )
         assert (
             1 <= array_info.chunks_per_shard.x
             and array_info.chunks_per_shard.x <= 32768
-        ), f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunks_per_shard.x}."
+        ), (
+            f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunks_per_shard.x}."
+        )
 
         try:
             wkw.Dataset.create(
@@ -251,23 +250,34 @@ class WKWArray(BaseArray):
     def __del__(self) -> None:
         del self._cached_wkw_dataset
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         d = dict(self.__dict__)
         del d["_cached_wkw_dataset"]
         return d
 
-    def __setstate__(self, d: Dict[str, Any]) -> None:
+    def __setstate__(self, d: dict[str, Any]) -> None:
         d["_cached_wkw_dataset"] = None
         self.__dict__ = d
 
 
 class AWSCredentialManager:
-    entries: Dict[int, Tuple[str, str]]
-    credentials_file_path: Path
+    entries: dict[int, tuple[str, str]]
+    folder_path: Path
 
-    def __init__(self, credentials_file_path: Path) -> None:
+    def __init__(self, folder_path: Path) -> None:
         self.entries = {}
-        self.credentials_file_path = credentials_file_path
+        self.folder_path = folder_path
+
+        self.credentials_file_path.touch()
+        self.config_file_path.write_text("[default]\n")
+
+    @property
+    def credentials_file_path(self) -> Path:
+        return self.folder_path / "credentials"
+
+    @property
+    def config_file_path(self) -> Path:
+        return self.folder_path / "config"
 
     def _dump_credentials(self) -> None:
         self.credentials_file_path.write_text(
@@ -282,33 +292,32 @@ class AWSCredentialManager:
             )
         )
 
-    def add(self, access_key_id: str, secret_access_key: str) -> Dict[str, str]:
+    def add(self, access_key_id: str, secret_access_key: str) -> dict[str, str]:
         key_tuple = (access_key_id, secret_access_key)
         key_hash = hash(key_tuple)
         self.entries[key_hash] = key_tuple
         self._dump_credentials()
         return {
+            "type": "profile",
             "profile": f"profile-{key_hash}",
-            "filename": str(self.credentials_file_path),
+            "config_file": str(self.config_file_path),
+            "credentials_file": str(self.credentials_file_path),
         }
 
 
 @lru_cache
-def _aws_credential_file() -> Path:
-    temp_dir_path = Path(mkdtemp())
-    credentials_file_path = Path(temp_dir_path / "aws_credentials")
-    credentials_file_path.touch()
-    return credentials_file_path
+def _aws_credential_folder() -> Path:
+    return Path(mkdtemp())
 
 
-_aws_credential_manager = AWSCredentialManager(_aws_credential_file())
+_aws_credential_manager = AWSCredentialManager(_aws_credential_folder())
 
 
 class TensorStoreArray(BaseArray):
-    _cached_array: Optional[tensorstore.TensorStore]
+    _cached_array: tensorstore.TensorStore | None
 
     def __init__(
-        self, path: Path, _cached_array: Optional[tensorstore.TensorStore] = None
+        self, path: Path, _cached_array: tensorstore.TensorStore | None = None
     ):
         super().__init__(path)
         self._cached_array = _cached_array
@@ -403,7 +412,7 @@ class TensorStoreArray(BaseArray):
         )
 
     @staticmethod
-    def _make_kvstore(path: Path) -> Union[str, Dict[str, Union[str, List[str]]]]:
+    def _make_kvstore(path: Path) -> str | dict[str, str | list[str]]:
         if is_fs_path(path):
             return {"driver": "file", "path": str(path)}
         elif isinstance(path, UPath) and path.protocol in ("http", "https"):
@@ -430,6 +439,8 @@ class TensorStoreArray(BaseArray):
                 kvstore_spec["aws_credentials"] = _aws_credential_manager.add(
                     path.storage_options["key"], path.storage_options["secret"]
                 )
+            else:
+                kvstore_spec["aws_credentials"] = {"type": "default"}
             return kvstore_spec
         else:
             return {
@@ -540,9 +551,9 @@ class TensorStoreArray(BaseArray):
             # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
             data = data.reshape((1,) + data.shape)
 
-        assert (
-            data.ndim == len(bbox) + 1
-        ), "The data has to have the same number of dimensions as the bounding box."
+        assert data.ndim == len(bbox) + 1, (
+            "The data has to have the same number of dimensions as the bounding box."
+        )
 
         array = self._array
 
@@ -561,7 +572,7 @@ class TensorStoreArray(BaseArray):
     ) -> Iterator[BoundingBox]:
         _type, separator = self._chunk_key_encoding()
 
-        def _try_parse_ints(vec: Iterable[Any]) -> Optional[list[int]]:
+        def _try_parse_ints(vec: Iterable[Any]) -> list[int] | None:
             output = []
             for value in vec:
                 try:
@@ -636,12 +647,12 @@ class TensorStoreArray(BaseArray):
     def __del__(self) -> None:
         del self._cached_array
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         d = dict(self.__dict__)
         del d[""]
         return d
 
-    def __setstate__(self, d: Dict[str, Any]) -> None:
+    def __setstate__(self, d: dict[str, Any]) -> None:
         d[""] = None
         self.__dict__ = d
 
@@ -687,7 +698,7 @@ class Zarr3Array(TensorStoreArray):
         )
 
     @staticmethod
-    def _has_compression_codecs(codecs: List[Dict[str, str]]) -> bool:
+    def _has_compression_codecs(codecs: list[dict[str, str]]) -> bool:
         return any(c["name"] in ("blosc", "gzip", "zstd") for c in codecs)
 
     @classmethod
@@ -812,9 +823,9 @@ class Zarr2Array(TensorStoreArray):
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "Zarr2Array":
         assert array_info.data_format == DataFormat.Zarr
-        assert array_info.chunks_per_shard == Vec3Int.full(
-            1
-        ), "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
+        assert array_info.chunks_per_shard == Vec3Int.full(1), (
+            "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
+        )
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]

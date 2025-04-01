@@ -5,23 +5,15 @@ import os
 import re
 import sys
 import threading
+from collections.abc import Callable, Iterable
 from concurrent.futures import Future
 from functools import lru_cache
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
+    Literal,
     TypeVar,
-    Union,
     cast,
 )
-
-from typing_extensions import Literal
 
 from cluster_tools._utils.call import call, chcall
 from cluster_tools._utils.string_ import random_string
@@ -80,10 +72,10 @@ class SlurmExecutor(ClusterExecutor):
         self,
         debug: bool = False,
         keep_logs: bool = True,
-        cfut_dir: Optional[str] = None,
-        job_resources: Optional[Dict[str, Any]] = None,
-        job_name: Optional[str] = None,
-        additional_setup_lines: Optional[List[str]] = None,
+        cfut_dir: str | None = None,
+        job_resources: dict[str, Any] | None = None,
+        job_name: str | None = None,
+        additional_setup_lines: list[str] | None = None,
         **kwargs: Any,
     ):
         super().__init__(
@@ -95,21 +87,21 @@ class SlurmExecutor(ClusterExecutor):
             additional_setup_lines=additional_setup_lines,
             **kwargs,
         )
-        self.submit_threads: List["_JobSubmitThread"] = []
+        self.submit_threads: list[_JobSubmitThread] = []
 
     @classmethod
     def executor_key(cls) -> str:
         return "slurm"
 
     @staticmethod
-    def get_job_array_index() -> Optional[int]:
+    def get_job_array_index() -> int | None:
         try:
             return int(os.environ["SLURM_ARRAY_TASK_ID"])
         except KeyError:
             return None
 
     @staticmethod
-    def get_job_array_id() -> Optional[str]:
+    def get_job_array_id() -> str | None:
         try:
             return os.environ.get("SLURM_ARRAY_JOB_ID")
         except KeyError:
@@ -209,7 +201,7 @@ class SlurmExecutor(ClusterExecutor):
         return max_submit_jobs
 
     @staticmethod
-    def get_number_of_submitted_jobs(state: Optional[str] = None) -> int:
+    def get_number_of_submitted_jobs(state: str | None = None) -> int:
         number_of_submitted_jobs = 0
         state_string = f"-t {state}" if state else ""
         # --array so that each job array element is displayed on a separate line and -h to hide the header
@@ -235,9 +227,7 @@ class SlurmExecutor(ClusterExecutor):
         the job ID.
         """
 
-        filename = cls.get_temp_file_path(
-            cfut_dir, "_temp_slurm{}.sh".format(random_string())
-        )
+        filename = cls.get_temp_file_path(cfut_dir, f"_temp_slurm{random_string()}.sh")
         with open(filename, "w", encoding="utf-8") as f:
             f.write(job)
 
@@ -245,7 +235,7 @@ class SlurmExecutor(ClusterExecutor):
         # Can be removed if https://bugs.schedmd.com/show_bug.cgi?id=14298 is ever fixed (currently won't fix)
         os.environ.pop("SLURM_CPU_BIND", None)
 
-        job_id, stderr = chcall("sbatch --parsable {}".format(filename))
+        job_id, stderr = chcall(f"sbatch --parsable {filename}")
         os.unlink(filename)
 
         if len(stderr) > 0:
@@ -258,7 +248,7 @@ class SlurmExecutor(ClusterExecutor):
             submit_thread.stop()
 
         # Jobs with a NOT_YET_SUBMITTED_STATE have not been submitted to the cluster yet
-        scheduled_job_ids: List[Union[int, str]] = [
+        scheduled_job_ids: list[int | str] = [
             job_id
             for job_id, job_state in self.jobs.items()
             if job_state != NOT_YET_SUBMITTED_STATE
@@ -292,10 +282,10 @@ class SlurmExecutor(ClusterExecutor):
     def inner_submit(
         self,
         cmdline: str,
-        job_name: Optional[str] = None,
-        additional_setup_lines: Optional[List[str]] = None,
-        job_count: Optional[int] = None,
-    ) -> Tuple[List[Future[str]], List[Tuple[int, int]]]:
+        job_name: str | None = None,
+        additional_setup_lines: list[str] | None = None,
+        job_count: int | None = None,
+    ) -> tuple[list[Future[str]], list[tuple[int, int]]]:
         """Starts a Slurm job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -309,19 +299,19 @@ class SlurmExecutor(ClusterExecutor):
         job_resources_lines = []
         if self.job_resources is not None:
             for resource, value in self.job_resources.items():
-                job_resources_lines += ["#SBATCH --{}={}".format(resource, value)]
+                job_resources_lines += [f"#SBATCH --{resource}={value}"]
 
         max_array_size = self.get_max_array_size()
         max_submit_jobs = self.get_max_submit_jobs()
         max_running_size = self.get_max_running_size()
         slurm_max_running_size_str = (
-            "%{}".format(max_running_size) if max_running_size > 0 else ""
+            f"%{max_running_size}" if max_running_size > 0 else ""
         )
         # Only ever submit at most max_submit_jobs and max_array_size jobs at once (but at least one).
         batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
         scripts = []
-        job_id_futures: List[Future[str]] = []
+        job_id_futures: list[Future[str]] = []
         ranges = []
         number_of_jobs = job_count if job_count is not None else 1
         for job_index_start in range(0, number_of_jobs, batch_size):
@@ -331,20 +321,20 @@ class SlurmExecutor(ClusterExecutor):
 
             job_array_line = ""
             if job_count is not None:
-                job_array_line = "#SBATCH --array=0-{}{}".format(
-                    array_index_end, slurm_max_running_size_str
+                job_array_line = (
+                    f"#SBATCH --array=0-{array_index_end}{slurm_max_running_size_str}"
                 )
             script_lines = (
                 [
                     "#!/bin/sh",
-                    "#SBATCH --output={}".format(log_path),
-                    '#SBATCH --job-name "{}"'.format(job_name),
+                    f"#SBATCH --output={log_path}",
+                    f'#SBATCH --job-name "{job_name}"',
                     job_array_line,
                 ]
                 + job_resources_lines
                 + [
                     *additional_setup_lines,
-                    "srun {} {}".format(cmdline, job_index_start),
+                    f"srun {cmdline} {job_index_start}",
                 ]
             )
 
@@ -391,7 +381,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return "ignore"
 
-        def matches_states(slurm_states: List[str]) -> bool:
+        def matches_states(slurm_states: list[str]) -> bool:
             return len(list(set(job_states) & set(slurm_states))) > 0
 
         if matches_states(SLURM_STATES["Failure"]):
@@ -400,24 +390,20 @@ class SlurmExecutor(ClusterExecutor):
             return "ignore"
         elif matches_states(SLURM_STATES["Unclear"]):
             logging.warning(
-                "The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(
-                    job_id_with_index, job_states
-                )
+                f"The job state for {job_id_with_index} is {job_states}. It's unclear whether the job will recover. Will wait further"
             )
             return "ignore"
         elif matches_states(SLURM_STATES["Success"]):
             return "completed"
         else:
             logging.error(
-                "Unhandled slurm job state for job id {}? {}".format(
-                    job_id_with_index, job_states
-                )
+                f"Unhandled slurm job state for job id {job_id_with_index}? {job_states}"
             )
             return "ignore"
 
     def investigate_failed_job(
         self, job_id_with_index: str
-    ) -> Optional[Tuple[str, Type[RemoteException]]]:
+    ) -> tuple[str, type[RemoteException]] | None:
         # This function tries to find the reason for a failed job by first checking whether
         # the job run time exceeded the specified time limit. If that is not the case, it
         # checks whether the job used too much RAM. As a last resort, it checks the exit code
@@ -426,7 +412,7 @@ class SlurmExecutor(ClusterExecutor):
 
         def parse_key_value_pairs(
             text: str, pair_delimiter: str, key_value_delimiter: str
-        ) -> Dict[str, str]:
+        ) -> dict[str, str]:
             properties = {}
             for key_value_pair in text.split(pair_delimiter):
                 if key_value_delimiter not in key_value_pair:
@@ -463,8 +449,8 @@ class SlurmExecutor(ClusterExecutor):
         return self._investigate_exit_code(properties)
 
     def _investigate_time_limit(
-        self, properties: Dict[str, str]
-    ) -> Optional[Tuple[str, Type[RemoteTimeLimitException]]]:
+        self, properties: dict[str, str]
+    ) -> tuple[str, type[RemoteTimeLimitException]] | None:
         reason = properties.get("Reason", None)
         if not reason:
             return None
@@ -480,8 +466,8 @@ class SlurmExecutor(ClusterExecutor):
         return (reason, RemoteTimeLimitException)
 
     def _investigate_memory_consumption(
-        self, properties: Dict[str, str]
-    ) -> Optional[Tuple[str, Type[RemoteOutOfMemoryException]]]:
+        self, properties: dict[str, str]
+    ) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
         if not properties.get("Memory Efficiency", None):
             return None
 
@@ -507,8 +493,8 @@ class SlurmExecutor(ClusterExecutor):
         return (reason, RemoteOutOfMemoryException)
 
     def _investigate_exit_code(
-        self, properties: Dict[str, str]
-    ) -> Optional[Tuple[str, Type[RemoteResourceLimitException]]]:
+        self, properties: dict[str, str]
+    ) -> tuple[str, type[RemoteResourceLimitException]] | None:
         if not properties.get("State", None):
             return None
         # For exit codes >128, subtract 128 to obtain the linux signal number which is SIGKILL (9) in this case
@@ -541,9 +527,9 @@ class SlurmExecutor(ClusterExecutor):
 class _JobSubmitThread(threading.Thread):
     def __init__(
         self,
-        scripts: List[str],
-        job_sizes: List[int],
-        futures: List[Future[str]],
+        scripts: list[str],
+        job_sizes: list[int],
+        futures: list[Future[str]],
         cfut_dir: str,
     ):
         super().__init__()

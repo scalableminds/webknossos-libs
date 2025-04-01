@@ -1,7 +1,6 @@
 import difflib
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional
 
 import networkx as nx
 import pytest
@@ -204,7 +203,7 @@ def test_nml_generation(tmp_path: Path) -> None:
                     assert old_edge[1].position == new_edge[1].position
 
 
-def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:
+def diff_lines(lines_a: list[str], lines_b: list[str]) -> list[str]:
     diff = list(
         difflib.unified_diff(
             lines_a,
@@ -217,12 +216,12 @@ def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:
 
 
 def diff_files(path_a: PathLike, path_b: PathLike) -> None:
-    with open(path_a, "r", encoding="utf-8") as file_a:
-        with open(path_b, "r", encoding="utf-8") as file_b:
+    with open(path_a, encoding="utf-8") as file_a:
+        with open(path_b, encoding="utf-8") as file_b:
             diff = diff_lines(file_a.readlines(), file_b.readlines())
-            assert (
-                len(diff) == 0
-            ), f"Files {path_a} and {path_b} are not equal:\n{''.join(diff)}"
+            assert len(diff) == 0, (
+                f"Files {path_a} and {path_b} are not equal:\n{''.join(diff)}"
+            )
 
 
 def test_export_to_nml(tmp_path: Path) -> None:
@@ -240,9 +239,9 @@ def test_import_from_nml() -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_skeleton_snapshot.nml"
     loaded_nml = wk.Skeleton.load(snapshot_path)
 
-    assert (
-        nml == loaded_nml
-    ), "NML created by create_dummy_skeleton() should equal NML loaded from disk."
+    assert nml == loaded_nml, (
+        "NML created by create_dummy_skeleton() should equal NML loaded from disk."
+    )
 
 
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
@@ -260,11 +259,11 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 </things>
 """
     nml.save(nml_path)
-    with open(nml_path, "r", encoding="utf-8") as f:
+    with open(nml_path, encoding="utf-8") as f:
         diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
-        assert (
-            len(diff) == 0
-        ), f"Written nml does not look as expected:\n{''.join(diff)}"
+        assert len(diff) == 0, (
+            f"Written nml does not look as expected:\n{''.join(diff)}"
+        )
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
         "Skeleton(_child_groups=<No child groups>, _child_trees=<No child trees>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
@@ -308,13 +307,13 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 </things>
 """
     nml.save(nml_path)
-    with open(nml_path, "r", encoding="utf-8") as f:
+    with open(nml_path, encoding="utf-8") as f:
         diff = diff_lines(
             f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
         )
-        assert (
-            len(diff) == 0
-        ), f"Written nml does not look as expected:\n{''.join(diff)}"
+        assert len(diff) == 0, (
+            f"Written nml does not look as expected:\n{''.join(diff)}"
+        )
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
         "Skeleton(_child_groups=<1 child group>, _child_trees=<1 child tree>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
@@ -340,7 +339,7 @@ def test_import_export_round_trip(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("layer_name", [None, "my_layer"])
-def test_volume_dump_round_trip(tmp_path: Path, layer_name: Optional[str]) -> None:
+def test_volume_dump_round_trip(tmp_path: Path, layer_name: str | None) -> None:
     import xml.etree.ElementTree as ET
 
     from loxun import XmlWriter

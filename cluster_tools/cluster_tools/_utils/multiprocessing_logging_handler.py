@@ -6,11 +6,12 @@ import sys
 import threading
 import traceback
 import warnings
+from collections.abc import Callable, Sequence
 from logging import getLogger
 from logging.handlers import QueueHandler
 from queue import Empty as QueueEmpty
 from queue import Queue
-from typing import Any, Callable, List
+from typing import Any
 
 # Inspired by https://stackoverflow.com/a/894284
 
@@ -106,7 +107,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
 
 
 def _setup_logging_multiprocessing(
-    queues: List[Queue], levels: List[int], filters: List[Any]
+    queues: list[Queue], levels: list[int], filters: Sequence[Any]
 ) -> None:
     """Re-setup logging in a multiprocessing context (only needed if a start_method other than
     fork is used) by setting up QueueHandler loggers for each queue and level

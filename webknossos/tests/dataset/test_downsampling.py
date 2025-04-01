@@ -1,6 +1,5 @@
 import warnings
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import numpy as np
 import pytest
@@ -248,10 +247,10 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
     ],
 )
 def test_mag_calculation(
-    voxel_size: Optional[Tuple[float, float, float]],
-    finest_mag: Tuple[int, int, int],
-    coarsest_mag: Tuple[int, int, int],
-    scheme: List[Tuple[int, int, int]],
+    voxel_size: tuple[float, float, float] | None,
+    finest_mag: tuple[int, int, int],
+    coarsest_mag: tuple[int, int, int],
+    scheme: list[tuple[int, int, int]],
 ) -> None:
     # This test does not test the exact input of the user:
     # If a user does not specify a max_mag, then a default is calculated.
@@ -293,9 +292,9 @@ def test_mag_calculation(
 )
 @pytest.mark.timeout(1)
 def test_invalid_mag_calculation(
-    voxel_size: Optional[Tuple[float, float, float]],
-    finest_mag: Tuple[int, int, int],
-    coarsest_mag: Tuple[int, int, int],
+    voxel_size: tuple[float, float, float] | None,
+    finest_mag: tuple[int, int, int],
+    coarsest_mag: tuple[int, int, int],
 ) -> None:
     # This test does not test the exact input of the user:
     # If a user does not specify a max_mag, then a default is calculated.

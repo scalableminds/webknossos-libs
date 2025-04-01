@@ -1,8 +1,9 @@
 import logging
 import warnings
+from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Union
 from uuid import uuid4
 
 import numpy as np
@@ -36,7 +37,7 @@ def _find_mag_path(
     dataset_path: Path,
     layer_name: str,
     mag_name: str,
-    path: Optional[LazyPath] = None,
+    path: LazyPath | None = None,
 ) -> LazyPath:
     if path is not None:
         return path
@@ -47,7 +48,7 @@ def _find_mag_path(
     return LazyPath(short_mag_file_path, long_mag_file_path)
 
 
-def _compress_cube_job(args: Tuple[View, View, int]) -> None:
+def _compress_cube_job(args: tuple[View, View, int]) -> None:
     source_view, target_view, _i = args
     target_view.write(
         source_view.read(), absolute_bounding_box=target_view.bounding_box
@@ -123,10 +124,10 @@ class MagView(View):
         mag: Mag,
         *,
         chunk_shape: Vec3Int,
-        shard_shape: Optional[Vec3Int] = None,
-        chunks_per_shard: Optional[Vec3Int] = None,
+        shard_shape: Vec3Int | None = None,
+        chunks_per_shard: Vec3Int | None = None,
         compression_mode: bool,
-        path: Optional[LazyPath] = None,
+        path: LazyPath | None = None,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -269,9 +270,9 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(
-            array_wrapper, TensorStoreArray
-        ), f"Expected TensorStoreArray, got {type(array_wrapper)}"  # for typechecking
+        assert isinstance(array_wrapper, TensorStoreArray), (
+            f"Expected TensorStoreArray, got {type(array_wrapper)}"
+        )  # for typechecking
         return array_wrapper._array
 
     def write(
@@ -280,10 +281,10 @@ class MagView(View):
         *,
         allow_resize: bool = False,
         allow_unaligned: bool = False,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
     ) -> None:
         """Write volumetric data to the magnification level.
 
@@ -303,13 +304,13 @@ class MagView(View):
             allow_unaligned (bool, optional): If True, allows writing data to without
                 being aligned to the shard shape.
                 Defaults to False.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Examples:
@@ -413,7 +414,7 @@ class MagView(View):
 
     def get_views_on_disk(
         self,
-        read_only: Optional[bool] = None,
+        read_only: bool | None = None,
     ) -> Iterator[View]:
         """Yields a view for each file on disk for efficient parallelization.
 
@@ -453,8 +454,8 @@ class MagView(View):
     def compress(
         self,
         *,
-        target_path: Optional[Union[str, Path]] = None,
-        executor: Optional[Executor] = None,
+        target_path: str | Path | None = None,
+        executor: Executor | None = None,
     ) -> None:
         """Compresses the files on disk.
 
@@ -486,9 +487,9 @@ class MagView(View):
                 logging.info(f"Mag {self.name} is already compressed")
                 return
             else:
-                assert is_fs_path(
-                    path
-                ), "Cannot compress a remote mag without `target_path`."
+                assert is_fs_path(path), (
+                    "Cannot compress a remote mag without `target_path`."
+                )
         else:
             target_path = UPath(target_path)
 
@@ -519,11 +520,7 @@ class MagView(View):
             compress=True,
         )
 
-        logging.info(
-            "Compressing mag {0} in '{1}'".format(
-                self.name, str(uncompressed_full_path)
-            )
-        )
+        logging.info(f"Compressing mag {self.name} in '{str(uncompressed_full_path)}'")
         with get_executor_for_args(None, executor) as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()
@@ -592,15 +589,15 @@ class MagView(View):
             - Merging is parallelized using the provided executor
             - Updates layer bounding box if necessary
         """
-        assert all(
-            other.info.chunks_per_shard.to_np() == 1
-        ), "volume annotation must have file_len=1"
-        assert (
-            self.info.voxel_type == other.info.voxel_type
-        ), "Volume annotation must have same dtype as fallback layer"
-        assert (
-            self.mag == other.mag
-        ), f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+        assert all(other.info.chunks_per_shard.to_np() == 1), (
+            "volume annotation must have file_len=1"
+        )
+        assert self.info.voxel_type == other.info.voxel_type, (
+            "Volume annotation must have same dtype as fallback layer"
+        )
+        assert self.mag == other.mag, (
+            f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+        )
 
         logging.info("Scan disk for annotation shards.")
         bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
@@ -627,7 +624,7 @@ class MagView(View):
         )
 
     def merge_chunk(
-        self, args: Tuple["MagView", NDBoundingBox, List[NDBoundingBox]]
+        self, args: tuple["MagView", NDBoundingBox, list[NDBoundingBox]]
     ) -> None:
         """Merge a single chunk during parallel merge operations.
 
@@ -638,7 +635,7 @@ class MagView(View):
             args: Tuple containing:
                 - other (MagView): Source view to merge from
                 - shard (NDBoundingBox): Target shard region
-                - bboxes (List[NDBoundingBox]): List of source bounding boxes
+                - bboxes (list[NDBoundingBox]): List of source bounding boxes
         """
         other, shard, bboxes = args
         data_buffer = self.read(absolute_bounding_box=shard)[0]

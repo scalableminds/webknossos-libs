@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.7...HEAD)
 
 ### Breaking Changes
+- Dropped support for Python 3.9. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
 
 ### Added
 - Adds the field `totalFileSizeInBytes` to the dataset upload information. [#1264](https://github.com/scalableminds/webknossos-libs/pull/1264)
@@ -20,6 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a warning on import if a newer version of the `webknossos` package is available from PyPI. [#1280](https://github.com/scalableminds/webknossos-libs/pull/1280)
 
 ### Changed
+- Upgraded `tensorstore` to `0.1.72`. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
 
 ### Fixed
 

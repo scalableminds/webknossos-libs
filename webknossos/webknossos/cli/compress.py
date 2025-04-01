@@ -2,10 +2,9 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, List, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from webknossos.geometry.mag import Mag
 
@@ -25,13 +24,13 @@ def main(
         ),
     ],
     layer_name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Name of the layer to be compressed. If not provided, all layers will be compressed.",
         ),
     ] = None,
     mag: Annotated[
-        Optional[List[Mag]],
+        list[Mag] | None,
         typer.Option(
             help="Mags that should be compressed. "
             "Should be number or minus separated string (e.g. 2 or 2-2-2). "
@@ -55,7 +54,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',

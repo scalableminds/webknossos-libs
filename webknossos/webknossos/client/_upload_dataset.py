@@ -1,10 +1,11 @@
 import os
 import warnings
-from functools import lru_cache
+from collections.abc import Iterator
+from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
-from typing import Iterator, List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 from uuid import uuid4
 
 import httpx
@@ -26,8 +27,8 @@ MAXIMUM_RETRY_COUNT = 4
 class LayerToLink(NamedTuple):
     dataset_name: str
     layer_name: str
-    new_layer_name: Optional[str] = None
-    organization_id: Optional[str] = (
+    new_layer_name: str | None = None
+    organization_id: str | None = (
         None  # defaults to the user's organization before uploading
     )
 
@@ -35,13 +36,13 @@ class LayerToLink(NamedTuple):
     def from_remote_layer(
         cls,
         layer: Layer,
-        new_layer_name: Optional[str] = None,
-        organization_id: Optional[str] = None,
+        new_layer_name: str | None = None,
+        organization_id: str | None = None,
     ) -> "LayerToLink":
         ds = layer.dataset
-        assert isinstance(
-            ds, RemoteDataset
-        ), f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        assert isinstance(ds, RemoteDataset), (
+            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        )
         return cls(ds._dataset_id, layer.name, new_layer_name, organization_id)
 
     def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
@@ -54,7 +55,7 @@ class LayerToLink(NamedTuple):
         )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
     datastores = context.api_client_with_auth.datastore_list()
     for datastore in datastores:
@@ -65,8 +66,8 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
 
 def _walk(
     path: Path,
-    base_path: Optional[Path] = None,
-) -> Iterator[Tuple[Path, Path, int]]:
+    base_path: Path | None = None,
+) -> Iterator[tuple[Path, Path, int]]:
     if base_path is None:
         base_path = path
     if path.is_dir():
@@ -78,9 +79,9 @@ def _walk(
 
 def upload_dataset(
     dataset: Dataset,
-    new_dataset_name: Optional[str] = None,
-    layers_to_link: Optional[List[LayerToLink]] = None,
-    jobs: Optional[int] = None,
+    new_dataset_name: str | None = None,
+    layers_to_link: list[LayerToLink] | None = None,
+    jobs: int | None = None,
 ) -> str:
     if new_dataset_name is None:
         new_dataset_name = dataset.name
