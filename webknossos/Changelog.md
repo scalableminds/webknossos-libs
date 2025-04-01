@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.7...v2.1.0)
 
 ### Breaking Changes
 - Dropped support for Python 3.9. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
@@ -22,8 +34,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Upgraded `tensorstore` to `0.1.72`. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
-
-### Fixed
 
 
 ## [2.0.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.7) - 2025-03-26
