@@ -1,12 +1,12 @@
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from distributed import LocalCluster
 
 import cluster_tools
 
-_dask_cluster: "LocalCluster" | None = None
+_dask_cluster: Optional["LocalCluster"] = None
 
 
 def job(_arg: None) -> str:
