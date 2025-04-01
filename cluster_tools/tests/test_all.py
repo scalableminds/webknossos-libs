@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import pytest
 
@@ -30,7 +30,7 @@ def sleep(duration: float) -> float:
 
 logging.basicConfig()
 
-_dask_cluster: "LocalCluster" | None = None
+_dask_cluster: Optional["LocalCluster"] = None
 
 
 def raise_if(msg: str, _bool: bool) -> None:
