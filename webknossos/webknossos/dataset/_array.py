@@ -262,11 +262,22 @@ class WKWArray(BaseArray):
 
 class AWSCredentialManager:
     entries: dict[int, tuple[str, str]]
-    credentials_file_path: Path
+    folder_path: Path
 
-    def __init__(self, credentials_file_path: Path) -> None:
+    def __init__(self, folder_path: Path) -> None:
         self.entries = {}
-        self.credentials_file_path = credentials_file_path
+        self.folder_path = folder_path
+
+        self.credentials_file_path.touch()
+        self.config_file_path.write_text("[default]\n")
+
+    @property
+    def credentials_file_path(self) -> Path:
+        return self.folder_path / "credentials"
+
+    @property
+    def config_file_path(self) -> Path:
+        return self.folder_path / "config"
 
     def _dump_credentials(self) -> None:
         self.credentials_file_path.write_text(
@@ -289,19 +300,17 @@ class AWSCredentialManager:
         return {
             "type": "profile",
             "profile": f"profile-{key_hash}",
+            "config_file": str(self.config_file_path),
             "credentials_file": str(self.credentials_file_path),
         }
 
 
 @lru_cache
-def _aws_credential_file() -> Path:
-    temp_dir_path = Path(mkdtemp())
-    credentials_file_path = Path(temp_dir_path / "aws_credentials")
-    credentials_file_path.touch()
-    return credentials_file_path
+def _aws_credential_folder() -> Path:
+    return Path(mkdtemp())
 
 
-_aws_credential_manager = AWSCredentialManager(_aws_credential_file())
+_aws_credential_manager = AWSCredentialManager(_aws_credential_folder())
 
 
 class TensorStoreArray(BaseArray):
