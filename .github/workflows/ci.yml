@@ -217,7 +217,7 @@ jobs:
         if: ${{ matrix.python-version == '3.11' }}
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-reports-${{ matrix.group }}
+          name: coverage-report-${{ matrix.group }}
           path: "~/.local/share/coverage/${{ matrix.group }}.coverage"
           retention-days: 1  # Automatically deletes after 1 day
 
@@ -246,7 +246,7 @@ jobs:
         env:
           COVERAGE_FILE: "coverage-files/result.coverage"
         run: |
-          coverage combine coverage-files/*.coverage
+          coverage combine coverage-files/**/*.coverage
           coverage report -m
       
       - name: Cleanup temporary files
