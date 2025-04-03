@@ -212,7 +212,7 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
           COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
           UV_CACHE_DIR: ~/.uv_cache
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=term-missing
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
@@ -245,9 +245,11 @@ jobs:
           version: "0.6.3"
 
       - name: Generate coverage report
+        env:
+          COVERAGE_FILE: "~/.local/share/coverage/result.coverage"
         run: |
           uv run --frozen coverage combine ~/.local/share/coverage/*.coverage
-          uv run --frozen coverage report
+          uv run --frozen coverage report -m
 
   webknossos_cli_docker:
     needs: [cluster_tools, webknossos_linux]
