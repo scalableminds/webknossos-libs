@@ -2,10 +2,9 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..dataset import DataFormat, Dataset, LengthUnit
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
@@ -58,13 +57,13 @@ def main(
         ),
     ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     layer_name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="This name is used if only one layer is created. Otherwise this name is used as a common prefix for all layers.",
         ),
     ] = None,
     category: Annotated[
-        Optional[LayerCategory],
+        LayerCategory | None,
         typer.Option(
             help="The category of the layer that should be created.",
         ),
@@ -76,7 +75,7 @@ def main(
         ),
     ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
     name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="New name for the WEBKNOSSOS dataset "
             "(if not provided, final component of target path is used)"
@@ -92,7 +91,7 @@ def main(
         ),
     ] = DEFAULT_CHUNK_SHAPE,
     shard_shape: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Number of voxels to be stored as a shard in the output format "
             "(e.g. `1024` or `1024,1024,1024`).",
@@ -101,7 +100,7 @@ def main(
         ),
     ] = None,
     chunks_per_shard: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
             "(e.g. `32` or `32,32,32`).",
@@ -113,7 +112,7 @@ def main(
         bool, typer.Option(help="Enable compression of the target dataset.")
     ] = False,
     batch_size: Annotated[
-        Optional[int],
+        int | None,
         typer.Option(
             help="Number of images to be processed in one batch (influences RAM consumption). "
             "When creating a WKW dataset, batch-size must be a multiple of chunk-shape's z dimension. "
@@ -136,7 +135,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',

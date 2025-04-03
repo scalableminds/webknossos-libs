@@ -1,7 +1,7 @@
 import mimetypes
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import httpx
 
@@ -94,8 +94,8 @@ def _send_chunk(
 
 
 def _build_query(
-    file: ResumableFile, chunk: FileChunk, additional_query_params: Dict[str, str]
-) -> Dict[str, Any]:
+    file: ResumableFile, chunk: FileChunk, additional_query_params: dict[str, str]
+) -> dict[str, Any]:
     """Build the query parameters for a chunk test or upload."""
     return {
         "resumableChunkSize": file.chunk_size,

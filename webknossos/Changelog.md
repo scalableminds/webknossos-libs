@@ -10,9 +10,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+- Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
+
+### Fixed
+
+
+## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.7...v2.1.0)
+
+### Breaking Changes
+- Dropped support for Python 3.9. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
 
 ### Added
 - Adds the field `totalFileSizeInBytes` to the dataset upload information. [#1264](https://github.com/scalableminds/webknossos-libs/pull/1264)
@@ -20,9 +34,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a warning on import if a newer version of the `webknossos` package is available from PyPI. [#1280](https://github.com/scalableminds/webknossos-libs/pull/1280)
 
 ### Changed
-- Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
-
-### Fixed
+- Upgraded `tensorstore` to `0.1.72`. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
 
 
 ## [2.0.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.7) - 2025-03-26

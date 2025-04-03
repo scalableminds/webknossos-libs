@@ -1,7 +1,7 @@
+from collections.abc import Iterator
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Iterator, List, Set
 
 import numpy as np
 from pims import FramesSequenceND
@@ -30,7 +30,7 @@ PIXEL_TYPE_TO_DTYPE = {
 
 class PimsCziReader(FramesSequenceND):
     @classmethod
-    def class_exts(cls) -> Set[str]:
+    def class_exts(cls) -> set[str]:
         return {"czi"}
 
     # class_priority is used in pims to pick the reader with the highest priority.
@@ -41,7 +41,7 @@ class PimsCziReader(FramesSequenceND):
     def __init__(self, path: PathLike, czi_channel: int = 0) -> None:
         self.path = Path(path)
         self.czi_channel = czi_channel
-        self.axis_offsets: Dict[str, int] = {}
+        self.axis_offsets: dict[str, int] = {}
         super().__init__()
         with self.czi_file() as czi_file:
             for axis, (
@@ -81,7 +81,7 @@ class PimsCziReader(FramesSequenceND):
         with pyczi.open_czi(str(self.path)) as czi_file:
             yield czi_file
 
-    def available_czi_channels(self) -> List[int]:
+    def available_czi_channels(self) -> list[int]:
         with self.czi_file() as czi_file:
             return sorted(czi_file.pixel_types.keys())
 

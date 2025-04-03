@@ -117,4 +117,4 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         return SequentialPickleExecutor(**kwargs)
     elif environment == "multiprocessing_with_pickling":
         return MultiprocessingPickleExecutor(**kwargs)
-    raise Exception("Unknown executor: {}".format(environment))
+    raise Exception(f"Unknown executor: {environment}")

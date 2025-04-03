@@ -1,6 +1,6 @@
 import warnings
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import numpy as np
 import pytest

@@ -1,7 +1,6 @@
 import logging
 import math
 from itertools import product
-from typing import List, Tuple
 
 import numpy as np
 
@@ -9,7 +8,7 @@ from ..geometry import Vec3Int
 from .view import View
 
 
-def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
+def upsample_cube(cube_buffer: np.ndarray, factors: list[int]) -> np.ndarray:
     ds = cube_buffer.shape
     out_buf = np.zeros(tuple(s * f for s, f in zip(ds, factors)), cube_buffer.dtype)
     for dx in (0, factors[0] - 1):
@@ -24,15 +23,15 @@ def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
 
 
 def upsample_cube_job(
-    args: Tuple[View, View, int],
-    mag_factors: List[float],
+    args: tuple[View, View, int],
+    mag_factors: list[float],
     buffer_shape: Vec3Int,
 ) -> None:
     (source_view, target_view, _i) = args
 
-    assert all(
-        1 >= f for f in mag_factors
-    ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
+    assert all(1 >= f for f in mag_factors), (
+        f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
+    )
 
     try:
         num_channels = target_view.info.num_channels

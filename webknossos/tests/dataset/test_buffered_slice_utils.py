@@ -45,24 +45,24 @@ def test_buffered_slice_writer() -> None:
         for i in range(13, 32):
             writer.send(test_img)
 
-        assert np.all(
-            mag_view.read(absolute_offset=origin, size=(24, 24, 32)) != 0
-        ), "The read data contains zeros while the written image has no zeros"
+        assert np.all(mag_view.read(absolute_offset=origin, size=(24, 24, 32)) != 0), (
+            "The read data contains zeros while the written image has no zeros"
+        )
 
         for i in range(32, 35):
             writer.send(test_img)
 
     read_data = np.squeeze(mag_view.read(absolute_offset=origin, size=(24, 24, 35)))
-    assert np.all(
-        read_data != 0
-    ), "The read data contains zeros while the written image has no zeros"
+    assert np.all(read_data != 0), (
+        "The read data contains zeros while the written image has no zeros"
+    )
     # check if the data are correct
     test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
-    for i in np.arange(35):
+    for i in range(35):
         test_img_3d[:, :, i] = test_img
-    assert np.array_equal(
-        test_img_3d, read_data
-    ), "The data from the disk is not the same as the data that should be written."
+    assert np.array_equal(test_img_3d, read_data), (
+        "The data from the disk is not the same as the data that should be written."
+    )
 
 
 @pytest.mark.parametrize("dim", [0, 1, 2])
@@ -208,14 +208,14 @@ def test_buffered_slice_writer_unaligned(
                 writer.send(section)
 
     written_data = mag1.read(absolute_offset=offset, size=shape)
-    assert np.all(
-        data == written_data
-    ), "Read data is not equal to the data that was just written."
+    assert np.all(data == written_data), (
+        "Read data is not equal to the data that was just written."
+    )
 
     data_at_z32 = mag1.read(absolute_offset=ones_offset, size=ones_at_z32.shape)
-    assert np.all(
-        ones_at_z32 == data_at_z32
-    ), "The BufferedSliceWriter seems to have overwritten older data."
+    assert np.all(ones_at_z32 == data_at_z32), (
+        "The BufferedSliceWriter seems to have overwritten older data."
+    )
 
 
 def test_buffered_slice_writer_should_raise_unaligned_usage(

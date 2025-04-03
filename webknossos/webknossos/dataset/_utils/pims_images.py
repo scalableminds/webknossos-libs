@@ -1,23 +1,10 @@
 import warnings
-from contextlib import contextmanager, nullcontext
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
 from os import PathLike
 from pathlib import Path
-from typing import (
-    ContextManager,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import TypeVar, Union, cast
 from urllib.error import HTTPError
 
 import numpy as np
@@ -45,15 +32,15 @@ class PimsImages:
 
     def __init__(
         self,
-        images: Union[str, Path, "pims.FramesSequence", List[Union[str, PathLike]]],
-        channel: Optional[int],
-        timepoint: Optional[int],
-        czi_channel: Optional[int],
+        images: Union[str, Path, "pims.FramesSequence", list[str | PathLike]],
+        channel: int | None,
+        timepoint: int | None,
+        czi_channel: int | None,
         swap_xy: bool,
         flip_x: bool,
         flip_y: bool,
         flip_z: bool,
-        use_bioformats: Optional[bool],
+        use_bioformats: bool | None,
         is_segmentation: bool,
     ) -> None:
         """
@@ -95,7 +82,7 @@ class PimsImages:
 
         ## attributes that will be set in __init__()
         # _bundle_axes
-        self._iter_axes: List[str] = []
+        self._iter_axes: list[str] = []
         self._iter_loop_size = None
         self._possible_layers = {}
 
@@ -113,9 +100,9 @@ class PimsImages:
         #######################
 
         with self._open_images() as images:
-            assert isinstance(
-                images, pims.FramesSequence
-            ), f"{type(images)} does not inherit from pims.FramesSequence"
+            assert isinstance(images, pims.FramesSequence), (
+                f"{type(images)} does not inherit from pims.FramesSequence"
+            )
             self.dtype = images.dtype
 
             if isinstance(images, pims.FramesSequenceND):
@@ -185,7 +172,7 @@ class PimsImages:
                 # dimensions as pims.FramesSequenceND does:
 
                 _allow_channels_first = not is_segmentation
-                if isinstance(images, (pims.ImageSequence, pims.ReaderSequence)):
+                if isinstance(images, pims.ImageSequence | pims.ReaderSequence):
                     _allow_channels_first = False
 
                 if len(images.shape) == 2:
@@ -263,9 +250,9 @@ class PimsImages:
 
         self._first_n_channels = None
         if self._channel is not None:
-            assert (
-                self._channel < self.num_channels
-            ), f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
+            assert self._channel < self.num_channels, (
+                f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
+            )
             self.num_channels = 1
         else:
             if self.num_channels == 2:
@@ -277,9 +264,9 @@ class PimsImages:
                 self.num_channels = 3
                 self._first_n_channels = 3
 
-    def _normalize_original_images(self) -> Union[str, List[str]]:
+    def _normalize_original_images(self) -> str | list[str]:
         original_images = self._original_images
-        if isinstance(original_images, (str, Path)):
+        if isinstance(original_images, str | Path):
             original_images_path = Path(original_images)
             if original_images_path.is_dir():
                 valid_suffixes = get_valid_pims_suffixes()
@@ -317,8 +304,8 @@ class PimsImages:
         Image.MAX_IMAGE_PIXELS = None
 
     def _try_open_pims_images(
-        self, original_images: Union[str, List[str]], exceptions: List[Exception]
-    ) -> Optional[pims.FramesSequence]:
+        self, original_images: str | list[str], exceptions: list[Exception]
+    ) -> pims.FramesSequence | None:
         import_exceptions = []
 
         try:
@@ -364,7 +351,7 @@ class PimsImages:
 
         # for image lists, try to guess the correct reader using only the first image,
         # and apply that for all images via pims.ReaderSequence
-        def strategy_2() -> Optional[pims.FramesSequence]:
+        def strategy_2() -> pims.FramesSequence | None:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
                 first_image_handler = pims.open(original_images[0], **open_kwargs)
@@ -389,9 +376,9 @@ class PimsImages:
 
     def _try_open_bioformats_images_raw(
         self,
-        original_images: Union[str, List[str]],
-        exceptions: List[Exception],
-    ) -> Optional[pims.FramesSequence]:
+        original_images: str | list[str],
+        exceptions: list[Exception],
+    ) -> pims.FramesSequence | None:
         try:
             if self._use_bioformats is False:  # None is allowed
                 raise RuntimeError(
@@ -432,17 +419,17 @@ class PimsImages:
     @contextmanager
     def _open_images(
         self,
-    ) -> Iterator[Union[pims.FramesSequence, List[pims.FramesSequence]]]:
+    ) -> Iterator[pims.FramesSequence | list[pims.FramesSequence]]:
         """
         This yields well-defined images of the form (self._iter_axes, *self._bundle_axes),
         after IDENTIFY AXIS ORDER of __init__() has run.
         For a 2D image this is achieved by wrapping it in a list.
         """
-        images_context_manager: Optional[ContextManager]
+        images_context_manager: AbstractContextManager | None
         if isinstance(self._original_images, pims.FramesSequenceND):
             images_context_manager = nullcontext(enter_result=self._original_images)
         else:
-            exceptions: List[Exception] = []
+            exceptions: list[Exception] = []
             original_images = self._normalize_original_images()
             images_context_manager = None
 
@@ -499,10 +486,10 @@ class PimsImages:
 
     def copy_to_view(
         self,
-        args: Union[BoundingBox, NDBoundingBox],
+        args: BoundingBox | NDBoundingBox,
         mag_view: MagView,
-        dtype: Optional[DTypeLike] = None,
-    ) -> Tuple[Tuple[int, int], Optional[int]]:
+        dtype: DTypeLike | None = None,
+    ) -> tuple[tuple[int, int], int | None]:
         """Copies the images according to the passed arguments to the given mag_view.
         args is expected to be a (ND)BoundingBox the start and end of the z-range, meant for usage with an executor.
         copy_to_view returns an iterable of image shapes and largest segment ids. When using this
@@ -522,7 +509,9 @@ class PimsImages:
                 size == 1
                 for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
                 if axis not in ("x", "y", "z")
-            ), "The delivered BoundingBox has to be flat except for x,y and z dimension."
+            ), (
+                "The delivered BoundingBox has to be flat except for x,y and z dimension."
+            )
 
             # z_start and z_end are relative to the bounding box of the mag_view
             # to access the correct data from the images
@@ -592,7 +581,7 @@ class PimsImages:
 
                 return dimwise_max(shapes), max_value
 
-    def get_possible_layers(self) -> Optional[Dict["str", List[int]]]:
+    def get_possible_layers(self) -> dict["str", list[int]] | None:
         if len(self._possible_layers) == 0:
             return None
         else:
@@ -668,7 +657,7 @@ class PimsImages:
                 )
 
 
-T = TypeVar("T", bound=Tuple[int, ...])
+T = TypeVar("T", bound=tuple[int, ...])
 
 
 def dimwise_max(vectors: Sequence[T]) -> T:
@@ -678,10 +667,10 @@ def dimwise_max(vectors: Sequence[T]) -> T:
         return cast(T, tuple(map(max, *vectors)))
 
 
-C = TypeVar("C", bound=Type)
+C = TypeVar("C", bound=type)
 
 
-def _recursive_subclasses(cls: C) -> List[C]:
+def _recursive_subclasses(cls: C) -> list[C]:
     "Return all subclasses (and their subclasses, etc.)."
     # Source: http://stackoverflow.com/a/3862957/1221924
     return cls.__subclasses__() + [
@@ -689,23 +678,23 @@ def _recursive_subclasses(cls: C) -> List[C]:
     ]
 
 
-def _get_all_pims_handlers() -> (
-    Iterable[Type[Union[pims.FramesSequence, pims.FramesSequenceND]]]
-):
+def _get_all_pims_handlers() -> Iterable[
+    type[pims.FramesSequence | pims.FramesSequenceND]
+]:
     return chain(
         _recursive_subclasses(pims.FramesSequence),
         _recursive_subclasses(pims.FramesSequenceND),
     )
 
 
-def get_valid_pims_suffixes() -> Set[str]:
+def get_valid_pims_suffixes() -> set[str]:
     valid_suffixes = set()
     for pims_handler in _get_all_pims_handlers():
         valid_suffixes.update(pims_handler.class_exts())
     return valid_suffixes
 
 
-def get_valid_bioformats_suffixes() -> Set[str]:
+def get_valid_bioformats_suffixes() -> set[str]:
     # Added the most present suffixes that are implemented in bioformats
     return {
         "bmp",
@@ -746,7 +735,7 @@ def get_valid_bioformats_suffixes() -> Set[str]:
 
 def has_image_z_dimension(
     filepath: Path,
-    use_bioformats: Optional[bool],
+    use_bioformats: bool | None,
     is_segmentation: bool,
 ) -> bool:
     pims_images = PimsImages(

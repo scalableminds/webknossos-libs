@@ -43,27 +43,15 @@ import json
 import logging
 import re
 import warnings
-from contextlib import contextmanager, nullcontext
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import (
-    BinaryIO,
-    ContextManager,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-    overload,
-)
+from typing import BinaryIO, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -92,8 +80,8 @@ from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
 logger = logging.getLogger(__name__)
 
-Vector3 = Tuple[float, float, float]
-Vector4 = Tuple[float, float, float, float]
+Vector3 = tuple[float, float, float]
+Vector4 = tuple[float, float, float, float]
 
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -104,21 +92,21 @@ ANNOTATION_WKW_PATH_RE = re.compile(rf"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
 
 @attr.define
 class SegmentInformation:
-    name: Optional[str]
-    anchor_position: Optional[Vec3Int]
-    color: Optional[Vector4]
-    metadata: Dict[str, Union[str, int, float, Sequence[str]]]
+    name: str | None
+    anchor_position: Vec3Int | None
+    color: Vector4 | None
+    metadata: dict[str, str | int | float | Sequence[str]]
 
 
 @attr.define
 class _VolumeLayer:
     id: int
     name: str
-    fallback_layer_name: Optional[str]
+    fallback_layer_name: str | None
     data_format: DataFormat
-    zip: Optional[ZipPath]
-    segments: Dict[int, SegmentInformation]
-    largest_segment_id: Optional[int]
+    zip: ZipPath | None
+    segments: dict[int, SegmentInformation]
+    largest_segment_id: int | None
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
@@ -198,20 +186,20 @@ class Annotation:
     skeleton: Skeleton = None  # type: ignore[assignment]
     # The following underscored attributes are just for initialization
     # in case the skeleton is not given. They are always None as attributes.
-    _dataset_name: Optional[str] = None
-    _voxel_size: Optional[Vector3] = None
-    _organization_id: Optional[str] = None
-    _description: Optional[str] = None
-    owner_name: Optional[str] = None
-    annotation_id: Optional[str] = None
-    time: Optional[int] = attr.ib(factory=time_since_epoch_in_ms)
-    edit_position: Optional[Vector3] = None
-    edit_rotation: Optional[Vector3] = None
-    zoom_level: Optional[float] = None
-    metadata: Dict[str, str] = attr.Factory(dict)
-    task_bounding_box: Optional[NDBoundingBox] = None
-    user_bounding_boxes: List[NDBoundingBox] = attr.Factory(list)
-    _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
+    _dataset_name: str | None = None
+    _voxel_size: Vector3 | None = None
+    _organization_id: str | None = None
+    _description: str | None = None
+    owner_name: str | None = None
+    annotation_id: str | None = None
+    time: int | None = attr.ib(factory=time_since_epoch_in_ms)
+    edit_position: Vector3 | None = None
+    edit_rotation: Vector3 | None = None
+    zoom_level: float | None = None
+    metadata: dict[str, str] = attr.Factory(dict)
+    task_bounding_box: NDBoundingBox | None = None
+    user_bounding_boxes: list[NDBoundingBox] = attr.Factory(list)
+    _volume_layers: list[_VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
     def _set_init_docstring(cls) -> None:
@@ -247,12 +235,12 @@ class Annotation:
 
     def __attrs_post_init__(self) -> None:
         if self.skeleton is None:
-            assert (
-                self._dataset_name is not None
-            ), "Please either supply a skeleton or dataset_name for Annotation()."
-            assert (
-                self._voxel_size is not None
-            ), "Please supply a voxel_size for Annotation()."
+            assert self._dataset_name is not None, (
+                "Please either supply a skeleton or dataset_name for Annotation()."
+            )
+            assert self._voxel_size is not None, (
+                "Please supply a voxel_size for Annotation()."
+            )
             self.skeleton = Skeleton(
                 dataset_name=self._dataset_name,
                 voxel_size=self._voxel_size,
@@ -290,7 +278,7 @@ class Annotation:
         self.skeleton.dataset_name = dataset_name
 
     @property
-    def dataset_id(self) -> Optional[str]:
+    def dataset_id(self) -> str | None:
         """ID of the dataset this annotation belongs to.
 
         Proxies to skeleton.dataset_id.
@@ -298,11 +286,11 @@ class Annotation:
         return self.skeleton.dataset_id
 
     @dataset_id.setter
-    def dataset_id(self, dataset_id: Optional[str]) -> None:
+    def dataset_id(self, dataset_id: str | None) -> None:
         self.skeleton.dataset_id = dataset_id
 
     @property
-    def voxel_size(self) -> Tuple[float, float, float]:
+    def voxel_size(self) -> tuple[float, float, float]:
         """Voxel dimensions in nanometers (x, y, z).
 
         Proxies to skeleton.voxel_size.
@@ -310,11 +298,11 @@ class Annotation:
         return self.skeleton.voxel_size
 
     @voxel_size.setter
-    def voxel_size(self, voxel_size: Tuple[float, float, float]) -> None:
+    def voxel_size(self, voxel_size: tuple[float, float, float]) -> None:
         self.skeleton.voxel_size = voxel_size
 
     @property
-    def organization_id(self) -> Optional[str]:
+    def organization_id(self) -> str | None:
         """ID of the organization owning this annotation.
 
         Proxies to skeleton.organization_id.
@@ -322,11 +310,11 @@ class Annotation:
         return self.skeleton.organization_id
 
     @organization_id.setter
-    def organization_id(self, organization_id: Optional[str]) -> None:
+    def organization_id(self, organization_id: str | None) -> None:
         self.skeleton.organization_id = organization_id
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         """Optional description of the annotation.
 
         Proxies to skeleton.description.
@@ -334,11 +322,11 @@ class Annotation:
         return self.skeleton.description
 
     @description.setter
-    def description(self, description: Optional[str]) -> None:
+    def description(self, description: str | None) -> None:
         self.skeleton.description = description
 
     @classmethod
-    def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
+    def load(cls, annotation_path: str | PathLike) -> "Annotation":
         """Loads an annotation from a file.
 
         Supports loading from:
@@ -365,9 +353,9 @@ class Annotation:
             ```
         """
         annotation_path = Path(annotation_path)
-        assert (
-            annotation_path.exists()
-        ), f"Annotation path {annotation_path} does not exist."
+        assert annotation_path.exists(), (
+            f"Annotation path {annotation_path} does not exist."
+        )
         if annotation_path.suffix == ".zip":
             return cls._load_from_zip(annotation_path)
         elif annotation_path.suffix == ".nml":
@@ -383,7 +371,7 @@ class Annotation:
     def download(
         cls,
         annotation_id_or_url: str,
-        webknossos_url: Optional[str] = None,
+        webknossos_url: str | None = None,
         *,
         skip_volume_data: bool = False,
     ) -> "Annotation": ...
@@ -393,22 +381,22 @@ class Annotation:
     def download(
         cls,
         annotation_id_or_url: str,
-        webknossos_url: Optional[str] = None,
+        webknossos_url: str | None = None,
         *,
         skip_volume_data: bool = False,
         _return_context: bool,
-    ) -> Tuple["Annotation", ContextManager[None]]: ...
+    ) -> tuple["Annotation", AbstractContextManager[None]]: ...
 
     @classmethod
     def download(
         cls,
         annotation_id_or_url: str,
-        webknossos_url: Optional[str] = None,
+        webknossos_url: str | None = None,
         *,
         skip_volume_data: bool = False,
         retry_count: int = 5,
         _return_context: bool = False,
-    ) -> Union["Annotation", Tuple["Annotation", ContextManager[None]]]:
+    ) -> Union["Annotation", tuple["Annotation", AbstractContextManager[None]]]:
         """Downloads an annotation from WEBKNOSSOS.
 
         Args:
@@ -458,7 +446,7 @@ class Annotation:
                 + "Using no token, only public annotations can be downloaded. "
                 + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
             )
-            context: ContextManager[None] = webknossos_context(
+            context: AbstractContextManager[None] = webknossos_context(
                 webknossos_url, token=None
             )
         else:
@@ -475,9 +463,9 @@ class Annotation:
         if filename.endswith(".nml"):
             annotation = Annotation._load_from_nml(filename[:-4], BytesIO(file_body))
         else:
-            assert filename.endswith(
-                ".zip"
-            ), f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
+            assert filename.endswith(".zip"), (
+                f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
+            )
             annotation = Annotation._load_from_zip(BytesIO(file_body))
 
         if _return_context:
@@ -525,7 +513,7 @@ class Annotation:
     def open_as_remote_dataset(
         cls,
         annotation_id_or_url: str,
-        webknossos_url: Optional[str] = None,
+        webknossos_url: str | None = None,
     ) -> Dataset:
         """Opens an annotation directly as a remote dataset from WEBKNOSSOS.
 
@@ -577,7 +565,7 @@ class Annotation:
         cls,
         name: str,
         nml_content: BinaryIO,
-        possible_volume_paths: Optional[List[ZipPath]] = None,
+        possible_volume_paths: list[ZipPath] | None = None,
     ) -> "Annotation":
         nml = wknml.Nml.parse(nml_content)
 
@@ -603,8 +591,8 @@ class Annotation:
 
     @staticmethod
     def _parse_volumes(
-        nml: wknml.Nml, possible_paths: Optional[List[ZipPath]]
-    ) -> List[_VolumeLayer]:
+        nml: wknml.Nml, possible_paths: list[ZipPath] | None
+    ) -> list[_VolumeLayer]:
         volume_layers = []
         layers_with_not_found_location = []
         layers_without_location = []
@@ -658,9 +646,9 @@ class Annotation:
                     largest_segment_id=volume.largest_segment_id,
                 )
             )
-        assert len(set(i.id for i in volume_layers)) == len(
-            volume_layers
-        ), "Some volume layers have the same id, this is not allowed."
+        assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
+            "Some volume layers have the same id, this is not allowed."
+        )
         if len(layers_without_location) > 0:
             warnings.warn(
                 "[INFO] Omitting the volume layer annotation data for layers "
@@ -677,18 +665,18 @@ class Annotation:
         return volume_layers
 
     @classmethod
-    def _load_from_zip(cls, content: Union[str, PathLike, BinaryIO]) -> "Annotation":
+    def _load_from_zip(cls, content: str | PathLike | BinaryIO) -> "Annotation":
         zipfile = ZipFile(content)
         paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
         nml_paths = [i for i in paths if i.suffix == ".nml"]
         assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
-        assert (
-            len(nml_paths) == 1
-        ), f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
+        assert len(nml_paths) == 1, (
+            f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
+        )
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
-    def save(self, path: Union[str, PathLike]) -> None:
+    def save(self, path: str | PathLike) -> None:
         """Saves the annotation to a file.
 
         For skeleton-only annotations, saves as .nml file.
@@ -735,8 +723,8 @@ class Annotation:
         self,
         target: Path,
         dataset_directory: Path,
-        volume_layer_name: Optional[str] = None,
-        executor: Optional[Executor] = None,
+        volume_layer_name: str | None = None,
+        executor: Executor | None = None,
     ) -> None:
         """Merges volume annotations with their fallback layer.
 
@@ -768,18 +756,18 @@ class Annotation:
             target,
             voxel_size=self.voxel_size,
         )
-        assert (
-            len(annotation_volumes) > 0
-        ), "Annotation does not contain any volume layers!"
+        assert len(annotation_volumes) > 0, (
+            "Annotation does not contain any volume layers!"
+        )
 
         if volume_layer_name is not None:
-            assert (
-                volume_layer_name in annotation_volumes
-            ), f'Volume layer name "{volume_layer_name}" not found in annotation'
+            assert volume_layer_name in annotation_volumes, (
+                f'Volume layer name "{volume_layer_name}" not found in annotation'
+            )
         else:
-            assert (
-                len(annotation_volumes) == 1
-            ), "Volume layer name was not provided and more than one volume layer found in annotation"
+            assert len(annotation_volumes) == 1, (
+                "Volume layer name was not provided and more than one volume layer found in annotation"
+            )
             volume_layer_name = annotation_volumes[0]
 
         volume_layer = self._get_volume_layer(volume_layer_name=volume_layer_name)
@@ -952,7 +940,7 @@ class Annotation:
             )
 
         context = _get_context()
-        token: Optional[str]
+        token: str | None
         if self.organization_id is None:
             token = context.required_token
             organization_id = context.organization_id
@@ -988,8 +976,8 @@ class Annotation:
 
     def get_remote_base_dataset(
         self,
-        sharing_token: Optional[str] = None,
-        webknossos_url: Optional[str] = None,
+        sharing_token: str | None = None,
+        webknossos_url: str | None = None,
     ) -> RemoteDataset:
         """Returns a remote dataset connection to the base dataset.
 
@@ -1039,8 +1027,8 @@ class Annotation:
     def add_volume_layer(
         self,
         name: str,
-        fallback_layer: Union[Layer, str, None] = None,
-        volume_layer_id: Optional[int] = None,
+        fallback_layer: Layer | str | None = None,
+        volume_layer_id: int | None = None,
     ) -> None:
         """Adds a new volume layer to the annotation.
 
@@ -1071,14 +1059,14 @@ class Annotation:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
-            assert (
-                volume_layer_id not in [i.id for i in self._volume_layers]
-            ), f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
-        fallback_layer_name: Optional[str]
+            assert volume_layer_id not in [i.id for i in self._volume_layers], (
+                f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
+            )
+        fallback_layer_name: str | None
         if isinstance(fallback_layer, Layer):
-            assert (
-                fallback_layer.category == SEGMENTATION_CATEGORY
-            ), "The fallback layer must be a segmentation layer."
+            assert fallback_layer.category == SEGMENTATION_CATEGORY, (
+                "The fallback layer must be a segmentation layer."
+            )
             fallback_layer_name = fallback_layer.name
         elif fallback_layer is not None:
             fallback_layer_name = str(fallback_layer)
@@ -1098,8 +1086,8 @@ class Annotation:
 
     def _get_volume_layer(
         self,
-        volume_layer_name: Optional[str] = None,
-        volume_layer_id: Optional[int] = None,
+        volume_layer_name: str | None = None,
+        volume_layer_id: int | None = None,
     ) -> _VolumeLayer:
         assert len(self._volume_layers) > 0, "No volume annotations present."
 
@@ -1141,9 +1129,9 @@ class Annotation:
             fitting_volume_layers = [
                 i for i in self._volume_layers if i.name == volume_layer_name
             ]
-            assert (
-                len(fitting_volume_layers) != 0
-            ), f"The specified volume name {volume_layer_name} could not be found in this annotation."
+            assert len(fitting_volume_layers) != 0, (
+                f"The specified volume name {volume_layer_name} could not be found in this annotation."
+            )
             assert len(fitting_volume_layers) == 1, (
                 f"More than one volume annotation has the name {volume_layer_name}. "
                 + "Please specify the exact annotation via the volume_layer_id argument. "
@@ -1158,8 +1146,8 @@ class Annotation:
 
     def delete_volume_layer(
         self,
-        volume_layer_name: Optional[str] = None,
-        volume_layer_id: Optional[int] = None,
+        volume_layer_name: str | None = None,
+        volume_layer_id: int | None = None,
     ) -> None:
         """Removes a volume layer from the annotation.
 
@@ -1190,8 +1178,8 @@ class Annotation:
         self,
         dataset: Dataset,
         layer_name: str = "volume_layer",
-        volume_layer_name: Optional[str] = None,
-        volume_layer_id: Optional[int] = None,
+        volume_layer_name: str | None = None,
+        volume_layer_id: int | None = None,
     ) -> SegmentationLayer:
         """Exports a volume layer to a dataset.
 
@@ -1228,9 +1216,9 @@ class Annotation:
 
         largest_segment_id = volume_layer.largest_segment_id
 
-        assert (
-            volume_zip_path is not None
-        ), "The selected volume layer data is not available and cannot be exported."
+        assert volume_zip_path is not None, (
+            "The selected volume layer data is not available and cannot be exported."
+        )
 
         with volume_zip_path.open(mode="rb") as f:
             data_zip = ZipFile(f)
@@ -1240,9 +1228,9 @@ class Annotation:
                     for i in data_zip.filelist
                     if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
                 ]
-                assert (
-                    len(wrong_files) == 0
-                ), f"The annotation contains unexpected files: {wrong_files}"
+                assert len(wrong_files) == 0, (
+                    f"The annotation contains unexpected files: {wrong_files}"
+                )
                 data_zip.extractall(dataset.path / layer_name)
                 layer = cast(
                     SegmentationLayer,
@@ -1256,9 +1244,9 @@ class Annotation:
                 datasource_properties = dataset_converter.structure(
                     json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
                 )
-                assert (
-                    len(datasource_properties.data_layers) == 1
-                ), f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
+                assert len(datasource_properties.data_layers) == 1, (
+                    f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
+                )
                 layer_properties = datasource_properties.data_layers[0]
                 internal_layer_name = layer_properties.name
                 layer_properties.name = layer_name
@@ -1290,8 +1278,8 @@ class Annotation:
     @contextmanager
     def temporary_volume_layer_copy(
         self,
-        volume_layer_name: Optional[str] = None,
-        volume_layer_id: Optional[int] = None,
+        volume_layer_name: str | None = None,
+        volume_layer_id: int | None = None,
         read_only: bool = True,
     ) -> Iterator[SegmentationLayer]:
         """Creates a temporary copy of a volume layer as a dataset.
@@ -1336,9 +1324,9 @@ class Annotation:
 
     def get_volume_layer_segments(
         self,
-        volume_layer_name: Optional[str] = None,
-        volume_layer_id: Optional[int] = None,
-    ) -> Dict[int, SegmentInformation]:
+        volume_layer_name: str | None = None,
+        volume_layer_id: int | None = None,
+    ) -> dict[int, SegmentInformation]:
         """Returns segment information for a volume layer.
 
         Returns a mutable dictionary mapping segment IDs to their metadata.
@@ -1349,7 +1337,7 @@ class Annotation:
             volume_layer_id: ID of the target volume layer if multiple exist.
 
         Returns:
-            Dict[int, SegmentInformation]: Dictionary mapping segment IDs to their information.
+            dict[int, SegmentInformation]: Dictionary mapping segment IDs to their information.
 
         Raises:
             ValueError: If neither name nor ID is provided when multiple layers exist.

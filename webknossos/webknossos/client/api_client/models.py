@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import attr
 
@@ -48,7 +48,7 @@ class ApiTeamAdd:
 
 @attr.s(auto_attribs=True)
 class ApiBoundingBox:
-    top_left: Tuple[int, int, int]
+    top_left: tuple[int, int, int]
     width: int
     height: int
     depth: int
@@ -57,7 +57,7 @@ class ApiBoundingBox:
 @attr.s(auto_attribs=True)
 class ApiAdditionalAxis:
     name: str
-    bounds: Tuple[int, int]
+    bounds: tuple[int, int]
     index: int
 
 
@@ -67,23 +67,23 @@ class ApiDataLayer:
     category: str
     element_class: str
     bounding_box: ApiBoundingBox
-    resolutions: List[Tuple[int, int, int]]
-    additional_axes: Optional[List[ApiAdditionalAxis]] = None
-    largest_segment_id: Optional[int] = None
-    default_view_configuration: Optional[Dict[str, Any]] = None
+    resolutions: list[tuple[int, int, int]]
+    additional_axes: list[ApiAdditionalAxis] | None = None
+    largest_segment_id: int | None = None
+    default_view_configuration: dict[str, Any] | None = None
 
 
 @attr.s(auto_attribs=True)
 class ApiVoxelSize:
     unit: str
-    factor: Tuple[float, float, float]
+    factor: tuple[float, float, float]
 
 
 @attr.s(auto_attribs=True)
 class ApiDataSource:
-    data_layers: Optional[List[ApiDataLayer]] = None
-    status: Optional[str] = None
-    scale: Optional[ApiVoxelSize] = None
+    data_layers: list[ApiDataLayer] | None = None
+    status: str | None = None
+    scale: ApiVoxelSize | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -99,15 +99,15 @@ class ApiDataset:
     name: str
     is_public: bool
     folder_id: str
-    allowed_teams: List[ApiTeam]
-    tags: List[str]
+    allowed_teams: list[ApiTeam]
+    tags: list[str]
     directory_name: str
     owning_organization: str
     data_store: ApiDataStore
     data_source: ApiDataSource
     created: float
-    metadata: Optional[List[ApiMetadata]] = None
-    description: Optional[str] = None
+    metadata: list[ApiMetadata] | None = None
+    description: str | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -122,22 +122,22 @@ class ApiDatasetId:
 class ApiDatasetExploreAndAddRemote:
     remote_uri: str
     dataset_name: str
-    folder_path: Optional[str] = None
-    data_store_name: Optional[str] = None
+    folder_path: str | None = None
+    data_store_name: str | None = None
 
 
 @attr.s(auto_attribs=True)
 class ApiDatasetAnnounceUpload:
     dataset_name: str
     organization: str
-    initial_team_ids: List[str]
+    initial_team_ids: list[str]
     folder_id: str
 
 
 @attr.s(auto_attribs=True)
 class ApiDatasetIsValidNewNameResponse:
     is_valid: bool
-    errors: Optional[List[str]] = None
+    errors: list[str] | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -160,7 +160,7 @@ class ApiLinkedLayerIdentifier:
     organization_id: str
     data_set_name: str
     layer_name: str
-    new_layer_name: Optional[str] = None
+    new_layer_name: str | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -170,9 +170,9 @@ class ApiReserveDatasetUploadInformation:
     organization: str
     total_file_count: int
     total_file_size_in_bytes: int
-    initial_teams: List[str]
-    layers_to_link: Optional[List[ApiLinkedLayerIdentifier]] = None
-    folder_id: Optional[str] = None
+    initial_teams: list[str]
+    layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
+    folder_id: str | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -212,8 +212,8 @@ class ApiNmlTaskParameters:
     needed_experience: ApiExperience
     pending_instances: int
     project_name: str
-    script_id: Optional[str]
-    bounding_box: Optional[ApiBoundingBox]
+    script_id: str | None
+    bounding_box: ApiBoundingBox | None
 
 
 @attr.s(auto_attribs=True)
@@ -222,23 +222,23 @@ class ApiTaskParameters:
     needed_experience: ApiExperience
     pending_instances: int
     project_name: str
-    script_id: Optional[str]
-    bounding_box: Optional[ApiBoundingBox]
+    script_id: str | None
+    bounding_box: ApiBoundingBox | None
     dataset_id: str
-    edit_position: Tuple[int, int, int]
-    edit_rotation: Tuple[float, float, float]
+    edit_position: tuple[int, int, int]
+    edit_rotation: tuple[float, float, float]
 
 
 @attr.s(auto_attribs=True)
 class ApiSingleTaskCreationResult:
-    error: Optional[str]
-    success: Optional[ApiTask]
+    error: str | None
+    success: ApiTask | None
 
 
 @attr.s(auto_attribs=True)
 class ApiTaskCreationResult:
-    tasks: List[ApiSingleTaskCreationResult]
-    warnings: List[str]
+    tasks: list[ApiSingleTaskCreationResult]
+    warnings: list[str]
 
 
 @attr.s(auto_attribs=True)
@@ -260,8 +260,8 @@ class ApiUser:
     is_active: bool
     is_admin: bool
     is_dataset_manager: bool
-    teams: List[ApiTeamMembership]
-    experiences: Dict[str, int]
+    teams: list[ApiTeamMembership]
+    experiences: dict[str, int]
 
 
 @attr.s(auto_attribs=True)
@@ -269,9 +269,9 @@ class ApiUserCompact:
     id: str
     first_name: str
     last_name: str
-    email: Optional[str] = None
-    is_admin: Optional[bool] = None
-    is_dataset_manager: Optional[bool] = None
+    email: str | None = None
+    is_admin: bool | None = None
+    is_dataset_manager: bool | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -293,7 +293,7 @@ class ApiDataStoreToken:
 
 @attr.s(auto_attribs=True)
 class ApiLoggedTimeGroupedByMonth:
-    logged_time: List[ApiLoggedTimeForMonth]
+    logged_time: list[ApiLoggedTimeForMonth]
 
 
 @attr.s(auto_attribs=True)
@@ -304,8 +304,8 @@ class ApiProject:
     team_name: str
     priority: int
     paused: bool
-    owner: Optional[ApiUserCompact]  # None in case you have no read access on the owner
-    expected_time: Optional[int] = None
+    owner: ApiUserCompact | None  # None in case you have no read access on the owner
+    expected_time: int | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -317,8 +317,8 @@ class ApiAnnotation:
     description: str
     state: str
     modified: int
-    data_store: Optional[ApiDataStore] = None
-    tracing_time: Optional[int] = None  # millis
+    data_store: ApiDataStore | None = None
+    tracing_time: int | None = None  # millis
 
 
 @attr.s(auto_attribs=True)
@@ -330,21 +330,21 @@ class ApiAnnotationIdentifier:
 @attr.s(auto_attribs=True)
 class ApiAnnotationUploadResult:
     annotation: ApiAnnotationIdentifier
-    messages: List[str]
+    messages: list[str]
 
 
 @attr.s(auto_attribs=True)
 class ApiFolderWithParent:
     id: str
     name: str
-    parent: Optional[str] = None
+    parent: str | None = None
 
 
 @attr.s(auto_attribs=True)
 class ApiFolder:
     id: str
     name: str
-    allowed_teams: List[ApiTeam]
-    allowed_teams_cumulative: List[ApiTeam]
+    allowed_teams: list[ApiTeam]
+    allowed_teams_cumulative: list[ApiTeam]
     is_editable: bool
-    metadata: Optional[List[ApiMetadata]] = None
+    metadata: list[ApiMetadata] | None = None
