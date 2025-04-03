@@ -156,6 +156,12 @@ class ApiDatasetUploadSuccess:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetManualUploadSuccess:
+    dataset_id: str
+    directory_name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiLinkedLayerIdentifier:
     organization_id: str
     data_set_name: str

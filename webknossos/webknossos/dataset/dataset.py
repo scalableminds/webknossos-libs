@@ -472,8 +472,9 @@ class Dataset:
         organization: str,
         initial_team_ids: list[str],
         folder_id: str | RemoteFolder,
+        require_unique_name: bool = False,
         token: str | None = None,
-    ) -> None:
+    ) -> tuple[str, str]:
         """Announce a manual dataset upload to WEBKNOSSOS.
 
         Used when manually uploading datasets to the file system of a datastore.
@@ -517,7 +518,10 @@ class Dataset:
         )
         upload_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
-        datastore_api.dataset_reserve_manual_upload(dataset_announce, token=token)
+        response = datastore_api.dataset_reserve_manual_upload(
+            dataset_announce, token=token, require_unique_name=require_unique_name
+        )
+        return response.dataset_id, response.directory_name
 
     @classmethod
     def trigger_reload_in_datastore(
