@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.10, <3.14"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -476,16 +477,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/58/e9/8fb8e0ff6bef5e170ee19d59ca694f9001b2ec085dc99b4f65c128bb3f9a/coverage-7.8.0-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:f3c38e4e5ccbdc9198aecc766cedbb134b2d89bf64533973678dfcf07effd883", size = 255116 },
     { url = "https://files.pythonhosted.org/packages/56/b0/d968ecdbe6fe0a863de7169bbe9e8a476868959f3af24981f6a10d2b6924/coverage-7.8.0-cp313-cp313t-win32.whl", hash = "sha256:379fe315e206b14e21db5240f89dc0774bdd3e25c3c58c2c733c99eca96f1ada", size = 214909 },
     { url = "https://files.pythonhosted.org/packages/87/e9/d6b7ef9fecf42dfb418d93544af47c940aa83056c49e6021a564aafbc91f/coverage-7.8.0-cp313-cp313t-win_amd64.whl", hash = "sha256:2e4b6b87bb0c846a9315e3ab4be2d52fac905100565f4b92f02c445c8799e257", size = 216068 },
-    { url = "https://files.pythonhosted.org/packages/60/0c/5da94be095239814bf2730a28cffbc48d6df4304e044f80d39e1ae581997/coverage-7.8.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:fa260de59dfb143af06dcf30c2be0b200bed2a73737a8a59248fcb9fa601ef0f", size = 211377 },
-    { url = "https://files.pythonhosted.org/packages/d5/cb/b9e93ebf193a0bb89dbcd4f73d7b0e6ecb7c1b6c016671950e25f041835e/coverage-7.8.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:96121edfa4c2dfdda409877ea8608dd01de816a4dc4a0523356067b305e4e17a", size = 211803 },
-    { url = "https://files.pythonhosted.org/packages/78/1a/cdbfe9e1bb14d3afcaf6bb6e1b9ba76c72666e329cd06865bbd241efd652/coverage-7.8.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6b8af63b9afa1031c0ef05b217faa598f3069148eeee6bb24b79da9012423b82", size = 240561 },
-    { url = "https://files.pythonhosted.org/packages/59/04/57f1223f26ac018d7ce791bfa65b0c29282de3e041c1cd3ed430cfeac5a5/coverage-7.8.0-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:89b1f4af0d4afe495cd4787a68e00f30f1d15939f550e869de90a86efa7e0814", size = 238488 },
-    { url = "https://files.pythonhosted.org/packages/b7/b1/0f25516ae2a35e265868670384feebe64e7857d9cffeeb3887b0197e2ba2/coverage-7.8.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:94ec0be97723ae72d63d3aa41961a0b9a6f5a53ff599813c324548d18e3b9e8c", size = 239589 },
-    { url = "https://files.pythonhosted.org/packages/e0/a4/99d88baac0d1d5a46ceef2dd687aac08fffa8795e4c3e71b6f6c78e14482/coverage-7.8.0-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:8a1d96e780bdb2d0cbb297325711701f7c0b6f89199a57f2049e90064c29f6bd", size = 239366 },
-    { url = "https://files.pythonhosted.org/packages/ea/9e/1db89e135feb827a868ed15f8fc857160757f9cab140ffee21342c783ceb/coverage-7.8.0-cp39-cp39-musllinux_1_2_i686.whl", hash = "sha256:f1d8a2a57b47142b10374902777e798784abf400a004b14f1b0b9eaf1e528ba4", size = 237591 },
-    { url = "https://files.pythonhosted.org/packages/1b/6d/ac4d6fdfd0e201bc82d1b08adfacb1e34b40d21a22cdd62cfaf3c1828566/coverage-7.8.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:cf60dd2696b457b710dd40bf17ad269d5f5457b96442f7f85722bdb16fa6c899", size = 238572 },
-    { url = "https://files.pythonhosted.org/packages/25/5e/917cbe617c230f7f1745b6a13e780a3a1cd1cf328dbcd0fd8d7ec52858cd/coverage-7.8.0-cp39-cp39-win32.whl", hash = "sha256:be945402e03de47ba1872cd5236395e0f4ad635526185a930735f66710e1bd3f", size = 213966 },
-    { url = "https://files.pythonhosted.org/packages/bd/93/72b434fe550135869f9ea88dd36068af19afce666db576e059e75177e813/coverage-7.8.0-cp39-cp39-win_amd64.whl", hash = "sha256:90e7fbc6216ecaffa5a880cdc9c77b7418c1dcb166166b78dbc630d07f278cc3", size = 214852 },
     { url = "https://files.pythonhosted.org/packages/c4/f1/1da77bb4c920aa30e82fa9b6ea065da3467977c2e5e032e38e66f1c57ffd/coverage-7.8.0-pp39.pp310.pp311-none-any.whl", hash = "sha256:b8194fb8e50d556d5849753de991d390c5a1edeeba50f68e3a9253fbd8bf8ccd", size = 203443 },
     { url = "https://files.pythonhosted.org/packages/59/f1/4da7717f0063a222db253e7121bd6a56f6fb1ba439dcc36659088793347c/coverage-7.8.0-py3-none-any.whl", hash = "sha256:dbf364b4c5e7bae9250528167dfe40219b62e2d573c854d74be213e1e52069f7", size = 203435 },
 ]
@@ -2148,7 +2139,6 @@ dependencies = [
     { name = "cattrs" },
     { name = "certifi" },
     { name = "cluster-tools" },
-    { name = "coverage" },
     { name = "httpx" },
     { name = "loxun" },
     { name = "natsort" },
@@ -2156,7 +2146,6 @@ dependencies = [
     { name = "numpy" },
     { name = "pims" },
     { name = "psutil" },
-    { name = "pytest-cov" },
     { name = "python-dateutil" },
     { name = "python-dotenv" },
     { name = "rich" },
@@ -2206,6 +2195,7 @@ tifffile = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "coverage" },
     { name = "fsspec" },
     { name = "hypothesis" },
     { name = "icecream" },
@@ -2213,6 +2203,7 @@ dev = [
     { name = "jsonschema" },
     { name = "mypy" },
     { name = "pytest" },
+    { name = "pytest-cov" },
     { name = "pytest-custom-exit-code" },
     { name = "pytest-split" },
     { name = "pytest-sugar" },
@@ -2230,7 +2221,6 @@ requires-dist = [
     { name = "cattrs", specifier = ">=22.0.0" },
     { name = "certifi", specifier = ">=2023" },
     { name = "cluster-tools", editable = "../cluster_tools" },
-    { name = "coverage", specifier = ">=7.8.0" },
     { name = "fastremap", marker = "extra == 'examples'", specifier = "~=1.15.0" },
     { name = "httpx", specifier = "~=0.27.0" },
     { name = "imagecodecs", marker = "extra == 'imagecodecs'", specifier = ">=2021.11.20" },
@@ -2244,7 +2234,6 @@ requires-dist = [
     { name = "pooch", marker = "extra == 'examples'", specifier = "~=1.5.2" },
     { name = "psutil", specifier = "~=6.0.0" },
     { name = "pylibczirw", marker = "extra == 'czi'", specifier = "==4.1.3" },
-    { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "python-dateutil", specifier = "~=2.8.0" },
     { name = "python-dotenv", specifier = "~=1.0.1" },
     { name = "rich", specifier = "~=13.8.0" },
@@ -2269,6 +2258,7 @@ provides-extras = ["tifffile", "imagecodecs", "bioformats", "czi", "examples", "
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "coverage", specifier = ">=7.8.0" },
     { name = "fsspec", specifier = "~=2024.6.0" },
     { name = "hypothesis", specifier = "~=6.35.0" },
     { name = "icecream", specifier = "~=2.1.1" },
@@ -2276,6 +2266,7 @@ dev = [
     { name = "jsonschema", specifier = "~=4.6.0" },
     { name = "mypy", specifier = "~=1.15.0" },
     { name = "pytest", specifier = "~=8.3.2" },
+    { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "pytest-custom-exit-code", specifier = "~=0.3.0" },
     { name = "pytest-split", specifier = "~=0.10.0" },
     { name = "pytest-sugar", specifier = "~=1.0.0" },
