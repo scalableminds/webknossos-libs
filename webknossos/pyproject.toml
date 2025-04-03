@@ -88,6 +88,7 @@ all = [
 [tool.uv]
 extra-index-url = ["https://pypi.scm.io/simple"]
 dev-dependencies = [
+    "coverage>=7.8.0",
     "fsspec ~=2024.6.0",
     "hypothesis ~=6.35.0",
     "icecream ~=2.1.1",
@@ -95,6 +96,7 @@ dev-dependencies = [
     "jsonschema ~=4.6.0",
     "mypy ~=1.15.0",
     "pytest ~=8.3.2",
+    "pytest-cov>=6.0.0",
     "pytest-custom-exit-code ~=0.3.0",
     "pytest-split ~=0.10.0",
     "pytest-sugar ~=1.0.0",
