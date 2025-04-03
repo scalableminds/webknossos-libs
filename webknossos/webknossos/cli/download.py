@@ -1,10 +1,9 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
 import re
-from typing import Any, List, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
@@ -31,7 +30,7 @@ def main(
         ),
     ],
     token: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Authentication token for WEBKNOSSOS instance "
             "(https://webknossos.org/auth/token).",
@@ -40,7 +39,7 @@ def main(
         ),
     ] = None,
     bbox: Annotated[
-        Optional[BoundingBox],
+        BoundingBox | None,
         typer.Option(
             rich_help_panel="Partial download",
             help="Bounding box that should be downloaded. "
@@ -51,7 +50,7 @@ def main(
         ),
     ] = None,
     layer: Annotated[
-        Optional[List[str]],
+        list[str] | None,
         typer.Option(
             rich_help_panel="Partial download",
             help="Layers that should be downloaded. "
@@ -59,7 +58,7 @@ def main(
         ),
     ] = None,
     mag: Annotated[
-        Optional[List[Mag]],
+        list[Mag] | None,
         typer.Option(
             rich_help_panel="Partial download",
             help="Mags that should be downloaded. "

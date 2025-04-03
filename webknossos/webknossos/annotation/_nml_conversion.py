@@ -1,7 +1,8 @@
 import colorsys
 import itertools
 import warnings
-from typing import TYPE_CHECKING, Dict, List, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import networkx as nx
 import numpy as np
@@ -28,7 +29,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
 
     groups_by_id = {}
 
-    def visit_groups(nml_groups: List[wknml.Group], current_group: "Group") -> None:
+    def visit_groups(nml_groups: list[wknml.Group], current_group: "Group") -> None:
         for nml_group in nml_groups:
             sub_group = current_group.add_group(
                 name=nml_group.name, _enforced_id=nml_group.id
@@ -77,8 +78,8 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
 
 
 def _dict_to_metadata_entry_list(
-    metadata: Dict[str, Union[str, int, float, Sequence[str]]],
-) -> List[wknml.MetadataEntry]:
+    metadata: dict[str, str | int | float | Sequence[str]],
+) -> list[wknml.MetadataEntry]:
     metadata_entry_list = []
     if metadata is not None:
         for key, value in metadata.items():
@@ -132,7 +133,7 @@ def _nml_tree_to_wk_tree(
         new_tree.add_edge(edge.source, edge.target)
 
 
-def _random_color_rgba() -> Tuple[float, float, float, float]:
+def _random_color_rgba() -> tuple[float, float, float, float]:
     """
     A utility to generate a new random RGBA color.
     """
@@ -246,12 +247,12 @@ def annotation_to_nml(
 
 def _extract_nodes_and_edges_from_tree(
     graph: nx.Graph,
-) -> Tuple[List[wknml.Node], List[wknml.Edge]]:
+) -> tuple[list[wknml.Node], list[wknml.Edge]]:
     """
     A utility to convert a single [NetworkX graph object](https://networkx.org/) into a list of `NmlNode` objects and `Edge` objects.
 
     Return
-        Tuple[List[NmlNode], List[Edge]]: A tuple containing both all nodes and all edges
+        tuple[list[NmlNode], list[Edge]]: A tuple containing both all nodes and all edges
     """
 
     node_nml = [

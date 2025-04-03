@@ -2,10 +2,9 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..dataset import Dataset, SamplingModes
 from ..geometry import Mag
@@ -35,7 +34,7 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         ),
     ],
     layer_name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Name of the layer that should be downsampled.", show_default=False
         ),
@@ -55,7 +54,7 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help='Necessary when using slurm as distribution strategy. Should be a JSON string \
 (e.g., --job-resources=\'{"mem": "10M"}\')\'',

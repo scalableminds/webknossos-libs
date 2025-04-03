@@ -1,4 +1,5 @@
-from typing import Literal, NamedTuple, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Literal, NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -9,7 +10,7 @@ from .utils import as_float_unless_none, as_int_unless_none, enforce_not_null
 class MetadataEntry(NamedTuple):
     key: str
     type: Literal["str", "number", "list"]
-    value: Union[str, int, float, Sequence[str]]
+    value: str | int | float | Sequence[str]
 
     def _dump(self, xf: XmlWriter) -> None:
         if self.type == "str":
@@ -41,7 +42,7 @@ class MetadataEntry(NamedTuple):
                 enforce_not_null(nml_metadata_entry.get("stringValue", default=None)),
             )
         elif nml_metadata_entry.get("numberValue") is not None:
-            number_value: Optional[Union[int, float]]
+            number_value: int | float | None
             try:
                 number_value = as_int_unless_none(nml_metadata_entry.get("numberValue"))
             except ValueError:

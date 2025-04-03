@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -13,12 +13,12 @@ class Tree(NamedTuple):
     #  nml-Thing pendant
 
     id: int
-    color: Optional[Vector4]  # RGBA
+    color: Vector4 | None  # RGBA
     name: str
-    nodes: List[Node]
-    edges: List[Edge]
-    metadata: List[MetadataEntry]
-    groupId: Optional[int] = None
+    nodes: list[Node]
+    edges: list[Edge]
+    metadata: list[MetadataEntry]
+    groupId: int | None = None
 
     def _dump(self, xf: XmlWriter) -> None:
         color = self.color or (1, 1, 1, 1)

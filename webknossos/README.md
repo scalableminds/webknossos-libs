@@ -12,7 +12,8 @@ For the WEBKNOSSOS server, please refer to https://github.com/scalableminds/webk
 
 ## Features
 
-- easy-to-use dataset API for reading/writing/editing raw 2D/3D image data and volume annotations/segmentation in WEBKNOSSOS wrap (*.wkw) format
+- easy-to-use dataset API for reading/writing/editing raw 2D/3D image data and volume annotations/segmentation in WEBKNOSSOS-compatiböe format
+    - convert from other formats, e.g. tiff stacks
     - add/remove layers
     - update metadata (`datasource-properties.json`) 
     - up/downsample layers
@@ -29,7 +30,7 @@ For the WEBKNOSSOS server, please refer to https://github.com/scalableminds/webk
 Please refer to [the documentation for further instructions](https://docs.webknossos.org/webknossos-py).
 
 ## Installation
-The `webknossos` package requires at least Python 3.9.
+The `webknossos` package requires at least Python 3.10.
 
 You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via pip:
 

@@ -1,14 +1,14 @@
 import itertools
+from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import attr
 import networkx as nx
 
 from .group import Group
 
-Vector3 = Tuple[float, float, float]
+Vector3 = tuple[float, float, float]
 
 
 @attr.define(eq=False)
@@ -81,11 +81,11 @@ class Skeleton(Group):
 
     voxel_size: Vector3
     dataset_name: str
-    dataset_id: Optional[str] = None
-    organization_id: Optional[str] = None
-    description: Optional[str] = None
+    dataset_id: str | None = None
+    organization_id: str | None = None
+    description: str | None = None
     # from Group parent to support mypy:
-    _enforced_id: Optional[int] = attr.field(default=None, eq=False, repr=False)
+    _enforced_id: int | None = attr.field(default=None, eq=False, repr=False)
 
     name: str = attr.field(default="Root", init=False, eq=False, repr=False)
     """Should not be used with `Skeleton`, this attribute is only useful for sub-groups. Set to `Root`."""
@@ -101,14 +101,14 @@ class Skeleton(Group):
         super().__attrs_post_init__()  # sets self._id
 
     @staticmethod
-    def load(file_path: Union[PathLike, str]) -> "Skeleton":
+    def load(file_path: PathLike | str) -> "Skeleton":
         """Load a skeleton annotation from a file.
 
         This method can load skeleton annotations from either a .nml file or a .zip file
         that contains an NML file. The .zip file may also contain volume layers.
 
         Args:
-            file_path (Union[PathLike, str]): Path to the .nml or .zip file containing
+            file_path (PathLike | str): Path to the .nml or .zip file containing
                 the skeleton annotation.
 
         Returns:
@@ -137,7 +137,7 @@ class Skeleton(Group):
 
         return Annotation.load(file_path).skeleton
 
-    def save(self, out_path: Union[str, PathLike]) -> None:
+    def save(self, out_path: str | PathLike) -> None:
         """Save the skeleton annotation to a file.
 
         Saves the skeleton data to either a .nml file or a .zip archive. The .zip
@@ -145,7 +145,7 @@ class Skeleton(Group):
         you want to compress the data.
 
         Args:
-            out_path (Union[str, PathLike]): Destination path for the saved file.
+            out_path (str | PathLike): Destination path for the saved file.
                 Must end with either .nml or .zip extension.
 
         Raises:
@@ -178,7 +178,7 @@ class Skeleton(Group):
         annotation.save(out_path)
 
     def add_nx_graphs(
-        self, tree_dict: Union[List[nx.Graph], Dict[str, List[nx.Graph]]]
+        self, tree_dict: list[nx.Graph] | dict[str, list[nx.Graph]]
     ) -> None:
         """Import NetworkX graphs as skeleton trees.
 
@@ -187,7 +187,7 @@ class Skeleton(Group):
         dictionary mapping group names to lists of graphs.
 
         Args:
-            tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): Either:
+            tree_dict (list[nx.Graph] | dict[str, list[nx.Graph]]): Either:
                 - A list of NetworkX graphs to be added directly to the skeleton
                 - A dictionary mapping group names to lists of graphs, which will
                   create new groups with the specified names containing the graphs

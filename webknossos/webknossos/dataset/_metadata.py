@@ -1,14 +1,8 @@
+from collections.abc import Generator, Iterator, MutableMapping, Sequence
 from contextlib import contextmanager
 from typing import (
     Any,
-    Dict,
-    Generator,
-    Iterator,
-    List,
-    MutableMapping,
-    Sequence,
     TypeVar,
-    Union,
 )
 
 from ..client.api_client.models import ApiDataset, ApiFolder, ApiMetadata
@@ -22,7 +16,7 @@ class Metadata(MutableMapping):
     _api_path: str
     _api_type: Any
 
-    def __init__(self, _id: str, *args: Any, **kwargs: Dict[str, Any]) -> None:
+    def __init__(self, _id: str, *args: Any, **kwargs: dict[str, Any]) -> None:
         if not self._api_path or not self._api_type:
             raise NotImplementedError(
                 "This class is not meant to be used directly. Please use FolderMetadata or DatasetMetadata."
@@ -30,7 +24,7 @@ class Metadata(MutableMapping):
         super().__init__(*args, **kwargs)
         self._id: str = _id
         self._has_changed: bool = False
-        self._mapping: Dict = {}
+        self._mapping: dict = {}
 
     @contextmanager
     def _recent_metadata(self: _T) -> Generator[_T, None, None]:
@@ -42,7 +36,7 @@ class Metadata(MutableMapping):
                 f"{self._api_path}{self._id}",
                 self._api_type,  # type: ignore
             )
-            metadata: List[ApiMetadata] = full_object.metadata
+            metadata: list[ApiMetadata] = full_object.metadata
             if metadata is not None:
                 self._mapping = {
                     element.key: parse_metadata_value(element.value, element.type)
@@ -65,14 +59,12 @@ class Metadata(MutableMapping):
                     client._put_json(f"{self._api_path}{self._id}", full_object)
                 self._has_changed = False
 
-    def __setitem__(
-        self, key: str, value: Union[str, int, float, Sequence[str]]
-    ) -> None:
+    def __setitem__(self, key: str, value: str | int | float | Sequence[str]) -> None:
         with self._recent_metadata() as metadata:
             metadata._has_changed = True
             metadata._mapping[key] = value
 
-    def __getitem__(self, key: str) -> Union[str, int, float, Sequence[str]]:
+    def __getitem__(self, key: str) -> str | int | float | Sequence[str]:
         with self._recent_metadata() as metadata:
             return metadata._mapping[key]
 
