@@ -226,40 +226,13 @@ class Layer:
 
     @property
     def path(self) -> Path:
-        """Gets the filesystem path to this layer's data.
-
-        The path is determined from the first mag's path parent directory if mags have paths,
-        otherwise uses the dataset path combined with layer name. Remote paths are handled
-        specially.
+        """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
+        Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
 
         Returns:
             Path: Filesystem path to this layer's data directory
-
-        Raises:
-            AssertionError: If mags in layer point to different layers
         """
-
-        # Assume that all mags belong to the same layer. If they have a path use them as this layers path.
-        # This is necessary for remote layer / mag support.
-        maybe_mag_path_str = (
-            self._properties.mags[0].path if len(self._properties.mags) > 0 else None
-        )
-        maybe_layer_path = (
-            strip_trailing_slash(UPath(maybe_mag_path_str)).parent
-            if maybe_mag_path_str
-            else None
-        )
-        for mag in self._properties.mags:
-            is_same_layer = (
-                mag.path is None and maybe_layer_path is None
-            ) or strip_trailing_slash(UPath(mag.path)).parent == maybe_layer_path
-            assert is_same_layer, "All mags of a layer must point to the same layer."
-        is_remote = maybe_layer_path and is_remote_path(maybe_layer_path)
-        return (
-            maybe_layer_path
-            if maybe_layer_path and is_remote
-            else self.dataset.path / self.name
-        )
+        return self.dataset.path / self.name
 
     @property
     def resolved_path(self) -> Path:
@@ -691,7 +664,15 @@ class Layer:
             f"Cannot add mag {mag} as it already exists for layer {self}"
         )
         self._setup_mag(mag, mag_path)
-        self._properties.mags.append(mag_view._properties)
+        # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
+        self._properties.mags.append(
+            MagViewProperties(
+                mag=mag_view.mag,
+                path=str(mag_view.path),
+                cube_length=mag_view._properties.cube_length,
+                axis_order=mag_view._properties.axis_order,
+            )
+        )
         self.dataset._export_as_json()
 
         return mag_view
