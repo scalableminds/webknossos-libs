@@ -48,6 +48,8 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           version: "0.6.3"
+          enable-cache: true
+          cache-dependency-glob: "cluster_tools/uv.lock"
       
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -161,8 +163,6 @@ jobs:
     defaults:
       run:
         working-directory: webknossos
-    env:
-      UV_CACHE_DIR: ~/.uv_cache
 
     steps:
       - uses: actions/checkout@v3
@@ -171,7 +171,9 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
-          version: "0.6.3"
+          version: "0.5.26"
+          enable-cache: true
+          cache-dependency-glob: "webknossos/uv.lock"
 
       - name: Install proxay
         run: npm install -g proxay
@@ -179,15 +181,6 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      - name: Restore uv cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.uv_cache
-          key: uv-${{ matrix.python-version }}-${{ hashFiles('webknossos/uv.lock') }}
-          restore-keys: |
-            uv-${{ matrix.python-version }}-${{ hashFiles('webknossos/uv.lock') }}
-            uv-${{ matrix.python-version }}
-      
       - name: Check formatting
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./format.sh check
@@ -211,7 +204,6 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
-          UV_CACHE_DIR: ~/.uv_cache
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=term-missing
 
       - name: Python tests
@@ -219,11 +211,14 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-          UV_CACHE_DIR: ~/.uv_cache
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
-      - name: Minimize uv cache
-        run: uv cache prune --ci
+      - name: Persist coverage reports
+        if: ${{ matrix.python-version == '3.11' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/coverage
+          key: coverage-${{ github.run_id }}
 
       - name: Check if git is dirty
         run: |
@@ -245,6 +240,13 @@ jobs:
         with:
           # Install a specific version of uv.
           version: "0.6.3"
+
+      - name: Retrieve coverage reports from cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/coverage
+          key: coverage-${{ github.run_id }}
+      
 
       - name: Generate coverage report
         env:
