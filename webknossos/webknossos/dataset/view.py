@@ -1,14 +1,8 @@
 import warnings
+from collections.abc import Callable, Generator, Iterator
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Dict,
-    Generator,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
 )
 
 import numpy as np
@@ -31,7 +25,7 @@ if TYPE_CHECKING:
     from ._utils.buffered_slice_writer import BufferedSliceWriter
 
 
-def _assert_check_equality(args: Tuple["View", "View", int]) -> None:
+def _assert_check_equality(args: tuple["View", "View", int]) -> None:
     view_a, view_b, _ = args
     assert np.all(view_a.read() == view_b.read())
 
@@ -63,17 +57,16 @@ class View:
 
     _path: LazyPath
     _data_format: DataFormat
-    _bounding_box: Optional[NDBoundingBox]
+    _bounding_box: NDBoundingBox | None
     _read_only: bool
-    _cached_array: Optional[BaseArray]
+    _cached_array: BaseArray | None
     _mag: Mag
 
     def __init__(
         self,
         path_to_mag_view: LazyPath,
-        bounding_box: Optional[
-            NDBoundingBox
-        ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
+        bounding_box: NDBoundingBox
+        | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
         data_format: DataFormat,
         read_only: bool = False,
@@ -86,7 +79,7 @@ class View:
         Args:
             path_to_mag_view (Path): Path to the magnification view directory.
             array_info (ArrayInfo): Information about the array structure and properties.
-            bounding_box (Optional[NDBoundingBox]): The bounding box in mag 1 absolute coordinates.
+            bounding_box (NDBoundingBox | None): The bounding box in mag 1 absolute coordinates.
                 Optional only for mag_view since it overwrites the bounding_box property.
             mag (Mag): Magnification level of the view.
             read_only (bool, optional): Whether the view is read-only. Defaults to False.
@@ -189,31 +182,31 @@ class View:
 
     def _get_mag1_bbox(
         self,
-        abs_mag1_bbox: Optional[NDBoundingBox] = None,
-        rel_mag1_bbox: Optional[NDBoundingBox] = None,
-        abs_mag1_offset: Optional[Vec3IntLike] = None,
-        rel_mag1_offset: Optional[Vec3IntLike] = None,
-        mag1_size: Optional[Vec3IntLike] = None,
-        current_mag_size: Optional[Vec3IntLike] = None,
+        abs_mag1_bbox: NDBoundingBox | None = None,
+        rel_mag1_bbox: NDBoundingBox | None = None,
+        abs_mag1_offset: Vec3IntLike | None = None,
+        rel_mag1_offset: Vec3IntLike | None = None,
+        mag1_size: Vec3IntLike | None = None,
+        current_mag_size: Vec3IntLike | None = None,
     ) -> NDBoundingBox:
         num_bboxes = count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
         num_offsets = count_defined_values([abs_mag1_offset, rel_mag1_offset])
         num_sizes = count_defined_values([mag1_size, current_mag_size])
         if num_bboxes == 0:
             assert num_offsets != 0, "You must supply an offset or a bounding box."
-            assert (
-                num_sizes != 0
-            ), "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
+            assert num_sizes != 0, (
+                "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
+            )
             assert num_offsets == 1, "Only one offset can be supplied."
             assert num_sizes == 1, "Only one size can be supplied."
         else:
             assert num_bboxes == 1, "Only one bounding-box can be supplied."
-            assert (
-                num_offsets == 0
-            ), "A bounding-box was supplied, you cannot also supply an offset."
-            assert (
-                num_sizes == 0
-            ), "A bounding-box was supplied, you cannot also supply a size."
+            assert num_offsets == 0, (
+                "A bounding-box was supplied, you cannot also supply an offset."
+            )
+            assert num_sizes == 0, (
+                "A bounding-box was supplied, you cannot also supply a size."
+            )
 
         if abs_mag1_bbox is not None:
             return abs_mag1_bbox
@@ -232,9 +225,9 @@ class View:
             assert abs_mag1_offset is not None, "No offset was supplied."
             assert mag1_size is not None, "No size was supplied."
 
-            assert (
-                len(self.bounding_box) == 3
-            ), "The delivered offset and size are only usable for 3D views."
+            assert len(self.bounding_box) == 3, (
+                "The delivered offset and size are only usable for 3D views."
+            )
 
             return self.bounding_box.with_topleft(abs_mag1_offset).with_size(mag1_size)
 
@@ -243,10 +236,10 @@ class View:
         data: np.ndarray,
         *,
         allow_unaligned: bool = False,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
     ) -> None:
         """Write data to the view at a specified location.
 
@@ -261,13 +254,13 @@ class View:
                 Shape must match the target region size.
             allow_unaligned (bool, optional): If True, allows writing data to without
                 being aligned to the shard shape. Defaults to False.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Raises:
@@ -339,13 +332,13 @@ class View:
 
         num_channels = self._array.info.num_channels
         if len(data.shape) == len(self.bounding_box):
-            assert (
-                num_channels == 1
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
+            assert num_channels == 1, (
+                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
+            )
         else:
-            assert (
-                num_channels == data.shape[0]
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
+            assert num_channels == data.shape[0], (
+                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
+            )
 
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_offset=relative_offset,
@@ -354,9 +347,9 @@ class View:
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=data_shape,
         )
-        assert self.bounding_box.contains_bbox(
-            mag1_bbox
-        ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
+        assert self.bounding_box.contains_bbox(mag1_bbox), (
+            f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
+        )
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
@@ -398,7 +391,7 @@ class View:
         self,
         current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
-    ) -> Iterator[Tuple[NDBoundingBox, np.ndarray]]:
+    ) -> Iterator[tuple[NDBoundingBox, np.ndarray]]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox,
         divides these into chunks of shard_shape size and delegates
         the preparation to _prepare_compressed_write_chunk."""
@@ -424,7 +417,7 @@ class View:
         self,
         current_mag_bbox: NDBoundingBox,
         data: np.ndarray,
-    ) -> Tuple[NDBoundingBox, np.ndarray]:
+    ) -> tuple[NDBoundingBox, np.ndarray]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox
         (ideally not larger than a shard) and enlarges that chunk to fit the shard it
         resides in (by reading the entire shard data and writing the passed data ndarray
@@ -449,14 +442,13 @@ class View:
 
     def read(
         self,
-        size: Optional[
-            Vec3IntLike
-        ] = None,  # usually in mag1, in current mag if offset is given
+        size: Vec3IntLike
+        | None = None,  # usually in mag1, in current mag if offset is given
         *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
     ) -> np.ndarray:
         """Read data from the view at a specified location.
 
@@ -465,15 +457,15 @@ class View:
         to read can be specified using either offset+size combinations or bounding boxes.
 
         Args:
-            size (Optional[Vec3IntLike], optional): Size of region to read. Specified in
+            size (Vec3IntLike | None, optional): Size of region to read. Specified in
                 Mag(1) coordinates. Defaults to None.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to the view's
+            relative_offset (Vec3IntLike | None, optional): Offset relative to the view's
                 position in Mag(1) coordinates. Must be used with size. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Must be used with size. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to the view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Returns:
@@ -515,13 +507,13 @@ class View:
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
         """
-        current_mag_size: Optional[Vec3IntLike]
-        mag1_size: Optional[Vec3IntLike]
+        current_mag_size: Vec3IntLike | None
+        mag1_size: Vec3IntLike | None
         if absolute_bounding_box is None and relative_bounding_box is None:
             if size is None:
-                assert (
-                    relative_offset is None and absolute_offset is None
-                ), "You must supply size, when reading with an offset."
+                assert relative_offset is None and absolute_offset is None, (
+                    "You must supply size, when reading with an offset."
+                )
                 absolute_bounding_box = self.bounding_box
                 current_mag_size = None
                 mag1_size = None
@@ -552,9 +544,9 @@ class View:
             ):
                 relative_offset = Vec3Int.zeros()
         else:
-            assert (
-                size is None
-            ), "Cannot supply a size when using bounding_box in view.read()"
+            assert size is None, (
+                "Cannot supply a size when using bounding_box in view.read()"
+            )
             current_mag_size = None
             mag1_size = None
 
@@ -570,14 +562,16 @@ class View:
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
         )
-        assert mag1_bbox.topleft.is_positive(), f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
+        assert mag1_bbox.topleft.is_positive(), (
+            f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
+        )
 
         return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
     def read_xyz(
         self,
-        relative_bounding_box: Optional[NDBoundingBox] = None,
-        absolute_bounding_box: Optional[NDBoundingBox] = None,
+        relative_bounding_box: NDBoundingBox | None = None,
+        absolute_bounding_box: NDBoundingBox | None = None,
     ) -> np.ndarray:
         """Read n-dimensional data and convert it to 3D XYZ format.
 
@@ -590,9 +584,9 @@ class View:
         This ensures compatibility with operations that expect purely 3-dimensional input.
 
         Args:
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Returns:
@@ -643,13 +637,13 @@ class View:
 
     def get_view(
         self,
-        size: Optional[Vec3IntLike] = None,
+        size: Vec3IntLike | None = None,
         *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        read_only: Optional[bool] = None,
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
+        read_only: bool | None = None,
     ) -> "View":
         """Create a new view restricted to a specified region.
 
@@ -658,17 +652,17 @@ class View:
         and can optionally be made read-only.
 
         Args:
-             size (Optional[Vec3IntLike], optional): Size of the new view. Must be specified
+             size (Vec3IntLike | None, optional): Size of the new view. Must be specified
                 when using any offset parameter. Defaults to None.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to current
+            relative_offset (Vec3IntLike | None, optional): Offset relative to current
                 view's position in Mag(1) coordinates. Must be used with size. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Must be used with size. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to current view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
-            read_only (Optional[bool], optional): Whether the new view should be read-only.
+            read_only (bool | None, optional): Whether the new view should be read-only.
                 If None, inherits from parent view. Defaults to None.
 
         Returns:
@@ -715,17 +709,17 @@ class View:
         if read_only is None:
             read_only = self.read_only
         else:
-            assert (
-                read_only or not self.read_only
-            ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
+            assert read_only or not self.read_only, (
+                "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
+            )
 
-        current_mag_size: Optional[Vec3IntLike]
-        mag1_size: Optional[Vec3IntLike]
+        current_mag_size: Vec3IntLike | None
+        mag1_size: Vec3IntLike | None
         if relative_bounding_box is None and absolute_bounding_box is None:
             if size is None:
-                assert (
-                    relative_offset is None and absolute_offset is None
-                ), "You must supply a size, when using get_view with an offset."
+                assert relative_offset is None and absolute_offset is None, (
+                    "You must supply a size, when using get_view with an offset."
+                )
                 current_mag_size = None
                 mag1_size = self.bounding_box.size
             else:
@@ -748,9 +742,9 @@ class View:
             if relative_offset is None and absolute_offset is None:
                 relative_offset = Vec3Int.zeros()
         else:
-            assert (
-                size is None
-            ), "Cannot supply a size when using bounding_box in view.get_view()"
+            assert size is None, (
+                "Cannot supply a size when using bounding_box in view.get_view()"
+            )
             current_mag_size = None
             mag1_size = None
 
@@ -767,7 +761,9 @@ class View:
                 f"The size ({mag1_bbox.size} in mag1) contains a zero. "
                 + "All dimensions must be strictly larger than '0'."
             )
-        assert mag1_bbox.topleft.is_positive(), f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
+        assert mag1_bbox.topleft.is_positive(), (
+            f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
+        )
 
         if not read_only:
             assert self.bounding_box.contains_bbox(mag1_bbox), (
@@ -805,13 +801,13 @@ class View:
 
     def get_buffered_slice_writer(
         self,
-        buffer_size: Optional[int] = None,
+        buffer_size: int | None = None,
         dimension: int = 2,  # z
         *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
         use_logging: bool = False,
         allow_unaligned: bool = False,
     ) -> "BufferedSliceWriter":
@@ -825,16 +821,16 @@ class View:
                 Defaults to the size of the shard in the `dimension`.
             dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
                 Defaults to 2 (z-axis).
-            relative_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates, relative
+            relative_offset (Vec3IntLike | None): Offset in mag1 coordinates, relative
                 to the current view's position. Mutually exclusive with absolute_offset.
                 Defaults to None.
-            absolute_offset (Optional[Vec3IntLike]): Offset in mag1 coordinates in
+            absolute_offset (Vec3IntLike | None): Offset in mag1 coordinates in
                 absolute dataset coordinates. Mutually exclusive with relative_offset.
                 Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+            relative_bounding_box (NDBoundingBox | None): Bounding box in mag1
                 coordinates, relative to the current view's offset. Mutually exclusive
                 with absolute_bounding_box. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1
+            absolute_bounding_box (NDBoundingBox | None): Bounding box in mag1
                 coordinates in absolute dataset coordinates. Mutually exclusive with
                 relative_bounding_box. Defaults to None.
             use_logging (bool): Whether to enable logging of write operations.
@@ -869,9 +865,9 @@ class View:
         """
         from ._utils.buffered_slice_writer import BufferedSliceWriter
 
-        assert (
-            not self._read_only
-        ), "Cannot get a buffered slice writer on a read-only view."
+        assert not self._read_only, (
+            "Cannot get a buffered slice writer on a read-only view."
+        )
 
         if buffer_size is None:
             buffer_size = self.info.shard_shape[dimension]
@@ -890,11 +886,11 @@ class View:
 
     def get_buffered_slice_reader(
         self,
-        buffer_size: Optional[int] = None,
+        buffer_size: int | None = None,
         dimension: int = 2,  # z
         *,
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
         use_logging: bool = False,
     ) -> "BufferedSliceReader":
         """Get a buffered reader for efficiently reading data slices.
@@ -908,10 +904,10 @@ class View:
                 Defaults to the size of the shard in the `dimension`.
             dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
                 Defaults to 2 (z-axis).
-            relative_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates,
+            relative_bounding_box (NDBoundingBox | None): Bounding box in mag1 coordinates,
                 relative to the current view's offset. Mutually exclusive with
                 absolute_bounding_box. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox]): Bounding box in mag1 coordinates
+            absolute_bounding_box (NDBoundingBox | None): Bounding box in mag1 coordinates
                 in absolute dataset coordinates. Mutually exclusive with
                 relative_bounding_box. Defaults to None.
             use_logging (bool): Whether to enable logging of read operations.
@@ -958,10 +954,10 @@ class View:
 
     def for_each_chunk(
         self,
-        func_per_chunk: Callable[[Tuple["View", int]], None],
-        chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        executor: Optional[Executor] = None,
-        progress_desc: Optional[str] = None,
+        func_per_chunk: Callable[[tuple["View", int]], None],
+        chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
+        executor: Executor | None = None,
+        progress_desc: str | None = None,
     ) -> None:
         """Process each chunk of the view with a given function.
 
@@ -970,15 +966,15 @@ class View:
         progress tracking and parallel execution.
 
         Args:
-            func_per_chunk (Callable[[Tuple[View, int]], None]): Function to apply to each chunk.
+            func_per_chunk (Callable[[tuple[View, int]], None]): Function to apply to each chunk.
                 Takes a tuple of (chunk_view, chunk_index) as argument. The chunk_index can be
                 used for progress tracking or logging.
-            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+            chunk_shape (Vec3IntLike | None, optional): Size of each chunk in Mag(1) coordinates.
                 If None, uses one chunk per file based on the dataset's file dimensions.
                 Defaults to None.
-            executor (Optional[Executor], optional): Executor for parallel processing.
+            executor (Executor | None, optional): Executor for parallel processing.
                 If None, processes chunks sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Examples:
@@ -986,7 +982,7 @@ class View:
             from webknossos.utils import named_partial
 
             # Define processing function
-            def process_chunk(args: Tuple[View, int], threshold: float) -> None:
+            def process_chunk(args: tuple[View, int], threshold: float) -> None:
                 chunk_view, chunk_idx = args
                 data = chunk_view.read()
                 # Process data...
@@ -1049,10 +1045,10 @@ class View:
     def map_chunk(
         self,
         func_per_chunk: Callable[["View"], Any],
-        chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        executor: Optional[Executor] = None,
-        progress_desc: Optional[str] = None,
-    ) -> List[Any]:
+        chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
+        executor: Executor | None = None,
+        progress_desc: str | None = None,
+    ) -> list[Any]:
         """Process each chunk of the view and collect results.
 
         Similar to for_each_chunk(), but collects and returns the results from each chunk.
@@ -1062,23 +1058,23 @@ class View:
         Args:
             func_per_chunk (Callable[[View], Any]): Function to apply to each chunk.
                 Takes a chunk view as argument and returns a result of any type.
-            chunk_shape (Optional[Vec3IntLike], optional): Size of each chunk in Mag(1) coordinates.
+            chunk_shape (Vec3IntLike | None, optional): Size of each chunk in Mag(1) coordinates.
                 If None, uses one chunk per file based on the dataset's file dimensions.
                 Defaults to None.
-            executor (Optional[Executor], optional): Executor for parallel processing.
+            executor (Executor | None, optional): Executor for parallel processing.
                 If None, processes chunks sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Returns:
-            List[Any]: List of results from processing each chunk, in chunk order.
+            list[Any]: List of results from processing each chunk, in chunk order.
 
         Examples:
             ```python
             from webknossos.utils import named_partial
 
             # Calculate statistics per chunk
-            def chunk_statistics(view: View, min_value: float) -> Dict[str, float]:
+            def chunk_statistics(view: View, min_value: float) -> dict[str, float]:
                 data = view.read()
                 return {
                     "mean": data[data > min_value].mean(),
@@ -1131,7 +1127,7 @@ class View:
     def chunk(
         self,
         chunk_shape: VecIntLike,
-        chunk_border_alignments: Optional[VecIntLike] = None,
+        chunk_border_alignments: VecIntLike | None = None,
         read_only: bool = False,
     ) -> Generator["View", None, None]:
         """Generate a sequence of sub-views by chunking the current view.
@@ -1142,7 +1138,7 @@ class View:
 
         Args:
             chunk_shape (VecIntLike): Size of each chunk in Mag(1) coordinates.
-            chunk_border_alignments (Optional[VecIntLike], optional): Alignment of chunk
+            chunk_border_alignments (VecIntLike | None, optional): Alignment of chunk
                 borders in Mag(1) coordinates. If None, aligns to (0, 0, 0).
                 Defaults to None.
             read_only (bool, optional): Whether the generated chunks should be read-only.
@@ -1163,12 +1159,12 @@ class View:
 
     def for_zipped_chunks(
         self,
-        func_per_chunk: Callable[[Tuple["View", "View", int]], None],
+        func_per_chunk: Callable[[tuple["View", "View", int]], None],
         target_view: "View",
-        source_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        target_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        executor: Optional[Executor] = None,
-        progress_desc: Optional[str] = None,
+        source_chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
+        target_chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
+        executor: Executor | None = None,
+        progress_desc: str | None = None,
     ) -> None:
         """Process paired chunks from source and target views simultaneously.
 
@@ -1177,24 +1173,24 @@ class View:
         transform data between views of different magnifications, like downsampling.
 
         Args:
-            func_per_chunk (Callable[[Tuple[View, View, int]], None]): Function to apply
+            func_per_chunk (Callable[[tuple[View, View, int]], None]): Function to apply
                 to each chunk pair. Takes (source_chunk, target_chunk, index) as arguments.
             target_view (View): The target view to write transformed data to.
-            source_chunk_shape (Optional[Vec3IntLike], optional): Size of source chunks
+            source_chunk_shape (Vec3IntLike | None, optional): Size of source chunks
                 in Mag(1). If None, uses maximum of source and target file dimensions.
                 Defaults to None.
-            target_chunk_shape (Optional[Vec3IntLike], optional): Size of target chunks
+            target_chunk_shape (Vec3IntLike | None, optional): Size of target chunks
                 in Mag(1). If None, uses maximum of source and target file dimensions.
                 Defaults to None.
-            executor (Optional[Executor], optional): Executor for parallel processing.
+            executor (Executor | None, optional): Executor for parallel processing.
                 If None, processes chunks sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Examples:
             ```python
             # Downsample data from Mag(1) to Mag(2)
-            def downsample_chunk(args: Tuple[View, View, int]) -> None:
+            def downsample_chunk(args: tuple[View, View, int]) -> None:
                 source_chunk, target_chunk, idx = args
                 data = source_chunk.read()
                 downsampled = downsample_data(data)  # Your downsampling function
@@ -1218,9 +1214,9 @@ class View:
             - Memory usage depends on chunk sizes and parallel execution
         """
         if source_chunk_shape is None or target_chunk_shape is None:
-            assert (
-                source_chunk_shape is None and target_chunk_shape is None
-            ), "Either both source_chunk_shape and target_chunk_shape must be given or none."
+            assert source_chunk_shape is None and target_chunk_shape is None, (
+                "Either both source_chunk_shape and target_chunk_shape must be given or none."
+            )
             source_chunk_shape = self._get_file_dimensions_mag1().pairmax(
                 target_view._get_file_dimensions_mag1()
             )
@@ -1282,7 +1278,7 @@ class View:
     def content_is_equal(
         self,
         other: "View",
-        executor: Optional[Executor] = None,
+        executor: Executor | None = None,
     ) -> bool:
         """Compare the content of this view with another view.
 
@@ -1291,9 +1287,9 @@ class View:
 
         Args:
             other (View): The view to compare against.
-            executor (Optional[Executor], optional): Executor for parallel comparison.
+            executor (Executor | None, optional): Executor for parallel comparison.
                 If None, compares sequentially. Defaults to None.
-            progress_desc (Optional[str], optional): Description for progress bar.
+            progress_desc (str | None, optional): Description for progress bar.
                 If None, no progress bar is shown. Defaults to None.
 
         Returns:
@@ -1340,9 +1336,9 @@ class View:
         return f"View({repr(self._path)}, bounding_box={self.bounding_box})"
 
     def _check_chunk_shape(self, chunk_shape: Vec3Int, read_only: bool) -> None:
-        assert chunk_shape.is_positive(
-            strictly_positive=True
-        ), f"The passed parameter 'chunk_shape' {chunk_shape} contains at least one 0. This is not allowed."
+        assert chunk_shape.is_positive(strictly_positive=True), (
+            f"The passed parameter 'chunk_shape' {chunk_shape} contains at least one 0. This is not allowed."
+        )
 
         divisor = self.mag.to_vec3_int() * self._array.info.chunk_shape
         if not read_only:
@@ -1377,17 +1373,17 @@ class View:
         if hasattr(self, "_cached_array"):
             del self._cached_array
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         d = dict(self.__dict__)
         del d["_cached_array"]
         return d
 
-    def __setstate__(self, d: Dict[str, Any]) -> None:
+    def __setstate__(self, d: dict[str, Any]) -> None:
         d["_cached_array"] = None
         self.__dict__ = d
 
 
-def _copy_job(args: Tuple[View, View, int]) -> None:
+def _copy_job(args: tuple[View, View, int]) -> None:
     (source_view, target_view, _) = args
     # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())

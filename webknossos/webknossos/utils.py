@@ -6,34 +6,27 @@ import logging
 import sys
 import time
 import warnings
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from concurrent.futures import Future
-from contextlib import nullcontext
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os.path import relpath
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
+from threading import Thread
 from typing import (
     Any,
-    Callable,
-    ContextManager,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
     Protocol,
-    Sequence,
-    Tuple,
     TypeVar,
-    Union,
 )
 
+import httpx
 import numpy as np
 import rich
 from cluster_tools import Executor, get_executor
+from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
 
@@ -42,18 +35,18 @@ times = {}
 
 def time_start(identifier: str) -> None:
     times[identifier] = time.time()
-    logging.debug("{} started".format(identifier))
+    logging.debug(f"{identifier} started")
 
 
 def time_stop(identifier: str) -> None:
     _time = times.pop(identifier)
-    logging.debug("{} took {:.8f}s".format(identifier, time.time() - _time))
+    logging.debug(f"{identifier} took {time.time() - _time:.8f}s")
 
 
 def get_executor_for_args(
-    args: Optional[argparse.Namespace],
-    executor: Optional[Executor] = None,
-) -> ContextManager[Executor]:
+    args: argparse.Namespace | None,
+    executor: Executor | None = None,
+) -> AbstractContextManager[Executor]:
     if executor is not None:
         return nullcontext(enter_result=executor)
 
@@ -63,7 +56,7 @@ def get_executor_for_args(
         # to these values:
         jobs = cpu_count()
         executor = get_executor("multiprocessing", max_workers=jobs)
-        logging.info("Using pool of {} workers.".format(jobs))
+        logging.info(f"Using pool of {jobs} workers.")
     elif args.distribution_strategy == "multiprocessing":
         # Also accept "processes" instead of job to be compatible with segmentation-tools.
         # In the long run, the args should be unified and provided by the clustertools.
@@ -75,7 +68,7 @@ def get_executor_for_args(
             jobs = cpu_count()
 
         executor = get_executor("multiprocessing", max_workers=jobs)
-        logging.info("Using pool of {} workers.".format(jobs))
+        logging.info(f"Using pool of {jobs} workers.")
     elif args.distribution_strategy in ("slurm", "kubernetes"):
         if args.job_resources is None:
             resources_example = (
@@ -101,9 +94,7 @@ def get_executor_for_args(
             keep_logs=True,
         )
     else:
-        logging.error(
-            "Unknown distribution strategy: {}".format(args.distribution_strategy)
-        )
+        logging.error(f"Unknown distribution strategy: {args.distribution_strategy}")
 
     return executor
 
@@ -121,7 +112,7 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
     return partial_func
 
 
-def infer_metadata_type(value: Union[str, int, float, Sequence[str]]) -> str:
+def infer_metadata_type(value: str | int | float | Sequence[str]) -> str:
     if isinstance(value, str):
         return "string"
     if isinstance(value, Sequence):
@@ -133,14 +124,14 @@ def infer_metadata_type(value: Union[str, int, float, Sequence[str]]) -> str:
         if all(isinstance(i, str) for i in value):
             return "string[]"
         raise ValueError(f"Unsupported metadata type: {type(value)}")
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return "number"
     raise ValueError(f"Unsupported metadata type: {type(value)}")
 
 
 def parse_metadata_value(
-    value: Union[str, List[str]], ts_type: str
-) -> Union[str, int, float, Sequence[str]]:
+    value: str | list[str], ts_type: str
+) -> str | int | float | Sequence[str]:
     if ts_type == "string[]":
         return list(str(v) for v in value)
     elif ts_type == "number":
@@ -156,10 +147,10 @@ def parse_metadata_value(
 
 
 def wait_and_ensure_success(
-    futures: List[Future],
+    futures: list[Future],
     executor: Executor,
-    progress_desc: Optional[str] = None,
-) -> List[Any]:
+    progress_desc: str | None = None,
+) -> list[Any]:
     """Waits for all futures to complete and raises an exception
     as soon as a future resolves with an error."""
 
@@ -181,7 +172,7 @@ def snake_to_camel_case(snake_case_name: str) -> str:
     return parts[0] + "".join(part.title() for part in parts[1:])
 
 
-def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
+def get_chunks(arr: list[Any], chunk_size: int) -> Iterable[list[Any]]:
     for i in range(0, len(arr), chunk_size):
         yield arr[i : i + chunk_size]
 
@@ -271,7 +262,7 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
     )
 
 
-def count_defined_values(values: Iterable[Optional[Any]]) -> int:
+def count_defined_values(values: Iterable[Any | None]) -> int:
     return sum(i is not None for i in values)
 
 
@@ -279,7 +270,7 @@ def is_fs_path(path: Path) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
     return not isinstance(path, UPath) or isinstance(
-        path, (PosixPath, WindowsPath, PosixUPath, WindowsUPath)
+        path, PosixPath | WindowsPath | PosixUPath | WindowsUPath
     )
 
 
@@ -323,7 +314,7 @@ def rmtree(path: Path) -> None:
 
 
 def copytree(in_path: Path, out_path: Path) -> None:
-    def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Tuple[str, ...]]]:
+    def _walk(path: Path, base_path: Path) -> Iterator[tuple[Path, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
         assert path.parts[: len(base_path.parts)] == base_path.parts
@@ -333,7 +324,7 @@ def copytree(in_path: Path, out_path: Path) -> None:
             for p in path.iterdir():
                 yield from _walk(p, base_path)
 
-    def _append(path: Path, parts: Tuple[str, ...]) -> Path:
+    def _append(path: Path, parts: tuple[str, ...]) -> Path:
         for p in parts:
             path = path / p
         return path
@@ -355,7 +346,7 @@ def movetree(in_path: Path, out_path: Path) -> None:
 
 class LazyPath:
     paths: tuple[Path, ...]
-    resolution: Optional[int] = None
+    resolution: int | None = None
 
     def __init__(self, *paths: Path):
         self.paths = tuple(paths)
@@ -393,7 +384,7 @@ C = TypeVar("C")  # cache
 
 
 class LazyReadOnlyDict(Mapping[K, V]):
-    def __init__(self, entries: Dict[K, C], func: Callable[[C], V]) -> None:
+    def __init__(self, entries: dict[K, C], func: Callable[[C], V]) -> None:
         self.entries = entries
         self.func = func
 
@@ -401,23 +392,71 @@ class LazyReadOnlyDict(Mapping[K, V]):
         return self.func(self.entries[key])
 
     def __iter__(self) -> Iterator[K]:
-        for key in self.entries:
-            yield key
+        yield from self.entries
 
     def __len__(self) -> int:
         return len(self.entries)
 
 
 class NDArrayLike(Protocol):
-    def __getitem__(self, selection: Tuple[slice, ...]) -> np.ndarray: ...
+    def __getitem__(self, selection: tuple[slice, ...]) -> np.ndarray: ...
 
-    def __setitem__(self, selection: Tuple[slice, ...], value: np.ndarray) -> None: ...
+    def __setitem__(self, selection: tuple[slice, ...], value: np.ndarray) -> None: ...
 
     @property
-    def shape(self) -> Tuple[int, ...]: ...
+    def shape(self) -> tuple[int, ...]: ...
 
     @property
     def ndim(self) -> int: ...
 
     @property
     def dtype(self) -> np.dtype: ...
+
+
+def get_latest_version_from_pypi() -> Version:
+    """Get the latest version of the Webknossos package from PyPI."""
+
+    try:
+        response = httpx.get("https://pypi.org/pypi/webknossos/json")
+        response.raise_for_status()
+        data = response.json()
+        releases = data["releases"]
+        versions = [Version(v) for v in releases.keys()]
+        latest_version = max(versions)
+        return latest_version
+
+    except (httpx.HTTPError, InvalidVersion):
+        # Failed to get latest version from PyPI
+        pass
+
+    return Version("0.0.0")
+
+
+def check_version_in_background(current_version: str) -> None:
+    """
+    Schedule a non-blocking version check that will log a warning if the current version is outdated.
+    This function runs the check in a separate thread to avoid blocking the main application.
+    """
+
+    def check_version_in_thread() -> None:
+        try:
+            # Get the latest version
+            latest_version = get_latest_version_from_pypi()
+
+            # Compare versions and log warning if needed
+            if Version(current_version) < latest_version:
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"Your current version {current_version} of the webknossos-libs is outdated. "
+                    f"The latest version available on PyPI is {latest_version}. "
+                    f"Consider upgrading to the latest version to avoid being out-of-sync with "
+                    f"the latest WEBKNOSSOS features. See GitHub for full changelog of all "
+                    f"releases (https://github.com/scalableminds/webknossos-libs/releases)."
+                )
+        except Exception:
+            # Silently ignore any errors in version checking
+            pass
+
+    # Start the check in a daemon thread so it won't block program exit
+    t = Thread(target=check_version_in_thread, daemon=True)
+    t.start()

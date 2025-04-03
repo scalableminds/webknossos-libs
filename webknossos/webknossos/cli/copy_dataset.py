@@ -3,10 +3,9 @@
 import logging
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..dataset import DataFormat, Dataset
 from ..geometry import Vec3Int
@@ -35,13 +34,13 @@ def main(
         ),
     ],
     data_format: Annotated[
-        Optional[DataFormat],
+        DataFormat | None,
         typer.Option(
             help="Data format to store the target dataset in.",
         ),
     ] = None,
     chunk_shape: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Number of voxels to be stored as a chunk in the target dataset "
             "(e.g. `32` or `32,32,32`).",
@@ -50,7 +49,7 @@ def main(
         ),
     ] = None,
     shard_shape: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Number of voxels to be stored as a shard in the target dataset "
             "(e.g. `1024` or `1024,1024,1024`).",
@@ -76,7 +75,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',

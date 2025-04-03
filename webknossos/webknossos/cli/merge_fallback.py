@@ -2,10 +2,9 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..annotation import Annotation
 from ..utils import get_executor_for_args
@@ -39,7 +38,7 @@ def main(
         ),
     ],
     volume_layer_name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(help="Name of the volume layer to merge with fallback layer."),
     ] = None,
     jobs: Annotated[
@@ -57,7 +56,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',

@@ -2,10 +2,9 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..dataset import Dataset, SamplingModes
 from ..geometry import Mag
@@ -27,13 +26,13 @@ def main(
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,
     layer_name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Name of the layer to downsample (if not provided, all layers are downsampled)."
         ),
     ] = None,
     coarsest_mag: Annotated[
-        Optional[Mag],
+        Mag | None,
         typer.Option(
             help="Mag to stop downsampling at. \
 Should be number or minus separated string (e.g. 2 or 2-2-2).",
@@ -55,7 +54,7 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',

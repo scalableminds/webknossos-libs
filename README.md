@@ -15,7 +15,7 @@
 Python API for working with [WEBKNOSSOS](https://webknossos.org) datasets, annotations, and for WEBKNOSSOS server interactions.
 
 Use this for:
-- reading/writing/manipulating raw 2D/3D image data and volume annotations/segmentation in WEBKNOSSOS wrap (*.wkw) format
+- reading/writing/manipulating raw 2D/3D image data and volume annotations/segmentation in WEBKNOSSOS format (Zarr and WKW)
 - handling/manipulation of WEBKNOSSOS datasets
 - reading/writing/manipulating WEBKNOSSOS skeleton annotations (*.nml)
 - up- & downloading annotations and datasets from your WEBKNOSSOS instance
@@ -24,12 +24,12 @@ Use this for:
 
 ### CLI
 
-CLI tool for creating and manipulating [WEBKNOSSOS](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large-scale 3D images as found in microscopy data.
+CLI tool for creating and manipulating [WEBKNOSSOS](https://webknossos.org) datasets.
 
 Use this for:
-- converting Tiff-stacks and other data formats for volume image data to WEBKNOSSOS-compatible *.wkw files from the CLI
-- up/downsampling of *.wkw files to different magnification levels (image pyramid) from the CLI
-- compressing your *.wkw files to save disk space from the CLI
+- converting Tiff-stacks and other data formats for volume image data to WEBKNOSSOS-compatible datasets from the CLI
+- up/downsampling of datasets to different magnification levels (image pyramid) from the CLI
+- compressing your datasets to save disk space from the CLI
 
 [Read more in the docs.](https://docs.webknossos.org/webknossos-py/)
 

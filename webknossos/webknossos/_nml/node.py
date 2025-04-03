@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -9,25 +9,25 @@ from .utils import Vector3, enforce_not_null
 class Node(NamedTuple):
     id: int
     position: Vector3
-    radius: Optional[float] = (
+    radius: float | None = (
         None  # radius of a node when rendered in wK, unit: nanometers (nm)
     )
     # 3D rotation of the camera when the node was annotated.
     # Mostly relevant for `Flight` mode to resume in the same direction when returning to `Flight` mode.
-    rotation: Optional[Vector3] = None
-    inVp: Optional[int] = (
+    rotation: Vector3 | None = None
+    inVp: int | None = (
         None  # wK UI viewport in which the node was set, `0`: XY plane, `1`: YZ plane. `2`: XY plane, `3`: 3D viewport
     )
     # wK rendering magnification-level when the node was annotated.
     # Lower magnification levels typically indicate a "zoomed-in" workflow resulting in more accurate annotations.
-    inMag: Optional[int] = None
+    inMag: int | None = None
     # wK rendering bit-depth when the node was annotated. 4bit (lower data quality) or 8bit (regular quality).
     # Lower quality data rendering might lead to less accurate annotations.
-    bitDepth: Optional[int] = None
+    bitDepth: int | None = None
     # wK rendering interpolation flag when the node was annotated.
     # Interpolated data rendering might lead to less accurate annotations.
-    interpolation: Optional[bool] = None
-    time: Optional[int] = None  # unix timestamp marking the creation time
+    interpolation: bool | None = None
+    time: int | None = None  # unix timestamp marking the creation time
 
     def _dump(self, xf: XmlWriter) -> None:
         attributes = {

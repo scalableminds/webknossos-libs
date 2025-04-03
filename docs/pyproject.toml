@@ -4,7 +4,7 @@ description = "Documentation for webknossos-libs"
 version = "0.0.1"
 authors = [{name= "scalable minds", email="hello@scalableminds.com"}]
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.10,<3.13"
 
 dependencies = [
     "webknossos",

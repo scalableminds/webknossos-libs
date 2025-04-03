@@ -1,4 +1,5 @@
-from typing import Any, Callable, Dict, Mapping, Type, TypeVar
+from collections.abc import Callable, Mapping
+from typing import Any, TypeVar
 
 import cattrs
 from attrs import fields as attr_fields
@@ -16,7 +17,7 @@ custom_converter = cattrs.Converter()
 # and not for dicts that may contain user data (e.g. user experiences)
 
 
-def attr_to_camel_case_structure(cl: Type[T]) -> Callable[[Mapping[str, Any], Any], T]:
+def attr_to_camel_case_structure(cl: type[T]) -> Callable[[Mapping[str, Any], Any], T]:
     return cattrs.gen.make_dict_structure_fn(
         cl,
         custom_converter,
@@ -28,7 +29,7 @@ def attr_to_camel_case_structure(cl: Type[T]) -> Callable[[Mapping[str, Any], An
     )
 
 
-def attr_to_camel_case_unstructure(cl: Type[T]) -> Callable[[T], Dict[str, Any]]:
+def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]:
     return cattrs.gen.make_dict_unstructure_fn(
         cl,
         custom_converter,

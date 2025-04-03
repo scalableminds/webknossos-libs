@@ -1,9 +1,10 @@
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
 from .edge import Edge
+from .metadata_entry import MetadataEntry
 from .node import Node
 from .utils import Vector4, enforce_not_null
 
@@ -12,11 +13,12 @@ class Tree(NamedTuple):
     #  nml-Thing pendant
 
     id: int
-    color: Optional[Vector4]  # RGBA
+    color: Vector4 | None  # RGBA
     name: str
-    nodes: List[Node]
-    edges: List[Edge]
-    groupId: Optional[int] = None
+    nodes: list[Node]
+    edges: list[Edge]
+    metadata: list[MetadataEntry]
+    groupId: int | None = None
 
     def _dump(self, xf: XmlWriter) -> None:
         color = self.color or (1, 1, 1, 1)
@@ -41,6 +43,10 @@ class Tree(NamedTuple):
         for edge in self.edges:
             edge._dump(xf)
         xf.endTag()  # edges
+        xf.startTag("metadata")
+        for metadata_entry in self.metadata:
+            metadata_entry._dump(xf)
+        xf.endTag()  # metadata
         xf.endTag()  # thing
 
     @classmethod
@@ -70,6 +76,7 @@ class Tree(NamedTuple):
         return cls(
             nodes=[],
             edges=[],
+            metadata=[],
             id=int(enforce_not_null(nml_tree.get("id"))),
             name=name,
             groupId=groupId if groupId >= 0 else None,
