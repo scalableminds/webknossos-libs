@@ -29,7 +29,7 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 
 ### Python 3 with pip from PyPi
 
-- `webknossos` requires at least Python 3.9
+- `webknossos` requires at least Python 3.10
 
 ```bash
 pip install "webknossos[all]"

@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from typing import IO, BinaryIO, List, NamedTuple, Optional
+from typing import IO, BinaryIO, NamedTuple
 
 from loxun import XmlWriter
 
@@ -8,6 +8,7 @@ from .comment import Comment
 from .edge import Edge
 from .group import Group
 from .meta import Meta
+from .metadata_entry import MetadataEntry
 from .node import Node
 from .parameters import Parameters
 from .segment import Segment
@@ -16,17 +17,17 @@ from .volume import Volume
 
 
 class Nml(NamedTuple):
-    meta: List[Meta]
+    meta: list[Meta]
     parameters: Parameters  # metadata for annotations
-    trees: List[Tree]
-    branchpoints: List[Branchpoint]
-    comments: List[Comment]
-    groups: List[Group]
-    volumes: List[
+    trees: list[Tree]
+    branchpoints: list[Branchpoint]
+    comments: list[Comment]
+    groups: list[Group]
+    volumes: list[
         Volume
     ] = []  # reference to any volume data that is part of this annotation
 
-    def get_meta(self, key: str) -> Optional[str]:
+    def get_meta(self, key: str) -> str | None:
         for entry in self.meta:
             if entry.name == key:
                 return entry.content
@@ -115,14 +116,14 @@ class Nml(NamedTuple):
                     current_tree = Tree._parse(elem)
                     trees.append(current_tree)
                 elif elem.tag == "node":
-                    assert (
-                        current_tree is not None
-                    ), "<node ...> tag needs to be child of a <thing ...> tag."
+                    assert current_tree is not None, (
+                        "<node ...> tag needs to be child of a <thing ...> tag."
+                    )
                     current_tree.nodes.append(Node._parse(elem))
                 elif elem.tag == "edge":
-                    assert (
-                        current_tree is not None
-                    ), "<edge ...> tag needs to be child of a <thing ...> tag."
+                    assert current_tree is not None, (
+                        "<edge ...> tag needs to be child of a <thing ...> tag."
+                    )
                     current_tree.edges.append(Edge._parse(elem))
                 elif elem.tag == "branchpoint":
                     branchpoints.append(Branchpoint._parse(elem))
@@ -141,6 +142,21 @@ class Nml(NamedTuple):
                     if volumes[-1].segments is None:
                         volumes[-1].segments = []
                     volumes[-1].segments.append(segment)
+                elif elem.tag == "metadataEntry":
+                    metadata_entry = MetadataEntry._parse(elem)
+                    if element_stack[-3].tag == "thing":
+                        # Metadata for a tree
+                        assert current_tree is not None, (
+                            "Metadata entry found outside of a tree"
+                        )
+                        current_tree.metadata.append(metadata_entry)
+                    elif element_stack[-3].tag == "segment":
+                        # Metadata for a segment
+                        volumes[-1].segments[-1].metadata.append(metadata_entry)
+                    else:
+                        raise ValueError(
+                            f"Metadata entry found in unexpected location: {elem.element_stack[-3].tag}"
+                        )
             elif event == "end":
                 if elem.tag == "parameters":
                     parameters = Parameters._parse(elem)

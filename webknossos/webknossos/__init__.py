@@ -28,5 +28,12 @@ from .administration import *
 from .annotation import *
 from .client import *
 from .dataset import *
+from .datastore import *
 from .geometry import *
 from .skeleton import *
+from .utils import check_version_in_background
+from .version import __version__ as current_version
+
+if not current_version == "0.0.0":
+    # Schedule the version check to run non-blocking in a background thread
+    check_version_in_background(current_version)

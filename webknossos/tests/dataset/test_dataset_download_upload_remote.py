@@ -117,9 +117,14 @@ def test_remote_dataset(tmp_path: Path) -> None:
 
 def test_upload_download_roundtrip(tmp_path: Path) -> None:
     ds_original = get_sample_dataset(tmp_path)
-    url = ds_original.upload(new_dataset_name="test_upload_download_roundtrip").url
+    uploaded_dataset = ds_original.upload(
+        new_dataset_name="test_upload_download_roundtrip"
+    )
+    wk.Dataset.trigger_reload_in_datastore(
+        "test_upload_download_roundtrip", "Organization_X"
+    )
     ds_roundtrip = wk.Dataset.download(
-        url, path=tmp_path / "ds", layers=["color", "segmentation"]
+        uploaded_dataset.url, path=tmp_path / "ds", layers=["color", "segmentation"]
     )
     assert set(ds_original.get_segmentation_layers()[0].mags.keys()) == set(
         ds_roundtrip.get_segmentation_layers()[0].mags.keys()
@@ -127,15 +132,23 @@ def test_upload_download_roundtrip(tmp_path: Path) -> None:
 
     original_config = ds_original.get_layer("color").default_view_configuration
     roundtrip_config = ds_roundtrip.get_layer("color").default_view_configuration
-    assert (
-        original_config is not None
-    ), "default_view_configuration should be defined for original dataset"
-    assert (
-        roundtrip_config is not None
-    ), "default_view_configuration should be defined for roundtrip dataset"
+    assert original_config is not None, (
+        "default_view_configuration should be defined for original dataset"
+    )
+    assert roundtrip_config is not None, (
+        "default_view_configuration should be defined for roundtrip dataset"
+    )
     assert original_config.color == roundtrip_config.color
     assert original_config.intensity_range == roundtrip_config.intensity_range
 
     data_original = ds_original.get_segmentation_layers()[0].get_finest_mag().read()
     data_roundtrip = ds_roundtrip.get_segmentation_layers()[0].get_finest_mag().read()
     assert np.array_equal(data_original, data_roundtrip)
+
+
+def test_upload_twice(tmp_path: Path) -> None:
+    ds_original = get_sample_dataset(tmp_path)
+    remote1 = ds_original.upload(new_dataset_name="test_upload_twice")
+    remote2 = ds_original.upload(new_dataset_name="test_upload_twice")
+    assert remote1.url != remote2.url
+    assert remote1.name == remote2.name

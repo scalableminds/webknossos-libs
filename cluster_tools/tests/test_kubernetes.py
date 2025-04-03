@@ -1,5 +1,4 @@
 import os
-from typing import List
 
 import cluster_tools
 
@@ -8,7 +7,7 @@ def square(n: float) -> float:
     return n * n
 
 
-def list_dir(path: str) -> List[str]:
+def list_dir(path: str) -> list[str]:
     return os.listdir(path)
 
 

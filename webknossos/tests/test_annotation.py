@@ -105,9 +105,9 @@ def test_annotation_from_file_with_multi_volume() -> None:
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
-        assert (
-            read_voxel == 7718
-        ), f"Expected to see voxel id 7718, but saw {read_voxel} instead."
+        assert read_voxel == 7718, (
+            f"Expected to see voxel id 7718, but saw {read_voxel} instead."
+        )
 
         read_voxel = layer.get_finest_mag().read(
             absolute_offset=(490, 512, 16),
@@ -116,9 +116,9 @@ def test_annotation_from_file_with_multi_volume() -> None:
         # When viewing the annotation online, this segment id will be 284.
         # However, this is fallback data which is not included in this annotation.
         # Therefore, we expect to read a 0 here.
-        assert (
-            read_voxel == 0
-        ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
+        assert read_voxel == 0, (
+            f"Expected to see voxel id 0, but saw {read_voxel} instead."
+        )
 
     # Read from second layer
     with annotation.temporary_volume_layer_copy(
@@ -128,17 +128,17 @@ def test_annotation_from_file_with_multi_volume() -> None:
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
-        assert (
-            read_voxel == 1
-        ), f"Expected to see voxel id 1, but saw {read_voxel} instead."
+        assert read_voxel == 1, (
+            f"Expected to see voxel id 1, but saw {read_voxel} instead."
+        )
 
         read_voxel = layer.get_finest_mag().read(
             absolute_offset=(490, 512, 16),
             size=(1, 1, 1),
         )
-        assert (
-            read_voxel == 0
-        ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
+        assert read_voxel == 0, (
+            f"Expected to see voxel id 0, but saw {read_voxel} instead."
+        )
 
     # Reading from not-existing layer should raise an error
     with pytest.raises(AssertionError):
@@ -328,5 +328,38 @@ def test_nml_with_volumes(nml_path: Path) -> None:
     segment_info = a.get_volume_layer_segments("segmentation")
     assert set(segment_info) == set([2504698])
     assert segment_info[2504698] == wk.SegmentInformation(
-        name="test_segment", anchor_position=Vec3Int(3581, 3585, 1024), color=None
+        name="test_segment",
+        anchor_position=Vec3Int(3581, 3585, 1024),
+        color=None,
+        metadata={},
+    )
+
+
+def test_segment_metadata(tmp_path: Path) -> None:
+    annotation = wk.Annotation.load(
+        TESTDATA_DIR / "annotations" / "nml_with_volumes.zip"
+    )
+    annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
+        "test_segment"
+    ] = "test"
+    annotation.save(tmp_path / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    assert (
+        tmp_annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
+            "test_segment"
+        ]
+        == "test"
+    )
+
+
+def test_tree_metadata(tmp_path: Path) -> None:
+    annotation = wk.Annotation.load(
+        TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    )
+    list(annotation.skeleton.flattened_trees())[0].metadata["test_tree"] = "test"
+    annotation.save(tmp_path / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    assert (
+        list(tmp_annotation.skeleton.flattened_trees())[0].metadata["test_tree"]
+        == "test"
     )

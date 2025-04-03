@@ -2,8 +2,9 @@ import itertools
 import json
 import os
 import pickle
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, Optional, Tuple, cast
+from typing import cast
 
 import numpy as np
 import pytest
@@ -62,7 +63,7 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
 
 
 def copy_simple_dataset(
-    data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
+    data_format: DataFormat, output_path: Path, suffix: str | None = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"simple_{data_format}_dataset{suffix}"
@@ -75,7 +76,7 @@ def copy_simple_dataset(
 
 
 def prepare_dataset_path(
-    data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
+    data_format: DataFormat, output_path: Path, suffix: str | None = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"{data_format}_dataset{suffix}"
@@ -83,7 +84,7 @@ def prepare_dataset_path(
     return new_dataset_path
 
 
-def chunk_job(args: Tuple[View, int]) -> None:
+def chunk_job(args: tuple[View, int]) -> None:
     (view, _i) = args
     # increment the color value of each voxel
     data = view.read()
@@ -95,14 +96,14 @@ def chunk_job(args: Tuple[View, int]) -> None:
 
 def default_chunk_config(
     data_format: DataFormat, chunk_shape: int = 32
-) -> Tuple[Vec3Int, Vec3Int]:
+) -> tuple[Vec3Int, Vec3Int]:
     if data_format == DataFormat.Zarr:
         return (Vec3Int.full(chunk_shape * 8), Vec3Int.full(chunk_shape * 8))
     else:
         return (Vec3Int.full(chunk_shape), Vec3Int.full(chunk_shape * 8))
 
 
-def advanced_chunk_job(args: Tuple[View, int]) -> None:
+def advanced_chunk_job(args: tuple[View, int]) -> None:
     view, _i = args
 
     # write different data for each chunk (depending on the topleft of the chunk)
@@ -166,7 +167,7 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
         )
 
 
-def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) -> None:
+def copy_and_transform_job(args: tuple[View, View, int], name: str, val: int) -> None:
     (source_view, target_view, _i) = args
     # This method simply takes the data from the source_view, transforms it and writes it to the target_view
 
@@ -196,9 +197,9 @@ def get_multichanneled_data(dtype: type) -> np.ndarray:
 
 def assure_exported_properties(ds: Dataset) -> None:
     reopened_ds = Dataset.open(ds.path)
-    assert (
-        ds._properties == reopened_ds._properties
-    ), "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
+    assert ds._properties == reopened_ds._properties, (
+        "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
+    )
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -230,7 +231,7 @@ def test_create_dataset_with_layer_and_mag(
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_ome_ngff_metadata(output_path: Path) -> None:
+def test_ome_ngff_0_4_metadata(output_path: Path) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
@@ -270,6 +271,84 @@ def test_ome_ngff_metadata(output_path: Path) -> None:
             ).read_bytes()
         ),
     )
+
+
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_ome_ngff_0_5_metadata(output_path: Path) -> None:
+    ds_path = prepare_dataset_path(DataFormat.Zarr3, output_path)
+    ds = Dataset(ds_path, voxel_size=(11, 11, 28))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
+    layer.add_mag("1")
+    layer.add_mag("2-2-1")
+
+    assert (ds_path / "zarr.json").exists()
+    assert (ds_path / "color" / "zarr.json").exists()
+    assert (ds_path / "color" / "1" / "zarr.json").exists()
+    assert (ds_path / "color" / "2-2-1" / "zarr.json").exists()
+
+    zattrs = json.loads((ds_path / "color" / "zarr.json").read_bytes())["attributes"]
+    assert zattrs["ome"]["version"] == "0.5"
+    assert len(zattrs["ome"]["multiscales"][0]["datasets"]) == 2
+    assert zattrs["ome"]["multiscales"][0]["datasets"][0]["coordinateTransformations"][
+        0
+    ]["scale"] == [
+        1,
+        11,
+        11,
+        28,
+    ]
+    assert zattrs["ome"]["multiscales"][0]["datasets"][1]["coordinateTransformations"][
+        0
+    ]["scale"] == [
+        1,
+        22,
+        22,
+        28,
+    ]
+
+    validate(
+        instance=zattrs,
+        schema=json.loads(
+            UPath(
+                "https://ngff.openmicroscopy.org/0.5/schemas/image.schema"
+            ).read_bytes()
+        ),
+    )
+
+
+def test_ome_ngff_0_5_metadata_symlink() -> None:
+    def recursive_chmod(ds_path: Path, mode: int) -> None:
+        # See https://docs.python.org/3/library/os.html#os.chmod for how to use mode
+        os.chmod(ds_path, mode)
+        for root, dirs, files in os.walk(ds_path):
+            root_path = Path(root)
+            for _dir in dirs:
+                path = root_path / _dir
+                os.chmod(path, mode)
+            for file in files:
+                path = root_path / file
+                os.chmod(path, mode)
+
+    ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "original")
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    ).add_mag(1)
+
+    # remove write permissions
+    recursive_chmod(ds_path, 0o555)
+    try:
+        symlink_path = prepare_dataset_path(
+            DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "with_symlink"
+        )
+        ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+
+        # add symlink color layer
+        ds.add_symlink_layer(ds_path / "color")
+
+    finally:
+        # restore write permissions
+        recursive_chmod(ds_path, 0o777)
 
 
 def test_create_default_layer() -> None:
@@ -792,7 +871,7 @@ def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 @pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
 def test_write_layer(
-    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+    data_format: DataFormat, output_path: Path, absolute_offset: Vec3Int | None
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -818,7 +897,7 @@ def test_write_layer(
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 @pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
 def test_write_layer_mag2(
-    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+    data_format: DataFormat, output_path: Path, absolute_offset: Vec3Int | None
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(12, 12, 24))
@@ -851,7 +930,7 @@ def test_write_layer_mag2(
 def test_write_layer_5d(
     data_format: DataFormat,
     output_path: Path,
-    absolute_offset: Optional[VecIntLike],
+    absolute_offset: VecIntLike | None,
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -1075,7 +1154,7 @@ def test_properties_with_segmentation() -> None:
     )
     copytree(TESTDATA_DIR / "complex_property_ds", ds_path)
 
-    with open(ds_path / "datasource-properties.json", "r", encoding="utf-8") as f:
+    with open(ds_path / "datasource-properties.json", encoding="utf-8") as f:
         data = json.load(f)
         ds_properties = dataset_converter.structure(data, DatasetProperties)
 
@@ -1114,7 +1193,7 @@ def test_properties_with_segmentation() -> None:
         input_data = json.load(input_properties)
 
         with open(
-            ds_path / "datasource-properties.json", "r", encoding="utf-8"
+            ds_path / "datasource-properties.json", encoding="utf-8"
         ) as output_properties:
             output_data = json.load(output_properties)
             for layer in output_data["dataLayers"]:
@@ -1491,7 +1570,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
 
         with open(
             ds_path / "datasource-properties.json",
-            "r",
             encoding="utf-8",
         ) as f:
             data = json.load(f)
@@ -2046,12 +2124,12 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
-    assert (
-        len(Dataset.open(ds_path).get_layer("color").mags) == 2
-    ), "Adding a new mag should not affect the original dataset"
-    assert (
-        len(Dataset.open(copy_path).get_layer("color").mags) == 3
-    ), "Expecting all mags from original dataset and new downsampled mag"
+    assert len(Dataset.open(ds_path).get_layer("color").mags) == 2, (
+        "Adding a new mag should not affect the original dataset"
+    )
+    assert len(Dataset.open(copy_path).get_layer("color").mags) == 3, (
+        "Expecting all mags from original dataset and new downsampled mag"
+    )
     assert (
         copy_path / "segmentation" / "mappings" / "agglomerate_view.hdf5"
     ).exists(), "Expecting mappings to exist in shallow copy"
@@ -2223,7 +2301,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-def _func_invalid_target_chunk_shape_wk(args: Tuple[View, View, int]) -> None:
+def _func_invalid_target_chunk_shape_wk(args: tuple[View, View, int]) -> None:
     (_s, _t, _i) = args
 
 

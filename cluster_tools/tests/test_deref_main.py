@@ -1,5 +1,3 @@
-from typing import Tuple, Type
-
 import cluster_tools
 
 
@@ -7,7 +5,7 @@ class TestClass:
     pass
 
 
-def deref_fun_helper(obj: Tuple[Type[TestClass], TestClass, int, int]) -> None:
+def deref_fun_helper(obj: tuple[type[TestClass], TestClass, int, int]) -> None:
     clss, inst, one, two = obj
     assert one == 1
     assert two == 2

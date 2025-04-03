@@ -23,14 +23,13 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
     "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
-    "Programming Language :: Python :: 3.9", 
     "Programming Language :: Python :: 3.10", 
     "Programming Language :: Python :: 3.11", 
     "Programming Language :: Python :: 3.12", 
     "Programming Language :: Python :: 3.13", 
 ]
 
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.14"
 
 dependencies = [
     "aiohttp ~=3.10.5",
@@ -43,14 +42,14 @@ dependencies = [
     "loxun ~=2.0.0",
     "natsort ~=8.4.0",
     "networkx ~=3.2.1",
-    "numpy ~=2.0.0",
+    "numpy >=2.0.0,<3.0.0",
     "pims ~=0.7.0",
     "psutil ~=6.0.0",
     "python-dateutil ~=2.8.0",
     "python-dotenv ~=1.0.1",
     "rich ~=13.8.0",
     "scipy >=1.13",
-    "tensorstore~=0.1.69",
+    "tensorstore~=0.1.72",
     "typer ~=0.12.5",
     "typing-extensions ~=4.0",
     "universal-pathlib ~=0.2",
@@ -94,7 +93,7 @@ dev-dependencies = [
     "icecream ~=2.1.1",
     "inducoapi ~=2.0.2",
     "jsonschema ~=4.6.0",
-    "mypy ~=1.10.0",
+    "mypy ~=1.15.0",
     "pytest ~=8.3.2",
     "pytest-custom-exit-code ~=0.3.0",
     "pytest-split ~=0.10.0",
@@ -102,7 +101,7 @@ dev-dependencies = [
     "pytest-timeout ~=2.3.0",
     "pytest-timestamper ~=0.0.10",
     "types-python-dateutil ~=2.9",
-    "ruff ~=0.6.0",
+    "ruff ~=0.11.0",
 ]
 
 [tool.uv.sources]
@@ -147,8 +146,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.9 for automatic linting fixes
-target-version = "py39"
+# Assume Python 3.10 for automatic linting fixes
+target-version = "py310"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
@@ -158,7 +157,8 @@ target-version = "py39"
 # PERF = Perflint https://docs.astral.sh/ruff/rules/#perflint-perf
 # FIX = Flake8 fixme https://docs.astral.sh/ruff/rules/#flake8-fixme-fix
 # ARG = Flake8 unused-arguments https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
-select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG", "T201"]
+# UP = Pyupgrade https://docs.astral.sh/ruff/rules/#pyupgrade-up
+select = ["F", "E", "W", "I", "A", "PERF", "FIX", "ARG", "T201", "UP"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

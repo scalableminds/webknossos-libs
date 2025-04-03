@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Tuple
 
 from webknossos.cli._utils import parse_voxel_size
 from webknossos.dataset import Dataset, MagView, View
@@ -61,7 +60,7 @@ def create_parser() -> ArgumentParser:
 
 def move_by_one(
     src_mag: MagView,
-    args: Tuple[View, int],
+    args: tuple[View, int],
 ) -> None:
     chunk_view, i = args
     del i

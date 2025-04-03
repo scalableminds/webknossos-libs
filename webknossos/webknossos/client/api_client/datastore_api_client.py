@@ -1,8 +1,7 @@
-from typing import Dict, Optional, Tuple
-
 from webknossos.client.api_client.models import (
     ApiDatasetAnnounceUpload,
     ApiDatasetUploadInformation,
+    ApiDatasetUploadSuccess,
     ApiReserveDatasetUploadInformation,
 )
 
@@ -19,7 +18,7 @@ class DatastoreApiClient(AbstractApiClient):
         self,
         datastore_base_url: str,
         timeout_seconds: float,
-        headers: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
     ):
         super().__init__(timeout_seconds, headers)
         self.datastore_base_url = datastore_base_url
@@ -31,22 +30,24 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_finish_upload(
         self,
         upload_information: ApiDatasetUploadInformation,
-        token: Optional[str],
+        token: str | None,
         retry_count: int,
-    ) -> None:
+    ) -> str:
         route = "/datasets/finishUpload"
-        self._post_json(
+        json = self._post_json_with_json_response(
             route,
             upload_information,
             query={"token": token},
             retry_count=retry_count,
             timeout_seconds=LONG_TIMEOUT_SECONDS,
+            response_type=ApiDatasetUploadSuccess,
         )
+        return json.new_dataset_id
 
     def dataset_reserve_upload(
         self,
         reserve_upload_information: ApiReserveDatasetUploadInformation,
-        token: Optional[str],
+        token: str | None,
         retry_count: int,
     ) -> None:
         route = "/datasets/reserveUpload"
@@ -61,7 +62,7 @@ class DatastoreApiClient(AbstractApiClient):
         self,
         organization_id: str,
         dataset_name: str,
-        token: Optional[str] = None,
+        token: str | None = None,
     ) -> None:
         route = f"/triggers/reload/{organization_id}/{dataset_name}"
         query: Query = {"token": token}
@@ -70,7 +71,7 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_reserve_manual_upload(
         self,
         dataset_announce: ApiDatasetAnnounceUpload,
-        token: Optional[str],
+        token: str | None,
     ) -> None:
         route = "/datasets/reserveManualUpload"
         query: Query = {"token": token}
@@ -82,14 +83,14 @@ class DatastoreApiClient(AbstractApiClient):
         directory_name: str,
         data_layer_name: str,
         mag: str,
-        token: Optional[str],
+        token: str | None,
         x: int,
         y: int,
         z: int,
         width: int,
         height: int,
         depth: int,
-    ) -> Tuple[bytes, str]:
+    ) -> tuple[bytes, str]:
         route = f"/datasets/{organization_id}/{directory_name}/layers/{data_layer_name}/data"
         query: Query = {
             "mag": mag,

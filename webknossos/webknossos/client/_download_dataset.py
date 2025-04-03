@@ -1,7 +1,7 @@
 import logging
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, TypeVar, Union, cast
+from typing import TypeVar, cast
 
 import numpy as np
 from rich.progress import track
@@ -24,11 +24,11 @@ _DOWNLOAD_CHUNK_SHAPE = Vec3Int(512, 512, 512)
 
 def download_dataset(
     dataset_id: str,
-    sharing_token: Optional[str] = None,
-    bbox: Optional[BoundingBox] = None,
-    layers: Optional[List[str]] = None,
-    mags: Optional[List[Mag]] = None,
-    path: Optional[Union[PathLike, str]] = None,
+    sharing_token: str | None = None,
+    bbox: BoundingBox | None = None,
+    layers: list[str] | None = None,
+    mags: list[Mag] | None = None,
+    path: PathLike | str | None = None,
     exist_ok: bool = False,
 ) -> Dataset:
     context = _get_context()
@@ -38,7 +38,6 @@ def download_dataset(
     directory_name = api_dataset.directory_name
 
     datastore_client = context.get_datastore_api_client(api_dataset.data_store.url)
-    optional_datastore_token = sharing_token or context.datastore_token
 
     download_path = (
         Path(f"{api_dataset.name}-{api_dataset.id}") if path is None else Path(path)
@@ -61,12 +60,12 @@ def download_dataset(
     )
     for layer_name in layers or [i.name for i in api_data_layers]:
         matching_api_data_layers = [i for i in api_data_layers if i.name == layer_name]
-        assert (
-            len(matching_api_data_layers) > 0
-        ), f"The provided layer name {layer_name} could not be found in the requested dataset."
-        assert (
-            len(matching_api_data_layers) == 1
-        ), f"The provided layer name {layer_name} was found multiple times in the requested dataset."
+        assert len(matching_api_data_layers) > 0, (
+            f"The provided layer name {layer_name} could not be found in the requested dataset."
+        )
+        assert len(matching_api_data_layers) == 1, (
+            f"The provided layer name {layer_name} was found multiple times in the requested dataset."
+        )
         api_data_layer = matching_api_data_layers[0]
         category = cast(LayerCategoryType, api_data_layer.category)
         element_class = api_data_layer.element_class
@@ -95,9 +94,9 @@ def download_dataset(
                 Vec3Int(response_bbox.width, response_bbox.height, response_bbox.depth),
             )
         else:
-            assert isinstance(
-                bbox, BoundingBox
-            ), f"Expected a BoundingBox object for the bbox parameter but got {type(bbox)}"
+            assert isinstance(bbox, BoundingBox), (
+                f"Expected a BoundingBox object for the bbox parameter but got {type(bbox)}"
+            )
             layer.bounding_box = bbox
         if mags is None:
             mags = [Mag(mag) for mag in api_data_layer.resolutions]
@@ -124,7 +123,7 @@ def download_dataset(
                     directory_name=directory_name,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),
-                    token=optional_datastore_token,
+                    token=sharing_token,
                     x=chunk.topleft.x,
                     y=chunk.topleft.y,
                     z=chunk.topleft.z,
@@ -132,9 +131,9 @@ def download_dataset(
                     height=chunk_in_mag.size.y,
                     depth=chunk_in_mag.size.z,
                 )
-                assert (
-                    missing_buckets == "[]"
-                ), f"Download contained missing buckets {missing_buckets}."
+                assert missing_buckets == "[]", (
+                    f"Download contained missing buckets {missing_buckets}."
+                )
                 data = np.frombuffer(
                     chunk_bytes, dtype=layer.dtype_per_channel
                 ).reshape(layer.num_channels, *chunk_in_mag.size, order="F")
