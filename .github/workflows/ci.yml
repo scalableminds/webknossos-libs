@@ -215,10 +215,11 @@ jobs:
 
       - name: Persist coverage reports
         if: ${{ matrix.python-version == '3.11' }}
-        uses: actions/cache@v4
+        uses: actions/upload-artifact@v4
         with:
-          path: ~/.local/share/coverage
-          key: coverage-${{ github.run_id }}
+          name: coverage-reports-${{ github.run_id }}
+          path: "~/.local/share/coverage/${{ matrix.group }}.coverage"
+          retention-days: 1  # Automatically deletes after 1 day
 
       - name: Check if git is dirty
         run: |
@@ -241,19 +242,22 @@ jobs:
           # Install a specific version of uv.
           version: "0.6.3"
 
-      - name: Retrieve coverage reports from cache
-        uses: actions/cache@v4
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
         with:
-          path: ~/.local/share/coverage
-          key: coverage-${{ github.run_id }}
+          name: coverage-reports-${{ github.run_id }}
+          path: coverage-files
       
 
       - name: Generate coverage report
         env:
-          COVERAGE_FILE: "~/.local/share/coverage/result.coverage"
+          COVERAGE_FILE: "coverage-files/result.coverage"
         run: |
-          uv run --frozen coverage combine ~/.local/share/coverage/*.coverage
+          uv run --frozen coverage combine coverage-files/*.coverage
           uv run --frozen coverage report -m
+      
+      - name: Cleanup temporary files
+        run: rm -rf coverage-files
 
   webknossos_cli_docker:
     needs: [cluster_tools, webknossos_linux]
