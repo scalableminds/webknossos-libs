@@ -11,6 +11,7 @@ from uuid import uuid4
 import httpx
 
 from ..dataset import Dataset, Layer, RemoteDataset
+from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
@@ -18,7 +19,7 @@ from .api_client.models import (
     ApiLinkedLayerIdentifier,
     ApiReserveDatasetUploadInformation,
 )
-from .context import _get_context, _WebknossosContext
+from .context import _get_context, _WebknossosContext, webknossos_context
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 4
@@ -57,11 +58,8 @@ class LayerToLink(NamedTuple):
 
 @cache
 def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
-    datastores = context.api_client_with_auth.datastore_list()
-    for datastore in datastores:
-        if datastore.allows_upload:
-            return datastore.url
-    raise ValueError("No datastore found where datasets can be uploaded.")
+    with webknossos_context(context.url, context.token):
+        return Datastore.get_upload_url()
 
 
 def _walk(
@@ -82,6 +80,7 @@ def upload_dataset(
     new_dataset_name: str | None = None,
     layers_to_link: list[LayerToLink] | None = None,
     jobs: int | None = None,
+    datastore_url: str | None = None,
 ) -> str:
     if new_dataset_name is None:
         new_dataset_name = dataset.name
@@ -111,7 +110,7 @@ def upload_dataset(
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
     datastore_token = context.datastore_required_token
-    datastore_url = _cached_get_upload_datastore(context)
+    datastore_url = datastore_url or _cached_get_upload_datastore(context)
     datastore_api_client = context.get_datastore_api_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
@@ -140,18 +139,19 @@ def upload_dataset(
             folder_id=None,
             initial_teams=[],
         ),
-        token=datastore_token,
+        token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
         with Resumable(
-            f"{datastore_url}/data/datasets?token={datastore_token}",
+            f"{datastore_url}/data/datasets",
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "owningOrganization": context.organization_id,
                 "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
+            headers={"x-auth-token": datastore_token},
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _,
             relative_path: f"{upload_id}/{relative_path.as_posix()}",
@@ -168,7 +168,7 @@ def upload_dataset(
 
     dataset_id = datastore_api_client.dataset_finish_upload(
         ApiDatasetUploadInformation(upload_id),
-        datastore_token,
+        token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 

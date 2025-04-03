@@ -62,6 +62,7 @@ from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
 
+from ..client.api_client.models import ApiAnnotation
 from ..dataset import (
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -393,6 +394,7 @@ class Annotation:
         webknossos_url: str | None = None,
         *,
         skip_volume_data: bool = False,
+        retry_count: int = 5,
         _return_context: bool = False,
     ) -> Union["Annotation", tuple["Annotation", AbstractContextManager[None]]]:
         """Downloads an annotation from WEBKNOSSOS.
@@ -453,7 +455,9 @@ class Annotation:
         with context:
             client = _get_api_client()
             file_body, filename = client.annotation_download(
-                annotation_id, skip_volume_data=skip_volume_data
+                annotation_id,
+                skip_volume_data=skip_volume_data,
+                retry_count=retry_count,
             )
 
         if filename.endswith(".nml"):
@@ -468,6 +472,42 @@ class Annotation:
             return annotation, context
         else:
             return annotation
+
+    @classmethod
+    def open_remote(
+        cls,
+        annotation_id_or_url: str,
+        webknossos_url: str | None = None,
+    ) -> "RemoteAnnotation":
+        (
+            annotation,
+            context,
+        ) = Annotation.download(
+            annotation_id_or_url=annotation_id_or_url,
+            webknossos_url=webknossos_url,
+            skip_volume_data=True,
+            _return_context=True,
+        )
+        assert annotation.annotation_id is not None
+        assert annotation.organization_id is not None
+        assert annotation.owner_name is not None
+
+        with context:
+            return RemoteAnnotation(
+                annotation.annotation_id,
+                annotation.organization_id,
+                annotation.dataset_id,
+                name=annotation.name,
+                skeleton=annotation.skeleton,
+                owner_name=annotation.owner_name,
+                time=annotation.time,
+                edit_position=annotation.edit_position,
+                edit_rotation=annotation.edit_rotation,
+                zoom_level=annotation.zoom_level,
+                metadata=annotation.metadata,
+                task_bounding_box=annotation.task_bounding_box,
+                user_bounding_boxes=annotation.user_bounding_boxes,
+            )
 
     @classmethod
     def open_as_remote_dataset(
@@ -1371,3 +1411,105 @@ _ANNOTATION_URL_REGEX = re.compile(
     + rf"((?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/)?"
     + r"(?P<annotation_id>[0-9A-Fa-f]*)"
 )
+
+
+class RemoteAnnotation(Annotation):
+    def __init__(
+        self,
+        annotation_id: str,
+        organization_id: str,
+        dataset_id: str | None = None,
+        *,
+        name: str,
+        skeleton: Skeleton,
+        owner_name: str,
+        time: int | None = None,
+        edit_position: Vector3 | None = None,
+        edit_rotation: Vector3 | None = None,
+        zoom_level: float | None = None,
+        task_bounding_box: NDBoundingBox | None = None,
+        user_bounding_boxes: list[NDBoundingBox] | None = None,
+        metadata: dict[str, str] = {},
+    ) -> None:
+        """A remote Annotation instance.
+        Note: Please not initialize this class directly, use Annotation.open_remote() instead."""
+        self.annotation_id = annotation_id
+        self.skeleton = skeleton
+        self.dataset_id = dataset_id
+        self.organization_id = organization_id
+        self.name = name
+        self.owner_name = owner_name
+        self.time = time
+        self.edit_position = edit_position
+        self.edit_rotation = edit_rotation
+        self.zoom_level = zoom_level
+        self.task_bounding_box = task_bounding_box
+        self.user_bounding_boxes = user_bounding_boxes or []
+        self.metadata = metadata
+
+    def __repr__(self) -> str:
+        return f"RemoteAnnotation({self.url})"
+
+    @property
+    def url(self) -> str:
+        from webknossos.client.context import _get_context
+
+        return f"{_get_context().url}/annotations/{self.annotation_id}"
+
+    @property
+    def name(self) -> str:
+        return self._get_annotation_info().name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        assert isinstance(value, str), "Name must be a string."
+        self._set_annotation_info(name=value)
+
+    @property
+    def description(self) -> str | None:
+        return self._get_annotation_info().description
+
+    @description.setter
+    def description(self, value: str) -> None:
+        assert isinstance(value, str), "Description must be a string."
+        self._set_annotation_info(description=value)
+
+    def _get_annotation_info(self) -> ApiAnnotation:
+        from webknossos.client.context import _get_api_client
+
+        client = _get_api_client(True)
+        assert self.annotation_id is not None, "Annotation ID must be set."
+        return client.annotation_info(self.annotation_id)
+
+    def _set_annotation_info(
+        self, name: str | None = None, description: str | None = None
+    ) -> None:
+        from webknossos.client.context import _get_api_client
+
+        client = _get_api_client(True)
+        annotation_info = self._get_annotation_info()
+        name = name if name is not None else annotation_info.name
+        description = (
+            description if description is not None else annotation_info.description
+        )
+        assert self.annotation_id is not None, "Annotation ID must be set."
+        client.annotation_edit(
+            annotation_typ=annotation_info.typ,
+            annotation_id=self.annotation_id,
+            annotation=ApiAnnotation(
+                id=self.annotation_id,
+                typ=annotation_info.typ,
+                owner=annotation_info.owner,
+                name=name,
+                description=description,
+                state=annotation_info.state,
+                modified=annotation_info.modified,
+                data_store=annotation_info.data_store,
+                tracing_time=annotation_info.tracing_time,
+            ),
+        )
+
+    def save(self, path: str | PathLike) -> None:
+        raise NotImplementedError(
+            "Remote annotations cannot be saved. Changes are applied ."
+        )
