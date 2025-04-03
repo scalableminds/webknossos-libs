@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import attr
 
 
@@ -14,8 +12,8 @@ class Datastore:
     @classmethod
     def get_datastores(
         cls,
-        allows_upload: Optional[bool] = None,
-    ) -> List["Datastore"]:
+        allows_upload: bool | None = None,
+    ) -> list["Datastore"]:
         """Get a list of all datastore URLs.
 
         Args:

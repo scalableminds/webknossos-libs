@@ -41,9 +41,9 @@ class LayerToLink(NamedTuple):
         organization_id: str | None = None,
     ) -> "LayerToLink":
         ds = layer.dataset
-        assert isinstance(
-            ds, RemoteDataset
-        ), f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        assert isinstance(ds, RemoteDataset), (
+            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        )
         return cls(ds._dataset_id, layer.name, new_layer_name, organization_id)
 
     def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:

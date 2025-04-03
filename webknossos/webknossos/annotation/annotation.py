@@ -477,7 +477,7 @@ class Annotation:
     def open_remote(
         cls,
         annotation_id_or_url: str,
-        webknossos_url: Optional[str] = None,
+        webknossos_url: str | None = None,
     ) -> "RemoteAnnotation":
         (
             annotation,
@@ -1418,18 +1418,18 @@ class RemoteAnnotation(Annotation):
         self,
         annotation_id: str,
         organization_id: str,
-        dataset_id: Optional[str] = None,
+        dataset_id: str | None = None,
         *,
         name: str,
         skeleton: Skeleton,
         owner_name: str,
-        time: Optional[int] = None,
-        edit_position: Optional[Vector3] = None,
-        edit_rotation: Optional[Vector3] = None,
-        zoom_level: Optional[float] = None,
-        task_bounding_box: Optional[NDBoundingBox] = None,
-        user_bounding_boxes: Optional[List[NDBoundingBox]] = None,
-        metadata: Dict[str, str] = {},
+        time: int | None = None,
+        edit_position: Vector3 | None = None,
+        edit_rotation: Vector3 | None = None,
+        zoom_level: float | None = None,
+        task_bounding_box: NDBoundingBox | None = None,
+        user_bounding_boxes: list[NDBoundingBox] | None = None,
+        metadata: dict[str, str] = {},
     ) -> None:
         """A remote Annotation instance.
         Note: Please not initialize this class directly, use Annotation.open_remote() instead."""
@@ -1466,7 +1466,7 @@ class RemoteAnnotation(Annotation):
         self._set_annotation_info(name=value)
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         return self._get_annotation_info().description
 
     @description.setter
@@ -1482,7 +1482,7 @@ class RemoteAnnotation(Annotation):
         return client.annotation_info(self.annotation_id)
 
     def _set_annotation_info(
-        self, name: Optional[str] = None, description: Optional[str] = None
+        self, name: str | None = None, description: str | None = None
     ) -> None:
         from webknossos.client.context import _get_api_client
 
@@ -1509,7 +1509,7 @@ class RemoteAnnotation(Annotation):
             ),
         )
 
-    def save(self, path: Union[str, PathLike]) -> None:
+    def save(self, path: str | PathLike) -> None:
         raise NotImplementedError(
             "Remote annotations cannot be saved. Changes are applied ."
         )

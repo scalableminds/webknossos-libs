@@ -633,9 +633,9 @@ class Dataset:
         current_context = _get_context()
 
         if dataset_id is None:
-            assert (
-                dataset_name_or_url is not None
-            ), f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
+            assert dataset_name_or_url is not None, (
+                f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
+            )
             dataset_name_or_url = resolve_short_link(dataset_name_or_url)
 
             match = _DATASET_URL_REGEX.match(dataset_name_or_url)
@@ -964,14 +964,14 @@ class Dataset:
                     input_upath, input_files=input_files, use_bioformats=use_bioformats
                 )
         if voxel_size_with_unit is None:
-            assert (
-                voxel_size is not None
-            ), "Please supply either voxel_size or voxel_size_with_unit."
+            assert voxel_size is not None, (
+                "Please supply either voxel_size or voxel_size_with_unit."
+            )
             voxel_size_with_unit = VoxelSize(voxel_size)
         else:
-            assert (
-                voxel_size is None
-            ), "Please supply either voxel_size or voxel_size_with_unit not both."
+            assert voxel_size is None, (
+                "Please supply either voxel_size or voxel_size_with_unit not both."
+            )
 
         ds = cls(output_path, voxel_size_with_unit=voxel_size_with_unit, name=name)
 
@@ -985,9 +985,9 @@ class Dataset:
             # Ensure layer name does not start with a dot
             layer_name_from_mapping = layer_name_from_mapping.lstrip(".")
 
-            assert (
-                layer_name_from_mapping != ""
-            ), f"Could not determine a layer name for {input_file}."
+            assert layer_name_from_mapping != "", (
+                f"Could not determine a layer name for {input_file}."
+            )
 
             filepaths_per_layer.setdefault(layer_name_from_mapping, []).append(
                 input_upath / input_file
@@ -1299,9 +1299,9 @@ class Dataset:
 
         self._ensure_writable()
 
-        assert _ALLOWED_LAYER_NAME_REGEX.match(
-            layer_name
-        ), f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+        assert _ALLOWED_LAYER_NAME_REGEX.match(layer_name), (
+            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+        )
 
         if num_channels is None:
             num_channels = 1
@@ -1334,9 +1334,9 @@ class Dataset:
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
             )
 
-        assert (
-            is_fs_path(self.path) or data_format != DataFormat.WKW
-        ), "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
+        assert is_fs_path(self.path) or data_format != DataFormat.WKW, (
+            "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
+        )
 
         layer_properties = LayerProperties(
             name=layer_name,
@@ -1571,9 +1571,9 @@ class Dataset:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
         array_info = _find_array_info(self.path / layer_name)
-        assert (
-            array_info is not None
-        ), f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
+        assert array_info is not None, (
+            f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
+        )
 
         num_channels = kwargs.pop("num_channels", array_info.num_channels)
         dtype_per_channel = kwargs.pop("dtype_per_channel", array_info.voxel_type)
@@ -1869,13 +1869,13 @@ class Dataset:
                     # in uncompressed wkw only writing to the same chunk is problematic
                     batch_size = mag_view.info.chunk_shape.z
             elif compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
-                assert (
-                    batch_size % mag_view.info.shard_shape.z == 0
-                ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
+                assert batch_size % mag_view.info.shard_shape.z == 0, (
+                    f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
+                )
             else:
-                assert (
-                    batch_size % mag_view.info.chunk_shape.z == 0
-                ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
+                assert batch_size % mag_view.info.chunk_shape.z == 0, (
+                    f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
+                )
 
             func_per_chunk = named_partial(
                 pims_image_sequence.copy_to_view,
@@ -2302,12 +2302,12 @@ class Dataset:
             )
         foreign_layer_path = foreign_layer.path
 
-        assert is_fs_path(
-            self.path
-        ), f"Cannot create symlinks in remote dataset {self.path}"
-        assert is_fs_path(
-            foreign_layer_path
-        ), f"Cannot create symlink to remote layer {foreign_layer_path}"
+        assert is_fs_path(self.path), (
+            f"Cannot create symlinks in remote dataset {self.path}"
+        )
+        assert is_fs_path(foreign_layer_path), (
+            f"Cannot create symlink to remote layer {foreign_layer_path}"
+        )
 
         foreign_layer_symlink_path = (
             Path(relpath(foreign_layer_path, self.path))
@@ -2372,14 +2372,14 @@ class Dataset:
             raise IndexError(
                 f"Cannot add foreign layer {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
-        assert (
-            foreign_layer.dataset.path != self.path
-        ), "Cannot add layer with the same origin dataset as foreign layer"
+        assert foreign_layer.dataset.path != self.path, (
+            "Cannot add layer with the same origin dataset as foreign layer"
+        )
         foreign_layer_path = foreign_layer.path
 
-        assert is_remote_path(
-            foreign_layer_path
-        ), f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_copy_layer instead."
+        assert is_remote_path(foreign_layer_path), (
+            f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_copy_layer instead."
+        )
 
         layer_properties = copy.deepcopy(foreign_layer._properties)
         for mag in layer_properties.mags:
@@ -2512,15 +2512,15 @@ class Dataset:
         new_dataset_path = UPath(new_dataset_path)
 
         if data_format == DataFormat.WKW:
-            assert is_fs_path(
-                new_dataset_path
-            ), "Cannot create WKW-based remote datasets. Use `data_format='zarr3'` instead."
+            assert is_fs_path(new_dataset_path), (
+                "Cannot create WKW-based remote datasets. Use `data_format='zarr3'` instead."
+            )
         if data_format is None and any(
             layer.data_format == DataFormat.WKW for layer in self.layers.values()
         ):
-            assert is_fs_path(
-                new_dataset_path
-            ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
+            assert is_fs_path(new_dataset_path), (
+                "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
+            )
 
         if voxel_size_with_unit is None:
             if voxel_size is None:
@@ -2594,13 +2594,13 @@ class Dataset:
             copies of remote datasets or create shallow copies in remote locations.
         """
 
-        assert is_fs_path(
-            self.path
-        ), f"Cannot create symlinks to remote dataset {self.path}"
+        assert is_fs_path(self.path), (
+            f"Cannot create symlinks to remote dataset {self.path}"
+        )
         new_dataset_path = UPath(new_dataset_path)
-        assert is_fs_path(
-            new_dataset_path
-        ), f"Cannot create symlink in remote path {new_dataset_path}"
+        assert is_fs_path(new_dataset_path), (
+            f"Cannot create symlink in remote path {new_dataset_path}"
+        )
         new_dataset = Dataset(
             new_dataset_path,
             voxel_size_with_unit=self.voxel_size_with_unit,
