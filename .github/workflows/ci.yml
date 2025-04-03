@@ -230,9 +230,6 @@ jobs:
     needs: [webknossos_linux]
     if: success()
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: webknossos
     steps:
       - name: Install coverage.py
         run: pip install coverage
