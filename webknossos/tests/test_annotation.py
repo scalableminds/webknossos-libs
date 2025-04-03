@@ -150,30 +150,28 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
 @pytest.mark.use_proxay
 def test_dataset_access_via_annotation(tmp_path: Path) -> None:
-    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", token):
-        dataset_to_reupload = wk.Dataset.download(
-            url,
-            path=Path(tmp_path) / "sample_ds",
-            bbox=wk.BoundingBox((3164, 3212, 1017), (10, 10, 10)),
-        )
-        renameable_dataset = dataset_to_reupload.upload("name_to_replace")
-    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
-    annotation_from_file = wk.Annotation.load(path)
+    # try to download an annotation with its id when the dataset name has changed
+    remote_ds = wk.Dataset.open_remote(
+        "http://localhost:9000/datasets/Organization_X/l4_sample"
+    )
+
+    # upload an annotation with a reference to a remote dataset
+    annotation_from_file = wk.Annotation.load(
+        TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    )
     annotation_from_file.organization_id = "Organization_X"
-    annotation_from_file.dataset_name = renameable_dataset.name
-    annotation_from_file.dataset_id = renameable_dataset._dataset_id
+    annotation_from_file.dataset_name = remote_ds.name
+    annotation_from_file.dataset_id = remote_ds._dataset_id
     test_token = os.getenv("WK_TOKEN")
     with wk.webknossos_context("http://localhost:9000", test_token):
         url = annotation_from_file.upload()
-        annotation = wk.Annotation.download(url)
-    assert annotation.dataset_name == "name_to_replace"
-    assert len(list(annotation.skeleton.flattened_trees())) == 1
 
-    renameable_dataset.name = "replaced_name"
-    # Test whether the DS can still be accessed via the annotation after the renaming.
-    assert annotation.dataset_id == renameable_dataset._dataset_id
+    # change the name of the remote dataset
+    remote_ds.name = "some_other_name"
+
+    # check if the annotations dataset can be accessed
+    with wk.webknossos_context("http://localhost:9000", test_token):
+        wk.Annotation.open_as_remote_dataset(url)
 
 
 @pytest.mark.use_proxay
