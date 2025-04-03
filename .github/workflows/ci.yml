@@ -234,26 +234,23 @@ jobs:
       run:
         working-directory: webknossos
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          # Install a specific version of uv.
-          version: "0.6.3"
+      - name: Install coverage.py
+        run: pip install coverage
 
       - name: Download all coverage reports
         uses: actions/download-artifact@v4
         with:
           path: coverage-files
-      
+
+      - name: Debug List downloaded files
+        run: ls -R coverage-files
 
       - name: Generate coverage report
         env:
           COVERAGE_FILE: "coverage-files/result.coverage"
         run: |
-          uv run --frozen coverage combine coverage-files/*.coverage
-          uv run --frozen coverage report -m
+          coverage combine coverage-files/*.coverage
+          coverage report -m
       
       - name: Cleanup temporary files
         run: rm -rf coverage-files
