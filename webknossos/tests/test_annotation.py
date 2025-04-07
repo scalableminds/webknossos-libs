@@ -149,7 +149,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
 
 @pytest.mark.use_proxay
-def test_dataset_access_via_annotation(tmp_path: Path) -> None:
+def test_dataset_access_via_annotation() -> None:
     # try to download an annotation with its id when the dataset name has changed
     remote_ds = wk.Dataset.open_remote(
         "http://localhost:9000/datasets/Organization_X/l4_sample"
