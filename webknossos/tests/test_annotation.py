@@ -150,7 +150,10 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
 @pytest.mark.use_proxay
 def test_dataset_access_via_annotation() -> None:
-    # try to download an annotation with its id when the dataset name has changed
+    # This is a regression test for a bug occuring when the dataset name was changed
+    # while it was referenced in an annotation.
+
+    # load a remote dataset
     remote_ds = wk.Dataset.open_remote(
         "http://localhost:9000/datasets/Organization_X/l4_sample"
     )
@@ -172,6 +175,9 @@ def test_dataset_access_via_annotation() -> None:
     # check if the annotations dataset can be accessed
     with wk.webknossos_context("http://localhost:9000", test_token):
         wk.Annotation.open_as_remote_dataset(url)
+
+    # change the name of the remote dataset back to the original name
+    remote_ds.name = "l4_sample"
 
 
 @pytest.mark.use_proxay
