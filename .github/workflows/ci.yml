@@ -243,20 +243,20 @@ jobs:
       - name: Download all coverage reports
         uses: actions/download-artifact@v4
         with:
-          path: coverage-files
+          path: ~/coverage-files
 
       - name: Debug List downloaded files
-        run: ls -R coverage-files
+        run: ls -R ~/coverage-files
 
       - name: Generate coverage report
         env:
-          COVERAGE_FILE: "coverage-files/result.coverage"
+          COVERAGE_FILE: "~/coverage-files/result.coverage"
         run: |
-          coverage combine coverage-files/**/*.coverage
+          coverage combine ~/coverage-files/**/*.coverage
           coverage report -m
       
       - name: Cleanup temporary files
-        run: rm -rf coverage-files
+        run: rm -rf ~/coverage-files
 
   webknossos_cli_docker:
     needs: [cluster_tools, webknossos_linux]
