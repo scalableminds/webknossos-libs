@@ -73,10 +73,9 @@ class DatastoreApiClient(AbstractApiClient):
         self,
         dataset_announce: ApiDatasetAnnounceUpload,
         token: str | None,
-        require_unique_name: bool = False,
     ) -> ApiDatasetManualUploadSuccess:
         route = "/datasets/reserveManualUpload"
-        query: Query = {"token": token, "requireUniqueName": require_unique_name}
+        query: Query = {"token": token}
         return self._post_json_with_json_response(
             route, dataset_announce, ApiDatasetManualUploadSuccess, query
         )

@@ -515,11 +515,12 @@ class Dataset:
             organization=organization,
             initial_team_ids=initial_team_ids,
             folder_id=folder_id,
+            require_unique_name=require_unique_name,
         )
         upload_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
         response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce, token=token, require_unique_name=require_unique_name
+            dataset_announce, token=token
         )
         return response.dataset_id, response.directory_name
 

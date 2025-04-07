@@ -132,6 +132,7 @@ class ApiDatasetAnnounceUpload:
     organization: str
     initial_team_ids: list[str]
     folder_id: str
+    require_unique_name: bool
 
 
 @attr.s(auto_attribs=True)
