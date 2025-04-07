@@ -522,7 +522,7 @@ class Dataset:
         response = datastore_api.dataset_reserve_manual_upload(
             dataset_announce, token=token
         )
-        return response.dataset_id, response.directory_name
+        return response.new_dataset_id, response.directory_name
 
     @classmethod
     def trigger_reload_in_datastore(

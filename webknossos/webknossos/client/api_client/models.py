@@ -158,7 +158,7 @@ class ApiDatasetUploadSuccess:
 
 @attr.s(auto_attribs=True)
 class ApiDatasetManualUploadSuccess:
-    dataset_id: str
+    new_dataset_id: str
     directory_name: str
 
 
