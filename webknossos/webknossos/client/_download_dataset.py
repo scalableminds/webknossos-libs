@@ -38,7 +38,6 @@ def download_dataset(
     directory_name = api_dataset.directory_name
 
     datastore_client = context.get_datastore_api_client(api_dataset.data_store.url)
-    optional_datastore_token = sharing_token or context.datastore_token
 
     download_path = (
         Path(f"{api_dataset.name}-{api_dataset.id}") if path is None else Path(path)
@@ -124,7 +123,7 @@ def download_dataset(
                     directory_name=directory_name,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),
-                    token=optional_datastore_token,
+                    token=sharing_token,
                     x=chunk.topleft.x,
                     y=chunk.topleft.y,
                     z=chunk.topleft.z,

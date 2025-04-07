@@ -30,9 +30,13 @@ class AbstractApiClient(ABC):
         return f"{self.url_prefix}{route}"
 
     def _get_json(
-        self, route: str, response_type: type[T], query: Query | None = None
+        self,
+        route: str,
+        response_type: type[T],
+        query: Query | None = None,
+        retry_count: int = 0,
     ) -> T:
-        response = self._get(route, query)
+        response = self._get(route, query, retry_count=retry_count)
         return self._parse_json(response, response_type)
 
     def _get_json_paginated(
@@ -80,8 +84,10 @@ class AbstractApiClient(ABC):
             timeout_seconds=timeout_seconds,
         )
 
-    def _get_file(self, route: str, query: Query | None = None) -> tuple[bytes, str]:
-        response = self._get(route, query)
+    def _get_file(
+        self, route: str, query: Query | None = None, retry_count: int = 0
+    ) -> tuple[bytes, str]:
+        response = self._get(route, query, retry_count=retry_count)
         return response.content, self._parse_filename_from_header(response)
 
     def _post_with_json_response(self, route: str, response_type: type[T]) -> T:
@@ -121,9 +127,16 @@ class AbstractApiClient(ABC):
         self,
         route: str,
         query: Query | None = None,
+        retry_count: int = 0,
         timeout_seconds: float | None = None,
     ) -> httpx.Response:
-        return self._request("GET", route, query, timeout_seconds=timeout_seconds)
+        return self._request(
+            "GET",
+            route,
+            query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+        )
 
     def _patch(
         self,

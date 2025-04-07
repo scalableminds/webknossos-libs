@@ -117,9 +117,14 @@ def test_remote_dataset(tmp_path: Path) -> None:
 
 def test_upload_download_roundtrip(tmp_path: Path) -> None:
     ds_original = get_sample_dataset(tmp_path)
-    url = ds_original.upload(new_dataset_name="test_upload_download_roundtrip").url
+    uploaded_dataset = ds_original.upload(
+        new_dataset_name="test_upload_download_roundtrip"
+    )
+    wk.Dataset.trigger_reload_in_datastore(
+        "test_upload_download_roundtrip", "Organization_X"
+    )
     ds_roundtrip = wk.Dataset.download(
-        url, path=tmp_path / "ds", layers=["color", "segmentation"]
+        uploaded_dataset.url, path=tmp_path / "ds", layers=["color", "segmentation"]
     )
     assert set(ds_original.get_segmentation_layers()[0].mags.keys()) == set(
         ds_roundtrip.get_segmentation_layers()[0].mags.keys()
