@@ -5,7 +5,7 @@ import logging
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from contextlib import AbstractContextManager, nullcontext
+from contextlib import AbstractContextManager
 from datetime import datetime
 from enum import Enum, unique
 from itertools import product
@@ -618,7 +618,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[AbstractContextManager, str, str, str, str | None]:
+    ) -> tuple[AbstractContextManager, str]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -650,15 +650,10 @@ class Dataset:
                     + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
                     + "organization_id, sharing_token and webknossos_url must not be set."
                 )
-                dataset_name = match.groupdict().get("dataset_name")
                 dataset_id = match.group("dataset_id")
                 sharing_token = match.group("sharing_token")
                 webknossos_url = match.group("webknossos_url")
-                if dataset_name is None:
-                    assert dataset_id is not None
-                    dataset_name = current_context.api_client.dataset_info(
-                        dataset_id, sharing_token
-                    ).directory_name
+                assert dataset_id is not None
             elif deprecated_match is not None:
                 assert (
                     organization_id is None
@@ -675,47 +670,32 @@ class Dataset:
                 webknossos_url = deprecated_match.group("webknossos_url")
 
                 assert organization_id is not None
+                assert dataset_name is not None
+
                 dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
             else:
                 dataset_name = dataset_name_or_url
-        else:
-            dataset_info = current_context.api_client.dataset_info(dataset_id)
-            dataset_name = dataset_info.directory_name
-            organization_id = dataset_info.owning_organization
+                assert organization_id is not None, (
+                    "When supplying a dataset name, please also supply the organization_id."
+                )
 
-        if webknossos_url is not None:
-            webknossos_url = webknossos_url.rstrip("/")
-        if webknossos_url is not None and webknossos_url != current_context.url:
+                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+
+        assert webknossos_url is not None
+        webknossos_url = webknossos_url.rstrip("/")
+        if webknossos_url != current_context.url:
             if sharing_token is None:
                 warnings.warn(
                     f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
                     + f"Using no token, only public datasets can used with Dataset.{caller}(). "
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
-            assert organization_id is not None, (
-                f"Please supply the organization_id to Dataset.{caller}()."
-                f"The supplied url {webknossos_url} does not match your current context {current_context.url}. "
-                + "In this case organization_id can not be inferred."
-            )
-            context_manager: AbstractContextManager[None] = webknossos_context(
-                webknossos_url, token=None
-            )
-        else:
-            if organization_id is None:
-                organization_id = current_context.organization_id
-
-            context_manager = nullcontext()
-
-        if dataset_id is None:
-            assert dataset_name is not None
-            dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
-
+        context_manager: AbstractContextManager[None] = webknossos_context(
+            webknossos_url, token=sharing_token
+        )
         return (
             context_manager,
             dataset_id,
-            dataset_name,
-            organization_id,
-            sharing_token,
         )
 
     @classmethod
@@ -757,9 +737,6 @@ class Dataset:
         (
             context_manager,
             dataset_id,
-            directory_name,
-            organization_id,
-            sharing_token,
         ) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
@@ -774,6 +751,8 @@ class Dataset:
                 dataset_id, sharing_token
             )
             token = sharing_token or wk_context.datastore_token
+            directory_name = api_dataset_info.directory_name
+            organization_id = api_dataset_info.owning_organization
 
         datastore_url = api_dataset_info.data_store.url
 
@@ -821,9 +800,6 @@ class Dataset:
         (
             context_manager,
             dataset_id,
-            directory_name,
-            organization_id,
-            sharing_token,
         ) = cls._parse_remote(
             dataset_name_or_url, organization_id, sharing_token, webknossos_url
         )
