@@ -5,7 +5,8 @@ import warnings
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union, cast
+from urllib.parse import urlparse
 
 import numpy as np
 from cluster_tools import Executor
@@ -28,6 +29,7 @@ from ._upsampling_utils import upsample_cube_job
 from .data_format import DataFormat
 from .defaults import SSL_CONTEXT
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
+from .mag_view import MagView
 from .properties import (
     LayerProperties,
     LayerViewConfiguration,
@@ -43,7 +45,6 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 from ..utils import (
-    LazyPath,
     copytree,
     get_executor_for_args,
     is_fs_path,
@@ -51,14 +52,12 @@ from ..utils import (
     movetree,
     named_partial,
     rmtree,
-    strip_trailing_slash,
     warn_deprecated,
 )
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_SHARD_SHAPE,
 )
-from .mag_view import MagView, _find_mag_path
 
 
 def _is_int(s: str) -> bool:
@@ -175,8 +174,73 @@ def _get_shard_shape(
     return shard_shape
 
 
+def _is_foreign_mag(dataset_path: Path, layer_name: str, mag_path: Path) -> bool:
+    if is_fs_path(mag_path):
+        return dataset_path / layer_name != mag_path.resolve().parent
+    else:
+        return dataset_path / layer_name != mag_path.parent
+
+
+def _find_mag_path(
+    layer_path: Path,
+    mag_name: str | Mag,
+    path: Path | None = None,
+) -> Path:
+    if path is not None:
+        return path
+
+    mag = Mag(mag_name)
+    short_mag_file_path = layer_path / mag.to_layer_name()
+    long_mag_file_path = layer_path / mag.to_long_layer_name()
+    if short_mag_file_path.exists():
+        return short_mag_file_path
+    elif long_mag_file_path.exists():
+        return long_mag_file_path
+    else:
+        raise FileNotFoundError(
+            f"Could not find any valid mag `{mag}` in `{layer_path}`."
+        )
+
+
+def _enrich_mag_path(path: str, dataset_path: Path) -> Path:
+    upath = UPath(path)
+    if upath.protocol in ("http", "https"):
+        # To setup the mag for non-public remote paths, we need to get the token from the context
+        wk_context = _get_context()
+        token = wk_context.datastore_token
+        return UPath(
+            path,
+            headers={} if token is None else {"X-Auth-Token": token},
+            ssl=SSL_CONTEXT,
+        )
+
+    elif upath.protocol == "s3":
+        parsed_url = urlparse(str(upath))
+        endpoint_url = f"https://{parsed_url.netloc}"
+        bucket, key = parsed_url.path.split("/", maxsplit=1)
+        return UPath(
+            f"s3://{bucket}/{path}", client_kwargs={"endpoint_url": endpoint_url}
+        )
+
+    if not upath.is_absolute():
+        return dataset_path / upath
+    return upath
+
+
+def _dump_mag_path(path: Path, dataset_path: Path) -> str:
+    resolved_path = path.resolve()
+    if resolved_path.is_relative_to(dataset_path):
+        return str(resolved_path.relative_to(dataset_path))
+    if resolved_path.protocol == "s3":
+        s3_path = cast(UPath, resolved_path)
+        return f"s3://{s3_path.storage_options['client_kwargs']['endpoint_url']}/{s3_path.path}"
+    return str(resolved_path)
+
+
 class Layer:
-    def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
+    def __init__(
+        self, dataset: "Dataset", properties: LayerProperties, read_only: bool
+    ) -> None:
         """A Layer represents a portion of hierarchical data at multiple magnifications.
 
         A Layer consists of multiple MagViews, which store the same data in different magnifications.
@@ -216,10 +280,23 @@ class Layer:
             properties.element_class, properties.num_channels
         )
         self._mags: dict[Mag, MagView] = {}
-        self._resolved_path: Path | None = None
+
+        resolved_path = self.dataset.resolved_path / self.name
+        if is_fs_path(resolved_path):
+            resolved_path = resolved_path.resolve()
+        self._resolved_path: Path = resolved_path
+        self._read_only = read_only
 
         for mag in properties.mags:
-            self._setup_mag(Mag(mag.mag), mag.path)
+            mag_path = (
+                _find_mag_path(self.resolved_path, mag.mag)
+                if mag.path is None
+                else _enrich_mag_path(mag.path)
+            )
+            read_only = read_only or _is_foreign_mag(
+                self.dataset.resolved_path, self.name, mag_path
+            )
+            self._setup_mag(Mag(mag.mag), mag_path, read_only=read_only)
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) in self._mags
         ]
@@ -236,18 +313,21 @@ class Layer:
 
     @property
     def resolved_path(self) -> Path:
-        if self._resolved_path is None:
-            self._resolved_path = self.path.resolve()
         return self._resolved_path
 
     @property
-    def is_remote_to_dataset(self) -> bool:
+    def is_foreign(self) -> bool:
         """Whether this layer's data is stored remotely relative to its dataset.
 
         Returns:
             bool: True if layer path parent differs from dataset path
         """
-        return self.path.parent != self.dataset.path
+        return self.resolved_path.parent != self.dataset.resolved_path
+
+    @property
+    def is_remote_to_dataset(self) -> bool:
+        warn_deprecated("is_remote_to_dataset", "is_foreign")
+        return self.is_foreign
 
     @property
     def _properties(self) -> LayerProperties:
@@ -265,6 +345,10 @@ class Layer:
             for layer_property in self.dataset._properties.data_layers
             if layer_property.name == self.name
         )
+
+    def _ensure_writable(self) -> None:
+        if self._read_only:
+            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
     @property
     def name(self) -> str:
@@ -284,7 +368,7 @@ class Layer:
         """
         if layer_name == self.name:
             return
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         assert layer_name not in self.dataset.layers.keys(), (
             f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
         )
@@ -293,6 +377,8 @@ class Layer:
             f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
         )
         self.path.rename(self.dataset.path / layer_name)
+        self._path = self.dataset.path / layer_name
+        self._resolved_path = (self.dataset.resolved_path / layer_name).resolve()
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
@@ -300,15 +386,12 @@ class Layer:
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            if not mag.is_remote_to_dataset:
-                mag_path_maybe = (
-                    LazyPath.resolved(UPath(mag._properties.path))
-                    if mag._properties.path is not None
-                    else None
-                )
-                mag._path = _find_mag_path(
-                    self.dataset.path, self.name, mag.name, mag_path_maybe
-                )
+            if not mag.is_foreign:
+                mag._properties.path = str(Path(layer_name) / mag.path.name)
+            mag._path = _enrich_mag_path(
+                mag._properties.path, self.dataset.resolved_path
+            )
+            mag._resolved_path = mag._path.resolve()
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
             del mag._array
@@ -338,7 +421,7 @@ class Layer:
     @bounding_box.setter
     def bounding_box(self, bbox: NDBoundingBox) -> None:
         """Updates the offset and size of the bounding box of this layer in the properties."""
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         assert bbox.topleft.is_positive(), (
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
@@ -423,7 +506,7 @@ class Layer:
     def default_view_configuration(
         self, view_configuration: LayerViewConfiguration
     ) -> None:
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         self._properties.default_view_configuration = view_configuration
         self.dataset._export_as_json()  # update properties on disk
 
@@ -434,7 +517,7 @@ class Layer:
         Returns:
             bool: True if layer is read-only, False if writable
         """
-        return self.dataset.read_only
+        return self._read_only
 
     @property
     def mags(self) -> dict[Mag, MagView]:
@@ -502,7 +585,7 @@ class Layer:
             IndexError: If magnification already exists
             Warning: If chunk_shape is not optimal for WEBKNOSSOS performance
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         # normalize the name of the mag
         mag = Mag(mag)
         compression_mode = compress
@@ -530,7 +613,7 @@ class Layer:
             )
 
         self._assert_mag_does_not_exist_yet(mag)
-        mag_path = LazyPath.resolved(self._create_dir_for_mag(mag))
+        mag_path = self._create_dir_for_mag(mag)
 
         mag_view = MagView.create(
             self,
@@ -539,6 +622,7 @@ class Layer:
             shard_shape=shard_shape,
             compression_mode=compression_mode,
             path=mag_path,
+            read_only=False,
         )
 
         mag_view._array.resize(
@@ -565,6 +649,10 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
+                path=str(
+                    self.resolved_path.relative_to(self.dataset.resolved_path)
+                    / mag_path.name
+                ),
             )
         ]
 
@@ -572,9 +660,12 @@ class Layer:
 
         return self._mags[mag]
 
-    def add_mag_for_existing_files(
+    def _add_mag_for_existing_files(
         self,
         mag: MagLike,
+        mag_path: Path,
+        read_only: bool,
+        override_stored_path: str | None = None,
     ) -> MagView:
         """Creates a MagView for existing data files.
 
@@ -591,14 +682,19 @@ class Layer:
             AssertionError: If magnification already exists in layer
             ArrayException: If files cannot be opened as valid arrays
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         mag = Mag(mag)
         assert mag not in self.mags, (
             f"Cannot add mag {mag} as it already exists for layer {self}"
         )
-        self._setup_mag(mag)
+        self._setup_mag(mag, mag_path=mag_path, read_only=read_only)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
+        stored_path = (
+            override_stored_path
+            if override_stored_path is not None
+            else _dump_mag_path(mag_path, self.dataset.resolved_path)
+        )
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag,
@@ -618,13 +714,14 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
+                path=stored_path,
             )
         )
         self.dataset._export_as_json()
 
         return mag_view
 
-    def add_existing_remote_mag_view(
+    def _add_existing_remote_mag_view(
         self,
         mag_view_maybe: MagLike | MagView,
     ) -> MagView:
@@ -644,7 +741,7 @@ class Layer:
             ArrayException: If remote data cannot be accessed
         """
 
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         mag_path = (
             mag_view_maybe.path
             if isinstance(mag_view_maybe, MagView)
@@ -663,12 +760,12 @@ class Layer:
         assert mag not in self.mags, (
             f"Cannot add mag {mag} as it already exists for layer {self}"
         )
-        self._setup_mag(mag, mag_path)
+        self._setup_mag(mag, mag_path, read_only=True)
         # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag_view.mag,
-                path=str(mag_view.path),
+                path=_dump_mag_path(mag_view.path, self.dataset.resolved_path),
                 cube_length=mag_view._properties.cube_length,
                 axis_order=mag_view._properties.axis_order,
             )
@@ -739,7 +836,7 @@ class Layer:
 
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
@@ -773,7 +870,7 @@ class Layer:
         to the current dataset. Additionally, the relevant information from the
         `datasource-properties.json` of the other dataset are copied, too.
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
         chunk_shape = Vec3Int.from_vec_or_int(
@@ -839,7 +936,7 @@ class Layer:
         If make_relative is True, the symlink is made relative to the current dataset path.
         Symlinked mags can only be added to layers on local file systems.
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
@@ -858,7 +955,9 @@ class Layer:
 
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
-        mag = self.add_mag_for_existing_files(foreign_mag_view.mag)
+        mag = self._add_mag_for_existing_files(
+            foreign_mag_view.mag, mag_path=foreign_normalized_mag_path, read_only=True
+        )
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
@@ -878,7 +977,7 @@ class Layer:
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
@@ -894,7 +993,7 @@ class Layer:
             + f"must match the layer's dtype {self.dtype_per_channel}"
         )
 
-        mag = self.add_existing_remote_mag_view(foreign_mag_view)
+        mag = self._add_existing_remote_mag_view(foreign_mag_view)
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
@@ -912,16 +1011,19 @@ class Layer:
         Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied, too.
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
+        mag_path = self.path / str(foreign_mag_view.mag)
         copytree(
             foreign_mag_view.path,
-            self.path / str(foreign_mag_view.mag),
+            mag_path,
         )
 
-        mag = self.add_mag_for_existing_files(foreign_mag_view.mag)
+        mag = self._add_mag_for_existing_files(
+            foreign_mag_view.mag, mag_path=mag_path, read_only=False
+        )
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
@@ -943,7 +1045,7 @@ class Layer:
         via the filesystem and adds it as `mag`. When `move` flag is set
         the array is moved, otherwise a copy of the zarrarray is created.
         """
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         source_path = Path(path)
 
         try:
@@ -955,12 +1057,15 @@ class Layer:
         else:
             mag = Mag(mag)
             self._assert_mag_does_not_exist_yet(mag)
+            mag_path = self.path / str(mag)
             if move:
-                movetree(source_path, self.path / str(mag))
+                movetree(source_path, mag_path)
             else:
-                copytree(source_path, self.path / str(mag))
+                copytree(source_path, mag_path)
 
-            mag_view = self.add_mag_for_existing_files(mag)
+            mag_view = self._add_mag_for_existing_files(
+                mag, mag_path=mag_path, read_only=False
+            )
 
             if extend_layer_bounding_box:
                 # assumption: the topleft of the bounding box is still the same, the size might differ
@@ -977,8 +1082,10 @@ class Layer:
 
     def _create_dir_for_mag(self, mag: MagLike) -> Path:
         mag_name = Mag(mag).to_layer_name()
-        full_path = self.path / mag_name
+        full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
+        if is_fs_path(full_path):
+            full_path = full_path.resolve()
         return full_path
 
     def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:
@@ -1426,7 +1533,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, path: str | PathLike | None = None) -> None:
+    def _setup_mag(self, mag: Mag, mag_path: Path, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.
 
         Does not create storage headers/metadata, e.g. wk_header.
@@ -1434,6 +1541,7 @@ class Layer:
         Args:
             mag: Magnification level to setup
             path: Optional path override for mag data
+            read_only: Whether the mag is read_only
 
         Raises:
             ArrayException: If mag setup fails
@@ -1442,30 +1550,14 @@ class Layer:
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
-        # To setup the mag for non-public remote paths, we need to get the token from the context
-        if path is not None and is_remote_path(UPath(path)):
-            wk_context = _get_context()
-            token = wk_context.datastore_token
-        else:
-            token = None
-        mag_path_maybe = (
-            LazyPath.resolved(
-                UPath(
-                    path,
-                    headers={} if token is None else {"X-Auth-Token": token},
-                    ssl=SSL_CONTEXT,
-                )
-            )
-            if path is not None
-            else None
-        )
+
         try:
             self._mags[mag] = MagView(
                 self,
                 mag,
-                _find_mag_path(self.dataset.path, self.name, mag_name, mag_path_maybe),
+                mag_path,
+                read_only=read_only,
             )
-            self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:
             logging.exception(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
@@ -1513,10 +1605,6 @@ class Layer:
             from .dataset import Dataset
 
             layer_path = UPath(layer)
-            # if is_remote_path(layer_path):
-            #     return Dataset.open_remote(str(layer_path.parent)).get_layer(
-            #         layer_path.name
-            #     )
             return Dataset.open(layer_path.parent).get_layer(layer_path.name)
 
 
@@ -1571,7 +1659,7 @@ class SegmentationLayer(Layer):
             AssertionError: If value is not None and cannot be converted to an integer.
         """
 
-        self.dataset._ensure_writable()
+        self._ensure_writable()
         if largest_segment_id is not None and not isinstance(largest_segment_id, int):
             assert largest_segment_id == int(largest_segment_id), (
                 f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."

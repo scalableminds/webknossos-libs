@@ -12,7 +12,6 @@ from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
-    LazyPath,
     get_executor_for_args,
     is_fs_path,
     rmtree,
@@ -31,21 +30,6 @@ if TYPE_CHECKING:
     )
 
 from .view import View
-
-
-def _find_mag_path(
-    dataset_path: Path,
-    layer_name: str,
-    mag_name: str,
-    path: LazyPath | None = None,
-) -> LazyPath:
-    if path is not None:
-        return path
-
-    mag = Mag(mag_name)
-    short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
-    long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
-    return LazyPath(short_mag_file_path, long_mag_file_path)
 
 
 def _compress_cube_job(args: tuple[View, View, int]) -> None:
@@ -75,6 +59,7 @@ class MagView(View):
         info: Information about array storage (chunk shape, compression, etc.).
         path: Path to the data on disk.
         bounding_box: The spatial extent of this magnification in Mag(1) coordinates.
+        read_only: Whether this magnification is read-only.
 
     Examples:
         ```python
@@ -117,17 +102,20 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
+    _layer: "Layer"
+
     @classmethod
     def create(
         cls,
         layer: "Layer",
         mag: Mag,
         *,
+        path: Path,
         chunk_shape: Vec3Int,
         shard_shape: Vec3Int | None = None,
         chunks_per_shard: Vec3Int | None = None,
         compression_mode: bool,
-        path: LazyPath | None = None,
+        read_only: bool = False,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -161,31 +149,32 @@ class MagView(View):
             ),
             dimension_names=("c",) + layer.bounding_box.axes,
         )
-        mag_path = (
-            path.resolve()
-            if path
-            else layer.dataset.path / layer.name / mag.to_layer_name()
-        )
-        BaseArray.get_class(array_info.data_format).create(mag_path, array_info)
-        return cls(layer, mag, LazyPath.resolved(mag_path))
+        BaseArray.get_class(array_info.data_format).create(path, array_info)
+        return cls(layer, mag, path, read_only=read_only)
 
     def __init__(
         self,
         layer: "Layer",
         mag: Mag,
-        mag_path: LazyPath,
+        path: Path,
+        read_only: bool = False,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.get_mag()`.
         """
 
         super().__init__(
-            mag_path,
+            path,
             bounding_box=layer.bounding_box,
             mag=mag,
             data_format=layer.data_format,
+            read_only=read_only,
         )
         self._layer = layer
+
+    def _ensure_writable(self) -> None:
+        if self._read_only:
+            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
     # Overwrites of View methods:
     @property
@@ -228,17 +217,22 @@ class MagView(View):
         Notes:
             - Path may be local or remote depending on dataset configuration
         """
-        return self._path.resolve()
+        return self._path
 
     @property
-    def is_remote_to_dataset(self) -> bool:
-        """Check if this magnification's data is stored remotely on a server relative to the dataset.
+    def is_foreign(self) -> bool:
+        """Check if this magnification's data is stored not as part of to the dataset.
 
         Returns:
             bool: True if data is stored in a different location than the parent dataset.
 
         """
-        return self._path.resolve().parent.parent != self.layer.dataset.path
+        return self._resolved_path.parent.parent != self.layer.dataset.resolved_path
+
+    @property
+    def is_remote_to_dataset(self) -> bool:
+        warn_deprecated("is_remote_to_dataset", "is_foreign")
+        return self.is_foreign
 
     @property
     def name(self) -> str:
@@ -330,6 +324,7 @@ class MagView(View):
             - For compressed data, writing may be slower due to compression
             - Large writes may temporarily increase memory usage
         """
+        self._ensure_writable()
         if all(
             i is None
             for i in [
@@ -481,7 +476,8 @@ class MagView(View):
         """
         from .dataset import Dataset
 
-        path = self._path.resolve()
+        self._ensure_writable()
+        path = self._path
         if target_path is None:
             if self._is_compressed():
                 logging.info(f"Mag {self.name} is already compressed")
@@ -565,7 +561,7 @@ class MagView(View):
             rmtree(compressed_dataset.path)
 
             # update the handle to the new dataset
-            MagView.__init__(self, self.layer, self._mag, LazyPath.resolved(path))
+            MagView.__init__(self, self.layer, self._mag, path)
 
     def merge_with_view(
         self,
@@ -589,6 +585,7 @@ class MagView(View):
             - Merging is parallelized using the provided executor
             - Updates layer bounding box if necessary
         """
+        self._ensure_writable()
         assert all(other.info.chunks_per_shard.to_np() == 1), (
             "volume annotation must have file_len=1"
         )
