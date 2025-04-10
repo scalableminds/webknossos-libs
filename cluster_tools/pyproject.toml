@@ -38,7 +38,7 @@ include = ["cluster_tools*"]
 exclude = ["cluster_tools.tests"]
 
 # This is a fix for an issue in setuptools. See: https://github.com/pypa/setuptools/issues/4759
-# This shoulde be removed when the issue is resolved.
+# This should be removed when the issue is resolved.
 [tool.setuptools]
 license-files = []
 
