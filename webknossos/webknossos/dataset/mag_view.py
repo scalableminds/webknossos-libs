@@ -227,7 +227,7 @@ class MagView(View):
             bool: True if data is stored in a different location than the parent dataset.
 
         """
-        return self._resolved_path.parent.parent != self.layer.dataset.resolved_path
+        return self.path.parent.parent != self.layer.dataset.resolved_path
 
     @property
     def is_remote_to_dataset(self) -> bool:

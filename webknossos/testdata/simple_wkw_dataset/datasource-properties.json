@@ -23,7 +23,8 @@
       "wkwResolutions": [
         {
           "resolution": [1, 1, 1],
-          "cubeLength": 32
+          "cubeLength": 32,
+          "path": "color/1"
         }
       ],
       "defaultViewConfiguration": {

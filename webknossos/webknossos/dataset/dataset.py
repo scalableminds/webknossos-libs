@@ -1485,10 +1485,12 @@ class Dataset:
         self._properties.data_layers += [layer_properties]
         if layer_properties.category == COLOR_CATEGORY:
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
-            self._layers[layer_name] = Layer(self, layer_properties)
+            self._layers[layer_name] = Layer(self, layer_properties, read_only=False)
         elif layer_properties.category == SEGMENTATION_CATEGORY:
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
-            self._layers[layer_name] = SegmentationLayer(self, layer_properties)
+            self._layers[layer_name] = SegmentationLayer(
+                self, layer_properties, read_only=False
+            )
         else:
             raise RuntimeError(
                 f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"

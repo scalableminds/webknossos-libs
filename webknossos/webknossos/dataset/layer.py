@@ -5,7 +5,7 @@ import warnings
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, Optional, Union
 from urllib.parse import urlparse
 
 import numpy as np
@@ -218,8 +218,9 @@ def _enrich_mag_path(path: str, dataset_path: Path) -> Path:
         parsed_url = urlparse(str(upath))
         endpoint_url = f"https://{parsed_url.netloc}"
         bucket, key = parsed_url.path.split("/", maxsplit=1)
+
         return UPath(
-            f"s3://{bucket}/{path}", client_kwargs={"endpoint_url": endpoint_url}
+            f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
         )
 
     if not upath.is_absolute():
@@ -228,12 +229,13 @@ def _enrich_mag_path(path: str, dataset_path: Path) -> Path:
 
 
 def _dump_mag_path(path: Path, dataset_path: Path) -> str:
-    resolved_path = path.resolve()
+    resolved_path = path.resolve() if is_fs_path(path) else path
+    if str(resolved_path).startswith(str(dataset_path)):
+        return str(resolved_path).removeprefix(str(dataset_path)).lstrip("/")
     if resolved_path.is_relative_to(dataset_path):
         return str(resolved_path.relative_to(dataset_path))
-    if resolved_path.protocol == "s3":
-        s3_path = cast(UPath, resolved_path)
-        return f"s3://{s3_path.storage_options['client_kwargs']['endpoint_url']}/{s3_path.path}"
+    if isinstance(resolved_path, UPath) and resolved_path.protocol == "s3":
+        return f"s3://{resolved_path.storage_options['client_kwargs']['endpoint_url']}/{resolved_path.path}"
     return str(resolved_path)
 
 
@@ -291,7 +293,7 @@ class Layer:
             mag_path = (
                 _find_mag_path(self.resolved_path, mag.mag)
                 if mag.path is None
-                else _enrich_mag_path(mag.path)
+                else _enrich_mag_path(mag.path, self.dataset.resolved_path)
             )
             read_only = read_only or _is_foreign_mag(
                 self.dataset.resolved_path, self.name, mag_path
@@ -387,7 +389,10 @@ class Layer:
         # The MagViews need to be updated
         for mag in self._mags.values():
             if not mag.is_foreign:
-                mag._properties.path = str(Path(layer_name) / mag.path.name)
+                mag._properties.path = str(
+                    self.resolved_path.relative_to(self.dataset.resolved_path)
+                    / mag.path.name
+                )
             mag._path = _enrich_mag_path(
                 mag._properties.path, self.dataset.resolved_path
             )
@@ -649,10 +654,7 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
-                path=str(
-                    self.resolved_path.relative_to(self.dataset.resolved_path)
-                    / mag_path.name
-                ),
+                path=_dump_mag_path(mag_path, self.dataset.resolved_path),
             )
         ]
 

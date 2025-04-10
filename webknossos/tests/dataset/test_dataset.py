@@ -1857,9 +1857,6 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
         original_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
     )
 
-    symlink_segmentation_layer.name = "seg"
-    # TODO: Check for paths in mag properties
-
     assure_exported_properties(ds)
 
 
