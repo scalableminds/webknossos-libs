@@ -1358,9 +1358,7 @@ class View:
     @property
     def _array(self) -> BaseArray:
         if self._cached_array is None:
-            self._cached_array = BaseArray.get_class(self._data_format).open(
-                self._path.resolve()
-            )
+            self._cached_array = BaseArray.get_class(self._data_format).open(self._path)
         return self._cached_array
 
     @_array.deleter
