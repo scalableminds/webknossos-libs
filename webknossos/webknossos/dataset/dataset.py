@@ -2399,8 +2399,8 @@ class Dataset:
         )
         foreign_layer_path = foreign_layer.path
 
-        assert is_remote_path(foreign_layer_path), (
-            f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_copy_layer instead."
+        assert all(is_remote_path(mag.path) for mag in foreign_layer.mags.values()), (
+            f"Cannot add foreign layer {foreign_layer} as it is not remote. Try using dataset.add_copy_layer instead."
         )
 
         layer_properties = copy.deepcopy(foreign_layer._properties)
@@ -2634,12 +2634,15 @@ class Dataset:
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
-            if is_remote_path(layer.path):
+            if all(is_remote_path(mag.path) for mag in layer.mags.values()):
                 new_dataset.add_remote_layer(layer, layer_name)
             else:
                 new_layer = new_dataset.add_layer_like(layer, layer_name)
                 for mag_view in layer.mags.values():
-                    new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
+                    if is_fs_path(mag_view.path):
+                        new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
+                    else:
+                        new_layer.add_remote_mag(mag_view)
 
                 # copy all other directories with a dir scan
                 copy_directory_with_symlinks(

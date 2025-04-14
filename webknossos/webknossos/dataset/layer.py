@@ -951,15 +951,18 @@ class Layer:
         )
 
         foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self.path))
+            Path(relpath(foreign_mag_view.path, self.dataset.resolved_path))
             if make_relative
-            else foreign_mag_view.path.resolve()
+            else foreign_mag_view.path
         )
 
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
         mag = self._add_mag_for_existing_files(
-            foreign_mag_view.mag, mag_path=foreign_normalized_mag_path, read_only=True
+            foreign_mag_view.mag, mag_path=foreign_mag_view.path, read_only=True
+        )
+        mag._properties.path = _dump_mag_path(
+            foreign_normalized_mag_path, self.dataset.resolved_path
         )
 
         if extend_layer_bounding_box:

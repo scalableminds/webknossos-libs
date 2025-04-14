@@ -2104,6 +2104,10 @@ def test_search_dataset_also_for_long_layer_name(
     copytree(short_mag_file_path, long_mag_file_path)
     rmtree(short_mag_file_path)
 
+    # Remove path from mag to let the path be auto-detected
+    ds._properties.data_layers[0].mags[0].path = None
+    ds._export_as_json()
+
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))
 
