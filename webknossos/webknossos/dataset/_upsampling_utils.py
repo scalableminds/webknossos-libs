@@ -36,8 +36,10 @@ def upsample_cube_job(
 
     try:
         num_channels = target_view.info.num_channels
-        target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
-        shape_xyz = target_bbox_in_mag.size_xyz
+        target_bbox = target_view.bounding_box.align_with_mag(
+            target_view.info.shard_shape, True
+        )
+        shape_xyz = target_bbox.size // target_view.mag
 
         tiles = product(
             *list(
@@ -49,22 +51,11 @@ def upsample_cube_job(
         )
 
         for tile in tiles:
-            target_offset_in_mag = (
-                Vec3Int(tile) * buffer_shape
-            )  # target offset in target mag
-            source_offset = (
-                target_offset_in_mag * target_view.mag
-            )  # relative offset in mag1
-            source_size = source_view.bounding_box.size_xyz  # max size in mag1
-            source_size = (
-                buffer_shape * target_view.mag  # restrict to actual buffer shape
-            ).pairmin(
-                source_size - source_offset  # restrict size when close to the borders
-            )
+            tile_bbox = target_view.bounding_box.offset(
+                Vec3Int(tile) * buffer_shape * target_view.mag
+            ).with_size_xyz(buffer_shape * target_view.mag)
 
-            bbox = source_view.bounding_box.offset(source_offset).with_size_xyz(
-                source_size
-            )  # absolute bbox in mag1 for one tile
+            bbox = target_bbox.intersected_with(tile_bbox)
             shape = (num_channels,) + (
                 bbox.in_mag(target_view.mag)
             ).size.to_tuple()  # shape of file buffer in target mag
