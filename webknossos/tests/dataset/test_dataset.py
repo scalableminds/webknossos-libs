@@ -1830,13 +1830,23 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
 
     ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
     # symlink color layer
-    symlink_layer = ds.add_symlink_layer(ds_path / "color")
+    symlink_layer = ds.add_symlink_layer(ds_path / "color", make_relative=True)
     # symlink segmentation layer
     symlink_segmentation_layer = ds.add_symlink_layer(ds_path / "segmentation")
     mag = symlink_layer.get_mag("1")
 
-    assert (symlink_path / "color" / "1").exists()
-    assert (symlink_path / "segmentation").exists()
+    if data_format == DataFormat.WKW:
+        assert ds._properties.data_layers[0].mags[0].path == os.path.relpath(
+            (symlink_path / "color" / "1").resolve(), ds.resolved_path
+        )
+        assert (symlink_path / "color" / "1").resolve().exists()
+    else:
+        assert ds._properties.data_layers[0].mags[0].path == os.path.relpath(
+            (symlink_path / "color" / "1-1-1").resolve(), ds.resolved_path
+        )
+        assert (symlink_path / "color" / "1-1-1").resolve().exists()
+
+    assert (symlink_path / "segmentation").resolve().exists()
 
     assert len(ds.layers) == 2
     assert len(ds.get_layer("color").mags) == 1
