@@ -30,9 +30,6 @@ def upsample_cube_job(
     assert all(1 >= f for f in mag_factors), (
         f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
     )
-    assert buffer_shape % target_view.info.shard_shape == Vec3Int.zeros(), (
-        f"buffer_shape ({buffer_shape=}) must be a multiple of ({target_view.info.shard_shape=})"
-    )
     inverse_factors = [int(1 / f) for f in mag_factors]
 
     try:
