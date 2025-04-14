@@ -51,6 +51,7 @@ from ..utils import (
     is_remote_path,
     movetree,
     named_partial,
+    resolve_if_fs_path,
     rmtree,
     warn_deprecated,
 )
@@ -175,10 +176,7 @@ def _get_shard_shape(
 
 
 def _is_foreign_mag(dataset_path: Path, layer_name: str, mag_path: Path) -> bool:
-    if is_fs_path(mag_path):
-        return dataset_path / layer_name != mag_path.resolve().parent
-    else:
-        return dataset_path / layer_name != mag_path.parent
+    return dataset_path / layer_name != resolve_if_fs_path(mag_path).parent
 
 
 def _find_mag_path(
@@ -193,9 +191,9 @@ def _find_mag_path(
     short_mag_file_path = layer_path / mag.to_layer_name()
     long_mag_file_path = layer_path / mag.to_long_layer_name()
     if short_mag_file_path.exists():
-        return short_mag_file_path
+        return resolve_if_fs_path(short_mag_file_path)
     elif long_mag_file_path.exists():
-        return long_mag_file_path
+        return resolve_if_fs_path(long_mag_file_path)
     else:
         raise FileNotFoundError(
             f"Could not find any valid mag `{mag}` in `{layer_path}`."
@@ -224,19 +222,21 @@ def _enrich_mag_path(path: str, dataset_path: Path) -> Path:
         )
 
     if not upath.is_absolute():
-        return dataset_path / upath
-    return upath
+        return resolve_if_fs_path(dataset_path / upath)
+    return resolve_if_fs_path(upath)
 
 
 def _dump_mag_path(path: Path, dataset_path: Path) -> str:
-    resolved_path = path.resolve() if is_fs_path(path) else path
-    if str(resolved_path).startswith(str(dataset_path)):
-        return str(resolved_path).removeprefix(str(dataset_path)).lstrip("/")
-    if resolved_path.is_relative_to(dataset_path):
-        return str(resolved_path.relative_to(dataset_path))
-    if isinstance(resolved_path, UPath) and resolved_path.protocol == "s3":
-        return f"s3://{resolved_path.storage_options['client_kwargs']['endpoint_url']}/{resolved_path.path}"
-    return str(resolved_path)
+    path = resolve_if_fs_path(path)
+    if str(path).startswith(str(dataset_path)):
+        return str(path).removeprefix(str(dataset_path)).lstrip("/")
+    if path.is_relative_to(dataset_path):
+        return str(path.relative_to(dataset_path))
+    if isinstance(path, UPath) and path.protocol == "s3":
+        return (
+            f"s3://{path.storage_options['client_kwargs']['endpoint_url']}/{path.path}"
+        )
+    return str(path)
 
 
 class Layer:
@@ -283,15 +283,13 @@ class Layer:
         )
         self._mags: dict[Mag, MagView] = {}
 
-        resolved_path = self.dataset.resolved_path / self.name
-        if is_fs_path(resolved_path):
-            resolved_path = resolved_path.resolve()
+        resolved_path = resolve_if_fs_path(self.dataset.resolved_path / self.name)
         self._resolved_path: Path = resolved_path
         self._read_only = read_only
 
         for mag in properties.mags:
             mag_path = (
-                _find_mag_path(self.resolved_path, mag.mag)
+                _find_mag_path(resolved_path, mag.mag)
                 if mag.path is None
                 else _enrich_mag_path(mag.path, self.dataset.resolved_path)
             )
@@ -380,7 +378,9 @@ class Layer:
         )
         self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
-        self._resolved_path = (self.dataset.resolved_path / layer_name).resolve()
+        self._resolved_path = resolve_if_fs_path(
+            self.dataset.resolved_path / layer_name
+        )
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
@@ -959,10 +959,10 @@ class Layer:
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
         mag = self._add_mag_for_existing_files(
-            foreign_mag_view.mag, mag_path=foreign_mag_view.path, read_only=True
-        )
-        mag._properties.path = _dump_mag_path(
-            foreign_normalized_mag_path, self.dataset.resolved_path
+            foreign_mag_view.mag,
+            mag_path=foreign_mag_view.path,
+            override_stored_path=str(foreign_normalized_mag_path),
+            read_only=True,
         )
 
         if extend_layer_bounding_box:
@@ -1090,8 +1090,7 @@ class Layer:
         mag_name = Mag(mag).to_layer_name()
         full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
-        if is_fs_path(full_path):
-            full_path = full_path.resolve()
+        full_path = resolve_if_fs_path(full_path)
         return full_path
 
     def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:

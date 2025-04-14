@@ -278,6 +278,12 @@ def is_remote_path(path: Path) -> bool:
     return not is_fs_path(path)
 
 
+def resolve_if_fs_path(path: Path) -> Path:
+    if is_fs_path(path):
+        return path.resolve()
+    return path
+
+
 def is_writable_path(path: Path) -> bool:
     from upath.implementations.http import HTTPPath
 

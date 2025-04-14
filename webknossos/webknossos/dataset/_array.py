@@ -787,7 +787,6 @@ class Zarr3Array(TensorStoreArray):
                     ],
                 },
                 "create": True,
-                "open": True,
             }
         ).result()
         return cls(path, _array)

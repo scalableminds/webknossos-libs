@@ -18,6 +18,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
+- The `path` of mags are now always written either as absolute path or as relative path to the Dataset path. [#1278](https://github.com/scalableminds/webknossos-libs/pull/1278)
+- The `Layer.path` property now always returns `Dataset.path / layer.name`, even if all mags are stored remotely. [#1278](https://github.com/scalableminds/webknossos-libs/pull/1278)
+- `Layer.is_remote_to_dataset` is deprecated in favor of `Layer.is_foreign` and `MagView.is_remote_to_dataset` is deprecated in favor of `MagView.is_foreign`. [#1278](https://github.com/scalableminds/webknossos-libs/pull/1278)
 
 ### Fixed
 

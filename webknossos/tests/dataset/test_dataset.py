@@ -1835,16 +1835,17 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
     symlink_segmentation_layer = ds.add_symlink_layer(ds_path / "segmentation")
     mag = symlink_layer.get_mag("1")
 
-    if data_format == DataFormat.WKW:
-        assert ds._properties.data_layers[0].mags[0].path == os.path.relpath(
-            (symlink_path / "color" / "1").resolve(), ds.resolved_path
-        )
-        assert (symlink_path / "color" / "1").resolve().exists()
-    else:
-        assert ds._properties.data_layers[0].mags[0].path == os.path.relpath(
-            (symlink_path / "color" / "1-1-1").resolve(), ds.resolved_path
+    if data_format == DataFormat.Zarr:
+        assert (
+            ds._properties.data_layers[0].mags[0].path
+            == f"../{ds_path.name}/color/1-1-1"
         )
         assert (symlink_path / "color" / "1-1-1").resolve().exists()
+    else:
+        assert (
+            ds._properties.data_layers[0].mags[0].path == f"../{ds_path.name}/color/1"
+        )
+        assert (symlink_path / "color" / "1").resolve().exists()
 
     assert (symlink_path / "segmentation").resolve().exists()
 
@@ -1889,6 +1890,25 @@ def test_symlink_layer_add_mag(data_format: DataFormat) -> None:
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_symlink_layer_rename(data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, TESTOUTPUT_DIR, "original")
+    symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
+
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    )
+
+    ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+    # symlink color layer
+    symlink_layer = ds.add_symlink_layer(ds_path / "color", make_relative=True)
+
+    # rename
+    with pytest.raises(RuntimeError):
+        symlink_layer.name = "color2"
+
+
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
 def test_add_symlink_mag(data_format: DataFormat) -> None:
     ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "original")
     symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
@@ -1923,8 +1943,10 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    symlink_mag_2 = layer.add_symlink_mag(original_mag_2)
-    layer.add_symlink_mag(original_mag_4.path)
+    symlink_mag_2 = layer.add_symlink_mag(original_mag_2, make_relative=True)
+    symlink_mag_4 = layer.add_symlink_mag(original_mag_4.path, make_relative=True)
+    assert symlink_mag_2._properties.path == f"../{ds_path.name}/color/2"
+    assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
 
     assert (symlink_path / "color" / "1").exists()
     assert len(layer._properties.mags) == 3
@@ -2824,6 +2846,7 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
         len([layer for layer in ds._properties.data_layers if layer.name == "color2"])
         == 1
     )
+    assert ds._properties.data_layers[0].mags[0].path == "color2/1"
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
     assert ds.get_layer("color2").data_format == data_format
