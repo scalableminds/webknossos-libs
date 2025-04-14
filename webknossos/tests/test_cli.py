@@ -2,6 +2,7 @@
 
 import json
 import os
+import random
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -87,6 +88,7 @@ def test_tiff_cubing_zarr_s3() -> None:
     os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
     os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
+    random.seed(1)
     _tiff_cubing(out_path, DataFormat.Zarr3)
 
     assert (out_path / "tiff" / "1" / "zarr.json").exists()
