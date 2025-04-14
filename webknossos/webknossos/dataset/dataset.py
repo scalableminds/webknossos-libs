@@ -1971,7 +1971,7 @@ class Dataset:
                             )
                             new_layer_properties.category = SEGMENTATION_CATEGORY
                             self._layers[layer.name] = SegmentationLayer(
-                                self, new_layer_properties
+                                self, new_layer_properties, read_only=False
                             )
                         else:
                             logging.info("The layer category is set to color.")
@@ -1981,7 +1981,9 @@ class Dataset:
 
                             new_layer_properties = LayerProperties(**_properties)
                             new_layer_properties.category = COLOR_CATEGORY
-                            self._layers[layer.name] = Layer(self, new_layer_properties)
+                            self._layers[layer.name] = Layer(
+                                self, new_layer_properties, read_only=False
+                            )
                         self._properties.update_for_layer(
                             layer.name, new_layer_properties
                         )

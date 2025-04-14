@@ -393,10 +393,11 @@ class Layer:
                     self.resolved_path.relative_to(self.dataset.resolved_path)
                     / mag.path.name
                 )
+            else:
+                assert mag._properties.path is not None  # for type checking
             mag._path = _enrich_mag_path(
                 mag._properties.path, self.dataset.resolved_path
             )
-            mag._resolved_path = mag._path.resolve()
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
             del mag._array
