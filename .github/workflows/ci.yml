@@ -245,8 +245,6 @@ jobs:
         with:
           path: ~/coverage-files
 
-      - name: Debug List downloaded files
-        run: ls -R ~/coverage-files
 
       - name: Generate coverage report
         env:
