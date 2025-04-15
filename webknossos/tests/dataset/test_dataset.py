@@ -8,6 +8,7 @@ from typing import cast
 
 import numpy as np
 import pytest
+from cattrs import ClassValidationError
 from cluster_tools import get_executor
 from jsonschema import validate
 from upath import UPath
@@ -1954,6 +1955,8 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     # assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
 
     assert (symlink_path / "color" / "1").exists()
+    assert (symlink_path / "color" / "2").exists()
+    assert (symlink_path / "color" / "4").exists()
     assert len(layer._properties.mags) == 3
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
@@ -3035,6 +3038,22 @@ def test_warn_outdated_properties(data_format: DataFormat, output_path: Path) ->
         # Changing ds1 should raise a warning, since ds1
         # does not know about the change in ds2
         ds1.add_layer("color", COLOR_CATEGORY, data_format=data_format)
+
+
+def test_dataset_properties_version() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+
+    properties_path = ds.path / PROPERTIES_FILE_NAME
+    properties = json.loads((properties_path).read_bytes())
+    assert properties["version"] == 1
+
+    # write invalid version
+    properties["version"] = 9000
+    properties_path.write_text(json.dumps(properties))
+
+    with pytest.raises(ClassValidationError):
+        Dataset.open(ds_path)
 
 
 def test_can_compress_mag8() -> None:

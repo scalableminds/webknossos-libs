@@ -382,6 +382,7 @@ class Dataset:
                 id={"name": name, "team": ""},
                 scale=voxel_size_with_unit,
                 data_layers=[],
+                version=1,
             )
             (self.path / PROPERTIES_FILE_NAME).write_text(
                 json.dumps(
@@ -2770,12 +2771,11 @@ class Dataset:
             raise FileNotFoundError(
                 f"Cannot read dataset at {dataset_path}. datasource-properties.json file not found."
             )
-        return dataset_converter.structure(data, DatasetProperties)
+        properties = dataset_converter.structure(data, DatasetProperties)
+        return properties
 
     def _export_as_json(self) -> None:
         self._ensure_writable()
-
-        self._properties.version = 1
 
         properties_on_disk = self._load_properties(self.path)
         try:

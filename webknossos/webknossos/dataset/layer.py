@@ -529,7 +529,7 @@ class Layer:
         Returns:
             bool: True if layer is read-only, False if writable
         """
-        return self.read_only
+        return self._read_only
 
     @property
     def mags(self) -> dict[Mag, MagView]:
@@ -961,7 +961,7 @@ class Layer:
         )
 
         foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self.dataset.resolved_path))
+            Path(relpath(foreign_mag_view.path, self.resolved_path))
             if make_relative
             else foreign_mag_view.path
         )
@@ -1573,7 +1573,6 @@ class Layer:
                 mag_path,
                 read_only=read_only,
             )
-            self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException:
             logging.exception(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
