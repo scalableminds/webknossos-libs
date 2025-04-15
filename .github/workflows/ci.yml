@@ -230,25 +230,29 @@ jobs:
     needs: [webknossos_linux]
     if: success()
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: webknossos
     steps:
+      - uses: actions/checkout@v3
+
       - name: Install coverage.py
         run: pip install coverage
 
       - name: Download all coverage reports
         uses: actions/download-artifact@v4
         with:
-          path: coverage-files
+          path: ~/coverage-files
 
       - name: Debug List downloaded files
-        run: ls -R coverage-files
+        run: ls -R ~/coverage-files
 
       - name: Generate coverage report
         env:
-          COVERAGE_FILE: "coverage-files/result.coverage"
+          COVERAGE_FILE: "~/coverage-files/result.coverage"
         run: |
-          coverage combine coverage-files/**/*.coverage
-          coverage xml -i -o coverage-files/result.xml
+          coverage combine ~/coverage-files/**/*.coverage
+          coverage xml -i -o ~/coverage-files/result.xml
 
       - name: Report coverage
         uses: orgoro/coverage@v3.2
