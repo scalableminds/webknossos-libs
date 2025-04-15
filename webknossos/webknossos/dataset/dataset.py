@@ -681,7 +681,8 @@ class Dataset:
 
                 dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
 
-        assert webknossos_url is not None
+        if webknossos_url is None:
+            webknossos_url = current_context.url
         webknossos_url = webknossos_url.rstrip("/")
         if webknossos_url != current_context.url:
             if sharing_token is None:
