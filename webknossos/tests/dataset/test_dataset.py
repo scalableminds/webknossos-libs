@@ -1206,6 +1206,22 @@ def test_properties_with_segmentation() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_relative_mag_paths(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
+
+    ds = Dataset.open(ds_path)
+    for layer in ds.layers.values():
+        for mag in layer.mags.values():
+            mag._properties.path = f"{layer.name}/{mag.path.name}"
+    ds._export_as_json()
+
+    ds = Dataset.open(ds_path)
+    for layer in ds.layers.values():
+        for mag in layer.mags.values():
+            assert mag.path == ds_path / layer.name / mag.path.name
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
