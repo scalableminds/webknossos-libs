@@ -40,6 +40,7 @@ from webknossos.dataset.properties import (
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
+    is_fs_path,
     is_remote_path,
     named_partial,
     rmtree,
@@ -1212,7 +1213,11 @@ def test_relative_mag_paths(data_format: DataFormat, output_path: Path) -> None:
     ds = Dataset.open(ds_path)
     for layer in ds.layers.values():
         for mag in layer.mags.values():
-            mag._properties.path = f"{layer.name}/{mag.path.name}"
+            if is_fs_path(mag.path):
+                mag._properties.path = f"../{ds_path.name}/{layer.name}/{mag.path.name}"
+            else:
+                mag._properties.path = f"{layer.name}/{mag.path.name}"
+
     ds._export_as_json()
 
     ds = Dataset.open(ds_path)
