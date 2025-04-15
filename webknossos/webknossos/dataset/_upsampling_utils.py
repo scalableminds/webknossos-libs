@@ -3,6 +3,7 @@ import logging
 import numpy as np
 
 from ..geometry import Vec3Int
+from .data_format import DataFormat
 from .view import View
 
 
@@ -30,6 +31,13 @@ def upsample_cube_job(
     assert all(1 >= f for f in mag_factors), (
         f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
     )
+    if (
+        target_view._data_format != DataFormat.WKW
+        and target_view._is_compressed() == False
+    ):
+        assert buffer_shape % target_view.info.shard_shape == Vec3Int.zeros(), (
+            f"buffer_shape ({buffer_shape}) must be divisible by shard_shape ({target_view.info.shard_shape})"
+        )
     inverse_factors = [int(1 / f) for f in mag_factors]
 
     try:
@@ -50,7 +58,7 @@ def upsample_cube_job(
                 if not np.all(cube_buffer == 0):
                     data_cube = upsample_cube(cube_buffer, inverse_factors)
 
-                    buffer_bbox = chunk.with_topleft(Vec3Int.zeros()).with_size_xyz(
+                    buffer_bbox = chunk.with_topleft_xyz(Vec3Int.zeros()).with_size_xyz(
                         data_cube.shape
                     )
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)

@@ -42,7 +42,6 @@ def test_upsampling(tmp_path: Path) -> None:
         finest_mag=Mag(1),
         compress=False,
         sampling_mode=SamplingModes.ANISOTROPIC,
-        buffer_shape=(64, 64, 64),
     )
 
     assert layer.get_mag("2").read().mean() == layer.get_mag("1").read().mean()
