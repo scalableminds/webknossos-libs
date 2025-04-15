@@ -69,9 +69,7 @@ class VecInt(tuple):
             if isinstance(args[0], VecInt):
                 return args[0]
             if isinstance(args[0], np.ndarray):
-                assert np.count_nonzero(args[0] % 1) == 0, (
-                    _value_error(args) + "Thsi error!"
-                )
+                assert np.count_nonzero(args[0] % 1) == 0, _value_error(args)
             if isinstance(args[0], str):
                 return cls.from_str(args[0])
             if isinstance(args[0], Iterable):

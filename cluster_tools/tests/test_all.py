@@ -41,7 +41,7 @@ def raise_if(msg: str, _bool: bool) -> None:
 # Most of the specs in this module should be executed with multiple executors. Some tests
 # should be called with all executors (including the pickling variants) and some with a subset (i.e., without the pickling variants).
 # In order to avoid redundant parameterization of each test, pytest_generate_tests is defined here.
-# If a spec uses an `exc_with_pickling` fixture (defined as a function parameter), that test is automatically parameterized with all executors. Analoguous, parameterization happens with `exc`.
+# If a spec uses an `exc_with_pickling` fixture (defined as a function parameter), that test is automatically parameterized with all executors. Analogous, parameterization happens with `exc`.
 # Regarding how this works in details: This function is called for each test and has access to the fixtures supplied
 # to the test and most importantly can parametrize those fixtures.
 def pytest_generate_tests(metafunc: Any) -> None:
