@@ -1,4 +1,3 @@
-import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
@@ -432,14 +431,8 @@ class TensorStoreArray(BaseArray):
                 "path": parsed_url.path.lstrip("/"),
                 "bucket": parsed_url.netloc,
             }
-            if (
-                (
-                    endpoint_url := path.storage_options.get("client_kwargs", {}).get(
-                        "endpoint_url", None
-                    )
-                )
-                or (endpoint_url := path.storage_options.get("endpoint_url", None))
-                or (endpoint_url := os.environ.get("S3_ENDPOINT_URL", None))
+            if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
+                "endpoint_url", None
             ):
                 kvstore_spec["endpoint"] = endpoint_url
             if "key" in path.storage_options and "secret" in path.storage_options:
