@@ -5,35 +5,23 @@
   },
   "scale": {
     "unit": "nanometer",
-    "factor": [
-      11.24,
-      11.24,
-      25.0
-    ]
+    "factor": [11.24, 11.24, 25.0]
   },
   "dataLayers": [
     {
       "name": "tiff",
       "category": "segmentation",
       "boundingBox": {
-        "topLeft": [
-          0,
-          0,
-          0
-        ],
+        "topLeft": [0, 0, 0],
         "width": 265,
         "height": 265,
         "depth": 257
       },
       "elementClass": "uint8",
-      "dataFormat": "zarr",
+      "dataFormat": "zarr3",
       "mags": [
         {
-          "mag": [
-            1,
-            1,
-            1
-          ],
+          "mag": [1, 1, 1],
           "axisOrder": {
             "c": 0,
             "x": 1,

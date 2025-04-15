@@ -3,6 +3,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import (
     Any,
+    Literal,
 )
 
 import attr
@@ -196,6 +197,7 @@ class DatasetProperties:
     id: dict[str, str]
     scale: VoxelSize
     data_layers: list[SegmentationLayerProperties | LayerProperties]
+    version: Literal[1] | None = None
     default_view_configuration: DatasetViewConfiguration | None = None
 
     def update_for_layer(
