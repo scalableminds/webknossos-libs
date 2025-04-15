@@ -1470,9 +1470,10 @@ class RemoteAnnotation(Annotation):
         return self._get_annotation_info().description
 
     @description.setter
-    def description(self, value: str) -> None:
-        assert isinstance(value, str), "Description must be a string."
-        self._set_annotation_info(description=value)
+    def description(self, value: str | None) -> None:
+        raise NotImplementedError(
+            "Description can not be changed for remote annotations. Set description before uploading."
+        )
 
     def _get_annotation_info(self) -> ApiAnnotation:
         from webknossos.client.context import _get_api_client
@@ -1481,17 +1482,12 @@ class RemoteAnnotation(Annotation):
         assert self.annotation_id is not None, "Annotation ID must be set."
         return client.annotation_info(self.annotation_id)
 
-    def _set_annotation_info(
-        self, name: str | None = None, description: str | None = None
-    ) -> None:
+    def _set_annotation_info(self, name: str | None = None) -> None:
         from webknossos.client.context import _get_api_client
 
         client = _get_api_client(True)
         annotation_info = self._get_annotation_info()
         name = name if name is not None else annotation_info.name
-        description = (
-            description if description is not None else annotation_info.description
-        )
         assert self.annotation_id is not None, "Annotation ID must be set."
         client.annotation_edit(
             annotation_typ=annotation_info.typ,
@@ -1501,7 +1497,7 @@ class RemoteAnnotation(Annotation):
                 typ=annotation_info.typ,
                 owner=annotation_info.owner,
                 name=name,
-                description=description,
+                description=annotation_info.description,
                 state=annotation_info.state,
                 modified=annotation_info.modified,
                 data_store=annotation_info.data_store,
