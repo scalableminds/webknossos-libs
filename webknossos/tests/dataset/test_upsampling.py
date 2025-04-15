@@ -91,7 +91,7 @@ def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
             0,
         ),
         [0.5, 0.5, 1.0],
-        BUFFER_SHAPE,
+        mag1.info.shard_shape,
     )
 
     assert np.any(source_buffer != 0)
@@ -137,7 +137,7 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
     upsample_cube_job(
         (mag2.get_view(), layer.get_mag("1").get_view(), 0),
         [0.5, 0.5, 0.5],
-        BUFFER_SHAPE,
+        mag2.info.shard_shape,
     )
 
     channels = [
