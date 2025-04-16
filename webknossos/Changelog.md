@@ -13,7 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...HEAD)
 
 ### Breaking Changes
-- If `buffer_shape` is passed to `Layer.upsample()` it must be a multiple of the `shard_shape`.
+- If `buffer_shape` is passed to `Layer.upsample()` it must be a multiple of the `shard_shape`. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
 
 ### Added
 
