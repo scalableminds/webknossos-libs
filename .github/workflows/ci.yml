@@ -257,7 +257,7 @@ jobs:
       - name: Report coverage
         uses: orgoro/coverage@v3.2
         with:
-          coverageFile: ~/coverage-files/result.xml
+          coverageFile: /home/runner/coverage-files/result.xml
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Cleanup temporary files
