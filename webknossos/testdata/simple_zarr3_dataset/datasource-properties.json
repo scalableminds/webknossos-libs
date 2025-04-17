@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "id": {
     "name": "simple_zarr_dataset",
     "team": ""
@@ -18,7 +19,8 @@
       "dataFormat": "zarr3",
       "mags": [
         {
-          "mag": [1, 1, 1]
+          "mag": [1, 1, 1],
+          "path": "color/1"
         }
       ],
       "numChannels": 3,

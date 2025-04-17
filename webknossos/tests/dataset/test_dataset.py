@@ -3090,7 +3090,7 @@ def test_dataset_properties_version() -> None:
 
     properties_path = ds.path / PROPERTIES_FILE_NAME
     properties = json.loads((properties_path).read_bytes())
-    assert properties["version"] == 1
+    assert properties["version"] == 2
 
     # write invalid version
     properties["version"] = 9000
