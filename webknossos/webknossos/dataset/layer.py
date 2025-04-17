@@ -391,19 +391,20 @@ class Layer:
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            # FIX when paths are merged
-            # if not mag.is_foreign:
-            #     mag._properties.path = str(
-            #         self.resolved_path.relative_to(self.dataset.resolved_path)
-            #         / mag.path.name
-            #     )
-            # else:
-            #     assert mag._properties.path is not None  # for type checking
-            mag._path = (
-                _enrich_mag_path(mag._properties.path, self.dataset.resolved_path)
-                if mag._properties.path is not None
-                else self._resolved_path / mag.path.name
-            )
+            if self.dataset.properties.version == 2:
+                if not mag.is_foreign:
+                    mag._properties.path = str(
+                        self.resolved_path.relative_to(self.dataset.resolved_path)
+                        / mag.path.name
+                    )
+                else:
+                    assert mag._properties.path is not None  # for type checking
+            else:
+                mag._path = (
+                    _enrich_mag_path(mag._properties.path, self.dataset.resolved_path)
+                    if mag._properties.path is not None
+                    else self._resolved_path / mag.path.name
+                )
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
             del mag._array
@@ -661,8 +662,9 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
-                # FIX when paths are merged
-                # path=_dump_mag_path(mag_path, self.dataset.resolved_path),
+                path=_dump_mag_path(mag_path, self.dataset.resolved_path)
+                if self.dataset.properties.version == 2
+                else None,
             )
         ]
 
@@ -675,8 +677,7 @@ class Layer:
         mag: MagLike,
         mag_path: Path,
         read_only: bool,
-        # FIX when paths are merged
-        # override_stored_path: str | None = None,
+        override_stored_path: str | None = None,
     ) -> MagView:
         """Creates a MagView for existing data files.
 
@@ -701,12 +702,13 @@ class Layer:
         self._setup_mag(mag, mag_path=mag_path, read_only=read_only)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
-        # FIX when paths are merged
-        # stored_path = (
-        #     override_stored_path
-        #     if override_stored_path is not None
-        #     else _dump_mag_path(mag_path, self.dataset.resolved_path)
-        # )
+        stored_path = None
+        if self.dataset.properties.version == 2:
+            stored_path = (
+                override_stored_path
+                if override_stored_path is not None
+                else _dump_mag_path(mag_path, self.dataset.resolved_path)
+            )
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag,
@@ -726,8 +728,7 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
-                # FIX when paths are merged
-                # path=stored_path,
+                path=stored_path,
             )
         )
         self.dataset._export_as_json()
@@ -971,8 +972,7 @@ class Layer:
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag,
             mag_path=foreign_mag_view.path,
-            # FIX when paths are merged
-            # override_stored_path=str(foreign_normalized_mag_path),
+            override_stored_path=str(foreign_normalized_mag_path),
             read_only=True,
         )
 

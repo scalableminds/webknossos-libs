@@ -12,7 +12,7 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, Union, cast
 
 import attr
 import numpy as np
@@ -127,6 +127,9 @@ _ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$"
 _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
+
+SUPPORTED_VERSIONS: list[Literal[1, 2]] = [1, 2]
+DEFAULT_VERSION = 2
 
 
 def _find_array_info(layer_path: Path) -> ArrayInfo | None:
@@ -382,7 +385,7 @@ class Dataset:
                 id={"name": name, "team": ""},
                 scale=voxel_size_with_unit,
                 data_layers=[],
-                version=1,
+                version=DEFAULT_VERSION,
             )
             (self.path / PROPERTIES_FILE_NAME).write_text(
                 json.dumps(
@@ -414,9 +417,10 @@ class Dataset:
         assert dataset_properties is not None
         self._properties = dataset_properties
         self._last_read_properties = copy.deepcopy(self._properties)
-        assert self._properties.version is None or self._properties.version == 1, (
-            f"Unsupported dataset version {self._properties.version}"
-        )
+        assert (
+            self._properties.version is None
+            or self._properties.version in SUPPORTED_VERSIONS
+        ), f"Unsupported dataset version {self._properties.version}"
 
         self._layers: dict[str, Layer] = {}
         # construct self.layers
@@ -2329,20 +2333,20 @@ class Dataset:
         new_layer_properties = copy.deepcopy(foreign_layer._properties)
         new_layer_properties.name = new_layer_name
 
-        # FIX when paths are merged
-        # # Add correct paths to mag properties
-        # for foreign_mag in foreign_layer.mags.values():
-        #     mag_prop = next(
-        #         m for m in new_layer_properties.mags if m.mag == foreign_mag.mag
-        #     )
-        #     if is_fs_path(foreign_mag.path):
-        #         mag_prop.path = str(
-        #             Path(relpath(foreign_mag.path, self.path))
-        #             if make_relative
-        #             else foreign_mag.path.resolve()
-        #         )
-        #     else:
-        #         mag_prop.path = str(foreign_mag.path)
+        if self.properties.version == 2:
+            # Add correct paths to mag properties
+            for foreign_mag in foreign_layer.mags.values():
+                mag_prop = next(
+                    m for m in new_layer_properties.mags if m.mag == foreign_mag.mag
+                )
+                if is_fs_path(foreign_mag.path):
+                    mag_prop.path = str(
+                        Path(relpath(foreign_mag.path, self.path))
+                        if make_relative
+                        else foreign_mag.path.resolve()
+                    )
+                else:
+                    mag_prop.path = str(foreign_mag.path)
 
         self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(

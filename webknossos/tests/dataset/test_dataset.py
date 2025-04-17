@@ -1860,17 +1860,15 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
     mag = symlink_layer.get_mag("1")
 
     if data_format == DataFormat.Zarr:
-        # FIX: When paths are merged
-        # assert (
-        #     ds._properties.data_layers[0].mags[0].path
-        #     == f"../{ds_path.name}/color/1-1-1"
-        # )
+        assert (
+            ds._properties.data_layers[0].mags[0].path
+            == f"../{ds_path.name}/color/1-1-1"
+        )
         assert (symlink_path / "color" / "1-1-1").resolve().exists()
     else:
-        # FIX: When paths are merged
-        # assert (
-        #     ds._properties.data_layers[0].mags[0].path == f"../{ds_path.name}/color/1"
-        # )
+        assert (
+            ds._properties.data_layers[0].mags[0].path == f"../{ds_path.name}/color/1"
+        )
         assert (symlink_path / "color" / "1").resolve().exists()
 
     assert (symlink_path / "segmentation").resolve().exists()
@@ -1970,10 +1968,9 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
     symlink_mag_2 = layer.add_symlink_mag(original_mag_2, make_relative=True)
-    layer.add_symlink_mag(original_mag_4.path, make_relative=True)
-    # FIX: When paths are merged
-    # assert symlink_mag_2._properties.path == f"../{ds_path.name}/color/2"
-    # assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
+    symlink_mag_4 = layer.add_symlink_mag(original_mag_4.path, make_relative=True)
+    assert symlink_mag_2._properties.path == f"../{ds_path.name}/color/2"
+    assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
 
     assert (symlink_path / "color" / "1").exists()
     assert (symlink_path / "color" / "2").exists()
@@ -2902,8 +2899,7 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
         len([layer for layer in ds._properties.data_layers if layer.name == "color2"])
         == 1
     )
-    # FIX: When paths are merged
-    # assert ds._properties.data_layers[0].mags[0].path == "color2/1"
+    assert ds._properties.data_layers[0].mags[0].path == "color2/1"
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
     assert ds.get_layer("color2").data_format == data_format
