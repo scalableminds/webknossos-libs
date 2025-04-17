@@ -28,11 +28,8 @@ class InterpolationModes(Enum):
     MIN = 6
 
 
-DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
-
-
 def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
-    return DEFAULT_BUFFER_SHAPE.pairmin(array_info.shard_shape)
+    return array_info.shard_shape
 
 
 def calculate_mags_to_downsample(
