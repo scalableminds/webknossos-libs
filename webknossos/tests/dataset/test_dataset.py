@@ -1925,13 +1925,15 @@ def test_symlink_layer_rename(data_format: DataFormat) -> None:
         "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
     )
 
-    ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+    symlink_ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
     # symlink color layer
-    symlink_layer = ds.add_symlink_layer(ds_path / "color", make_relative=True)
+    symlink_layer = symlink_ds.add_symlink_layer(ds_path / "color", make_relative=True)
 
     # rename
-    with pytest.raises(RuntimeError):
-        symlink_layer.name = "color2"
+    symlink_layer.name = "color2"
+
+    assert (symlink_ds.path / "color2").exists()
+    assert not (symlink_ds.path / "color").exists()
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)
