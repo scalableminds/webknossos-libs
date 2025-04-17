@@ -302,8 +302,14 @@ class Layer:
         ]
 
     def _ensure_writable(self) -> None:
-        if self._read_only:
+        if self.read_only:
             raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
+
+    def _ensure_metadata_writable(self) -> None:
+        if self.dataset.read_only:
+            raise RuntimeError(
+                f"{self.dataset} is read-only, the changes to the metadata of {self} will not be saved!"
+            )
 
     @property
     def path(self) -> Path:
@@ -371,7 +377,7 @@ class Layer:
         """
         if layer_name == self.name:
             return
-        self._ensure_writable()
+        self._ensure_metadata_writable()
         assert layer_name not in self.dataset.layers.keys(), (
             f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
         )
@@ -433,7 +439,7 @@ class Layer:
     @bounding_box.setter
     def bounding_box(self, bbox: NDBoundingBox) -> None:
         """Updates the offset and size of the bounding box of this layer in the properties."""
-        self._ensure_writable()
+        self._ensure_metadata_writable()
         assert bbox.topleft.is_positive(), (
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
@@ -518,7 +524,7 @@ class Layer:
     def default_view_configuration(
         self, view_configuration: LayerViewConfiguration
     ) -> None:
-        self._ensure_writable()
+        self._ensure_metadata_writable()
         self._properties.default_view_configuration = view_configuration
         self.dataset._export_as_json()  # update properties on disk
 
