@@ -243,6 +243,6 @@ def prepare_shard_shape(
     else:
         if shard_shape % chunk_shape != Vec3Int.zeros():
             raise ValueError(
-                f"The shard_shape {shard_shape} must be cleanly divisble by the chunk_shape {chunk_shape}."
+                f"The shard_shape {shard_shape} must be cleanly divisible by the chunk_shape {chunk_shape}."
             )
         return shard_shape

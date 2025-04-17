@@ -88,6 +88,7 @@ all = [
 [tool.uv]
 extra-index-url = ["https://pypi.scm.io/simple"]
 dev-dependencies = [
+    "coverage>=7.8.0",
     "fsspec ~=2024.6.0",
     "hypothesis ~=6.35.0",
     "icecream ~=2.1.1",
@@ -95,6 +96,7 @@ dev-dependencies = [
     "jsonschema ~=4.6.0",
     "mypy ~=1.15.0",
     "pytest ~=8.3.2",
+    "pytest-cov>=6.0.0",
     "pytest-custom-exit-code ~=0.3.0",
     "pytest-split ~=0.10.0",
     "pytest-sugar ~=1.0.0",
@@ -189,7 +191,7 @@ requires = ["setuptools>=70.0", "wheel; python_version>='3.12'"]
 build-backend = "setuptools.build_meta"
 
 # This is a fix for an issue in setuptools. See: https://github.com/pypa/setuptools/issues/4759
-# This shoulde be removed when the issue is resolved.
+# This should be removed when the issue is resolved.
 [tool.setuptools]
 license-files = []
 

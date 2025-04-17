@@ -10,16 +10,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [2.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.2.0) - 2025-04-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...v2.2.0)
+
+### Breaking Changes
+- If `buffer_shape` is passed to `Layer.upsample()` it must be a multiple of the `shard_shape`. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
+
+### Changed
 - Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
 
 ### Fixed
+- Fixed an issue with upsampling views. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
+
 
 
 ## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01
@@ -304,8 +317,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 - `RemoteDataset.display_name` is deprecated. To change the name of a dataset use the `name` property instead.
 - `Dataset.get_remote_datasets()` returns a mapping. The keys of this mapping changed from datasets name to datasets id.
-- `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternativly a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated. As `dataset_name` is an optional argument now its position has changed, this is important if `create()` is called only with positional arguments.
-- When uploading an Annotation the organization_id is neccessary now. The organization_id might be stored in the Annotation object or it is inferred from the current webknossos_context. [#1155](https://github.com/scalableminds/webknossos-libs/pull/1155)
+- `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternatively a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated. As `dataset_name` is an optional argument now its position has changed, this is important if `create()` is called only with positional arguments.
+- When uploading an Annotation the organization_id is necessary now. The organization_id might be stored in the Annotation object or it is inferred from the current webknossos_context. [#1155](https://github.com/scalableminds/webknossos-libs/pull/1155)
 
 ### Added
 - `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.
@@ -510,7 +523,7 @@ Removed the CZI installation extra from `pip install webknossos[all]` by default
 - Added a pixel level heuristic for distinguishing color and segmentation layers when importing image data with the `from_images` or `add_layer_from_images` method. [#1007](https://github.com/scalableminds/webknossos-libs/pull/1007)
 - Added .ims as supported suffix. [#1085](https://github.com/scalableminds/webknossos-libs/pull/1085)
 - Added suffixes supported by bioformats for Zeiss CZI, Leica LOF, Zeiss LSM (laser scanning microscope), Zeiss LSM (Laser Scanning Microscope) 510/710, Leica XLEF and Zeiss AxioVision ZVI (Zeiss Vision Image). [#1086](https://github.com/scalableminds/webknossos-libs/pull/1086)
-- Added suport for setting a default ID mapping for segmentation layers. [#1118](https://github.com/scalableminds/webknossos-libs/pull/1118)
+- Added support for setting a default ID mapping for segmentation layers. [#1118](https://github.com/scalableminds/webknossos-libs/pull/1118)
 
 ### Changed
 - Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [#1055](https://github.com/scalableminds/webknossos-libs/pull/1055)

@@ -180,7 +180,7 @@ jobs:
               
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
-      
+
       - name: Check formatting
         if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
         run: ./format.sh check
@@ -198,16 +198,69 @@ jobs:
           sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
           cat /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
+      - name: Python tests (with coverage)
+        if: ${{ matrix.python-version == '3.11' }}
+        timeout-minutes: 30
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+
       - name: Python tests
+        if: ${{ matrix.python-version != '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
+      - name: Persist coverage reports
+        if: ${{ matrix.python-version == '3.11' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.group }}
+          path: "~/.local/share/coverage/${{ matrix.group }}.coverage"
+          retention-days: 1  # Automatically deletes after 1 day
+
       - name: Check if git is dirty
         run: |
           git diff --no-ext-diff --exit-code
           [[ -z $(git status -s) ]]
+
+  coverage_report:
+    needs: [webknossos_linux]
+    if: success()
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webknossos
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install coverage.py
+        run: pip install coverage
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          path: ~/coverage-files
+
+      - name: Generate coverage report
+        env:
+          COVERAGE_FILE: "~/coverage-files/result.coverage"
+        run: |
+          coverage combine ~/coverage-files/**/*.coverage
+          coverage xml -i -o ~/coverage-files/result.xml
+
+      - name: Report coverage
+        uses: orgoro/coverage@v3.2
+        with:
+          coverageFile: /home/runner/coverage-files/result.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          thresholdAll: 0.8
+          thresholdNew: 0.8
+      
+      - name: Cleanup temporary files
+        run: rm -rf ~/coverage-files
 
   webknossos_cli_docker:
     needs: [cluster_tools, webknossos_linux]
