@@ -2180,8 +2180,6 @@ def test_search_dataset_also_for_long_layer_name(
     "data_format", DATA_FORMATS
 )  # Cannot test symlinks on remote storage
 def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> None:
-    print(make_relative, data_format, TESTOUTPUT_DIR)
-
     ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "original")
     copy_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "copy")
 
@@ -2221,6 +2219,35 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
 
     assert not shallow_copy_of_ds.get_layer("color").read_only
     assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
+
+
+def test_dataset_shallow_copy_downsample() -> None:
+    ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "original")
+    copy_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "copy")
+
+    ds = Dataset(ds_path, (1, 1, 1))
+    original_layer_1 = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel=np.uint8,
+        num_channels=1,
+        data_format=DEFAULT_DATA_FORMAT,
+        bounding_box=BoundingBox((0, 0, 0), (512, 512, 512)),
+    )
+    original_layer_1.add_mag(1)
+
+    # Creating a shallow copy
+    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=True)
+    # Pre-initializing the downsampled mags
+    shallow_copy_of_ds.get_layer("color").downsample(
+        from_mag=Mag(1), coarsest_mag=Mag(2), only_setup_mags=True
+    )
+    # Re-opening the copy dataset in order to re-determine read-only mags
+    shallow_copy_of_ds = Dataset.open(copy_path)
+    with get_executor("sequential") as ex:
+        shallow_copy_of_ds.get_layer("color").downsample(
+            from_mag=Mag(1), coarsest_mag=Mag(2), allow_overwrite=True, executor=ex
+        )
 
 
 def test_remote_wkw_dataset() -> None:

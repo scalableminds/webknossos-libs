@@ -293,10 +293,10 @@ class Layer:
                 if mag.path is None
                 else _enrich_mag_path(mag.path, self.dataset.resolved_path)
             )
-            read_only = read_only or _is_foreign_mag(
+            mag_is_read_only = read_only or _is_foreign_mag(
                 self.dataset.resolved_path, self.name, mag_path
             )
-            self._setup_mag(Mag(mag.mag), mag_path, read_only=read_only)
+            self._setup_mag(Mag(mag.mag), mag_path, read_only=mag_is_read_only)
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) in self._mags
         ]
