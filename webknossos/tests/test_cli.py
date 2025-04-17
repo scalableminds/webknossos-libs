@@ -2,6 +2,7 @@
 
 import json
 import os
+import random
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -87,22 +88,18 @@ def test_tiff_cubing_zarr_s3() -> None:
     os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
     os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
-    _tiff_cubing(out_path, DataFormat.Zarr)
+    random.seed(1)
+    _tiff_cubing(out_path, DataFormat.Zarr3)
 
-    assert (out_path / "tiff" / "1" / ".zarray").exists()
-    assert (out_path / PROPERTIES_FILE_NAME).exists()
+    assert (out_path / "tiff" / "1" / "zarr.json").exists()
 
-    with (
-        (out_path / PROPERTIES_FILE_NAME).open("r") as file,
-        (TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json").open(
-            "r"
-        ) as fixture,
-    ):
-        json_a = json.load(file)
-        json_fixture = json.load(fixture)
-        del json_a["id"]
-        del json_fixture["id"]
-        assert json_a == json_fixture
+    json_a = json.loads((out_path / PROPERTIES_FILE_NAME).read_bytes())
+    json_fixture = json.loads(
+        (TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json").read_bytes()
+    )
+    del json_a["id"]
+    del json_fixture["id"]
+    assert json_a == json_fixture
 
 
 def test_main() -> None:

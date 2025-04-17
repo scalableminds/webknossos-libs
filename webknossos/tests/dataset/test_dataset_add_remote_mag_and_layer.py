@@ -103,9 +103,9 @@ def test_add_remote_layer_from_object(sample_remote_dataset: wk.Dataset) -> None
         layer_name = f"test_remote_layer_{layer.category}_object"
         sample_remote_dataset.add_remote_layer(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
-        assert is_remote_path(new_layer.path) and (
-            layer.path.as_uri() == new_layer.path.as_uri()
-        ), "Added layer should have a remote path matching the remote layer added."
+        assert is_remote_path(new_layer.get_mag(1).path) and (
+            str(layer.get_mag(1).path) == str(new_layer.get_mag(1).path)
+        ), "Mag path of added layer should be equal to mag path in source layer."
 
 
 def test_add_remote_layer_from_path(sample_remote_dataset: wk.Dataset) -> None:
@@ -118,9 +118,9 @@ def test_add_remote_layer_from_path(sample_remote_dataset: wk.Dataset) -> None:
         layer_name = f"test_remote_layer_{layer.category}_path"
         sample_remote_dataset.add_remote_layer(UPath(layer.path), layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
-        assert is_remote_path(new_layer.path) and (
-            new_layer.path.as_uri() == layer.path.as_uri()
-        ), "Added layer should have a remote path matching the remote layer added."
+        assert is_remote_path(new_layer.get_mag(1).path) and (
+            str(new_layer.get_mag(1).path) == str(layer.get_mag(1).path)
+        ), "Mag path of added layer should be equal to mag path is source layer."
 
 
 def test_add_remote_layer_non_public(tmp_path: Path) -> None:

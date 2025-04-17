@@ -18,10 +18,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:00 GMT
+        date: Tue, 15 Apr 2025 13:06:09 GMT
+        connection: close
         content-type: application/json
         content-length: '682'
       body:
@@ -48,10 +50,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 30 Jan 2025 14:18:00 GMT
+        date: Tue, 15 Apr 2025 13:06:09 GMT
+        connection: close
         content-type: application/json
         content-length: '625'
       body:

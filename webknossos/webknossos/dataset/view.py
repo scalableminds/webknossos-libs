@@ -1,5 +1,6 @@
 import warnings
 from collections.abc import Callable, Generator, Iterator
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -11,7 +12,6 @@ from cluster_tools import Executor
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.vec_int import VecIntLike
 from ..utils import (
-    LazyPath,
     count_defined_values,
     get_executor_for_args,
     get_rich_progress,
@@ -55,7 +55,7 @@ class View:
         ```
     """
 
-    _path: LazyPath
+    _path: Path
     _data_format: DataFormat
     _bounding_box: NDBoundingBox | None
     _read_only: bool
@@ -64,7 +64,7 @@ class View:
 
     def __init__(
         self,
-        path_to_mag_view: LazyPath,
+        path_to_mag_view: Path,
         bounding_box: NDBoundingBox
         | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
@@ -1358,9 +1358,7 @@ class View:
     @property
     def _array(self) -> BaseArray:
         if self._cached_array is None:
-            self._cached_array = BaseArray.get_class(self._data_format).open(
-                self._path.resolve()
-            )
+            self._cached_array = BaseArray.get_class(self._data_format).open(self._path)
         return self._cached_array
 
     @_array.deleter
