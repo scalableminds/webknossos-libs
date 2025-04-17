@@ -31,7 +31,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 - If `buffer_shape` is passed to `Layer.upsample()` it must be a multiple of the `shard_shape`. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
 
-### Added
 
 ### Changed
 - Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)

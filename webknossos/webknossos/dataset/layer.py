@@ -1556,7 +1556,7 @@ class Layer:
 
         Args:
             mag: Magnification level to setup
-            path: Optional path override for mag data
+            mag_path: Optional path override for mag data
             read_only: Whether the mag is read_only
 
         Raises:
