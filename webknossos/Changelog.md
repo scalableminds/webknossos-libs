@@ -42,6 +42,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
+- Add clarification that bounding box size is in units of voxels [#1289](https://github.com/scalableminds/webknossos-libs/pull/1289)
 
 ### Fixed
 - Fixed an issue with upsampling views. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
