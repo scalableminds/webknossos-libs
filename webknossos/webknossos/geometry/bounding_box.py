@@ -33,7 +33,7 @@ class BoundingBox(NDBoundingBox):
 
     Attributes:
         topleft (Vec3Int): Top-left corner coordinates (inclusive)
-        size (Vec3Int): Size of the bounding box in each dimension (width, height, depth)
+        size (Vec3Int): Size of the bounding box in units of voxels for each dimension (width, height, depth)
         axes (tuple[str, str, str]): Names of the coordinate axes, defaults to ("x", "y", "z")
         index (Vec3Int): Index values for each dimension, defaults to (1, 2, 3)
         bottomright (Vec3Int): Bottom-right corner coordinates (exclusive), computed from topleft + size
