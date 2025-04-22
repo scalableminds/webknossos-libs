@@ -2,13 +2,14 @@
 
 import json
 import os
+import random
 import subprocess
+from collections.abc import Iterator
 from contextlib import contextmanager
 from math import ceil
 from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
-from typing import Iterator, Union
 
 import numpy as np
 import pytest
@@ -51,7 +52,7 @@ def minio_docker() -> Iterator[None]:
         yield
 
 
-def check_call(*args: Union[str, int, Path]) -> None:
+def check_call(*args: str | int | Path) -> None:
     try:
         subprocess.check_call([str(a) for a in args])
     except subprocess.CalledProcessError as err:
@@ -87,22 +88,18 @@ def test_tiff_cubing_zarr_s3() -> None:
     os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
     os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
-    _tiff_cubing(out_path, DataFormat.Zarr)
+    random.seed(1)
+    _tiff_cubing(out_path, DataFormat.Zarr3)
 
-    assert (out_path / "tiff" / "1" / ".zarray").exists()
-    assert (out_path / PROPERTIES_FILE_NAME).exists()
+    assert (out_path / "tiff" / "1" / "zarr.json").exists()
 
-    with (
-        (out_path / PROPERTIES_FILE_NAME).open("r") as file,
-        (TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json").open(
-            "r"
-        ) as fixture,
-    ):
-        json_a = json.load(file)
-        json_fixture = json.load(fixture)
-        del json_a["id"]
-        del json_fixture["id"]
-        assert json_a == json_fixture
+    json_a = json.loads((out_path / PROPERTIES_FILE_NAME).read_bytes())
+    json_fixture = json.loads(
+        (TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json").read_bytes()
+    )
+    del json_a["id"]
+    del json_fixture["id"]
+    assert json_a == json_fixture
 
 
 def test_main() -> None:
@@ -489,9 +486,9 @@ def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
                     / f"{x_tile_index + 1}.tiff"
                 )
 
-                assert (
-                    tiff_path.is_file()
-                ), f"Expected a tiff to be written at: {tiff_path}."
+                assert tiff_path.is_file(), (
+                    f"Expected a tiff to be written at: {tiff_path}."
+                )
 
                 test_image = np.array(Image.open(tiff_path)).T
 
@@ -553,9 +550,9 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                     / f"{x_tile_index + 1}.tiff"
                 )
 
-                assert (
-                    tiff_path.is_file()
-                ), f"Expected a tiff to be written at: {tiff_path}."
+                assert tiff_path.is_file(), (
+                    f"Expected a tiff to be written at: {tiff_path}."
+                )
 
                 test_image = np.array(Image.open(tiff_path)).T
 

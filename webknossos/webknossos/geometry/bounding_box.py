@@ -1,16 +1,7 @@
 import json
 import re
-from typing import (
-    Callable,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from collections.abc import Callable, Generator, Iterable
+from typing import Union, cast
 
 import attr
 import numpy as np
@@ -42,23 +33,23 @@ class BoundingBox(NDBoundingBox):
 
     Attributes:
         topleft (Vec3Int): Top-left corner coordinates (inclusive)
-        size (Vec3Int): Size of the bounding box in each dimension (width, height, depth)
-        axes (Tuple[str, str, str]): Names of the coordinate axes, defaults to ("x", "y", "z")
+        size (Vec3Int): Size of the bounding box in units of voxels for each dimension (width, height, depth)
+        axes (tuple[str, str, str]): Names of the coordinate axes, defaults to ("x", "y", "z")
         index (Vec3Int): Index values for each dimension, defaults to (1, 2, 3)
         bottomright (Vec3Int): Bottom-right corner coordinates (exclusive), computed from topleft + size
-        name (Optional[str]): Optional name for the bounding box, defaults to "Unnamed Bounding Box"
+        name (str | None): Optional name for the bounding box, defaults to "Unnamed Bounding Box"
         is_visible (bool): Whether the bounding box should be visible, defaults to True
-        color (Optional[Tuple[float, float, float, float]]): Optional RGBA color values
+        color (tuple[float, float, float, float] | None): Optional RGBA color values
     """
 
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
-    axes: Tuple[str, str, str] = attr.field(default=("x", "y", "z"))
+    axes: tuple[str, str, str] = attr.field(default=("x", "y", "z"))
     index: Vec3Int = attr.field(default=Vec3Int(1, 2, 3))
     bottomright: Vec3Int = attr.field(init=False)
-    name: Optional[str] = _DEFAULT_BBOX_NAME
+    name: str | None = _DEFAULT_BBOX_NAME
     is_visible: bool = True
-    color: Optional[Tuple[float, float, float, float]] = None
+    color: tuple[float, float, float, float] | None = None
 
     def __attrs_post_init__(self) -> None:
         if not self.size.is_positive():
@@ -75,28 +66,28 @@ class BoundingBox(NDBoundingBox):
         object.__setattr__(self, "bottomright", self.topleft + self.size)
 
     def with_bounds_x(
-        self, new_topleft_x: Optional[int] = None, new_size_x: Optional[int] = None
+        self, new_topleft_x: int | None = None, new_size_x: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.x optionally replaced and size.x optionally replaced."""
 
         return cast(BoundingBox, self.with_bounds("x", new_topleft_x, new_size_x))
 
     def with_bounds_y(
-        self, new_topleft_y: Optional[int] = None, new_size_y: Optional[int] = None
+        self, new_topleft_y: int | None = None, new_size_y: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.y optionally replaced and size.y optionally replaced."""
 
         return cast(BoundingBox, self.with_bounds("y", new_topleft_y, new_size_y))
 
     def with_bounds_z(
-        self, new_topleft_z: Optional[int] = None, new_size_z: Optional[int] = None
+        self, new_topleft_z: int | None = None, new_size_z: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
 
         return cast(BoundingBox, self.with_bounds("z", new_topleft_z, new_size_z))
 
     @classmethod
-    def from_wkw_dict(cls, bbox: Dict) -> "BoundingBox":
+    def from_wkw_dict(cls, bbox: dict) -> "BoundingBox":
         """Creates a BoundingBox from a wkw-format dictionary.
 
         Args:
@@ -109,7 +100,7 @@ class BoundingBox(NDBoundingBox):
         return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
 
     @classmethod
-    def from_config_dict(cls, bbox: Dict) -> "BoundingBox":
+    def from_config_dict(cls, bbox: dict) -> "BoundingBox":
         """Creates a BoundingBox from a config-format dictionary.
 
         Args:
@@ -122,11 +113,11 @@ class BoundingBox(NDBoundingBox):
         return cls(bbox["topleft"], bbox["size"])
 
     @classmethod
-    def from_tuple6(cls, tuple6: Tuple[int, int, int, int, int, int]) -> "BoundingBox":
+    def from_tuple6(cls, tuple6: tuple[int, int, int, int, int, int]) -> "BoundingBox":
         """Creates a BoundingBox from a 6-tuple of coordinates.
 
         Args:
-            tuple6 (Tuple[int, int, int, int, int, int]): A tuple containing
+            tuple6 (tuple[int, int, int, int, int, int]): A tuple containing
                 (x, y, z) coordinates followed by (width, height, depth) dimensions
 
         Returns:
@@ -135,11 +126,11 @@ class BoundingBox(NDBoundingBox):
         return cls(tuple6[0:3], tuple6[3:6])
 
     @classmethod
-    def from_tuple2(cls, tuple2: Tuple[Vec3IntLike, Vec3IntLike]) -> "BoundingBox":
+    def from_tuple2(cls, tuple2: tuple[Vec3IntLike, Vec3IntLike]) -> "BoundingBox":
         """Creates a BoundingBox from a 2-tuple of coordinates.
 
         Args:
-            tuple2 (Tuple[Vec3IntLike, Vec3IntLike]): A tuple containing
+            tuple2 (tuple[Vec3IntLike, Vec3IntLike]): A tuple containing
                 the topleft coordinates and size dimensions
 
         Returns:
@@ -171,16 +162,16 @@ class BoundingBox(NDBoundingBox):
         """This function extracts a bounding box in the format `x_y_z_sx_sy_xz` which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
-        assert (
-            match is not None
-        ), f"Could not extract bounding box from {checkpoint_name}"
+        assert match is not None, (
+            f"Could not extract bounding box from {checkpoint_name}"
+        )
         bbox_tuple = tuple(int(value) for value in match.group().split("_"))
-        return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
+        return cls.from_tuple6(cast(tuple[int, int, int, int, int, int], bbox_tuple))
 
     @classmethod
     def from_csv(cls, csv_bbox: str) -> "BoundingBox":
         bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
-        return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
+        return cls.from_tuple6(cast(tuple[int, int, int, int, int, int], bbox_tuple))
 
     @classmethod
     def from_ndbbox(cls, bbox: NDBoundingBox) -> "BoundingBox":
@@ -188,7 +179,7 @@ class BoundingBox(NDBoundingBox):
 
     @classmethod
     def from_auto(
-        cls, obj: Union["BoundingBox", str, Dict, List, Tuple]
+        cls, obj: Union["BoundingBox", str, dict, list, tuple]
     ) -> "BoundingBox":
         if isinstance(obj, cls):
             return obj
@@ -222,7 +213,7 @@ class BoundingBox(NDBoundingBox):
 
         Returns:
             dict: A dictionary with keys:
-                - topLeft: List[int] of (x,y,z) coordinates
+                - topLeft: list[int] of (x,y,z) coordinates
                 - width: int width in x dimension
                 - height: int height in y dimension
                 - depth: int depth in z dimension
@@ -247,8 +238,8 @@ class BoundingBox(NDBoundingBox):
 
         Returns:
             dict: A dictionary with keys:
-                - topleft: List[int] of (x,y,z) coordinates
-                - size: List[int] of (width,height,depth) dimensions
+                - topleft: list[int] of (x,y,z) coordinates
+                - size: list[int] of (width,height,depth) dimensions
         """
         return {"topleft": self.topleft.to_list(), "size": self.size.to_list()}
 
@@ -263,17 +254,15 @@ class BoundingBox(NDBoundingBox):
         """
         x, y, z = self.topleft
         width, height, depth = self.size
-        return "{x}_{y}_{z}_{width}_{height}_{depth}".format(
-            x=x, y=y, z=z, width=width, height=height, depth=depth
-        )
+        return f"{x}_{y}_{z}_{width}_{height}_{depth}"
 
-    def to_tuple6(self) -> Tuple[int, int, int, int, int, int]:
+    def to_tuple6(self) -> tuple[int, int, int, int, int, int]:
         """Converts the bounding box coordinates to a 6-tuple.
 
         Creates a tuple containing the bounding box coordinates and dimensions.
 
         Returns:
-            Tuple[int, int, int, int, int, int]: A tuple containing:
+            tuple[int, int, int, int, int, int]: A tuple containing:
                 - First three values: (x,y,z) coordinates of topleft
                 - Last three values: (width,height,depth) dimensions
         """
@@ -329,12 +318,12 @@ class BoundingBox(NDBoundingBox):
         """
         mag_vec = mag.to_vec3_int()
 
-        assert (
-            self.topleft % mag_vec == Vec3Int.zeros()
-        ), f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
-        assert (
-            self.bottomright % mag_vec == Vec3Int.zeros()
-        ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+        assert self.topleft % mag_vec == Vec3Int.zeros(), (
+            f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+        )
+        assert self.bottomright % mag_vec == Vec3Int.zeros(), (
+            f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+        )
 
         return attr.evolve(
             self,
@@ -365,9 +354,7 @@ class BoundingBox(NDBoundingBox):
             bottomright = align(self.bottomright, np.floor)
         return attr.evolve(self, topleft=topleft, size=bottomright - topleft)
 
-    def align_with_mag(
-        self, mag: Union[Mag, Vec3Int], ceil: bool = False
-    ) -> "BoundingBox":
+    def align_with_mag(self, mag: Mag | Vec3Int, ceil: bool = False) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
         Args:
@@ -397,14 +384,14 @@ class BoundingBox(NDBoundingBox):
                 size=aligned_roundup - aligned_rounddown,
             )
 
-    def contains(self, coord: Union[Vec3IntLike, np.ndarray]) -> bool:
+    def contains(self, coord: Vec3IntLike | np.ndarray) -> bool:
         """Check whether a point is inside of the bounding box.
         Note that the point may have float coordinates in the ndarray case"""
 
         if isinstance(coord, np.ndarray):
-            assert (
-                coord.shape == (3,)
-            ), f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
+            assert coord.shape == (3,), (
+                f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
+            )
             return cast(
                 bool,
                 np.all(coord >= self.topleft) and np.all(coord < self.bottomright),
@@ -423,14 +410,14 @@ class BoundingBox(NDBoundingBox):
     def chunk(
         self,
         chunk_shape: Vec3IntLike,
-        chunk_border_alignments: Optional[Vec3IntLike] = None,
+        chunk_border_alignments: Vec3IntLike | None = None,
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_shape`.
 
         Args:
             chunk_shape (Vec3IntLike): Size of chunks to decompose into. Each chunk
                 will be at most this size.
-            chunk_border_alignments (Optional[Vec3IntLike]): If provided, all border
+            chunk_border_alignments (Vec3IntLike | None): If provided, all border
                 coordinates between chunks will be divisible by these values.
 
         Yields:
@@ -453,9 +440,9 @@ class BoundingBox(NDBoundingBox):
         start_adjust = np.array([0, 0, 0])
         if chunk_border_alignments is not None:
             chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
-            assert np.all(
-                chunk_shape % chunk_border_alignments_array == 0
-            ), f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+            assert np.all(chunk_shape % chunk_border_alignments_array == 0), (
+                f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+            )
 
             # Move the start to be aligned correctly. This doesn't actually change
             # the start of the first chunk, because we'll intersect with `self`,

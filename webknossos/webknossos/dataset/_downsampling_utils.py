@@ -1,9 +1,10 @@
 import logging
 import math
 import warnings
+from collections.abc import Callable
 from enum import Enum
 from itertools import product
-from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from scipy.ndimage import zoom
@@ -27,19 +28,16 @@ class InterpolationModes(Enum):
     MIN = 6
 
 
-DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
-
-
 def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
-    return DEFAULT_BUFFER_SHAPE.pairmin(array_info.shard_shape)
+    return array_info.shard_shape
 
 
 def calculate_mags_to_downsample(
     from_mag: Mag,
     coarsest_mag: Mag,
     dataset_to_align_with: Optional["Dataset"],
-    voxel_size: Optional[Tuple[float, float, float]],
-) -> List[Mag]:
+    voxel_size: tuple[float, float, float] | None,
+) -> list[Mag]:
     assert np.all(from_mag.to_np() <= coarsest_mag.to_np())
     mags = []
     current_mag = from_mag
@@ -52,9 +50,9 @@ def calculate_mags_to_downsample(
             for mag in layer.mags.keys()
         )
     mags_to_align_with_by_max_dim = {mag.max_dim: mag for mag in mags_to_align_with}
-    assert len(mags_to_align_with) == len(
-        mags_to_align_with_by_max_dim
-    ), "Some layers contain different values for the same mag, this is not allowed."
+    assert len(mags_to_align_with) == len(mags_to_align_with_by_max_dim), (
+        "Some layers contain different values for the same mag, this is not allowed."
+    )
     while current_mag < coarsest_mag:
         if current_mag.max_dim * 2 in mags_to_align_with_by_max_dim:
             current_mag = mags_to_align_with_by_max_dim[current_mag.max_dim * 2]
@@ -111,8 +109,8 @@ def calculate_mags_to_upsample(
     from_mag: Mag,
     finest_mag: Mag,
     dataset_to_align_with: Optional["Dataset"],
-    voxel_size: Optional[Tuple[float, float, float]],
-) -> List[Mag]:
+    voxel_size: tuple[float, float, float] | None,
+) -> list[Mag]:
     return list(
         reversed(
             calculate_mags_to_downsample(
@@ -145,7 +143,7 @@ def parse_interpolation_mode(
         return InterpolationModes[interpolation_mode.upper()]
 
 
-def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.ndarray:
+def linear_filter_3d(data: np.ndarray, factors: list[int], order: int) -> np.ndarray:
     factors_np = np.array(factors)
 
     return zoom(
@@ -164,10 +162,10 @@ def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.nda
 
 
 def non_linear_filter_3d(
-    data: np.ndarray, factors: List[int], func: Callable[[np.ndarray], np.ndarray]
+    data: np.ndarray, factors: list[int], func: Callable[[np.ndarray], np.ndarray]
 ) -> np.ndarray:
     ds = data.shape
-    assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
+    assert not any(d % factor > 0 for (d, factor) in zip(ds, factors))
     data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
     data = data.swapaxes(0, 1)
     data = data.reshape(
@@ -276,7 +274,7 @@ def downsample_unpadded_data(
 
 
 def downsample_cube(
-    cube_buffer: np.ndarray, factors: List[int], interpolation_mode: InterpolationModes
+    cube_buffer: np.ndarray, factors: list[int], interpolation_mode: InterpolationModes
 ) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
         return non_linear_filter_3d(cube_buffer, factors, _mode)
@@ -293,11 +291,11 @@ def downsample_cube(
     elif interpolation_mode == InterpolationModes.MIN:
         return non_linear_filter_3d(cube_buffer, factors, _min)
     else:
-        raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
+        raise Exception(f"Invalid interpolation mode: {interpolation_mode}")
 
 
 def downsample_cube_job(
-    args: Tuple[View, View, int],
+    args: tuple[View, View, int],
     mag_factors: Vec3Int,
     interpolation_mode: InterpolationModes,
     buffer_shape: Vec3Int,

@@ -3,10 +3,9 @@
 import logging
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Any, Optional
+from typing import Annotated, Any
 
 import typer
-from typing_extensions import Annotated
 
 from ..dataset import Dataset, Layer
 from ..utils import get_executor_for_args
@@ -34,7 +33,7 @@ def main(
         ),
     ],
     layer_name: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Name of the layer to compare (if not provided, all layers are compared)."
         ),
@@ -54,7 +53,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
@@ -79,19 +78,19 @@ def main(
 
     try:
         if layer_name is not None:
-            assert (
-                layer_name in source_layer_names
-            ), f"Provided layer {layer_name} does not exist in source dataset."
-            assert (
-                layer_name in target_layer_names
-            ), f"Provided layer {layer_name} does not exist in target dataset."
+            assert layer_name in source_layer_names, (
+                f"Provided layer {layer_name} does not exist in source dataset."
+            )
+            assert layer_name in target_layer_names, (
+                f"Provided layer {layer_name} does not exist in target dataset."
+            )
             layer_names = [layer_name]
 
         else:
-            assert (
-                source_layer_names == target_layer_names
-            ), f"The provided input datasets have different \
+            assert source_layer_names == target_layer_names, (
+                f"The provided input datasets have different \
     layers: {source_layer_names} != {target_layer_names}"
+            )
 
         for name in layer_names:
             compare_layers(
@@ -119,18 +118,18 @@ def compare_layers(
     layer_name = source_layer.name
     logging.info("Checking layer_name: %s", layer_name)
 
-    assert (
-        source_layer.bounding_box == target_layer.bounding_box
-    ), f"The bounding boxes of '{layer_name}' layer of source and target \
+    assert source_layer.bounding_box == target_layer.bounding_box, (
+        f"The bounding boxes of '{layer_name}' layer of source and target \
 are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
+    )
 
     source_mags = set(source_layer.mags.keys())
     target_mags = set(target_layer.mags.keys())
 
-    assert (
-        source_mags == target_mags
-    ), f"The mags of '{layer_name}' layer of source and target are not equal: \
+    assert source_mags == target_mags, (
+        f"The mags of '{layer_name}' layer of source and target are not equal: \
 {source_mags} != {target_mags}"
+    )
 
     for mag in source_mags:
         source_mag = source_layer.mags[mag]
@@ -138,6 +137,6 @@ are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
 
         logging.info("Start verification of %s in mag %s", layer_name, mag)
         with get_executor_for_args(args=executor_args) as executor:
-            assert source_mag.content_is_equal(
-                target_mag, executor=executor
-            ), f"The contents of {source_mag} and {target_mag} differ."
+            assert source_mag.content_is_equal(target_mag, executor=executor), (
+                f"The contents of {source_mag} and {target_mag} differ."
+            )

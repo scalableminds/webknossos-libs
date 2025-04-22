@@ -10,17 +10,120 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `get_remote_annotations()` to AnnotationInfo class to get a list of all remote Annotations of the current user. [#1262](https://github.com/scalableminds/webknossos-libs/pull/1262)
+- Added argument `require_unique_name` to `Dataset.announce_manual_upload()`. Additionally, the method returns a tuple of `new_dataset_id` and `directory_name` now. [#1283](https://github.com/scalableminds/webknossos-libs/pull/1283)
 
 ### Changed
 
 ### Fixed
+
+
+## [2.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.0) - 2025-04-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...v2.3.0)
+
+### Added
+- Added a `version` field to the `datasource-properties.json` file, which is always set to `1`, for now. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+
+### Changed
+- The `Layer.path` property now always returns `Dataset.path / layer.name`, even if all mags are stored remotely. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+- `Layer.is_remote_to_dataset` is deprecated in favor of `Layer.is_foreign` and `MagView.is_remote_to_dataset` is deprecated in favor of `MagView.is_foreign`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+- Relative `path` fields in the mag definition of a `datasource-properties.json` file are now interpreted relative to the `Dataset.path`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+
+
+## [2.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.2.0) - 2025-04-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...v2.2.0)
+
+### Breaking Changes
+- If `buffer_shape` is passed to `Layer.upsample()` it must be a multiple of the `shard_shape`. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
+
+### Changed
+- Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
+- Add clarification that bounding box size is in units of voxels [#1289](https://github.com/scalableminds/webknossos-libs/pull/1289)
+
+### Fixed
+- Fixed an issue with upsampling views. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
+
+
+## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.7...v2.1.0)
+
+### Breaking Changes
+- Dropped support for Python 3.9. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
+
+### Added
+- Adds the field `totalFileSizeInBytes` to the dataset upload information. [#1264](https://github.com/scalableminds/webknossos-libs/pull/1264)
+- Added support for metadata in segment and trees. [#1271](https://github.com/scalableminds/webknossos-libs/pull/1271)
+- Added a warning on import if a newer version of the `webknossos` package is available from PyPI. [#1280](https://github.com/scalableminds/webknossos-libs/pull/1280)
+
+### Changed
+- Upgraded `tensorstore` to `0.1.72`. [#1277](https://github.com/scalableminds/webknossos-libs/pull/1277)
+
+
+## [2.0.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.7) - 2025-03-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.6...v2.0.7)
+
+### Changed
+- Pinned `tensorstore` to `<=0.1.71`. [#1276](https://github.com/scalableminds/webknossos-libs/pull/1276)
+
+
+## [2.0.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.6) - 2025-03-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.5...v2.0.6)
+
+### Fixed
+- Fixed an issue with uploading datasets where the dataset name is already in use. [#1275](https://github.com/scalableminds/webknossos-libs/pull/1275)
+
+
+
+## [2.0.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.5) - 2025-03-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.4...v2.0.5)
+
+### Changed
+- Changed the default dimension separator for Zarr 2 arrays from `.` to `/`. [#1274](https://github.com/scalableminds/webknossos-libs/pull/1274)
+
+
+## [2.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.4) - 2025-03-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.3...v2.0.4)
+
+### Changed
+- For Zarr3 datasets, the OME-Zarr 0.5 metadata is now written. [#1272](https://github.com/scalableminds/webknossos-libs/pull/1272)
+
+### Fixed
+- Fixed an issue where it was attempted to overwrite the OME-Zarr metadata for symlinked layers. [#1272](https://github.com/scalableminds/webknossos-libs/pull/1272)
+
+
+
+## [2.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.3) - 2025-03-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.2...v2.0.3)
+
+
+## [2.0.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.2) - 2025-03-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.1...v2.0.2)
+
+### Added
+- Added tests for NDBoundingBox and VecInt classes. [#1268](https://github.com/scalableminds/webknossos-libs/pull/1268)
+
+### Changed
+- Removed `PimsImagejTiffReader` in favor of the unified `PimsTiffReader`. [#1269](https://github.com/scalableminds/webknossos-libs/pull/1269)
+
+### Fixed
+- Fixed issues with tiff conversion for tiff files that don't use pages for z and other axes. [#1269](https://github.com/scalableminds/webknossos-libs/pull/1269)
+
+
+
+## [2.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.1) - 2025-03-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...v2.0.1)
+
+### Added
+- Added `get_remote_annotations()` to AnnotationInfo class to get a list of all remote Annotations of the current user. [#1262](https://github.com/scalableminds/webknossos-libs/pull/1262)
+
+### Fixed
 - Fixed an issue with `RemoteDataset.explore_and_add_remote()` where including a remote dataset failed. [#1261](https://github.com/scalableminds/webknossos-libs/pull/1261)
+- Fixed an issue with the Zarr array's shape when using `Dataset.from_images`. [#1267](https://github.com/scalableminds/webknossos-libs/pull/1267)
+
 
 
 ## [2.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.0) - 2025-03-04
@@ -227,8 +330,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 - `RemoteDataset.display_name` is deprecated. To change the name of a dataset use the `name` property instead.
 - `Dataset.get_remote_datasets()` returns a mapping. The keys of this mapping changed from datasets name to datasets id.
-- `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternativly a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated. As `dataset_name` is an optional argument now its position has changed, this is important if `create()` is called only with positional arguments.
-- When uploading an Annotation the organization_id is neccessary now. The organization_id might be stored in the Annotation object or it is inferred from the current webknossos_context. [#1155](https://github.com/scalableminds/webknossos-libs/pull/1155)
+- `Task.create()` needs a `dataset_id` now instead of a `dataset_name`. Alternatively a `RemoteDataset` object can be used. The `dataset_name` is marked as deprecated. As `dataset_name` is an optional argument now its position has changed, this is important if `create()` is called only with positional arguments.
+- When uploading an Annotation the organization_id is necessary now. The organization_id might be stored in the Annotation object or it is inferred from the current webknossos_context. [#1155](https://github.com/scalableminds/webknossos-libs/pull/1155)
 
 ### Added
 - `Dataset` method `get_remote_datasets()` accepts `name` and `folder_id` as arguments now to filter remote datasets.
@@ -433,7 +536,7 @@ Removed the CZI installation extra from `pip install webknossos[all]` by default
 - Added a pixel level heuristic for distinguishing color and segmentation layers when importing image data with the `from_images` or `add_layer_from_images` method. [#1007](https://github.com/scalableminds/webknossos-libs/pull/1007)
 - Added .ims as supported suffix. [#1085](https://github.com/scalableminds/webknossos-libs/pull/1085)
 - Added suffixes supported by bioformats for Zeiss CZI, Leica LOF, Zeiss LSM (laser scanning microscope), Zeiss LSM (Laser Scanning Microscope) 510/710, Leica XLEF and Zeiss AxioVision ZVI (Zeiss Vision Image). [#1086](https://github.com/scalableminds/webknossos-libs/pull/1086)
-- Added suport for setting a default ID mapping for segmentation layers. [#1118](https://github.com/scalableminds/webknossos-libs/pull/1118)
+- Added support for setting a default ID mapping for segmentation layers. [#1118](https://github.com/scalableminds/webknossos-libs/pull/1118)
 
 ### Changed
 - Moved functional parts of merge volume annotation CLI to Dataset and Annotation classes. [#1055](https://github.com/scalableminds/webknossos-libs/pull/1055)

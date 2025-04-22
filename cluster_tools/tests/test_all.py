@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import pytest
 
@@ -35,13 +35,13 @@ _dask_cluster: Optional["LocalCluster"] = None
 
 def raise_if(msg: str, _bool: bool) -> None:
     if _bool:
-        raise Exception("raise_if was called with True: {}".format(msg))
+        raise Exception(f"raise_if was called with True: {msg}")
 
 
 # Most of the specs in this module should be executed with multiple executors. Some tests
 # should be called with all executors (including the pickling variants) and some with a subset (i.e., without the pickling variants).
 # In order to avoid redundant parameterization of each test, pytest_generate_tests is defined here.
-# If a spec uses an `exc_with_pickling` fixture (defined as a function parameter), that test is automatically parameterized with all executors. Analoguous, parameterization happens with `exc`.
+# If a spec uses an `exc_with_pickling` fixture (defined as a function parameter), that test is automatically parameterized with all executors. Analogous, parameterization happens with `exc`.
 # Regarding how this works in details: This function is called for each test and has access to the fixtures supplied
 # to the test and most importantly can parametrize those fixtures.
 def pytest_generate_tests(metafunc: Any) -> None:
@@ -229,29 +229,22 @@ def test_process_id(exc_with_pickling: cluster_tools.Executor) -> None:
 
         should_differ = not isinstance(
             exc,
-            (
-                cluster_tools.SequentialExecutor,
-                cluster_tools.SequentialPickleExecutor,
-            ),
+            cluster_tools.SequentialExecutor | cluster_tools.SequentialPickleExecutor,
         )
 
         if should_differ:
-            assert (
-                inner_pid != outer_pid
-            ), f"Inner and outer pid should differ, but both are {inner_pid}."
+            assert inner_pid != outer_pid, (
+                f"Inner and outer pid should differ, but both are {inner_pid}."
+            )
         else:
-            assert (
-                inner_pid == outer_pid
-            ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
+            assert inner_pid == outer_pid, (
+                f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
+            )
 
 
 def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
     is_async = not isinstance(
-        exc,
-        (
-            cluster_tools.SequentialExecutor,
-            cluster_tools.SequentialPickleExecutor,
-        ),
+        exc, cluster_tools.SequentialExecutor | cluster_tools.SequentialPickleExecutor
     )
 
     with exc:
@@ -274,11 +267,7 @@ def test_unordered_sleep(exc: cluster_tools.Executor) -> None:
 
 def test_map_to_futures(exc: cluster_tools.Executor) -> None:
     is_async = not isinstance(
-        exc,
-        (
-            cluster_tools.SequentialExecutor,
-            cluster_tools.SequentialPickleExecutor,
-        ),
+        exc, cluster_tools.SequentialExecutor | cluster_tools.SequentialPickleExecutor
     )
 
     with exc:
@@ -323,9 +312,9 @@ def test_map_to_futures_with_pickle_paths(
             assert set(results) == {1, 4}
 
         for number in numbers:
-            assert Path(
-                output_pickle_path_getter(tmp_dir, number)
-            ).exists(), f"File for chunk {number} should exist."
+            assert Path(output_pickle_path_getter(tmp_dir, number)).exists(), (
+                f"File for chunk {number} should exist."
+            )
 
 
 def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
@@ -385,9 +374,8 @@ def enum_consumer(value: DummyEnum) -> DummyEnum:
     "executor_key", ["multiprocessing_with_pickling", "sequential_with_pickling"]
 )
 def test_pickling(
-    executor_key: Union[
-        Literal["multiprocessing_with_pickling"], Literal["sequential_with_pickling"]
-    ],
+    executor_key: Literal["multiprocessing_with_pickling"]
+    | Literal["sequential_with_pickling"],
 ) -> None:
     with cluster_tools.get_executor(executor_key) as executor:
         future = executor.submit(enum_consumer, DummyEnum.BANANA)
@@ -400,9 +388,9 @@ def test_map_to_futures_with_sequential() -> None:
         futures = exc.map_to_futures(sleep, durations)
 
         for fut in futures:
-            assert (
-                fut.done()
-            ), "Future should immediately be finished after map_to_futures has returned"
+            assert fut.done(), (
+                "Future should immediately be finished after map_to_futures has returned"
+            )
 
         results = [f.result() for f in futures]
 

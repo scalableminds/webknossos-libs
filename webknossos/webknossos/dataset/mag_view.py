@@ -1,8 +1,9 @@
 import logging
 import warnings
+from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Union
 from uuid import uuid4
 
 import numpy as np
@@ -11,7 +12,6 @@ from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
-    LazyPath,
     get_executor_for_args,
     is_fs_path,
     rmtree,
@@ -32,22 +32,7 @@ if TYPE_CHECKING:
 from .view import View
 
 
-def _find_mag_path(
-    dataset_path: Path,
-    layer_name: str,
-    mag_name: str,
-    path: Optional[LazyPath] = None,
-) -> LazyPath:
-    if path is not None:
-        return path
-
-    mag = Mag(mag_name)
-    short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
-    long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
-    return LazyPath(short_mag_file_path, long_mag_file_path)
-
-
-def _compress_cube_job(args: Tuple[View, View, int]) -> None:
+def _compress_cube_job(args: tuple[View, View, int]) -> None:
     source_view, target_view, _i = args
     target_view.write(
         source_view.read(), absolute_bounding_box=target_view.bounding_box
@@ -74,6 +59,7 @@ class MagView(View):
         info: Information about array storage (chunk shape, compression, etc.).
         path: Path to the data on disk.
         bounding_box: The spatial extent of this magnification in Mag(1) coordinates.
+        read_only: Whether this magnification is read-only.
 
     Examples:
         ```python
@@ -116,17 +102,20 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
+    _layer: "Layer"
+
     @classmethod
     def create(
         cls,
         layer: "Layer",
         mag: Mag,
         *,
+        path: Path,
         chunk_shape: Vec3Int,
-        shard_shape: Optional[Vec3Int] = None,
-        chunks_per_shard: Optional[Vec3Int] = None,
+        shard_shape: Vec3Int | None = None,
+        chunks_per_shard: Vec3Int | None = None,
         compression_mode: bool,
-        path: Optional[LazyPath] = None,
+        read_only: bool = False,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -160,31 +149,33 @@ class MagView(View):
             ),
             dimension_names=("c",) + layer.bounding_box.axes,
         )
-        mag_path = (
-            path.resolve()
-            if path
-            else layer.dataset.path / layer.name / mag.to_layer_name()
-        )
-        BaseArray.get_class(array_info.data_format).create(mag_path, array_info)
-        return cls(layer, mag, LazyPath.resolved(mag_path))
+
+        BaseArray.get_class(array_info.data_format).create(path, array_info)
+        return cls(layer, mag, path, read_only=read_only)
 
     def __init__(
         self,
         layer: "Layer",
         mag: Mag,
-        mag_path: LazyPath,
+        path: Path,
+        read_only: bool = False,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.get_mag()`.
         """
 
         super().__init__(
-            mag_path,
+            path,
             bounding_box=layer.bounding_box,
             mag=mag,
             data_format=layer.data_format,
+            read_only=read_only,
         )
         self._layer = layer
+
+    def _ensure_writable(self) -> None:
+        if self._read_only:
+            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
     # Overwrites of View methods:
     @property
@@ -227,17 +218,20 @@ class MagView(View):
         Notes:
             - Path may be local or remote depending on dataset configuration
         """
-        return self._path.resolve()
+        return self._path
+
+    @property
+    def is_foreign(self) -> bool:
+        """Check if this magnification's data is stored not as part of to the dataset.
+        Returns:
+            bool: True if data is stored in a different location than the parent dataset.
+        """
+        return self.path.parent.parent != self.layer.dataset.resolved_path
 
     @property
     def is_remote_to_dataset(self) -> bool:
-        """Check if this magnification's data is stored remotely on a server relative to the dataset.
-
-        Returns:
-            bool: True if data is stored in a different location than the parent dataset.
-
-        """
-        return self._path.resolve().parent.parent != self.layer.dataset.path
+        warn_deprecated("is_remote_to_dataset", "is_foreign")
+        return self.is_foreign
 
     @property
     def name(self) -> str:
@@ -269,9 +263,9 @@ class MagView(View):
         array_wrapper = self._array
         if isinstance(array_wrapper, WKWArray):
             raise ValueError("Cannot get the zarr array for wkw datasets.")
-        assert isinstance(
-            array_wrapper, TensorStoreArray
-        ), f"Expected TensorStoreArray, got {type(array_wrapper)}"  # for typechecking
+        assert isinstance(array_wrapper, TensorStoreArray), (
+            f"Expected TensorStoreArray, got {type(array_wrapper)}"
+        )  # for typechecking
         return array_wrapper._array
 
     def write(
@@ -280,10 +274,10 @@ class MagView(View):
         *,
         allow_resize: bool = False,
         allow_unaligned: bool = False,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[NDBoundingBox] = None,  # in mag1
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
     ) -> None:
         """Write volumetric data to the magnification level.
 
@@ -303,13 +297,13 @@ class MagView(View):
             allow_unaligned (bool, optional): If True, allows writing data to without
                 being aligned to the shard shape.
                 Defaults to False.
-            relative_offset (Optional[Vec3IntLike], optional): Offset relative to view's
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
                 position in Mag(1) coordinates. Defaults to None.
-            absolute_offset (Optional[Vec3IntLike], optional): Absolute offset in Mag(1)
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
                 coordinates. Defaults to None.
-            relative_bounding_box (Optional[NDBoundingBox], optional): Bounding box relative
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
                 to view's position in Mag(1) coordinates. Defaults to None.
-            absolute_bounding_box (Optional[NDBoundingBox], optional): Absolute bounding box
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
                 in Mag(1) coordinates. Defaults to None.
 
         Examples:
@@ -329,6 +323,7 @@ class MagView(View):
             - For compressed data, writing may be slower due to compression
             - Large writes may temporarily increase memory usage
         """
+        self._ensure_writable()
         if all(
             i is None
             for i in [
@@ -413,7 +408,7 @@ class MagView(View):
 
     def get_views_on_disk(
         self,
-        read_only: Optional[bool] = None,
+        read_only: bool | None = None,
     ) -> Iterator[View]:
         """Yields a view for each file on disk for efficient parallelization.
 
@@ -453,8 +448,8 @@ class MagView(View):
     def compress(
         self,
         *,
-        target_path: Optional[Union[str, Path]] = None,
-        executor: Optional[Executor] = None,
+        target_path: str | Path | None = None,
+        executor: Executor | None = None,
     ) -> None:
         """Compresses the files on disk.
 
@@ -480,15 +475,16 @@ class MagView(View):
         """
         from .dataset import Dataset
 
-        path = self._path.resolve()
+        self._ensure_writable()
+        path = self._path
         if target_path is None:
             if self._is_compressed():
                 logging.info(f"Mag {self.name} is already compressed")
                 return
             else:
-                assert is_fs_path(
-                    path
-                ), "Cannot compress a remote mag without `target_path`."
+                assert is_fs_path(path), (
+                    "Cannot compress a remote mag without `target_path`."
+                )
         else:
             target_path = UPath(target_path)
 
@@ -519,11 +515,7 @@ class MagView(View):
             compress=True,
         )
 
-        logging.info(
-            "Compressing mag {0} in '{1}'".format(
-                self.name, str(uncompressed_full_path)
-            )
-        )
+        logging.info(f"Compressing mag {self.name} in '{str(uncompressed_full_path)}'")
         with get_executor_for_args(None, executor) as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()
@@ -568,7 +560,7 @@ class MagView(View):
             rmtree(compressed_dataset.path)
 
             # update the handle to the new dataset
-            MagView.__init__(self, self.layer, self._mag, LazyPath.resolved(path))
+            MagView.__init__(self, self.layer, self._mag, path)
 
     def merge_with_view(
         self,
@@ -592,15 +584,16 @@ class MagView(View):
             - Merging is parallelized using the provided executor
             - Updates layer bounding box if necessary
         """
-        assert all(
-            other.info.chunks_per_shard.to_np() == 1
-        ), "volume annotation must have file_len=1"
-        assert (
-            self.info.voxel_type == other.info.voxel_type
-        ), "Volume annotation must have same dtype as fallback layer"
-        assert (
-            self.mag == other.mag
-        ), f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+        self._ensure_writable()
+        assert all(other.info.chunks_per_shard.to_np() == 1), (
+            "volume annotation must have file_len=1"
+        )
+        assert self.info.voxel_type == other.info.voxel_type, (
+            "Volume annotation must have same dtype as fallback layer"
+        )
+        assert self.mag == other.mag, (
+            f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
+        )
 
         logging.info("Scan disk for annotation shards.")
         bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
@@ -627,7 +620,7 @@ class MagView(View):
         )
 
     def merge_chunk(
-        self, args: Tuple["MagView", NDBoundingBox, List[NDBoundingBox]]
+        self, args: tuple["MagView", NDBoundingBox, list[NDBoundingBox]]
     ) -> None:
         """Merge a single chunk during parallel merge operations.
 
@@ -638,7 +631,7 @@ class MagView(View):
             args: Tuple containing:
                 - other (MagView): Source view to merge from
                 - shard (NDBoundingBox): Target shard region
-                - bboxes (List[NDBoundingBox]): List of source bounding boxes
+                - bboxes (list[NDBoundingBox]): List of source bounding boxes
         """
         other, shard, bboxes = args
         data_buffer = self.read(absolute_bounding_box=shard)[0]

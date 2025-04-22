@@ -1,17 +1,19 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
 from ..geometry import Vec3Int
+from .metadata_entry import MetadataEntry
 from .utils import Vector4, enforce_not_null, filter_none_values
 
 
 class Segment(NamedTuple):
     id: int
-    name: Optional[str]
-    anchor_position: Optional[Vec3Int]
-    color: Optional[Vector4]
+    name: str | None
+    anchor_position: Vec3Int | None
+    color: Vector4 | None
+    metadata: list[MetadataEntry]
 
     def _dump(self, xf: XmlWriter) -> None:
         if self.anchor_position is None:
@@ -31,7 +33,7 @@ class Segment(NamedTuple):
                 "color.b": str(self.color[2]),
                 "color.a": str(self.color[3]),
             }
-        xf.tag(
+        xf.startTag(
             "segment",
             filter_none_values(
                 {
@@ -42,6 +44,11 @@ class Segment(NamedTuple):
                 }
             ),
         )
+        xf.startTag("metadata")
+        for metadata_entry in self.metadata:
+            metadata_entry._dump(xf)
+        xf.endTag()  # metadata
+        xf.endTag()  # segment
 
     @classmethod
     def _parse(cls, nml_segment: Element) -> "Segment":
@@ -67,4 +74,5 @@ class Segment(NamedTuple):
             name=nml_segment.get("name"),
             anchor_position=anchor_position,
             color=color,
+            metadata=[],
         )

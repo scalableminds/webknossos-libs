@@ -5,11 +5,10 @@ from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Literal, Optional, Tuple, Union
+from typing import Annotated, Any, Literal
 
 import numpy as np
 import typer
-from typing_extensions import Annotated
 
 from webknossos.dataset.length_unit import LengthUnit
 from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
@@ -47,9 +46,9 @@ def _raw_chunk_converter(
     source_raw_path: Path,
     target_mag_view: MagView,
     input_dtype: str,
-    shape: Tuple[int, int, int],
+    shape: tuple[int, int, int],
     order: Literal["C", "F"],
-    flip_axes: Optional[Union[int, Tuple[int, ...]]],
+    flip_axes: int | tuple[int, ...] | None,
 ) -> None:
     logging.info("Conversion of %s", bounding_box.topleft)
     source_data: np.ndarray = np.memmap(
@@ -80,9 +79,9 @@ def convert_raw(
     shard_shape: Vec3Int,
     order: Literal["C", "F"] = "F",
     voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
-    flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
+    flip_axes: int | tuple[int, ...] | None = None,
     compress: bool = True,
-    executor_args: Optional[Namespace] = None,
+    executor_args: Namespace | None = None,
 ) -> MagView:
     """Performs the conversion step from RAW file to WEBKNOSSOS"""
     time_start(f"Conversion of {source_raw_path}")
@@ -202,7 +201,7 @@ def main(
         ),
     ] = DEFAULT_CHUNK_SHAPE,
     shard_shape: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Number of voxels to be stored as a shard in the output format "
             "(e.g. `1024` or `1024,1024,1024`).",
@@ -211,7 +210,7 @@ def main(
         ),
     ] = None,
     chunks_per_shard: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
             "(e.g. `32` or `32,32,32`).",
@@ -220,7 +219,7 @@ def main(
         ),
     ] = None,
     max_mag: Annotated[
-        Optional[Mag],
+        Mag | None,
         typer.Option(
             help="Max resolution to be downsampled. "
             "Should be number or minus separated string (e.g. 2 or 2-2-2).",
@@ -235,7 +234,7 @@ def main(
         ),
     ] = "default",
     flip_axes: Annotated[
-        Optional[Vec3Int],
+        Vec3Int | None,
         typer.Option(
             help="The axes at which should be flipped. "
             "Input format is a comma separated list of axis indices. "
@@ -265,7 +264,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help='Necessary when using slurm as distribution strategy. Should be a JSON string \
 (e.g., --job-resources=\'{"mem": "10M"}\')\'',
@@ -283,9 +282,9 @@ def main(
 
     if flip_axes is not None:
         for index in flip_axes:
-            assert (
-                0 <= index <= 3
-            ), "flip_axes parameter must only contain indices between 0 and 3."
+            assert 0 <= index <= 3, (
+                "flip_axes parameter must only contain indices between 0 and 3."
+            )
 
     mode = SamplingModes.parse(sampling_mode.value)
     if source.is_dir():

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,46 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [2.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.0) - 2025-04-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...v2.3.0)
+
+
+## [2.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.2.0) - 2025-04-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...v2.2.0)
+
+
+## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.7...v2.1.0)
+
+
+## [2.0.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.7) - 2025-03-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.6...v2.0.7)
+
+
+## [2.0.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.6) - 2025-03-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.5...v2.0.6)
+
+
+## [2.0.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.5) - 2025-03-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.4...v2.0.5)
+
+
+## [2.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.4) - 2025-03-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.3...v2.0.4)
+
+
+## [2.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.3) - 2025-03-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.2...v2.0.3)
+
+
+## [2.0.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.2) - 2025-03-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.1...v2.0.2)
+
+
+## [2.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.1) - 2025-03-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.0.0...v2.0.1)
 
 
 ## [2.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.0.0) - 2025-03-04

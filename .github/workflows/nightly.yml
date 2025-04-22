@@ -11,7 +11,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         group: [1, 2, 3]
       fail-fast: false
     defaults:
@@ -36,10 +36,6 @@ jobs:
       run: |
         git diff --no-ext-diff --quiet --exit-code
         [[ -z $(git status -s) ]]
-
-    - name: Use currently deployed Webknossos version
-      run: |
-        sed -i "s/export DOCKER_TAG=.*$/export DOCKER_TAG=master__$(curl https://webknossos.org/api/buildinfo | jq -r .webknossos.version)/" local_wk_setup.sh
 
     - name: Python tests, refreshing the network snapshots
       env:

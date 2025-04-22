@@ -2,11 +2,13 @@ import itertools
 import json
 import os
 import pickle
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, Optional, Tuple, cast
+from typing import cast
 
 import numpy as np
 import pytest
+from cattrs import ClassValidationError
 from cluster_tools import get_executor
 from jsonschema import validate
 from upath import UPath
@@ -38,6 +40,7 @@ from webknossos.dataset.properties import (
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
+    is_fs_path,
     is_remote_path,
     named_partial,
     rmtree,
@@ -62,7 +65,7 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
 
 
 def copy_simple_dataset(
-    data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
+    data_format: DataFormat, output_path: Path, suffix: str | None = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"simple_{data_format}_dataset{suffix}"
@@ -75,7 +78,7 @@ def copy_simple_dataset(
 
 
 def prepare_dataset_path(
-    data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
+    data_format: DataFormat, output_path: Path, suffix: str | None = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"{data_format}_dataset{suffix}"
@@ -83,7 +86,7 @@ def prepare_dataset_path(
     return new_dataset_path
 
 
-def chunk_job(args: Tuple[View, int]) -> None:
+def chunk_job(args: tuple[View, int]) -> None:
     (view, _i) = args
     # increment the color value of each voxel
     data = view.read()
@@ -95,14 +98,14 @@ def chunk_job(args: Tuple[View, int]) -> None:
 
 def default_chunk_config(
     data_format: DataFormat, chunk_shape: int = 32
-) -> Tuple[Vec3Int, Vec3Int]:
+) -> tuple[Vec3Int, Vec3Int]:
     if data_format == DataFormat.Zarr:
         return (Vec3Int.full(chunk_shape * 8), Vec3Int.full(chunk_shape * 8))
     else:
         return (Vec3Int.full(chunk_shape), Vec3Int.full(chunk_shape * 8))
 
 
-def advanced_chunk_job(args: Tuple[View, int]) -> None:
+def advanced_chunk_job(args: tuple[View, int]) -> None:
     view, _i = args
 
     # write different data for each chunk (depending on the topleft of the chunk)
@@ -166,7 +169,7 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
         )
 
 
-def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) -> None:
+def copy_and_transform_job(args: tuple[View, View, int], name: str, val: int) -> None:
     (source_view, target_view, _i) = args
     # This method simply takes the data from the source_view, transforms it and writes it to the target_view
 
@@ -196,9 +199,9 @@ def get_multichanneled_data(dtype: type) -> np.ndarray:
 
 def assure_exported_properties(ds: Dataset) -> None:
     reopened_ds = Dataset.open(ds.path)
-    assert (
-        ds._properties == reopened_ds._properties
-    ), "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
+    assert ds._properties == reopened_ds._properties, (
+        "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
+    )
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -230,7 +233,7 @@ def test_create_dataset_with_layer_and_mag(
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_ome_ngff_metadata(output_path: Path) -> None:
+def test_ome_ngff_0_4_metadata(output_path: Path) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
@@ -270,6 +273,84 @@ def test_ome_ngff_metadata(output_path: Path) -> None:
             ).read_bytes()
         ),
     )
+
+
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_ome_ngff_0_5_metadata(output_path: Path) -> None:
+    ds_path = prepare_dataset_path(DataFormat.Zarr3, output_path)
+    ds = Dataset(ds_path, voxel_size=(11, 11, 28))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
+    layer.add_mag("1")
+    layer.add_mag("2-2-1")
+
+    assert (ds_path / "zarr.json").exists()
+    assert (ds_path / "color" / "zarr.json").exists()
+    assert (ds_path / "color" / "1" / "zarr.json").exists()
+    assert (ds_path / "color" / "2-2-1" / "zarr.json").exists()
+
+    zattrs = json.loads((ds_path / "color" / "zarr.json").read_bytes())["attributes"]
+    assert zattrs["ome"]["version"] == "0.5"
+    assert len(zattrs["ome"]["multiscales"][0]["datasets"]) == 2
+    assert zattrs["ome"]["multiscales"][0]["datasets"][0]["coordinateTransformations"][
+        0
+    ]["scale"] == [
+        1,
+        11,
+        11,
+        28,
+    ]
+    assert zattrs["ome"]["multiscales"][0]["datasets"][1]["coordinateTransformations"][
+        0
+    ]["scale"] == [
+        1,
+        22,
+        22,
+        28,
+    ]
+
+    validate(
+        instance=zattrs,
+        schema=json.loads(
+            UPath(
+                "https://ngff.openmicroscopy.org/0.5/schemas/image.schema"
+            ).read_bytes()
+        ),
+    )
+
+
+def test_ome_ngff_0_5_metadata_symlink() -> None:
+    def recursive_chmod(ds_path: Path, mode: int) -> None:
+        # See https://docs.python.org/3/library/os.html#os.chmod for how to use mode
+        os.chmod(ds_path, mode)
+        for root, dirs, files in os.walk(ds_path):
+            root_path = Path(root)
+            for _dir in dirs:
+                path = root_path / _dir
+                os.chmod(path, mode)
+            for file in files:
+                path = root_path / file
+                os.chmod(path, mode)
+
+    ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "original")
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    ).add_mag(1)
+
+    # remove write permissions
+    recursive_chmod(ds_path, 0o555)
+    try:
+        symlink_path = prepare_dataset_path(
+            DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "with_symlink"
+        )
+        ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+
+        # add symlink color layer
+        ds.add_symlink_layer(ds_path / "color")
+
+    finally:
+        # restore write permissions
+        recursive_chmod(ds_path, 0o777)
 
 
 def test_create_default_layer() -> None:
@@ -792,7 +873,7 @@ def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 @pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
 def test_write_layer(
-    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+    data_format: DataFormat, output_path: Path, absolute_offset: Vec3Int | None
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -818,7 +899,7 @@ def test_write_layer(
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 @pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
 def test_write_layer_mag2(
-    data_format: DataFormat, output_path: Path, absolute_offset: Optional[Vec3Int]
+    data_format: DataFormat, output_path: Path, absolute_offset: Vec3Int | None
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(12, 12, 24))
@@ -851,7 +932,7 @@ def test_write_layer_mag2(
 def test_write_layer_5d(
     data_format: DataFormat,
     output_path: Path,
-    absolute_offset: Optional[VecIntLike],
+    absolute_offset: VecIntLike | None,
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -1075,7 +1156,7 @@ def test_properties_with_segmentation() -> None:
     )
     copytree(TESTDATA_DIR / "complex_property_ds", ds_path)
 
-    with open(ds_path / "datasource-properties.json", "r", encoding="utf-8") as f:
+    with open(ds_path / "datasource-properties.json", encoding="utf-8") as f:
         data = json.load(f)
         ds_properties = dataset_converter.structure(data, DatasetProperties)
 
@@ -1114,7 +1195,7 @@ def test_properties_with_segmentation() -> None:
         input_data = json.load(input_properties)
 
         with open(
-            ds_path / "datasource-properties.json", "r", encoding="utf-8"
+            ds_path / "datasource-properties.json", encoding="utf-8"
         ) as output_properties:
             output_data = json.load(output_properties)
             for layer in output_data["dataLayers"]:
@@ -1123,6 +1204,26 @@ def test_properties_with_segmentation() -> None:
                     del layer["numChannels"]
 
             assert input_data == output_data
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_relative_mag_paths(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
+
+    ds = Dataset.open(ds_path)
+    for layer in ds.layers.values():
+        for mag in layer.mags.values():
+            if is_fs_path(mag.path):
+                mag._properties.path = f"../{ds_path.name}/{layer.name}/{mag.path.name}"
+            else:
+                mag._properties.path = f"{layer.name}/{mag.path.name}"
+
+    ds._export_as_json()
+
+    ds = Dataset.open(ds_path)
+    for layer in ds.layers.values():
+        for mag in layer.mags.values():
+            assert mag.path == ds_path / layer.name / mag.path.name
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1491,7 +1592,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
 
         with open(
             ds_path / "datasource-properties.json",
-            "r",
             encoding="utf-8",
         ) as f:
             data = json.load(f)
@@ -1742,39 +1842,98 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
     symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
 
     # Add an additional segmentation layer to the original dataset
-    Dataset.open(ds_path).add_layer(
-        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
-    )
+    original_ds = Dataset.open(ds_path)
+    original_ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999)
 
-    original_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
+    original_mag = original_ds.get_layer("color").get_mag("1")
+    original_mag.write(
+        (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8), allow_unaligned=True
+    )
 
     ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
     # symlink color layer
     symlink_layer = ds.add_symlink_layer(ds_path / "color")
     # symlink segmentation layer
-    symlink_segmentation_layer = ds.add_symlink_layer(ds_path / "segmentation")
+    symlink_segmentation_layer = ds.add_symlink_layer(
+        ds_path / "segmentation", make_relative=True
+    )
     mag = symlink_layer.get_mag("1")
 
-    assert (symlink_path / "color" / "1").exists()
-    assert (symlink_path / "segmentation").exists()
+    if data_format == DataFormat.Zarr:
+        # FIX: When paths are merged
+        # assert (
+        #     ds._properties.data_layers[0].mags[0].path
+        #     == f"../{ds_path.name}/color/1-1-1"
+        # )
+        assert (symlink_path / "color" / "1-1-1").resolve().exists()
+    else:
+        # FIX: When paths are merged
+        # assert (
+        #     ds._properties.data_layers[0].mags[0].path == f"../{ds_path.name}/color/1"
+        # )
+        assert (symlink_path / "color" / "1").resolve().exists()
+
+    assert (symlink_path / "segmentation").resolve().exists()
 
     assert len(ds.layers) == 2
     assert len(ds.get_layer("color").mags) == 1
 
     assert symlink_segmentation_layer.as_segmentation_layer().largest_segment_id == 999
 
-    # write data in symlink layer
-    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data, allow_unaligned=True)
+    assert symlink_layer.read_only
+    assert symlink_segmentation_layer.read_only
+    assert mag.read_only
+
+    with pytest.raises(RuntimeError):
+        mag.write(
+            (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8), allow_unaligned=True
+        )
 
     assert np.array_equal(
-        mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data
-    )
-    assert np.array_equal(
-        original_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data
+        mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
+        original_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
     )
 
     assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_symlink_layer_add_mag(data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, TESTOUTPUT_DIR, "original")
+    symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
+
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    )
+
+    ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+    # symlink color layer
+    symlink_layer = ds.add_symlink_layer(ds_path / "color")
+
+    with pytest.raises(RuntimeError):
+        symlink_layer.add_mag(2)
+
+
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_symlink_layer_rename(data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, TESTOUTPUT_DIR, "original")
+    symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
+
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    )
+
+    symlink_ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+    # symlink color layer
+    symlink_layer = symlink_ds.add_symlink_layer(ds_path / "color", make_relative=True)
+
+    # rename
+    symlink_layer.name = "color2"
+
+    assert (symlink_ds.path / "color2").exists()
+    assert not (symlink_ds.path / "color").exists()
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)
@@ -1812,29 +1971,27 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    symlink_mag_2 = layer.add_symlink_mag(original_mag_2)
-    layer.add_symlink_mag(original_mag_4.path)
+    symlink_mag_2 = layer.add_symlink_mag(original_mag_2, make_relative=True)
+    layer.add_symlink_mag(original_mag_4.path, make_relative=True)
+    # FIX: When paths are merged
+    # assert symlink_mag_2._properties.path == f"../{ds_path.name}/color/2"
+    # assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
 
     assert (symlink_path / "color" / "1").exists()
+    assert (symlink_path / "color" / "2").exists()
+    assert (symlink_path / "color" / "4").exists()
     assert len(layer._properties.mags) == 3
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
     assert tuple(layer.bounding_box.size) == (16, 26, 36)
 
-    # Write data in symlink layer
-    # Note: The written data is fully inside the bounding box of the original data.
-    # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
-    write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    symlink_mag_2.write(
-        absolute_offset=(0, 0, 0), data=write_data, allow_unaligned=True
-    )
+    assert not layer.read_only
+    assert not layer.get_mag(1).read_only
+    assert symlink_mag_2.read_only
 
     assert np.array_equal(
-        symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data
-    )
-    assert np.array_equal(
+        symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0],
         original_layer.get_mag(2).read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0],
-        write_data,
     )
 
     assure_exported_properties(ds)
@@ -1870,6 +2027,7 @@ def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
     dst_layer = dst_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
+    assert not dst_layer.read_only
 
     with pytest.raises(AssertionError):
         dst_layer.add_symlink_mag(src_mag1)
@@ -1897,6 +2055,7 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
     copy_mag = copy_layer.add_copy_mag(original_mag, extend_layer_bounding_box=True)
+    assert not copy_mag.read_only
 
     assert (copy_ds_path / "color" / "1").exists()
     assert len(copy_layer._properties.mags) == 1
@@ -1944,6 +2103,8 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
     copy_mag = copy_layer.add_fs_copy_mag(original_mag, extend_layer_bounding_box=True)
+    assert not copy_layer.read_only
+    assert not copy_mag.read_only
 
     assert (copy_ds_path / "color" / "1").exists()
     assert len(copy_layer._properties.mags) == 1
@@ -1996,6 +2157,10 @@ def test_search_dataset_also_for_long_layer_name(
     copytree(short_mag_file_path, long_mag_file_path)
     rmtree(short_mag_file_path)
 
+    # Remove path from mag to let the path be auto-detected
+    ds._properties.data_layers[0].mags[0].path = None
+    ds._export_as_json()
+
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))
 
@@ -2017,8 +2182,6 @@ def test_search_dataset_also_for_long_layer_name(
     "data_format", DATA_FORMATS
 )  # Cannot test symlinks on remote storage
 def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> None:
-    print(make_relative, data_format, TESTOUTPUT_DIR)
-
     ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "original")
     copy_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "copy")
 
@@ -2042,19 +2205,51 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_2.add_mag(4)
     mappings_path = original_layer_2.path / "mappings"
     mappings_path.mkdir(parents=True)
-    open(mappings_path / "agglomerate_view.hdf5", "w", encoding="utf-8").close()
+    (mappings_path / "agglomerate_view.hdf5").touch()
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
-    assert (
-        len(Dataset.open(ds_path).get_layer("color").mags) == 2
-    ), "Adding a new mag should not affect the original dataset"
-    assert (
-        len(Dataset.open(copy_path).get_layer("color").mags) == 3
-    ), "Expecting all mags from original dataset and new downsampled mag"
+    assert len(Dataset.open(ds_path).get_layer("color").mags) == 2, (
+        "Adding a new mag should not affect the original dataset"
+    )
+    assert len(Dataset.open(copy_path).get_layer("color").mags) == 3, (
+        "Expecting all mags from original dataset and new downsampled mag"
+    )
     assert (
         copy_path / "segmentation" / "mappings" / "agglomerate_view.hdf5"
     ).exists(), "Expecting mappings to exist in shallow copy"
+
+    assert not shallow_copy_of_ds.get_layer("color").read_only
+    assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
+
+
+def test_dataset_shallow_copy_downsample() -> None:
+    ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "original")
+    copy_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "copy")
+
+    ds = Dataset(ds_path, (1, 1, 1))
+    original_layer_1 = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel=np.uint8,
+        num_channels=1,
+        data_format=DEFAULT_DATA_FORMAT,
+        bounding_box=BoundingBox((0, 0, 0), (512, 512, 512)),
+    )
+    original_layer_1.add_mag(1)
+
+    # Creating a shallow copy
+    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=True)
+    # Pre-initializing the downsampled mags
+    shallow_copy_of_ds.get_layer("color").downsample(
+        from_mag=Mag(1), coarsest_mag=Mag(2), only_setup_mags=True
+    )
+    # Re-opening the copy dataset in order to re-determine read-only mags
+    shallow_copy_of_ds = Dataset.open(copy_path)
+    with get_executor("sequential") as ex:
+        shallow_copy_of_ds.get_layer("color").downsample(
+            from_mag=Mag(1), coarsest_mag=Mag(2), allow_overwrite=True, executor=ex
+        )
 
 
 def test_remote_wkw_dataset() -> None:
@@ -2223,7 +2418,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-def _func_invalid_target_chunk_shape_wk(args: Tuple[View, View, int]) -> None:
+def _func_invalid_target_chunk_shape_wk(args: tuple[View, View, int]) -> None:
     (_s, _t, _i) = args
 
 
@@ -2709,6 +2904,8 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
         len([layer for layer in ds._properties.data_layers if layer.name == "color2"])
         == 1
     )
+    # FIX: When paths are merged
+    # assert ds._properties.data_layers[0].mags[0].path == "color2/1"
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
     assert ds.get_layer("color2").data_format == data_format
@@ -2891,6 +3088,22 @@ def test_warn_outdated_properties(data_format: DataFormat, output_path: Path) ->
         # Changing ds1 should raise a warning, since ds1
         # does not know about the change in ds2
         ds1.add_layer("color", COLOR_CATEGORY, data_format=data_format)
+
+
+def test_dataset_properties_version() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+
+    properties_path = ds.path / PROPERTIES_FILE_NAME
+    properties = json.loads((properties_path).read_bytes())
+    assert properties["version"] == 1
+
+    # write invalid version
+    properties["version"] = 9000
+    properties_path.write_text(json.dumps(properties))
+
+    with pytest.raises(ClassValidationError):
+        Dataset.open(ds_path)
 
 
 def test_can_compress_mag8() -> None:

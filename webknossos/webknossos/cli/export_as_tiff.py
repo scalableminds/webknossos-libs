@@ -6,13 +6,12 @@ from functools import partial
 from math import ceil
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Optional, Tuple, Union
+from typing import Annotated, Any
 
 import numpy as np
 import typer
 from PIL import Image
 from scipy.ndimage import zoom
-from typing_extensions import Annotated
 
 from ..dataset import Dataset, MagView, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
@@ -62,7 +61,7 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
 def export_tiff_slice(
     dest_path: Path,
     name: str,
-    tiling_size: Union[None, Tuple[int, int]],
+    tiling_size: None | tuple[int, int],
     downsample: int,
     start_slice_index: int,
     view: View,
@@ -131,7 +130,7 @@ def export_tiff_stack(
     bbox: BoundingBox,
     destination_path: Path,
     name: str,
-    tiling_slice_size: Union[None, Tuple[int, int]],
+    tiling_slice_size: None | tuple[int, int],
     batch_size: int,
     downsample: int,
     args: Namespace,
@@ -192,7 +191,7 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     bbox: Annotated[
-        Optional[BoundingBox],
+        BoundingBox | None,
         typer.Option(
             help="The BoundingBox that should be exported. "
             "If the input data is too small, it will be padded. If it's too large, it will be "
@@ -213,7 +212,7 @@ def main(
     name: Annotated[str, typer.Option(help="Name of the tiffs.")] = "",
     downsample: Annotated[int, typer.Option(help="Downsample each tiff image.")] = 1,
     tiles_per_dimension: Annotated[
-        Optional[Vec2Int],
+        Vec2Int | None,
         typer.Option(
             help="For very large datasets, it is recommended to enable tiling which will ensure "
             "that each slice is exported to multiple images (i.e., tiles). As a parameter you "
@@ -223,7 +222,7 @@ def main(
         ),
     ] = None,
     tile_size: Annotated[
-        Optional[Vec2Int],
+        Vec2Int | None,
         typer.Option(
             help="For very large datasets, it is recommended to enable tiling which will ensure "
             "that each slice is exported to multiple images (i.e., tiles). As a parameter you "
@@ -250,7 +249,7 @@ def main(
         ),
     ] = DistributionStrategy.MULTIPROCESSING,
     job_resources: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Necessary when using slurm as distribution strategy. Should be a JSON string "
             '(e.g., --job-resources=\'{"mem": "10M"}\')\'',

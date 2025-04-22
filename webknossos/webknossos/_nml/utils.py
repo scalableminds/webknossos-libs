@@ -1,10 +1,10 @@
-from typing import Dict, Optional, Tuple, TypeVar
+from typing import TypeVar
 
-Vector3 = Tuple[float, float, float]
-Vector4 = Tuple[float, float, float, float]
+Vector3 = tuple[float, float, float]
+Vector4 = tuple[float, float, float, float]
 
 
-def filter_none_values(_dict: Dict[str, Optional[str]]) -> Dict[str, str]:
+def filter_none_values(_dict: dict[str, str | None]) -> dict[str, str]:
     """XML values must not be None."""
     return {key: value for key, value in _dict.items() if value is not None}
 
@@ -12,13 +12,19 @@ def filter_none_values(_dict: Dict[str, Optional[str]]) -> Dict[str, str]:
 T = TypeVar("T")
 
 
-def enforce_not_null(val: Optional[T]) -> T:
+def enforce_not_null(val: T | None) -> T:
     if val is None:
         raise ValueError("Value is None")
     return val
 
 
-def as_int_unless_none(val: Optional[str]) -> Optional[int]:
+def as_int_unless_none(val: str | None) -> int | None:
     if val is None:
         return None
     return int(val)
+
+
+def as_float_unless_none(val: str | None) -> float | None:
+    if val is None:
+        return None
+    return float(val)
