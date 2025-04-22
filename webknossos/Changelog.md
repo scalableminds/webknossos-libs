@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added argument `require_unique_name` to `Dataset.announce_manual_upload()`. Additionally, the method returns a tuple of `new_dataset_id` and `directory_name` now. [#1283](https://github.com/scalableminds/webknossos-libs/pull/1283)
 
 ### Changed
 
@@ -45,7 +46,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue with upsampling views. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
-
 
 
 ## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01

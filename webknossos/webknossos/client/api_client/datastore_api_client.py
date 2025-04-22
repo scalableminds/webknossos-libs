@@ -1,5 +1,6 @@
 from webknossos.client.api_client.models import (
     ApiDatasetAnnounceUpload,
+    ApiDatasetManualUploadSuccess,
     ApiDatasetUploadInformation,
     ApiDatasetUploadSuccess,
     ApiReserveDatasetUploadInformation,
@@ -72,10 +73,12 @@ class DatastoreApiClient(AbstractApiClient):
         self,
         dataset_announce: ApiDatasetAnnounceUpload,
         token: str | None,
-    ) -> None:
+    ) -> ApiDatasetManualUploadSuccess:
         route = "/datasets/reserveManualUpload"
         query: Query = {"token": token}
-        self._post_json(route, dataset_announce, query)
+        return self._post_json_with_json_response(
+            route, dataset_announce, ApiDatasetManualUploadSuccess, query
+        )
 
     def dataset_get_raw_data(
         self,
