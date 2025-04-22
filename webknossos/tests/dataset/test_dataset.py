@@ -8,6 +8,7 @@ from typing import cast
 
 import numpy as np
 import pytest
+from cattrs import ClassValidationError
 from cluster_tools import get_executor
 from jsonschema import validate
 from upath import UPath
@@ -39,6 +40,7 @@ from webknossos.dataset.properties import (
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
+    is_fs_path,
     is_remote_path,
     named_partial,
     rmtree,
@@ -1205,6 +1207,26 @@ def test_properties_with_segmentation() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_relative_mag_paths(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
+
+    ds = Dataset.open(ds_path)
+    for layer in ds.layers.values():
+        for mag in layer.mags.values():
+            if is_fs_path(mag.path):
+                mag._properties.path = f"../{ds_path.name}/{layer.name}/{mag.path.name}"
+            else:
+                mag._properties.path = f"{layer.name}/{mag.path.name}"
+
+    ds._export_as_json()
+
+    ds = Dataset.open(ds_path)
+    for layer in ds.layers.values():
+        for mag in layer.mags.values():
+            assert mag.path == ds_path / layer.name / mag.path.name
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
@@ -1820,39 +1842,98 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
     symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
 
     # Add an additional segmentation layer to the original dataset
-    Dataset.open(ds_path).add_layer(
-        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
-    )
+    original_ds = Dataset.open(ds_path)
+    original_ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999)
 
-    original_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
+    original_mag = original_ds.get_layer("color").get_mag("1")
+    original_mag.write(
+        (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8), allow_unaligned=True
+    )
 
     ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
     # symlink color layer
     symlink_layer = ds.add_symlink_layer(ds_path / "color")
     # symlink segmentation layer
-    symlink_segmentation_layer = ds.add_symlink_layer(ds_path / "segmentation")
+    symlink_segmentation_layer = ds.add_symlink_layer(
+        ds_path / "segmentation", make_relative=True
+    )
     mag = symlink_layer.get_mag("1")
 
-    assert (symlink_path / "color" / "1").exists()
-    assert (symlink_path / "segmentation").exists()
+    if data_format == DataFormat.Zarr:
+        # FIX: When paths are merged
+        # assert (
+        #     ds._properties.data_layers[0].mags[0].path
+        #     == f"../{ds_path.name}/color/1-1-1"
+        # )
+        assert (symlink_path / "color" / "1-1-1").resolve().exists()
+    else:
+        # FIX: When paths are merged
+        # assert (
+        #     ds._properties.data_layers[0].mags[0].path == f"../{ds_path.name}/color/1"
+        # )
+        assert (symlink_path / "color" / "1").resolve().exists()
+
+    assert (symlink_path / "segmentation").resolve().exists()
 
     assert len(ds.layers) == 2
     assert len(ds.get_layer("color").mags) == 1
 
     assert symlink_segmentation_layer.as_segmentation_layer().largest_segment_id == 999
 
-    # write data in symlink layer
-    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data, allow_unaligned=True)
+    assert symlink_layer.read_only
+    assert symlink_segmentation_layer.read_only
+    assert mag.read_only
+
+    with pytest.raises(RuntimeError):
+        mag.write(
+            (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8), allow_unaligned=True
+        )
 
     assert np.array_equal(
-        mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data
-    )
-    assert np.array_equal(
-        original_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data
+        mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
+        original_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
     )
 
     assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_symlink_layer_add_mag(data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, TESTOUTPUT_DIR, "original")
+    symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
+
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    )
+
+    ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+    # symlink color layer
+    symlink_layer = ds.add_symlink_layer(ds_path / "color")
+
+    with pytest.raises(RuntimeError):
+        symlink_layer.add_mag(2)
+
+
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_symlink_layer_rename(data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, TESTOUTPUT_DIR, "original")
+    symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
+
+    # Add an additional segmentation layer to the original dataset
+    Dataset.open(ds_path).add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    )
+
+    symlink_ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+    # symlink color layer
+    symlink_layer = symlink_ds.add_symlink_layer(ds_path / "color", make_relative=True)
+
+    # rename
+    symlink_layer.name = "color2"
+
+    assert (symlink_ds.path / "color2").exists()
+    assert not (symlink_ds.path / "color").exists()
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)
@@ -1890,29 +1971,27 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    symlink_mag_2 = layer.add_symlink_mag(original_mag_2)
-    layer.add_symlink_mag(original_mag_4.path)
+    symlink_mag_2 = layer.add_symlink_mag(original_mag_2, make_relative=True)
+    layer.add_symlink_mag(original_mag_4.path, make_relative=True)
+    # FIX: When paths are merged
+    # assert symlink_mag_2._properties.path == f"../{ds_path.name}/color/2"
+    # assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
 
     assert (symlink_path / "color" / "1").exists()
+    assert (symlink_path / "color" / "2").exists()
+    assert (symlink_path / "color" / "4").exists()
     assert len(layer._properties.mags) == 3
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
     assert tuple(layer.bounding_box.size) == (16, 26, 36)
 
-    # Write data in symlink layer
-    # Note: The written data is fully inside the bounding box of the original data.
-    # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
-    write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    symlink_mag_2.write(
-        absolute_offset=(0, 0, 0), data=write_data, allow_unaligned=True
-    )
+    assert not layer.read_only
+    assert not layer.get_mag(1).read_only
+    assert symlink_mag_2.read_only
 
     assert np.array_equal(
-        symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data
-    )
-    assert np.array_equal(
+        symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0],
         original_layer.get_mag(2).read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0],
-        write_data,
     )
 
     assure_exported_properties(ds)
@@ -1948,6 +2027,7 @@ def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
     dst_layer = dst_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
+    assert not dst_layer.read_only
 
     with pytest.raises(AssertionError):
         dst_layer.add_symlink_mag(src_mag1)
@@ -1975,6 +2055,7 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
     copy_mag = copy_layer.add_copy_mag(original_mag, extend_layer_bounding_box=True)
+    assert not copy_mag.read_only
 
     assert (copy_ds_path / "color" / "1").exists()
     assert len(copy_layer._properties.mags) == 1
@@ -2022,6 +2103,8 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
     copy_mag = copy_layer.add_fs_copy_mag(original_mag, extend_layer_bounding_box=True)
+    assert not copy_layer.read_only
+    assert not copy_mag.read_only
 
     assert (copy_ds_path / "color" / "1").exists()
     assert len(copy_layer._properties.mags) == 1
@@ -2074,6 +2157,10 @@ def test_search_dataset_also_for_long_layer_name(
     copytree(short_mag_file_path, long_mag_file_path)
     rmtree(short_mag_file_path)
 
+    # Remove path from mag to let the path be auto-detected
+    ds._properties.data_layers[0].mags[0].path = None
+    ds._export_as_json()
+
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))
 
@@ -2095,8 +2182,6 @@ def test_search_dataset_also_for_long_layer_name(
     "data_format", DATA_FORMATS
 )  # Cannot test symlinks on remote storage
 def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> None:
-    print(make_relative, data_format, TESTOUTPUT_DIR)
-
     ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "original")
     copy_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "copy")
 
@@ -2120,7 +2205,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     original_layer_2.add_mag(4)
     mappings_path = original_layer_2.path / "mappings"
     mappings_path.mkdir(parents=True)
-    open(mappings_path / "agglomerate_view.hdf5", "w", encoding="utf-8").close()
+    (mappings_path / "agglomerate_view.hdf5").touch()
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
@@ -2133,6 +2218,38 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     assert (
         copy_path / "segmentation" / "mappings" / "agglomerate_view.hdf5"
     ).exists(), "Expecting mappings to exist in shallow copy"
+
+    assert not shallow_copy_of_ds.get_layer("color").read_only
+    assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
+
+
+def test_dataset_shallow_copy_downsample() -> None:
+    ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "original")
+    copy_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "copy")
+
+    ds = Dataset(ds_path, (1, 1, 1))
+    original_layer_1 = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel=np.uint8,
+        num_channels=1,
+        data_format=DEFAULT_DATA_FORMAT,
+        bounding_box=BoundingBox((0, 0, 0), (512, 512, 512)),
+    )
+    original_layer_1.add_mag(1)
+
+    # Creating a shallow copy
+    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=True)
+    # Pre-initializing the downsampled mags
+    shallow_copy_of_ds.get_layer("color").downsample(
+        from_mag=Mag(1), coarsest_mag=Mag(2), only_setup_mags=True
+    )
+    # Re-opening the copy dataset in order to re-determine read-only mags
+    shallow_copy_of_ds = Dataset.open(copy_path)
+    with get_executor("sequential") as ex:
+        shallow_copy_of_ds.get_layer("color").downsample(
+            from_mag=Mag(1), coarsest_mag=Mag(2), allow_overwrite=True, executor=ex
+        )
 
 
 def test_remote_wkw_dataset() -> None:
@@ -2787,6 +2904,8 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
         len([layer for layer in ds._properties.data_layers if layer.name == "color2"])
         == 1
     )
+    # FIX: When paths are merged
+    # assert ds._properties.data_layers[0].mags[0].path == "color2/1"
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
     assert ds.get_layer("color2").data_format == data_format
@@ -2969,6 +3088,22 @@ def test_warn_outdated_properties(data_format: DataFormat, output_path: Path) ->
         # Changing ds1 should raise a warning, since ds1
         # does not know about the change in ds2
         ds1.add_layer("color", COLOR_CATEGORY, data_format=data_format)
+
+
+def test_dataset_properties_version() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+
+    properties_path = ds.path / PROPERTIES_FILE_NAME
+    properties = json.loads((properties_path).read_bytes())
+    assert properties["version"] == 1
+
+    # write invalid version
+    properties["version"] = 9000
+    properties_path.write_text(json.dumps(properties))
+
+    with pytest.raises(ClassValidationError):
+        Dataset.open(ds_path)
 
 
 def test_can_compress_mag8() -> None:

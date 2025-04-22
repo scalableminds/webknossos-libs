@@ -3,6 +3,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import (
     Any,
+    Literal,
 )
 
 import attr
@@ -196,6 +197,7 @@ class DatasetProperties:
     id: dict[str, str]
     scale: VoxelSize
     data_layers: list[SegmentationLayerProperties | LayerProperties]
+    version: Literal[1]
     default_view_configuration: DatasetViewConfiguration | None = None
 
     def update_for_layer(
@@ -285,6 +287,8 @@ def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
     ) -> dict[str, Any]:
         if isinstance(d["scale"], list):
             d["scale"] = {"unit": DEFAULT_LENGTH_UNIT_STR, "factor": d["scale"]}
+        if "version" not in d:
+            d["version"] = 1
         obj = converter_fn(d, type_value)
         return obj
 
