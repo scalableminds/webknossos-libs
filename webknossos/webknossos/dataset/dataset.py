@@ -673,9 +673,7 @@ class Dataset:
                 dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
             else:
                 dataset_name = dataset_name_or_url
-                assert organization_id is not None, (
-                    "When supplying a dataset name, please also supply the organization_id."
-                )
+                organization_id = organization_id or current_context.organization_id
 
                 dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
 
@@ -690,7 +688,7 @@ class Dataset:
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
         context_manager: AbstractContextManager[None] = webknossos_context(
-            webknossos_url, token=sharing_token
+            webknossos_url, token=sharing_token or current_context.token
         )
         return (
             context_manager,
@@ -746,21 +744,18 @@ class Dataset:
 
         with context_manager:
             wk_context = _get_context()
-            api_dataset_info = wk_context.api_client.dataset_info(
-                dataset_id, sharing_token
-            )
             token = sharing_token or wk_context.datastore_token
+            api_dataset_info = wk_context.api_client.dataset_info(dataset_id, token)
             directory_name = api_dataset_info.directory_name
             organization_id = api_dataset_info.owning_organization
+            datastore_url = api_dataset_info.data_store.url
 
-        datastore_url = api_dataset_info.data_store.url
-
-        zarr_path = UPath(
-            f"{datastore_url}/data/zarr/{organization_id}/{directory_name}/",
-            headers={} if token is None else {"X-Auth-Token": token},
-            ssl=SSL_CONTEXT,
-        )
-        return RemoteDataset(zarr_path, dataset_id, sharing_token, context_manager)
+            zarr_path = UPath(
+                f"{datastore_url}/data/zarr/{organization_id}/{directory_name}/",
+                headers={} if token is None else {"X-Auth-Token": token},
+                ssl=SSL_CONTEXT,
+            )
+            return RemoteDataset(zarr_path, dataset_id, context_manager)
 
     @classmethod
     def download(
@@ -2911,7 +2906,6 @@ class RemoteDataset(Dataset):
         self,
         dataset_path: UPath,
         dataset_id: str,
-        sharing_token: str | None,
         context: AbstractContextManager,
     ) -> None:
         """Initialize a remote dataset instance.
@@ -2946,7 +2940,6 @@ class RemoteDataset(Dataset):
             else:
                 raise e from None
         self._dataset_id = dataset_id
-        self._sharing_token = sharing_token
         self._context = context
 
     @classmethod
@@ -2999,7 +2992,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            return client.dataset_info(self._dataset_id, self._sharing_token)
+            return client.dataset_info(self._dataset_id)
 
     def _update_dataset_info(
         self,
