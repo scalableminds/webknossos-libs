@@ -10,16 +10,41 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [2.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.0) - 2025-04-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...v2.3.0)
+
+### Added
+- Added a `version` field to the `datasource-properties.json` file, which is always set to `1`, for now. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+
+### Changed
+- The `Layer.path` property now always returns `Dataset.path / layer.name`, even if all mags are stored remotely. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+- `Layer.is_remote_to_dataset` is deprecated in favor of `Layer.is_foreign` and `MagView.is_remote_to_dataset` is deprecated in favor of `MagView.is_foreign`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+- Relative `path` fields in the mag definition of a `datasource-properties.json` file are now interpreted relative to the `Dataset.path`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
+
+
+## [2.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.2.0) - 2025-04-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.1.0...v2.2.0)
+
+### Breaking Changes
+- If `buffer_shape` is passed to `Layer.upsample()` it must be a multiple of the `shard_shape`. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
+
+### Changed
 - Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
 
 ### Fixed
+- Fixed an issue with upsampling views. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
+
 
 
 ## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01

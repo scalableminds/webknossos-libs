@@ -73,6 +73,7 @@ from ..utils import (
     is_fs_path,
     is_remote_path,
     named_partial,
+    resolve_if_fs_path,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
@@ -315,9 +316,11 @@ class Dataset:
             AssertionError: If opening existing dataset with mismatched voxel size or name
 
         """
+        path = strip_trailing_slash(UPath(dataset_path))
+
         self._read_only = read_only
-        self._resolved_path: Path | None = None
-        self.path: Path = strip_trailing_slash(UPath(dataset_path))
+        self.path: Path = path
+        self._resolved_path: Path = resolve_if_fs_path(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -379,6 +382,7 @@ class Dataset:
                 id={"name": name, "team": ""},
                 scale=voxel_size_with_unit,
                 data_layers=[],
+                version=1,
             )
             (self.path / PROPERTIES_FILE_NAME).write_text(
                 json.dumps(
@@ -410,6 +414,9 @@ class Dataset:
         assert dataset_properties is not None
         self._properties = dataset_properties
         self._last_read_properties = copy.deepcopy(self._properties)
+        assert self._properties.version is None or self._properties.version == 1, (
+            f"Unsupported dataset version {self._properties.version}"
+        )
 
         self._layers: dict[str, Layer] = {}
         # construct self.layers
@@ -426,17 +433,10 @@ class Dataset:
             )
             layer_properties.num_channels = num_channels
 
-            layer = self._initialize_layer_from_properties(layer_properties)
+            layer = self._initialize_layer_from_properties(
+                layer_properties, self.read_only
+            )
             self._layers[layer_properties.name] = layer
-            if layer.is_remote_to_dataset:
-                # The mags of remote layers need to have their path properly set.
-                for mag in layer.mags:
-                    mag_prop = next(
-                        mag_prop
-                        for mag_prop in layer_properties.mags
-                        if mag_prop.mag == mag
-                    )
-                    mag_prop.path = str(layer.mags[mag].path)
         return self
 
     @classmethod
@@ -456,13 +456,11 @@ class Dataset:
         dataset = cls.__new__(cls)
         dataset.path = dataset_path
         dataset._read_only = read_only
-        dataset._resolved_path = None
+        dataset._resolved_path = resolve_if_fs_path(dataset_path)
         return dataset._init_from_properties(dataset_properties)
 
     @property
     def resolved_path(self) -> Path:
-        if self._resolved_path is None:
-            self._resolved_path = self.path.resolve()
         return self._resolved_path
 
     @classmethod
@@ -1330,7 +1328,7 @@ class Dataset:
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
-            self._layers[layer_name] = Layer(self, layer_properties)
+            self._layers[layer_name] = Layer(self, layer_properties, read_only=False)
         elif category == SEGMENTATION_CATEGORY:
             segmentation_layer_properties: SegmentationLayerProperties = (
                 SegmentationLayerProperties(
@@ -1345,7 +1343,7 @@ class Dataset:
             self._properties.data_layers += [segmentation_layer_properties]
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
-                self, segmentation_layer_properties
+                self, segmentation_layer_properties, read_only=False
             )
         else:
             raise RuntimeError(
@@ -1467,10 +1465,12 @@ class Dataset:
         self._properties.data_layers += [layer_properties]
         if layer_properties.category == COLOR_CATEGORY:
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
-            self._layers[layer_name] = Layer(self, layer_properties)
+            self._layers[layer_name] = Layer(self, layer_properties, read_only=False)
         elif layer_properties.category == SEGMENTATION_CATEGORY:
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
-            self._layers[layer_name] = SegmentationLayer(self, layer_properties)
+            self._layers[layer_name] = SegmentationLayer(
+                self, layer_properties, read_only=False
+            )
         else:
             raise RuntimeError(
                 f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
@@ -1487,7 +1487,9 @@ class Dataset:
         )
 
         self._properties.data_layers.append(layer_properties)
-        layer = self._initialize_layer_from_properties(layer_properties)
+        layer = self._initialize_layer_from_properties(
+            layer_properties, read_only=False
+        )
         self.layers[layer.name] = layer
 
         self._export_as_json()
@@ -1571,7 +1573,12 @@ class Dataset:
                 Mag(mag_dir.name)
             except ValueError:
                 continue
-            layer.add_mag_for_existing_files(mag_dir.name)
+            # Mags are only writable if they are local to the dataset
+            resolved_mag_path = resolve_if_fs_path(mag_dir)
+            read_only = resolved_mag_path.parent != self.resolved_path / layer_name
+            layer._add_mag_for_existing_files(
+                mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
+            )
         finest_mag_view = layer.mags[min(layer.mags)]
         if "bounding_box" not in kwargs:
             layer.bounding_box = infer_bounding_box_existing_files(finest_mag_view)
@@ -1944,7 +1951,7 @@ class Dataset:
                             )
                             new_layer_properties.category = SEGMENTATION_CATEGORY
                             self._layers[layer.name] = SegmentationLayer(
-                                self, new_layer_properties
+                                self, new_layer_properties, read_only=False
                             )
                         else:
                             logging.info("The layer category is set to color.")
@@ -1954,7 +1961,9 @@ class Dataset:
 
                             new_layer_properties = LayerProperties(**_properties)
                             new_layer_properties.category = COLOR_CATEGORY
-                            self._layers[layer.name] = Layer(self, new_layer_properties)
+                            self._layers[layer.name] = Layer(
+                                self, new_layer_properties, read_only=False
+                            )
                         self._properties.update_for_layer(
                             layer.name, new_layer_properties
                         )
@@ -2292,12 +2301,29 @@ class Dataset:
             else foreign_layer_path.resolve()
         )
 
-        (self.path / new_layer_name).symlink_to(foreign_layer_symlink_path)
-        layer_properties = copy.deepcopy(foreign_layer._properties)
-        layer_properties.name = new_layer_name
-        self._properties.data_layers += [layer_properties]
+        new_layer_path = self.path / new_layer_name
+        new_layer_path.symlink_to(foreign_layer_symlink_path)
+        new_layer_properties = copy.deepcopy(foreign_layer._properties)
+        new_layer_properties.name = new_layer_name
+
+        # FIX when paths are merged
+        # # Add correct paths to mag properties
+        # for foreign_mag in foreign_layer.mags.values():
+        #     mag_prop = next(
+        #         m for m in new_layer_properties.mags if m.mag == foreign_mag.mag
+        #     )
+        #     if is_fs_path(foreign_mag.path):
+        #         mag_prop.path = str(
+        #             Path(relpath(foreign_mag.path, self.path))
+        #             if make_relative
+        #             else foreign_mag.path.resolve()
+        #         )
+        #     else:
+        #         mag_prop.path = str(foreign_mag.path)
+
+        self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
-            layer_properties
+            new_layer_properties, read_only=True
         )
 
         self._export_as_json()
@@ -2354,8 +2380,8 @@ class Dataset:
         )
         foreign_layer_path = foreign_layer.path
 
-        assert is_remote_path(foreign_layer_path), (
-            f"Cannot add foreign layer {foreign_layer_path} as it is not remote. Try using dataset.add_copy_layer instead."
+        assert all(is_remote_path(mag.path) for mag in foreign_layer.mags.values()), (
+            f"Cannot add foreign layer {foreign_layer} as it is not remote. Try using dataset.add_copy_layer instead."
         )
 
         layer_properties = copy.deepcopy(foreign_layer._properties)
@@ -2363,7 +2389,9 @@ class Dataset:
             mag.path = str(foreign_layer.mags[mag.mag].path)
         layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
-        new_layer = self._initialize_layer_from_properties(layer_properties)
+        new_layer = self._initialize_layer_from_properties(
+            layer_properties, read_only=False
+        )
         new_layer._resolved_path = foreign_layer_path
         self._layers[new_layer_name] = new_layer
 
@@ -2398,7 +2426,7 @@ class Dataset:
         layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
-            layer_properties
+            layer_properties, read_only=False
         )
 
         self._export_as_json()
@@ -2587,12 +2615,15 @@ class Dataset:
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
-            if is_remote_path(layer.path):
+            if all(is_remote_path(mag.path) for mag in layer.mags.values()):
                 new_dataset.add_remote_layer(layer, layer_name)
             else:
                 new_layer = new_dataset.add_layer_like(layer, layer_name)
                 for mag_view in layer.mags.values():
-                    new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
+                    if is_fs_path(mag_view.path):
+                        new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
+                    else:
+                        new_layer.add_remote_mag(mag_view)
 
                 # copy all other directories with a dir scan
                 copy_directory_with_symlinks(
@@ -2717,7 +2748,8 @@ class Dataset:
             raise FileNotFoundError(
                 f"Cannot read dataset at {dataset_path}. datasource-properties.json file not found."
             )
-        return dataset_converter.structure(data, DatasetProperties)
+        properties = dataset_converter.structure(data, DatasetProperties)
+        return properties
 
     def _export_as_json(self) -> None:
         self._ensure_writable()
@@ -2738,14 +2770,14 @@ class Dataset:
                 + "the bounding box naming or axis order changed."
             )
 
-        with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:
-            json.dump(
+        (self.path / PROPERTIES_FILE_NAME).write_text(
+            json.dumps(
                 dataset_converter.unstructure(self._properties),
-                outfile,
                 indent=4,
             )
+        )
 
-            self._last_read_properties = copy.deepcopy(self._properties)
+        self._last_read_properties = copy.deepcopy(self._properties)
 
         # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
         if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
@@ -2759,14 +2791,16 @@ class Dataset:
 
         for layer in self.layers.values():
             # Only write out OME metadata if the layer is a child of the dataset
-            if layer.resolved_path.parent == self.resolved_path:
+            if not layer.is_foreign:
                 write_ome_metadata(self, layer)
 
-    def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
+    def _initialize_layer_from_properties(
+        self, properties: LayerProperties, read_only: bool
+    ) -> Layer:
         if properties.category == COLOR_CATEGORY:
-            return Layer(self, properties)
+            return Layer(self, properties, read_only=read_only)
         elif properties.category == SEGMENTATION_CATEGORY:
-            return SegmentationLayer(self, properties)
+            return SegmentationLayer(self, properties, read_only=read_only)
         else:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
@@ -2897,6 +2931,7 @@ class RemoteDataset(Dataset):
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
         self.path = dataset_path
+        self._resolved_path = dataset_path
         self._read_only = True
         try:
             dataset_properties = self._load_properties(self.path)
