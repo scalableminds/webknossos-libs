@@ -10,19 +10,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [2.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.0) - 2025-04-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...v2.3.0)
 
 ### Added
 - Added a `version` field to the `datasource-properties.json` file, which is always set to `1`, for now. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
 
 ### Changed
 - The `Layer.path` property now always returns `Dataset.path / layer.name`, even if all mags are stored remotely. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
-- `Layer.is_remote_to_dataset` is deprecated in favor of `Layer.is_foreign` and `MagView.is_remote_to_dataset` is deprecated in favor of `MagView.is_foreign`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288) 
+- `Layer.is_remote_to_dataset` is deprecated in favor of `Layer.is_foreign` and `MagView.is_remote_to_dataset` is deprecated in favor of `MagView.is_foreign`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
 - Relative `path` fields in the mag definition of a `datasource-properties.json` file are now interpreted relative to the `Dataset.path`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
-
-### Fixed
 
 
 ## [2.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.2.0) - 2025-04-17
