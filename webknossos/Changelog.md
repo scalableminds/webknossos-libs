@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an issue with `Dataset.get_remote_datasets()` that causes value lookups to fail. [#1286](https://github.com/scalableminds/webknossos-libs/pull/1286)
 
 
 ## [2.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.0) - 2025-04-22
