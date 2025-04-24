@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added argument `require_unique_name` to `Dataset.announce_manual_upload()`. Additionally, the method returns a tuple of `new_dataset_id` and `directory_name` now. [#1283](https://github.com/scalableminds/webknossos-libs/pull/1283)
 
 ### Changed
+- Upgraded `tensorstore` to `0.1.74`. [#1292](https://github.com/scalableminds/webknossos-libs/pull/1292)
 
 ### Fixed
 
