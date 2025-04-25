@@ -233,9 +233,7 @@ def _dump_mag_path(path: Path, dataset_path: Path) -> str:
     if path.is_relative_to(dataset_path):
         return str(path.relative_to(dataset_path))
     if isinstance(path, UPath) and path.protocol == "s3":
-        return (
-            f"s3://{path.storage_options['client_kwargs']['endpoint_url']}/{path.path}"
-        )
+        return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
     return str(path)
 
 
