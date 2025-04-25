@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.1...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added argument `require_unique_name` to `Dataset.announce_manual_upload()`. Additionally, the method returns a tuple of `new_dataset_id` and `directory_name` now. [#1283](https://github.com/scalableminds/webknossos-libs/pull/1283)
 
 ### Changed
 
 ### Fixed
 - Fixed an issue with `Dataset.get_remote_datasets()` that causes value lookups to fail. [#1286](https://github.com/scalableminds/webknossos-libs/pull/1286)
+
+
+## [2.3.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.1) - 2025-04-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...v2.3.1)
+
+### Added
+- Added argument `require_unique_name` to `Dataset.announce_manual_upload()`. Additionally, the method returns a tuple of `new_dataset_id` and `directory_name` now. [#1283](https://github.com/scalableminds/webknossos-libs/pull/1283)
+
+### Changed
+- Upgraded `tensorstore` to `0.1.74`. [#1292](https://github.com/scalableminds/webknossos-libs/pull/1292)
 
 
 ## [2.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.0) - 2025-04-22
