@@ -215,7 +215,7 @@ def _enrich_mag_path(path: str, dataset_path: Path) -> Path:
     elif upath.protocol == "s3":
         parsed_url = urlparse(str(upath))
         endpoint_url = f"https://{parsed_url.netloc}"
-        bucket, key = parsed_url.path.split("/", maxsplit=1)
+        bucket, key = parsed_url.path.strip("/").split("/", maxsplit=1)
 
         return UPath(
             f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
