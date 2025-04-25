@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
-
+For S3 mag paths, do not dump endpoint_url protocol ("https") in the mag path when writing to dataset_properties.json. Correctly parse S3 paths for remote mags when reading from dataset_properties.json.[#1293](https://github.com/scalableminds/webknossos-libs/pull/1293)
 
 ## [2.3.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.1) - 2025-04-24
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...v2.3.1)
