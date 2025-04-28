@@ -108,10 +108,10 @@ from .properties import (
 
 logger = logging.getLogger(__name__)
 
-
+# Note: The dataset_name part might be outdated. Retrieve the dataset name by requesting the up to date object from the backend.
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
-    + r"((?P<directory_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[^?/]*)?)?)?"
+    + r"((?P<dataset_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[^?/]*)?)?)?"
     + r"((\?token=(?P<sharing_token>[^#\?]*))[^/]*)?$"
 )
 _DATASET_DEPRECATED_URL_REGEX = re.compile(
