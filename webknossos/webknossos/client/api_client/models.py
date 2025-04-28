@@ -322,7 +322,7 @@ class ApiProjectCreate:
     priority: int
     paused: bool
     expected_time: int | None = None
-    owner: ApiUserCompact | None = None
+    owner: ApiUser | None = None
 
 
 @attr.s(auto_attribs=True)

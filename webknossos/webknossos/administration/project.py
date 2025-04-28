@@ -66,7 +66,8 @@ class Project:
     def update(self, name: str | None = None, paused: bool | None = None) -> "Project":
         """Updates the project with the given name and returns it."""
         client = _get_api_client(enforce_auth=True)
-        api_project = ApiProjectCreate(
+        api_project = ApiProject(
+            id=self.project_id,
             name=name if name is not None else self.name,
             team=self.team_id,
             priority=self.priority,
@@ -74,8 +75,7 @@ class Project:
             expected_time=self.expected_time,
             owner=client.user_current(),
         )
-        client.project_update(self.project_id, api_project)
-        return self.get_by_id(self.project_id)
+        return self.__class__._from_api_project(client.project_update(api_project))
 
     def get_tasks(self, fetch_all: bool = False) -> list["Task"]:
         """Returns the tasks of this project.
