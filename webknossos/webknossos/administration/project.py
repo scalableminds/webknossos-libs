@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from ..client.api_client.models import ApiProject, ApiProjectCreate, ApiUserCompact
+from ..client.api_client.models import ApiProject, ApiProjectCreate
 from ..client.context import _get_api_client
 from .user import User
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .task import Task
 
 
-@attr.frozen
+@attr.define
 class Project:
     """Data class containing information about a WEBKNOSSOS project"""
 
@@ -23,6 +23,7 @@ class Project:
     priority: int
     paused: bool
     expected_time: int | None
+    is_blacklisted_from_report: bool
 
     @classmethod
     def get_by_id(cls, project_id: str) -> "Project":
@@ -44,8 +45,21 @@ class Project:
         paused: bool,
         expected_time: int | None,
         team_id: str,
+        is_blacklisted_from_report: bool,
     ) -> "Project":
-        """Creates a new project with the given name and returns it."""
+        """Creates a new project and returns it.
+        Note: The project will be created with the current user as owner.
+
+        Args:
+            name (str): The name of the project.
+            priority (int): The priority of the project.
+            paused (bool): Whether the project is paused or not.
+            expected_time (int | None): The expected time for the project in minutes.
+            team_id (str): The ID of the team to which the project belongs.
+
+        Returns:
+            Project: The created project.
+        """
         api_client = _get_api_client(enforce_auth=True)
         api_project = ApiProjectCreate(
             name=name,
@@ -53,7 +67,8 @@ class Project:
             priority=priority,
             paused=paused,
             expected_time=expected_time,
-            owner_id=api_client.user_current().id,
+            owner=User.get_current_user().user_id,
+            is_blacklisted_from_report=is_blacklisted_from_report,
         )
 
         return cls._from_api_project(api_client.project_create(api_project))
@@ -68,29 +83,25 @@ class Project:
         name: str | None = None,
         priority: int | None = None,
         paused: bool | None = None,
+        is_blacklisted_from_report: bool | None = None,
     ) -> "Project":
         """Updates the project with the given name and returns it."""
-        owner = self.get_owner()
-        api_owner = ApiUserCompact(
-            id=owner.user_id,
-            first_name=owner.first_name,
-            last_name=owner.last_name,
-            email=owner.email,
-            is_admin=owner.is_admin,
-            is_dataset_manager=owner.is_dataset_manager,
-        )
-        api_project = ApiProject(
-            id=self.project_id,
+        api_project = ApiProjectCreate(
             name=name if name is not None else self.name,
             team=self.team_id,
-            team_name=self.team_name,
             priority=priority if priority is not None else self.priority,
             paused=paused if paused is not None else self.paused,
             expected_time=self.expected_time,
-            owner=api_owner,
+            owner=User.get_current_user().user_id,
+            is_blacklisted_from_report=is_blacklisted_from_report
+            if is_blacklisted_from_report is not None
+            else self.is_blacklisted_from_report,
         )
-        _get_api_client(enforce_auth=True).project_update(api_project)
-        return self.__class__._from_api_project(api_project)
+        updated = _get_api_client(enforce_auth=True).project_update(
+            self.project_id, api_project
+        )
+
+        return Project._from_api_project(updated)
 
     def get_tasks(self, fetch_all: bool = False) -> list["Task"]:
         """Returns the tasks of this project.
@@ -139,13 +150,14 @@ class Project:
         owner_id = None
         if api_project.owner is not None:
             owner_id = api_project.owner.id
-        return cls(
-            api_project.id,
-            api_project.name,
-            api_project.team,
-            api_project.team_name,
-            owner_id,
-            api_project.priority,
-            api_project.paused,
-            api_project.expected_time,
+        return Project(
+            project_id=api_project.id,
+            name=api_project.name,
+            team_id=api_project.team,
+            team_name=api_project.team_name,
+            owner_id=owner_id,
+            priority=api_project.priority,
+            paused=api_project.paused,
+            expected_time=api_project.expected_time,
+            is_blacklisted_from_report=api_project.is_blacklisted_from_report,
         )

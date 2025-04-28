@@ -144,9 +144,9 @@ class WkApiClient(AbstractApiClient):
         route = f"/projects/{project_id}"
         self._delete(route)
 
-    def project_update(self, project: ApiProject) -> None:
-        route = f"/projects/{project.id}"
-        self._put_json(route, project)
+    def project_update(self, project_id: str, project: ApiProjectCreate) -> ApiProject:
+        route = f"/projects/{project_id}"
+        return self._put_json_with_json_response(route, project, ApiProject)
 
     def project_info_by_name(self, project_name: str) -> ApiProject:
         route = f"/projects/byName/{project_name}"

@@ -21,9 +21,6 @@ def sample_remote_dataset(tmp_path: Path) -> Iterator[wk.Dataset]:
     )
 
 
-pytestmark = [pytest.mark.use_proxay]
-
-
 @pytest.fixture(scope="module")
 def sample_layer_and_mag_name() -> list[tuple[str, str]]:
     layer_names = ["color", "segmentation"]

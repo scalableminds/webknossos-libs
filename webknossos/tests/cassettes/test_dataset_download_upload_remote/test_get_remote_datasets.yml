@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:43:59 GMT
         content-type: application/json
         content-length: '682'
       body:
@@ -53,13 +53,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:43:59 GMT
         content-type: application/json
         content-length: '2373'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"id":"68075f82010000a20002ad2c","name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"e2006_knossos","created":1745313666681,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1745313666681,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"id":"680f942e010000ab0072cb37","name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"e2006_knossos","created":1745851438906,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1745851438906,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -83,7 +83,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         content-type: application/json
         content-length: '682'
       body:
@@ -116,7 +116,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         content-type: application/json
         content-length: '1421'
       body:
@@ -147,17 +147,17 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"H7tuyxZDi7bDxsnoXOFSSA"}'
+        data: '{"token":"Qp-fqdXeLSdNLM7Ebv6-uQ"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=H7tuyxZDi7bDxsnoXOFSSA
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=Qp-fqdXeLSdNLM7Ebv6-uQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -177,20 +177,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313668577,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851441352,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -207,7 +207,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -220,7 +220,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -238,7 +238,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -252,7 +252,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -269,7 +269,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -327,7 +327,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -344,7 +344,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -402,7 +402,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -419,7 +419,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -477,7 +477,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -494,7 +494,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -552,7 +552,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -569,7 +569,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:07 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -627,7 +627,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -644,7 +644,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -702,7 +702,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -719,7 +719,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -777,7 +777,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -794,7 +794,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -852,7 +852,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -869,7 +869,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -927,7 +927,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -944,7 +944,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -1000,7 +1000,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=H7tuyxZDi7bDxsnoXOFSSA
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=Qp-fqdXeLSdNLM7Ebv6-uQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -1020,20 +1020,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313669128,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851441857,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1050,7 +1050,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -1063,7 +1063,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -1081,7 +1081,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -1095,7 +1095,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1112,7 +1112,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:00 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -1170,7 +1170,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1187,7 +1187,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -1245,7 +1245,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1262,7 +1262,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -1320,7 +1320,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1337,7 +1337,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -1395,7 +1395,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1412,7 +1412,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -1470,7 +1470,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1487,7 +1487,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -1545,7 +1545,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1562,7 +1562,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1620,7 +1620,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1637,7 +1637,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1695,7 +1695,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1712,7 +1712,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1770,7 +1770,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1787,7 +1787,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -1843,7 +1843,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=H7tuyxZDi7bDxsnoXOFSSA
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=Qp-fqdXeLSdNLM7Ebv6-uQ
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -1863,20 +1863,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313669529,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851442323,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1893,7 +1893,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -1906,7 +1906,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -1924,7 +1924,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -1938,7 +1938,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1955,7 +1955,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -2013,7 +2013,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2030,7 +2030,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -2088,7 +2088,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2105,7 +2105,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -2163,7 +2163,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2180,7 +2180,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -2238,7 +2238,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2255,7 +2255,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -2313,7 +2313,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2330,7 +2330,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -2388,7 +2388,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2405,7 +2405,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2463,7 +2463,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2480,7 +2480,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2538,7 +2538,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2555,7 +2555,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -2613,7 +2613,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: H7tuyxZDi7bDxsnoXOFSSA
+        x-auth-token: Qp-fqdXeLSdNLM7Ebv6-uQ
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -2630,7 +2630,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:08 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -2705,13 +2705,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313669974,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851442804,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2735,13 +2735,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:01 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670049,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851442894,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2765,13 +2765,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670169,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851442979,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2795,13 +2795,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670297,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851443064,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2825,13 +2825,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670372,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851443155,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2855,13 +2855,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670448,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851443229,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2885,13 +2885,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670523,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851443295,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2915,7 +2915,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '399'
       body:
@@ -2947,13 +2947,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670659,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851443424,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: GET
@@ -2977,7 +2977,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '399'
       body:
@@ -3009,7 +3009,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '682'
       body:
@@ -3042,13 +3042,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '1433'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670659,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851443424,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -3074,11 +3074,11 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 22 Apr 2025 09:21:09 GMT
+        date: Mon, 28 Apr 2025 14:44:03 GMT
         content-type: application/json
         content-length: '2385'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745313670659,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"id":"68075f82010000a20002ad2c","name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"e2006_knossos","created":1745313666681,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1745313666681,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1745851443424,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"id":"680f942e010000ab0072cb37","name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":{"factor":[1.1,1.1,1.1],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"e2006_knossos","created":1745851438906,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1745851438906,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none

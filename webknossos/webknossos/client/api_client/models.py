@@ -312,6 +312,7 @@ class ApiProject:
     priority: int
     paused: bool
     owner: ApiUserCompact | None  # None in case you have no read access on the owner
+    is_blacklisted_from_report: bool
     expected_time: int | None = None
 
 
@@ -321,8 +322,9 @@ class ApiProjectCreate:
     team: str
     priority: int
     paused: bool
+    is_blacklisted_from_report: bool
     expected_time: int | None = None
-    owner_id: str | None = None
+    owner: str | None = None
 
 
 @attr.s(auto_attribs=True)

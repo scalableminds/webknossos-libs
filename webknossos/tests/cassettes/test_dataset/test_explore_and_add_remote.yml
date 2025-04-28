@@ -6,7 +6,7 @@ http_interactions:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -15,13 +15,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:13 GMT
+        date: Mon, 28 Apr 2025 14:45:04 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
@@ -54,12 +53,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
-        connection: close
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         content-length: '0'
       body:
         encoding: utf8
@@ -84,12 +81,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
-        connection: close
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         content-type: application/json
         content-length: '682'
       body:
@@ -117,17 +112,15 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
-        connection: close
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"NZ63BTOCsg4WqyenSDK7kg"}'
+        data: '{"token":"vkFiGnitoPq2Iq5eFSQJsg"}'
         compression: none
   - request:
       method: GET
@@ -149,33 +142,30 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
-        connection: close
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         content-type: application/json
-        content-length: '2601'
+        content-length: '1276'
       body:
         encoding: utf8
         data: >-
-          [{"id":"67fe59a41d01008002f169e9","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds","created":1744722340247,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1744722340247,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0},{"id":"67fe59c61d01000f02f169ee","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-67fe59c61d01000f02f169ee","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-67fe59c61d01000f02f169ee","created":1744722374703,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1744722374703,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"680f9471010000c700bf4d5e","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds","created":1745851505228,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1745851505228,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/67fe59a41d01008002f169e9?sharingToken=NZ63BTOCsg4WqyenSDK7kg
+        /api/v9/datasets/680f9471010000c700bf4d5e?sharingToken=vkFiGnitoPq2Iq5eFSQJsg
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
       body:
         encoding: utf8
         data: ''
@@ -184,28 +174,26 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
-        connection: close
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         content-type: application/json
         content-length: '1286'
       body:
         encoding: utf8
         data: >-
-          {"id":"67fe59a41d01008002f169e9","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds","created":1744722340247,"isEditable":true,"lastUsedByUser":1744722375386,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1744722340247,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"680f9471010000c700bf4d5e","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds","created":1745851505228,"isEditable":true,"lastUsedByUser":1745851506138,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1745851505228,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/added_remote_ds/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept-encoding: identity
         accept: '*/*'
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -214,13 +202,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: application/json
         content-length: '1158'
@@ -233,11 +220,11 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         range: bytes=0-1157
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -246,13 +233,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: application/json
         content-length: '1158'
@@ -266,10 +252,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/color/1
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -278,13 +264,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -342,10 +327,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/color/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -354,13 +339,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1299'
@@ -418,10 +402,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/color/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -430,13 +414,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1299'
@@ -494,10 +477,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/color/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -506,13 +489,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1299'
@@ -570,10 +552,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/color/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -582,13 +564,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1301'
@@ -646,10 +627,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/segmentation/1
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -658,13 +639,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -722,10 +702,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/segmentation/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -734,13 +714,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:05 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1306'
@@ -798,10 +777,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/segmentation/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -810,13 +789,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:06 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1306'
@@ -874,10 +852,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/segmentation/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -886,13 +864,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:06 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1306'
@@ -950,10 +927,10 @@ http_interactions:
       path: /data/zarr/Organization_X/added_remote_ds/segmentation/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: NZ63BTOCsg4WqyenSDK7kg
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -962,13 +939,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
+        date: Mon, 28 Apr 2025 14:45:06 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1308'
@@ -1023,16 +999,14 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: >-
-        /api/v9/datasets/67fe59a41d01008002f169e9?sharingToken=NZ63BTOCsg4WqyenSDK7kg
+      path: /api/v9/datasets/680f9471010000c700bf4d5e
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: vkFiGnitoPq2Iq5eFSQJsg
       body:
         encoding: utf8
         data: ''
@@ -1041,16 +1015,14 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:06:14 GMT
-        connection: close
+        date: Mon, 28 Apr 2025 14:45:06 GMT
         content-type: application/json
         content-length: '1286'
       body:
         encoding: utf8
         data: >-
-          {"id":"67fe59a41d01008002f169e9","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds","created":1744722340247,"isEditable":true,"lastUsedByUser":1744722375789,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1744722340247,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"680f9471010000c700bf4d5e","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds","created":1745851505228,"isEditable":true,"lastUsedByUser":1745851506603,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1745851505228,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
