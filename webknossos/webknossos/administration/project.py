@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from ..client.api_client.models import ApiProject, ApiProjectCreate
+from ..client.api_client.models import ApiProject, ApiProjectCreate, ApiUserCompact
 from ..client.context import _get_api_client
 from .user import User
 
@@ -53,7 +53,7 @@ class Project:
             priority=priority,
             paused=paused,
             expected_time=expected_time,
-            owner=api_client.user_current(),
+            owner_id=api_client.user_current().id,
         )
 
         return cls._from_api_project(api_client.project_create(api_project))
@@ -63,19 +63,34 @@ class Project:
         client = _get_api_client(enforce_auth=True)
         client.project_delete(self.project_id)
 
-    def update(self, name: str | None = None, paused: bool | None = None) -> "Project":
+    def update(
+        self,
+        name: str | None = None,
+        priority: int | None = None,
+        paused: bool | None = None,
+    ) -> "Project":
         """Updates the project with the given name and returns it."""
-        client = _get_api_client(enforce_auth=True)
+        owner = self.get_owner()
+        api_owner = ApiUserCompact(
+            id=owner.user_id,
+            first_name=owner.first_name,
+            last_name=owner.last_name,
+            email=owner.email,
+            is_admin=owner.is_admin,
+            is_dataset_manager=owner.is_dataset_manager,
+        )
         api_project = ApiProject(
             id=self.project_id,
             name=name if name is not None else self.name,
             team=self.team_id,
-            priority=self.priority,
+            team_name=self.team_name,
+            priority=priority if priority is not None else self.priority,
             paused=paused if paused is not None else self.paused,
             expected_time=self.expected_time,
-            owner=client.user_current(),
+            owner=api_owner,
         )
-        return self.__class__._from_api_project(client.project_update(api_project))
+        _get_api_client(enforce_auth=True).project_update(api_project)
+        return self.__class__._from_api_project(api_project)
 
     def get_tasks(self, fetch_all: bool = False) -> list["Task"]:
         """Returns the tasks of this project.
