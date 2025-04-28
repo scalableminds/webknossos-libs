@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.2...HEAD)
 
 ### Breaking Changes
 
@@ -20,6 +20,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue with `Dataset.get_remote_datasets()` that causes value lookups to fail. [#1286](https://github.com/scalableminds/webknossos-libs/pull/1286)
+
+
+## [2.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.2) - 2025-04-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.1...v2.3.2)
+
+### Fixed
+For S3 mag paths, do not dump endpoint_url protocol ("https") in the mag path when writing to dataset_properties.json. Correctly parse S3 paths for remote mags when reading from dataset_properties.json.[#1293](https://github.com/scalableminds/webknossos-libs/pull/1293)
 
 
 ## [2.3.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.1) - 2025-04-24
