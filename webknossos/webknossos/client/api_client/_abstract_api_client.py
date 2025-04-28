@@ -195,6 +195,15 @@ class AbstractApiClient(ABC):
             timeout_seconds=timeout_seconds,
         )
 
+    def _delete(
+        self,
+        route: str,
+    ) -> httpx.Response:
+        return self._request(
+            "DELETE",
+            route,
+        )
+
     def _request(
         self,
         method: str,

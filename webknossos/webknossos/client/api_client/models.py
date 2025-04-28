@@ -316,6 +316,16 @@ class ApiProject:
 
 
 @attr.s(auto_attribs=True)
+class ApiProjectCreate:
+    name: str
+    team: str
+    priority: int
+    paused: bool
+    expected_time: int | None = None
+    owner: ApiUserCompact | None = None
+
+
+@attr.s(auto_attribs=True)
 class ApiAnnotation:
     id: str
     typ: str

@@ -15,6 +15,7 @@ from webknossos.client.api_client.models import (
     ApiLoggedTimeGroupedByMonth,
     ApiNmlTaskParameters,
     ApiProject,
+    ApiProjectCreate,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
@@ -134,6 +135,18 @@ class WkApiClient(AbstractApiClient):
     def datastore_list(self) -> list[ApiDataStore]:
         route = "/datastores"
         return self._get_json(route, list[ApiDataStore])
+
+    def project_create(self, project: ApiProjectCreate) -> ApiProject:
+        route = "/projects"
+        return self._post_json_with_json_response(route, project, ApiProject)
+
+    def project_delete(self, project_id: str) -> None:
+        route = f"/projects/{project_id}"
+        self._delete(route)
+
+    def project_update(self, project: ApiProject) -> None:
+        route = f"/projects/{project.id}"
+        self._put_json(route, project)
 
     def project_info_by_name(self, project_name: str) -> ApiProject:
         route = f"/projects/byName/{project_name}"

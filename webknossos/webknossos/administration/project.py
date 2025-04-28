@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from ..client.api_client.models import ApiProject
+from ..client.api_client.models import ApiProject, ApiProjectCreate
 from ..client.context import _get_api_client
 from .user import User
 
@@ -35,6 +35,47 @@ class Project:
         """Returns the user specified by the passed name if your token authorizes you to see it."""
         api_project = _get_api_client(enforce_auth=True).project_info_by_name(name)
         return cls._from_api_project(api_project)
+
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        priority: int,
+        paused: bool,
+        expected_time: int | None,
+        team_id: str,
+    ) -> "Project":
+        """Creates a new project with the given name and returns it."""
+        api_client = _get_api_client(enforce_auth=True)
+        api_project = ApiProjectCreate(
+            name=name,
+            team=team_id,
+            priority=priority,
+            paused=paused,
+            expected_time=expected_time,
+            owner=api_client.user_current(),
+        )
+
+        return cls._from_api_project(api_client.project_create(api_project))
+
+    def delete(self) -> None:
+        """Deletes this project. WARNING: This is irreversible!"""
+        client = _get_api_client(enforce_auth=True)
+        client.project_delete(self.project_id)
+
+    def update(self, name: str | None = None, paused: bool | None = None) -> "Project":
+        """Updates the project with the given name and returns it."""
+        client = _get_api_client(enforce_auth=True)
+        api_project = ApiProjectCreate(
+            name=name if name is not None else self.name,
+            team=self.team_id,
+            priority=self.priority,
+            paused=paused if paused is not None else self.paused,
+            expected_time=self.expected_time,
+            owner=client.user_current(),
+        )
+        client.project_update(self.project_id, api_project)
+        return self.get_by_id(self.project_id)
 
     def get_tasks(self, fetch_all: bool = False) -> list["Task"]:
         """Returns the tasks of this project.
