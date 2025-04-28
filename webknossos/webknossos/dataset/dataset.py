@@ -625,9 +625,6 @@ class Dataset:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
-        * dataset_name,
-        * organization_id,
-        * sharing_token.
         """
         from ..client._resolve_short_link import resolve_short_link
         from ..client.context import _get_context, webknossos_context
@@ -685,6 +682,9 @@ class Dataset:
         if webknossos_url is None:
             webknossos_url = current_context.url
         webknossos_url = webknossos_url.rstrip("/")
+        context_manager: AbstractContextManager[None] = webknossos_context(
+            webknossos_url, token=sharing_token or current_context.token
+        )
         if webknossos_url != current_context.url:
             if sharing_token is None:
                 warnings.warn(
@@ -692,9 +692,7 @@ class Dataset:
                     + f"Using no token, only public datasets can used with Dataset.{caller}(). "
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
-        context_manager: AbstractContextManager[None] = webknossos_context(
-            webknossos_url, token=sharing_token or current_context.token
-        )
+                context_manager = webknossos_context(webknossos_url, None)
         return (
             context_manager,
             dataset_id,
