@@ -196,6 +196,16 @@ class ApiTaskType:
     description: str
     team_id: str
     team_name: str
+    settings: dict[str, str] | None = None
+    tracing_type: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiTaskTypeCreate:
+    summary: str
+    description: str
+    team_id: str
+    team_name: str
 
 
 @attr.s(auto_attribs=True)
@@ -325,6 +335,13 @@ class ApiProjectCreate:
     is_blacklisted_from_report: bool
     expected_time: int | None = None
     owner: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiProjectUpdate:
+    priority: int | None = None
+    is_blacklisted_from_report: bool | None = None
+    expected_time: int | None = None
 
 
 @attr.s(auto_attribs=True)

@@ -2,6 +2,8 @@ import logging
 
 import attr
 
+from webknossos.geometry.vec3_int import Vec3IntLike
+
 from ..annotation import Annotation, AnnotationInfo
 from ..client.api_client.models import (
     ApiBoundingBox,
@@ -11,12 +13,14 @@ from ..client.api_client.models import (
     ApiTaskCreationResult,
     ApiTaskParameters,
     ApiTaskType,
+    ApiTaskTypeCreate,
 )
 from ..client.context import _get_api_client, _get_context
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
 from ..utils import warn_deprecated
 from .project import Project
+from .user import Team
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +40,12 @@ class TaskStatus:
 @attr.frozen
 class TaskType:
     task_type_id: str
-    name: str
+    name: str  # summary
     description: str
     team_id: str
     team_name: str
+    settings: dict[str, str] | None = None
+    tracingType: str | None = None
 
     @classmethod
     def _from_api_task_type(cls, api_task_type: ApiTaskType) -> "TaskType":
@@ -50,6 +56,26 @@ class TaskType:
             api_task_type.team_id,
             api_task_type.team_name,
         )
+
+    @classmethod
+    def create(cls, name: str, description: str, team: str | Team) -> "TaskType":
+        """Creates a new task type and returns it."""
+        client = _get_api_client(enforce_auth=True)
+        if isinstance(team, str):
+            team = Team.get_by_name(team)
+        team_name = team.name
+        team_id = team.id
+        api_task_type = client.task_type_create(
+            ApiTaskTypeCreate(
+                summary=name,
+                description=description,
+                team_id=team_id,
+                team_name=team_name,
+                settings={},
+                tracingType=None,
+            )
+        )
+        return cls._from_api_task_type(api_task_type)
 
 
 @attr.frozen
@@ -72,8 +98,8 @@ class Task:
     @classmethod
     def create_from_annotations(
         cls,
-        task_type_id: str,
-        project_name: str,
+        task_type_id: str | TaskType,
+        project_name: str | Project,
         base_annotations: list[Annotation],
         needed_experience_domain: str,
         needed_experience_value: int,
@@ -86,6 +112,10 @@ class Task:
         assert len(base_annotations) > 0, (
             "Must supply at least one base annotation to create tasks"
         )
+        if isinstance(task_type_id, TaskType):
+            task_type_id = task_type_id.task_type_id
+        if isinstance(project_name, Project):
+            project_name = project_name.name
 
         client = _get_api_client(enforce_auth=True)
         nml_task_parameters = ApiNmlTaskParameters(
@@ -116,13 +146,13 @@ class Task:
     @classmethod
     def create(
         cls,
-        task_type_id: str,
-        project_name: str,
+        task_type_id: str | TaskType,
+        project_name: str | Project,
         needed_experience_domain: str,
         needed_experience_value: int,
-        starting_position: Vec3Int,
+        starting_position: Vec3IntLike,
         dataset_name: str | RemoteDataset | None = None,
-        starting_rotation: Vec3Int = Vec3Int(0, 0, 0),
+        starting_rotation: Vec3IntLike = Vec3Int(0, 0, 0),
         instances: int = 1,
         dataset_id: str | RemoteDataset | None = None,
         script_id: str | None = None,
@@ -134,6 +164,12 @@ class Task:
         assert dataset_id is not None or dataset_name is not None, (
             "Please provide a dataset_id to create a task."
         )
+        starting_position = Vec3Int(starting_position)
+        starting_rotation = Vec3Int(starting_rotation)
+        if isinstance(task_type_id, TaskType):
+            task_type_id = task_type_id.task_type_id
+        if isinstance(project_name, Project):
+            project_name = project_name.name
         if dataset_id is not None:
             if isinstance(dataset_id, RemoteDataset):
                 dataset_id = dataset_id._dataset_id

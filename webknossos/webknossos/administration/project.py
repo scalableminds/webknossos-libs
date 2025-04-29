@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from ..client.api_client.models import ApiProject, ApiProjectCreate
+from ..client.api_client.models import ApiProject, ApiProjectCreate, ApiProjectUpdate
 from ..client.context import _get_api_client
-from .user import User
+from .user import User, Team
 
 if TYPE_CHECKING:
     from .task import Task
@@ -44,8 +44,9 @@ class Project:
         priority: int,
         paused: bool,
         expected_time: int | None,
-        team_id: str,
+        team: str | Team,
         is_blacklisted_from_report: bool,
+        owner: str | User | None = None,
     ) -> "Project":
         """Creates a new project and returns it.
         Note: The project will be created with the current user as owner.
@@ -56,18 +57,23 @@ class Project:
             paused (bool): Whether the project is paused or not.
             expected_time (int | None): The expected time for the project in minutes.
             team_id (str): The ID of the team to which the project belongs.
+            owner_id: (str | None): The ID of the owner of the project. If None, the current user will be used.
 
         Returns:
             Project: The created project.
         """
+        if isinstance(team, Team):
+            team = team.id
+        if isinstance(owner, User):
+            owner = owner.user_id
         api_client = _get_api_client(enforce_auth=True)
         api_project = ApiProjectCreate(
             name=name,
-            team=team_id,
+            team=team,
             priority=priority,
             paused=paused,
             expected_time=expected_time,
-            owner=User.get_current_user().user_id,
+            owner=owner or User.get_current_user().user_id,
             is_blacklisted_from_report=is_blacklisted_from_report,
         )
 
@@ -80,19 +86,16 @@ class Project:
 
     def update(
         self,
-        name: str | None = None,
         priority: int | None = None,
-        paused: bool | None = None,
+        expected_time: int | None = None,
         is_blacklisted_from_report: bool | None = None,
     ) -> "Project":
         """Updates the project with the given name and returns it."""
-        api_project = ApiProjectCreate(
-            name=name if name is not None else self.name,
-            team=self.team_id,
+        api_project = ApiProjectUpdate(
             priority=priority if priority is not None else self.priority,
-            paused=paused if paused is not None else self.paused,
-            expected_time=self.expected_time,
-            owner=User.get_current_user().user_id,
+            expected_time=expected_time
+            if expected_time is not None
+            else self.expected_time,
             is_blacklisted_from_report=is_blacklisted_from_report
             if is_blacklisted_from_report is not None
             else self.is_blacklisted_from_report,
