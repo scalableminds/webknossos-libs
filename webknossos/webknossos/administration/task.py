@@ -72,7 +72,7 @@ class TaskType:
                 team_id=team_id,
                 team_name=team_name,
                 settings={},
-                tracingType=None,
+                tracingType="",
             )
         )
         return cls._from_api_task_type(api_task_type)
