@@ -5,7 +5,7 @@ import logging
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from contextlib import AbstractContextManager, nullcontext
+from contextlib import AbstractContextManager
 from datetime import datetime
 from enum import Enum, unique
 from itertools import product
@@ -108,10 +108,10 @@ from .properties import (
 
 logger = logging.getLogger(__name__)
 
-
+# Note: The dataset_name part might be outdated. Retrieve the dataset name by requesting the up to date object from the backend.
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
-    + r"((?P<directory_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[^?/]*)?)?)?"
+    + r"((?P<dataset_name>[^/]*)-)?(?P<dataset_id>[^/\?#]+)(/(view(#[^?/]*)?)?)?"
     + r"((\?token=(?P<sharing_token>[^#\?]*))[^/]*)?$"
 )
 _DATASET_DEPRECATED_URL_REGEX = re.compile(
@@ -621,13 +621,10 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[AbstractContextManager, str, str, str, str | None]:
+    ) -> tuple[AbstractContextManager, str]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
-        * dataset_name,
-        * organization_id,
-        * sharing_token.
         """
         from ..client._resolve_short_link import resolve_short_link
         from ..client.context import _get_context, webknossos_context
@@ -653,15 +650,10 @@ class Dataset:
                     + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
                     + "organization_id, sharing_token and webknossos_url must not be set."
                 )
-                dataset_name = match.groupdict().get("dataset_name")
                 dataset_id = match.group("dataset_id")
                 sharing_token = match.group("sharing_token")
                 webknossos_url = match.group("webknossos_url")
-                if dataset_name is None:
-                    assert dataset_id is not None
-                    dataset_name = current_context.api_client.dataset_info(
-                        dataset_id, sharing_token
-                    ).directory_name
+                assert dataset_id is not None
             elif deprecated_match is not None:
                 assert (
                     organization_id is None
@@ -678,47 +670,32 @@ class Dataset:
                 webknossos_url = deprecated_match.group("webknossos_url")
 
                 assert organization_id is not None
+                assert dataset_name is not None
+
                 dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
             else:
                 dataset_name = dataset_name_or_url
-        else:
-            dataset_info = current_context.api_client.dataset_info(dataset_id)
-            dataset_name = dataset_info.directory_name
-            organization_id = dataset_info.owning_organization
+                organization_id = organization_id or current_context.organization_id
 
-        if webknossos_url is not None:
-            webknossos_url = webknossos_url.rstrip("/")
-        if webknossos_url is not None and webknossos_url != current_context.url:
+                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+
+        if webknossos_url is None:
+            webknossos_url = current_context.url
+        webknossos_url = webknossos_url.rstrip("/")
+        context_manager: AbstractContextManager[None] = webknossos_context(
+            webknossos_url, token=sharing_token or current_context.token
+        )
+        if webknossos_url != current_context.url:
             if sharing_token is None:
                 warnings.warn(
                     f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
                     + f"Using no token, only public datasets can used with Dataset.{caller}(). "
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
-            assert organization_id is not None, (
-                f"Please supply the organization_id to Dataset.{caller}()."
-                f"The supplied url {webknossos_url} does not match your current context {current_context.url}. "
-                + "In this case organization_id can not be inferred."
-            )
-            context_manager: AbstractContextManager[None] = webknossos_context(
-                webknossos_url, token=None
-            )
-        else:
-            if organization_id is None:
-                organization_id = current_context.organization_id
-
-            context_manager = nullcontext()
-
-        if dataset_id is None:
-            assert dataset_name is not None
-            dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
-
+                context_manager = webknossos_context(webknossos_url, None)
         return (
             context_manager,
             dataset_id,
-            dataset_name,
-            organization_id,
-            sharing_token,
         )
 
     @classmethod
@@ -760,9 +737,6 @@ class Dataset:
         (
             context_manager,
             dataset_id,
-            directory_name,
-            organization_id,
-            sharing_token,
         ) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
@@ -773,19 +747,18 @@ class Dataset:
 
         with context_manager:
             wk_context = _get_context()
-            api_dataset_info = wk_context.api_client.dataset_info(
-                dataset_id, sharing_token
-            )
             token = sharing_token or wk_context.datastore_token
+            api_dataset_info = wk_context.api_client.dataset_info(dataset_id, token)
+            directory_name = api_dataset_info.directory_name
+            organization_id = api_dataset_info.owning_organization
+            datastore_url = api_dataset_info.data_store.url
 
-        datastore_url = api_dataset_info.data_store.url
-
-        zarr_path = UPath(
-            f"{datastore_url}/data/zarr/{organization_id}/{directory_name}/",
-            headers={} if token is None else {"X-Auth-Token": token},
-            ssl=SSL_CONTEXT,
-        )
-        return RemoteDataset(zarr_path, dataset_id, sharing_token, context_manager)
+            zarr_path = UPath(
+                f"{datastore_url}/data/zarr/{organization_id}/{directory_name}/",
+                headers={} if token is None else {"X-Auth-Token": token},
+                ssl=SSL_CONTEXT,
+            )
+            return RemoteDataset(zarr_path, dataset_id, context_manager)
 
     @classmethod
     def download(
@@ -824,9 +797,6 @@ class Dataset:
         (
             context_manager,
             dataset_id,
-            directory_name,
-            organization_id,
-            sharing_token,
         ) = cls._parse_remote(
             dataset_name_or_url, organization_id, sharing_token, webknossos_url
         )
@@ -2939,7 +2909,6 @@ class RemoteDataset(Dataset):
         self,
         dataset_path: UPath,
         dataset_id: str,
-        sharing_token: str | None,
         context: AbstractContextManager,
     ) -> None:
         """Initialize a remote dataset instance.
@@ -2974,7 +2943,6 @@ class RemoteDataset(Dataset):
             else:
                 raise e from None
         self._dataset_id = dataset_id
-        self._sharing_token = sharing_token
         self._context = context
 
     @classmethod
@@ -3027,7 +2995,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            return client.dataset_info(self._dataset_id, self._sharing_token)
+            return client.dataset_info(self._dataset_id)
 
     def _update_dataset_info(
         self,
