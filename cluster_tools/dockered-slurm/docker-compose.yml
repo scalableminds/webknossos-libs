@@ -13,7 +13,7 @@ services:
       - ..:/cluster_tools
 
   slurmdbd:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14751549755
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
     command: [ "slurmdbd" ]
     container_name: slurmdbd
     hostname: slurmdbd
@@ -29,7 +29,7 @@ services:
       - mysql
 
   slurmctld:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14751549755
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
     command: [ "slurmctld" ]
     container_name: slurmctld
     environment:
@@ -50,7 +50,7 @@ services:
       - "slurmdbd"
 
   c1:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14751549755
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
     command: [ "slurmd" ]
     hostname: c1
     container_name: c1
@@ -68,7 +68,7 @@ services:
       - "slurmctld"
 
   c2:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14751549755
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
     command: [ "slurmd" ]
     hostname: c2
     container_name: c2
