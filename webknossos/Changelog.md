@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue with `Dataset.get_remote_datasets()` that causes value lookups to fail. [#1286](https://github.com/scalableminds/webknossos-libs/pull/1286)
+- Fixed issue with adding remote mags to local dataset due to some UPath checks failing for paths from different file systems. [#1298](https://github.com/scalableminds/webknossos-libs/pull/1298)
 
 
 ## [2.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.2) - 2025-04-25
