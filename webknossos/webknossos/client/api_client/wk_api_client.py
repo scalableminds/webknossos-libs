@@ -15,11 +15,14 @@ from webknossos.client.api_client.models import (
     ApiLoggedTimeGroupedByMonth,
     ApiNmlTaskParameters,
     ApiProject,
+    ApiProjectCreate,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
     ApiTaskCreationResult,
     ApiTaskParameters,
+    ApiTaskType,
+    ApiTaskTypeCreate,
     ApiTeam,
     ApiTeamAdd,
     ApiUser,
@@ -135,6 +138,18 @@ class WkApiClient(AbstractApiClient):
         route = "/datastores"
         return self._get_json(route, list[ApiDataStore])
 
+    def project_create(self, project: ApiProjectCreate) -> ApiProject:
+        route = "/projects"
+        return self._post_json_with_json_response(route, project, ApiProject)
+
+    def project_delete(self, project_id: str) -> None:
+        route = f"/projects/{project_id}"
+        self._delete(route)
+
+    def project_update(self, project_id: str, project: ApiProjectCreate) -> ApiProject:
+        route = f"/projects/{project_id}"
+        return self._put_json_with_json_response(route, project, ApiProject)
+
     def project_info_by_name(self, project_name: str) -> ApiProject:
         route = f"/projects/byName/{project_name}"
         return self._get_json(route, ApiProject)
@@ -148,6 +163,10 @@ class WkApiClient(AbstractApiClient):
     ) -> tuple[list[ApiTask], int]:
         route = f"/projects/{project_id}/tasks"
         return self._get_json_paginated(route, list[ApiTask], limit, page_number)
+
+    def task_type_create(self, task_type: ApiTaskTypeCreate) -> ApiTaskType:
+        route = "/taskTypes"
+        return self._post_json_with_json_response(route, task_type, ApiTaskType)
 
     def annotation_info(self, annotation_id: str) -> ApiAnnotation:
         route = f"/annotations/{annotation_id}/info"
