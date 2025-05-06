@@ -37,6 +37,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -87,6 +90,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -122,6 +128,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -161,6 +170,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
