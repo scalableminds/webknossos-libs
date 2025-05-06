@@ -29,7 +29,7 @@ jobs:
             cluster_tools:
               - 'cluster_tools/**'
 
-  cluster_tools[slurm]:
+  cluster_tools_slurm:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
@@ -79,7 +79,7 @@ jobs:
             -w /cluster_tools/tests \
             slurmctld bash -c "uv run --frozen python test_deref_main.py"
 
-  cluster_tools[multiprocessing]:
+  cluster_tools_multiprocessing:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
@@ -114,7 +114,7 @@ jobs:
           PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
             uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
 
-  cluster_tools[kubernetes]:
+  cluster_tools_kubernetes:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
@@ -153,7 +153,7 @@ jobs:
           cd tests
           PYTEST_EXECUTORS=kubernetes uv run --frozen python -m pytest -sv test_all.py test_kubernetes.py
 
-  cluster_tools[dask]:
+  cluster_tools_dask:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
@@ -187,7 +187,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ["3.12", "3.13", "3.11", "3.10"]
+        python-version: ["3.13", "3.12", "3.11", "3.10"]
         group: [1, 2, 3]
       fail-fast: false
     defaults:
