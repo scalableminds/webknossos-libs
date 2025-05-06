@@ -293,7 +293,12 @@ jobs:
         run: rm -rf ~/coverage-files
 
   webknossos_cli_docker:
-    needs: [cluster_tools, webknossos_linux]
+    needs:
+      - cluster_tools_slurm
+      - cluster_tools_multiprocessing
+      - cluster_tools_kubernetes
+      - cluster_tools_dask
+      - webknossos_linux
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -365,7 +370,12 @@ jobs:
           docker push scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
 
   docs:
-    needs: [cluster_tools, webknossos_linux]
+    needs:
+      - cluster_tools_slurm
+      - cluster_tools_multiprocessing
+      - cluster_tools_kubernetes
+      - cluster_tools_dask
+      - webknossos_linux
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -421,7 +431,12 @@ jobs:
               "$SLACK_HOOK"
 
   pypi_and_gh_release:
-    needs: [cluster_tools, webknossos_linux]
+    needs:
+      - cluster_tools_slurm
+      - cluster_tools_multiprocessing
+      - cluster_tools_kubernetes
+      - cluster_tools_dask
+      - webknossos_linux
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -459,7 +474,10 @@ jobs:
   complete:
     needs:
       [
-        cluster_tools,
+        cluster_tools_dask,
+        cluster_tools_kubernetes,
+        cluster_tools_multiprocessing,
+        cluster_tools_slurm,
         webknossos_linux,
         webknossos_cli_docker,
         docs,
