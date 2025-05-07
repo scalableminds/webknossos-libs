@@ -271,6 +271,8 @@ def test_slurm_number_of_submitted_jobs() -> None:
 def test_slurm_max_array_size() -> None:
     expected_max_array_size = 2
 
+    executor = cluster_tools.get_executor("slurm", debug=True)
+
     max_array_size = executor.get_max_array_size()
     assert max_array_size == expected_max_array_size
 
