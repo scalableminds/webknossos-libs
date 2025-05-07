@@ -49,10 +49,7 @@ jobs:
           cache-dependency-glob: "cluster_tools/uv.lock"
       - run: uv python install ${{ matrix.python-version }}
       - name: Start Docker Cluster
-        run: |
-          set -xe
-          cd ./dockered-slurm
-          docker compose up -d
+        run: cd ./dockered-slurm && docker compose up -d
       - name: Log Core Container
         run: |
           for name in "slurmctld" "c1" "c2"; do
@@ -74,6 +71,23 @@ jobs:
           docker exec \
             -w /cluster_tools/tests \
             slurmctld bash -c "uv run --frozen python test_deref_main.py"
+
+      - name: Stop Slurm Cluster
+        run: cd ./dockered-slurm && docker compose stop
+      - name: Update Slurm Config
+        run: |
+          echo "MaxArraySize=2" >> ./dockered-slurm/slurm.conf
+          sed "s/JobAcctGatherFrequency=30/JobAcctGatherFrequency=1/g" ./dockered-slurm/slurm.conf > ./dockered-slurm/slurm.conf.bak
+          cp ./dockered-slurm/slurm.conf.bak ./dockered-slurm/slurm.conf
+      - name: Start Slurm Cluster
+        run: cd ./dockered-slurm && docker compose start
+
+      - name: "Run Tests (test_all, test_slurm)"
+        run: |
+          docker exec \
+            -w /cluster_tools/tests \
+            -e PYTEST_EXECUTORS=slurm \
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_slurm.py -m 'slurm_change_config'"
 
   cluster_tools_multiprocessing:
     needs: changes
