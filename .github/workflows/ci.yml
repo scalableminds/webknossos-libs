@@ -58,18 +58,6 @@ jobs:
           for name in "slurmctld" "c1" "c2"; do
             docker exec -w /cluster_tools "$name" bash -c "uv sync --frozen"
           done
-      - name: Wait for Cluster to become ready
-        run: |
-          # Register cluster (with retry)
-          for i in {1..5}; do
-            echo register_cluster
-            ./register_cluster.sh && s=0 && break || s=$?
-            sleep 10
-          done
-
-          for name in "slurmctld" "c1" "c2"; do
-            docker logs "$name"
-          done
       - name: "Run Tests (test_all, test_slurm)"
         run: |
           docker exec \

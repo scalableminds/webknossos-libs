@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:5.7
+    image: mysql:9.3
     hostname: mysql
     container_name: mysql
     environment:
@@ -8,12 +8,17 @@ services:
       MYSQL_DATABASE: slurm_acct_db
       MYSQL_USER: slurm
       MYSQL_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - var_lib_mysql:/var/lib/mysql
       - ..:/cluster_tools
 
   slurmdbd:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
     command: [ "slurmdbd" ]
     container_name: slurmdbd
     hostname: slurmdbd
@@ -25,11 +30,17 @@ services:
       - var_log_slurm:/var/log/slurm
     expose:
       - "6819"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/6819"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
   slurmctld:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
     command: [ "slurmctld" ]
     container_name: slurmctld
     environment:
@@ -46,11 +57,17 @@ services:
       - .history:/root/.history
     expose:
       - "6817"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "true"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - "slurmdbd"
+      slurmdbd:
+        condition: service_healthy
 
   c1:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
     command: [ "slurmd" ]
     hostname: c1
     container_name: c1
@@ -65,10 +82,11 @@ services:
     expose:
       - "6818"
     depends_on:
-      - "slurmctld"
+      slurmctld:
+        condition: service_healthy
 
   c2:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian__14753584102
+    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
     command: [ "slurmd" ]
     hostname: c2
     container_name: c2
@@ -83,7 +101,8 @@ services:
     expose:
       - "6818"
     depends_on:
-      - "slurmctld"
+      slurmctld:
+        condition: service_healthy
 
 volumes:
   etc_munge:
