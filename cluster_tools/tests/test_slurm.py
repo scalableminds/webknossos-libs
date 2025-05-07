@@ -45,9 +45,10 @@ def expect_fork() -> bool:
 
 
 def search_and_replace_in_slurm_config(search_string: str, replace_string: str) -> None:
-    chcall(
-        f"sed -ci 's/{search_string}/{replace_string}/g' /etc/slurm/slurm.conf && scontrol reconfigure"
-    )
+    chcall(f"sed 's/{search_string}/{replace_string}/g' /etc/slurm/slurm.conf > /etc/slurm/slurm.conf.bak")
+    chcall(f"cp /etc/slurm/slurm.conf.bak /etc/slurm/slurm.conf")
+    chcall("scontrol reconfigure")
+    sleep(310)
 
 
 def test_map_with_spawn() -> None:
@@ -273,6 +274,7 @@ def test_slurm_number_of_submitted_jobs() -> None:
         assert executor.get_number_of_submitted_jobs() == 0
 
 
+@pytest.mark.slurm_change_config
 def test_slurm_max_array_size() -> None:
     max_array_size = 2
 
@@ -282,7 +284,8 @@ def test_slurm_max_array_size() -> None:
     command = f"MaxArraySize={max_array_size}"
 
     try:
-        chcall(f"echo -e '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure")
+        chcall(f"echo '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure")
+        sleep(310)
 
         new_max_array_size = executor.get_max_array_size()
         assert new_max_array_size == max_array_size
@@ -323,6 +326,7 @@ def test_slurm_time_limit() -> None:
         )
 
 
+@pytest.mark.slurm_change_config
 def test_slurm_memory_limit() -> None:
     # Request 1 MB
     executor = cluster_tools.get_executor(
