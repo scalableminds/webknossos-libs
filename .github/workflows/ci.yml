@@ -53,6 +53,11 @@ jobs:
           set -xe
           cd ./dockered-slurm
           docker compose up -d
+      - name: Log Core Container
+        run: |
+          for name in "slurmctld" "c1" "c2"; do
+            docker logs "$name"
+          done
       - name: Install UV dependencies
         run: |
           for name in "slurmctld" "c1" "c2"; do

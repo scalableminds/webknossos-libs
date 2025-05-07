@@ -69,6 +69,7 @@ services:
   c1:
     image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
     command: [ "slurmd" ]
+    privileged: true
     hostname: c1
     container_name: c1
     volumes:
@@ -88,6 +89,7 @@ services:
   c2:
     image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
     command: [ "slurmd" ]
+    privileged: true
     hostname: c2
     container_name: c2
     volumes:
