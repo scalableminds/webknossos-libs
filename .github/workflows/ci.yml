@@ -63,7 +63,7 @@ jobs:
           docker exec \
             -w /cluster_tools/tests \
             -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py"
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py -m 'not slurm_change_config'"
       - name: "Run Tests (test_deref_main)"
         run: |
           docker exec \
