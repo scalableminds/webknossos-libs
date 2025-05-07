@@ -45,7 +45,9 @@ def expect_fork() -> bool:
 
 
 def search_and_replace_in_slurm_config(search_string: str, replace_string: str) -> None:
-    chcall(f"sed 's/{search_string}/{replace_string}/g' /etc/slurm/slurm.conf > /etc/slurm/slurm.conf.bak")
+    chcall(
+        f"sed 's/{search_string}/{replace_string}/g' /etc/slurm/slurm.conf > /etc/slurm/slurm.conf.bak"
+    )
     chcall(f"cp /etc/slurm/slurm.conf.bak /etc/slurm/slurm.conf")
     chcall("scontrol reconfigure")
     sleep(310)
