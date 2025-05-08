@@ -290,7 +290,6 @@ nav:
         - Upsample: cli/upsample.md
         - Export as Tiff: cli/export-as-tiff.md
         - Merge Fallback: cli/merge-fallback.md
-      - Contribute: cli/contribute.md
     - Version Changelog:
       - webknossos-py/stability_policy.md
       - webknossos-py/changelog.md
