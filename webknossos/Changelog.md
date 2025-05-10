@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed deletion of symlinked mags. [#1300](https://github.com/scalableminds/webknossos-libs/pull/1300)
 
 
 ## [2.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.3) - 2025-05-06
