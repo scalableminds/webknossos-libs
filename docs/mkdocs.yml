@@ -57,6 +57,9 @@ extra:
       link: https://medium.com/webknossos
   generator: false
 
+extra_javascript:
+  - javascripts/runllm-widget.js
+
 plugins:
   # - gen-files:
   #     scripts:
@@ -172,7 +175,7 @@ nav:
         - Import Through Python: webknossos/data/upload_python.md
         - Streaming from Cloud Storage: webknossos/data/streaming.md
         - Export Through UI : webknossos/data/export_ui.md
-        - Export Through Python: webknossos/data/export_python.md
+        - Export Through Python:  webknossos/data/export_python.md
         - Export as Zarr Stream: webknossos/data/zarr_stream.md
       - Datasets:
         - webknossos/datasets/index.md
