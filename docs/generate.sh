@@ -12,7 +12,8 @@ rm -rf src/api/webknossos
 uv run --frozen generate_api_doc_pages.py 
 
 if [ $# -eq 1 ] && [ "$1" = "--persist" ]; then
-    uv run --with black mkdocs build
+    uv run --with black --frozen mkdocs build
 else
-    uv run --with black mkdocs serve -a localhost:8197 --watch-theme
+    uv run --with black --frozen mkdocs serve -a localhost:8197 --watch-theme
 fi
+    

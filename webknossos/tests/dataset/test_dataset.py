@@ -1997,6 +1997,11 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
     assure_exported_properties(original_ds)
 
+    layer.delete_mag(4)
+    assert Mag(4) not in layer.mags
+    assert not (symlink_path / "color" / "4").exists()
+    assert (ds_path / "color" / "4").exists()
+
 
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_remote_add_symlink_layer(data_format: DataFormat) -> None:

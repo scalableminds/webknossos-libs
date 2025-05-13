@@ -57,6 +57,9 @@ extra:
       link: https://medium.com/webknossos
   generator: false
 
+extra_javascript:
+  - javascripts/runllm-widget.js
+
 plugins:
   # - gen-files:
   #     scripts:
@@ -205,8 +208,9 @@ nav:
       - Proofreading:
         - webknossos/proofreading/index.md
         - Segmentation mappings: webknossos/proofreading/segmentation_mappings.md
-        - Tools: webknossos/proofreading/tools.md
+        - Proofreading Tool: webknossos/proofreading/proofreading_tool.md
         - Merger-mode: webknossos/proofreading/merger_mode.md
+        - Split Segments Toolkit: webknossos/proofreading/split_segments_toolkit.md
       - Synapse and Connectome Viewer: webknossos/connectome_viewer.md
       - Open source version:
         - Installation: webknossos/open_source/installation.md
