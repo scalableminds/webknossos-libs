@@ -45,6 +45,7 @@ webknossos --install-completion
 webknossos convert \
   --voxel-size 11.24,11.24,25 \
   --name great_dataset \
+  --downsample \
   data/source data/target
 
 

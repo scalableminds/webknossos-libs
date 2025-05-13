@@ -110,7 +110,7 @@ def main(
     ] = None,
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
-    ] = False,
+    ] = True,
     downsample: Annotated[
         bool, typer.Option(help="Downsample the target dataset.")
     ] = False,

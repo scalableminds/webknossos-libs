@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `--downsample` flag to `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
 
 ### Changed
+- Uses compression by default for `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
 
 ### Fixed
 - Pinned `click<8.2.0` because of incompatibility with `typer`. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
