@@ -324,6 +324,8 @@ def test_slurm_memory_limit() -> None:
         )
         concurrent.futures.wait(futures)
 
+        print([fut.exception() for fut in futures])
+
         # Job should have been killed with a RemoteOutOfMemoryException
         assert all(
             isinstance(fut.exception(), cluster_tools.RemoteOutOfMemoryException)

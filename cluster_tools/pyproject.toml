@@ -2,9 +2,10 @@
 name = "cluster_tools"
 version = "0.0.0"  # filled by dunamai
 description = "Utility library for easily distributing code execution on clusters"
-authors = [{name= "scalable minds", email="hello@scalableminds.com"}] 
+authors = [{name= "scalable minds", email="hello@scalableminds.com"}]
 readme = "README.md"
-license = {text = "MIT"}
+license-files = ["LICENSE"]
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "typing-extensions ~=4.12.0",
@@ -39,8 +40,6 @@ exclude = ["cluster_tools.tests"]
 
 # This is a fix for an issue in setuptools. See: https://github.com/pypa/setuptools/issues/4759
 # This should be removed when the issue is resolved.
-[tool.setuptools]
-license-files = []
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -108,3 +107,8 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
+
+[tool.pytest.ini_options]
+markers = [
+	"slurm_config_change: marks a test which needs additional changes to the slurm.conf",
+]
