@@ -439,11 +439,9 @@ class SlurmExecutor(ClusterExecutor):
 
         # Call `seff job_id` which should return some output including a line,
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
-        stdout, _, exit_code = call(f"seff {job_id_with_index}")
+        stdout, _, exit_code = call(f"sacct -P -j {job_id_with_index}")
         print("seff exit code", exit_code)
         if exit_code == 0:
-            return None
-
             # Parse stdout into a key-value object
             properties = parse_key_value_pairs(stdout, "\n", ":")
 
@@ -474,31 +472,11 @@ class SlurmExecutor(ClusterExecutor):
         reason = f"The job was probably terminated because it ran for too long ({time_limit_note})."
         return (reason, RemoteTimeLimitException)
 
-    def _investigate_memory_consumption(
-        self, properties: dict[str, str]
-    ) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
-        if not properties.get("Memory Efficiency", None):
+    def _investigate_memory_consumption(self, stdout: str) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
+        if "OUT_OF_MEMORY" not in stdout:
             return None
 
-        # Extract the "25019.18% of 1.00 GB" part of the line
-        efficiency_note = properties["Memory Efficiency"]
-        PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
-
-        # Extract the percentage to see whether it exceeds 100%.
-        match = re.search(PERCENTAGE_REGEX, efficiency_note)
-        percentage = None
-        if match is None:
-            return None
-
-        try:
-            percentage = float(match.group(1))
-        except ValueError:
-            return None
-
-        if percentage < 100:
-            return None
-
-        reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
+        reason = "The job was probably terminated because it consumed too much memory."
         return (reason, RemoteOutOfMemoryException)
 
     def _investigate_exit_code(
