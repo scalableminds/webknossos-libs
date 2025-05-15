@@ -330,7 +330,7 @@ def test_slurm_memory_limit() -> None:
 
         with open(".cfut/slurmpy.91_0.log.stdout", "r") as file:
             print("=== LOG ===")
-            print(file.read().decode())
+            print(file.read())
 
         print([fut.exception() for fut in futures])
 
