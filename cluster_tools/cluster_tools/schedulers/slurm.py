@@ -451,6 +451,7 @@ class SlurmExecutor(ClusterExecutor):
             if memory_limit_investigation:
                 return memory_limit_investigation
 
+        print("properties", properties)
         if properties is None:
             return None
 
