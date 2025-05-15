@@ -107,8 +107,3 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
-
-[tool.pytest.ini_options]
-markers = [
-	"slurm_config_change: marks a test which needs additional changes to the slurm.conf",
-]

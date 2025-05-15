@@ -36,6 +36,10 @@ def allocate(duration: float, num_bytes: int) -> int:
     return sys.getsizeof(data)
 
 
+def pytest_configuration(config):
+    config.addinivalue_line("makers", "slurm_change_config")
+
+
 logging.basicConfig()
 
 
@@ -323,6 +327,10 @@ def test_slurm_memory_limit() -> None:
             partial(allocate, duration), [1024 * 1024 * 2]
         )
         concurrent.futures.wait(futures)
+
+        with open(".cfut/slurmpy.91_0.log.stdout", "r") as file:
+            print("=== LOG ===")
+            print(file.readall().decode())
 
         print([fut.exception() for fut in futures])
 
