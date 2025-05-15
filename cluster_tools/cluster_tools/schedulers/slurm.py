@@ -428,6 +428,7 @@ class SlurmExecutor(ClusterExecutor):
         stdout, stderr, exit_code = call(f"scontrol show jobid={job_id_with_index}")
         print("exit code", exit_code, stderr)
 
+        properties = None
         if exit_code == 0:
             # Parse stdout into a key-value object
             properties = parse_key_value_pairs(stdout, " ", "=")
@@ -440,17 +441,18 @@ class SlurmExecutor(ClusterExecutor):
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
         stdout, _, exit_code = call(f"seff {job_id_with_index}")
         print("seff exit code", exit_code)
-        if exit_code != 0:
+        if exit_code == 0:
             return None
 
-        print("seff", stdout)
+            # Parse stdout into a key-value object
+            properties = parse_key_value_pairs(stdout, "\n", ":")
 
-        # Parse stdout into a key-value object
-        properties = parse_key_value_pairs(stdout, "\n", ":")
+            memory_limit_investigation = self._investigate_memory_consumption(properties)
+            if memory_limit_investigation:
+                return memory_limit_investigation
 
-        memory_limit_investigation = self._investigate_memory_consumption(properties)
-        if memory_limit_investigation:
-            return memory_limit_investigation
+        if properties is None:
+            return None
 
         return self._investigate_exit_code(properties)
 
