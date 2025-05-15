@@ -10,6 +10,7 @@ from webknossos.client.api_client.models import (
     ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
+    ApiTracingStore,
     ApiDataStoreToken,
     ApiFolderWithParent,
     ApiLoggedTimeGroupedByMonth,
@@ -134,6 +135,10 @@ class WkApiClient(AbstractApiClient):
     def datastore_list(self) -> list[ApiDataStore]:
         route = "/datastores"
         return self._get_json(route, list[ApiDataStore])
+
+    def tracingstore(self) -> ApiTracingStore:
+        route = "/tracingstore"
+        return self._get_json(route, ApiTracingStore)
 
     def project_info_by_name(self, project_name: str) -> ApiProject:
         route = f"/projects/byName/{project_name}"

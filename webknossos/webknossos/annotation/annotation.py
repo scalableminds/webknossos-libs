@@ -51,7 +51,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import BinaryIO, Union, cast, overload
+from typing import BinaryIO, Literal, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -61,8 +61,9 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
+from webknossos.geometry.mag import Mag
 
-from ..client.api_client.models import ApiAnnotation
+from ..client.api_client.models import ApiAnnotation, ApiMeshAdHoc, ApiMeshPrecomputed
 from ..dataset import (
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -472,6 +473,58 @@ class Annotation:
             return annotation, context
         else:
             return annotation
+
+    def download_mesh(
+        self,
+        segment_id: int,
+        tracing_id: str,
+        output_dir: PathLike,
+        is_precomputed: bool = False,
+        mesh_file_name: str | None = None,
+        datastore_url: str | None = None,
+        lod: int = 0,
+        mapping_name: str | None = None,
+        mapping_type: Literal["agglomerate", "json"] | None = None,
+        mag: Mag | None = None,
+        seed_position: Vec3Int | None = None,
+        token: str | None = None,
+    ) -> UPath:
+        from ..client.context import _get_context
+        from ..datastore import Datastore
+
+        context = _get_context()
+        datastore_url = datastore_url or Datastore.get_upload_url()
+        tracingstore = context.get_tracingstore_api_client()
+        mesh: ApiMeshAdHoc | ApiMeshPrecomputed
+        if is_precomputed:
+            assert mesh_file_name is not None
+            mesh = ApiMeshPrecomputed(
+                lod=lod,
+                mesh_file_name=mesh_file_name,
+                segment_id=segment_id,
+                mapping_name=mapping_name,
+            )
+        else:
+            assert mapping_type is not None
+            assert mag is not None
+            assert seed_position is not None
+            mesh = ApiMeshAdHoc(
+                lod=lod,
+                segment_id=segment_id,
+                mapping_name=mapping_name,
+                mapping_type=mapping_type,
+                mag=mag.to_tuple(),
+                seed_position=seed_position.to_tuple(),
+            )
+        file_path = UPath(output_dir) / f"{tracing_id}_{segment_id}.stl"
+        with file_path.open("wb") as f:
+            for chunk in tracingstore.annotation_download_mesh(
+                mesh=mesh,
+                tracing_id=tracing_id,
+                token=token,
+            ):
+                f.write(chunk)
+        return file_path
 
     @classmethod
     def open_remote(
