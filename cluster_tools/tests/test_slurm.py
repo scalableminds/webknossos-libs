@@ -36,7 +36,7 @@ def allocate(duration: float, num_bytes: int) -> int:
     return sys.getsizeof(data)
 
 
-def pytest_configuration(config):
+def pytest_configuration(config) -> None:
     config.addinivalue_line("makers", "slurm_change_config")
 
 
