@@ -439,6 +439,8 @@ class SlurmExecutor(ClusterExecutor):
         if exit_code != 0:
             return None
 
+        print("seff", stdout)
+
         # Parse stdout into a key-value object
         properties = parse_key_value_pairs(stdout, "\n", ":")
 
