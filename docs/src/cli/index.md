@@ -2,6 +2,10 @@
 
 Python CLI for creating and working with [WEBKNOSSOS](https://webknossos.org/) [WKW](https://docs.webknossos.org/webknossos/data/wkw.html) or [Zarr](https://docs.webknossos.org/webknossos/data/zarr.html) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy. Zarr is a community-driven, cloud-native data format for n-dimensional datasets.
 
+## Installation
+
+To install and run the WEBKNOSSOS CLI, please refer to the [Installation Guide](install.md) for detailed instructions.
+
 ## Features
 
 The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:

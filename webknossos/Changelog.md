@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.5...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,28 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [2.3.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.5) - 2025-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.4...v2.3.5)
+
+### Added
+- Added `--downsample` flag to `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+### Changed
+- Uses compression by default for `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+### Fixed
+- Pinned `click<8.2.0` because of incompatibility with `typer`. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+
+
+## [2.3.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.4) - 2025-05-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.3...v2.3.4)
+
+### Fixed
+- Fixed deletion of symlinked mags. [#1300](https://github.com/scalableminds/webknossos-libs/pull/1300)
+
 
 
 ## [2.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.3) - 2025-05-06

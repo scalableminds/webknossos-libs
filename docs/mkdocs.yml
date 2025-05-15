@@ -57,6 +57,9 @@ extra:
       link: https://medium.com/webknossos
   generator: false
 
+extra_javascript:
+  - javascripts/runllm-widget.js
+
 plugins:
   # - gen-files:
   #     scripts:
