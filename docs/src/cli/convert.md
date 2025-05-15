@@ -1,13 +1,13 @@
-# `convert`
+# Convert Images
 
 The conversion commands allow you to transform various types of images or image stacks into the WEBKNOSSOS dataset format. Each command is tailored for a specific input dataset type, ensuring efficient and accurate conversion. Below is an overview of the available commands and their usage.
 
 ## Available Commands
 
-- [`convert`](#convert-command): Converts an image stack to a WEBKNOSSOS dataset.
-- [`convert-knossos`](#convert-knossos-command): Converts a KNOSSOS dataset to a WEBKNOSSOS dataset.
-- [`convert-raw`](#convert-raw-command): Converts a RAW dataset to a WEBKNOSSOS dataset.
-- [`convert-zarr`](#convert-zarr-command): Converts a Zarr dataset to a WEBKNOSSOS dataset.
+- [`convert`](#convert): Converts an image stack to a WEBKNOSSOS dataset.
+- [`convert-knossos`](#convert-knossos): Converts a KNOSSOS dataset to a WEBKNOSSOS dataset.
+- [`convert-raw`](#convert-raw): Converts a RAW dataset to a WEBKNOSSOS dataset.
+- [`convert-zarr`](#convert-zarr): Converts a Zarr dataset to a WEBKNOSSOS dataset.
 
 ---
 

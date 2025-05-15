@@ -5,7 +5,7 @@ The `upload-dataset` command uploads a local WEBKNOSSOS dataset to a specified W
 ## Usage
 
 ```bash
-upload-dataset [OPTIONS] SOURCE
+webknossos upload-dataset [OPTIONS] SOURCE
 ```
 
 ### Arguments

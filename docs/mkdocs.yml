@@ -280,6 +280,8 @@ nav:
     - CLI Reference:
       - Overview: cli/index.md
       - Install and Run: cli/install.md
+      - Environment Variables: cli/environment_variables.md
+      - Distribution Strategies: cli/distribution_strategies.md
       - CLI Commands:
         - Convert Images: cli/convert.md
         - Compress: cli/compress.md

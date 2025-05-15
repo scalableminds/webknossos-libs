@@ -40,19 +40,6 @@ webknossos download [OPTIONS] TARGET
     For multiple mags, use the option multiple times.  
     Example: `--mag 1 --mag 2`.
 
-### Environment Variables for Remote Paths
-
-When using remote paths (e.g., HTTP or S3), configure the following environment variables:
-
-#### HTTP Basic Authentication:
-- `HTTP_BASIC_USER`  
-- `HTTP_BASIC_PASSWORD`
-
-#### S3 Configuration:
-- `S3_ENDPOINT_URL`  
-- `AWS_ACCESS_KEY_ID`  
-- `AWS_SECRET_ACCESS_KEY`
-
 ## Example Commands
 
 ### Download a dataset:

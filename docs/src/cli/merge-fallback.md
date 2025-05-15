@@ -5,7 +5,7 @@ The `merge-fallback` command merges a WEBKNOSSOS volume annotation layer with it
 ## Usage
 
 ```bash
-merge-fallback [OPTIONS] TARGET SOURCE_ANNOTATION DATASET_DIRECTORY
+webknossos merge-fallback [OPTIONS] TARGET SOURCE_ANNOTATION DATASET_DIRECTORY
 ```
 
 ### Arguments
@@ -15,7 +15,7 @@ merge-fallback [OPTIONS] TARGET SOURCE_ANNOTATION DATASET_DIRECTORY
     Example: `/path/to/output/dataset` or `s3://bucket-name/output-dataset`.
 
 - **SOURCE_ANNOTATION**  
-    Path to the WEBKNOSSOS zip annotation file containing the fallback layer.  
+    Path to the WEBKNOSSOS zip annotation file containing the fallback layer. A link for working with Annotations with webknossos and how to export them can be found [here](https://docs.webknossos.org/webknossos/volume_annotation/import_export.html).
     Example: `/path/to/source/annotation.zip`.
 
 - **DATASET_DIRECTORY**  

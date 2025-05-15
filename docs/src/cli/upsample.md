@@ -5,7 +5,7 @@ The `upsample` command allows you to upsample a WEBKNOSSOS dataset. It supports 
 ## Usage
 
 ```bash
-upsample [OPTIONS] SOURCE
+webknossos upsample [OPTIONS] SOURCE
 ```
 
 ### Arguments
