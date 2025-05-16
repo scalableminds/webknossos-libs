@@ -24,16 +24,16 @@ webknossos upsample [OPTIONS] SOURCE
 - `--from-mag`  
     Magnification level to start upsampling from.  
     Accepts a single number or a minus separated string (e.g., `2` or `2-2-2`).  
-    Example: `--from-mag=2`.
+    Example: `--from-mag 2`.
 
 - `--layer-name`  
     Name of the layer that should be upsampled. If not provided, all layers will be processed.  
-    Example: `--layer-name=gray_matter`.
+    Example: `--layer-name gray_matter`.
 
 - `--jobs`  
     Number of processes to be spawned for parallel execution.  
     Default: Number of CPU cores.  
-    Example: `--jobs=4`.
+    Example: `--jobs 4`.
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
@@ -43,7 +43,7 @@ webknossos upsample [OPTIONS] SOURCE
 - `--job-resources`  
     Specify resources for jobs when using the SLURM distribution strategy.  
     Should be a JSON string.  
-    Example: `--job-resources='{"mem": "10M"}'`.
+    Example: `--job-resources '{"mem": "10M"}'`.
 
 ## Example Commands
 
@@ -61,7 +61,7 @@ This command upsamples only the layer named "gray_matter" in the dataset.
 
 ### Upsample with parallel execution using SLURM:
 ```bash
-webknossos upsample --from-mag 2 --distribution-strategy slurm --job-resources='{"mem": "10M"}' /path/to/dataset
+webknossos upsample --from-mag 2 --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/dataset
 ```
 This command uses the SLURM distribution strategy with custom job resources for the upsampling process.
 

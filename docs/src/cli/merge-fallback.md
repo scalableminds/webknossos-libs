@@ -39,7 +39,7 @@ webknossos merge-fallback [OPTIONS] TARGET SOURCE_ANNOTATION DATASET_DIRECTORY
 
 - `--job-resources`  
     Specify resources for jobs when using the SLURM distribution strategy.  
-    Example: `--job-resources='{"mem": "10M"}'`.
+    Example: `--job-resources '{"mem": "10M"}'`.
 
 ## Example Commands
 
@@ -51,12 +51,12 @@ Merges the fallback annotation into the volume layer using the default multiproc
 
 ### Merge fallback layer with a specific volume layer:
 ```bash
-webknossos merge-fallback --volume-layer-name=my_volume /path/to/output/dataset /path/to/source/annotation.zip /path/to/dataset/folder
+webknossos merge-fallback --volume-layer-name my_volume /path/to/output/dataset /path/to/source/annotation.zip /path/to/dataset/folder
 ```
 
 ### Merge fallback layer with parallel execution and custom job settings:
 ```bash
-webknossos merge-fallback --jobs=4 --distribution-strategy=slurm --job-resources='{"mem": "10M"}' /path/to/output/dataset /path/to/source/annotation.zip /path/to/dataset/folder
+webknossos merge-fallback --jobs 4 --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/output/dataset /path/to/source/annotation.zip /path/to/dataset/folder
 ```
 Uses 4 parallel processes with SLURM to merge the fallback layer, allocating custom memory to each job.
 

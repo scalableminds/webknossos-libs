@@ -41,7 +41,7 @@ convert [OPTIONS] SOURCE TARGET
 
 - `--voxel-size`  
     The size of one voxel in the source data in nanometers.  
-    Example: `--voxel-size=11.0,11.0,20.0`.
+    Example: `--voxel-size 11.0,11.0,20.0`.
 
 - `--unit`  
     The unit of the voxel size.  
@@ -58,11 +58,11 @@ convert [OPTIONS] SOURCE TARGET
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
-    Example: `--chunk-shape=32,32,32`.
+    Example: `--chunk-shape 32,32,32`.
 
 - `--shard-shape`  
     Number of voxels to be stored as a shard in the output format.  
-    Example: `--shard-shape=1024,1024,1024`.
+    Example: `--shard-shape 1024,1024,1024`.
 
 - `--compress`  
     Enable compression of the target dataset.  
@@ -88,7 +88,7 @@ webknossos convert /path/to/source/images /path/to/target/dataset
 Convert an image stack using parallel execution:
 
 ```bash
-webknossos convert --jobs=4 /path/to/source/images /path/to/target/dataset
+webknossos convert --jobs 4 /path/to/source/images /path/to/target/dataset
 ```
 
 ---
@@ -117,7 +117,7 @@ convert-knossos [OPTIONS] SOURCE TARGET
 
 - `--voxel-size`  
     The size of one voxel in the source data in nanometers.  
-    Example: `--voxel-size=11.0,11.0,20.0`.
+    Example: `--voxel-size 11.0,11.0,20.0`.
 
 - `--unit`  
     The unit of the voxel size.  
@@ -138,11 +138,11 @@ convert-knossos [OPTIONS] SOURCE TARGET
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
-    Example: `--chunk-shape=32,32,32`.
+    Example: `--chunk-shape 32,32,32`.
 
 - `--shard-shape`  
     Number of voxels to be stored as a shard in the output format.  
-    Example: `--shard-shape=1024,1024,1024`.
+    Example: `--shard-shape 1024,1024,1024`.
 
 - `--jobs`  
     Number of processes to be spawned for parallel execution.  
@@ -164,7 +164,7 @@ webknossos convert-knossos /path/to/source/knossos /path/to/target/dataset
 Convert a KNOSSOS dataset with custom voxel size and parallel execution:
 
 ```bash
-webknossos convert-knossos --voxel-size=11.0,11.0,20.0 --jobs=4 /path/to/source/knossos /path/to/target/dataset
+webknossos convert-knossos --voxel-size 11.0,11.0,20.0 --jobs 4 /path/to/source/knossos /path/to/target/dataset
 ```
 
 ---
@@ -193,7 +193,7 @@ convert-raw [OPTIONS] SOURCE TARGET
 
 - `--shape`  
     Shape of the source dataset.  
-    Example: `--shape=1024,1024,512`.
+    Example: `--shape 1024,1024,512`.
 
 - `--order`  
     Input data storage layout: `C` (row-major) or `F` (column-major).  
@@ -201,7 +201,7 @@ convert-raw [OPTIONS] SOURCE TARGET
 
 - `--voxel-size`  
     The size of one voxel in the source data in nanometers.  
-    Example: `--voxel-size=11.0,11.0,20.0`.
+    Example: `--voxel-size 11.0,11.0,20.0`.
 
 - `--unit`  
     The unit of the voxel size.  
@@ -222,11 +222,11 @@ convert-raw [OPTIONS] SOURCE TARGET
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
-    Example: `--chunk-shape=32,32,32`.
+    Example: `--chunk-shape 32,32,32`.
 
 - `--shard-shape`  
     Number of voxels to be stored as a shard in the output format.  
-    Example: `--shard-shape=1024,1024,1024`.
+    Example: `--shard-shape 1024,1024,1024`.
 
 - `--jobs`  
     Number of processes to be spawned for parallel execution.  
@@ -242,13 +242,13 @@ convert-raw [OPTIONS] SOURCE TARGET
 Convert a RAW dataset locally:
 
 ```bash
-webknossos convert-raw --shape=1024,1024,512 /path/to/source/raw /path/to/target/dataset
+webknossos convert-raw --shape 1024,1024,512 /path/to/source/raw /path/to/target/dataset
 ```
 
 Convert a RAW dataset using parallel execution:
 
 ```bash
-webknossos convert-raw --shape=1024,1024,512 --jobs=4 /path/to/source/raw /path/to/target/dataset
+webknossos convert-raw --shape 1024,1024,512 --jobs 4 /path/to/source/raw /path/to/target/dataset
 ```
 
 ---
@@ -277,7 +277,7 @@ convert-zarr [OPTIONS] SOURCE TARGET
 
 - `--voxel-size`  
     The size of one voxel in the source data in nanometers.  
-    Example: `--voxel-size=11.0,11.0,20.0`.
+    Example: `--voxel-size 11.0,11.0,20.0`.
 
 - `--unit`  
     The unit of the voxel size.  
@@ -294,11 +294,11 @@ convert-zarr [OPTIONS] SOURCE TARGET
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
-    Example: `--chunk-shape=32,32,32`.
+    Example: `--chunk-shape 32,32,32`.
 
 - `--shard-shape`  
     Number of voxels to be stored as a shard in the output format.  
-    Example: `--shard-shape=1024,1024,1024`.
+    Example: `--shard-shape 1024,1024,1024`.
 
 - `--compress`  
     Enable compression of the target dataset.  
@@ -324,13 +324,13 @@ webknossos convert-zarr /path/to/source/zarr /path/to/target/dataset
 Convert a Zarr dataset using parallel execution:
 
 ```bash
-webknossos convert-zarr --jobs=4 /path/to/source/zarr /path/to/target/dataset
+webknossos convert-zarr --jobs 4 /path/to/source/zarr /path/to/target/dataset
 ```
 
 Convert a Zarr dataset using SLURM with custom job resources:
 
 ```bash
-webknossos convert-zarr --distribution-strategy=slurm --job-resources='{"mem": "10M"}' /path/to/source/zarr /path/to/target/dataset
+webknossos convert-zarr --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/zarr /path/to/target/dataset
 ```
 
 ---

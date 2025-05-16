@@ -37,7 +37,7 @@ To get access to services that require authentication, you can set the [environm
 
 ### Parallelization
 
-Most tasks can be configured to be executed in a parallelized manner. Via `--distribution-strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job-resources='{"mem": "10M"}'`. For a more detailed overview take a look at our [distribution strategies page](distribution_strategies.md).
+Most tasks can be configured to be executed in a parallelized manner. Via `--distribution-strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job-resources '{"mem": "10M"}'`. For a more detailed overview take a look at our [distribution strategies page](distribution_strategies.md).
 
 ## License
 AGPLv3

@@ -18,7 +18,7 @@ webknossos download [OPTIONS] TARGET
 
 - `--url`  
     URL of your WEBKNOSSOS dataset or annotation.  
-    Example: `--url=https://webknossos.org/dataset/12345`.
+    Example: `--url https://webknossos.org/dataset/12345`.
 
 - `--token`  
     Authentication token for your WEBKNOSSOS instance (e.g., https://webknossos.org/auth/token).  
@@ -27,7 +27,7 @@ webknossos download [OPTIONS] TARGET
 - `--bbox`  
     Define a bounding box for a partial download.  
     The input format is `x,y,z,width,height,depth`.  
-    Example: `--bbox=0,0,0,10,10,10`.
+    Example: `--bbox 0,0,0,10,10,10`.
 
 - `--layer`  
     Specify one or more layers to download.  
@@ -44,22 +44,22 @@ webknossos download [OPTIONS] TARGET
 
 ### Download a dataset:
 ```bash
-webknossos download --url=https://webknossos.org/dataset/12345 /path/to/save/dataset
+webknossos download --url https://webknossos.org/dataset/12345 /path/to/save/dataset
 ```
 This command downloads the entire dataset from the provided URL and saves it locally.
 
 ### Download a dataset with authentication and a bounding box:
 ```bash
 WK_TOKEN=your-token webknossos download \
-    --url=https://webknossos.org/dataset/12345 \
-    --bbox=0,0,0,10,10,10 \
+    --url https://webknossos.org/dataset/12345 \
+    --bbox 0,0,0,10,10,10 \
     /path/to/save/dataset
 ```
 This command downloads a partial dataset specified by a bounding box using an authentication token.
 
 ### Download an annotation:
 ```bash
-webknossos download --url=https://webknossos.org/annotation/67890 /path/to/save/annotation
+webknossos download --url https://webknossos.org/annotation/67890 /path/to/save/annotation
 ```
 This command downloads an annotation from the provided URL and saves it to the target path.
 

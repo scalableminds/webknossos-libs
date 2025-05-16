@@ -60,7 +60,7 @@ This command compresses the `1` and `2` magnifications in all layers of the data
 
 ### Compress using SLURM with custom job resources:
 ```bash
-compress --distribution-strategy slurm --job-resources='{"mem": "10M"}' /path/to/dataset
+compress --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/dataset
 ```
 This command uses the SLURM distribution strategy with custom memory allocation for each job.
 

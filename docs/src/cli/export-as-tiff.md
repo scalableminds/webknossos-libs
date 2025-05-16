@@ -64,7 +64,7 @@ export-as-tiff [OPTIONS] SOURCE TARGET
 
 - `--job-resources`  
     Resources specification for jobs when using the SLURM strategy.  
-    Example: `--job-resources='{"mem": "10M"}'`.
+    Example: `--job-resources '{"mem": "10M"}'`.
 
 ## Example Commands
 
@@ -76,17 +76,17 @@ This command exports all slices of the dataset to TIFF files in the target folde
 
 ### Export with a specified layer and downsampling:
 ```bash
-webknossos export-as-tiff --layer-name=color --downsample=2 /path/to/source/dataset /path/to/target/tiff_folder
+webknossos export-as-tiff --layer-name color --downsample 2 /path/to/source/dataset /path/to/target/tiff_folder
 ```
 
 ### Export a specific bounding box with tiling:
 ```bash
-webknossos export-as-tiff --bbox=0,0,0,512,512,100 --tiles-per-dimension=4,4 /path/to/source/dataset /path/to/target/tiff_folder
+webknossos export-as-tiff --bbox 0,0,0,512,512,100 --tiles-per-dimension 4,4 /path/to/source/dataset /path/to/target/tiff_folder
 ```
 
 ### Export using parallel processing with SLURM:
 ```bash
-webknossos export-as-tiff --jobs=8 --distribution-strategy=slurm --job-resources='{"mem": "10M"}' /path/to/source/dataset /path/to/target/tiff_folder
+webknossos export-as-tiff --jobs 8 --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/dataset /path/to/target/tiff_folder
 ```
 
 ## Notes

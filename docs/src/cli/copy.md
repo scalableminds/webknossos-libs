@@ -22,15 +22,15 @@ copy-dataset [OPTIONS] SOURCE TARGET
 - `--data-format`  
     Specify the data format to store the target dataset.  
     Options: `wkw`, `zarr`, `zarr3`  
-    Example: `--data-format=zarr`
+    Example: `--data-format zarr3`.
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the target dataset.  
-    Example: `--chunk-shape=32,32,32`.
+    Example: `--chunk-shape 32,32,32`.
 
 - `--shard-shape`  
     Number of voxels to be stored as a shard in the target dataset.  
-    Example: `--shard-shape=1024,1024,1024`.
+    Example: `--shard-shape 1024,1024,1024`.
 
 - `--exists-ok`  
     Allow overwriting an existing dataset.  
@@ -47,7 +47,7 @@ copy-dataset [OPTIONS] SOURCE TARGET
 
 - `--job-resources`  
     Specify resources for jobs when using the SLURM distribution strategy.  
-    Example: `--job-resources='{"mem": "10M"}'`.
+    Example: `--job-resources '{"mem": "10M"}'`.
 
 ### Environment Variables for Remote Paths
 
@@ -82,13 +82,13 @@ This command copies a local dataset to a remote S3 bucket. Ensure that the requi
 
 ### Copy a dataset with parallel execution:
 ```bash
-webknossos copy-dataset --jobs=4 /path/to/source/dataset /path/to/target/dataset
+webknossos copy-dataset --jobs 4 /path/to/source/dataset /path/to/target/dataset
 ```
 This command uses 4 parallel processes to speed up the dataset copying process.
 
 ### Copy a dataset using SLURM with custom job resources:
 ```bash
-webknossos copy-dataset --distribution-strategy=slurm --job-resources='{"mem": "10M"}' /path/to/source/dataset /path/to/target/dataset
+webknossos copy-dataset --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/dataset /path/to/target/dataset
 ```
 This command uses the SLURM distribution strategy with custom memory allocation for each job.
 
