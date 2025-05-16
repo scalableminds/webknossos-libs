@@ -36,7 +36,7 @@ compress [OPTIONS] TARGET
 
 - `--job-resources`  
     Specify resources for jobs when using the SLURM distribution strategy.  
-    Example: `--job-resources='{"mem": "10M"}'`.
+    Example: `--job-resources '{"mem": "10M"}'`.
 
 ## Example Commands
 

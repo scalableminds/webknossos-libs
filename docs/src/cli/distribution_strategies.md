@@ -7,7 +7,7 @@ The CLI offers several distribution strategies to execute tasks, each designed f
 Deploy tasks on a SLURM cluster to leverage distributed computing resources. When using the `slurm` strategy, you can configure SLURM-specific options to fine-tune your job scheduling and resource allocation. For example, you may supply job resources via parameters like:
 
 ```bash
---job-resources='{"mem": "10M", "cpus_per_task": "2", "ntasks": "4", "partition": "debug", "time": "00:05:00"}'
+--job-resources '{"mem": "10M", "time": "00:05:00", "partition": "cpu"}'
 ```
 
 Below is a list of the allowed resources and a brief explanation of each. For further details on their meanings, please refer to the [SLURM sbatch documentation](https://slurm.schedmd.com/sbatch.html):

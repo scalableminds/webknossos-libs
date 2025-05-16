@@ -63,6 +63,6 @@ Uses 4 parallel processes with SLURM to merge the fallback layer, allocating cus
 ## Notes
 
 - Ensure that the target dataset, source annotation, and dataset directory are correctly accessible.
-- Set any necessary environment variables or credentials for remote paths.
+- Set any necessary [environment variables](environment_variables.md) or credentials for remote paths.
 - The SLURM distribution strategy requires specifying job resources via the `--job-resources` option.
 - This command facilitates efficient merging of volume annotations with fallback layers by leveraging configurable parallel execution strategies.
