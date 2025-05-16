@@ -11,6 +11,7 @@ from ..client._resolve_short_link import resolve_short_link
 from ..dataset.dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX, Dataset
 from ..geometry import BoundingBox, Mag
 from ._utils import parse_bbox, parse_mag, parse_path
+from urllib.parse import urlparse
 
 
 def main(
@@ -74,8 +75,10 @@ def main(
     layers = layer if layer else None
     mags = mag if mag else None
     url = resolve_short_link(url)
+    parsed = urlparse(url)
+    domain = f"{parsed.scheme}://{parsed.netloc}"
 
-    with webknossos_context(token=token):
+    with webknossos_context(url=domain, token=token):
         if re.match(_DATASET_URL_REGEX, url) or re.match(
             _DATASET_DEPRECATED_URL_REGEX, url
         ):
