@@ -15,7 +15,7 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 - [`webknossos convert-knossos`](convert.md#convert-knossos): Converts a KNOSSOS dataset to a WEBKNOSSOS dataset
 - [`webknossos convert-raw`](convert.md#convert-raw): Converts a RAW image file to a WEBKNOSSOS dataset
 - [`webknossos convert-zarr`](convert.md#convert-zarr): Converts a Zarr dataset to a WEBKNOSSOS dataset 
-- [`webknossos copy-dataset`](copy-dataset.md): Makes a copy of a WEBKNOSSOS dataset
+- [`webknossos copy-dataset`](copy.md): Makes a copy of a WEBKNOSSOS dataset
 - [`webknossos download`](download.md): Download a dataset from a WEBKNOSSOS server
 - [`webknossos downsample`](downsample.md): Downsample a WEBKNOSSOS dataset
 - [`webknossos merge-fallback`](merge-fallback.md): Merge a volume layer of a WEBKNOSSOS dataset with an annotation
