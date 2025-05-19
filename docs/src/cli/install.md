@@ -8,7 +8,7 @@ WEBKNOSSOS CLI requires Python 3.10 or higher.
 
 ### Installation
 
-To install the the webknossos CLI the webknossos package is required:
+To install the the webknossos CLI the [webknossos package](https://pypi.org/project/webknossos/) is required:
 
 ```bash
 pip install "webknossos[all]"

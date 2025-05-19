@@ -4,7 +4,7 @@ Python CLI for creating and working with [WEBKNOSSOS](https://webknossos.org/) [
 
 ## Installation
 
-To install and run the WEBKNOSSOS CLI, please refer to the [Installation Guide](install.md) for detailed instructions.
+To install and run the WEBKNOSSOS CLI the [webknossos package](https://pypi.org/project/webknossos/) is required. Please refer to the [Installation Guide](install.md) for detailed instructions.
 
 ## Features
 
