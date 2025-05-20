@@ -484,9 +484,6 @@ class TensorStoreArray(BaseArray):
             ).result()  # check that everything exists
             return cls(path, _array)
         except Exception as exc:
-            import pdb
-
-            pdb.set_trace()
             raise ArrayException(f"Could not open array at {uri}.") from exc
 
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
