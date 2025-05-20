@@ -5,7 +5,7 @@ The `downsample` command allows you to reduce the resolution of a WEBKNOSSOS dat
 ## Usage
 
 ```bash
-downsample [OPTIONS] TARGET
+webknossos downsample [OPTIONS] TARGET
 ```
 
 ### Arguments
