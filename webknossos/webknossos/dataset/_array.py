@@ -22,6 +22,8 @@ from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
 from ..utils import is_fs_path
 from .data_format import DataFormat
 
+TS_CONTEXT = tensorstore.Context()
+
 
 def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
@@ -442,6 +444,14 @@ class TensorStoreArray(BaseArray):
             else:
                 kvstore_spec["aws_credentials"] = {"type": "default"}
             return kvstore_spec
+        elif isinstance(path, UPath) and path.protocol == "memory":
+            # use memory driver (in-memory file systems), e.g. useful for testing
+            # attention: this is not a persistent storage and it does not support
+            # multiprocessing since memory is not shared between processes
+            return {
+                "driver": "memory",
+                "path": path.path,
+            }
         else:
             return {
                 "driver": "file",
@@ -470,6 +480,7 @@ class TensorStoreArray(BaseArray):
                 },
                 open=True,
                 create=False,
+                context=TS_CONTEXT,
             ).result()  # check that everything exists
             return cls(path, _array)
         except Exception as exc:
@@ -532,7 +543,8 @@ class TensorStoreArray(BaseArray):
                 {
                     "driver": str(self.data_format),
                     "kvstore": self._make_kvstore(self._path),
-                }
+                },
+                context=TS_CONTEXT,
             ).result()
             if array.domain != current_array.domain:
                 raise RuntimeError(
@@ -632,7 +644,8 @@ class TensorStoreArray(BaseArray):
                     {
                         "driver": str(self.data_format),
                         "kvstore": self._make_kvstore(self._path),
-                    }
+                    },
+                    context=TS_CONTEXT,
                 ).result()
             except Exception as e:
                 raise ArrayException(
@@ -780,7 +793,8 @@ class Zarr3Array(TensorStoreArray):
                     ],
                 },
                 "create": True,
-            }
+            },
+            context=TS_CONTEXT,
         ).result()
         return cls(path, _array)
 
@@ -856,7 +870,8 @@ class Zarr2Array(TensorStoreArray):
                     "dimension_separator": "/",
                 },
                 "create": True,
-            }
+            },
+            context=TS_CONTEXT,
         ).result()
         return cls(path, _array)
 

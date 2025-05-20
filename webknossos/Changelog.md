@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Add support for in-memory zarr3 datasets (using the Tensorstore in-memory KvStore driver). [#1310](https://github.com/scalableminds/webknossos-libs/pull/1310)
 
 ### Changed
 - Added url parsing in webknossos download CLI command, to get webknossos url without environment variable. [#1299](https://github.com/scalableminds/webknossos-libs/pull/1299)

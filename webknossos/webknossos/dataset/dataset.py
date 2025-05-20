@@ -352,20 +352,16 @@ class Dataset:
         else:
             assert not read_only
 
-            dataset_path_exists = False
-            dataset_path_is_empty = False
-            try:
-                dataset_path_is_empty = next(self.path.iterdir(), None) is None
-                dataset_path_exists = True
-            except NotADirectoryError:
-                dataset_path_exists = True
-            except FileNotFoundError:
-                dataset_path_exists = False
-
-            if dataset_path_exists and not dataset_path_is_empty:
-                raise RuntimeError(
-                    f"Creation of Dataset at {self.path} failed, because a file or folder already exists at this path."
-                )
+            if self.path.exists():
+                if self.path.is_dir():
+                    if next(self.path.iterdir(), None) is not None:
+                        raise RuntimeError(
+                            f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
+                        )
+                else:
+                    raise NotADirectoryError(
+                        f"Creation of Dataset at {self.path} failed, because the given path already exists but is not a directory."
+                    )
             # Create directories on disk and write datasource-properties.json
             try:
                 self.path.mkdir(parents=True, exist_ok=True)
