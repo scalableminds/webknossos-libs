@@ -1,11 +1,10 @@
-
 import numpy as np
 
 import webknossos as wk
 from tests.utils import TestTemporaryDirectoryNonLocal
 
 
-def test_create_dataset_remote_storage()->None:
+def test_create_dataset_remote_storage() -> None:
     """Test creating a dataset with remote storage."""
     # Create a temporary directory for the dataset
     # with tempfile.TemporaryDirectory() as temp_dir:
