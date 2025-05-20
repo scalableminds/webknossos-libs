@@ -24,7 +24,7 @@ The `convert` command automatically detects an image stack and converts it into 
 ### Usage
 
 ```bash
-convert [OPTIONS] SOURCE TARGET
+webknossos convert [OPTIONS] SOURCE TARGET
 ```
 
 ### Arguments
@@ -100,7 +100,7 @@ The `convert-knossos` command converts a KNOSSOS dataset into a WEBKNOSSOS datas
 ### Usage
 
 ```bash
-convert-knossos [OPTIONS] SOURCE TARGET
+webknossos convert-knossos [OPTIONS] SOURCE TARGET
 ```
 
 ### Arguments
@@ -176,7 +176,7 @@ The `convert-raw` command converts a RAW dataset into a WEBKNOSSOS dataset.
 ### Usage
 
 ```bash
-convert-raw [OPTIONS] SOURCE TARGET
+webknossos convert-raw [OPTIONS] SOURCE TARGET
 ```
 
 ### Arguments
@@ -260,7 +260,7 @@ The `convert-zarr` command converts a Zarr dataset into a WEBKNOSSOS dataset.
 ### Usage
 
 ```bash
-convert-zarr [OPTIONS] SOURCE TARGET
+webknossos convert-zarr [OPTIONS] SOURCE TARGET
 ```
 
 ### Arguments

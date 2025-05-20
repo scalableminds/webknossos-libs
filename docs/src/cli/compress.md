@@ -5,7 +5,7 @@ The `compress` command allows you to compress a WEBKNOSSOS dataset. It supports 
 ## Usage
 
 ```bash
-compress [OPTIONS] TARGET
+webknossos compress [OPTIONS] TARGET
 ```
 
 ### Arguments
