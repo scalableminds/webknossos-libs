@@ -358,10 +358,9 @@ class Dataset:
                 dataset_path_is_empty = next(self.path.iterdir(), None) is None
                 dataset_path_exists = True
             except NotADirectoryError:
-                dataset_path_exists = True
+                dataset_path_is_empty = True
             except FileNotFoundError:
                 dataset_path_exists = False
-
             if dataset_path_exists and not dataset_path_is_empty:
                 raise RuntimeError(
                     f"Creation of Dataset at {self.path} failed, because a file or folder already exists at this path."
