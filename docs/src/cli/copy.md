@@ -5,7 +5,7 @@ The `copy-dataset` command allows you to create a copy of a WEBKNOSSOS dataset. 
 ## Usage
 
 ```bash
-copy-dataset [OPTIONS] SOURCE TARGET
+webknossos copy-dataset [OPTIONS] SOURCE TARGET
 ```
 
 ### Arguments

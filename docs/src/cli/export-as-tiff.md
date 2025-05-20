@@ -5,7 +5,7 @@ The `export-as-tiff` command exports a WEBKNOSSOS dataset to TIFF image data. It
 ## Usage
 
 ```bash
-export-as-tiff [OPTIONS] SOURCE TARGET
+webknossos export-as-tiff [OPTIONS] SOURCE TARGET
 ```
 
 ### Arguments
