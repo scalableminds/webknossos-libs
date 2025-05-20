@@ -477,8 +477,9 @@ class Annotation:
     def download_mesh(
         self,
         segment_id: int,
-        tracing_id: str,
         output_dir: PathLike,
+        tracing_id: str | None = None,
+        layer_name: str | None = None,
         is_precomputed: bool = False,
         mesh_file_name: str | None = None,
         datastore_url: str | None = None,
@@ -517,12 +518,25 @@ class Annotation:
                 seed_position=seed_position.to_tuple(),
             )
         file_path = UPath(output_dir) / f"{tracing_id}_{segment_id}.stl"
-        with file_path.open("wb") as f:
-            for chunk in tracingstore.annotation_download_mesh(
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        if tracing_id is None:
+            datastore = context.get_datastore_api_client(datastore_url=datastore_url)
+            mesh_download = datastore.annotation_download_mesh(
+                mesh,
+                organization_id=self.organization_id,
+                directory_name=self.dataset_name,
+                layer_name=layer_name,
+                token=token,
+            )
+        else:
+            mesh_download = tracingstore.annotation_download_mesh(
                 mesh=mesh,
                 tracing_id=tracing_id,
                 token=token,
-            ):
+            )
+
+        with file_path.open("wb") as f:
+            for chunk in mesh_download:
                 f.write(chunk)
         return file_path
 
