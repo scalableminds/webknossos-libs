@@ -72,6 +72,7 @@ services:
     privileged: true
     hostname: c1
     container_name: c1
+    init: true
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
@@ -92,6 +93,7 @@ services:
     privileged: true
     hostname: c2
     container_name: c2
+    init: true
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm

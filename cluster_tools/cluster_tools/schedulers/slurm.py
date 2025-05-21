@@ -439,9 +439,10 @@ class SlurmExecutor(ClusterExecutor):
 
         # Call `seff job_id` which should return some output including a line,
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
-        stdout, _, exit_code = call(f"sacct -P --format=JobID,State -j {job_id_with_index}")
+        stdout, _, exit_code = call(f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}")
         print("sacct stdout:\n", stdout)
         print("sacct exit code", exit_code)
+
         if exit_code == 0:
             # Parse stdout into a key-value object
             memory_limit_investigation = self._investigate_memory_consumption(stdout)
@@ -472,10 +473,34 @@ class SlurmExecutor(ClusterExecutor):
         return (reason, RemoteTimeLimitException)
 
     def _investigate_memory_consumption(self, stdout: str) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
-        if "OUT_OF_MEMORY" not in stdout:
-            return None
+        stdout_lines = stdout.splitlines()
+        max_rss = 0
+        req_mem = 0
+        if len(stdout_lines) > 0:
+            for line in stdout_lines[1:]:
+                params = line.split("|")
+                print(params)
+                try:
+                    print(params[2][:-1])
+                    max_rss = max(max_rss, int(params[2][:-1]))
+                except:
+                    pass
+                try:
+                    print(params[3][:-1])
+                    req_mem = max(max_rss, int(params[3][:-1]))
+                except:
+                    pass
 
-        reason = "The job was probably terminated because it consumed too much memory."
+        if "OUT_OF_MEMORY" in stdout:
+            # Check if task plugin killed the job. This is the case if cgroup is used as TaskPlugin and
+            # memory limits are enforced.
+            reason = f"The job was terminated because it consumed too much memory (Requested: {req_mem / 1000} MB)."
+        elif max_rss > req_mem:
+            # Check if job accounting canceled the job. This is the case if JobAcctGatherParam=OverMemoryKill
+            # is enabled.
+            reason = f"The job was probably terminated because it consumed too much memory. Required {max_rss / 1000} MB but requeseted {req_mem / 1000} MB."
+        else:
+            return None
         return (reason, RemoteOutOfMemoryException)
 
     def _investigate_exit_code(

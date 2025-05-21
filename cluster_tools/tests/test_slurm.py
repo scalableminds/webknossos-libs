@@ -316,7 +316,7 @@ def test_slurm_time_limit() -> None:
 def test_slurm_memory_limit() -> None:
     # Request 1 MB
     executor = cluster_tools.get_executor(
-        "slurm", debug=True, job_resources={"mem": "1M"}
+        "slurm", debug=True, job_resources={"mem": "30M"} # 30M is minimal required memory
     )
 
     with executor:
@@ -324,13 +324,9 @@ def test_slurm_memory_limit() -> None:
         # because the frequency of the memory polling is 1 second
         duration = 3
         futures = executor.map_to_futures(
-            partial(allocate, duration), [1024 * 1024 * 2]
+            partial(allocate, duration), [1024 * 1024 * 50]
         )
         concurrent.futures.wait(futures)
-
-        with open(".cfut/slurmpy.91_0.log.stdout", "r") as file:
-            print("=== LOG ===")
-            print(file.read())
 
         print([fut.exception() for fut in futures])
 
