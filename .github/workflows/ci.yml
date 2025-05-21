@@ -72,15 +72,13 @@ jobs:
             -w /cluster_tools/tests \
             slurmctld bash -c "uv run --frozen python test_deref_main.py"
 
-      - name: Stop Slurm Cluster
-        run: cd ./dockered-slurm && docker compose stop
       - name: Update Slurm Config
         run: |
           echo "MaxArraySize=2" >> ./dockered-slurm/slurm.conf
           sed "s/JobAcctGatherFrequency=30/JobAcctGatherFrequency=1/g" ./dockered-slurm/slurm.conf > ./dockered-slurm/slurm.conf.bak
           cp ./dockered-slurm/slurm.conf.bak ./dockered-slurm/slurm.conf
       - name: Start Slurm Cluster
-        run: cd ./dockered-slurm && docker compose start
+        run: cd ./dockered-slurm && docker compose restart slurmctld c1 c2
 
       - name: "Run Tests (test_all, test_slurm)"
         run: |
