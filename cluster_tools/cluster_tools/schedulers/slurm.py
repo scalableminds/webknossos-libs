@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sys
+import time
 import threading
 from collections.abc import Callable, Iterable
 from concurrent.futures import Future
@@ -437,19 +438,27 @@ class SlurmExecutor(ClusterExecutor):
             if time_limit_investigation:
                 return time_limit_investigation
 
-        # Call `seff job_id` which should return some output including a line,
-        # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
-        stdout, _, exit_code = call(
-            f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}"
-        )
-        print("sacct stdout:\n", stdout)
-        print("sacct exit code", exit_code)
+        # Request gathered job information.
+        for _ in range(10):
+            stdout, _, exit_code = call(
+                f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}"
+            )
+            print("sacct stdout:\n", stdout)
+            print("sacct exit code", exit_code)
 
-        if exit_code == 0:
+            if exit_code != 0:
+                break
+
+            if len(stdout.splitlines()) <= 1:
+                time.sleep(0.1)
+                continue
+
             # Parse stdout into a key-value object
             memory_limit_investigation = self._investigate_memory_consumption(stdout)
             if memory_limit_investigation:
                 return memory_limit_investigation
+
+            break
 
         print("properties", properties)
         if properties is None:
