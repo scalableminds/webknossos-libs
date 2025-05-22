@@ -10,7 +10,6 @@ from webknossos.client.api_client.models import (
     ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
-    ApiTracingStore,
     ApiDataStoreToken,
     ApiFolderWithParent,
     ApiLoggedTimeGroupedByMonth,
@@ -23,6 +22,7 @@ from webknossos.client.api_client.models import (
     ApiTaskParameters,
     ApiTeam,
     ApiTeamAdd,
+    ApiTracingStore,
     ApiUser,
     ApiWkBuildInfo,
 )

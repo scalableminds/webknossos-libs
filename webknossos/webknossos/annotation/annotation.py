@@ -521,9 +521,12 @@ class Annotation:
         file_path.parent.mkdir(parents=True, exist_ok=True)
         if tracing_id is None:
             datastore = context.get_datastore_api_client(datastore_url=datastore_url)
+            assert layer_name is not None, (
+                "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
+            )
             mesh_download = datastore.annotation_download_mesh(
                 mesh,
-                organization_id=self.organization_id,
+                organization_id=self.organization_id or context.organization_id,
                 directory_name=self.dataset_name,
                 layer_name=layer_name,
                 token=token,

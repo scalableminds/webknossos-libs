@@ -56,7 +56,7 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
-from .api_client import DatastoreApiClient, WkApiClient, TracingstoreApiClient
+from .api_client import DatastoreApiClient, TracingstoreApiClient, WkApiClient
 
 load_dotenv()
 
