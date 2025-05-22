@@ -4,8 +4,8 @@ import logging
 import os
 import re
 import sys
-import time
 import threading
+import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import Future
 from functools import lru_cache
@@ -496,12 +496,12 @@ class SlurmExecutor(ClusterExecutor):
                 try:
                     print(params[2][:-1])
                     max_rss = max(max_rss, int(params[2][:-1]))
-                except:
+                except Exception:
                     pass
                 try:
                     print(params[3][:-1])
                     req_mem = max(max_rss, int(params[3][:-1]))
-                except:
+                except Exception:
                     pass
 
         if "OUT_OF_MEMORY" in stdout:
