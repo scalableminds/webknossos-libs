@@ -443,8 +443,6 @@ class SlurmExecutor(ClusterExecutor):
             stdout, _, exit_code = call(
                 f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}"
             )
-            print("sacct stdout:\n", stdout)
-            print("sacct exit code", exit_code)
 
             if exit_code != 0:
                 break
@@ -460,7 +458,6 @@ class SlurmExecutor(ClusterExecutor):
 
             break
 
-        print("properties", properties)
         if properties is None:
             return None
 
@@ -492,14 +489,11 @@ class SlurmExecutor(ClusterExecutor):
         if len(stdout_lines) > 0:
             for line in stdout_lines[1:]:
                 params = line.split("|")
-                print(params)
                 try:
-                    print(params[2][:-1])
                     max_rss = max(max_rss, int(params[2][:-1]))
                 except Exception:
                     pass
                 try:
-                    print(params[3][:-1])
                     req_mem = max(max_rss, int(params[3][:-1]))
                 except Exception:
                     pass
