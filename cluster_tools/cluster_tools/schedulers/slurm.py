@@ -411,8 +411,6 @@ class SlurmExecutor(ClusterExecutor):
         # of the job: If the job was killed with signal 9, it's very likely due to some
         # resource limit.
 
-        print("JobId", job_id_with_index)
-
         def parse_key_value_pairs(
             text: str, pair_delimiter: str, key_value_delimiter: str
         ) -> dict[str, str]:
@@ -427,7 +425,6 @@ class SlurmExecutor(ClusterExecutor):
         # Call `scontrol show jobid=<job_id>` which should return some output including
         # key=value pairs, such as: "Reason=...", "TimeLimit=...", and "RunTime=..."
         stdout, stderr, exit_code = call(f"scontrol show jobid={job_id_with_index}")
-        print("exit code", exit_code, stderr)
 
         properties = None
         if exit_code == 0:
