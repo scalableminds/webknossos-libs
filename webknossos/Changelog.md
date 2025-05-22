@@ -10,16 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Added url parsing in webknossos download CLI command, to get webknossos url without environment variable. [#1299](https://github.com/scalableminds/webknossos-libs/pull/1299)
 
 ### Fixed
+
+
+## [2.3.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.6) - 2025-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.5...v2.3.6)
+
+### Added
+- Add support for in-memory zarr3 datasets (using the Tensorstore in-memory KvStore driver). [#1310](https://github.com/scalableminds/webknossos-libs/pull/1310)
+
+### Changed
+- Added url parsing in webknossos download CLI command, to get webknossos url without environment variable. [#1299](https://github.com/scalableminds/webknossos-libs/pull/1299)
 
 
 ## [2.3.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.5) - 2025-05-13
