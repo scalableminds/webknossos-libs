@@ -450,7 +450,7 @@ class SlurmExecutor(ClusterExecutor):
                 break
 
             if len(stdout.splitlines()) <= 1:
-                time.sleep(0.1)
+                time.sleep(0.2)
                 continue
 
             # Parse stdout into a key-value object
