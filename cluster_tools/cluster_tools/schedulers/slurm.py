@@ -439,7 +439,9 @@ class SlurmExecutor(ClusterExecutor):
 
         # Call `seff job_id` which should return some output including a line,
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
-        stdout, _, exit_code = call(f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}")
+        stdout, _, exit_code = call(
+            f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}"
+        )
         print("sacct stdout:\n", stdout)
         print("sacct exit code", exit_code)
 
@@ -472,7 +474,9 @@ class SlurmExecutor(ClusterExecutor):
         reason = f"The job was probably terminated because it ran for too long ({time_limit_note})."
         return (reason, RemoteTimeLimitException)
 
-    def _investigate_memory_consumption(self, stdout: str) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
+    def _investigate_memory_consumption(
+        self, stdout: str
+    ) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
         stdout_lines = stdout.splitlines()
         max_rss = 0
         req_mem = 0

@@ -312,7 +312,9 @@ def test_slurm_time_limit() -> None:
 def test_slurm_memory_limit() -> None:
     # Request 1 MB
     executor = cluster_tools.get_executor(
-        "slurm", debug=True, job_resources={"mem": "30M"} # 30M is minimal required memory
+        "slurm",
+        debug=True,
+        job_resources={"mem": "30M"},  # 30M is minimal required memory
     )
 
     with executor:
