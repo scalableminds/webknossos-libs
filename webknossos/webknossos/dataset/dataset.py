@@ -1463,7 +1463,9 @@ class Dataset:
         elif layer_properties.category == SEGMENTATION_CATEGORY:
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
-                self, layer_properties, read_only=False
+                self,
+                cast(SegmentationLayerProperties, layer_properties),
+                read_only=False,
             )
         else:
             raise RuntimeError(
@@ -2794,7 +2796,9 @@ class Dataset:
         if properties.category == COLOR_CATEGORY:
             return Layer(self, properties, read_only=read_only)
         elif properties.category == SEGMENTATION_CATEGORY:
-            return SegmentationLayer(self, properties, read_only=read_only)
+            return SegmentationLayer(
+                self, cast(SegmentationLayerProperties, properties), read_only=read_only
+            )
         else:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."

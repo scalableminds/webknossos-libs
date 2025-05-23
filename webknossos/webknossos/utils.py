@@ -21,6 +21,7 @@ from typing import (
     Protocol,
     TypeVar,
 )
+from urllib.parse import urlparse
 
 import httpx
 import numpy as np
@@ -475,3 +476,43 @@ def safe_is_relative_to(path: Path, base_path: Path) -> bool:
     ) and path.is_relative_to(base_path):
         return True
     return False
+
+
+def enrich_path(path: str, dataset_path: Path) -> Path:
+    upath = UPath(path)
+    if upath.protocol in ("http", "https"):
+        from .client.context import _get_context
+        from .dataset.defaults import SSL_CONTEXT
+
+        # To setup the mag for non-public remote paths, we need to get the token from the context
+        wk_context = _get_context()
+        token = wk_context.datastore_token
+        return UPath(
+            path,
+            headers={} if token is None else {"X-Auth-Token": token},
+            ssl=SSL_CONTEXT,
+        )
+
+    elif upath.protocol == "s3":
+        parsed_url = urlparse(str(upath))
+        endpoint_url = f"https://{parsed_url.netloc}"
+        bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+
+        return UPath(
+            f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
+        )
+
+    if not upath.is_absolute():
+        return resolve_if_fs_path(dataset_path / upath)
+    return resolve_if_fs_path(upath)
+
+
+def dump_path(path: Path, dataset_path: Path) -> str:
+    path = resolve_if_fs_path(path)
+    if str(path).startswith(str(dataset_path)):
+        return str(path).removeprefix(str(dataset_path)).lstrip("/")
+    if safe_is_relative_to(path, dataset_path):
+        return str(path.relative_to(dataset_path))
+    if isinstance(path, UPath) and path.protocol == "s3":
+        return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
+    return str(path)
