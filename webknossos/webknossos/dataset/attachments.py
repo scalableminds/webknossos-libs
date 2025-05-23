@@ -1,7 +1,8 @@
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Self, cast, get_args, get_type_hints
+from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
 
+from typing_extensions import Self
 from upath import UPath
 
 from ..utils import dump_path, enrich_path
