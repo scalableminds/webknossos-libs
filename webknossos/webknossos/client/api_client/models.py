@@ -131,7 +131,7 @@ class ApiDatasetAnnounceUpload:
     dataset_name: str
     organization: str
     initial_team_ids: list[str]
-    folder_id: str
+    folder_id: str | None
     require_unique_name: bool
 
 
