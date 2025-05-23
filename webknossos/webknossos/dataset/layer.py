@@ -5,7 +5,7 @@ import warnings
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union, Callable, Tuple
 from urllib.parse import urlparse
 
 import numpy as np
@@ -14,7 +14,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..client.context import _get_context
-from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, BoundingBox
 from ..geometry.mag import MagLike
 from ._array import ArrayException, TensorStoreArray
 from ._downsampling_utils import (
@@ -1619,12 +1619,208 @@ class Layer:
     def _get_largest_segment_id_maybe(self) -> int | None:
         return None
 
+    def transform(
+        self,
+        output_layer: "Layer",
+        inverse_transform: Callable[[np.ndarray], np.ndarray],
+        mag: Mag = Mag(1),
+        num_threads: int | None = None,
+        output_bounding_box: Optional[BoundingBox] = None,
+        chunk_shape: Optional[Tuple[int, int, int]] = None,
+    ) -> None:
+        """Transforms the layer into the output_layer using the inverse_transform function.
+
+        Args:
+            output_layer (Layer): The layer to write the transformed data to.
+            inverse_transform (Callable[[np.ndarray], np.ndarray]): A function that takes a NumPy array of shape (N, 3)
+                representing coordinates in the output space and returns a NumPy array of shape (N, 3)
+                representing the corresponding coordinates in the input space.
+            mag (Mag, optional): The magnification level to use for reading and writing. Defaults to Mag(1).
+            num_threads (int | None, optional): The number of threads to use for parallel processing.
+                Defaults to None, which means cluster_tools will use its default.
+            output_bounding_box (BoundingBox | None, optional): The bounding box in the output layer to transform.
+                Defaults to the bounding box of the output_layer.
+            chunk_shape (Tuple[int, int, int] | None, optional): The shape of chunks to process.
+                Defaults to (64, 64, 64).
+        """
+        if output_bounding_box is None:
+            output_bounding_box = output_layer.bounding_box
+            if output_bounding_box is None:
+                raise ValueError(
+                    "output_bounding_box must be provided if output_layer has no bounding_box"
+                )
+
+        if chunk_shape is None:
+            chunk_shape_vec = Vec3Int(64, 64, 64)
+        else:
+            chunk_shape_vec = Vec3Int.from_tuple(chunk_shape)
+
+        input_mag_view = self.get_mag(mag)
+        output_mag_view = output_layer.get_mag(mag)
+
+        # Ensure layers are writable if they are the target of write operations
+        # self._ensure_writable() # Input layer is read from
+        output_layer._ensure_writable()
+
+        def process_chunk(chunk_bbox_mag_coords: NDBoundingBox) -> None:
+            # Generate coordinates for all voxels in the current output chunk (in mag coords)
+            # chunk_bbox_mag_coords is already in mag units
+            x_coords = np.arange(chunk_bbox_mag_coords.min_x, chunk_bbox_mag_coords.max_x)
+            y_coords = np.arange(chunk_bbox_mag_coords.min_y, chunk_bbox_mag_coords.max_y)
+            z_coords = np.arange(chunk_bbox_mag_coords.min_z, chunk_bbox_mag_coords.max_z)
+
+            # Create a meshgrid of coordinates
+            # Shape: (3, Dx, Dy, Dz) where D are dimensions of the chunk
+            grid_x, grid_y, grid_z = np.meshgrid(x_coords, y_coords, z_coords, indexing="ij")
+
+            # Flatten and stack to get (N, 3) array of output coordinates
+            # N = Dx * Dy * Dz
+            output_coords_mag = np.stack(
+                [grid_x.ravel(), grid_y.ravel(), grid_z.ravel()], axis=-1
+            )
+
+            # Convert output coordinates from mag units to global units for inverse_transform
+            # The inverse_transform function expects global coordinates
+            output_coords_global = output_coords_mag * mag.to_vec3_int().to_np() + output_bounding_box.min_coord_np[:3]
+
+
+            # Apply inverse transform to get input coordinates in global space
+            input_coords_global = inverse_transform(output_coords_global)
+
+            # Convert transformed input coordinates from global units back to mag units for reading
+            input_coords_mag = input_coords_global / mag.to_vec3_int().to_np()
+
+
+            # Handle out-of-bounds: Clamp to input layer's bounds (in mag units)
+            input_layer_bbox_mag = input_mag_view.bounding_box.in_mag(mag) # Bbox of input layer in mag units
+            input_coords_mag[:, 0] = np.clip(
+                input_coords_mag[:, 0], input_layer_bbox_mag.min_x, input_layer_bbox_mag.max_x -1
+            )
+            input_coords_mag[:, 1] = np.clip(
+                input_coords_mag[:, 1], input_layer_bbox_mag.min_y, input_layer_bbox_mag.max_y -1
+            )
+            input_coords_mag[:, 2] = np.clip(
+                input_coords_mag[:, 2], input_layer_bbox_mag.min_z, input_layer_bbox_mag.max_z -1
+            )
+
+            # Nearest neighbor interpolation (by rounding to nearest integer)
+            input_coords_mag_rounded = np.round(input_coords_mag).astype(int)
+
+            # Read data from input layer
+            # This requires careful handling as MagView.read expects a bounding box,
+            # not arbitrary coordinates. We need to read a bounding box that encompasses
+            # all unique input_coords_mag_rounded and then select the specific voxels.
+            # For simplicity in this step, let's assume we can read individual voxels
+            # or small patches. A more optimized approach would read larger encompassing BBs.
+
+            # A direct voxel-by-voxel read is inefficient.
+            # Instead, read the bounding box enclosing all needed input voxels.
+            min_input_coords = np.min(input_coords_mag_rounded, axis=0)
+            max_input_coords = np.max(input_coords_mag_rounded, axis=0)
+
+            # Create a bounding box for reading from the input layer (in mag coordinates)
+            # Add 1 to max_coords because NDBoundingBox to_slices is exclusive for the max coord
+            input_read_bbox_mag = NDBoundingBox.from_iterator(
+                np.concatenate((min_input_coords, max_input_coords + 1))
+            )
+
+
+            # Ensure the read bounding box is within the input layer's actual data bounds
+            # This is a bit redundant due to clamping, but good for safety
+            input_read_bbox_mag = input_read_bbox_mag.intersection(input_layer_bbox_mag)
+
+            if input_read_bbox_mag.is_empty(): # All requested coords are outside input layer
+                # Fill with zeros or appropriate background value
+                data_shape = (
+                    self.num_channels, # C
+                    chunk_bbox_mag_coords.shape[0], # X
+                    chunk_bbox_mag_coords.shape[1], # Y
+                    chunk_bbox_mag_coords.shape[2], # Z
+                )
+                read_data_flat = np.zeros((input_coords_mag_rounded.shape[0], self.num_channels), dtype=self.dtype_per_channel)
+            else:
+                # Read the encompassing bounding box from the input layer
+                encompassing_data = input_mag_view.read(input_read_bbox_mag) # Shape (C, Dx', Dy', Dz')
+
+                # Map the rounded input coordinates to indices within the `encompassing_data`
+                # These are 0-indexed relative to the start of `input_read_bbox_mag`
+                relative_input_coords_x = input_coords_mag_rounded[:, 0] - input_read_bbox_mag.min_x
+                relative_input_coords_y = input_coords_mag_rounded[:, 1] - input_read_bbox_mag.min_y
+                relative_input_coords_z = input_coords_mag_rounded[:, 2] - input_read_bbox_mag.min_z
+                
+                # Gather the data using these relative coordinates
+                # encompassing_data has shape (C, X, Y, Z)
+                # We want to select N voxels, resulting in (N, C)
+                read_data_flat = encompassing_data[
+                    :, # All channels
+                    relative_input_coords_x,
+                    relative_input_coords_y,
+                    relative_input_coords_z,
+                ].transpose() # Transpose to get (N, C)
+
+            # Reshape flat data (N, C) back to chunk shape (C, Dx, Dy, Dz)
+            # The order of raveling for grid_x, grid_y, grid_z was 'ij' which corresponds to 'F' (Fortran-like) order
+            # when thinking about (x,y,z) dimensions.
+            # However, numpy's default reshape order is 'C' (C-like).
+            # The output of np.stack was (N,3) where N = X*Y*Z (iterating Z first, then Y, then X for meshgrid 'ij')
+            # So, read_data_flat corresponds to this N.
+            # We need to reshape it to (Dx, Dy, Dz, C) and then transpose to (C, Dx, Dy, Dz)
+            # Dx, Dy, Dz are dimensions of the output chunk
+            dx = chunk_bbox_mag_coords.shape[0]
+            dy = chunk_bbox_mag_coords.shape[1]
+            dz = chunk_bbox_mag_coords.shape[2]
+            
+            output_data = read_data_flat.reshape((dx, dy, dz, self.num_channels)).transpose(3, 0, 1, 2)
+
+
+            # Write data to the output layer
+            # chunk_bbox_mag_coords is already in the correct MagView space for output_mag_view
+            output_mag_view.write(output_data, chunk_bbox_mag_coords)
+
+
+        # Iterate over the output_bounding_box in chunks
+        # output_bounding_box is in global coordinates. Convert to mag coordinates for iteration.
+        output_bbox_mag = output_bounding_box.in_mag(mag)
+
+        # Align chunk_shape_vec with the axes of the bounding box
+        # Assuming output_bbox_mag.axes are ('x', 'y', 'z') for simplicity here.
+        # If axes can be different, this needs to be handled.
+        # For now, assume standard 'x', 'y', 'z' order for chunk_shape_vec.
+        
+        # Create tasks for the executor
+        tasks = []
+        for current_chunk_min_coord_mag in output_bbox_mag.chunked_coords_iter(chunk_shape_vec):
+            chunk_max_coord_mag = Vec3Int.min(current_chunk_min_coord_mag + chunk_shape_vec, output_bbox_mag.max_coord)
+            # Define the bounding box for the current chunk in mag coordinates
+            # NDBoundingBox expects [min_x, min_y, min_z, max_x, max_y, max_z]
+            # where max is exclusive for slicing, so it's effectively size.
+            chunk_bbox_mag = NDBoundingBox.from_min_max_coords(current_chunk_min_coord_mag, chunk_max_coord_mag, axes=output_bbox_mag.axes)
+            if chunk_bbox_mag.is_empty():
+                continue
+            tasks.append(chunk_bbox_mag)
+
+        if num_threads == 0: # Run sequentially for debugging or specific cases
+            logging.info(f"Running transform for layer {self.name} sequentially.")
+            for task_bbox in tasks:
+                process_chunk(task_bbox)
+        else:
+            logging.info(f"Running transform for layer {self.name} with up to {num_threads or 'default'} threads.")
+            with Executor(max_workers=num_threads) as executor:
+                # cf_executor is the concurrent.futures.Executor
+                # The map function in cluster_tools.Executor is for cloud jobs.
+                # We need to use submit for local multithreading.
+                futures = [executor.submit(process_chunk, chunk_bbox) for chunk_bbox in tasks]
+                for future in futures:
+                    future.result() # Wait for completion and raise exceptions if any
+
+
     def as_segmentation_layer(self) -> "SegmentationLayer":
         """Casts into SegmentationLayer."""
         if isinstance(self, SegmentationLayer):
             return self
         else:
             raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
+
 
     @classmethod
     def _ensure_layer(cls, layer: Union[str, PathLike, "Layer"]) -> "Layer":
