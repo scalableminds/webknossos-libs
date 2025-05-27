@@ -267,7 +267,7 @@ def test_slurm_number_of_submitted_jobs() -> None:
         assert executor.get_number_of_submitted_jobs() == 0
 
 
-@pytest.mark.slurm_change_config
+@pytest.mark.requires_modified_slurm_config
 def test_slurm_max_array_size() -> None:
     expected_max_array_size = 2
 
@@ -308,17 +308,17 @@ def test_slurm_time_limit() -> None:
         )
 
 
-@pytest.mark.slurm_change_config
+@pytest.mark.requires_modified_slurm_config
 def test_slurm_memory_limit() -> None:
-    # Request 1 MB
+    # Request 30 MB
     executor = cluster_tools.get_executor(
         "slurm",
         debug=True,
-        job_resources={"mem": "30M"},  # 30M is minimal required memory
+        job_resources={"mem": "30M"},  # 30M is the smallest limited enforced by Cgroups
     )
 
     with executor:
-        # Schedule a job that allocates more than 1 MB and let it run for more than 1 second
+        # Schedule a job that allocates more than 30 MB and let it run for more than 1 second
         # because the frequency of the memory polling is 1 second
         duration = 3
         futures = executor.map_to_futures(

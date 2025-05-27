@@ -443,17 +443,14 @@ class SlurmExecutor(ClusterExecutor):
 
             if exit_code != 0:
                 break
-
-            if len(stdout.splitlines()) <= 1:
+            elif len(stdout_lines()) <= 1:
                 time.sleep(0.2)
-                continue
-
-            # Parse stdout into a key-value object
-            memory_limit_investigation = self._investigate_memory_consumption(stdout)
-            if memory_limit_investigation:
-                return memory_limit_investigation
-
-            break
+            else:
+                # Parse stdout into a key-value object
+                memory_limit_investigation = self._investigate_memory_consumption(stdout)
+                if memory_limit_investigation:
+                    return memory_limit_investigation
+                break
 
         if properties is None:
             return None
@@ -483,19 +480,20 @@ class SlurmExecutor(ClusterExecutor):
         stdout_lines = stdout.splitlines()
         max_rss = 0
         req_mem = 0
-        if len(stdout_lines) > 0:
-            for line in stdout_lines[1:]:
-                params = line.split("|")
-                try:
-                    max_rss = max(max_rss, int(params[2][:-1]))
-                except Exception:
-                    pass
-                try:
-                    req_mem = max(max_rss, int(params[3][:-1]))
-                except Exception:
-                    pass
+        states = []
+        # Table Format:
+        #
+        #   JobID|State|MaxRSS|ReqMem
+        #   91_0|FAILED||30720K
+        #   91_0.batch|FAILED|248K|
+        #   91_0.0|OUT_OF_MEMORY|164K|
+        linefilter = re.compile(r"^([^|]*)\|(\w*)\|(\d*)K?\|(\d*)K?$", re.MULTILINE)
+        for job_id, state, rss, mem in linefilter.findall(text):
+            max_rss = max(max_rss, int(rss or 0))
+            req_mem = max(req_mem, int(mem or 0))
+            states += [state]
 
-        if "OUT_OF_MEMORY" in stdout:
+        if "OUT_OF_MEMORY" in states:
             # Check if task plugin killed the job. This is the case if cgroup is used as TaskPlugin and
             # memory limits are enforced.
             reason = f"The job was terminated because it consumed too much memory (Requested: {req_mem / 1000} MB)."

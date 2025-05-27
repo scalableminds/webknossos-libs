@@ -60,12 +60,12 @@ jobs:
           for name in "slurmctld" "c1" "c2"; do
             docker exec -w /cluster_tools "$name" bash -c "uv sync --frozen"
           done
-      - name: "Run Tests (test_all, test_slurm)"
+      - name: "Run Tests (test_all, test_slurm) without modified slurm.conf"
         run: |
           docker exec \
             -w /cluster_tools/tests \
             -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py -m 'not slurm_change_config'"
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py -m 'not requires_modified_slurm_config'"
       - name: "Run Tests (test_deref_main)"
         run: |
           docker exec \
@@ -75,17 +75,18 @@ jobs:
       - name: Update Slurm Config
         run: |
           echo "MaxArraySize=2" >> ./dockered-slurm/slurm.conf
-          sed "s/JobAcctGatherFrequency=30/JobAcctGatherFrequency=1/g" ./dockered-slurm/slurm.conf > ./dockered-slurm/slurm.conf.bak
-          cp ./dockered-slurm/slurm.conf.bak ./dockered-slurm/slurm.conf
-      - name: Start Slurm Cluster
+          sed "s/JobAcctGatherFrequency=30/JobAcctGatherFrequency=1/g" ./dockered-slurm/slurm.conf > ./dockered-slurm/slurm.conf.tmp
+          mv ./dockered-slurm/slurm.conf.tmp ./dockered-slurm/slurm.conf
+      - name: Restart Slurm Cluster
         run: cd ./dockered-slurm && docker compose restart slurmctld c1 c2
 
-      - name: "Run Tests (test_all, test_slurm)"
+      - name: "Run Tests (test_all, test_slurm) with modified slurn.conf"
         run: |
+          # Run tests requiring a modified slurm config
           docker exec \
             -w /cluster_tools/tests \
             -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "uv run --frozen python -m pytest -sv test_slurm.py -m 'slurm_change_config'"
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_slurm.py -m 'requires_modified_slurm_config'"
 
   cluster_tools_multiprocessing:
     needs: changes
@@ -190,7 +191,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
       - name: Install dependencies (without docker)
         run: uv sync --all-extras --frozen
-      - name: "Run Kubernetes"
+      - name: "Run Dask"
         run: |
           cd tests
           PYTEST_EXECUTORS=dask uv run --frozen python -m pytest -sv test_all.py test_dask.py
