@@ -40,6 +40,8 @@ exclude = ["cluster_tools.tests"]
 
 # This is a fix for an issue in setuptools. See: https://github.com/pypa/setuptools/issues/4759
 # This should be removed when the issue is resolved.
+[tool.setuptools]
+license-files = []
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
