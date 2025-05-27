@@ -18,7 +18,7 @@ services:
       - ..:/cluster_tools
 
   slurmdbd:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
+    image: scalableminds/slurm-docker-cluster:master
     command: [ "slurmdbd" ]
     container_name: slurmdbd
     hostname: slurmdbd
@@ -40,7 +40,7 @@ services:
         condition: service_healthy
 
   slurmctld:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
+    image: scalableminds/slurm-docker-cluster:master
     command: [ "slurmctld" ]
     container_name: slurmctld
     environment:
@@ -67,7 +67,7 @@ services:
         condition: service_healthy
 
   c1:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
+    image: scalableminds/slurm-docker-cluster:master
     command: [ "slurmd" ]
     privileged: true
     hostname: c1
@@ -88,7 +88,7 @@ services:
         condition: service_healthy
 
   c2:
-    image: scalableminds/slurm-docker-cluster:port_slurm_in_docker_to_debian
+    image: scalableminds/slurm-docker-cluster:master
     command: [ "slurmd" ]
     privileged: true
     hostname: c2
