@@ -314,7 +314,7 @@ def test_slurm_memory_limit() -> None:
     executor = cluster_tools.get_executor(
         "slurm",
         debug=True,
-        job_resources={"mem": "30M"},  # 30M is the smallest limited enforced by Cgroups
+        job_resources={"mem": "30M"},  # 30M is the smallest limit enforced by Cgroups
     )
 
     with executor:
