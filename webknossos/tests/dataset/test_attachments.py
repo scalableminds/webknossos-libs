@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pytest
 from upath import UPath
 
 from webknossos.dataset import (
@@ -271,3 +272,19 @@ def test_symlink_layer(tmp_path: Path) -> None:
         copy_layer.attachments.agglomerates[0]._properties.path
         == "../agglomerate_view_15"
     )
+
+
+def test_upload_fail(tmp_path: Path) -> None:
+    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
+    seg_layer = dataset.add_layer(
+        "seg",
+        SEGMENTATION_CATEGORY,
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+    ).as_segmentation_layer()
+    seg_layer.attachments.add_mesh(
+        dataset.path / "seg" / "meshfile", AttachmentDataFormat.ZARR3
+    )
+
+    with pytest.raises(NotImplementedError):
+        dataset.upload()
