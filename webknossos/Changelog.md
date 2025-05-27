@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Made the folder_id parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
 
 ### Fixed
 
