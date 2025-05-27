@@ -2099,6 +2099,17 @@ class Dataset:
             if layer.category == COLOR_CATEGORY
         ]
 
+    def get_segmentation_layer(self, layer_name: str) -> SegmentationLayer:
+        """Get a segmentation layer by name.
+
+        Args:
+            layer_name: Name of the layer to get
+
+        Returns:
+            SegmentationLayer: The segmentation layer
+        """
+        return self.get_layer(layer_name).as_segmentation_layer()
+
     def delete_layer(self, layer_name: str) -> None:
         """Delete a layer from the dataset.
 
