@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Pin tifffile version to 2025.5.21 or below. [#1314](https://github.com/scalableminds/webknossos-libs/pull/1314)
 
 ### Fixed
 
