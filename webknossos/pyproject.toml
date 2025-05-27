@@ -66,6 +66,8 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/webkno
 
 # A list of all of the optional dependencies. They can be opted into by other apps.
 [project.optional-dependencies]
+# When we drop support for python 3.10 this should be updated to ["tifffile >= 2025.5.21"] this requires to change the
+# call of the zarr store in our pims_tiff_reader.py as the zarr store namespace changed from tifffile to tifffile.zarr.
 tifffile = ["tifffile >=2024.8.24, <2025.5.21"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
 bioformats = ["JPype1 ~=1.5.0"]
