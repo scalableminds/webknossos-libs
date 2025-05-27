@@ -440,14 +440,17 @@ class SlurmExecutor(ClusterExecutor):
             stdout, _, exit_code = call(
                 f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}"
             )
+            stdout_lines = stdout.splitlines()
 
             if exit_code != 0:
                 break
-            elif len(stdout_lines()) <= 1:
+            elif len(stdout_lines) <= 1:
                 time.sleep(0.2)
             else:
                 # Parse stdout into a key-value object
-                memory_limit_investigation = self._investigate_memory_consumption(stdout)
+                memory_limit_investigation = self._investigate_memory_consumption(
+                    stdout
+                )
                 if memory_limit_investigation:
                     return memory_limit_investigation
                 break
@@ -477,18 +480,17 @@ class SlurmExecutor(ClusterExecutor):
     def _investigate_memory_consumption(
         self, stdout: str
     ) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
-        stdout_lines = stdout.splitlines()
-        max_rss = 0
-        req_mem = 0
-        states = []
         # Table Format:
         #
         #   JobID|State|MaxRSS|ReqMem
         #   91_0|FAILED||30720K
         #   91_0.batch|FAILED|248K|
         #   91_0.0|OUT_OF_MEMORY|164K|
+        max_rss = 0
+        req_mem = 0
+        states = []
         linefilter = re.compile(r"^([^|]*)\|(\w*)\|(\d*)K?\|(\d*)K?$", re.MULTILINE)
-        for job_id, state, rss, mem in linefilter.findall(text):
+        for job_id, state, rss, mem in linefilter.findall(stdout):
             max_rss = max(max_rss, int(rss or 0))
             req_mem = max(req_mem, int(mem or 0))
             states += [state]
