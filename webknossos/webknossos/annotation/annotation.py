@@ -477,7 +477,7 @@ class Annotation:
     def download_mesh(
         self,
         segment_id: int,
-        output_dir: PathLike,
+        output_dir: PathLike | str,
         tracing_id: str | None = None,
         layer_name: str | None = None,
         is_precomputed: bool = False,
