@@ -508,6 +508,8 @@ def enrich_path(path: str, dataset_path: Path) -> Path:
 
 
 def dump_path(path: Path, dataset_path: Path) -> str:
+    if is_fs_path(path) and not path.is_absolute():
+        path = dataset_path / path
     path = resolve_if_fs_path(path)
     if str(path).startswith(str(dataset_path)):
         return str(path).removeprefix(str(dataset_path)).lstrip("/")

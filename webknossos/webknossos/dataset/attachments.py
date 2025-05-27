@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
@@ -5,7 +6,7 @@ from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
 from typing_extensions import Self
 from upath import UPath
 
-from ..utils import dump_path, enrich_path
+from ..utils import copytree, dump_path, enrich_path, snake_to_camel_case
 from .data_format import AttachmentDataFormat
 from .properties import AttachmentProperties, AttachmentsProperties
 
@@ -47,6 +48,8 @@ class Attachment:
     def from_path(
         cls, path: Path, data_format: AttachmentDataFormat, dataset_path: Path
     ) -> Self:
+        if not path.is_absolute():
+            path = dataset_path / path
         return cls(
             AttachmentProperties(data_format, dump_path(path, dataset_path)),
             path,
@@ -71,6 +74,15 @@ class CumsumAttachment(Attachment):
 
 class ConnectomeAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.ZARR3, AttachmentDataFormat.HDF5]
+
+
+TYPE_MAPPING = {
+    AgglomerateAttachment: "agglomerates",
+    MeshAttachment: "meshes",
+    SegmentIndexAttachment: "segment_index",
+    CumsumAttachment: "cumsum",
+    ConnectomeAttachment: "connectomes",
+}
 
 
 class Attachments:
@@ -124,60 +136,54 @@ class Attachments:
     def _add_attachment(
         self,
         attachment: Attachment,
-        container_name: str,
     ) -> None:
         self._layer._ensure_writable()
-        setattr(self, container_name, getattr(self, container_name) + (attachment,))
-        properties_container = getattr(self._properties, container_name)
-        if properties_container is None:
-            setattr(self._properties, container_name, [attachment._properties])
+        container_name = TYPE_MAPPING[type(attachment)]
+        if isinstance(attachment, CumsumAttachment) or isinstance(
+            attachment, SegmentIndexAttachment
+        ):
+            setattr(self, container_name, attachment)
+            setattr(self._properties, container_name, attachment._properties)
         else:
-            properties_container.append(attachment._properties)
-        self._layer.dataset._export_as_json()
-
-    def _set_attachment(
-        self,
-        attachment: Attachment,
-        container_name: str,
-    ) -> None:
-        self._layer._ensure_writable()
-        setattr(self, container_name, attachment)
-        setattr(self._properties, container_name, attachment._properties)
+            setattr(self, container_name, getattr(self, container_name) + (attachment,))
+            properties_container = getattr(self._properties, container_name)
+            if properties_container is None:
+                setattr(self._properties, container_name, [attachment._properties])
+            else:
+                properties_container.append(attachment._properties)
         self._layer.dataset._export_as_json()
 
     def _remove_attachment(
         self,
         attachment: Attachment,
-        container_name: str,
     ) -> None:
-        setattr(
-            self,
-            container_name,
-            tuple(p for p in getattr(self, container_name) if p != attachment),
-        )
-        properties_container = getattr(self._properties, container_name)
-        properties_container.remove(attachment._properties)
-        if len(properties_container) == 0:
+        container_name = TYPE_MAPPING[type(attachment)]
+        if isinstance(attachment, CumsumAttachment) or isinstance(
+            attachment, SegmentIndexAttachment
+        ):
+            if getattr(self, container_name) != attachment:
+                raise KeyError(
+                    f"Attachment {attachment} is not part of {container_name}."
+                )
+            setattr(self, container_name, None)
             setattr(self._properties, container_name, None)
-        self._layer.dataset._export_as_json()
-
-    def _unset_attachment(
-        self,
-        attachment: Attachment,
-        container_name: str,
-    ) -> None:
-        if getattr(self, container_name) != attachment:
-            raise KeyError(f"Attachment {attachment} is not part of {container_name}.")
-        setattr(self, container_name, None)
-        setattr(self._properties, container_name, None)
+        else:
+            setattr(
+                self,
+                container_name,
+                tuple(p for p in getattr(self, container_name) if p != attachment),
+            )
+            properties_container = getattr(self._properties, container_name)
+            properties_container.remove(attachment._properties)
+            if len(properties_container) == 0:
+                setattr(self._properties, container_name, None)
         self._layer.dataset._export_as_json()
 
     def add_mesh(self, path: str | PathLike, data_format: AttachmentDataFormat) -> None:
         self._add_attachment(
             MeshAttachment.from_path(
                 UPath(path), data_format, self._layer.dataset.resolved_path
-            ),
-            "meshes",
+            )
         )
 
     def add_agglomerate(
@@ -186,8 +192,7 @@ class Attachments:
         self._add_attachment(
             AgglomerateAttachment.from_path(
                 UPath(path), data_format, self._layer.dataset.resolved_path
-            ),
-            "agglomerates",
+            )
         )
 
     def add_connectome(
@@ -196,44 +201,55 @@ class Attachments:
         self._add_attachment(
             ConnectomeAttachment.from_path(
                 UPath(path), data_format, self._layer.dataset.resolved_path
-            ),
-            "connectomes",
+            )
         )
 
     def set_segment_index(
         self, path: str | PathLike, data_format: AttachmentDataFormat
     ) -> None:
-        self._set_attachment(
+        self._add_attachment(
             SegmentIndexAttachment.from_path(
                 UPath(path), data_format, self._layer.dataset.resolved_path
-            ),
-            "segment_index",
+            )
         )
 
     def set_cumsum(
         self, path: str | PathLike, data_format: AttachmentDataFormat
     ) -> None:
-        self._set_attachment(
+        self._add_attachment(
             CumsumAttachment.from_path(
                 UPath(path), data_format, self._layer.dataset.resolved_path
-            ),
-            "cumsum",
+            )
         )
 
     def delete_attachment(self, attachment: Attachment) -> None:
         self._layer._ensure_writable()
         if isinstance(attachment, MeshAttachment):
-            self._remove_attachment(attachment, "meshes")
+            self._remove_attachment(attachment)
         elif isinstance(attachment, AgglomerateAttachment):
-            self._remove_attachment(attachment, "agglomerates")
+            self._remove_attachment(attachment)
         elif isinstance(attachment, ConnectomeAttachment):
-            self._remove_attachment(attachment, "connectomes")
+            self._remove_attachment(attachment)
         elif isinstance(attachment, SegmentIndexAttachment):
-            self._unset_attachment(attachment, "segment_index")
+            self._remove_attachment(attachment)
         elif isinstance(attachment, CumsumAttachment):
-            self._unset_attachment(attachment, "cumsum")
+            self._remove_attachment(attachment)
         else:
             raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
+
+    def add_copy_attachments(self, other: "Attachments") -> None:
+        for attachment in other:
+            new_path = (
+                self._layer.path
+                / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
+                / attachment.path.name
+            )
+            new_path.parent.mkdir(parents=True, exist_ok=True)
+            new_attachment = type(attachment).from_path(
+                new_path, attachment.data_format, self._layer.dataset.resolved_path
+            )
+            copytree(attachment.path, new_path)
+            self._add_attachment(new_attachment)
 
     @property
     def is_empty(self) -> bool:
@@ -244,3 +260,12 @@ class Attachments:
             and (self.segment_index is None)
             and (self.cumsum is None)
         )
+
+    def __iter__(self) -> Iterator[Attachment]:
+        yield from (self.meshes or [])
+        yield from (self.agglomerates or [])
+        if self.segment_index is not None:
+            yield self.segment_index
+        if self.cumsum is not None:
+            yield self.cumsum
+        yield from (self.connectomes or [])

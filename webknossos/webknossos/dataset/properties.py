@@ -1,5 +1,5 @@
 import copy
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import (
     Any,
@@ -185,6 +185,18 @@ class AttachmentsProperties:
     segment_index: AttachmentProperties | None = None
     cumsum: AttachmentProperties | None = None
     connectomes: list[AttachmentProperties] | None = None
+
+    def __iter__(self) -> Iterator[AttachmentProperties]:
+        for attachment in self.meshes or []:
+            yield attachment
+        for attachment in self.agglomerates or []:
+            yield attachment
+        if self.segment_index is not None:
+            yield self.segment_index
+        if self.cumsum is not None:
+            yield self.cumsum
+        for attachment in self.connectomes or []:
+            yield attachment
 
 
 @attr.define
