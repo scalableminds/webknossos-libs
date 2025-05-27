@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a `get_segmentation_layer` method to `Dataset` to get a correctly-typed segmentation layer by name. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
 
 ### Changed
+- Pin tifffile version to 2025.5.21 or below. [#1314](https://github.com/scalableminds/webknossos-libs/pull/1314)
 
 ### Fixed
 
