@@ -262,6 +262,7 @@ def main(
     mag_view = Dataset.open(source).get_layer(layer_name).get_mag(mag)
 
     bbox = BoundingBox.from_ndbbox(mag_view.bounding_box) if bbox is None else bbox
+    bbox = bbox.align_with_mag(mag_view.mag)
 
     logging.info("Starting tiff export for bounding box: %s", bbox)
     executor_args = Namespace(

@@ -10,7 +10,7 @@ Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), wh
 """
 # ruff: noqa: F401 imported but unused
 
-from .data_format import DataFormat
+from .data_format import AttachmentDataFormat, DataFormat
 from .dataset import Dataset, RemoteDataset
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,

@@ -1174,6 +1174,12 @@ class Dataset:
             ]
         )
 
+        for layer in self.get_segmentation_layers():
+            if not layer.attachments.is_empty:
+                raise NotImplementedError(
+                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attchments."
+                )
+
         dataset_id = upload_dataset(
             self, new_dataset_name, converted_layers_to_link, jobs
         )
@@ -1464,7 +1470,9 @@ class Dataset:
         elif layer_properties.category == SEGMENTATION_CATEGORY:
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
-                self, layer_properties, read_only=False
+                self,
+                cast(SegmentationLayerProperties, layer_properties),
+                read_only=False,
             )
         else:
             raise RuntimeError(
@@ -2092,6 +2100,17 @@ class Dataset:
             if layer.category == COLOR_CATEGORY
         ]
 
+    def get_segmentation_layer(self, layer_name: str) -> SegmentationLayer:
+        """Get a segmentation layer by name.
+
+        Args:
+            layer_name: Name of the layer to get
+
+        Returns:
+            SegmentationLayer: The segmentation layer
+        """
+        return self.get_layer(layer_name).as_segmentation_layer()
+
     def delete_layer(self, layer_name: str) -> None:
         """Delete a layer from the dataset.
 
@@ -2141,6 +2160,7 @@ class Dataset:
         compress: bool | None = None,
         exists_ok: bool = False,
         executor: Executor | None = None,
+        with_attachments: bool = True,
     ) -> Layer:
         """Copy layer from another dataset to this one.
 
@@ -2229,6 +2249,13 @@ class Dataset:
                 progress_desc=progress_desc,
             )
 
+        if (
+            with_attachments
+            and isinstance(layer, SegmentationLayer)
+            and isinstance(foreign_layer, SegmentationLayer)
+        ):
+            layer.attachments.add_copy_attachments(foreign_layer.attachments)
+
         return layer
 
     def add_symlink_layer(
@@ -2315,6 +2342,23 @@ class Dataset:
         #         )
         #     else:
         #         mag_prop.path = str(foreign_mag.path)
+
+        if (
+            isinstance(new_layer_properties, SegmentationLayerProperties)
+            and new_layer_properties.attachments is not None
+        ):
+            for attachment in new_layer_properties.attachments:
+                old_path = UPath(attachment.path)
+                if is_fs_path(old_path):
+                    if not old_path.is_absolute():
+                        old_path = (
+                            foreign_layer.dataset.resolved_path / old_path
+                        ).resolve()
+                    attachment.path = str(
+                        Path(relpath(old_path, self.path))
+                        if make_relative
+                        else old_path.resolve()
+                    )
 
         self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
@@ -2417,11 +2461,30 @@ class Dataset:
             )
 
         copytree(foreign_layer.path, self.path / new_layer_name)
-        layer_properties = copy.deepcopy(foreign_layer._properties)
-        layer_properties.name = new_layer_name
-        self._properties.data_layers += [layer_properties]
+        new_layer_properties = copy.deepcopy(foreign_layer._properties)
+        new_layer_properties.name = new_layer_name
+
+        if (
+            isinstance(new_layer_properties, SegmentationLayerProperties)
+            and new_layer_properties.attachments is not None
+        ):
+            for attachment in new_layer_properties.attachments:
+                old_path = UPath(attachment.path)
+                if is_fs_path(old_path):
+                    if not old_path.is_absolute():
+                        old_path = (
+                            foreign_layer.dataset.resolved_path / old_path
+                        ).resolve()
+                    else:
+                        old_path = old_path.resolve()
+                    # attachment has been a foreign attachment to the foreign layer
+                    # therefore it will not be copied
+                    if foreign_layer.resolved_path not in old_path.parents:
+                        attachment.path = str(old_path)
+
+        self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
-            layer_properties, read_only=False
+            new_layer_properties, read_only=False
         )
 
         self._export_as_json()
@@ -2795,7 +2858,9 @@ class Dataset:
         if properties.category == COLOR_CATEGORY:
             return Layer(self, properties, read_only=read_only)
         elif properties.category == SEGMENTATION_CATEGORY:
-            return SegmentationLayer(self, properties, read_only=read_only)
+            return SegmentationLayer(
+                self, cast(SegmentationLayerProperties, properties), read_only=read_only
+            )
         else:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
