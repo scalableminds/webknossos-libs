@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import threading
+import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import Future
 from functools import lru_cache
@@ -423,8 +424,9 @@ class SlurmExecutor(ClusterExecutor):
 
         # Call `scontrol show jobid=<job_id>` which should return some output including
         # key=value pairs, such as: "Reason=...", "TimeLimit=...", and "RunTime=..."
-        stdout, _, exit_code = call(f"scontrol show jobid={job_id_with_index}")
+        stdout, stderr, exit_code = call(f"scontrol show jobid={job_id_with_index}")
 
+        properties = None
         if exit_code == 0:
             # Parse stdout into a key-value object
             properties = parse_key_value_pairs(stdout, " ", "=")
@@ -433,18 +435,28 @@ class SlurmExecutor(ClusterExecutor):
             if time_limit_investigation:
                 return time_limit_investigation
 
-        # Call `seff job_id` which should return some output including a line,
-        # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
-        stdout, _, exit_code = call(f"seff {job_id_with_index}")
-        if exit_code != 0:
+        # Request gathered job information.
+        for _ in range(10):
+            stdout, _, exit_code = call(
+                f"sacct -P --format=JobID,State,MaxRSS,ReqMem --unit K -j {job_id_with_index}"
+            )
+            stdout_lines = stdout.splitlines()
+
+            if exit_code != 0:
+                break
+            elif len(stdout_lines) <= 1:
+                time.sleep(0.2)
+            else:
+                # Parse stdout into a key-value object
+                memory_limit_investigation = self._investigate_memory_consumption(
+                    stdout
+                )
+                if memory_limit_investigation:
+                    return memory_limit_investigation
+                break
+
+        if properties is None:
             return None
-
-        # Parse stdout into a key-value object
-        properties = parse_key_value_pairs(stdout, "\n", ":")
-
-        memory_limit_investigation = self._investigate_memory_consumption(properties)
-        if memory_limit_investigation:
-            return memory_limit_investigation
 
         return self._investigate_exit_code(properties)
 
@@ -466,30 +478,33 @@ class SlurmExecutor(ClusterExecutor):
         return (reason, RemoteTimeLimitException)
 
     def _investigate_memory_consumption(
-        self, properties: dict[str, str]
+        self, stdout: str
     ) -> tuple[str, type[RemoteOutOfMemoryException]] | None:
-        if not properties.get("Memory Efficiency", None):
+        # Table Format:
+        #
+        #   JobID|State|MaxRSS|ReqMem
+        #   91_0|FAILED||30720K
+        #   91_0.batch|FAILED|248K|
+        #   91_0.0|OUT_OF_MEMORY|164K|
+        max_rss = 0
+        req_mem = 0
+        states = []
+        linefilter = re.compile(r"^([^|]*)\|(\w*)\|(\d*)K?\|(\d*)K?$", re.MULTILINE)
+        for job_id, state, rss, mem in linefilter.findall(stdout):
+            max_rss = max(max_rss, int(rss or 0))
+            req_mem = max(req_mem, int(mem or 0))
+            states += [state]
+
+        if "OUT_OF_MEMORY" in states:
+            # Check if task plugin killed the job. This is the case if cgroup is used as TaskPlugin and
+            # memory limits are enforced.
+            reason = f"The job was terminated because it consumed too much memory (Requested: {req_mem / 1000} MB)."
+        elif max_rss > req_mem:
+            # Check if job accounting canceled the job. This is the case if JobAcctGatherParam=OverMemoryKill
+            # is enabled.
+            reason = f"The job was probably terminated because it consumed too much memory. Required {max_rss / 1000} MB but requeseted {req_mem / 1000} MB."
+        else:
             return None
-
-        # Extract the "25019.18% of 1.00 GB" part of the line
-        efficiency_note = properties["Memory Efficiency"]
-        PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
-
-        # Extract the percentage to see whether it exceeds 100%.
-        match = re.search(PERCENTAGE_REGEX, efficiency_note)
-        percentage = None
-        if match is None:
-            return None
-
-        try:
-            percentage = float(match.group(1))
-        except ValueError:
-            return None
-
-        if percentage < 100:
-            return None
-
-        reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
         return (reason, RemoteOutOfMemoryException)
 
     def _investigate_exit_code(

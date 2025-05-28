@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Use `sacct` to detect out of memory errors instead of `seff` for Slurm executor. [#1297](https://github.com/scalableminds/webknossos-libs/pull/1297)
 
 ### Fixed
 
