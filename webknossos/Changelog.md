@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Made the folder_id parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
 
 ### Fixed
+
+
+## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.7...v2.3.8)
+
+### Changed
+- Made the folder_id parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
 
 
 ## [2.3.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.7) - 2025-05-27
