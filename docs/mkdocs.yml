@@ -57,6 +57,9 @@ extra:
       link: https://medium.com/webknossos
   generator: false
 
+extra_javascript:
+  - javascripts/runllm-widget.js
+
 plugins:
   # - gen-files:
   #     scripts:
@@ -279,6 +282,19 @@ nav:
         - Task: api/webknossos/administration/task.md
     - CLI Reference:
       - Overview: cli/index.md
+      - Install and Run: cli/install.md
+      - Environment Variables: cli/environment_variables.md
+      - Distribution Strategies: cli/distribution_strategies.md
+      - CLI Commands:
+        - Convert Images: cli/convert.md
+        - Compress: cli/compress.md
+        - Copy Datasets: cli/copy.md
+        - Download: cli/download.md
+        - Upload: cli/upload.md
+        - Downsample: cli/downsample.md
+        - Upsample: cli/upsample.md
+        - Export as Tiff: cli/export-as-tiff.md
+        - Merge Fallback: cli/merge-fallback.md
     - Version Changelog:
       - webknossos-py/stability_policy.md
       - webknossos-py/changelog.md

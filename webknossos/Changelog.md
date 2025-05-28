@@ -10,16 +10,64 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.7...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+- Made the folder_id parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
+
+### Fixed
+
+
+## [2.3.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.7) - 2025-05-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.6...v2.3.7)
+
+### Changed
+- Pin tifffile version to 2025.5.21 or below. [#1314](https://github.com/scalableminds/webknossos-libs/pull/1314)
+
+
+## [2.3.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.6) - 2025-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.5...v2.3.6)
+
+### Added
+- Add support for in-memory zarr3 datasets (using the Tensorstore in-memory KvStore driver). [#1310](https://github.com/scalableminds/webknossos-libs/pull/1310)
+
+### Changed
+- Added url parsing in webknossos download CLI command, to get webknossos url without environment variable. [#1299](https://github.com/scalableminds/webknossos-libs/pull/1299)
+
+
+## [2.3.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.5) - 2025-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.4...v2.3.5)
+
+### Added
+- Added `--downsample` flag to `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+### Changed
+- Uses compression by default for `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+### Fixed
+- Pinned `click<8.2.0` because of incompatibility with `typer`. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+
+
+## [2.3.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.4) - 2025-05-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.3...v2.3.4)
+
+### Fixed
+- Fixed deletion of symlinked mags. [#1300](https://github.com/scalableminds/webknossos-libs/pull/1300)
+
+
+
+## [2.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.3) - 2025-05-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.2...v2.3.3)
 
 ### Fixed
 - Fixed an issue with `Dataset.get_remote_datasets()` that causes value lookups to fail. [#1286](https://github.com/scalableminds/webknossos-libs/pull/1286)
+- Fixed issue with adding remote mags to local dataset due to some UPath checks failing for paths from different file systems. [#1298](https://github.com/scalableminds/webknossos-libs/pull/1298)
+
 
 
 ## [2.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.2) - 2025-04-25

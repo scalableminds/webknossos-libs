@@ -110,6 +110,9 @@ def main(
     ] = None,
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
+    ] = True,
+    downsample: Annotated[
+        bool, typer.Option(help="Downsample the target dataset.")
     ] = False,
     batch_size: Annotated[
         int | None,
@@ -159,7 +162,7 @@ def main(
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     with get_executor_for_args(args=executor_args) as executor:
-        Dataset.from_images(
+        dataset = Dataset.from_images(
             source,
             target,
             name=name,
@@ -173,3 +176,6 @@ def main(
             batch_size=batch_size,
             layer_category=category.value if category else None,
         )
+    if downsample:
+        with get_executor_for_args(args=executor_args) as executor:
+            dataset.downsample(executor=executor)
