@@ -465,7 +465,7 @@ class Dataset:
         dataset_name: str,
         organization: str,
         initial_team_ids: list[str],
-        folder_id: str | RemoteFolder,
+        folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
         token: str | None = None,
     ) -> tuple[str, str]:
@@ -478,7 +478,8 @@ class Dataset:
             dataset_name: Name for the new dataset
             organization: Organization ID to upload to
             initial_team_ids: List of team IDs to grant initial access
-            folder_id: ID of folder where dataset should be placed
+            folder_id: Optional ID of folder where dataset should be placed
+            require_unique_name: Whether to make request fail in case a dataset with the name already exists
             token: Optional authentication token
 
         Note:
