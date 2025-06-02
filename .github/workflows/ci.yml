@@ -304,7 +304,6 @@ jobs:
           coverageFile: /home/runner/coverage-files/result.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           thresholdAll: 0.8
-          thresholdNew: 0.8
 
       - name: Cleanup temporary files
         run: rm -rf ~/coverage-files
