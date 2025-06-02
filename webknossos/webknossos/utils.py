@@ -466,3 +466,12 @@ def check_version_in_background(current_version: str) -> None:
     # Start the check in a daemon thread so it won't block program exit
     t = Thread(target=check_version_in_thread, daemon=True)
     t.start()
+
+
+def safe_is_relative_to(path: Path, base_path: Path) -> bool:
+    if (
+        (is_fs_path(path) and is_fs_path(base_path))
+        or UPath(path).protocol == UPath(base_path).protocol
+    ) and path.is_relative_to(base_path):
+        return True
+    return False

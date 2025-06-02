@@ -352,20 +352,16 @@ class Dataset:
         else:
             assert not read_only
 
-            dataset_path_exists = False
-            dataset_path_is_empty = False
-            try:
-                dataset_path_is_empty = next(self.path.iterdir(), None) is None
-                dataset_path_exists = True
-            except NotADirectoryError:
-                dataset_path_exists = True
-            except FileNotFoundError:
-                dataset_path_exists = False
-
-            if dataset_path_exists and not dataset_path_is_empty:
-                raise RuntimeError(
-                    f"Creation of Dataset at {self.path} failed, because a file or folder already exists at this path."
-                )
+            if self.path.exists():
+                if self.path.is_dir():
+                    if next(self.path.iterdir(), None) is not None:
+                        raise RuntimeError(
+                            f"Creation of Dataset at {self.path} failed, because a non-empty folder already exists at this path."
+                        )
+                else:
+                    raise NotADirectoryError(
+                        f"Creation of Dataset at {self.path} failed, because the given path already exists but is not a directory."
+                    )
             # Create directories on disk and write datasource-properties.json
             try:
                 self.path.mkdir(parents=True, exist_ok=True)
@@ -469,7 +465,7 @@ class Dataset:
         dataset_name: str,
         organization: str,
         initial_team_ids: list[str],
-        folder_id: str | RemoteFolder,
+        folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
         token: str | None = None,
     ) -> tuple[str, str]:
@@ -482,7 +478,8 @@ class Dataset:
             dataset_name: Name for the new dataset
             organization: Organization ID to upload to
             initial_team_ids: List of team IDs to grant initial access
-            folder_id: ID of folder where dataset should be placed
+            folder_id: Optional ID of folder where dataset should be placed
+            require_unique_name: Whether to make request fail in case a dataset with the name already exists
             token: Optional authentication token
 
         Note:

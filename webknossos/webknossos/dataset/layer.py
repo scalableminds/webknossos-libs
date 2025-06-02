@@ -53,6 +53,7 @@ from ..utils import (
     named_partial,
     resolve_if_fs_path,
     rmtree,
+    safe_is_relative_to,
     warn_deprecated,
 )
 from .defaults import (
@@ -230,7 +231,7 @@ def _dump_mag_path(path: Path, dataset_path: Path) -> str:
     path = resolve_if_fs_path(path)
     if str(path).startswith(str(dataset_path)):
         return str(path).removeprefix(str(dataset_path)).lstrip("/")
-    if path.is_relative_to(dataset_path):
+    if safe_is_relative_to(path, dataset_path):
         return str(path.relative_to(dataset_path))
     if isinstance(path, UPath) and path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
@@ -618,7 +619,7 @@ class Layer:
         )
         if shard_shape is None:
             if self.data_format == DataFormat.Zarr:
-                shard_shape = DEFAULT_CHUNK_SHAPE
+                shard_shape = chunk_shape
             else:
                 shard_shape = DEFAULT_SHARD_SHAPE
 
@@ -859,6 +860,7 @@ class Layer:
             raise IndexError(
                 f"Deleting mag {mag} failed. There is no mag with this name"
             )
+        mag_view = self.get_mag(mag)
 
         full_path = self._mags[mag].path
         del self._mags[mag]
@@ -866,8 +868,17 @@ class Layer:
             res for res in self._properties.mags if Mag(res.mag) != mag
         ]
         self.dataset._export_as_json()
-        # delete files on disk
-        rmtree(full_path)
+        if not mag_view.is_foreign:
+            # delete files on disk
+            rmtree(full_path)
+        else:
+            # delete symlinks only
+            short_mag_file_path = self.path / mag.to_layer_name()
+            long_mag_file_path = self.path / mag.to_long_layer_name()
+            if short_mag_file_path.exists():
+                short_mag_file_path.unlink()
+            elif long_mag_file_path.exists():
+                long_mag_file_path.unlink()
 
     def add_copy_mag(
         self,
