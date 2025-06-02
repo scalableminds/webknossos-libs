@@ -25,13 +25,13 @@ def test_attachments(tmp_path: Path) -> None:
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
         name="meshfile",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer._properties.attachments.meshes[0].path == "seg/meshfile"
     assert (
         seg_layer._properties.attachments.meshes[0].data_format
-        == AttachmentDataFormat.ZARR3
+        == AttachmentDataFormat.Zarr3
     )
     assert len(seg_layer._properties.attachments.meshes) == 1
 
@@ -42,7 +42,7 @@ def test_attachments(tmp_path: Path) -> None:
             client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
         ),
         name="identity",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
     assert seg_layer._properties.attachments.agglomerates is not None
     assert (
@@ -51,7 +51,7 @@ def test_attachments(tmp_path: Path) -> None:
     )
     assert (
         seg_layer._properties.attachments.agglomerates[0].data_format
-        == AttachmentDataFormat.ZARR3
+        == AttachmentDataFormat.Zarr3
     )
     assert len(seg_layer._properties.attachments.agglomerates) == 1
 
@@ -59,7 +59,7 @@ def test_attachments(tmp_path: Path) -> None:
     seg_layer.attachments.add_connectome(
         UPath("http://example.com/connectome.zarr"),
         name="connectome",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
     assert seg_layer._properties.attachments.connectomes is not None
     assert (
@@ -68,7 +68,7 @@ def test_attachments(tmp_path: Path) -> None:
     )
     assert (
         seg_layer._properties.attachments.connectomes[0].data_format
-        == AttachmentDataFormat.ZARR3
+        == AttachmentDataFormat.Zarr3
     )
     assert len(seg_layer._properties.attachments.connectomes) == 1
 
@@ -159,7 +159,7 @@ def test_copy_layer(tmp_path: Path) -> None:
     seg_layer.attachments.add_agglomerate(
         Path("../agglomerate_view_15"),
         name="agglomerate_view_15",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
 
     copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
@@ -213,7 +213,7 @@ def test_fs_copy_layer(tmp_path: Path) -> None:
     seg_layer.attachments.add_agglomerate(
         Path("../agglomerate_view_15"),
         name="agglomerate_view_15",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
 
     copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
@@ -259,7 +259,7 @@ def test_symlink_layer(tmp_path: Path) -> None:
     seg_layer.attachments.add_agglomerate(
         Path("../agglomerate_view_15"),
         name="agglomerate_view_15",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
 
     copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
@@ -297,7 +297,7 @@ def test_upload_fail(tmp_path: Path) -> None:
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
         name="meshfile",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
 
     with pytest.raises(NotImplementedError):
@@ -316,11 +316,11 @@ def test_unique_attachment_names(tmp_path: Path) -> None:
     seg_layer.attachments.add_mesh(
         UPath("http://example.com/meshfile.zarr"),
         name="meshfile",
-        data_format=AttachmentDataFormat.ZARR3,
+        data_format=AttachmentDataFormat.Zarr3,
     )
     with pytest.raises(ValueError):
         seg_layer.attachments.add_mesh(
             UPath("http://example.com/meshfile.zarr"),
             name="meshfile",
-            data_format=AttachmentDataFormat.ZARR3,
+            data_format=AttachmentDataFormat.Zarr3,
         )

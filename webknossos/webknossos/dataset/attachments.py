@@ -66,23 +66,23 @@ class Attachment:
 
 
 class MeshAttachment(Attachment):
-    data_format: Literal[AttachmentDataFormat.ZARR3, AttachmentDataFormat.HDF5]
+    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
 
 
 class SegmentIndexAttachment(Attachment):
-    data_format: Literal[AttachmentDataFormat.ZARR3, AttachmentDataFormat.HDF5]
+    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
 
 
 class AgglomerateAttachment(Attachment):
-    data_format: Literal[AttachmentDataFormat.ZARR3, AttachmentDataFormat.HDF5]
+    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
 
 
 class CumsumAttachment(Attachment):
-    data_format: Literal[AttachmentDataFormat.ZARR3, AttachmentDataFormat.JSON]
+    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.JSON]
 
 
 class ConnectomeAttachment(Attachment):
-    data_format: Literal[AttachmentDataFormat.ZARR3, AttachmentDataFormat.HDF5]
+    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
 
 
 TYPE_MAPPING = {

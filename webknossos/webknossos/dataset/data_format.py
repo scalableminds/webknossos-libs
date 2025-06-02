@@ -11,7 +11,7 @@ class DataFormat(Enum):
 
 
 class AttachmentDataFormat(Enum):
-    ZARR3 = "zarr3"
+    Zarr3 = "zarr3"
     HDF5 = "hdf5"
     JSON = "json"
 
