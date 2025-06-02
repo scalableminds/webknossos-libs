@@ -581,7 +581,7 @@ class Layer:
         )
         if shard_shape is None:
             if self.data_format == DataFormat.Zarr:
-                shard_shape = DEFAULT_CHUNK_SHAPE
+                shard_shape = chunk_shape
             else:
                 shard_shape = DEFAULT_SHARD_SHAPE
 

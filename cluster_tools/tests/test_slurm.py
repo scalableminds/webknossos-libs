@@ -44,12 +44,6 @@ def expect_fork() -> bool:
     return True
 
 
-def search_and_replace_in_slurm_config(search_string: str, replace_string: str) -> None:
-    chcall(
-        f"sed -ci 's/{search_string}/{replace_string}/g' /etc/slurm/slurm.conf && scontrol reconfigure"
-    )
-
-
 def test_map_with_spawn() -> None:
     with cluster_tools.get_executor(
         "slurm", max_workers=5, start_method="spawn"
@@ -273,33 +267,24 @@ def test_slurm_number_of_submitted_jobs() -> None:
         assert executor.get_number_of_submitted_jobs() == 0
 
 
+@pytest.mark.requires_modified_slurm_config
 def test_slurm_max_array_size() -> None:
-    max_array_size = 2
+    expected_max_array_size = 2
 
     executor = cluster_tools.get_executor("slurm", debug=True)
-    original_max_array_size = executor.get_max_array_size()
 
-    command = f"MaxArraySize={max_array_size}"
+    max_array_size = executor.get_max_array_size()
+    assert max_array_size == expected_max_array_size
 
-    try:
-        chcall(f"echo -e '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure")
+    with executor:
+        futures = executor.map_to_futures(square, range(6))
+        concurrent.futures.wait(futures)
+        job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
 
-        new_max_array_size = executor.get_max_array_size()
-        assert new_max_array_size == max_array_size
+        # Count how often each job_id occurs which corresponds to the array size of the job
+        occurrences = list(Counter(job_ids).values())
 
-        with executor:
-            futures = executor.map_to_futures(square, range(6))
-            concurrent.futures.wait(futures)
-            job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
-
-            # Count how often each job_id occurs which corresponds to the array size of the job
-            occurrences = list(Counter(job_ids).values())
-
-            assert all(array_size <= max_array_size for array_size in occurrences)
-    finally:
-        search_and_replace_in_slurm_config(command, "")
-        reset_max_array_size = executor.get_max_array_size()
-        assert reset_max_array_size == original_max_array_size
+        assert all(array_size <= expected_max_array_size for array_size in occurrences)
 
 
 @pytest.mark.skip(
@@ -323,38 +308,28 @@ def test_slurm_time_limit() -> None:
         )
 
 
+@pytest.mark.requires_modified_slurm_config
 def test_slurm_memory_limit() -> None:
-    # Request 1 MB
+    # Request 30 MB
     executor = cluster_tools.get_executor(
-        "slurm", debug=True, job_resources={"mem": "1M"}
+        "slurm",
+        debug=True,
+        job_resources={"mem": "30M"},  # 30M is the smallest limit enforced by Cgroups
     )
 
-    original_gather_frequency_config = "JobAcctGatherFrequency=30"  # from slurm.conf
-    new_gather_frequency_config = "JobAcctGatherFrequency=1"
-
-    try:
-        # Increase the frequency at which slurm checks whether a job uses too much memory
-        search_and_replace_in_slurm_config(
-            original_gather_frequency_config, new_gather_frequency_config
+    with executor:
+        # Schedule a job that allocates more than 30 MB and let it run for more than 1 second
+        # because the frequency of the memory polling is 1 second
+        duration = 3
+        futures = executor.map_to_futures(
+            partial(allocate, duration), [1024 * 1024 * 50]
         )
+        concurrent.futures.wait(futures)
 
-        with executor:
-            # Schedule a job that allocates more than 1 MB and let it run for more than 1 second
-            # because the frequency of the memory polling is 1 second
-            duration = 3
-            futures = executor.map_to_futures(
-                partial(allocate, duration), [1024 * 1024 * 2]
-            )
-            concurrent.futures.wait(futures)
-
-            # Job should have been killed with a RemoteOutOfMemoryException
-            assert all(
-                isinstance(fut.exception(), cluster_tools.RemoteOutOfMemoryException)
-                for fut in futures
-            )
-    finally:
-        search_and_replace_in_slurm_config(
-            new_gather_frequency_config, original_gather_frequency_config
+        # Job should have been killed with a RemoteOutOfMemoryException
+        assert all(
+            isinstance(fut.exception(), cluster_tools.RemoteOutOfMemoryException)
+            for fut in futures
         )
 
 
