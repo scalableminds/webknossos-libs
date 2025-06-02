@@ -2452,7 +2452,6 @@ class Dataset:
         assert foreign_layer.dataset.path != self.path, (
             "Cannot add layer with the same origin dataset as foreign layer"
         )
-        foreign_layer_path = foreign_layer.path
 
         assert all(is_remote_path(mag.path) for mag in foreign_layer.mags.values()), (
             f"Cannot add foreign layer {foreign_layer} as it is not remote. Try using dataset.add_copy_layer instead."
@@ -2466,7 +2465,6 @@ class Dataset:
         new_layer = self._initialize_layer_from_properties(
             layer_properties, read_only=False
         )
-        new_layer._resolved_path = foreign_layer_path
         self._layers[new_layer_name] = new_layer
 
         self._export_as_json()
@@ -2625,15 +2623,16 @@ class Dataset:
                 voxel_size_with_unit = self.voxel_size_with_unit
             else:
                 voxel_size_with_unit = VoxelSize(voxel_size)
-        new_ds = Dataset(
+        new_dataset = Dataset(
             new_dataset_path,
             voxel_size_with_unit=voxel_size_with_unit,
             exist_ok=exists_ok,
         )
+        new_dataset.default_view_configuration = self.default_view_configuration
 
         with get_executor_for_args(None, executor) as executor:
             for layer in self.layers.values():
-                new_ds.add_copy_layer(
+                new_dataset.add_copy_layer(
                     layer,
                     chunk_shape=chunk_shape,
                     shard_shape=shard_shape,
@@ -2643,8 +2642,8 @@ class Dataset:
                     exists_ok=exists_ok,
                     executor=executor,
                 )
-        new_ds._export_as_json()
-        return new_ds
+        new_dataset._export_as_json()
+        return new_dataset
 
     def fs_copy_dataset(
         self,
@@ -2687,16 +2686,17 @@ class Dataset:
                 "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
             )
 
-        new_ds = Dataset(
+        new_dataset = Dataset(
             new_dataset_path,
             voxel_size_with_unit=self.voxel_size_with_unit,
             exist_ok=exists_ok,
         )
+        new_dataset.default_view_configuration = self.default_view_configuration
 
         for layer in self.layers.values():
             if layers_to_ignore is not None and layer.name in layers_to_ignore:
                 continue
-            new_layer = new_ds.add_layer_like(layer, layer.name)
+            new_layer = new_dataset.add_layer_like(layer, layer.name)
             for mag_view in layer.mags.values():
                 new_mag = new_layer.add_mag(
                     mag_view.mag,
@@ -2709,8 +2709,8 @@ class Dataset:
                 new_layer, SegmentationLayer
             ):
                 new_layer.attachments.add_copy_attachments(layer.attachments)
-        new_ds._export_as_json()
-        return new_ds
+        new_dataset._export_as_json()
+        return new_dataset
 
     def shallow_copy_dataset(
         self,
@@ -2771,6 +2771,8 @@ class Dataset:
             name=name or self.name,
             exist_ok=False,
         )
+        new_dataset.default_view_configuration = self.default_view_configuration
+
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
@@ -2944,7 +2946,7 @@ class Dataset:
 
         for layer in self.layers.values():
             # Only write out OME metadata if the layer is a child of the dataset
-            if not layer.is_foreign:
+            if not layer.is_foreign and layer.path.exists():
                 write_ome_metadata(self, layer)
 
     def _initialize_layer_from_properties(

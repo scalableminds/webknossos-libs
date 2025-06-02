@@ -286,6 +286,37 @@ def test_symlink_layer(tmp_path: Path) -> None:
     )
 
 
+def test_remote_layer(tmp_path: Path) -> None:
+    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
+    seg_layer = dataset.add_layer(
+        "seg",
+        SEGMENTATION_CATEGORY,
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+    ).as_segmentation_layer()
+
+    mesh_path = UPath(
+        "s3://bucket/meshfile.zarr",
+        client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
+    )
+
+    seg_layer.attachments.add_mesh(
+        mesh_path,
+        name="meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+
+    copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
+    copy_layer = copy_dataset.add_remote_layer(seg_layer).as_segmentation_layer()
+
+    assert copy_layer.attachments.meshes[0].path == mesh_path
+    assert copy_layer._properties.attachments.meshes is not None
+    assert (
+        copy_layer._properties.attachments.meshes[0].path
+        == "s3://s3.eu-central-1.amazonaws.com/bucket/meshfile.zarr"
+    )
+
+
 def test_upload_fail(tmp_path: Path) -> None:
     dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
     seg_layer = dataset.add_layer(

@@ -2147,6 +2147,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     copy_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "copy")
 
     ds = Dataset(ds_path, (1, 1, 1))
+    ds.default_view_configuration = DatasetViewConfiguration(zoom=1.5)
     original_layer_1 = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -2175,6 +2176,10 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     )
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
+    assert (
+        shallow_copy_of_ds.default_view_configuration
+        and shallow_copy_of_ds.default_view_configuration.zoom == 1.5
+    )
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
     assert len(Dataset.open(ds_path).get_layer("color").mags) == 2, (
         "Adding a new mag should not affect the original dataset"
@@ -2239,6 +2244,7 @@ def test_dataset_conversion_wkw_only() -> None:
 
     # create example dataset
     origin_ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    origin_ds.default_view_configuration = DatasetViewConfiguration(zoom=1.5)
     seg_layer = origin_ds.add_layer(
         "layer1",
         SEGMENTATION_CATEGORY,
@@ -2276,6 +2282,10 @@ def test_dataset_conversion_wkw_only() -> None:
     )
     converted_ds = origin_ds.copy_dataset(converted_path)
 
+    assert (
+        converted_ds.default_view_configuration
+        and converted_ds.default_view_configuration.zoom == 1.5
+    )
     assert origin_ds.layers.keys() == converted_ds.layers.keys()
     for layer_name in origin_ds.layers:
         assert (
@@ -3302,8 +3312,9 @@ def test_fs_copy_dataset_with_attachments(input_path: Path, output_path: Path) -
     ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, input_path)
     new_ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, output_path, "copied")
 
-    # Add segmentation layer and meshfile
     ds = Dataset.open(ds_path)
+    ds.default_view_configuration = DatasetViewConfiguration(zoom=1.5)
+    # Add segmentation layer and meshfile
     seg_layer = ds.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
@@ -3324,7 +3335,12 @@ def test_fs_copy_dataset_with_attachments(input_path: Path, output_path: Path) -
     )
 
     # Copy
-    ds.fs_copy_dataset(new_ds_path)
+    copy_ds = ds.fs_copy_dataset(new_ds_path)
+
+    assert (
+        copy_ds.default_view_configuration
+        and copy_ds.default_view_configuration.zoom == 1.5
+    )
     assert (new_ds_path / "segmentation" / "1" / "zarr.json").exists()
     assert (new_ds_path / "segmentation" / "meshes" / "meshfile" / "zarr.json").exists()
 
