@@ -1301,7 +1301,7 @@ class Dataset:
 
         # assert that the dtype_per_channel are supported by webknossos
         if category == COLOR_CATEGORY:
-            if dtype_per_channel.name not in (
+            color_dtypes = (
                 "uint8",
                 "uint16",
                 "uint32",
@@ -1309,13 +1309,14 @@ class Dataset:
                 "int16",
                 "int32",
                 "float32",
-            ):
+            )
+            if dtype_per_channel.name not in color_dtypes:
                 raise ValueError(
                     f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    "Supported dtypes are: 'uint8', 'uint16', 'uint32', 'int8', 'int16', 'int32', 'float32'."
+                    f"Supported dtypes are: {', '.join(color_dtypes)}.",
                 )
         else:
-            if dtype_per_channel.name not in (
+            segmentation_dtypes = (
                 "uint8",
                 "uint16",
                 "uint32",
@@ -1324,10 +1325,11 @@ class Dataset:
                 "int16",
                 "int32",
                 "int64",
-            ):
+            )
+            if dtype_per_channel.name not in segmentation_dtypes:
                 raise ValueError(
                     f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    "Supported dtypes are: 'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64'."
+                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}.",
                 )
 
         if layer_name in self.layers.keys():
