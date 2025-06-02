@@ -31,6 +31,7 @@ def _validate_data_format(
 
 class Attachment:
     _properties: AttachmentProperties
+    name: str
     path: Path
     data_format: AttachmentDataFormat
 
@@ -41,17 +42,25 @@ class Attachment:
     ):
         _validate_data_format(self.__class__, properties.data_format)
         self._properties = properties
+        self.name = properties.name
         self.path = path
         self.data_format = properties.data_format
 
     @classmethod
-    def from_path(
-        cls, path: Path, data_format: AttachmentDataFormat, dataset_path: Path
+    def from_path_and_name(
+        cls,
+        path: Path,
+        name: str,
+        *,
+        data_format: AttachmentDataFormat,
+        dataset_path: Path,
     ) -> Self:
         if not path.is_absolute():
             path = dataset_path / path
         return cls(
-            AttachmentProperties(data_format, dump_path(path, dataset_path)),
+            AttachmentProperties(
+                name=name, data_format=data_format, path=dump_path(path, dataset_path)
+            ),
             path,
         )
 
@@ -145,6 +154,10 @@ class Attachments:
             setattr(self, container_name, attachment)
             setattr(self._properties, container_name, attachment._properties)
         else:
+            if any(a.name == attachment.name for a in getattr(self, container_name)):
+                raise ValueError(
+                    f"Attachment with name {attachment.name} already exists in {container_name}."
+                )
             setattr(self, container_name, getattr(self, container_name) + (attachment,))
             properties_container = getattr(self._properties, container_name)
             if properties_container is None:
@@ -179,46 +192,63 @@ class Attachments:
                 setattr(self._properties, container_name, None)
         self._layer.dataset._export_as_json()
 
-    def add_mesh(self, path: str | PathLike, data_format: AttachmentDataFormat) -> None:
+    def add_mesh(
+        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+    ) -> None:
         self._add_attachment(
-            MeshAttachment.from_path(
-                UPath(path), data_format, self._layer.dataset.resolved_path
+            MeshAttachment.from_path_and_name(
+                UPath(path),
+                name,
+                data_format=data_format,
+                dataset_path=self._layer.dataset.resolved_path,
             )
         )
 
     def add_agglomerate(
-        self, path: str | PathLike, data_format: AttachmentDataFormat
+        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
     ) -> None:
         self._add_attachment(
-            AgglomerateAttachment.from_path(
-                UPath(path), data_format, self._layer.dataset.resolved_path
+            AgglomerateAttachment.from_path_and_name(
+                UPath(path),
+                name,
+                data_format=data_format,
+                dataset_path=self._layer.dataset.resolved_path,
             )
         )
 
     def add_connectome(
-        self, path: str | PathLike, data_format: AttachmentDataFormat
+        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
     ) -> None:
         self._add_attachment(
-            ConnectomeAttachment.from_path(
-                UPath(path), data_format, self._layer.dataset.resolved_path
+            ConnectomeAttachment.from_path_and_name(
+                UPath(path),
+                name,
+                data_format=data_format,
+                dataset_path=self._layer.dataset.resolved_path,
             )
         )
 
     def set_segment_index(
-        self, path: str | PathLike, data_format: AttachmentDataFormat
+        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
     ) -> None:
         self._add_attachment(
-            SegmentIndexAttachment.from_path(
-                UPath(path), data_format, self._layer.dataset.resolved_path
+            SegmentIndexAttachment.from_path_and_name(
+                UPath(path),
+                name,
+                data_format=data_format,
+                dataset_path=self._layer.dataset.resolved_path,
             )
         )
 
     def set_cumsum(
-        self, path: str | PathLike, data_format: AttachmentDataFormat
+        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
     ) -> None:
         self._add_attachment(
-            CumsumAttachment.from_path(
-                UPath(path), data_format, self._layer.dataset.resolved_path
+            CumsumAttachment.from_path_and_name(
+                UPath(path),
+                name,
+                data_format=data_format,
+                dataset_path=self._layer.dataset.resolved_path,
             )
         )
 
@@ -245,8 +275,11 @@ class Attachments:
                 / attachment.path.name
             )
             new_path.parent.mkdir(parents=True, exist_ok=True)
-            new_attachment = type(attachment).from_path(
-                new_path, attachment.data_format, self._layer.dataset.resolved_path
+            new_attachment = type(attachment).from_path_and_name(
+                new_path,
+                attachment.name,
+                data_format=attachment.data_format,
+                dataset_path=self._layer.dataset.resolved_path,
             )
             copytree(attachment.path, new_path)
             self._add_attachment(new_attachment)

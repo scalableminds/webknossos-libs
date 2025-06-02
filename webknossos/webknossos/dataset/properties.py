@@ -174,8 +174,9 @@ class LayerProperties:
 
 @attr.define
 class AttachmentProperties:
-    data_format: AttachmentDataFormat
+    name: str
     path: str
+    data_format: AttachmentDataFormat
 
 
 @attr.define

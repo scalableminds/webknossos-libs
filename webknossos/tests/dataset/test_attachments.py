@@ -24,7 +24,8 @@ def test_attachments(tmp_path: Path) -> None:
     # meshes
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
-        AttachmentDataFormat.ZARR3,
+        name="meshfile",
+        data_format=AttachmentDataFormat.ZARR3,
     )
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer._properties.attachments.meshes[0].path == "seg/meshfile"
@@ -40,7 +41,8 @@ def test_attachments(tmp_path: Path) -> None:
             "s3://bucket/agglomerate.zarr",
             client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
         ),
-        AttachmentDataFormat.ZARR3,
+        name="identity",
+        data_format=AttachmentDataFormat.ZARR3,
     )
     assert seg_layer._properties.attachments.agglomerates is not None
     assert (
@@ -55,13 +57,14 @@ def test_attachments(tmp_path: Path) -> None:
 
     # connectomes
     seg_layer.attachments.add_connectome(
-        UPath("http://example.com/agglomerate.zarr"),
-        AttachmentDataFormat.ZARR3,
+        UPath("http://example.com/connectome.zarr"),
+        name="connectome",
+        data_format=AttachmentDataFormat.ZARR3,
     )
     assert seg_layer._properties.attachments.connectomes is not None
     assert (
         seg_layer._properties.attachments.connectomes[0].path
-        == "http://example.com/agglomerate.zarr"
+        == "http://example.com/connectome.zarr"
     )
     assert (
         seg_layer._properties.attachments.connectomes[0].data_format
@@ -72,7 +75,8 @@ def test_attachments(tmp_path: Path) -> None:
     # segment index
     seg_layer.attachments.set_segment_index(
         "/usr/segment_index.hdf5",
-        AttachmentDataFormat.HDF5,
+        name="main",
+        data_format=AttachmentDataFormat.HDF5,
     )
     assert seg_layer._properties.attachments.segment_index is not None
     assert (
@@ -87,7 +91,8 @@ def test_attachments(tmp_path: Path) -> None:
     # cumsum
     seg_layer.attachments.set_cumsum(
         dataset.path / "seg" / "cumsum.json",
-        AttachmentDataFormat.JSON,
+        name="main",
+        data_format=AttachmentDataFormat.JSON,
     )
     assert seg_layer._properties.attachments.cumsum is not None
     assert seg_layer._properties.attachments.cumsum.path == "seg/cumsum.json"
@@ -102,6 +107,7 @@ def test_attachments(tmp_path: Path) -> None:
     print(attachments_json)
     assert len(attachments_json["meshes"]) == 1
     assert attachments_json["meshes"][0] == {
+        "name": "meshfile",
         "dataFormat": "zarr3",
         "path": "seg/meshfile",
     }
@@ -147,11 +153,13 @@ def test_copy_layer(tmp_path: Path) -> None:
 
     seg_layer.attachments.add_mesh(
         mesh_path,
-        AttachmentDataFormat.HDF5,
+        name="meshfile",
+        data_format=AttachmentDataFormat.HDF5,
     )
     seg_layer.attachments.add_agglomerate(
         Path("../agglomerate_view_15"),
-        AttachmentDataFormat.ZARR3,
+        name="agglomerate_view_15",
+        data_format=AttachmentDataFormat.ZARR3,
     )
 
     copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
@@ -198,12 +206,14 @@ def test_fs_copy_layer(tmp_path: Path) -> None:
 
     seg_layer.attachments.add_mesh(
         mesh_path,
-        AttachmentDataFormat.HDF5,
+        name="meshfile",
+        data_format=AttachmentDataFormat.HDF5,
     )
 
     seg_layer.attachments.add_agglomerate(
         Path("../agglomerate_view_15"),
-        AttachmentDataFormat.ZARR3,
+        name="agglomerate_view_15",
+        data_format=AttachmentDataFormat.ZARR3,
     )
 
     copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
@@ -242,12 +252,14 @@ def test_symlink_layer(tmp_path: Path) -> None:
 
     seg_layer.attachments.add_mesh(
         mesh_path,
-        AttachmentDataFormat.HDF5,
+        name="meshfile",
+        data_format=AttachmentDataFormat.HDF5,
     )
 
     seg_layer.attachments.add_agglomerate(
         Path("../agglomerate_view_15"),
-        AttachmentDataFormat.ZARR3,
+        name="agglomerate_view_15",
+        data_format=AttachmentDataFormat.ZARR3,
     )
 
     copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
@@ -283,8 +295,32 @@ def test_upload_fail(tmp_path: Path) -> None:
         bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
     ).as_segmentation_layer()
     seg_layer.attachments.add_mesh(
-        dataset.path / "seg" / "meshfile", AttachmentDataFormat.ZARR3
+        dataset.path / "seg" / "meshfile",
+        name="meshfile",
+        data_format=AttachmentDataFormat.ZARR3,
     )
 
     with pytest.raises(NotImplementedError):
         dataset.upload()
+
+
+def test_unique_attachment_names(tmp_path: Path) -> None:
+    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
+    seg_layer = dataset.add_layer(
+        "seg",
+        SEGMENTATION_CATEGORY,
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+    ).as_segmentation_layer()
+
+    seg_layer.attachments.add_mesh(
+        UPath("http://example.com/meshfile.zarr"),
+        name="meshfile",
+        data_format=AttachmentDataFormat.ZARR3,
+    )
+    with pytest.raises(ValueError):
+        seg_layer.attachments.add_mesh(
+            UPath("http://example.com/meshfile.zarr"),
+            name="meshfile",
+            data_format=AttachmentDataFormat.ZARR3,
+        )
