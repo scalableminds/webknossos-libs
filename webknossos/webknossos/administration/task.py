@@ -2,6 +2,7 @@ import logging
 
 import attr
 
+from webknossos.geometry.mag import Mag
 from webknossos.geometry.vec3_int import Vec3IntLike
 
 from ..annotation import Annotation, AnnotationInfo
@@ -71,8 +72,15 @@ class TaskType:
                 description=description,
                 team_id=team_id,
                 team_name=team_name,
-                settings={},
-                tracingType="",
+                settings={
+                    "mergerMode": False,
+                    "magRestrictions": Mag(1).to_vec3_int(),
+                    "somaClickingAllowed": False,
+                    "volumeInterpolationAllowed": False,
+                    "allowedModes": [],
+                    "branchPointsAllowed": False,
+                },
+                tracing_type="test",
             )
         )
         return cls._from_api_task_type(api_task_type)

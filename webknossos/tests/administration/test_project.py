@@ -1,13 +1,12 @@
 import pytest
 
 import webknossos as wk
-from webknossos.client.context import _get_api_client
 
 pytestmark = [pytest.mark.use_proxay]
 
 
 def test_get_project() -> None:
-    teams = _get_api_client(enforce_auth=True).user_current().teams
+    teams = wk.Team.get_list()
 
     project = wk.Project.create(
         name="test_update_project",
@@ -26,7 +25,7 @@ def test_get_project() -> None:
 def test_project_create() -> None:
     """Test creating a project."""
 
-    teams = _get_api_client(enforce_auth=True).user_current().teams
+    teams = wk.Team.get_list()
 
     project = wk.Project.create(
         name="test_create_project",
@@ -47,7 +46,7 @@ def test_project_create() -> None:
 
 def test_project_update() -> None:
     """Test updating a project."""
-    teams = _get_api_client(enforce_auth=True).user_current().teams
+    teams = wk.Team.get_list()
 
     project = wk.Project.create(
         name="test_update_project",
@@ -69,7 +68,7 @@ def test_project_update() -> None:
 
 def test_project_delete() -> None:
     """Test deleting a project."""
-    teams = _get_api_client(enforce_auth=True).user_current().teams
+    teams = wk.Team.get_list()
 
     project = wk.Project.create(
         name="test_delete_project",
@@ -86,7 +85,7 @@ def test_project_delete() -> None:
 
 def test_project_get_owner() -> None:
     """Test getting the owner of a project."""
-    teams = _get_api_client(enforce_auth=True).user_current().teams
+    teams = wk.Team.get_list()
 
     project = wk.Project.create(
         name="test_get_owner_project",
@@ -102,7 +101,7 @@ def test_project_get_owner() -> None:
 
 def test_project_get_tasks() -> None:
     """Test getting the task of a project."""
-    teams = _get_api_client(enforce_auth=True).user_current().teams
+    teams = wk.Team.get_list()
     ds_id = wk.Dataset.open_remote("l4_sample")._dataset_id
 
     project = wk.Project.create(
@@ -120,7 +119,7 @@ def test_project_get_tasks() -> None:
     )
     for i in range(1001):
         wk.Task.create(
-            task_type_id=task_type.id,
+            task_type_id=task_type.task_type_id,
             project_name=project.name,
             needed_experience_domain="test_domain",
             needed_experience_value=i,

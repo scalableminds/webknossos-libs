@@ -5,7 +5,7 @@ import attr
 
 from ..client.api_client.models import ApiProject, ApiProjectCreate, ApiProjectUpdate
 from ..client.context import _get_api_client
-from .user import User, Team
+from .user import Team, User
 
 if TYPE_CHECKING:
     from .task import Task

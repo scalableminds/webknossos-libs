@@ -206,6 +206,8 @@ class ApiTaskTypeCreate:
     description: str
     team_id: str
     team_name: str
+    settings: dict[str, str] | None = None
+    tracing_type: str | None = None
 
 
 @attr.s(auto_attribs=True)
