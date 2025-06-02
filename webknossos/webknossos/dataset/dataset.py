@@ -1299,7 +1299,7 @@ class Dataset:
         else:
             dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
 
-        # assert that the dtype_per_channel are supported by webknossos
+        # assert that the dtype_per_channel is supported by webknossos
         if category == COLOR_CATEGORY:
             color_dtypes = (
                 "uint8",
