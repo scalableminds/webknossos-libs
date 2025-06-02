@@ -324,3 +324,25 @@ def test_unique_attachment_names(tmp_path: Path) -> None:
             name="meshfile",
             data_format=AttachmentDataFormat.Zarr3,
         )
+
+
+def test_remote_dataset() -> None:
+    dataset = Dataset(UPath("memory://test_attachments"), voxel_size=(10, 10, 10))
+    seg_layer = dataset.add_layer(
+        "seg",
+        SEGMENTATION_CATEGORY,
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+    ).as_segmentation_layer()
+
+    mesh_path = dataset.path / "seg" / "meshes" / "meshfile"
+    mesh_path.parent.mkdir(parents=True, exist_ok=True)
+    mesh_path.write_text("test")
+
+    seg_layer.attachments.add_mesh(
+        mesh_path,
+        name="meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+
+    assert seg_layer.attachments.meshes[0]._properties.path == "seg/meshes/meshfile"

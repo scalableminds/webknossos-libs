@@ -1678,6 +1678,27 @@ class SegmentationLayer(Layer):
 
     @property
     def attachments(self) -> Attachments:
+        """Access, add and remove the attachments of this layer.
+
+        Attachments are additional files that can be attached to a segmentation layer.
+        They can be used to store additional information, such as meshes, agglomerations, segment indices, cumsums and connectomes.
+
+        Examples:
+            ```
+            # Add a mesh attachment to the segmentation layer
+            layer.attachments.add_mesh(
+                mesh_path,
+                name="meshfile",
+                data_format=AttachmentDataFormat.Zarr3,
+            )
+
+            # Access the mesh attachment path
+            layer.attachments.meshes[0].path
+
+            # Remove the mesh attachment
+            layer.attachments.delete_attachment(layer.attachments.meshes[0])
+            ```
+        """
         return self._attachments
 
     def _get_largest_segment_id_maybe(self) -> int | None:
