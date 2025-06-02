@@ -1299,6 +1299,37 @@ class Dataset:
         else:
             dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
 
+        # assert that the dtype_per_channel are supported by webknossos
+        if category == COLOR_CATEGORY:
+            if dtype_per_channel.name not in (
+                "uint8",
+                "uint16",
+                "uint32",
+                "int8",
+                "int16",
+                "int32",
+                "float32",
+            ):
+                raise ValueError(
+                    f"Cannot add color layer with dtype {dtype_per_channel.name}. "
+                    "Supported dtypes are: 'uint8', 'uint16', 'uint32', 'int8', 'int16', 'int32', 'float32'."
+                )
+        else:
+            if dtype_per_channel.name not in (
+                "uint8",
+                "uint16",
+                "uint32",
+                "uint64",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+            ):
+                raise ValueError(
+                    f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
+                    "Supported dtypes are: 'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64'."
+                )
+
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
