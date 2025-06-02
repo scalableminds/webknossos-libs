@@ -1555,41 +1555,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         ds.add_layer(
             "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
         )
-        ds.add_layer(
-            "seg1",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="float",
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg2",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel=float,
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg3",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel=float,
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg4",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="double",
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg5",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="float",
-            num_channels=3,
-            largest_segment_id=100000,
-        )
 
         with open(
             ds_path / "datasource-properties.json",
@@ -1601,11 +1566,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
             assert data["dataLayers"][1]["elementClass"] == "uint8"
             assert data["dataLayers"][2]["elementClass"] == "uint24"
             assert data["dataLayers"][3]["elementClass"] == "uint24"
-            assert data["dataLayers"][4]["elementClass"] == "float"
-            assert data["dataLayers"][5]["elementClass"] == "float"
-            assert data["dataLayers"][6]["elementClass"] == "float"
-            assert data["dataLayers"][7]["elementClass"] == "double"
-            assert data["dataLayers"][8]["elementClass"] == "float96"
 
         reopened_ds = Dataset.open(
             ds_path
@@ -1614,12 +1574,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
         assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
         assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
-        # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-        assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
-        assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
 
         assure_exported_properties(ds)
 
@@ -3071,7 +3025,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
     ],
 )
 def test_add_layer_dtype_per_channel(
-    dtype_per_channel, category: LayerCategoryType, is_supported: bool
+    dtype_per_channel: str, category: LayerCategoryType, is_supported: bool
 ) -> None:
     ds_path = prepare_dataset_path(
         DataFormat.Zarr3, TESTOUTPUT_DIR, "dtype_per_channel"
