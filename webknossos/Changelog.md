@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...HEAD)
 
 ### Breaking Changes
 
@@ -20,9 +20,23 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a `get_segmentation_layer` method to `Dataset` to get a correctly-typed segmentation layer by name. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
 
 ### Changed
-- Pin tifffile version to 2025.5.21 or below. [#1314](https://github.com/scalableminds/webknossos-libs/pull/1314)
 
 ### Fixed
+- Fixed an issue that creates an Error when `add_mag()` was called just with a `chunk_shape`. [#1315](https://github.com/scalableminds/webknossos-libs/pull/1315)
+
+
+## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.7...v2.3.8)
+
+### Changed
+- Made the folder_id parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
+
+
+## [2.3.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.7) - 2025-05-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.6...v2.3.7)
+
+### Changed
+- Pin tifffile version to 2025.5.21 or below. [#1314](https://github.com/scalableminds/webknossos-libs/pull/1314)
 
 
 ## [2.3.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.6) - 2025-05-20
