@@ -28,7 +28,7 @@ from webknossos.dataset import (
     RemoteDataset,
     View,
 )
-from webknossos.dataset._array import DataFormat
+from webknossos.dataset.data_format import AttachmentDataFormat, DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
 from webknossos.dataset.properties import (
@@ -63,6 +63,7 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.Zarr3, TESTOUTPUT_DIR),
     (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
 ]
+OUTPUT_PATHS = [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR]
 
 
 def copy_simple_dataset(
@@ -3280,6 +3281,39 @@ def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
         assert (ds_path / "color" / "1" / ".zarray").exists()
     else:
         assert (ds_path / "color" / "1" / "zarr.json").exists()
+
+
+@pytest.mark.parametrize("input_path", OUTPUT_PATHS)
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
+def test_fs_copy_dataset_with_attachments(input_path: Path, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, input_path)
+    new_ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, output_path, "copied")
+
+    # Add segmentation layer and meshfile
+    ds = Dataset.open(ds_path)
+    seg_layer = ds.add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        largest_segment_id=999,
+        bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)),
+    ).as_segmentation_layer()
+    seg_mag = seg_layer.add_mag(1)
+    seg_mag.write(data=np.zeros((10, 10, 10), dtype=np.uint8))
+
+    meshfile_path = seg_layer.path / "meshes" / "meshfile"
+    meshfile_path.mkdir(parents=True, exist_ok=True)
+    (meshfile_path / "zarr.json").write_text("test")
+
+    seg_layer.attachments.add_mesh(
+        meshfile_path,
+        name="meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+
+    # Copy
+    ds.fs_copy_dataset(new_ds_path)
+    assert (new_ds_path / "segmentation" / "1" / "zarr.json").exists()
+    assert (new_ds_path / "segmentation" / "meshes" / "meshfile" / "zarr.json").exists()
 
 
 def test_wkw_copy_to_remote_dataset() -> None:

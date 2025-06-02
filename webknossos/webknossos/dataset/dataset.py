@@ -1494,6 +1494,10 @@ class Dataset:
 
         layer_properties = copy.copy(other_layer._properties)
         layer_properties.mags = []
+        if isinstance(layer_properties, SegmentationLayerProperties):
+            from .properties import AttachmentsProperties
+
+            layer_properties.attachments = AttachmentsProperties()
         layer_properties.name = layer_name
 
         self._properties.data_layers += [layer_properties]
@@ -2602,7 +2606,7 @@ class Dataset:
 
         Note:
             WKW layers can only be copied to datasets on local file systems.
-            For remote datasets, use data_format='zarr'.
+            For remote datasets, use data_format='zarr3'.
         """
 
         new_dataset_path = UPath(new_dataset_path)
@@ -2641,6 +2645,68 @@ class Dataset:
                     exists_ok=exists_ok,
                     executor=executor,
                 )
+        new_ds._export_as_json()
+        return new_ds
+
+    def fs_copy_dataset(
+        self,
+        new_dataset_path: str | Path,
+        *,
+        exists_ok: bool = False,
+    ) -> "Dataset":
+        """
+        Creates an independent copy of the dataset with all layers at a new location.
+
+        This method copies the files of the dataset as is and, therefore, might be faster than Dataset.copy_dataset, which decodes and encodes all the data.
+        If you wish to change the data storage parameters, use Dataset.copy_dataset.
+
+        Args:
+            new_dataset_path: Path where new dataset should be created
+            exists_ok: Whether to overwrite existing datasets and layers
+
+        Returns:
+            Dataset: The newly created copy
+
+        Raises:
+            AssertionError: If trying to copy WKW layers to remote dataset
+
+        Examples:
+            Basic copy:
+                ```
+                copied = ds.fs_copy_dataset("path/to/copy")
+                ```
+
+        Note:
+            WKW layers can only be copied to datasets on local file systems.
+        """
+
+        new_dataset_path = UPath(new_dataset_path)
+
+        if any(layer.data_format == DataFormat.WKW for layer in self.layers.values()):
+            assert is_fs_path(new_dataset_path), (
+                "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
+            )
+
+        new_ds = Dataset(
+            new_dataset_path,
+            voxel_size_with_unit=self.voxel_size_with_unit,
+            exist_ok=exists_ok,
+        )
+
+        for layer in self.layers.values():
+            new_layer = new_ds.add_layer_like(layer, layer.name)
+            for mag_view in layer.mags.values():
+                new_mag = new_layer.add_mag(
+                    mag_view.mag,
+                    chunk_shape=mag_view.info.chunk_shape,
+                    shard_shape=mag_view.info.shard_shape,
+                    compress=mag_view.info.compression_mode,
+                )
+                copytree(mag_view.path, new_mag.path)
+            if isinstance(layer, SegmentationLayer) and isinstance(
+                new_layer, SegmentationLayer
+            ):
+                new_layer.attachments.add_copy_attachments(layer.attachments)
         new_ds._export_as_json()
         return new_ds
 
