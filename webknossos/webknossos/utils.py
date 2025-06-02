@@ -12,7 +12,6 @@ from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
-from os.path import relpath
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
@@ -182,28 +181,6 @@ def time_since_epoch_in_ms() -> int:
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     return unixtime * 1000
-
-
-def copy_directory_with_symlinks(
-    src_path: Path,
-    dst_path: Path,
-    ignore: Iterable[str] = tuple(),
-    make_relative: bool = False,
-) -> None:
-    """
-    Links all directories in src_path / dir_name to dst_path / dir_name.
-    """
-    assert is_fs_path(src_path), f"Cannot create symlink with remote paths {src_path}."
-    assert is_fs_path(dst_path), f"Cannot create symlink with remote paths {dst_path}."
-
-    for item in src_path.iterdir():
-        if item.name not in ignore:
-            symlink_path = dst_path / item.name
-            if make_relative:
-                rel_or_abspath = Path(relpath(item, symlink_path.parent))
-            else:
-                rel_or_abspath = item.resolve()
-            symlink_path.symlink_to(rel_or_abspath)
 
 
 def setup_warnings() -> None:

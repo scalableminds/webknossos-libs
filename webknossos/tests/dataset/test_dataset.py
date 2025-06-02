@@ -2162,11 +2162,17 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
         dtype_per_channel=np.uint32,
         largest_segment_id=0,
         data_format=data_format,
-    )
+    ).as_segmentation_layer()
     original_layer_2.add_mag(4)
-    mappings_path = original_layer_2.path / "mappings"
-    mappings_path.mkdir(parents=True)
-    (mappings_path / "agglomerate_view.hdf5").touch()
+
+    agglomerates_path = original_layer_2.path / "agglomerates" / "agglomerate_view.hdf5"
+    agglomerates_path.parent.mkdir(parents=True)
+    agglomerates_path.touch()
+    original_layer_2.attachments.add_agglomerate(
+        agglomerates_path,
+        name="agglomerate_view",
+        data_format=AttachmentDataFormat.HDF5,
+    )
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
@@ -2177,8 +2183,15 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
         "Expecting all mags from original dataset and new downsampled mag"
     )
     assert (
-        copy_path / "segmentation" / "mappings" / "agglomerate_view.hdf5"
-    ).exists(), "Expecting mappings to exist in shallow copy"
+        shallow_copy_of_ds.get_segmentation_layer("segmentation")
+        .attachments.agglomerates[0]
+        .path
+        == copy_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
+    ), "Expecting agglomerates to exist in shallow copy"
+
+    assert (
+        copy_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
+    ).exists(), "Expecting agglomerates to exist in shallow copy"
 
     assert not shallow_copy_of_ds.get_layer("color").read_only
     assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only

@@ -1,12 +1,13 @@
 from collections.abc import Iterator
 from os import PathLike
+from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
 
 from typing_extensions import Self
 from upath import UPath
 
-from ..utils import copytree, dump_path, enrich_path, snake_to_camel_case
+from ..utils import copytree, dump_path, enrich_path, is_fs_path, snake_to_camel_case
 from .data_format import AttachmentDataFormat
 from .properties import AttachmentProperties, AttachmentsProperties
 
@@ -63,6 +64,9 @@ class Attachment:
             ),
             path,
         )
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(path={repr(self.path)}, name={self.name}, data_format={self.data_format})"
 
 
 class MeshAttachment(Attachment):
@@ -282,6 +286,30 @@ class Attachments:
                 dataset_path=self._layer.dataset.resolved_path,
             )
             copytree(attachment.path, new_path)
+            self._add_attachment(new_attachment)
+
+    def add_symlink_attachments(
+        self, other: "Attachments", *, make_relative: bool = False
+    ) -> None:
+        for attachment in other:
+            new_path = attachment.path
+            if is_fs_path(attachment.path):
+                new_path = (
+                    self._layer.path
+                    / TYPE_MAPPING[type(attachment)]
+                    / attachment.path.name
+                )
+                new_path.parent.mkdir(parents=True, exist_ok=True)
+                if make_relative:
+                    new_path.symlink_to(Path(relpath(attachment.path, new_path.parent)))
+                else:
+                    new_path.symlink_to(attachment.path)
+            new_attachment = type(attachment).from_path_and_name(
+                new_path,
+                attachment.name,
+                data_format=attachment.data_format,
+                dataset_path=self._layer.dataset.resolved_path,
+            )
             self._add_attachment(new_attachment)
 
     @property

@@ -50,7 +50,6 @@ from .defaults import (
     PROPERTIES_FILE_NAME,
     SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
-    ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
 from .ome_metadata import write_ome_metadata
@@ -65,7 +64,6 @@ if TYPE_CHECKING:
     from ..client._upload_dataset import LayerToLink
 
 from ..utils import (
-    copy_directory_with_symlinks,
     copytree,
     count_defined_values,
     get_executor_for_args,
@@ -2653,6 +2651,7 @@ class Dataset:
         new_dataset_path: str | Path,
         *,
         exists_ok: bool = False,
+        layers_to_ignore: Iterable[str] | None = None,
     ) -> "Dataset":
         """
         Creates an independent copy of the dataset with all layers at a new location.
@@ -2663,6 +2662,7 @@ class Dataset:
         Args:
             new_dataset_path: Path where new dataset should be created
             exists_ok: Whether to overwrite existing datasets and layers
+            layers_to_ignore: List of layer names to exclude from the copy
 
         Returns:
             Dataset: The newly created copy
@@ -2694,6 +2694,8 @@ class Dataset:
         )
 
         for layer in self.layers.values():
+            if layers_to_ignore is not None and layer.name in layers_to_ignore:
+                continue
             new_layer = new_ds.add_layer_like(layer, layer.name)
             for mag_view in layer.mags.values():
                 new_mag = new_layer.add_mag(
@@ -2782,19 +2784,13 @@ class Dataset:
                     else:
                         new_layer.add_remote_mag(mag_view)
 
-                # copy all other directories with a dir scan
-                copy_directory_with_symlinks(
-                    layer.path,
-                    new_layer.path,
-                    ignore=[str(mag) for mag in layer.mags]
-                    + [
-                        PROPERTIES_FILE_NAME,
-                        ZGROUP_FILE_NAME,
-                        ZATTRS_FILE_NAME,
-                        ZARR_JSON_FILE_NAME,
-                    ],
-                    make_relative=make_relative,
-                )
+                # reference-copy all attachments
+                if isinstance(layer, SegmentationLayer) and isinstance(
+                    new_layer, SegmentationLayer
+                ):
+                    new_layer.attachments.add_symlink_attachments(
+                        layer.attachments, make_relative=make_relative
+                    )
 
         return new_dataset
 
