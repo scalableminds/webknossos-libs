@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a `get_segmentation_layer` method to `Dataset` to get a correctly-typed segmentation layer by name. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
 
 ### Changed
+- When adding a layer, the used dtype is only valid if it is supported by webknossos. [#1316](https://github.com/scalableminds/webknossos-libs/pull/1316)
 
 ### Fixed
 - Fixed an issue that creates an Error when `add_mag()` was called just with a `chunk_shape`. [#1315](https://github.com/scalableminds/webknossos-libs/pull/1315)
