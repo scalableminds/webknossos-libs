@@ -22,7 +22,7 @@ from .layer import Layer, SegmentationLayer
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .length_unit import LengthUnit
 from .mag_view import MagView
+from .properties import VoxelSize
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .view import View
-from .properties import VoxelSize
