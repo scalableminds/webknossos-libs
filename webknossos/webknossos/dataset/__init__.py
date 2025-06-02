@@ -25,3 +25,4 @@ from .mag_view import MagView
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .view import View
+from .properties import VoxelSize

@@ -4,6 +4,7 @@ import numpy as np
 import tensorstore
 
 import webknossos as wk
+from webknossos.dataset.data_format import DataFormat
 
 
 def test_add_mag_from_zarrarray(tmp_path: Path) -> None:
@@ -62,3 +63,18 @@ def test_add_mag_from_zarrarray(tmp_path: Path) -> None:
     assert layer.get_mag("1").info.num_channels == 1
     assert layer.get_mag("1").info.dimension_names == ("c", "x", "y", "z")
     assert (layer.get_mag("1").read()[0] == zarr_data).all()
+
+
+def test_add_mag_with_chunk_shape_zarr2(tmp_path: Path) -> None:
+    dataset = wk.Dataset(
+        tmp_path / "test_add_mag_with_chunk_shape_zarr2", voxel_size=(10, 10, 10)
+    )
+    layer = dataset.add_layer(
+        "color",
+        wk.COLOR_CATEGORY,
+        data_format=DataFormat.Zarr,
+        bounding_box=wk.BoundingBox((0, 0, 0), (16, 16, 16)),
+    )
+    mag = layer.add_mag("1", chunk_shape=(8, 8, 8))
+
+    assert mag.info.chunk_shape == (8, 8, 8)
