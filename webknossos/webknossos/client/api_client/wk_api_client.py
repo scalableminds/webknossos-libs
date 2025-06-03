@@ -168,6 +168,18 @@ class WkApiClient(AbstractApiClient):
         route = "/taskTypes"
         return self._post_json_with_json_response(route, task_type, ApiTaskType)
 
+    def task_type_delete(self, task_type_id: str) -> None:
+        route = f"/taskTypes/{task_type_id}"
+        self._delete(route)
+
+    def task_type_list(self) -> list[ApiTaskType]:
+        route = "/taskTypes"
+        return self._get_json(route, list[ApiTaskType])
+
+    def get_task_type(self, task_type_id: str) -> ApiTaskType:
+        route = f"/taskTypes/{task_type_id}"
+        return self._get_json(route, ApiTaskType)
+
     def annotation_info(self, annotation_id: str) -> ApiAnnotation:
         route = f"/annotations/{annotation_id}/info"
         return self._get_json(

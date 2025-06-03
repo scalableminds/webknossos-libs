@@ -59,6 +59,28 @@ class TaskType:
         )
 
     @classmethod
+    def get_list(cls) -> list["TaskType"]:
+        """Returns a list of all tasks that your token authorizes you to see"""
+        client = _get_api_client(enforce_auth=True)
+        api_tasks = client.task_type_list()
+        return [cls._from_api_task_type(t) for t in api_tasks]
+
+    @classmethod
+    def get_by_id(cls, task_type_id: str) -> "TaskType":
+        """Returns the task type specified by the passed id (if your token authorizes you to see it)"""
+        client = _get_api_client(enforce_auth=True)
+        return cls._from_api_task_type(client.get_task_type(task_type_id))
+
+    @classmethod
+    def get_by_name(cls, name: str) -> "TaskType":
+        """Returns the task type specified by the passed name (if your token authorizes you to see it)"""
+        task_types = cls.get_list()
+        for task_type in task_types:
+            if task_type.name == name:
+                return task_type
+        raise ValueError(f"Task type with name '{name}' not found.")
+
+    @classmethod
     def create(
         cls,
         name: str,
@@ -93,6 +115,11 @@ class TaskType:
             )
         )
         return cls._from_api_task_type(api_task_type)
+
+    def delete(self) -> None:
+        """Deletes the task type."""
+        client = _get_api_client(enforce_auth=True)
+        client.task_type_delete(self.task_type_id)
 
 
 @attr.frozen
