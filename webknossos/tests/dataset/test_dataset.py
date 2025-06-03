@@ -23,6 +23,7 @@ from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
+    LayerCategoryType,
     RemoteDataset,
     View,
 )
@@ -1552,41 +1553,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         ds.add_layer(
             "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
         )
-        ds.add_layer(
-            "seg1",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="float",
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg2",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel=float,
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg3",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel=float,
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg4",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="double",
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg5",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="float",
-            num_channels=3,
-            largest_segment_id=100000,
-        )
 
         with open(
             ds_path / "datasource-properties.json",
@@ -1598,11 +1564,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
             assert data["dataLayers"][1]["elementClass"] == "uint8"
             assert data["dataLayers"][2]["elementClass"] == "uint24"
             assert data["dataLayers"][3]["elementClass"] == "uint24"
-            assert data["dataLayers"][4]["elementClass"] == "float"
-            assert data["dataLayers"][5]["elementClass"] == "float"
-            assert data["dataLayers"][6]["elementClass"] == "float"
-            assert data["dataLayers"][7]["elementClass"] == "double"
-            assert data["dataLayers"][8]["elementClass"] == "float96"
 
         reopened_ds = Dataset.open(
             ds_path
@@ -1611,12 +1572,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
         assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
         assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
-        # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-        assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
-        assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
 
         assure_exported_properties(ds)
 
@@ -3040,6 +2995,57 @@ def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
     )
 
     assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize(
+    "dtype_per_channel,category,is_supported",
+    [
+        ("uint8", COLOR_CATEGORY, True),
+        ("uint16", COLOR_CATEGORY, True),
+        ("uint32", COLOR_CATEGORY, True),
+        ("uint64", COLOR_CATEGORY, False),
+        ("int8", COLOR_CATEGORY, True),
+        ("int16", COLOR_CATEGORY, True),
+        ("int32", COLOR_CATEGORY, True),
+        ("int64", COLOR_CATEGORY, False),
+        ("float32", COLOR_CATEGORY, True),
+        ("float64", COLOR_CATEGORY, False),
+        ("uint8", SEGMENTATION_CATEGORY, True),
+        ("uint16", SEGMENTATION_CATEGORY, True),
+        ("uint32", SEGMENTATION_CATEGORY, True),
+        ("uint64", SEGMENTATION_CATEGORY, True),
+        ("int8", SEGMENTATION_CATEGORY, True),
+        ("int16", SEGMENTATION_CATEGORY, True),
+        ("int32", SEGMENTATION_CATEGORY, True),
+        ("int64", SEGMENTATION_CATEGORY, True),
+        ("float32", SEGMENTATION_CATEGORY, False),
+        ("float64", SEGMENTATION_CATEGORY, False),
+    ],
+)
+def test_add_layer_dtype_per_channel(
+    dtype_per_channel: str, category: LayerCategoryType, is_supported: bool
+) -> None:
+    ds_path = prepare_dataset_path(
+        DataFormat.Zarr3, TESTOUTPUT_DIR, "dtype_per_channel"
+    )
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    if is_supported:
+        layer = ds.add_layer(
+            "test_layer",
+            category=category,
+            dtype_per_channel=dtype_per_channel,
+        )
+        assert layer.dtype_per_channel == np.dtype(dtype_per_channel)
+    else:
+        with pytest.raises(
+            ValueError,
+            match="Supported dtypes are:",
+        ):
+            ds.add_layer(
+                "test_layer",
+                category=category,
+                dtype_per_channel=dtype_per_channel,
+            )
 
 
 def test_pickle_view() -> None:
