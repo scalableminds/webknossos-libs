@@ -11,6 +11,7 @@ def test_get_task() -> None:
         name="test_get_task_task_type",
         description="This is a test task type",
         team=team,
+        tracing_type="volume",
     )
     project = wk.Project.create(
         name="test_get_task_project",
@@ -27,26 +28,7 @@ def test_get_task() -> None:
         needed_experience_domain="testing",
         needed_experience_value=0,
         starting_position=wk.Vec3Int(0, 0, 0),
+        dataset_id=wk.Dataset.open_remote("l4_sample")._dataset_id,
     )
     task_by_id = wk.Task.get_by_id(task[0].task_id)
     assert task_by_id == task[0]
-
-
-def test_project_create() -> None:
-    """Test creating a project."""
-
-    teams = wk.Team.get_list()
-
-    project = wk.Project.create(
-        name="test_create_project",
-        priority=1,
-        paused=False,
-        expected_time=1234,
-        team=teams[0],
-        is_blacklisted_from_report=False,
-    )
-    assert project.name == "test_create_project"
-    assert project.priority == 1
-    assert project.paused is False
-    assert project.expected_time == 1234
-    assert project.team_id == teams[0].id

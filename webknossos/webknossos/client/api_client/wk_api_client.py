@@ -16,7 +16,6 @@ from webknossos.client.api_client.models import (
     ApiNmlTaskParameters,
     ApiProject,
     ApiProjectCreate,
-    ApiProjectUpdate,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
@@ -147,7 +146,7 @@ class WkApiClient(AbstractApiClient):
         route = f"/projects/{project_id}"
         self._delete(route)
 
-    def project_update(self, project_id: str, project: ApiProjectUpdate) -> ApiProject:
+    def project_update(self, project_id: str, project: ApiProjectCreate) -> ApiProject:
         route = f"/projects/{project_id}"
         return self._put_json_with_json_response(route, project, ApiProject)
 
@@ -251,9 +250,10 @@ class WkApiClient(AbstractApiClient):
         self, task_parameters: list[ApiTaskParameters]
     ) -> ApiTaskCreationResult:
         route = "/tasks"
-        return self._post_json_with_json_response(
+        response = self._post_json_with_json_response(
             route, task_parameters, ApiTaskCreationResult
         )
+        return response
 
     def tasks_create_from_files(
         self,

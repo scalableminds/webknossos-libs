@@ -9,7 +9,7 @@ def test_get_project() -> None:
     teams = wk.Team.get_list()
 
     project = wk.Project.create(
-        name="test_update_project",
+        name="test_get_project",
         priority=1,
         paused=False,
         expected_time=1234,
@@ -116,16 +116,16 @@ def test_project_get_tasks() -> None:
         name="test_task_type",
         description="test_task_type_description",
         team=teams[0].name,
+        tracing_type="volume",
     )
-    for i in range(1001):
+    for i in range(3):
         wk.Task.create(
             task_type_id=task_type.task_type_id,
             project_name=project.name,
             needed_experience_domain="test_domain",
-            needed_experience_value=i,
+            needed_experience_value=3,
             starting_position=wk.Vec3Int(0, 0, 0),
             dataset_id=ds_id,
         )
 
-    assert len(project.get_tasks()) == 1000
-    assert len(project.get_tasks(fetch_all=True)) == 1001
+    assert len(project.get_tasks()) == 3

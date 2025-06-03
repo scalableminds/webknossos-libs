@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from ..client.api_client.models import ApiProject, ApiProjectCreate, ApiProjectUpdate
+from ..client.api_client.models import ApiProject, ApiProjectCreate
 from ..client.context import _get_api_client
 from .user import Team, User
 
@@ -91,19 +91,22 @@ class Project:
         is_blacklisted_from_report: bool | None = None,
     ) -> "Project":
         """Updates the project with the given name and returns it."""
-        api_project = ApiProjectUpdate(
+        api_project = ApiProjectCreate(
+            name=self.name,
+            team=self.team_id,
             priority=priority if priority is not None else self.priority,
+            paused=self.paused,
             expected_time=expected_time
             if expected_time is not None
             else self.expected_time,
             is_blacklisted_from_report=is_blacklisted_from_report
             if is_blacklisted_from_report is not None
             else self.is_blacklisted_from_report,
+            owner=self.owner_id,
         )
         updated = _get_api_client(enforce_auth=True).project_update(
             self.project_id, api_project
         )
-
         return Project._from_api_project(updated)
 
     def get_tasks(self, fetch_all: bool = False) -> list["Task"]:
