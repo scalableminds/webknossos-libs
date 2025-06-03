@@ -44,6 +44,7 @@ def test_get_task() -> None:
     task_by_id = wk.Task.get_by_id(tasks[0].task_id)
     assert task_by_id == tasks[0]
 
+
 def test_task_get_project() -> None:
     tasks = wk.Task.create(
         task_type_id=wk.TaskType.get_by_name(TEST_TASK_TYPE_NAME).task_type_id,
@@ -55,6 +56,7 @@ def test_task_get_project() -> None:
     )
     project = tasks[0].get_project()
     assert project.name == TEST_PROJECT_NAME
+
 
 def test_get_task_type() -> None:
     task_type_by_name = wk.TaskType.get_by_name(TEST_TASK_TYPE_NAME)

@@ -222,6 +222,10 @@ class WkApiClient(AbstractApiClient):
         route = f"/tasks/{task_id}"
         return self._get_json(route, ApiTask)
 
+    def task_list(self) -> list[ApiTask]:
+        route = "/tasks"
+        return self._get_json(route, list[ApiTask])
+
     def folder_tree(self) -> list[ApiFolderWithParent]:
         route = "/folders/tree"
         return self._get_json(route, list[ApiFolderWithParent])
@@ -266,6 +270,14 @@ class WkApiClient(AbstractApiClient):
             route, task_parameters, ApiTaskCreationResult
         )
         return response
+
+    def task_update(self, task_id: str, task_parameters: ApiTaskParameters) -> ApiTask:
+        route = f"/tasks/{task_id}"
+        return self._put_json_with_json_response(route, task_parameters, ApiTask)
+
+    def task_delete(self, task_id: str) -> None:
+        route = f"/tasks/{task_id}"
+        self._delete(route)
 
     def tasks_create_from_files(
         self,

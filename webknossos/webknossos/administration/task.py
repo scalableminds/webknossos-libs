@@ -140,6 +140,13 @@ class Task:
         return cls._from_api_task(api_task)
 
     @classmethod
+    def get_list(cls) -> list["Task"]:
+        """Returns a list of all tasks that your token authorizes you to see"""
+        client = _get_api_client(enforce_auth=True)
+        api_tasks = client.task_list()
+        return [cls._from_api_task(t) for t in api_tasks]
+
+    @classmethod
     def create_from_annotations(
         cls,
         task_type_id: str | TaskType,
@@ -267,6 +274,56 @@ class Task:
             ),
             TaskType._from_api_task_type(api_task.type),
         )
+
+    def update(
+        self,
+        task_type_id: str | TaskType,
+        project_name: str | Project,
+        needed_experience_domain: str,
+        needed_experience_value: int,
+        starting_position: Vec3IntLike,
+        dataset_id: str | RemoteDataset,
+        starting_rotation: Vec3IntLike = Vec3Int(0, 0, 0),
+        instances: int = 1,
+        script_id: str | None = None,
+        bounding_box: BoundingBox | None = None,
+    ) -> "Task":
+        """Updates the task with the given parameters."""
+        client = _get_api_client(enforce_auth=True)
+        if isinstance(task_type_id, TaskType):
+            task_type_id = task_type_id.task_type_id
+        if isinstance(project_name, Project):
+            project_name = project_name.name
+        api_task = ApiTaskParameters(
+            task_type_id=task_type_id or self.task_type.task_type_id,
+            project_name=project_name or self.get_project().name,
+            needed_experience=ApiExperience(
+                domain=needed_experience_domain,
+                value=needed_experience_value,
+            ),
+            edit_position=Vec3Int(starting_position).to_tuple(),
+            dataset_id=dataset_id._dataset_id
+            if isinstance(dataset_id, RemoteDataset)
+            else dataset_id,
+            edit_rotation=Vec3Int(starting_rotation).to_tuple(),
+            pending_instances=instances,
+            script_id=script_id,
+            bounding_box=ApiBoundingBox(
+                bounding_box.topleft.to_tuple(),
+                bounding_box.size.x,
+                bounding_box.size.y,
+                bounding_box.size.z,
+            )
+            if bounding_box is not None
+            else None,
+        )
+        updated = client.task_update(self.task_id, api_task)
+        return self._from_api_task(updated)
+
+    def delete(self) -> None:
+        """Deletes this task. WARNING: This is irreversible!"""
+        client = _get_api_client(enforce_auth=True)
+        client.task_delete(self.task_id)
 
     def get_annotation_infos(self) -> list[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""

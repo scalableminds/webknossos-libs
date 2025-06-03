@@ -156,7 +156,7 @@ class Project:
         owner_id = None
         if api_project.owner is not None:
             owner_id = api_project.owner.id
-        return Project(
+        return cls(
             project_id=api_project.id,
             name=api_project.name,
             team_id=api_project.team,

@@ -15,6 +15,22 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added operations for `Project`, `Task` and `TaskType` classes and objects: [#1294](https://github.com/scalableminds/webknossos-libs/pull/1294)
+  - Added operations for `Project` class:
+    - `Project.create()` for creating a new project.
+    - `my_project.delete()` to delete a project object
+  - Added `my_project.update()` to update `priority`, `expected_time` and `is_blacklisted_from_report` values of an existing project object.
+  - Added operations for `TaskType` class:
+    - `TaskType.get_list()` to get all `TaskType` objects.
+    - `TaskType.get_by_id()` to get a `TaskType` by id.
+    - `TaskType.get_by_name()` to get a `TaskType` by name.
+    - `TaskType.create()` to create a new `TaskType`.
+  - Added operations `my_task_type.delete()` method for `TaskType` objects.
+  - Added `Task.get_list()`to get all `Task` objects.
+  - Added operations for `Task` objects:
+    - `my_task.update()` to update `Task` object.
+    - `my_task.delete()` to delete `Task` object.
+
 
 ### Changed
 - When adding a layer, the used dtype is only valid if it is supported by webknossos. [#1316](https://github.com/scalableminds/webknossos-libs/pull/1316)
