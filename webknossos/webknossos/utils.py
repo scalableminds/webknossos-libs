@@ -12,6 +12,7 @@ from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
+from multiprocessing.pool import ThreadPool
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
@@ -297,7 +298,13 @@ def rmtree(path: Path) -> None:
             pass
 
 
-def copytree(in_path: Path, out_path: Path) -> None:
+def copytree(
+    in_path: Path,
+    out_path: Path,
+    *,
+    threads: int | None = 10,
+    progress_desc: str | None = None,
+) -> None:
     def _walk(path: Path, base_path: Path) -> Iterator[tuple[Path, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
@@ -313,15 +320,31 @@ def copytree(in_path: Path, out_path: Path) -> None:
             path = path / p
         return path
 
+    def _copy(args: tuple[Path, Path, tuple[str, ...]]) -> None:
+        in_path, out_path, sub_path = args
+        with (
+            _append(in_path, sub_path).open("rb") as in_file,
+            _append(out_path, sub_path).open("wb") as out_file,
+        ):
+            copyfileobj(in_file, out_file)
+
+    files_to_copy: list[tuple[Path, Path, tuple[str, ...]]] = []
     for in_sub_path, sub_path in _walk(in_path, in_path):
         if in_sub_path.is_dir():
             _append(out_path, sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with (
-                _append(in_path, sub_path).open("rb") as in_file,
-                _append(out_path, sub_path).open("wb") as out_file,
-            ):
-                copyfileobj(in_file, out_file)
+            files_to_copy.append((in_path, out_path, sub_path))
+
+    with ThreadPool(threads) as pool:
+        iterator = pool.imap_unordered(_copy, files_to_copy)
+
+        if progress_desc:
+            with get_rich_progress() as progress:
+                task = progress.add_task(progress_desc, total=len(files_to_copy))
+                for _ in iterator:
+                    progress.update(task, advance=1)
+        for _ in iterator:
+            pass
 
 
 def movetree(in_path: Path, out_path: Path) -> None:
