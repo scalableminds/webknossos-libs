@@ -295,7 +295,7 @@ class Attachments:
             new_path = attachment.path
             if is_fs_path(attachment.path):
                 new_path = (
-                    self._layer.path
+                    self._layer.resolved_path
                     / TYPE_MAPPING[type(attachment)]
                     / attachment.path.name
                 )
