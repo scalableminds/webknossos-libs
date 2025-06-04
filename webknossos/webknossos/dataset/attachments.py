@@ -7,7 +7,14 @@ from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
 from typing_extensions import Self
 from upath import UPath
 
-from ..utils import copytree, dump_path, enrich_path, is_fs_path, snake_to_camel_case
+from ..utils import (
+    copytree,
+    dump_path,
+    enrich_path,
+    is_fs_path,
+    resolve_if_fs_path,
+    snake_to_camel_case,
+)
 from .data_format import AttachmentDataFormat
 from .properties import AttachmentProperties, AttachmentsProperties
 
@@ -271,9 +278,19 @@ class Attachments:
         else:
             raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
 
+    def add_attachments(self, other: "Attachments") -> None:
+        for attachment in other:
+            new_attachment = type(attachment).from_path_and_name(
+                resolve_if_fs_path(attachment.path),
+                attachment.name,
+                data_format=attachment.data_format,
+                dataset_path=self._layer.dataset.resolved_path,
+            )
+            self._add_attachment(new_attachment)
+
     def add_copy_attachments(self, other: "Attachments") -> None:
         for attachment in other:
-            new_path = (
+            new_path = resolve_if_fs_path(
                 self._layer.path
                 / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
                 / attachment.path.name
@@ -292,7 +309,7 @@ class Attachments:
         self, other: "Attachments", *, make_relative: bool = False
     ) -> None:
         for attachment in other:
-            new_path = attachment.path
+            new_path = resolve_if_fs_path(attachment.path)
             if is_fs_path(attachment.path):
                 new_path = (
                     self._layer.resolved_path
