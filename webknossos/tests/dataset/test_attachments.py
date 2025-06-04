@@ -8,18 +8,25 @@ from webknossos.dataset import (
     SEGMENTATION_CATEGORY,
     AttachmentDataFormat,
     Dataset,
+    SegmentationLayer,
 )
+from webknossos.dataset.attachments import MeshAttachment
 from webknossos.geometry import BoundingBox
 
 
-def test_attachments(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
+def make_dataset(dataset_path: Path) -> tuple[Dataset, SegmentationLayer]:
+    dataset = Dataset(dataset_path / "test_attachments", voxel_size=(10, 10, 10))
     seg_layer = dataset.add_layer(
         "seg",
         SEGMENTATION_CATEGORY,
         data_format="zarr3",
         bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
     ).as_segmentation_layer()
+    return dataset, seg_layer
+
+
+def test_attachments(tmp_path: Path) -> None:
+    dataset, seg_layer = make_dataset(tmp_path)
 
     # meshes
     seg_layer.attachments.add_mesh(
@@ -135,13 +142,7 @@ def test_attachments(tmp_path: Path) -> None:
 
 
 def test_copy_layer(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
-    seg_layer = dataset.add_layer(
-        "seg",
-        SEGMENTATION_CATEGORY,
-        data_format="zarr3",
-        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
-    ).as_segmentation_layer()
+    dataset, seg_layer = make_dataset(tmp_path)
 
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
@@ -188,13 +189,7 @@ def test_copy_layer(tmp_path: Path) -> None:
 
 
 def test_fs_copy_layer(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
-    seg_layer = dataset.add_layer(
-        "seg",
-        SEGMENTATION_CATEGORY,
-        data_format="zarr3",
-        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
-    ).as_segmentation_layer()
+    dataset, seg_layer = make_dataset(tmp_path)
 
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
@@ -234,13 +229,7 @@ def test_fs_copy_layer(tmp_path: Path) -> None:
 
 
 def test_symlink_layer(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
-    seg_layer = dataset.add_layer(
-        "seg",
-        SEGMENTATION_CATEGORY,
-        data_format="zarr3",
-        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
-    ).as_segmentation_layer()
+    dataset, seg_layer = make_dataset(tmp_path)
 
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
@@ -287,13 +276,7 @@ def test_symlink_layer(tmp_path: Path) -> None:
 
 
 def test_remote_layer(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
-    seg_layer = dataset.add_layer(
-        "seg",
-        SEGMENTATION_CATEGORY,
-        data_format="zarr3",
-        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
-    ).as_segmentation_layer()
+    dataset, seg_layer = make_dataset(tmp_path)
 
     mesh_path = UPath(
         "s3://bucket/meshfile.zarr",
@@ -318,13 +301,7 @@ def test_remote_layer(tmp_path: Path) -> None:
 
 
 def test_upload_fail(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
-    seg_layer = dataset.add_layer(
-        "seg",
-        SEGMENTATION_CATEGORY,
-        data_format="zarr3",
-        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
-    ).as_segmentation_layer()
+    dataset, seg_layer = make_dataset(tmp_path)
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
         name="meshfile",
@@ -336,13 +313,7 @@ def test_upload_fail(tmp_path: Path) -> None:
 
 
 def test_unique_attachment_names(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "test_attachments", voxel_size=(10, 10, 10))
-    seg_layer = dataset.add_layer(
-        "seg",
-        SEGMENTATION_CATEGORY,
-        data_format="zarr3",
-        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
-    ).as_segmentation_layer()
+    dataset, seg_layer = make_dataset(tmp_path)
 
     seg_layer.attachments.add_mesh(
         UPath("http://example.com/meshfile.zarr"),
@@ -358,13 +329,7 @@ def test_unique_attachment_names(tmp_path: Path) -> None:
 
 
 def test_remote_dataset() -> None:
-    dataset = Dataset(UPath("memory://test_attachments"), voxel_size=(10, 10, 10))
-    seg_layer = dataset.add_layer(
-        "seg",
-        SEGMENTATION_CATEGORY,
-        data_format="zarr3",
-        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
-    ).as_segmentation_layer()
+    dataset, seg_layer = make_dataset(UPath("memory://test_attachments"))
 
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
@@ -377,3 +342,60 @@ def test_remote_dataset() -> None:
     )
 
     assert seg_layer.attachments.meshes[0]._properties.path == "seg/meshes/meshfile"
+
+
+def test_add_attachments(tmp_path: Path) -> None:
+    dataset, seg_layer = make_dataset(tmp_path)
+
+    mesh = MeshAttachment.from_path_and_name(
+        dataset.path / "seg" / "meshes" / "meshfile",
+        "meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+        dataset_path=dataset.resolved_path,  # not relevant for this test
+    )
+    seg_layer.attachments.add_attachments([mesh])
+    assert seg_layer._properties.attachments.meshes is not None
+    assert seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile"
+    assert seg_layer.attachments.meshes[0].name == "meshfile"
+
+
+def test_add_copy_attachments(tmp_path: Path) -> None:
+    dataset, seg_layer = make_dataset(tmp_path)
+
+    mesh_path = tmp_path / "meshfile"
+    mesh_path.write_text("test")
+
+    mesh = MeshAttachment.from_path_and_name(
+        mesh_path,
+        "meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+        dataset_path=dataset.resolved_path,  # not relevant for this test
+    )
+    seg_layer.attachments.add_copy_attachments([mesh])
+    assert seg_layer._properties.attachments.meshes is not None
+    assert seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile"
+    assert seg_layer.attachments.meshes[0].name == "meshfile"
+    assert (dataset.path / "seg" / "meshes" / "meshfile").exists()
+    assert mesh_path.exists()
+
+
+def test_add_symlink_attachments(tmp_path: Path) -> None:
+    dataset, seg_layer = make_dataset(tmp_path)
+
+    mesh_path = tmp_path.resolve() / "meshfile"
+    mesh_path.write_text("test")
+
+    mesh = MeshAttachment.from_path_and_name(
+        mesh_path,
+        "meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+        dataset_path=dataset.resolved_path,  # not relevant for this test
+    )
+    seg_layer.attachments.add_symlink_attachments([mesh])
+    assert seg_layer._properties.attachments.meshes is not None
+    assert seg_layer._properties.attachments.meshes[0].path == str(mesh_path)
+    assert seg_layer.attachments.meshes[0].name == "meshfile"
+    assert (dataset.path / "seg" / "meshes" / "meshfile").exists()
+    assert (dataset.path / "seg" / "meshes" / "meshfile").is_symlink()
+    assert (dataset.path / "seg" / "meshes" / "meshfile").resolve() == mesh_path
+    assert mesh_path.exists()
