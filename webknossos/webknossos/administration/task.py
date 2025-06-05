@@ -39,6 +39,18 @@ class TaskStatus:
 
 
 @attr.frozen
+class TaskExperience:
+    """Data class containing information about the experience needed to work on a task"""
+
+    domain: str
+    value: int
+
+    @classmethod
+    def _from_api_experience(cls, api_experience: ApiExperience) -> "TaskExperience":
+        return cls(api_experience.domain, api_experience.value)
+
+
+@attr.frozen
 class TaskType:
     task_type_id: str
     name: str  # summary
@@ -128,9 +140,14 @@ class Task:
 
     task_id: str
     project_id: str
-    dataset_name: str
+    dataset_id: str
     status: TaskStatus
     task_type: TaskType
+    experience: TaskExperience
+    edit_position: Vec3Int
+    edit_rotation: tuple[float, float, float]
+    script_id: str | None = None
+    bounding_box: BoundingBox | None = None
 
     @classmethod
     def get_by_id(cls, task_id: str) -> "Task":
@@ -266,56 +283,54 @@ class Task:
         return cls(
             api_task.id,
             api_task.project_id,
-            api_task.dataset_name,
+            api_task.dataset_id,
             TaskStatus(
                 api_task.status.pending,
                 api_task.status.active,
                 api_task.status.finished,
             ),
             TaskType._from_api_task_type(api_task.type),
+            TaskExperience._from_api_experience(api_task.needed_experience),
+            Vec3Int(api_task.edit_position),
+            api_task.edit_rotation,
+            api_task.script.id if api_task.script else None,
+            BoundingBox.from_tuple2(
+                (
+                    api_task.bounding_box.top_left,
+                    (
+                        api_task.bounding_box.width,
+                        api_task.bounding_box.height,
+                        api_task.bounding_box.depth,
+                    ),
+                )
+            )
+            if api_task.bounding_box
+            else None,
         )
 
     def update(
         self,
-        task_type_id: str | TaskType,
-        project_name: str | Project,
-        needed_experience_domain: str,
-        needed_experience_value: int,
-        starting_position: Vec3IntLike,
-        dataset_id: str | RemoteDataset,
-        starting_rotation: Vec3IntLike = Vec3Int(0, 0, 0),
-        instances: int = 1,
-        script_id: str | None = None,
-        bounding_box: BoundingBox | None = None,
+        remaining_instances: int,
     ) -> "Task":
         """Updates the task with the given parameters."""
         client = _get_api_client(enforce_auth=True)
-        if isinstance(task_type_id, TaskType):
-            task_type_id = task_type_id.task_type_id
-        if isinstance(project_name, Project):
-            project_name = project_name.name
         api_task = ApiTaskParameters(
-            task_type_id=task_type_id or self.task_type.task_type_id,
-            project_name=project_name or self.get_project().name,
-            needed_experience=ApiExperience(
-                domain=needed_experience_domain,
-                value=needed_experience_value,
-            ),
-            edit_position=Vec3Int(starting_position).to_tuple(),
-            dataset_id=dataset_id._dataset_id
-            if isinstance(dataset_id, RemoteDataset)
-            else dataset_id,
-            edit_rotation=Vec3Int(starting_rotation).to_tuple(),
-            pending_instances=instances,
-            script_id=script_id,
-            bounding_box=ApiBoundingBox(
-                bounding_box.topleft.to_tuple(),
-                bounding_box.size.x,
-                bounding_box.size.y,
-                bounding_box.size.z,
+            self.task_type.task_type_id,
+            ApiExperience(self.experience.domain, self.experience.value),
+            remaining_instances,
+            self.get_project().name,
+            self.script_id,
+            ApiBoundingBox(
+                self.bounding_box.topleft.to_tuple(),
+                self.bounding_box.size.x,
+                self.bounding_box.size.y,
+                self.bounding_box.size.z,
             )
-            if bounding_box is not None
+            if self.bounding_box is not None
             else None,
+            self.dataset_id,
+            self.edit_position.to_tuple(),
+            self.edit_rotation,
         )
         updated = client.task_update(self.task_id, api_task)
         return self._from_api_task(updated)

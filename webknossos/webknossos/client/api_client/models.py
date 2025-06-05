@@ -211,18 +211,30 @@ class ApiTaskTypeCreate:
 
 
 @attr.s(auto_attribs=True)
-class ApiTask:
-    id: str
-    project_id: str
-    dataset_name: str
-    status: ApiTaskStatus
-    type: ApiTaskType
-
-
-@attr.s(auto_attribs=True)
 class ApiExperience:
     domain: str
     value: int
+
+
+@attr.s(auto_attribs=True)
+class ApiScript:
+    id: str
+    name: str
+    owner: str
+
+
+@attr.s(auto_attribs=True)
+class ApiTask:
+    id: str
+    project_id: str
+    dataset_id: str
+    status: ApiTaskStatus
+    type: ApiTaskType
+    needed_experience: ApiExperience
+    bounding_box: ApiBoundingBox | None
+    edit_position: tuple[int, int, int]
+    edit_rotation: tuple[float, float, float]
+    script: ApiScript | None = None
 
 
 @attr.s(auto_attribs=True)
