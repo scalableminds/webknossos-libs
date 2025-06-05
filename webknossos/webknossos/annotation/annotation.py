@@ -506,7 +506,6 @@ class Annotation:
                 mapping_name=mapping_name,
             )
         else:
-            assert mapping_type is not None
             assert mag is not None
             assert seed_position is not None
             mesh = ApiMeshAdHoc(
@@ -517,8 +516,7 @@ class Annotation:
                 mag=mag.to_tuple(),
                 seed_position=seed_position.to_tuple(),
             )
-        file_path = UPath(output_dir) / f"{tracing_id}_{segment_id}.stl"
-        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path: UPath
         if tracing_id is None:
             datastore = context.get_datastore_api_client(datastore_url=datastore_url)
             assert layer_name is not None, (
@@ -531,12 +529,15 @@ class Annotation:
                 layer_name=layer_name,
                 token=token,
             )
+            file_path = UPath(output_dir) / f"{self.dataset_name}_{layer_name}_{segment_id}.stl"
         else:
             mesh_download = tracingstore.annotation_download_mesh(
                 mesh=mesh,
                 tracing_id=tracing_id,
                 token=token,
             )
+            file_path = UPath(output_dir) / f"{tracing_id}_{segment_id}.stl"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
         with file_path.open("wb") as f:
             for chunk in mesh_download:
