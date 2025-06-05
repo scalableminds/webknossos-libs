@@ -10,6 +10,14 @@ Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), wh
 """
 # ruff: noqa: F401 imported but unused
 
+from .attachments import (
+    AgglomerateAttachment,
+    Attachment,
+    ConnectomeAttachment,
+    CumsumAttachment,
+    MeshAttachment,
+    SegmentIndexAttachment,
+)
 from .data_format import AttachmentDataFormat, DataFormat
 from .dataset import Dataset, RemoteDataset
 from .defaults import (

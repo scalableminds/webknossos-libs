@@ -8,9 +8,9 @@ from webknossos.dataset import (
     SEGMENTATION_CATEGORY,
     AttachmentDataFormat,
     Dataset,
+    MeshAttachment,
     SegmentationLayer,
 )
-from webknossos.dataset.attachments import MeshAttachment
 from webknossos.geometry import BoundingBox
 
 
