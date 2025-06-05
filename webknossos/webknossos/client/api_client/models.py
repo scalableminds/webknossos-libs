@@ -376,7 +376,7 @@ class ApiMeshAdHoc:
     lod: int
     segment_id: int  # if mapping name is set, this is an agglomerate id
     mapping_name: str | None
-    mapping_type: Literal["json", "agglomerate"]
+    mapping_type: Literal["json", "agglomerate"] | None
     mag: tuple[int, int, int]
     seed_position: tuple[int, int, int]
     mesh_file_name: None = None  # None means ad-hoc mesh

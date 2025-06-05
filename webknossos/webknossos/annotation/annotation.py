@@ -529,7 +529,9 @@ class Annotation:
                 layer_name=layer_name,
                 token=token,
             )
-            file_path = UPath(output_dir) / f"{self.dataset_name}_{layer_name}_{segment_id}.stl"
+            file_path = (
+                UPath(output_dir) / f"{self.dataset_name}_{layer_name}_{segment_id}.stl"
+            )
         else:
             mesh_download = tracingstore.annotation_download_mesh(
                 mesh=mesh,
