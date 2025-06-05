@@ -399,3 +399,47 @@ def test_add_symlink_attachments(tmp_path: Path) -> None:
     assert (dataset.path / "seg" / "meshes" / "meshfile").is_symlink()
     assert (dataset.path / "seg" / "meshes" / "meshfile").resolve() == mesh_path
     assert mesh_path.exists()
+
+
+def test_detect_legacy_attachments(tmp_path: Path) -> None:
+    _, seg_layer = make_dataset(tmp_path)
+
+    # legacy meshes
+    mesh_path = seg_layer.path / "meshes" / "meshfile_4-4-1.hdf5"
+    mesh_path.parent.mkdir(parents=True, exist_ok=True)
+    mesh_path.write_text("test")
+
+    # legacy agglomerates
+    agglomerate_path = seg_layer.path / "agglomerates" / "agglomerate_view_15.hdf5"
+    agglomerate_path.parent.mkdir(parents=True, exist_ok=True)
+    agglomerate_path.write_text("test")
+
+    # legacy cumsum
+    cumsum_path = seg_layer.path / "agglomerates" / "cumsum.json"
+    cumsum_path.parent.mkdir(parents=True, exist_ok=True)
+    cumsum_path.write_text("test")
+
+    # legacy agglomerates
+    connectome_path = seg_layer.path / "connectomes" / "paper_l4_full_connectome.hdf5"
+    connectome_path.parent.mkdir(parents=True, exist_ok=True)
+    connectome_path.write_text("test")
+
+    # legacy segment index
+    segment_index_path = seg_layer.path / "segmentIndex" / "segmentIndex.hdf5"
+    segment_index_path.parent.mkdir(parents=True, exist_ok=True)
+    segment_index_path.write_text("test")
+
+    seg_layer.attachments.detect_legacy_attachments()
+
+    assert seg_layer.attachments.meshes[0].path == mesh_path
+    assert seg_layer.attachments.agglomerates[0].path == agglomerate_path
+    assert seg_layer.attachments.connectomes[0].path == connectome_path
+
+    assert (
+        seg_layer.attachments.cumsum
+        and seg_layer.attachments.cumsum.path == cumsum_path
+    )
+    assert (
+        seg_layer.attachments.segment_index
+        and seg_layer.attachments.segment_index.path == segment_index_path
+    )

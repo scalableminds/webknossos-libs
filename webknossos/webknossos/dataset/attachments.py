@@ -329,6 +329,38 @@ class Attachments:
             )
             self._add_attachment(new_attachment)
 
+    def detect_legacy_attachments(self) -> None:
+        """Detects and adds legacy attachments.
+        Legacy attachments are attachments that were stored in the folder hierarchy of the layer without explicit metadata."""
+        if not is_fs_path(self._layer.resolved_path):
+            return
+
+        def _detect_hdf5(typ: type[Attachment]) -> None:
+            folder_name = snake_to_camel_case(TYPE_MAPPING[typ])
+            if (self._layer.resolved_path / folder_name).exists():
+                for attachment_path in (self._layer.resolved_path / folder_name).glob(
+                    "*.hdf5"
+                ):
+                    new_attachment = typ.from_path_and_name(
+                        attachment_path,
+                        attachment_path.stem,
+                        data_format=AttachmentDataFormat.HDF5,
+                        dataset_path=self._layer.dataset.resolved_path,
+                    )
+                    self._add_attachment(new_attachment)
+
+        _detect_hdf5(MeshAttachment)
+        _detect_hdf5(AgglomerateAttachment)
+        _detect_hdf5(ConnectomeAttachment)
+        _detect_hdf5(SegmentIndexAttachment)
+
+        if (self._layer.resolved_path / "agglomerates" / "cumsum.json").exists():
+            self.set_cumsum(
+                self._layer.resolved_path / "agglomerates" / "cumsum.json",
+                name="cumsum",
+                data_format=AttachmentDataFormat.JSON,
+            )
+
     @property
     def is_empty(self) -> bool:
         return (
