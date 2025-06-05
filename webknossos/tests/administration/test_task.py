@@ -82,6 +82,7 @@ def test_update_task() -> None:
     )
     assert updated.status.pending_instance_count == 4
 
+
 def test_delete_task() -> None:
     tasks = wk.Task.create(
         task_type_id=wk.TaskType.get_by_name(TEST_TASK_TYPE_NAME).task_type_id,
@@ -94,4 +95,6 @@ def test_delete_task() -> None:
     task = tasks[0]
     task.delete()
     with pytest.raises(UnexpectedStatusError):
-        wk.Task.get_by_id(task.task_id)  # Should raise KeyError since the task is deleted
+        wk.Task.get_by_id(
+            task.task_id
+        )  # Should raise KeyError since the task is deleted
