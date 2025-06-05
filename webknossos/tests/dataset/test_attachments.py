@@ -10,6 +10,7 @@ from webknossos.dataset import (
     Dataset,
     MeshAttachment,
     SegmentationLayer,
+    SegmentIndexAttachment,
 )
 from webknossos.geometry import BoundingBox
 
@@ -328,6 +329,17 @@ def test_unique_attachment_names(tmp_path: Path) -> None:
         )
 
 
+def test_acceptable_attachment_names(tmp_path: Path) -> None:
+    dataset, seg_layer = make_dataset(tmp_path)
+
+    with pytest.raises(ValueError):
+        seg_layer.attachments.add_mesh(
+            UPath("http://example.com/meshfile.zarr"),
+            name="meshfile/test",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+
+
 def test_remote_dataset() -> None:
     dataset, seg_layer = make_dataset(UPath("memory://test_attachments"))
 
@@ -349,53 +361,93 @@ def test_add_attachments(tmp_path: Path) -> None:
 
     mesh = MeshAttachment.from_path_and_name(
         dataset.path / "seg" / "meshes" / "meshfile",
-        "meshfile",
+        "meshfile_4-4-1",
         data_format=AttachmentDataFormat.Zarr3,
     )
     seg_layer.attachments.add_attachments([mesh])
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile"
-    assert seg_layer.attachments.meshes[0].name == "meshfile"
+    assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
 
 
 def test_add_copy_attachments(tmp_path: Path) -> None:
     dataset, seg_layer = make_dataset(tmp_path)
 
+    # meshes
     mesh_path = tmp_path / "meshfile"
     mesh_path.write_text("test")
 
     mesh = MeshAttachment.from_path_and_name(
         mesh_path,
-        "meshfile",
+        "meshfile_4-4-1",
         data_format=AttachmentDataFormat.Zarr3,
     )
     seg_layer.attachments.add_copy_attachments([mesh])
     assert seg_layer._properties.attachments.meshes is not None
-    assert seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile"
-    assert seg_layer.attachments.meshes[0].name == "meshfile"
-    assert (dataset.path / "seg" / "meshes" / "meshfile").exists()
+    assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
+    # path has changed based on the name
+    assert (
+        seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile_4-4-1"
+    )
+    assert (dataset.path / "seg" / "meshes" / "meshfile_4-4-1").exists()
     assert mesh_path.exists()
+
+    # segment index (has camel-casing)
+    segment_index_path = tmp_path / "segment_index"
+    segment_index_path.write_text("test")
+
+    segment_index = SegmentIndexAttachment.from_path_and_name(
+        segment_index_path,
+        "main",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+    seg_layer.attachments.add_copy_attachments([segment_index])
+    assert seg_layer._properties.attachments.segment_index is not None
+    assert (
+        seg_layer._properties.attachments.segment_index.path == "seg/segmentIndex/main"
+    )
 
 
 def test_add_symlink_attachments(tmp_path: Path) -> None:
     dataset, seg_layer = make_dataset(tmp_path)
 
+    # meshes
     mesh_path = tmp_path.resolve() / "meshfile"
     mesh_path.write_text("test")
 
     mesh = MeshAttachment.from_path_and_name(
         mesh_path,
-        "meshfile",
+        "meshfile_4-4-1",
         data_format=AttachmentDataFormat.Zarr3,
     )
     seg_layer.attachments.add_symlink_attachments([mesh])
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer._properties.attachments.meshes[0].path == str(mesh_path)
-    assert seg_layer.attachments.meshes[0].name == "meshfile"
-    assert (dataset.path / "seg" / "meshes" / "meshfile").exists()
-    assert (dataset.path / "seg" / "meshes" / "meshfile").is_symlink()
-    assert (dataset.path / "seg" / "meshes" / "meshfile").resolve() == mesh_path
+    assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
+    assert (dataset.path / "seg" / "meshes" / "meshfile_4-4-1").exists()
+    assert (dataset.path / "seg" / "meshes" / "meshfile_4-4-1").is_symlink()
+    assert (dataset.path / "seg" / "meshes" / "meshfile_4-4-1").resolve() == mesh_path
     assert mesh_path.exists()
+
+    # segment index (has camel-casing)
+    segment_index_path = tmp_path / "segment_index"
+    segment_index_path.write_text("test")
+
+    segment_index = SegmentIndexAttachment.from_path_and_name(
+        segment_index_path,
+        "main",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+    seg_layer.attachments.add_symlink_attachments([segment_index])
+    assert seg_layer._properties.attachments.segment_index is not None
+    assert seg_layer._properties.attachments.segment_index.path == str(
+        segment_index_path
+    )
+    assert (dataset.path / "seg" / "segmentIndex" / "main").exists()
+    assert (dataset.path / "seg" / "segmentIndex" / "main").is_symlink()
+    assert (
+        dataset.path / "seg" / "segmentIndex" / "main"
+    ).resolve() == segment_index_path
 
 
 def test_detect_legacy_attachments(tmp_path: Path) -> None:

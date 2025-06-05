@@ -37,6 +37,21 @@ def _validate_data_format(
         )
 
 
+def _validate_name(name: str) -> None:
+    from .dataset import _ALLOWED_LAYER_NAME_REGEX
+
+    if not _ALLOWED_LAYER_NAME_REGEX.match(name):
+        raise ValueError(
+            f"Name {name} is not allowed. It must only contain letters, numbers, underscores, hyphens and dots."
+        )
+
+
+def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -> str:
+    if data_format == AttachmentDataFormat.Zarr3:
+        return attachment_name
+    return f"{attachment_name}.{data_format.value.lower()}"
+
+
 class Attachment:
     _properties: AttachmentProperties
     name: str
@@ -49,6 +64,7 @@ class Attachment:
         path: Path,
     ):
         _validate_data_format(self.__class__, properties.data_format)
+        _validate_name(properties.name)
         self._properties = properties
         self.name = properties.name
         self.path = path
@@ -297,7 +313,7 @@ class Attachments:
             new_path = resolve_if_fs_path(
                 self._layer.path
                 / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
-                / attachment.path.name
+                / _maybe_add_suffix(attachment.name, attachment.data_format)
             )
             new_path.parent.mkdir(parents=True, exist_ok=True)
             new_attachment = type(attachment).from_path_and_name(
@@ -317,8 +333,8 @@ class Attachments:
             if is_fs_path(attachment.path):
                 new_path = (
                     self._layer.resolved_path
-                    / TYPE_MAPPING[type(attachment)]
-                    / attachment.path.name
+                    / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
+                    / _maybe_add_suffix(attachment.name, attachment.data_format)
                 )
                 new_path.parent.mkdir(parents=True, exist_ok=True)
                 if make_relative:
