@@ -364,7 +364,7 @@ def test_add_attachments(tmp_path: Path) -> None:
         "meshfile_4-4-1",
         data_format=AttachmentDataFormat.Zarr3,
     )
-    seg_layer.attachments.add_attachments([mesh])
+    seg_layer.attachments.add_attachments(mesh)
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile"
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
@@ -382,7 +382,7 @@ def test_add_copy_attachments(tmp_path: Path) -> None:
         "meshfile_4-4-1",
         data_format=AttachmentDataFormat.Zarr3,
     )
-    seg_layer.attachments.add_copy_attachments([mesh])
+    seg_layer.attachments.add_copy_attachments(mesh)
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
     # path has changed based on the name
@@ -401,7 +401,7 @@ def test_add_copy_attachments(tmp_path: Path) -> None:
         "main",
         data_format=AttachmentDataFormat.Zarr3,
     )
-    seg_layer.attachments.add_copy_attachments([segment_index])
+    seg_layer.attachments.add_copy_attachments(segment_index)
     assert seg_layer._properties.attachments.segment_index is not None
     assert (
         seg_layer._properties.attachments.segment_index.path == "seg/segmentIndex/main"
@@ -420,7 +420,7 @@ def test_add_symlink_attachments(tmp_path: Path) -> None:
         "meshfile_4-4-1",
         data_format=AttachmentDataFormat.Zarr3,
     )
-    seg_layer.attachments.add_symlink_attachments([mesh])
+    seg_layer.attachments.add_symlink_attachments(mesh)
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer._properties.attachments.meshes[0].path == str(mesh_path)
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
@@ -438,7 +438,7 @@ def test_add_symlink_attachments(tmp_path: Path) -> None:
         "main",
         data_format=AttachmentDataFormat.Zarr3,
     )
-    seg_layer.attachments.add_symlink_attachments([segment_index])
+    seg_layer.attachments.add_symlink_attachments(segment_index)
     assert seg_layer._properties.attachments.segment_index is not None
     assert seg_layer._properties.attachments.segment_index.path == str(
         segment_index_path

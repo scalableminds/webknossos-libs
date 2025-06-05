@@ -2289,7 +2289,7 @@ class Dataset:
             and isinstance(layer, SegmentationLayer)
             and isinstance(foreign_layer, SegmentationLayer)
         ):
-            layer.attachments.add_copy_attachments(foreign_layer.attachments)
+            layer.attachments.add_copy_attachments(*foreign_layer.attachments)
 
         return layer
 
@@ -2708,7 +2708,7 @@ class Dataset:
             if isinstance(layer, SegmentationLayer) and isinstance(
                 new_layer, SegmentationLayer
             ):
-                new_layer.attachments.add_copy_attachments(layer.attachments)
+                new_layer.attachments.add_copy_attachments(*layer.attachments)
         new_dataset._export_as_json()
         return new_dataset
 
@@ -2791,7 +2791,7 @@ class Dataset:
                     new_layer, SegmentationLayer
                 ):
                     new_layer.attachments.add_symlink_attachments(
-                        layer.attachments, make_relative=make_relative
+                        *layer.attachments, make_relative=make_relative
                     )
 
         return new_dataset

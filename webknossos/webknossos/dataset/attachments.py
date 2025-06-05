@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -298,7 +298,7 @@ class Attachments:
         else:
             raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
 
-    def add_attachments(self, other: Iterable[Attachment]) -> None:
+    def add_attachments(self, *other: Attachment) -> None:
         for attachment in other:
             new_attachment = type(attachment).from_path_and_name(
                 resolve_if_fs_path(attachment.path),
@@ -308,7 +308,7 @@ class Attachments:
             )
             self._add_attachment(new_attachment)
 
-    def add_copy_attachments(self, other: Iterable[Attachment]) -> None:
+    def add_copy_attachments(self, *other: Attachment) -> None:
         for attachment in other:
             new_path = resolve_if_fs_path(
                 self._layer.path
@@ -326,7 +326,7 @@ class Attachments:
             self._add_attachment(new_attachment)
 
     def add_symlink_attachments(
-        self, other: Iterable[Attachment], *, make_relative: bool = False
+        self, *other: Attachment, make_relative: bool = False
     ) -> None:
         for attachment in other:
             new_path = resolve_if_fs_path(attachment.path)
