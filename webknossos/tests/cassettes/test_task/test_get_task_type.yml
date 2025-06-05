@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '333'
       body:
@@ -59,13 +59,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '390'
       body:
         encoding: utf8
         data: >-
-          {"id":"6841964d010000ad00bd9e3c","summary":"test_task_type","description":"This
+          {"id":"68419af90100009a007d285b","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
@@ -91,7 +91,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -126,13 +126,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '618'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"6841964e010000ad00bd9e3d","created":1749128782034}
+          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68419af90100009a007d285c","created":1749129977142}
         compression: none
   - request:
       method: GET
@@ -156,7 +156,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '1213'
       body:
@@ -166,13 +166,13 @@ http_interactions:
           those cells
           out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
           those cells
-          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"6841964d010000ad00bd9e3c","summary":"test_task_type","description":"This
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68419af90100009a007d285b","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}]
         compression: none
   - request:
       method: GET
-      path: /api/v9/taskTypes/6841964d010000ad00bd9e3c
+      path: /api/v9/taskTypes/68419af90100009a007d285b
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -192,19 +192,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '390'
       body:
         encoding: utf8
         data: >-
-          {"id":"6841964d010000ad00bd9e3c","summary":"test_task_type","description":"This
+          {"id":"68419af90100009a007d285b","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/taskTypes/6841964d010000ad00bd9e3c
+      path: /api/v9/taskTypes/68419af90100009a007d285b
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -224,7 +224,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '80'
       body:
@@ -235,7 +235,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/projects/6841964e010000ad00bd9e3d
+      path: /api/v9/projects/68419af90100009a007d285c
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -255,7 +255,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:06:21 GMT
+        date: Thu, 05 Jun 2025 13:26:16 GMT
         content-type: application/json
         content-length: '61'
       body:

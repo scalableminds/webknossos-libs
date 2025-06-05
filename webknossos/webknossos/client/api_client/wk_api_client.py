@@ -223,8 +223,8 @@ class WkApiClient(AbstractApiClient):
         return self._get_json(route, ApiTask)
 
     def task_list(self) -> list[ApiTask]:
-        route = "/tasks"
-        return self._get_json(route, list[ApiTask])
+        route = "/tasks/list"
+        return self._post_json_with_json_response(route, {}, list[ApiTask])
 
     def folder_tree(self) -> list[ApiFolderWithParent]:
         route = "/folders/tree"

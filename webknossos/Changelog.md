@@ -28,8 +28,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - Added operations `my_task_type.delete()` method for `TaskType` objects.
   - Added `Task.get_list()`to get all `Task` objects.
   - Added operations for `Task` objects:
-    - `my_task.update()` to update `Task` object.
-    - `my_task.delete()` to delete `Task` object.
+    - `my_task.update()` to update a `Task` object.
+    - `my_task.delete()` to delete a `Task` object.
+- Added `TaskExperience` class to store domain and value pair.
 
 
 ### Changed

@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '333'
       body:
@@ -59,13 +59,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '390'
       body:
         encoding: utf8
         data: >-
-          {"id":"68419af80100002b007d2855","summary":"test_task_type","description":"This
+          {"id":"68419afa010000b7007d2869","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
@@ -91,7 +91,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -126,13 +126,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '618'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68419af80100002b007d2856","created":1749129976396}
+          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68419afa010000b7007d286a","created":1749129978967}
         compression: none
   - request:
       method: GET
@@ -156,7 +156,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '1213'
       body:
@@ -166,7 +166,7 @@ http_interactions:
           those cells
           out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
           those cells
-          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68419af80100002b007d2855","summary":"test_task_type","description":"This
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68419afa010000b7007d2869","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}]
         compression: none
@@ -192,7 +192,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -225,13 +225,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '1433'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1749129975459,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1749129978398,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: POST
@@ -256,17 +256,17 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"ULFQLSyNYQzSPs2VRBXOSA"}'
+        data: '{"token":"lyI3vI16S6cAIYN1o3aCHg"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=ULFQLSyNYQzSPs2VRBXOSA
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=lyI3vI16S6cAIYN1o3aCHg
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -286,20 +286,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1749129976558,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1749129979093,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -316,7 +316,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -329,7 +329,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         range: bytes=0-1151
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -347,7 +347,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: application/json
         content-length: '1152'
@@ -361,7 +361,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/1
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -378,7 +378,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1289'
@@ -436,7 +436,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -453,7 +453,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -511,7 +511,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -528,7 +528,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -586,7 +586,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -603,7 +603,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1293'
@@ -661,7 +661,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/color/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -678,7 +678,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1295'
@@ -736,7 +736,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/1
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -753,7 +753,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1296'
@@ -811,7 +811,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -828,7 +828,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -886,7 +886,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -903,7 +903,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -961,7 +961,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -978,7 +978,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1300'
@@ -1036,7 +1036,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
       headers:
         host: localhost:9000
-        x-auth-token: ULFQLSyNYQzSPs2VRBXOSA
+        x-auth-token: lyI3vI16S6cAIYN1o3aCHg
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -1053,7 +1053,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:15 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1302'
@@ -1122,7 +1122,7 @@ http_interactions:
       body:
         encoding: utf8
         data: >-
-          [{"taskTypeId": "68419af80100002b007d2855", "neededExperience":
+          [{"taskTypeId": "68419afa010000b7007d2869", "neededExperience":
           {"domain": "testing", "value": 0}, "pendingInstances": 1,
           "projectName": "test_project", "scriptId": null, "boundingBox": null,
           "datasetId": "59e9cfbdba632ac2ab8b23b5", "editPosition": [0, 0, 0],
@@ -1135,19 +1135,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '871'
       body:
         encoding: utf8
         data: >-
-          {"tasks":[{"status":200,"success":{"id":"68419af8010000ac007d2859","projectId":"68419af80100002b007d2856","projectName":"test_project","team":"team_X1","type":{"id":"68419af80100002b007d2855","summary":"test_task_type","description":"This
+          {"tasks":[{"status":200,"success":{"id":"68419afb010000ab007d286d","projectId":"68419afa010000b7007d286a","projectName":"test_project","team":"team_X1","type":{"id":"68419afa010000b7007d2869","summary":"test_task_type","description":"This
           is a test task
-          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1749129976846,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1749129979328,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
         compression: none
   - request:
-      method: GET
-      path: /api/v9/projects/68419af80100002b007d2856
+      method: POST
+      path: /api/v9/tasks/list
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -1156,9 +1156,11 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        content-length: '2'
+        content-type: application/json
       body:
         encoding: utf8
-        data: ''
+        data: '{}'
         compression: none
     response:
       status:
@@ -1167,17 +1169,27 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
-        content-length: '618'
+        content-length: '4238'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68419af80100002b007d2856","created":1749129976396}
+          [{"id":"58135c192faeb34c0081c058","projectId":"58135bfd2faeb3190181c057","projectName":"Test_Project","team":"team_X1","type":{"id":"570b9f4c2a7c0e4c008da6ee","summary":"ek_0563_BipolarCells","description":"Check
+          those cells
+          out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},"datasetName":"confocal-multi_knossos","datasetId":"59e9cfbdba632ac2ab8b23b3","neededExperience":{"domain":"abc","value":0},"created":1477663769000,"status":{"pending":9,"active":0,"finished":1},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"581367a82faeb37a008a5352","projectId":"58135bfd2faeb3190181c057","projectName":"Test_Project","team":"team_X1","type":{"id":"570b9f4c2a7c0e4c008da6ee","summary":"ek_0563_BipolarCells","description":"Check
+          those cells
+          out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},"datasetName":"2012-06-28_Cortex","datasetId":"570b9f4e4bb848d0885ee711","neededExperience":{"domain":"abc","value":0},"created":1477666728000,"status":{"pending":10,"active":1,"finished":-1},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"581367a82faeb37a008a5354","projectId":"68135bfd2faeb3190181c058","projectName":"Test_Project2","team":"team_X2","type":{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
+          those cells
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},"datasetName":"2012-06-28_Cortex","datasetId":"570b9f4e4bb848d0885ee711","neededExperience":{"domain":"abc","value":0},"created":1477666728000,"status":{"pending":10,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"681367a82faeb37a008a5354","projectId":"78135bfd2faeb3190181c058","projectName":"Test_Project3(for_annotation_mutations)","team":"team_X2","type":{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
+          those cells
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},"datasetName":"2012-06-28_Cortex","datasetId":"570b9f4e4bb848d0885ee711","neededExperience":{"domain":"abc","value":0},"created":1477666728000,"status":{"pending":10,"active":2,"finished":-2},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"68419afb010000ab007d286d","projectId":"68419afa010000b7007d286a","projectName":"test_project","team":"team_X1","type":{"id":"68419afa010000b7007d2869","summary":"test_task_type","description":"This
+          is a test task
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1749129979328,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}]
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/taskTypes/68419af80100002b007d2855
+      path: /api/v9/taskTypes/68419afa010000b7007d2869
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -1197,7 +1209,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '80'
       body:
@@ -1208,7 +1220,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/projects/68419af80100002b007d2856
+      path: /api/v9/projects/68419afa010000b7007d286a
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -1228,7 +1240,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 05 Jun 2025 13:26:18 GMT
         content-type: application/json
         content-length: '61'
       body:

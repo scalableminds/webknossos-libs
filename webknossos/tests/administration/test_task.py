@@ -98,3 +98,17 @@ def test_delete_task() -> None:
         wk.Task.get_by_id(
             task.task_id
         )  # Should raise KeyError since the task is deleted
+
+
+def test_task_list() -> None:
+    tasks = wk.Task.create(
+        task_type_id=wk.TaskType.get_by_name(TEST_TASK_TYPE_NAME).task_type_id,
+        project_name=TEST_PROJECT_NAME,
+        needed_experience_domain="testing",
+        needed_experience_value=0,
+        starting_position=wk.Vec3Int(0, 0, 0),
+        dataset_id=wk.Dataset.open_remote("l4_sample")._dataset_id,
+    )
+    task_list = wk.Task.get_list()
+    assert len(task_list) > 0
+    assert tasks[0] in task_list
