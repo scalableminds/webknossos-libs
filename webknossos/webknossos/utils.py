@@ -507,14 +507,17 @@ def enrich_path(path: str, dataset_path: Path) -> Path:
     return resolve_if_fs_path(upath)
 
 
-def dump_path(path: Path, dataset_path: Path) -> str:
+def dump_path(path: Path, dataset_path: Path | None) -> str:
     if is_fs_path(path) and not path.is_absolute():
+        if dataset_path is None:
+            raise ValueError("dataset_path must be provided when path is not absolute.")
         path = dataset_path / path
     path = resolve_if_fs_path(path)
-    if str(path).startswith(str(dataset_path)):
-        return str(path).removeprefix(str(dataset_path)).lstrip("/")
-    if safe_is_relative_to(path, dataset_path):
-        return str(path.relative_to(dataset_path))
+    if dataset_path is not None:
+        if str(path).startswith(str(dataset_path)):
+            return str(path).removeprefix(str(dataset_path)).lstrip("/")
+        if safe_is_relative_to(path, dataset_path):
+            return str(path.relative_to(dataset_path))
     if isinstance(path, UPath) and path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
     return str(path)

@@ -351,7 +351,6 @@ def test_add_attachments(tmp_path: Path) -> None:
         dataset.path / "seg" / "meshes" / "meshfile",
         "meshfile",
         data_format=AttachmentDataFormat.Zarr3,
-        dataset_path=dataset.resolved_path,  # not relevant for this test
     )
     seg_layer.attachments.add_attachments([mesh])
     assert seg_layer._properties.attachments.meshes is not None
@@ -369,7 +368,6 @@ def test_add_copy_attachments(tmp_path: Path) -> None:
         mesh_path,
         "meshfile",
         data_format=AttachmentDataFormat.Zarr3,
-        dataset_path=dataset.resolved_path,  # not relevant for this test
     )
     seg_layer.attachments.add_copy_attachments([mesh])
     assert seg_layer._properties.attachments.meshes is not None
@@ -389,7 +387,6 @@ def test_add_symlink_attachments(tmp_path: Path) -> None:
         mesh_path,
         "meshfile",
         data_format=AttachmentDataFormat.Zarr3,
-        dataset_path=dataset.resolved_path,  # not relevant for this test
     )
     seg_layer.attachments.add_symlink_attachments([mesh])
     assert seg_layer._properties.attachments.meshes is not None

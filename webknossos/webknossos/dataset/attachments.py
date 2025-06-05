@@ -61,9 +61,13 @@ class Attachment:
         name: str,
         *,
         data_format: AttachmentDataFormat,
-        dataset_path: Path,
+        dataset_path: Path | None = None,
     ) -> Self:
         if not path.is_absolute():
+            if dataset_path is None:
+                raise ValueError(
+                    "dataset_path must be provided when path is not absolute."
+                )
             path = dataset_path / path
         return cls(
             AttachmentProperties(
