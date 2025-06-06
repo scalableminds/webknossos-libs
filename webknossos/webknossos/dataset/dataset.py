@@ -126,8 +126,8 @@ _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
-SUPPORTED_VERSIONS: list[Literal[1, 2]] = [1, 2]
-DEFAULT_VERSION = 2
+SUPPORTED_VERSIONS: list[Literal[1]] = [1]
+DEFAULT_VERSION: Literal[1] = 1
 
 
 def _find_array_info(layer_path: Path) -> ArrayInfo | None:

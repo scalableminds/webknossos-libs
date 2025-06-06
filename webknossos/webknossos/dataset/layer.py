@@ -6,7 +6,6 @@ from os import PathLike
 from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
-from urllib.parse import urlparse
 
 import numpy as np
 from cluster_tools import Executor
