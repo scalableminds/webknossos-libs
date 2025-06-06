@@ -12,7 +12,7 @@ from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
-from os.path import relpath
+from multiprocessing.pool import ThreadPool
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
@@ -21,6 +21,7 @@ from typing import (
     Protocol,
     TypeVar,
 )
+from urllib.parse import urlparse
 
 import httpx
 import numpy as np
@@ -183,28 +184,6 @@ def time_since_epoch_in_ms() -> int:
     return unixtime * 1000
 
 
-def copy_directory_with_symlinks(
-    src_path: Path,
-    dst_path: Path,
-    ignore: Iterable[str] = tuple(),
-    make_relative: bool = False,
-) -> None:
-    """
-    Links all directories in src_path / dir_name to dst_path / dir_name.
-    """
-    assert is_fs_path(src_path), f"Cannot create symlink with remote paths {src_path}."
-    assert is_fs_path(dst_path), f"Cannot create symlink with remote paths {dst_path}."
-
-    for item in src_path.iterdir():
-        if item.name not in ignore:
-            symlink_path = dst_path / item.name
-            if make_relative:
-                rel_or_abspath = Path(relpath(item, symlink_path.parent))
-            else:
-                rel_or_abspath = item.resolve()
-            symlink_path.symlink_to(rel_or_abspath)
-
-
 def setup_warnings() -> None:
     warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
 
@@ -319,7 +298,13 @@ def rmtree(path: Path) -> None:
             pass
 
 
-def copytree(in_path: Path, out_path: Path) -> None:
+def copytree(
+    in_path: Path,
+    out_path: Path,
+    *,
+    threads: int | None = 10,
+    progress_desc: str | None = None,
+) -> None:
     def _walk(path: Path, base_path: Path) -> Iterator[tuple[Path, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
@@ -335,15 +320,31 @@ def copytree(in_path: Path, out_path: Path) -> None:
             path = path / p
         return path
 
+    def _copy(args: tuple[Path, Path, tuple[str, ...]]) -> None:
+        in_path, out_path, sub_path = args
+        with (
+            _append(in_path, sub_path).open("rb") as in_file,
+            _append(out_path, sub_path).open("wb") as out_file,
+        ):
+            copyfileobj(in_file, out_file)
+
+    files_to_copy: list[tuple[Path, Path, tuple[str, ...]]] = []
     for in_sub_path, sub_path in _walk(in_path, in_path):
         if in_sub_path.is_dir():
             _append(out_path, sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with (
-                _append(in_path, sub_path).open("rb") as in_file,
-                _append(out_path, sub_path).open("wb") as out_file,
-            ):
-                copyfileobj(in_file, out_file)
+            files_to_copy.append((in_path, out_path, sub_path))
+
+    with ThreadPool(threads) as pool:
+        iterator = pool.imap_unordered(_copy, files_to_copy)
+
+        if progress_desc:
+            with get_rich_progress() as progress:
+                task = progress.add_task(progress_desc, total=len(files_to_copy))
+                for _ in iterator:
+                    progress.update(task, advance=1)
+        for _ in iterator:
+            pass
 
 
 def movetree(in_path: Path, out_path: Path) -> None:
@@ -475,3 +476,48 @@ def safe_is_relative_to(path: Path, base_path: Path) -> bool:
     ) and path.is_relative_to(base_path):
         return True
     return False
+
+
+def enrich_path(path: str, dataset_path: Path) -> Path:
+    upath = UPath(path)
+    if upath.protocol in ("http", "https"):
+        from .client.context import _get_context
+        from .dataset.defaults import SSL_CONTEXT
+
+        # To setup the mag for non-public remote paths, we need to get the token from the context
+        wk_context = _get_context()
+        token = wk_context.datastore_token
+        return UPath(
+            path,
+            headers={} if token is None else {"X-Auth-Token": token},
+            ssl=SSL_CONTEXT,
+        )
+
+    elif upath.protocol == "s3":
+        parsed_url = urlparse(str(upath))
+        endpoint_url = f"https://{parsed_url.netloc}"
+        bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+
+        return UPath(
+            f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
+        )
+
+    if not upath.is_absolute():
+        return resolve_if_fs_path(dataset_path / upath)
+    return resolve_if_fs_path(upath)
+
+
+def dump_path(path: Path, dataset_path: Path | None) -> str:
+    if is_fs_path(path) and not path.is_absolute():
+        if dataset_path is None:
+            raise ValueError("dataset_path must be provided when path is not absolute.")
+        path = dataset_path / path
+    path = resolve_if_fs_path(path)
+    if dataset_path is not None:
+        if str(path).startswith(str(dataset_path)):
+            return str(path).removeprefix(str(dataset_path)).lstrip("/")
+        if safe_is_relative_to(path, dataset_path):
+            return str(path.relative_to(dataset_path))
+    if isinstance(path, UPath) and path.protocol == "s3":
+        return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
+    return str(path)

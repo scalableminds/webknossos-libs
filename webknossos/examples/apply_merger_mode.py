@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import cast
 
 import fastremap
 
@@ -26,7 +25,7 @@ def main() -> None:
         bbox=wk.BoundingBox((3457, 3323, 1204), (40, 10, 10)),
         path="testoutput/l4_sample",
     )
-    in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))
+    in_layer = dataset.get_segmentation_layer("segmentation")
     in_mag1 = in_layer.get_mag("1")
 
     ##############################
