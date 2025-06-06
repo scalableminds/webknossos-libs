@@ -57,6 +57,9 @@ extra:
       link: https://medium.com/webknossos
   generator: false
 
+extra_javascript:
+  - javascripts/runllm-widget.js
+
 plugins:
   # - gen-files:
   #     scripts:
@@ -205,8 +208,9 @@ nav:
       - Proofreading:
         - webknossos/proofreading/index.md
         - Segmentation mappings: webknossos/proofreading/segmentation_mappings.md
-        - Tools: webknossos/proofreading/tools.md
+        - Proofreading Tool: webknossos/proofreading/proofreading_tool.md
         - Merger-mode: webknossos/proofreading/merger_mode.md
+        - Split Segments Toolkit: webknossos/proofreading/split_segments_toolkit.md
       - Synapse and Connectome Viewer: webknossos/connectome_viewer.md
       - Open source version:
         - Installation: webknossos/open_source/installation.md
@@ -278,6 +282,19 @@ nav:
         - Task: api/webknossos/administration/task.md
     - CLI Reference:
       - Overview: cli/index.md
+      - Install and Run: cli/install.md
+      - Environment Variables: cli/environment_variables.md
+      - Distribution Strategies: cli/distribution_strategies.md
+      - CLI Commands:
+        - Convert Images: cli/convert.md
+        - Compress: cli/compress.md
+        - Copy Datasets: cli/copy.md
+        - Download: cli/download.md
+        - Upload: cli/upload.md
+        - Downsample: cli/downsample.md
+        - Upsample: cli/upsample.md
+        - Export as Tiff: cli/export-as-tiff.md
+        - Merge Fallback: cli/merge-fallback.md
     - Version Changelog:
       - webknossos-py/stability_policy.md
       - webknossos-py/changelog.md

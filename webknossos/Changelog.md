@@ -10,19 +10,107 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+
+### Changed
+- Added a feature to track attached files of a segmentation layer. Previously, these files were only auto-detected by WEBKNOSSOS based on the location in special folders. Attachments can be added, e.g. `dataset.get_segmentation_layer("segmentation").attachments.add_mesh('path/to/meshfile.hdf5')`. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
+- Added a `with_attachments` parameter to `Dataset.copy_dataset` to copy attachments. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
+- Added a `get_segmentation_layer` method to `Dataset` to get a correctly-typed segmentation layer by name. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
+
+### Changed
+- When adding a layer, the used dtype is only valid if it is supported by webknossos. [#1316](https://github.com/scalableminds/webknossos-libs/pull/1316)
+
+### Fixed
+- Fixed an issue that creates an Error when `add_mag()` was called just with a `chunk_shape`. [#1315](https://github.com/scalableminds/webknossos-libs/pull/1315)
+
+
+## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.7...v2.3.8)
+
+### Changed
+- Made the folder_id parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
+
+
+## [2.3.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.7) - 2025-05-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.6...v2.3.7)
+
+### Changed
+- Pin tifffile version to 2025.5.21 or below. [#1314](https://github.com/scalableminds/webknossos-libs/pull/1314)
+
+
+## [2.3.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.6) - 2025-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.5...v2.3.6)
+
+### Added
+- Add support for in-memory zarr3 datasets (using the Tensorstore in-memory KvStore driver). [#1310](https://github.com/scalableminds/webknossos-libs/pull/1310)
+
+### Changed
+- Added url parsing in webknossos download CLI command, to get webknossos url without environment variable. [#1299](https://github.com/scalableminds/webknossos-libs/pull/1299)
+
+
+## [2.3.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.5) - 2025-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.4...v2.3.5)
+
+### Added
+- Added `--downsample` flag to `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+### Changed
+- Uses compression by default for `webknossos convert` CLI command. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+### Fixed
+- Pinned `click<8.2.0` because of incompatibility with `typer`. [#1305](https://github.com/scalableminds/webknossos-libs/pull/1305)
+
+
+
+## [2.3.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.4) - 2025-05-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.3...v2.3.4)
+
+### Fixed
+- Fixed deletion of symlinked mags. [#1300](https://github.com/scalableminds/webknossos-libs/pull/1300)
+
+
+
+## [2.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.3) - 2025-05-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.2...v2.3.3)
+
+### Fixed
+- Fixed an issue with `Dataset.get_remote_datasets()` that causes value lookups to fail. [#1286](https://github.com/scalableminds/webknossos-libs/pull/1286)
+- Fixed issue with adding remote mags to local dataset due to some UPath checks failing for paths from different file systems. [#1298](https://github.com/scalableminds/webknossos-libs/pull/1298)
+
+
+
+## [2.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.2) - 2025-04-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.1...v2.3.2)
+
+### Fixed
+For S3 mag paths, do not dump endpoint_url protocol ("https") in the mag path when writing to dataset_properties.json. Correctly parse S3 paths for remote mags when reading from dataset_properties.json.[#1293](https://github.com/scalableminds/webknossos-libs/pull/1293)
+
+
+## [2.3.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.1) - 2025-04-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.0...v2.3.1)
+
+### Added
+- Added argument `require_unique_name` to `Dataset.announce_manual_upload()`. Additionally, the method returns a tuple of `new_dataset_id` and `directory_name` now. [#1283](https://github.com/scalableminds/webknossos-libs/pull/1283)
+
+### Changed
+- Upgraded `tensorstore` to `0.1.74`. [#1292](https://github.com/scalableminds/webknossos-libs/pull/1292)
+
+
+## [2.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.0) - 2025-04-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.2.0...v2.3.0)
 
 ### Added
 - Added a `version` field to the `datasource-properties.json` file, which is always set to `1`, for now. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
 
 ### Changed
 - The `Layer.path` property now always returns `Dataset.path / layer.name`, even if all mags are stored remotely. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
-- `Layer.is_remote_to_dataset` is deprecated in favor of `Layer.is_foreign` and `MagView.is_remote_to_dataset` is deprecated in favor of `MagView.is_foreign`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288) 
+- `Layer.is_remote_to_dataset` is deprecated in favor of `Layer.is_foreign` and `MagView.is_remote_to_dataset` is deprecated in favor of `MagView.is_foreign`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
 - Relative `path` fields in the mag definition of a `datasource-properties.json` file are now interpreted relative to the `Dataset.path`. [#1288](https://github.com/scalableminds/webknossos-libs/pull/1288)
-
-### Fixed
 
 
 ## [2.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.2.0) - 2025-04-17
@@ -33,10 +121,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Using `x-auth-header` to send tokens to datastore. [#1270](https://github.com/scalableminds/webknossos-libs/pull/1270)
+- Add clarification that bounding box size is in units of voxels [#1289](https://github.com/scalableminds/webknossos-libs/pull/1289)
 
 ### Fixed
 - Fixed an issue with upsampling views. [#1287](https://github.com/scalableminds/webknossos-libs/pull/1287)
-
 
 
 ## [2.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.1.0) - 2025-04-01

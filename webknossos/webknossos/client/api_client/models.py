@@ -131,7 +131,8 @@ class ApiDatasetAnnounceUpload:
     dataset_name: str
     organization: str
     initial_team_ids: list[str]
-    folder_id: str
+    folder_id: str | None
+    require_unique_name: bool
 
 
 @attr.s(auto_attribs=True)
@@ -153,6 +154,12 @@ class ApiDatasetUploadInformation:
 @attr.s(auto_attribs=True)
 class ApiDatasetUploadSuccess:
     new_dataset_id: str
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetManualUploadSuccess:
+    new_dataset_id: str
+    directory_name: str
 
 
 @attr.s(auto_attribs=True)

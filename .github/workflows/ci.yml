@@ -29,58 +29,125 @@ jobs:
             cluster_tools:
               - 'cluster_tools/**'
 
-  cluster_tools:
+  cluster_tools_slurm:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
-      max-parallel: 4
       matrix:
-        executors: [multiprocessing, slurm, kubernetes, dask]
         python-version: ["3.13", "3.12", "3.11", "3.10"]
     defaults:
       run:
         working-directory: cluster_tools
     steps:
-      - uses: actions/checkout@v3
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
         with:
           version: "0.6.3"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
-      
+      - run: uv python install ${{ matrix.python-version }}
+      - name: Start Docker Cluster
+        run: cd ./dockered-slurm && docker compose up -d
+      - name: Log Core Container
+        run: |
+          for name in "slurmctld" "c1" "c2"; do
+            docker logs "$name"
+          done
+      - name: Install UV dependencies
+        run: |
+          for name in "slurmctld" "c1" "c2"; do
+            docker exec -w /cluster_tools "$name" bash -c "uv sync --frozen"
+          done
+      - name: "Run Tests (test_all, test_slurm) without modified slurm.conf"
+        run: |
+          docker exec \
+            -w /cluster_tools/tests \
+            -e PYTEST_EXECUTORS=slurm \
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py -m 'not requires_modified_slurm_config'"
+      - name: "Run Tests (test_deref_main)"
+        run: |
+          docker exec \
+            -w /cluster_tools/tests \
+            slurmctld bash -c "uv run --frozen python test_deref_main.py"
+
+      - name: Update Slurm Config
+        run: |
+          echo "MaxArraySize=2" >> ./dockered-slurm/slurm.conf
+          sed "s/JobAcctGatherFrequency=30/JobAcctGatherFrequency=1/g" ./dockered-slurm/slurm.conf > ./dockered-slurm/slurm.conf.tmp
+          mv ./dockered-slurm/slurm.conf.tmp ./dockered-slurm/slurm.conf
+      - name: Restart Slurm Cluster
+        run: cd ./dockered-slurm && docker compose restart slurmctld c1 c2
+
+      - name: "Run Tests (test_all, test_slurm) with modified slurn.conf"
+        run: |
+          # Run tests requiring a modified slurm config
+          docker exec \
+            -w /cluster_tools/tests \
+            -e PYTEST_EXECUTORS=slurm \
+            slurmctld bash -c "uv run --frozen python -m pytest -sv test_slurm.py -m 'requires_modified_slurm_config'"
+
+  cluster_tools_multiprocessing:
+    needs: changes
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.3"
+          enable-cache: true
+          cache-dependency-glob: "cluster_tools/uv.lock"
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
-      - name: Build/pull dockered-slurm image
-        if: ${{ matrix.executors == 'slurm' }}
+      - name: Install dependencies (without docker)
+        run: uv sync --frozen
+      - name: Check typing
+        if: ${{ matrix.python-version == '3.11' }}
+        run: ./typecheck.sh
+      - name: Check formatting
+        if: ${{ matrix.python-version == '3.11' }}
+        run: ./format.sh check
+      - name: Lint code
+        if: ${{ matrix.python-version == '3.11' }}
+        run: ./lint.sh
+      - name: Run multiprocessing tests
         run: |
-          cd ./dockered-slurm
+          cd tests
+          PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
+            uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
 
-          echo docker compose up
-          docker compose up -d
-
-          # Register cluster (with retry)
-          for i in {1..5}; do
-            echo register_cluster
-            ./register_cluster.sh && s=0 && break || s=$?
-            sleep 10
-          done
-
-          # Show log output for debugging
-          docker logs slurmctld
-          docker logs c1
-          docker logs c2
-
-          # Run setup.py on all three nodes
-          docker exec -w /cluster_tools slurmctld bash -c "uv sync --frozen" &
-          docker exec -w /cluster_tools c1 bash -c "uv sync --frozen" &
-          docker exec -w /cluster_tools c2 bash -c "uv sync --frozen" &
-          wait
-
+  cluster_tools_kubernetes:
+    needs: changes
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.3"
+          enable-cache: true
+          cache-dependency-glob: "cluster_tools/uv.lock"
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
       - name: Setup Kubernetes-in-Docker
-        if: ${{ matrix.executors == 'kubernetes' }}
         run: |
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
           chmod +x ./kind
@@ -94,56 +161,37 @@ jobs:
             -t scalableminds/cluster-tools:latest \
             .
           ./kind load docker-image scalableminds/cluster-tools:latest
-
       - name: Install dependencies (without docker)
-        if: ${{ matrix.executors == 'multiprocessing' }}
-        run: |
-          uv sync --frozen
-
-      - name: Install dependencies (without docker)
-        if: ${{ matrix.executors == 'kubernetes' || matrix.executors == 'dask' }}
-        run: |
-          uv sync --all-extras --frozen
-
-      - name: Check typing
-        if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version == '3.11' }}
-        run: ./typecheck.sh
-
-      - name: Check formatting
-        if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version == '3.11' }}
-        run: ./format.sh check
-
-      - name: Lint code
-        if: ${{ matrix.executors == 'multiprocessing' && matrix.python-version == '3.11' }}
-        run: ./lint.sh
-
-      - name: Run multiprocessing tests
-        if: ${{ matrix.executors == 'multiprocessing' }}
-        run: |
-          cd tests
-          PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
-            uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
-
-      - name: Run slurm tests
-        if: ${{ matrix.executors == 'slurm' }}
-        run: |
-          cd ./dockered-slurm
-          docker exec \
-            -w /cluster_tools/tests \
-            -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "uv run --frozen python -m pytest -sv test_all.py test_slurm.py"
-          docker exec \
-            -w /cluster_tools/tests \
-            slurmctld bash -c "uv run --frozen python test_deref_main.py"
-
-      - name: Run kubernetes tests
-        if: ${{ matrix.executors == 'kubernetes' }}
+        run: uv sync --all-extras --frozen
+      - name: "Run Kubernetes"
         run: |
           cd tests
           PYTEST_EXECUTORS=kubernetes uv run --frozen python -m pytest -sv test_all.py test_kubernetes.py
 
-      - name: Run dask tests
-        if: ${{ matrix.executors == 'dask' }}
+  cluster_tools_dask:
+    needs: changes
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.3"
+          enable-cache: true
+          cache-dependency-glob: "cluster_tools/uv.lock"
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies (without docker)
+        run: uv sync --all-extras --frozen
+      - name: "Run Dask"
         run: |
           cd tests
           PYTEST_EXECUTORS=dask uv run --frozen python -m pytest -sv test_all.py test_dask.py
@@ -155,9 +203,8 @@ jobs:
       ${{ needs.changes.outputs.webknossos == 'true' }}
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
       matrix:
-        python-version: ["3.12", "3.13", "3.11", "3.10"]
+        python-version: ["3.13", "3.12", "3.11", "3.10"]
         group: [1, 2, 3]
       fail-fast: false
     defaults:
@@ -177,7 +224,7 @@ jobs:
 
       - name: Install proxay
         run: npm install -g proxay
-              
+
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
@@ -258,12 +305,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           thresholdAll: 0.8
           thresholdNew: 0.8
-      
+
       - name: Cleanup temporary files
         run: rm -rf ~/coverage-files
 
   webknossos_cli_docker:
-    needs: [cluster_tools, webknossos_linux]
+    needs:
+      - cluster_tools_slurm
+      - cluster_tools_multiprocessing
+      - cluster_tools_kubernetes
+      - cluster_tools_dask
+      - webknossos_linux
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -335,7 +387,12 @@ jobs:
           docker push scalableminds/webknossos-cli:$NORMALIZED_CI_BRANCH
 
   docs:
-    needs: [cluster_tools, webknossos_linux]
+    needs:
+      - cluster_tools_slurm
+      - cluster_tools_multiprocessing
+      - cluster_tools_kubernetes
+      - cluster_tools_dask
+      - webknossos_linux
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -391,7 +448,12 @@ jobs:
               "$SLACK_HOOK"
 
   pypi_and_gh_release:
-    needs: [cluster_tools, webknossos_linux]
+    needs:
+      - cluster_tools_slurm
+      - cluster_tools_multiprocessing
+      - cluster_tools_kubernetes
+      - cluster_tools_dask
+      - webknossos_linux
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -429,7 +491,10 @@ jobs:
   complete:
     needs:
       [
-        cluster_tools,
+        cluster_tools_dask,
+        cluster_tools_kubernetes,
+        cluster_tools_multiprocessing,
+        cluster_tools_slurm,
         webknossos_linux,
         webknossos_cli_docker,
         docs,

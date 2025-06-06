@@ -24,10 +24,11 @@ from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
+    LayerCategoryType,
     RemoteDataset,
     View,
 )
-from webknossos.dataset._array import DataFormat
+from webknossos.dataset.data_format import AttachmentDataFormat, DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
 from webknossos.dataset.properties import (
@@ -62,6 +63,7 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.Zarr3, TESTOUTPUT_DIR),
     (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
 ]
+OUTPUT_PATHS = [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR]
 
 
 def copy_simple_dataset(
@@ -1554,41 +1556,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         ds.add_layer(
             "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
         )
-        ds.add_layer(
-            "seg1",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="float",
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg2",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel=float,
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg3",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel=float,
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg4",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="double",
-            num_channels=1,
-            largest_segment_id=100000,
-        )
-        ds.add_layer(
-            "seg5",
-            SEGMENTATION_CATEGORY,
-            dtype_per_channel="float",
-            num_channels=3,
-            largest_segment_id=100000,
-        )
 
         with open(
             ds_path / "datasource-properties.json",
@@ -1600,11 +1567,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
             assert data["dataLayers"][1]["elementClass"] == "uint8"
             assert data["dataLayers"][2]["elementClass"] == "uint24"
             assert data["dataLayers"][3]["elementClass"] == "uint24"
-            assert data["dataLayers"][4]["elementClass"] == "float"
-            assert data["dataLayers"][5]["elementClass"] == "float"
-            assert data["dataLayers"][6]["elementClass"] == "float"
-            assert data["dataLayers"][7]["elementClass"] == "double"
-            assert data["dataLayers"][8]["elementClass"] == "float96"
 
         reopened_ds = Dataset.open(
             ds_path
@@ -1613,12 +1575,6 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
         assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
         assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
-        # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-        assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
-        assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
-        assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
 
         assure_exported_properties(ds)
 
@@ -1992,6 +1948,11 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
     assure_exported_properties(original_ds)
 
+    layer.delete_mag(4)
+    assert Mag(4) not in layer.mags
+    assert not (symlink_path / "color" / "4").exists()
+    assert (ds_path / "color" / "4").exists()
+
 
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
@@ -2181,6 +2142,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
     copy_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "copy")
 
     ds = Dataset(ds_path, (1, 1, 1))
+    ds.default_view_configuration = DatasetViewConfiguration(zoom=1.5)
     original_layer_1 = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -2196,13 +2158,23 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
         dtype_per_channel=np.uint32,
         largest_segment_id=0,
         data_format=data_format,
-    )
+    ).as_segmentation_layer()
     original_layer_2.add_mag(4)
-    mappings_path = original_layer_2.path / "mappings"
-    mappings_path.mkdir(parents=True)
-    (mappings_path / "agglomerate_view.hdf5").touch()
+
+    agglomerates_path = original_layer_2.path / "agglomerates" / "agglomerate_view.hdf5"
+    agglomerates_path.parent.mkdir(parents=True)
+    agglomerates_path.touch()
+    original_layer_2.attachments.add_agglomerate(
+        agglomerates_path,
+        name="agglomerate_view",
+        data_format=AttachmentDataFormat.HDF5,
+    )
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
+    assert (
+        shallow_copy_of_ds.default_view_configuration
+        and shallow_copy_of_ds.default_view_configuration.zoom == 1.5
+    )
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
     assert len(Dataset.open(ds_path).get_layer("color").mags) == 2, (
         "Adding a new mag should not affect the original dataset"
@@ -2211,8 +2183,47 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
         "Expecting all mags from original dataset and new downsampled mag"
     )
     assert (
-        copy_path / "segmentation" / "mappings" / "agglomerate_view.hdf5"
-    ).exists(), "Expecting mappings to exist in shallow copy"
+        shallow_copy_of_ds.get_segmentation_layer("segmentation")
+        .attachments.agglomerates[0]
+        .path
+        == copy_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
+    ), "Expecting agglomerates to exist in shallow copy"
+
+    assert (
+        copy_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
+    ).exists(), "Expecting agglomerates to exist in shallow copy"
+
+    assert not shallow_copy_of_ds.get_layer("color").read_only
+    assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
+
+
+def test_dataset_shallow_copy_downsample() -> None:
+    ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "original")
+    copy_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR, "copy")
+
+    ds = Dataset(ds_path, (1, 1, 1))
+    original_layer_1 = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel=np.uint8,
+        num_channels=1,
+        data_format=DEFAULT_DATA_FORMAT,
+        bounding_box=BoundingBox((0, 0, 0), (512, 512, 512)),
+    )
+    original_layer_1.add_mag(1)
+
+    # Creating a shallow copy
+    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=True)
+    # Pre-initializing the downsampled mags
+    shallow_copy_of_ds.get_layer("color").downsample(
+        from_mag=Mag(1), coarsest_mag=Mag(2), only_setup_mags=True
+    )
+    # Re-opening the copy dataset in order to re-determine read-only mags
+    shallow_copy_of_ds = Dataset.open(copy_path)
+    with get_executor("sequential") as ex:
+        shallow_copy_of_ds.get_layer("color").downsample(
+            from_mag=Mag(1), coarsest_mag=Mag(2), allow_overwrite=True, executor=ex
+        )
 
     assert not shallow_copy_of_ds.get_layer("color").read_only
     assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
@@ -2260,6 +2271,7 @@ def test_dataset_conversion_wkw_only() -> None:
 
     # create example dataset
     origin_ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    origin_ds.default_view_configuration = DatasetViewConfiguration(zoom=1.5)
     seg_layer = origin_ds.add_layer(
         "layer1",
         SEGMENTATION_CATEGORY,
@@ -2297,6 +2309,10 @@ def test_dataset_conversion_wkw_only() -> None:
     )
     converted_ds = origin_ds.copy_dataset(converted_path)
 
+    assert (
+        converted_ds.default_view_configuration
+        and converted_ds.default_view_configuration.zoom == 1.5
+    )
     assert origin_ds.layers.keys() == converted_ds.layers.keys()
     for layer_name in origin_ds.layers:
         assert (
@@ -3033,6 +3049,57 @@ def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
     assure_exported_properties(ds)
 
 
+@pytest.mark.parametrize(
+    "dtype_per_channel,category,is_supported",
+    [
+        ("uint8", COLOR_CATEGORY, True),
+        ("uint16", COLOR_CATEGORY, True),
+        ("uint32", COLOR_CATEGORY, True),
+        ("uint64", COLOR_CATEGORY, False),
+        ("int8", COLOR_CATEGORY, True),
+        ("int16", COLOR_CATEGORY, True),
+        ("int32", COLOR_CATEGORY, True),
+        ("int64", COLOR_CATEGORY, False),
+        ("float32", COLOR_CATEGORY, True),
+        ("float64", COLOR_CATEGORY, False),
+        ("uint8", SEGMENTATION_CATEGORY, True),
+        ("uint16", SEGMENTATION_CATEGORY, True),
+        ("uint32", SEGMENTATION_CATEGORY, True),
+        ("uint64", SEGMENTATION_CATEGORY, True),
+        ("int8", SEGMENTATION_CATEGORY, True),
+        ("int16", SEGMENTATION_CATEGORY, True),
+        ("int32", SEGMENTATION_CATEGORY, True),
+        ("int64", SEGMENTATION_CATEGORY, True),
+        ("float32", SEGMENTATION_CATEGORY, False),
+        ("float64", SEGMENTATION_CATEGORY, False),
+    ],
+)
+def test_add_layer_dtype_per_channel(
+    dtype_per_channel: str, category: LayerCategoryType, is_supported: bool
+) -> None:
+    ds_path = prepare_dataset_path(
+        DataFormat.Zarr3, TESTOUTPUT_DIR, "dtype_per_channel"
+    )
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    if is_supported:
+        layer = ds.add_layer(
+            "test_layer",
+            category=category,
+            dtype_per_channel=dtype_per_channel,
+        )
+        assert layer.dtype_per_channel == np.dtype(dtype_per_channel)
+    else:
+        with pytest.raises(
+            ValueError,
+            match="Supported dtypes are:",
+        ):
+            ds.add_layer(
+                "test_layer",
+                category=category,
+                dtype_per_channel=dtype_per_channel,
+            )
+
+
 def test_pickle_view() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "pickle")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -3090,7 +3157,7 @@ def test_dataset_properties_version() -> None:
 
     properties_path = ds.path / PROPERTIES_FILE_NAME
     properties = json.loads((properties_path).read_bytes())
-    assert properties["version"] == 2
+    assert properties["version"] == 1
 
     # write invalid version
     properties["version"] = 9000
@@ -3263,6 +3330,45 @@ def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
         assert (ds_path / "color" / "1" / ".zarray").exists()
     else:
         assert (ds_path / "color" / "1" / "zarr.json").exists()
+
+
+@pytest.mark.parametrize("input_path", OUTPUT_PATHS)
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
+def test_fs_copy_dataset_with_attachments(input_path: Path, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, input_path)
+    new_ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, output_path, "copied")
+
+    ds = Dataset.open(ds_path)
+    ds.default_view_configuration = DatasetViewConfiguration(zoom=1.5)
+    # Add segmentation layer and meshfile
+    seg_layer = ds.add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        largest_segment_id=999,
+        bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)),
+    ).as_segmentation_layer()
+    seg_mag = seg_layer.add_mag(1)
+    seg_mag.write(data=np.zeros((10, 10, 10), dtype=np.uint8))
+
+    meshfile_path = seg_layer.path / "meshes" / "meshfile"
+    meshfile_path.mkdir(parents=True, exist_ok=True)
+    (meshfile_path / "zarr.json").write_text("test")
+
+    seg_layer.attachments.add_mesh(
+        meshfile_path,
+        name="meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+
+    # Copy
+    copy_ds = ds.fs_copy_dataset(new_ds_path)
+
+    assert (
+        copy_ds.default_view_configuration
+        and copy_ds.default_view_configuration.zoom == 1.5
+    )
+    assert (new_ds_path / "segmentation" / "1" / "zarr.json").exists()
+    assert (new_ds_path / "segmentation" / "meshes" / "meshfile" / "zarr.json").exists()
 
 
 def test_wkw_copy_to_remote_dataset() -> None:

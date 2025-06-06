@@ -10,7 +10,15 @@ Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), wh
 """
 # ruff: noqa: F401 imported but unused
 
-from .data_format import DataFormat
+from .attachments import (
+    AgglomerateAttachment,
+    Attachment,
+    ConnectomeAttachment,
+    CumsumAttachment,
+    MeshAttachment,
+    SegmentIndexAttachment,
+)
+from .data_format import AttachmentDataFormat, DataFormat
 from .dataset import Dataset, RemoteDataset
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -22,6 +30,7 @@ from .layer import Layer, SegmentationLayer
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .length_unit import LengthUnit
 from .mag_view import MagView
+from .properties import VoxelSize
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .view import View
