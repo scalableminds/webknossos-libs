@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "id": {
     "name": "simple_zarr_dataset",
     "team": ""
