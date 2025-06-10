@@ -63,6 +63,25 @@ class AbstractApiClient(ABC):
         body_json = self._prepare_for_json(body_structured)
         self._put(route, body_json)
 
+    def _put_json_with_json_response(
+        self,
+        route: str,
+        body_structured: Any,
+        response_type: type[T],
+        query: Query | None = None,
+        retry_count: int = 0,
+        timeout_seconds: float | None = None,
+    ) -> T:
+        body_json = self._prepare_for_json(body_structured)
+        response = self._put(
+            route,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+            body_json=body_json,
+        )
+        return self._parse_json(response, response_type)
+
     def _patch_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
         self._patch(route, body_json)
@@ -193,6 +212,15 @@ class AbstractApiClient(ABC):
             query=query,
             retry_count=retry_count,
             timeout_seconds=timeout_seconds,
+        )
+
+    def _delete(
+        self,
+        route: str,
+    ) -> httpx.Response:
+        return self._request(
+            "DELETE",
+            route,
         )
 
     def _request(

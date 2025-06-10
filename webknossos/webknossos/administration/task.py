@@ -1,6 +1,9 @@
 import logging
+from typing import Any, Literal
 
 import attr
+
+from webknossos.geometry.vec3_int import Vec3IntLike
 
 from ..annotation import Annotation, AnnotationInfo
 from ..client.api_client.models import (
@@ -11,12 +14,14 @@ from ..client.api_client.models import (
     ApiTaskCreationResult,
     ApiTaskParameters,
     ApiTaskType,
+    ApiTaskTypeCreate,
 )
 from ..client.context import _get_api_client, _get_context
 from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
 from ..utils import warn_deprecated
 from .project import Project
+from .user import Team
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +39,26 @@ class TaskStatus:
 
 
 @attr.frozen
+class TaskExperience:
+    """Data class containing information about the experience needed to work on a task"""
+
+    domain: str
+    value: int
+
+    @classmethod
+    def _from_api_experience(cls, api_experience: ApiExperience) -> "TaskExperience":
+        return cls(api_experience.domain, api_experience.value)
+
+
+@attr.frozen
 class TaskType:
     task_type_id: str
-    name: str
+    name: str  # summary
     description: str
     team_id: str
     team_name: str
+    settings: dict[str, Any] | None = None
+    tracingType: str | None = None
 
     @classmethod
     def _from_api_task_type(cls, api_task_type: ApiTaskType) -> "TaskType":
@@ -51,6 +70,69 @@ class TaskType:
             api_task_type.team_name,
         )
 
+    @classmethod
+    def get_list(cls) -> list["TaskType"]:
+        """Returns a list of all tasks that your token authorizes you to see"""
+        client = _get_api_client(enforce_auth=True)
+        api_tasks = client.task_type_list()
+        return [cls._from_api_task_type(t) for t in api_tasks]
+
+    @classmethod
+    def get_by_id(cls, task_type_id: str) -> "TaskType":
+        """Returns the task type specified by the passed id (if your token authorizes you to see it)"""
+        client = _get_api_client(enforce_auth=True)
+        return cls._from_api_task_type(client.get_task_type(task_type_id))
+
+    @classmethod
+    def get_by_name(cls, name: str) -> "TaskType":
+        """Returns the task type specified by the passed name (if your token authorizes you to see it)"""
+        task_types = cls.get_list()
+        for task_type in task_types:
+            if task_type.name == name:
+                return task_type
+        raise ValueError(f"Task type with name '{name}' not found.")
+
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        description: str,
+        team: str | Team,
+        tracing_type: Literal["skeleton", "volume", "hybrid"],
+    ) -> "TaskType":
+        """Creates a new task type and returns it."""
+        client = _get_api_client(enforce_auth=True)
+        if isinstance(team, str):
+            team = Team.get_by_name(team)
+        team_name = team.name
+        team_id = team.id
+        api_task_type = client.task_type_create(
+            ApiTaskTypeCreate(
+                summary=name,
+                description=description,
+                team_id=team_id,
+                team_name=team_name,
+                settings={
+                    "mergerMode": False,
+                    "magRestrictions": {
+                        "min": 1,
+                        "max": 1,
+                    },
+                    "somaClickingAllowed": False,
+                    "volumeInterpolationAllowed": False,
+                    "allowedModes": [],
+                    "branchPointsAllowed": False,
+                },
+                tracing_type=tracing_type,
+            )
+        )
+        return cls._from_api_task_type(api_task_type)
+
+    def delete(self) -> None:
+        """Deletes the task type."""
+        client = _get_api_client(enforce_auth=True)
+        client.task_type_delete(self.task_type_id)
+
 
 @attr.frozen
 class Task:
@@ -58,9 +140,14 @@ class Task:
 
     task_id: str
     project_id: str
-    dataset_name: str
+    dataset_id: str
     status: TaskStatus
     task_type: TaskType
+    experience: TaskExperience
+    edit_position: Vec3Int
+    edit_rotation: tuple[float, float, float]
+    script_id: str | None = None
+    bounding_box: BoundingBox | None = None
 
     @classmethod
     def get_by_id(cls, task_id: str) -> "Task":
@@ -70,10 +157,17 @@ class Task:
         return cls._from_api_task(api_task)
 
     @classmethod
+    def get_list(cls) -> list["Task"]:
+        """Returns a list of all tasks that your token authorizes you to see"""
+        client = _get_api_client(enforce_auth=True)
+        api_tasks = client.task_list()
+        return [cls._from_api_task(t) for t in api_tasks]
+
+    @classmethod
     def create_from_annotations(
         cls,
-        task_type_id: str,
-        project_name: str,
+        task_type_id: str | TaskType,
+        project_name: str | Project,
         base_annotations: list[Annotation],
         needed_experience_domain: str,
         needed_experience_value: int,
@@ -86,6 +180,10 @@ class Task:
         assert len(base_annotations) > 0, (
             "Must supply at least one base annotation to create tasks"
         )
+        if isinstance(task_type_id, TaskType):
+            task_type_id = task_type_id.task_type_id
+        if isinstance(project_name, Project):
+            project_name = project_name.name
 
         client = _get_api_client(enforce_auth=True)
         nml_task_parameters = ApiNmlTaskParameters(
@@ -116,15 +214,15 @@ class Task:
     @classmethod
     def create(
         cls,
-        task_type_id: str,
-        project_name: str,
+        task_type_id: str | TaskType,
+        project_name: str | Project,
         needed_experience_domain: str,
         needed_experience_value: int,
-        starting_position: Vec3Int,
+        starting_position: Vec3IntLike,
+        dataset_id: str | RemoteDataset,
         dataset_name: str | RemoteDataset | None = None,
-        starting_rotation: Vec3Int = Vec3Int(0, 0, 0),
+        starting_rotation: Vec3IntLike = Vec3Int(0, 0, 0),
         instances: int = 1,
-        dataset_id: str | RemoteDataset | None = None,
         script_id: str | None = None,
         bounding_box: BoundingBox | None = None,
     ) -> list["Task"]:
@@ -134,6 +232,12 @@ class Task:
         assert dataset_id is not None or dataset_name is not None, (
             "Please provide a dataset_id to create a task."
         )
+        starting_position = Vec3Int(starting_position)
+        starting_rotation = Vec3Int(starting_rotation)
+        if isinstance(task_type_id, TaskType):
+            task_type_id = task_type_id.task_type_id
+        if isinstance(project_name, Project):
+            project_name = project_name.name
         if dataset_id is not None:
             if isinstance(dataset_id, RemoteDataset):
                 dataset_id = dataset_id._dataset_id
@@ -179,14 +283,62 @@ class Task:
         return cls(
             api_task.id,
             api_task.project_id,
-            api_task.dataset_name,
+            api_task.dataset_id,
             TaskStatus(
                 api_task.status.pending,
                 api_task.status.active,
                 api_task.status.finished,
             ),
             TaskType._from_api_task_type(api_task.type),
+            TaskExperience._from_api_experience(api_task.needed_experience),
+            Vec3Int(api_task.edit_position),
+            api_task.edit_rotation,
+            api_task.script.id if api_task.script else None,
+            BoundingBox.from_tuple2(
+                (
+                    api_task.bounding_box.top_left,
+                    (
+                        api_task.bounding_box.width,
+                        api_task.bounding_box.height,
+                        api_task.bounding_box.depth,
+                    ),
+                )
+            )
+            if api_task.bounding_box
+            else None,
         )
+
+    def update(
+        self,
+        remaining_instances: int,
+    ) -> "Task":
+        """Updates the task with the given parameters."""
+        client = _get_api_client(enforce_auth=True)
+        api_task = ApiTaskParameters(
+            self.task_type.task_type_id,
+            ApiExperience(self.experience.domain, self.experience.value),
+            remaining_instances,
+            self.get_project().name,
+            self.script_id,
+            ApiBoundingBox(
+                self.bounding_box.topleft.to_tuple(),
+                self.bounding_box.size.x,
+                self.bounding_box.size.y,
+                self.bounding_box.size.z,
+            )
+            if self.bounding_box is not None
+            else None,
+            self.dataset_id,
+            self.edit_position.to_tuple(),
+            self.edit_rotation,
+        )
+        updated = client.task_update(self.task_id, api_task)
+        return self._from_api_task(updated)
+
+    def delete(self) -> None:
+        """Deletes this task. WARNING: This is irreversible!"""
+        client = _get_api_client(enforce_auth=True)
+        client.task_delete(self.task_id)
 
     def get_annotation_infos(self) -> list[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
