@@ -1,5 +1,5 @@
 import copy
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import (
     Any,
@@ -14,7 +14,7 @@ from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
 from ._array import ArrayException, BaseArray
-from .data_format import DataFormat
+from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
 from .length_unit import (
     _LENGTH_UNIT_TO_NANOMETER,
@@ -173,9 +173,38 @@ class LayerProperties:
 
 
 @attr.define
+class AttachmentProperties:
+    name: str
+    path: str
+    data_format: AttachmentDataFormat
+
+
+@attr.define
+class AttachmentsProperties:
+    meshes: list[AttachmentProperties] | None = None
+    agglomerates: list[AttachmentProperties] | None = None
+    segment_index: AttachmentProperties | None = None
+    cumsum: AttachmentProperties | None = None
+    connectomes: list[AttachmentProperties] | None = None
+
+    def __iter__(self) -> Iterator[AttachmentProperties]:
+        for attachment in self.meshes or []:
+            yield attachment
+        for attachment in self.agglomerates or []:
+            yield attachment
+        if self.segment_index is not None:
+            yield self.segment_index
+        if self.cumsum is not None:
+            yield self.cumsum
+        for attachment in self.connectomes or []:
+            yield attachment
+
+
+@attr.define
 class SegmentationLayerProperties(LayerProperties):
     largest_segment_id: int | None = None
     mappings: list[str] = []
+    attachments: AttachmentsProperties = attr.field(factory=AttachmentsProperties)
 
 
 @attr.define
@@ -254,6 +283,8 @@ for cls in [
     MagViewProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
+    AttachmentProperties,
+    AttachmentsProperties,
 ]:
     dataset_converter.register_unstructure_hook(
         cls,
@@ -314,6 +345,10 @@ def layer_properties_post_unstructure(
         if "additionalAxes" in d["boundingBox"]:
             d["additionalAxes"] = d["boundingBox"]["additionalAxes"]
             del d["boundingBox"]["additionalAxes"]
+
+        if "attachments" in d:
+            if all(p is None or len(p) == 0 for p in d["attachments"].values()):
+                del d["attachments"]
         return d
 
     return __layer_properties_post_unstructure

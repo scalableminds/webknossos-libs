@@ -31,7 +31,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `my_task.update()` to update a `Task` object.
     - `my_task.delete()` to delete a `Task` object.
 - Added `TaskExperience` class to store domain and value pair.
-
+- Added a feature to track attached files of a segmentation layer. Previously, these files were only auto-detected by WEBKNOSSOS based on the location in special folders. Attachments can be added, e.g. `dataset.get_segmentation_layer("segmentation").attachments.add_mesh('path/to/meshfile.hdf5')`. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
+- Added a `with_attachments` parameter to `Dataset.copy_dataset` to copy attachments. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
+- Added a `get_segmentation_layer` method to `Dataset` to get a correctly-typed segmentation layer by name. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
 
 ### Changed
 - When adding a layer, the used dtype is only valid if it is supported by webknossos. [#1316](https://github.com/scalableminds/webknossos-libs/pull/1316)
