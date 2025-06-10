@@ -1,8 +1,12 @@
+from collections.abc import Iterator
+
 from webknossos.client.api_client.models import (
     ApiDatasetAnnounceUpload,
     ApiDatasetManualUploadSuccess,
     ApiDatasetUploadInformation,
     ApiDatasetUploadSuccess,
+    ApiMeshAdHoc,
+    ApiMeshPrecomputed,
     ApiReserveDatasetUploadInformation,
 )
 
@@ -107,3 +111,19 @@ class DatastoreApiClient(AbstractApiClient):
         }
         response = self._get(route, query)
         return response.content, response.headers.get("MISSING-BUCKETS")
+
+    def annotation_download_mesh(
+        self,
+        mesh: ApiMeshPrecomputed | ApiMeshAdHoc,
+        organization_id: str,
+        directory_name: str,
+        layer_name: str,
+        token: str | None,
+    ) -> Iterator[bytes]:
+        route = f"/datasets/{organization_id}/{directory_name}/layers/{layer_name}/meshes/fullMesh.stl"
+        query: Query = {"token": token}
+        yield from self._post_json_with_response_stream(
+            route=route,
+            body_structured=mesh,
+            query=query,
+        )
