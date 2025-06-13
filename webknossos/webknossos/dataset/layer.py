@@ -914,7 +914,7 @@ class Layer:
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
-        Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
+        Deprecated. Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
@@ -922,6 +922,12 @@ class Layer:
         Symlinked mags can only be added to layers on local file systems.
         """
         self._ensure_writable()
+        warnings.warn(
+            "Using symlinks is deprecated and will be removed in a future version. "
+            + "Use `add_remote_mag` instead, which adds the mag as a reference to this layer.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
@@ -940,10 +946,16 @@ class Layer:
 
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
+        new_mag_path = (
+            relpath(foreign_mag_view.path, self.dataset.resolved_path)
+            if make_relative
+            else str(foreign_mag_view.path.resolve())
+        )
+
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag,
             mag_path=foreign_mag_view.path,
-            override_stored_path=str(foreign_normalized_mag_path),
+            override_stored_path=new_mag_path,
             read_only=True,
         )
 
@@ -969,9 +981,6 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_remote_path(foreign_mag_view.path), (
-            f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
-        )
         assert self.data_format == foreign_mag_view.info.data_format, (
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"

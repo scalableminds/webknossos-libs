@@ -2304,7 +2304,7 @@ class Dataset:
         *,
         make_relative: bool = False,
     ) -> Layer:
-        """Create symbolic link to layer from another dataset.
+        """Deprecated. Create symbolic link to layer from another dataset.
 
         Instead of copying data, creates a symbolic link to the original layer's data and copies
         only the layer metadata. Changes to the original layer's properties, e.g. bounding box, afterwards won't
@@ -2338,6 +2338,13 @@ class Dataset:
         """
 
         self._ensure_writable()
+        warnings.warn(
+            "Using symlinks is deprecated and will be removed in a future version. "
+            + "Use `add_remote_layer` instead, which adds the mags and attachments of the layer as references to this dataset.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         foreign_layer = Layer._ensure_layer(foreign_layer)
 
         if new_layer_name is None:
@@ -2374,10 +2381,11 @@ class Dataset:
             )
             if is_fs_path(foreign_mag.path):
                 mag_prop.path = str(
-                    Path(relpath(foreign_mag.path, self.path))
+                    Path(relpath(foreign_mag.path.resolve(), self.path))
                     if make_relative
                     else foreign_mag.path.resolve()
                 )
+                print(make_relative, mag_prop.path)
             else:
                 mag_prop.path = str(foreign_mag.path)
 
@@ -2456,21 +2464,16 @@ class Dataset:
             "Cannot add layer with the same origin dataset as foreign layer"
         )
 
-        assert all(is_remote_path(mag.path) for mag in foreign_layer.mags.values()), (
-            f"Cannot add foreign layer {foreign_layer} as it is not remote. Try using dataset.add_copy_layer instead."
-        )
+        new_layer = self.add_layer_like(foreign_layer, new_layer_name)
+        for mag_view in foreign_layer.mags.values():
+            new_layer.add_remote_mag(mag_view)
 
-        layer_properties = copy.deepcopy(foreign_layer._properties)
-        for mag in layer_properties.mags:
-            mag.path = str(foreign_layer.mags[mag.mag].path)
-        layer_properties.name = new_layer_name
-        self._properties.data_layers += [layer_properties]
-        new_layer = self._initialize_layer_from_properties(
-            layer_properties, read_only=False
-        )
-        self._layers[new_layer_name] = new_layer
+        # reference-copy all attachments
+        if isinstance(foreign_layer, SegmentationLayer) and isinstance(
+            new_layer, SegmentationLayer
+        ):
+            new_layer.attachments.add_attachments(*foreign_layer.attachments)
 
-        self._export_as_json()
         return new_layer
 
     def add_fs_copy_layer(
@@ -2720,20 +2723,18 @@ class Dataset:
         new_dataset_path: str | PathLike,
         *,
         name: str | None = None,
-        make_relative: bool = False,
         layers_to_ignore: Iterable[str] | None = None,
+        make_relative: bool = None,  # deprecated
     ) -> "Dataset":
-        """Create a new dataset that uses symlinks to reference data.
+        """Create a new dataset that contains references to the layers, mags and attachments of another dataset.
 
-        Links all magnifications and layer directories from the original dataset via symlinks
-        rather than copying data. Remote layers are referenced as well. Useful for creating alternative views or exposing datasets
-        to webknossos.
+        Useful for creating alternative views or exposing datasets to WEBKNOSOSS.
 
         Args:
             new_dataset_path: Path where new dataset should be created
             name: Optional name for the new dataset, uses original name if None
-            make_relative: Whether to create relative symlinks
             layers_to_ignore: Optional iterable of layer names to exclude
+            executor: Optional executor for copy operations
 
         Returns:
             Dataset: The newly created dataset with linked layers
@@ -2755,19 +2756,15 @@ class Dataset:
                     layers_to_ignore=["temp_layer"]
                 )
                 ```
-
-        Note:
-            Only works with datasets on local filesystems. Cannot create shallow
-            copies of remote datasets or create shallow copies in remote locations.
         """
+        if make_relative is not None:
+            warnings.warn(
+                "make_relative is deprecated and has no utility anymore, because shallow_copy_dataset does not use symlinks anymore.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
-        assert is_fs_path(self.path), (
-            f"Cannot create symlinks to remote dataset {self.path}"
-        )
         new_dataset_path = UPath(new_dataset_path)
-        assert is_fs_path(new_dataset_path), (
-            f"Cannot create symlink in remote path {new_dataset_path}"
-        )
         new_dataset = Dataset(
             new_dataset_path,
             voxel_size_with_unit=self.voxel_size_with_unit,
@@ -2779,23 +2776,7 @@ class Dataset:
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
-            if all(is_remote_path(mag.path) for mag in layer.mags.values()):
-                new_dataset.add_remote_layer(layer, layer_name)
-            else:
-                new_layer = new_dataset.add_layer_like(layer, layer_name)
-                for mag_view in layer.mags.values():
-                    if is_fs_path(mag_view.path):
-                        new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
-                    else:
-                        new_layer.add_remote_mag(mag_view)
-
-                # reference-copy all attachments
-                if isinstance(layer, SegmentationLayer) and isinstance(
-                    new_layer, SegmentationLayer
-                ):
-                    new_layer.attachments.add_symlink_attachments(
-                        *layer.attachments, make_relative=make_relative
-                    )
+            new_dataset.add_remote_layer(layer, layer_name)
 
         return new_dataset
 
