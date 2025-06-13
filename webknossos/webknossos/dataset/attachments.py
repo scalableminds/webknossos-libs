@@ -1,9 +1,9 @@
+import warnings
 from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
-import warnings
 
 from typing_extensions import Self
 from upath import UPath

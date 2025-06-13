@@ -36,7 +36,7 @@ def test_attachments(tmp_path: Path) -> None:
         data_format=AttachmentDataFormat.Zarr3,
     )
     assert seg_layer._properties.attachments.meshes is not None
-    assert seg_layer._properties.attachments.meshes[0].path == "seg/meshfile"
+    assert seg_layer._properties.attachments.meshes[0].path == "./seg/meshfile"
     assert (
         seg_layer._properties.attachments.meshes[0].data_format
         == AttachmentDataFormat.Zarr3
@@ -103,7 +103,7 @@ def test_attachments(tmp_path: Path) -> None:
         data_format=AttachmentDataFormat.JSON,
     )
     assert seg_layer._properties.attachments.cumsum is not None
-    assert seg_layer._properties.attachments.cumsum.path == "seg/cumsum.json"
+    assert seg_layer._properties.attachments.cumsum.path == "./seg/cumsum.json"
     assert (
         seg_layer._properties.attachments.cumsum.data_format
         == AttachmentDataFormat.JSON
@@ -117,7 +117,7 @@ def test_attachments(tmp_path: Path) -> None:
     assert attachments_json["meshes"][0] == {
         "name": "meshfile",
         "dataFormat": "zarr3",
-        "path": "seg/meshfile",
+        "path": "./seg/meshfile",
     }
     assert len(attachments_json["agglomerates"]) == 1
     assert len(attachments_json["connectomes"]) == 1
@@ -173,7 +173,8 @@ def test_copy_layer(tmp_path: Path) -> None:
     )
     assert (copy_dataset.path / "seg" / "meshes" / "meshfile.hdf5").exists()
     assert (
-        copy_layer.attachments.meshes[0]._properties.path == "seg/meshes/meshfile.hdf5"
+        copy_layer.attachments.meshes[0]._properties.path
+        == "./seg/meshes/meshfile.hdf5"
     )
 
     assert (
@@ -185,7 +186,7 @@ def test_copy_layer(tmp_path: Path) -> None:
     ).exists()
     assert (
         copy_layer.attachments.agglomerates[0]._properties.path
-        == "seg/agglomerates/agglomerate_view_15"
+        == "./seg/agglomerates/agglomerate_view_15"
     )
 
 
@@ -354,7 +355,7 @@ def test_remote_dataset() -> None:
         data_format=AttachmentDataFormat.Zarr3,
     )
 
-    assert seg_layer.attachments.meshes[0]._properties.path == "seg/meshes/meshfile"
+    assert seg_layer.attachments.meshes[0]._properties.path == "./seg/meshes/meshfile"
 
 
 def test_add_attachments(tmp_path: Path) -> None:
@@ -367,7 +368,7 @@ def test_add_attachments(tmp_path: Path) -> None:
     )
     seg_layer.attachments.add_attachments(mesh)
     assert seg_layer._properties.attachments.meshes is not None
-    assert seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile"
+    assert seg_layer._properties.attachments.meshes[0].path == "./seg/meshes/meshfile"
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
 
 
@@ -388,7 +389,8 @@ def test_add_copy_attachments(tmp_path: Path) -> None:
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
     # path has changed based on the name
     assert (
-        seg_layer._properties.attachments.meshes[0].path == "seg/meshes/meshfile_4-4-1"
+        seg_layer._properties.attachments.meshes[0].path
+        == "./seg/meshes/meshfile_4-4-1"
     )
     assert (dataset.path / "seg" / "meshes" / "meshfile_4-4-1").exists()
     assert mesh_path.exists()
@@ -405,7 +407,8 @@ def test_add_copy_attachments(tmp_path: Path) -> None:
     seg_layer.attachments.add_copy_attachments(segment_index)
     assert seg_layer._properties.attachments.segment_index is not None
     assert (
-        seg_layer._properties.attachments.segment_index.path == "seg/segmentIndex/main"
+        seg_layer._properties.attachments.segment_index.path
+        == "./seg/segmentIndex/main"
     )
 
 

@@ -215,8 +215,8 @@ def test_create_dataset_with_layer_and_mag(
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     ds.add_layer("color", "color", data_format=data_format)
 
-    ds.get_layer("color").add_mag("1")
-    ds.get_layer("color").add_mag("2-2-1")
+    mag1 = ds.get_layer("color").add_mag("1")
+    mag2 = ds.get_layer("color").add_mag("2-2-1")
 
     if data_format == DataFormat.WKW:
         assert (ds_path / "color" / "1" / "header.wkw").exists()
@@ -230,6 +230,11 @@ def test_create_dataset_with_layer_and_mag(
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
+
+    assert mag1.path == ds_path / "color" / "1"
+    assert mag1._properties.path == "./color/1"
+    assert mag2.path == ds_path / "color" / "2-2-1"
+    assert mag2._properties.path == "./color/2-2-1"
 
     assure_exported_properties(ds)
 

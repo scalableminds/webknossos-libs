@@ -20,7 +20,7 @@
       "mags": [
         {
           "mag": [1, 1, 1],
-          "path": "color/1"
+          "path": "./color/1"
         }
       ],
       "numChannels": 3,

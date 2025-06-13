@@ -48,7 +48,6 @@ from ..utils import (
     enrich_path,
     get_executor_for_args,
     is_fs_path,
-    is_remote_path,
     movetree,
     named_partial,
     resolve_if_fs_path,

@@ -69,7 +69,6 @@ from ..utils import (
     get_executor_for_args,
     infer_metadata_type,
     is_fs_path,
-    is_remote_path,
     named_partial,
     resolve_if_fs_path,
     rmtree,
@@ -2385,7 +2384,6 @@ class Dataset:
                     if make_relative
                     else foreign_mag.path.resolve()
                 )
-                print(make_relative, mag_prop.path)
             else:
                 mag_prop.path = str(foreign_mag.path)
 
@@ -2724,7 +2722,7 @@ class Dataset:
         *,
         name: str | None = None,
         layers_to_ignore: Iterable[str] | None = None,
-        make_relative: bool = None,  # deprecated
+        make_relative: bool | None = None,  # deprecated
     ) -> "Dataset":
         """Create a new dataset that contains references to the layers, mags and attachments of another dataset.
 
