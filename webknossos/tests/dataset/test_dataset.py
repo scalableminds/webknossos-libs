@@ -1893,9 +1893,11 @@ def test_symlink_layer_rename(data_format: DataFormat) -> None:
         # symlink color layer
         symlink_layer = ds.add_symlink_layer(ds_path / "color", make_relative=True)
 
-    # rename
-    with pytest.raises(RuntimeError):
-        symlink_layer.name = "color2"
+    assert (symlink_path / "color").exists()
+    assert (symlink_path / "color").resolve() == ds_path / "color"
+    symlink_layer.name = "color2"
+    assert (symlink_path / "color2").exists()
+    assert (symlink_path / "color2").resolve() == ds_path / "color"
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)

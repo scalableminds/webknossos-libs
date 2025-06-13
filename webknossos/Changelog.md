@@ -13,13 +13,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...HEAD)
 
 ### Breaking Changes
-- `Dataset.add_symlink_layer`, `Layer.add_symlink_mag` and `Attachments.add_symlink_attachments` are deprecated and will be removed in a future release. Please use `Dataset.add_remote_layer`, `Layer.add_remote_mag` and `Attachments.add_attachments` instead. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
+- `Dataset.add_symlink_layer`, `Layer.add_symlink_mag` and `Attachments.add_symlink_attachments` are deprecated. Please use `Dataset.add_remote_layer`, `Layer.add_remote_mag` and `Attachments.add_attachments` instead. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 - `Dataset.shallow_copy_dataset` does not symlink layers, mags and attachments anymore. Instead mags and attachments are referenced by their path. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 
 ### Added
 
 ### Changed
-- All mags now store their path in the datasource-properties.json file. This eliminates the need for symlinks and removes the need to check multiple possible mag paths (e.g. 1-1-1 or 1). It also unifies local and remote mags. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
+- All mags now store their path in the `datasource-properties.json` file. This eliminates the need for symlinks and removes the need to check multiple possible mag paths (e.g. 1-1-1 or 1). It also unifies local and remote mags. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 - Dataset-local mags and attachments use the `./` prefix for their path in compliance with [IETF RFC1808](https://datatracker.ietf.org/doc/html/rfc1808). [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 
 ### Fixed
