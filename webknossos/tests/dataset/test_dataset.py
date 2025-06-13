@@ -55,7 +55,7 @@ def start_minio() -> Iterator[None]:
         yield
 
 
-DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
+DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr, DataFormat.Zarr3]
 DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
@@ -215,8 +215,8 @@ def test_create_dataset_with_layer_and_mag(
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     ds.add_layer("color", "color", data_format=data_format)
 
-    ds.get_layer("color").add_mag("1")
-    ds.get_layer("color").add_mag("2-2-1")
+    mag1 = ds.get_layer("color").add_mag("1")
+    mag2 = ds.get_layer("color").add_mag("2-2-1")
 
     if data_format == DataFormat.WKW:
         assert (ds_path / "color" / "1" / "header.wkw").exists()
@@ -230,6 +230,11 @@ def test_create_dataset_with_layer_and_mag(
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
+
+    assert mag1.path == ds_path / "color" / "1"
+    assert mag1._properties.path == "./color/1"
+    assert mag2.path == ds_path / "color" / "2-2-1"
+    assert mag2._properties.path == "./color/2-2-1"
 
     assure_exported_properties(ds)
 
@@ -348,7 +353,8 @@ def test_ome_ngff_0_5_metadata_symlink() -> None:
         ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
 
         # add symlink color layer
-        ds.add_symlink_layer(ds_path / "color")
+        with pytest.warns(DeprecationWarning):
+            ds.add_symlink_layer(ds_path / "color")
 
     finally:
         # restore write permissions
@@ -1799,7 +1805,9 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
 
     # Add an additional segmentation layer to the original dataset
     original_ds = Dataset.open(ds_path)
-    original_ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999)
+    original_ds.add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
+    ).add_mag(1)
 
     original_mag = original_ds.get_layer("color").get_mag("1")
     original_mag.write(
@@ -1807,27 +1815,25 @@ def test_add_symlink_layer(data_format: DataFormat) -> None:
     )
 
     ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
-    # symlink color layer
-    symlink_layer = ds.add_symlink_layer(ds_path / "color")
-    # symlink segmentation layer
-    symlink_segmentation_layer = ds.add_symlink_layer(
-        ds_path / "segmentation", make_relative=True
-    )
+    with pytest.warns(DeprecationWarning):
+        # symlink color layer
+        symlink_layer = ds.add_symlink_layer(ds_path / "color")
+        # symlink segmentation layer
+        symlink_segmentation_layer = ds.add_symlink_layer(
+            ds_path / "segmentation", make_relative=True
+        )
     mag = symlink_layer.get_mag("1")
 
-    if data_format == DataFormat.Zarr:
-        # FIX: When paths are merged
-        # assert (
-        #     ds._properties.data_layers[0].mags[0].path
-        #     == f"../{ds_path.name}/color/1-1-1"
-        # )
-        assert (symlink_path / "color" / "1-1-1").resolve().exists()
-    else:
-        # FIX: When paths are merged
-        # assert (
-        #     ds._properties.data_layers[0].mags[0].path == f"../{ds_path.name}/color/1"
-        # )
-        assert (symlink_path / "color" / "1").resolve().exists()
+    color_mag_path = original_mag.path.name
+    assert ds._properties.data_layers[0].mags[0].path == str(
+        ds_path / "color" / color_mag_path
+    )
+    assert (symlink_path / "color" / color_mag_path).resolve().exists()
+    assert (
+        ds._properties.data_layers[1].mags[0].path
+        == f"../{ds_path.name}/segmentation/1"
+    )
+    assert (symlink_path / "segmentation" / "1").resolve().exists()
 
     assert (symlink_path / "segmentation").resolve().exists()
 
@@ -1864,8 +1870,9 @@ def test_symlink_layer_add_mag(data_format: DataFormat) -> None:
     )
 
     ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
-    # symlink color layer
-    symlink_layer = ds.add_symlink_layer(ds_path / "color")
+    with pytest.warns(DeprecationWarning):
+        # symlink color layer
+        symlink_layer = ds.add_symlink_layer(ds_path / "color")
 
     with pytest.raises(RuntimeError):
         symlink_layer.add_mag(2)
@@ -1881,15 +1888,16 @@ def test_symlink_layer_rename(data_format: DataFormat) -> None:
         "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
     )
 
-    symlink_ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
-    # symlink color layer
-    symlink_layer = symlink_ds.add_symlink_layer(ds_path / "color", make_relative=True)
+    ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
+    with pytest.warns(DeprecationWarning):
+        # symlink color layer
+        symlink_layer = ds.add_symlink_layer(ds_path / "color", make_relative=True)
 
-    # rename
+    assert (symlink_path / "color").exists()
+    assert (symlink_path / "color").resolve() == ds_path / "color"
     symlink_layer.name = "color2"
-
-    assert (symlink_ds.path / "color2").exists()
-    assert not (symlink_ds.path / "color").exists()
+    assert (symlink_path / "color2").exists()
+    assert (symlink_path / "color2").resolve() == ds_path / "color"
 
 
 @pytest.mark.parametrize("data_format", DATA_FORMATS)
@@ -1927,11 +1935,11 @@ def test_add_symlink_mag(data_format: DataFormat) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    symlink_mag_2 = layer.add_symlink_mag(original_mag_2, make_relative=True)
-    layer.add_symlink_mag(original_mag_4.path, make_relative=True)
-    # FIX: When paths are merged
-    # assert symlink_mag_2._properties.path == f"../{ds_path.name}/color/2"
-    # assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
+    with pytest.warns(DeprecationWarning):
+        symlink_mag_2 = layer.add_symlink_mag(original_mag_2, make_relative=True)
+        symlink_mag_4 = layer.add_symlink_mag(original_mag_4.path, make_relative=True)
+    assert symlink_mag_2._properties.path == f"../{ds_path.name}/color/2"
+    assert symlink_mag_4._properties.path == f"../{ds_path.name}/color/4"
 
     assert (symlink_path / "color" / "1").exists()
     assert (symlink_path / "color" / "2").exists()
@@ -2138,13 +2146,10 @@ def test_search_dataset_also_for_long_layer_name(
     assure_exported_properties(layer.dataset)
 
 
-@pytest.mark.parametrize("make_relative", [True, False])
-@pytest.mark.parametrize(
-    "data_format", DATA_FORMATS
-)  # Cannot test symlinks on remote storage
-def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> None:
-    ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "original")
-    copy_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "copy")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_dataset_shallow_copy(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "original")
+    copy_path = prepare_dataset_path(data_format, output_path, "copy")
 
     ds = Dataset(ds_path, (1, 1, 1))
     ds.default_view_configuration = DatasetViewConfiguration(zoom=1.5)
@@ -2175,7 +2180,7 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
         data_format=AttachmentDataFormat.HDF5,
     )
 
-    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
+    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path)
     assert (
         shallow_copy_of_ds.default_view_configuration
         and shallow_copy_of_ds.default_view_configuration.zoom == 1.5
@@ -2191,12 +2196,12 @@ def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> N
         shallow_copy_of_ds.get_segmentation_layer("segmentation")
         .attachments.agglomerates[0]
         .path
-        == copy_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
+        == ds_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
     ), "Expecting agglomerates to exist in shallow copy"
 
-    assert (
+    assert not (
         copy_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
-    ).exists(), "Expecting agglomerates to exist in shallow copy"
+    ).exists(), "Expecting agglomerates not to exist in shallow copy"
 
     assert not shallow_copy_of_ds.get_layer("color").read_only
     assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
@@ -2218,7 +2223,7 @@ def test_dataset_shallow_copy_downsample() -> None:
     original_layer_1.add_mag(1)
 
     # Creating a shallow copy
-    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=True)
+    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path)
     # Pre-initializing the downsampled mags
     shallow_copy_of_ds.get_layer("color").downsample(
         from_mag=Mag(1), coarsest_mag=Mag(2), only_setup_mags=True
@@ -2229,6 +2234,9 @@ def test_dataset_shallow_copy_downsample() -> None:
         shallow_copy_of_ds.get_layer("color").downsample(
             from_mag=Mag(1), coarsest_mag=Mag(2), allow_overwrite=True, executor=ex
         )
+
+    assert not shallow_copy_of_ds.get_layer("color").read_only
+    assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
 
 
 def test_remote_wkw_dataset() -> None:
@@ -2888,8 +2896,7 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
         len([layer for layer in ds._properties.data_layers if layer.name == "color2"])
         == 1
     )
-    # FIX: When paths are merged
-    # assert ds._properties.data_layers[0].mags[0].path == "color2/1"
+    assert ds._properties.data_layers[0].mags[0].path == "color2/1"
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
     assert ds.get_layer("color2").data_format == data_format

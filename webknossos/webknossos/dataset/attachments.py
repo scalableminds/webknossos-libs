@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
@@ -328,6 +329,12 @@ class Attachments:
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False
     ) -> None:
+        warnings.warn(
+            "Using symlinks is deprecated and will be removed in a future version. "
+            + "Use `add_attachments` instead, which adds the attachments as a reference to the layer.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         for attachment in other:
             new_path = resolve_if_fs_path(attachment.path)
             if is_fs_path(attachment.path):

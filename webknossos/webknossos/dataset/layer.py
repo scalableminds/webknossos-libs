@@ -48,7 +48,6 @@ from ..utils import (
     enrich_path,
     get_executor_for_args,
     is_fs_path,
-    is_remote_path,
     movetree,
     named_partial,
     resolve_if_fs_path,
@@ -358,14 +357,13 @@ class Layer:
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            # FIX when paths are merged
-            # if not mag.is_foreign:
-            #     mag._properties.path = str(
-            #         self.resolved_path.relative_to(self.dataset.resolved_path)
-            #         / mag.path.name
-            #     )
-            # else:
-            #     assert mag._properties.path is not None  # for type checking
+            if not mag.is_foreign:
+                mag._properties.path = str(
+                    self.resolved_path.relative_to(self.dataset.resolved_path)
+                    / mag.path.name
+                )
+            else:
+                assert mag._properties.path is not None  # for type checking
             mag._path = (
                 enrich_path(mag._properties.path, self.dataset.resolved_path)
                 if mag._properties.path is not None
@@ -628,8 +626,7 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
-                # FIX when paths are merged
-                # path=dump_path(mag_path, self.dataset.resolved_path),
+                path=dump_path(mag_path, self.dataset.resolved_path),
             )
         ]
 
@@ -642,8 +639,7 @@ class Layer:
         mag: MagLike,
         mag_path: Path,
         read_only: bool,
-        # FIX when paths are merged
-        # override_stored_path: str | None = None,
+        override_stored_path: str | None = None,
     ) -> MagView:
         """Creates a MagView for existing data files.
 
@@ -668,12 +664,11 @@ class Layer:
         self._setup_mag(mag, mag_path=mag_path, read_only=read_only)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
-        # FIX when paths are merged
-        # stored_path = (
-        #     override_stored_path
-        #     if override_stored_path is not None
-        #     else dump_path(mag_path, self.dataset.resolved_path)
-        # )
+        stored_path = (
+            override_stored_path
+            if override_stored_path is not None
+            else dump_path(mag_path, self.dataset.resolved_path)
+        )
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag,
@@ -693,8 +688,7 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
-                # FIX when paths are merged
-                # path=stored_path,
+                path=stored_path,
             )
         )
         self.dataset._export_as_json()
@@ -919,7 +913,7 @@ class Layer:
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
-        Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
+        Deprecated. Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
@@ -927,6 +921,12 @@ class Layer:
         Symlinked mags can only be added to layers on local file systems.
         """
         self._ensure_writable()
+        warnings.warn(
+            "Using symlinks is deprecated and will be removed in a future version. "
+            + "Use `add_remote_mag` instead, which adds the mag as a reference to this layer.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
@@ -945,11 +945,16 @@ class Layer:
 
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
+        new_mag_path = (
+            relpath(foreign_mag_view.path, self.dataset.resolved_path)
+            if make_relative
+            else str(foreign_mag_view.path.resolve())
+        )
+
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag,
             mag_path=foreign_mag_view.path,
-            # FIX when paths are merged
-            # override_stored_path=str(foreign_normalized_mag_path),
+            override_stored_path=new_mag_path,
             read_only=True,
         )
 
@@ -975,9 +980,6 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_remote_path(foreign_mag_view.path), (
-            f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
-        )
         assert self.data_format == foreign_mag_view.info.data_format, (
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"
