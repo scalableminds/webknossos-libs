@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [2.3.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.9) - 2025-06-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...v2.3.9)
 
 ### Added
 - Added a feature to track attached files of a segmentation layer. Previously, these files were only auto-detected by WEBKNOSSOS based on the location in special folders. Attachments can be added, e.g. `dataset.get_segmentation_layer("segmentation").attachments.add_mesh('path/to/meshfile.hdf5')`. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
@@ -25,6 +35,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue that creates an Error when `add_mag()` was called just with a `chunk_shape`. [#1315](https://github.com/scalableminds/webknossos-libs/pull/1315)
+
 
 
 ## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28
