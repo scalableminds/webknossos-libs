@@ -518,7 +518,8 @@ class TensorStoreArray(BaseArray):
                     open=True,
                     create=False,
                     context=TS_CONTEXT,
-                ).result()
+                ).result(),
+                description="Opening tensorstore array",
             )  # check that everything exists
             return cls(path, _array)
         except Exception as exc:
@@ -544,22 +545,18 @@ class TensorStoreArray(BaseArray):
             )
             available_domain = requested_domain.intersect(array.domain)
 
+        data = call_with_retries(
+            lambda: array[available_domain].read(order="F").result(),
+            description="Reading tensorstore array",
+        )
         if available_domain != requested_domain:
             # needs padding
             out = np.zeros(
                 requested_domain.shape, dtype=array.dtype.numpy_dtype, order="F"
             )
-            data = call_with_retries(
-                lambda: array[available_domain].read(order="F").result()
-            )
             out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
-            if not has_channel_dimension:
-                out = np.expand_dims(out, 0)
-            return out
-
-        out = call_with_retries(
-            lambda: array[requested_domain].read(order="F").result()
-        )
+        else:
+            out = data
         if not has_channel_dimension:
             out = np.expand_dims(out, 0)
         return out
@@ -588,7 +585,8 @@ class TensorStoreArray(BaseArray):
                         "kvstore": self._make_kvstore(self._path),
                     },
                     context=TS_CONTEXT,
-                ).result()
+                ).result(),
+                description="Opening tensorstore array for resizing",
             )
             if array.domain != current_array.domain:
                 raise RuntimeError(
@@ -601,7 +599,8 @@ class TensorStoreArray(BaseArray):
                     inclusive_min=None,
                     exclusive_max=new_domain.exclusive_max,
                     resize_metadata_only=True,
-                ).result()
+                ).result(),
+                description="Resizing tensorstore array",
             )
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
@@ -620,7 +619,10 @@ class TensorStoreArray(BaseArray):
             inclusive_min=(0,) + bbox.topleft.to_tuple(),
             shape=(self.info.num_channels,) + bbox.size.to_tuple(),
         )
-        call_with_retries(lambda: array[requested_domain].write(data).result())
+        call_with_retries(
+            lambda: array[requested_domain].write(data).result(),
+            description="Writing tensorstore array",
+        )
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         raise NotImplementedError
@@ -639,7 +641,9 @@ class TensorStoreArray(BaseArray):
                     return None
             return output
 
-        keys = call_with_retries(lambda: kvstore.list().result())
+        keys = call_with_retries(
+            lambda: kvstore.list().result(), description="Listing keys in kvstore"
+        )
         for key in keys:
             key_parts = key.decode("utf-8").split(separator)
             if _type == "default":
@@ -693,7 +697,8 @@ class TensorStoreArray(BaseArray):
                             "kvstore": self._make_kvstore(self._path),
                         },
                         context=TS_CONTEXT,
-                    ).result()
+                    ).result(),
+                    description="Creating tensorstore array",
                 )
             except Exception as e:
                 raise ArrayException(
