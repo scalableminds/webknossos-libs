@@ -10,17 +10,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...HEAD)
 
 ### Breaking Changes
+- `Dataset.add_symlink_layer`, `Layer.add_symlink_mag` and `Attachments.add_symlink_attachments` are deprecated and will be removed in a future release. Please use `Dataset.add_remote_layer`, `Layer.add_remote_mag` and `Attachments.add_attachments` instead. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
+- `Dataset.shallow_copy_dataset` does not symlink layers, mags and attachments anymore. Instead mags and attachments are referenced by their path. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 
 ### Added
 
-
 ### Changed
+- All mags now store their path in the datasource-properties.json file. This eliminates the need for symlinks and removes the need to check multiple possible mag paths (e.g. 1-1-1 or 1). It also unifies local and remote mags. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
+- Dataset-local mags and attachments use the `./` prefix for their path in compliance with [IETF RFC1808](https://datatracker.ietf.org/doc/html/rfc1808). [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
+
+### Fixed
+
+
+## [2.3.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.9) - 2025-06-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...v2.3.9)
+
+### Added
 - Added a feature to track attached files of a segmentation layer. Previously, these files were only auto-detected by WEBKNOSSOS based on the location in special folders. Attachments can be added, e.g. `dataset.get_segmentation_layer("segmentation").attachments.add_mesh('path/to/meshfile.hdf5')`. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
 - Added a `with_attachments` parameter to `Dataset.copy_dataset` to copy attachments. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
 - Added a `get_segmentation_layer` method to `Dataset` to get a correctly-typed segmentation layer by name. [#1312](https://github.com/scalableminds/webknossos-libs/pull/1312)
+- Retry asynchronous tensorstore calls on failure to make operation on object storage datasets accessed via network more robust. [#1319](https://github.com/scalableminds/webknossos-libs/pull/1319)
 
 ### Changed
 - When adding a layer, the used dtype is only valid if it is supported by webknossos. [#1316](https://github.com/scalableminds/webknossos-libs/pull/1316)
@@ -29,11 +41,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed an issue that creates an Error when `add_mag()` was called just with a `chunk_shape`. [#1315](https://github.com/scalableminds/webknossos-libs/pull/1315)
 
 
+
 ## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.7...v2.3.8)
 
 ### Changed
-- Made the folder_id parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
+- Made the `folder_id` parameter of `Dataset.announce_manual_upload` optional. [#1313](https://github.com/scalableminds/webknossos-libs/pull/1313)
 
 
 ## [2.3.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.7) - 2025-05-27
