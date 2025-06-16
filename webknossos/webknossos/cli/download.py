@@ -2,6 +2,7 @@
 
 import re
 from typing import Annotated, Any
+from urllib.parse import urlparse
 
 import typer
 
@@ -74,8 +75,10 @@ def main(
     layers = layer if layer else None
     mags = mag if mag else None
     url = resolve_short_link(url)
+    parsed = urlparse(url)
+    domain = f"{parsed.scheme}://{parsed.netloc}"
 
-    with webknossos_context(token=token):
+    with webknossos_context(url=domain, token=token):
         if re.match(_DATASET_URL_REGEX, url) or re.match(
             _DATASET_DEPRECATED_URL_REGEX, url
         ):

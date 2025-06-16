@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,29 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [2.3.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.9) - 2025-06-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.8...v2.3.9)
+
+### Changed
+- Use `sacct` to detect out of memory errors instead of `seff` for Slurm executor. [#1297](https://github.com/scalableminds/webknossos-libs/pull/1297)
+
+
+## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.7...v2.3.8)
+
+
+## [2.3.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.7) - 2025-05-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.6...v2.3.7)
+
+
+## [2.3.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.6) - 2025-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.5...v2.3.6)
+
+
+## [2.3.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.5) - 2025-05-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.4...v2.3.5)
 
 
 ## [2.3.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.4) - 2025-05-12
