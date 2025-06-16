@@ -1,14 +1,17 @@
 import re
+import time
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
+from logging import getLogger
 from os.path import relpath
 from pathlib import Path
 from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
+    TypeVar,
 )
 from urllib.parse import urlparse
 
@@ -22,7 +25,11 @@ from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
 from ..utils import is_fs_path
 from .data_format import DataFormat
 
+logger = getLogger(__name__)
+
 TS_CONTEXT = tensorstore.Context()
+
+DEFAULT_NUM_RETRIES = 5
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -31,6 +38,35 @@ def _is_power_of_two(num: int) -> bool:
 
 class ArrayException(Exception):
     pass
+
+
+ReturnType = TypeVar("ReturnType")
+
+
+def call_with_retries(
+    fn: Callable[[], ReturnType],
+    num_retries: int = DEFAULT_NUM_RETRIES,
+    description: str = "",
+) -> ReturnType:
+    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
+    last_exception = None
+    for i in range(num_retries):
+        try:
+            return fn()
+        except Exception as e:  # noqa: PERF203 # allow try except in loop
+            logger.warning(
+                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
+                f"Error was: {e}"
+            )
+            # We introduce some randomness to avoid multiple processes retrying at the same time
+            random_factor = np.random.uniform(0.5, 1.5)
+            time.sleep(1 * (1.5**i) * random_factor)
+            last_exception = e
+    # If the last attempt fails, we log the error and raise it.
+    # This is important to avoid silent failures.
+    logger.error(f"{description} failed after {num_retries} attempts.")
+    assert last_exception is not None, "last_exception should never be None here"
+    raise last_exception
 
 
 @dataclass
@@ -473,15 +509,18 @@ class TensorStoreArray(BaseArray):
     def _open(cls, path: Path) -> Self:
         try:
             uri = cls._make_kvstore(path)
-            _array = tensorstore.open(
-                {
-                    "driver": str(cls.data_format),
-                    "kvstore": uri,
-                },
-                open=True,
-                create=False,
-                context=TS_CONTEXT,
-            ).result()  # check that everything exists
+            _array = call_with_retries(
+                lambda: tensorstore.open(
+                    {
+                        "driver": str(cls.data_format),
+                        "kvstore": uri,
+                    },
+                    open=True,
+                    create=False,
+                    context=TS_CONTEXT,
+                ).result(),
+                description="Opening tensorstore array",
+            )  # check that everything exists
             return cls(path, _array)
         except Exception as exc:
             raise ArrayException(f"Could not open array at {uri}.") from exc
@@ -506,18 +545,18 @@ class TensorStoreArray(BaseArray):
             )
             available_domain = requested_domain.intersect(array.domain)
 
+        data = call_with_retries(
+            lambda: array[available_domain].read(order="F").result(),
+            description="Reading tensorstore array",
+        )
         if available_domain != requested_domain:
             # needs padding
             out = np.zeros(
                 requested_domain.shape, dtype=array.dtype.numpy_dtype, order="F"
             )
-            data = array[available_domain].read(order="F").result()
             out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
-            if not has_channel_dimension:
-                out = np.expand_dims(out, 0)
-            return out
-
-        out = array[requested_domain].read(order="F").result()
+        else:
+            out = data
         if not has_channel_dimension:
             out = np.expand_dims(out, 0)
         return out
@@ -539,24 +578,30 @@ class TensorStoreArray(BaseArray):
 
         if new_domain != array.domain:
             # Check on-disk for changes to shape
-            current_array = tensorstore.open(
-                {
-                    "driver": str(self.data_format),
-                    "kvstore": self._make_kvstore(self._path),
-                },
-                context=TS_CONTEXT,
-            ).result()
+            current_array = call_with_retries(
+                lambda: tensorstore.open(
+                    {
+                        "driver": str(self.data_format),
+                        "kvstore": self._make_kvstore(self._path),
+                    },
+                    context=TS_CONTEXT,
+                ).result(),
+                description="Opening tensorstore array for resizing",
+            )
             if array.domain != current_array.domain:
                 raise RuntimeError(
                     f"While resizing the Zarr array at {self._path}, a differing shape ({array.domain} != {current_array.domain}) was found in the currently persisted metadata."
                     + "This is likely happening because multiple processes changed the metadata of this array."
                 )
 
-            self._cached_array = array.resize(
-                inclusive_min=None,
-                exclusive_max=new_domain.exclusive_max,
-                resize_metadata_only=True,
-            ).result()
+            self._cached_array = call_with_retries(
+                lambda: array.resize(
+                    inclusive_min=None,
+                    exclusive_max=new_domain.exclusive_max,
+                    resize_metadata_only=True,
+                ).result(),
+                description="Resizing tensorstore array",
+            )
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
         if data.ndim == len(bbox):
@@ -574,7 +619,10 @@ class TensorStoreArray(BaseArray):
             inclusive_min=(0,) + bbox.topleft.to_tuple(),
             shape=(self.info.num_channels,) + bbox.size.to_tuple(),
         )
-        array[requested_domain].write(data).result()
+        call_with_retries(
+            lambda: array[requested_domain].write(data).result(),
+            description="Writing tensorstore array",
+        )
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         raise NotImplementedError
@@ -593,7 +641,9 @@ class TensorStoreArray(BaseArray):
                     return None
             return output
 
-        keys = kvstore.list().result()
+        keys = call_with_retries(
+            lambda: kvstore.list().result(), description="Listing keys in kvstore"
+        )
         for key in keys:
             key_parts = key.decode("utf-8").split(separator)
             if _type == "default":
@@ -640,13 +690,16 @@ class TensorStoreArray(BaseArray):
     def _array(self) -> tensorstore.TensorStore:
         if self._cached_array is None:
             try:
-                self._cached_array = tensorstore.open(
-                    {
-                        "driver": str(self.data_format),
-                        "kvstore": self._make_kvstore(self._path),
-                    },
-                    context=TS_CONTEXT,
-                ).result()
+                self._cached_array = call_with_retries(
+                    lambda: tensorstore.open(
+                        {
+                            "driver": str(self.data_format),
+                            "kvstore": self._make_kvstore(self._path),
+                        },
+                        context=TS_CONTEXT,
+                    ).result(),
+                    description="Creating tensorstore array",
+                )
             except Exception as e:
                 raise ArrayException(
                     f"Exception while opening array for {self._make_kvstore(self._path)}"
