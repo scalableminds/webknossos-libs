@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `layers_to_ignore` argument to `Dataset.copy_dataset`. [#1321](https://github.com/scalableminds/webknossos-libs/pull/1321)
 
 ### Changed
 
