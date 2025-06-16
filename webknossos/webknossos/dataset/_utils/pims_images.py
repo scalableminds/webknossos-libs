@@ -52,13 +52,7 @@ def _pims_imports() -> str | None:
     return None
 
 
-if (errors := _pims_imports()) is not None:
-    warnings.warn(
-        f"[WARNING] Not all pims readers could be imported:\n{errors}Install the readers you need or use 'webknossos[all]' to install all readers.",
-        category=UserWarning,
-        source=None,
-        stacklevel=2,
-    )
+_PIMS_IMPORT_ERRORS = _pims_imports()
 
 
 def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:

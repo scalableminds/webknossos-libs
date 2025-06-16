@@ -894,6 +894,14 @@ class Dataset:
         """
         from ._utils import pims_images
 
+        if pims_images._PIMS_IMPORT_ERRORS is not None:
+            warnings.warn(
+                f"[WARNING] Not all pims readers could be imported:\n{pims_images._PIMS_IMPORT_ERRORS}Install the readers you need or use 'webknossos[all]' to install all readers.",
+                category=UserWarning,
+                source=None,
+                stacklevel=2,
+            )
+
         input_upath = UPath(input_path)
 
         valid_suffixes = pims_images.get_valid_pims_suffixes()

@@ -36,7 +36,11 @@ from .version import __version__ as current_version
 
 if not current_version == "0.0.0":
     import multiprocessing
+    import os
 
-    if multiprocessing.parent_process() is None:
+    if (
+        multiprocessing.parent_process() is None
+        and os.environ.get("SLURM_JOB_ID") is None
+    ):
         # Schedule the version check to run non-blocking in a background thread
         check_version_in_background(current_version)
