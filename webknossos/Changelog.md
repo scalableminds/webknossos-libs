@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Warnings regarding missing pims image readers are only printed once during conversion. Error messages regarding wk-libs version are not displayed in slurm environments. [#1266](https://github.com/scalableminds/webknossos-libs/pull/1266)
 
 ### Fixed
 
