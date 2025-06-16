@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `Dataset.shallow_copy_dataset` does not symlink layers, mags and attachments anymore. Instead mags and attachments are referenced by their path. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 
 ### Added
+- Added `layers_to_ignore` argument to `Dataset.copy_dataset`. [#1321](https://github.com/scalableminds/webknossos-libs/pull/1321)
 
 ### Changed
 - All mags now store their path in the `datasource-properties.json` file. This eliminates the need for symlinks and removes the need to check multiple possible mag paths (e.g. 1-1-1 or 1). It also unifies local and remote mags. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)

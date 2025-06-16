@@ -2566,6 +2566,7 @@ class Dataset:
         exists_ok: bool = False,
         executor: Executor | None = None,
         voxel_size_with_unit: VoxelSize | None = None,
+        layers_to_ignore: Iterable[str] | None = None,
     ) -> "Dataset":
         """
         Creates an independent copy of the dataset with all layers at a new location.
@@ -2582,6 +2583,7 @@ class Dataset:
             exists_ok: Whether to overwrite existing datasets and layers
             executor: Optional executor for parallel copying
             voxel_size_with_unit: Optional voxel size specification with units
+            layers_to_ignore: List of layer names to exclude from the copy
 
         Returns:
             Dataset: The newly created copy
@@ -2636,6 +2638,8 @@ class Dataset:
 
         with get_executor_for_args(None, executor) as executor:
             for layer in self.layers.values():
+                if layers_to_ignore is not None and layer.name in layers_to_ignore:
+                    continue
                 new_dataset.add_copy_layer(
                     layer,
                     chunk_shape=chunk_shape,
