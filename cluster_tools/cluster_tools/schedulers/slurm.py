@@ -262,8 +262,11 @@ class SlurmExecutor(ClusterExecutor):
             job_id_string = " ".join(unique_job_ids)
             # Send SIGINT signal to running jobs instead of terminating the jobs right away. This way, the jobs can
             # react to the signal, safely shutdown and signal (cancel) jobs they possibly scheduled, recursively.
+            # After a short waiting time kill all jobs that are still running (due to race conditions or because they
+            # didn't react to the SIGINT signal for some reason).
             _, stderr, _ = call(
-                f"scancel --state=PENDING {job_id_string}; scancel -s SIGINT --state=RUNNING {job_id_string}; scancel --state=SUSPENDED {job_id_string}"
+                f"scancel --state=PENDING {job_id_string}; scancel -s SIGINT --state=RUNNING {job_id_string};"
+                + "scancel --state=SUSPENDED {job_id_string}; sleep 2; scancel {job_id_string}"
             )
 
             maybe_error_or_warning = (
