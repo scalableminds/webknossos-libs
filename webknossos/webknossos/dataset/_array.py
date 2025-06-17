@@ -1,7 +1,6 @@
 import re
-import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
@@ -11,7 +10,6 @@ from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
-    TypeVar,
 )
 from urllib.parse import urlparse
 
@@ -22,14 +20,12 @@ from typing_extensions import Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import is_fs_path
+from ..utils import call_with_retries, is_fs_path
 from .data_format import DataFormat
 
 logger = getLogger(__name__)
 
 TS_CONTEXT = tensorstore.Context()
-
-DEFAULT_NUM_RETRIES = 5
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -38,35 +34,6 @@ def _is_power_of_two(num: int) -> bool:
 
 class ArrayException(Exception):
     pass
-
-
-ReturnType = TypeVar("ReturnType")
-
-
-def call_with_retries(
-    fn: Callable[[], ReturnType],
-    num_retries: int = DEFAULT_NUM_RETRIES,
-    description: str = "",
-) -> ReturnType:
-    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
-    last_exception = None
-    for i in range(num_retries):
-        try:
-            return fn()
-        except Exception as e:  # noqa: PERF203 # allow try except in loop
-            logger.warning(
-                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
-                f"Error was: {e}"
-            )
-            # We introduce some randomness to avoid multiple processes retrying at the same time
-            random_factor = np.random.uniform(0.5, 1.5)
-            time.sleep(1 * (1.5**i) * random_factor)
-            last_exception = e
-    # If the last attempt fails, we log the error and raise it.
-    # This is important to avoid silent failures.
-    logger.error(f"{description} failed after {num_retries} attempts.")
-    assert last_exception is not None, "last_exception should never be None here"
-    raise last_exception
 
 
 @dataclass
