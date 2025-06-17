@@ -15,6 +15,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import defaults
 import numpy as np
 import tensorstore
 import wkw
@@ -28,8 +29,6 @@ from .data_format import DataFormat
 logger = getLogger(__name__)
 
 TS_CONTEXT = tensorstore.Context()
-
-DEFAULT_NUM_RETRIES = 5
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -45,8 +44,9 @@ ReturnType = TypeVar("ReturnType")
 
 def call_with_retries(
     fn: Callable[[], ReturnType],
-    num_retries: int = DEFAULT_NUM_RETRIES,
+    num_retries: int = defaults.DEFAULT_NUM_RETRIES,
     description: str = "",
+    backoff_factor: float = defaults.DEFAULT_BACKOFF_FACTOR,
 ) -> ReturnType:
     """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
     last_exception = None
@@ -59,8 +59,8 @@ def call_with_retries(
                 f"Error was: {e}"
             )
             # We introduce some randomness to avoid multiple processes retrying at the same time
-            random_factor = np.random.uniform(0.5, 1.5)
-            time.sleep(1 * (1.5**i) * random_factor)
+            random_factor = np.random.uniform(0.5, 2.0)
+            time.sleep((backoff_factor**i) * random_factor)
             last_exception = e
     # If the last attempt fails, we log the error and raise it.
     # This is important to avoid silent failures.
