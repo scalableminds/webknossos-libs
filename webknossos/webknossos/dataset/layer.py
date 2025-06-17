@@ -19,7 +19,8 @@ from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
-    determine_buffer_shape,
+    determine_downsample_buffer_shape,
+    determine_upsample_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
 )
@@ -1301,7 +1302,7 @@ class Layer:
         # perform downsampling
         with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
-                buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                buffer_shape = determine_downsample_buffer_shape(prev_mag_view.info)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
@@ -1506,7 +1507,7 @@ class Layer:
             # perform upsampling
             with get_executor_for_args(None, executor) as actual_executor:
                 if buffer_shape is None:
-                    buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                    buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:
                     buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
                 func = named_partial(
