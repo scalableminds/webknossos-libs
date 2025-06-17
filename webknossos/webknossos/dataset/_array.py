@@ -1,7 +1,6 @@
 import re
-import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
@@ -11,11 +10,9 @@ from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
-    TypeVar,
 )
 from urllib.parse import urlparse
 
-import defaults
 import numpy as np
 import tensorstore
 import wkw
@@ -23,7 +20,7 @@ from typing_extensions import Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import is_fs_path
+from ..utils import call_with_retries, is_fs_path
 from .data_format import DataFormat
 
 logger = getLogger(__name__)

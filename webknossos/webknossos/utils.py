@@ -27,7 +27,7 @@ import httpx
 import numpy as np
 import rich
 from cluster_tools import Executor, get_executor
-from dataset import defaults
+from dataset.defaults import DEFAULT_BACKOFF_FACTOR, DEFAULT_NUM_RETRIES
 from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
@@ -41,9 +41,9 @@ ReturnType = TypeVar("ReturnType")
 
 def call_with_retries(
     fn: Callable[[], ReturnType],
-    num_retries: int = defaults.DEFAULT_NUM_RETRIES,
+    num_retries: int = DEFAULT_NUM_RETRIES,
     description: str = "",
-    backoff_factor: float = defaults.DEFAULT_BACKOFF_FACTOR,
+    backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
 ) -> ReturnType:
     """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
     last_exception = None

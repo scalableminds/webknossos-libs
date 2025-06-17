@@ -61,10 +61,12 @@ ZARR_JSON_FILE_NAME = "zarr.json"
 SSL_CONTEXT = _create_sslcontext()
 
 DEFAULT_NUM_RETRIES = (
-    os.environ["DEFAULT_NUM_RETRIES"] if "DEFAULT_NUM_RETRIES" in os.environ else 20
+    int(os.environ["DEFAULT_NUM_RETRIES"])
+    if "DEFAULT_NUM_RETRIES" in os.environ
+    else 20
 )
 DEFAULT_BACKOFF_FACTOR = (
-    os.environ["DEFAULT_BACKOFF_FACTOR"]
+    float(os.environ["DEFAULT_BACKOFF_FACTOR"])
     if "DEFAULT_BACKOFF_FACTOR" in os.environ
     else 1.75
 )
