@@ -65,6 +65,7 @@ if TYPE_CHECKING:
 
 from ..utils import (
     copytree,
+    copytree_tensorstore,
     count_defined_values,
     get_executor_for_args,
     infer_metadata_type,
@@ -2701,6 +2702,7 @@ class Dataset:
             if layers_to_ignore is not None and layer.name in layers_to_ignore:
                 continue
             new_layer = new_dataset.add_layer_like(layer, layer.name)
+
             for mag_view in layer.mags.values():
                 new_mag = new_layer.add_mag(
                     mag_view.mag,
@@ -2708,7 +2710,17 @@ class Dataset:
                     shard_shape=mag_view.info.shard_shape,
                     compress=mag_view.info.compression_mode,
                 )
-                copytree(mag_view.path, new_mag.path)
+                if (
+                    isinstance(mag_view.path, UPath)
+                    and mag_view.path.protocol == "memory"
+                ) or (
+                    isinstance(new_mag.path, UPath)
+                    and new_mag.path.protocol == "memory"
+                ):
+                    # We need to special-case memory paths because tensorstore has its own memory namespace
+                    copytree_tensorstore(mag_view.path, new_mag.path)
+                else:
+                    copytree(mag_view.path, new_mag.path)
             if isinstance(layer, SegmentationLayer) and isinstance(
                 new_layer, SegmentationLayer
             ):

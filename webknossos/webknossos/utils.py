@@ -347,6 +347,43 @@ def copytree(
             pass
 
 
+def copytree_tensorstore(
+    in_path: Path,
+    out_path: Path,
+    *,
+    threads: int | None = 10,
+    progress_desc: str | None = None,
+) -> None:
+    from tensorstore import KvStore
+
+    from .dataset._array import TS_CONTEXT, TensorStoreArray
+
+    in_kv = KvStore.open(
+        TensorStoreArray._make_kvstore(in_path), context=TS_CONTEXT
+    ).result()
+    out_kv = KvStore.open(
+        TensorStoreArray._make_kvstore(out_path), context=TS_CONTEXT
+    ).result()
+
+    def _copy(key: bytes) -> None:
+        data = in_kv.read(key).result().value
+        out_kv.write(key, data).result()
+
+    keys_to_copy: list[bytes] = [
+        key for key in in_kv.list().result() if key.startswith(b"/")
+    ]
+    with ThreadPool(threads) as pool:
+        iterator = pool.imap_unordered(_copy, keys_to_copy)
+
+        if progress_desc:
+            with get_rich_progress() as progress:
+                task = progress.add_task(progress_desc, total=len(keys_to_copy))
+                for _ in iterator:
+                    progress.update(task, advance=1)
+        for _ in iterator:
+            pass
+
+
 def movetree(in_path: Path, out_path: Path) -> None:
     move(in_path, out_path)
 

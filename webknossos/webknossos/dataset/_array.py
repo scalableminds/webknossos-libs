@@ -43,6 +43,11 @@ class ArrayException(Exception):
 ReturnType = TypeVar("ReturnType")
 
 
+def _clear_tensorstore_context() -> None:
+    global TS_CONTEXT
+    TS_CONTEXT = tensorstore.Context()
+
+
 def call_with_retries(
     fn: Callable[[], ReturnType],
     num_retries: int = DEFAULT_NUM_RETRIES,

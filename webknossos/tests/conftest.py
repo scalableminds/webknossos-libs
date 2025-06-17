@@ -15,6 +15,7 @@ from hypothesis import strategies as st
 import webknossos as wk
 from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
+from webknossos.webknossos.dataset._array import _clear_tensorstore_context
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
@@ -101,6 +102,7 @@ def clear_testoutput() -> Generator:
 def clear_caches() -> Generator:
     _clear_all_context_caches()
     _cached_get_upload_datastore.cache_clear()
+    _clear_tensorstore_context()
     yield
 
 

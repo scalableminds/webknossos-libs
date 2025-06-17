@@ -5,6 +5,7 @@ import pickle
 from collections.abc import Iterator
 from pathlib import Path
 from typing import cast
+from uuid import uuid4
 
 import numpy as np
 import pytest
@@ -3343,6 +3344,38 @@ def test_fs_copy_dataset_with_attachments(input_path: Path, output_path: Path) -
     )
     assert (new_ds_path / "segmentation" / "1" / "zarr.json").exists()
     assert (new_ds_path / "segmentation" / "meshes" / "meshfile" / "zarr.json").exists()
+
+
+@pytest.mark.parametrize("input_protocol", ["memory", "file"])
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
+def test_fs_copy_dataset_memory(input_protocol: str, output_path: Path) -> None:
+    if input_protocol == "file":
+        ds_path = UPath(TESTOUTPUT_DIR / "test_dataset")
+    else:
+        ds_path = UPath(f"memory:///test_dataset-{uuid4()}")
+    new_ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, output_path, "copied")
+
+    ds = Dataset(ds_path, (1, 1, 1))
+    # Add segmentation layer and meshfile
+    seg_layer = ds.add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        largest_segment_id=999,
+        bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)),
+    ).as_segmentation_layer()
+    seg_mag = seg_layer.add_mag(1)
+    seg_mag.write(data=np.ones((1, 10, 10, 10), dtype=np.uint8))
+
+    # Copy
+    copy_ds = ds.fs_copy_dataset(new_ds_path)
+
+    assert (new_ds_path / "segmentation" / "1" / "zarr.json").exists()
+    np.testing.assert_array_equal(
+        copy_ds.get_segmentation_layer("segmentation")
+        .get_mag("1")
+        .read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
+        np.ones((1, 10, 10, 10), dtype=np.uint8),
+    )
 
 
 def test_wkw_copy_to_remote_dataset() -> None:
