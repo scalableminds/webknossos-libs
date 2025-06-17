@@ -31,7 +31,40 @@ from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
 
+from .dataset.defaults import DEFAULT_BACKOFF_FACTOR, DEFAULT_NUM_RETRIES
+
+logger = logging.getLogger(__name__)
+
 times = {}
+
+ReturnType = TypeVar("ReturnType")
+
+
+def call_with_retries(
+    fn: Callable[[], ReturnType],
+    num_retries: int = DEFAULT_NUM_RETRIES,
+    description: str = "",
+    backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
+) -> ReturnType:
+    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
+    last_exception = None
+    for i in range(num_retries):
+        try:
+            return fn()
+        except Exception as e:  # noqa: PERF203 # allow try except in loop
+            logger.warning(
+                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
+                f"Error was: {e}"
+            )
+            # We introduce some randomness to avoid multiple processes retrying at the same time
+            random_factor = np.random.uniform(0.66, 1.5)
+            time.sleep((backoff_factor**i) * random_factor)
+            last_exception = e
+    # If the last attempt fails, we log the error and raise it.
+    # This is important to avoid silent failures.
+    logger.error(f"{description} failed after {num_retries} attempts.")
+    assert last_exception is not None, "last_exception should never be None here"
+    raise last_exception
 
 
 def time_start(identifier: str) -> None:
