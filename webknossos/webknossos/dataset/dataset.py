@@ -1317,7 +1317,8 @@ class Dataset:
             if dtype_per_channel.name not in color_dtypes:
                 raise ValueError(
                     f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(color_dtypes)}.",
+                    f"Supported dtypes are: {', '.join(color_dtypes)}."
+                    "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/wkw.html",
                 )
         else:
             segmentation_dtypes = (
@@ -1333,7 +1334,8 @@ class Dataset:
             if dtype_per_channel.name not in segmentation_dtypes:
                 raise ValueError(
                     f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}.",
+                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}."
+                    "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/wkw.html",
                 )
 
         if layer_name in self.layers.keys():
