@@ -27,10 +27,11 @@ import httpx
 import numpy as np
 import rich
 from cluster_tools import Executor, get_executor
-from dataset.defaults import DEFAULT_BACKOFF_FACTOR, DEFAULT_NUM_RETRIES
 from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
+
+from .dataset.defaults import DEFAULT_BACKOFF_FACTOR, DEFAULT_NUM_RETRIES
 
 logger = logging.getLogger(__name__)
 
