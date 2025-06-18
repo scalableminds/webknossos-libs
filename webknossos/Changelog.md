@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Changed the default path type to `UPath` [#1326](https://github.com/scalableminds/webknossos-libs/pull/1326)
 
 ### Fixed
 
