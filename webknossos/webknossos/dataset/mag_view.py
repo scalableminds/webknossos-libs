@@ -12,6 +12,7 @@ from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
+    enrich_path,
     get_executor_for_args,
     is_fs_path,
     rmtree,
@@ -666,7 +667,7 @@ class MagView(View):
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            path = UPath(
+            path = enrich_path(
                 str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
             )
             mag_view_path = strip_trailing_slash(path)

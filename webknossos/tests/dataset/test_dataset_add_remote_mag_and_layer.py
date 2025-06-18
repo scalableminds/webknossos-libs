@@ -3,21 +3,23 @@ import os
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
+import numpy as np
 import pytest
 from upath import UPath
 
-import webknossos as wk
+from webknossos.dataset import COLOR_CATEGORY, Dataset
+from webknossos.geometry import BoundingBox
 from webknossos.utils import is_remote_path
 
 pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture
-def sample_remote_dataset(tmp_path: Path) -> Iterator[wk.Dataset]:
-    yield wk.Dataset.download(
+def sample_remote_dataset(tmp_path: Path) -> Iterator[Dataset]:
+    yield Dataset.download(
         "l4_sample",
         path=tmp_path / "l4_sample",
-        bbox=wk.BoundingBox((3457, 3323, 1204), (10, 10, 10)),
+        bbox=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
     )
 
 
@@ -32,10 +34,10 @@ def sample_layer_and_mag_name() -> list[tuple[str, str]]:
 
 
 def test_add_remote_mags_from_mag_view(
-    sample_remote_dataset: wk.Dataset,
+    sample_remote_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    remote_dataset = wk.Dataset.open_remote(
+    remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
     sample_remote_mags = [
@@ -62,10 +64,10 @@ def test_add_remote_mags_from_mag_view(
 
 
 def test_add_remote_mags_from_path(
-    sample_remote_dataset: wk.Dataset,
+    sample_remote_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    remote_dataset = wk.Dataset.open_remote(
+    remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
     sample_remote_mags = [
@@ -93,8 +95,8 @@ def test_add_remote_mags_from_path(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-def test_add_remote_layer_from_object(sample_remote_dataset: wk.Dataset) -> None:
-    remote_dataset = wk.Dataset.open_remote(
+def test_add_remote_layer_from_object(sample_remote_dataset: Dataset) -> None:
+    remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
     sample_remote_layer = list(remote_dataset.layers.values())
@@ -108,8 +110,8 @@ def test_add_remote_layer_from_object(sample_remote_dataset: wk.Dataset) -> None
         ), "Mag path of added layer should be equal to mag path in source layer."
 
 
-def test_add_remote_layer_from_path(sample_remote_dataset: wk.Dataset) -> None:
-    remote_dataset = wk.Dataset.open_remote(
+def test_add_remote_layer_from_path(sample_remote_dataset: Dataset) -> None:
+    remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
     sample_remote_layer = list(remote_dataset.layers.values())
@@ -124,10 +126,10 @@ def test_add_remote_layer_from_path(sample_remote_dataset: wk.Dataset) -> None:
 
 
 def test_add_remote_layer_non_public(tmp_path: Path) -> None:
-    dataset = wk.Dataset.open("testdata/simple_zarr3_dataset").copy_dataset(
+    dataset = Dataset.open("testdata/simple_zarr3_dataset").copy_dataset(
         tmp_path / "simple_zarr3_dataset"
     )
-    remote_dataset = wk.Dataset.open_remote(
+    remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
     remote_dataset.is_public = False
@@ -143,11 +145,38 @@ def test_add_remote_layer_non_public(tmp_path: Path) -> None:
 
 
 def test_shallow_copy_remote_layers(tmp_path: Path) -> None:
-    dataset = wk.Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
-    remote_dataset = wk.Dataset.open_remote(
+    dataset = Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
+    remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
     dataset.add_remote_layer(remote_dataset.get_layer("color"), "color")
     dataset_copy = dataset.shallow_copy_dataset(tmp_path / "copy")
     data = dataset_copy.get_layer("color").get_mag("16-16-4").read()
     assert data.shape == (1, 64, 64, 256)
+
+
+def test_add_remote_mag_from_local_path(tmp_path: Path) -> None:
+    dataset1 = Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
+    dataset1.write_layer(
+        "color",
+        COLOR_CATEGORY,
+        data=np.ones((1, 10, 10, 10), dtype="uint8"),
+        downsample=False,
+    )
+
+    dataset2 = Dataset(tmp_path / "copy", voxel_size=(10, 10, 10))
+    layer1 = dataset2.add_remote_layer(tmp_path / "origin" / "color")
+    layer1_mag1 = layer1.get_mag(1)
+
+    assert layer1_mag1.path == tmp_path / "origin" / "color" / "1"
+    assert layer1_mag1._properties.path == str(
+        (tmp_path / "origin" / "color" / "1").resolve()
+    )
+
+    layer2_mag1 = dataset2.add_layer("color2", COLOR_CATEGORY).add_remote_mag(
+        tmp_path / "origin" / "color" / "1"
+    )
+    assert layer2_mag1.path == tmp_path / "origin" / "color" / "1"
+    assert layer2_mag1._properties.path == str(
+        (tmp_path / "origin" / "color" / "1").resolve()
+    )
