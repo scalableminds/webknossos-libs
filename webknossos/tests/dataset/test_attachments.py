@@ -15,7 +15,7 @@ from webknossos.dataset import (
 from webknossos.geometry import BoundingBox
 
 
-def make_dataset(dataset_path: Path) -> tuple[Dataset, SegmentationLayer]:
+def make_dataset(dataset_path: UPath) -> tuple[Dataset, SegmentationLayer]:
     dataset = Dataset(dataset_path / "test_attachments", voxel_size=(10, 10, 10))
     seg_layer = dataset.add_layer(
         "seg",
@@ -26,8 +26,8 @@ def make_dataset(dataset_path: Path) -> tuple[Dataset, SegmentationLayer]:
     return dataset, seg_layer
 
 
-def test_attachments(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_attachments(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     # meshes
     seg_layer.attachments.add_mesh(
@@ -142,14 +142,14 @@ def test_attachments(tmp_path: Path) -> None:
     assert "attachments" not in properties_json["dataLayers"][0]
 
 
-def test_copy_layer(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_copy_layer(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     mesh_path.write_text("test")
 
-    agglomerate_path = (tmp_path / "agglomerate_view_15").resolve()
+    agglomerate_path = (tmp_upath / "agglomerate_view_15").resolve()
     agglomerate_path.mkdir(parents=True, exist_ok=True)
     (agglomerate_path / "zarr.json").write_text("test")
 
@@ -164,7 +164,7 @@ def test_copy_layer(tmp_path: Path) -> None:
         data_format=AttachmentDataFormat.Zarr3,
     )
 
-    copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
+    copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
     copy_layer = copy_dataset.add_copy_layer(seg_layer).as_segmentation_layer()
 
     assert (
@@ -190,14 +190,14 @@ def test_copy_layer(tmp_path: Path) -> None:
     )
 
 
-def test_fs_copy_layer(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_fs_copy_layer(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     mesh_path.write_text("test")
 
-    agglomerate_path = (tmp_path / "agglomerate_view_15").resolve()
+    agglomerate_path = (tmp_upath / "agglomerate_view_15").resolve()
     agglomerate_path.mkdir(parents=True, exist_ok=True)
     (agglomerate_path / "zarr.json").write_text("test")
 
@@ -213,7 +213,7 @@ def test_fs_copy_layer(tmp_path: Path) -> None:
         data_format=AttachmentDataFormat.Zarr3,
     )
 
-    copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
+    copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
     copy_layer = copy_dataset.add_fs_copy_layer(seg_layer).as_segmentation_layer()
 
     # has been copied
@@ -230,14 +230,14 @@ def test_fs_copy_layer(tmp_path: Path) -> None:
     )
 
 
-def test_symlink_layer(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_symlink_layer(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     mesh_path.write_text("test")
 
-    agglomerate_path = (tmp_path / "agglomerate_view_15").resolve()
+    agglomerate_path = (tmp_upath / "agglomerate_view_15").resolve()
     agglomerate_path.mkdir(parents=True, exist_ok=True)
     (agglomerate_path / "zarr.json").write_text("test")
 
@@ -253,7 +253,7 @@ def test_symlink_layer(tmp_path: Path) -> None:
         data_format=AttachmentDataFormat.Zarr3,
     )
 
-    copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
+    copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
     with pytest.warns(DeprecationWarning):
         copy_layer = copy_dataset.add_symlink_layer(
             seg_layer, make_relative=True
@@ -278,8 +278,8 @@ def test_symlink_layer(tmp_path: Path) -> None:
     )
 
 
-def test_remote_layer(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_remote_layer(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     mesh_path = UPath(
         "s3://bucket/meshfile.zarr",
@@ -292,7 +292,7 @@ def test_remote_layer(tmp_path: Path) -> None:
         data_format=AttachmentDataFormat.Zarr3,
     )
 
-    copy_dataset = Dataset(tmp_path / "test_copy", voxel_size=(10, 10, 10))
+    copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
     copy_layer = copy_dataset.add_remote_layer(seg_layer).as_segmentation_layer()
 
     assert copy_layer.attachments.meshes[0].path == mesh_path
@@ -303,8 +303,8 @@ def test_remote_layer(tmp_path: Path) -> None:
     )
 
 
-def test_upload_fail(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_upload_fail(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
         name="meshfile",
@@ -315,8 +315,8 @@ def test_upload_fail(tmp_path: Path) -> None:
         dataset.upload()
 
 
-def test_unique_attachment_names(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_unique_attachment_names(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     seg_layer.attachments.add_mesh(
         UPath("http://example.com/meshfile.zarr"),
@@ -331,8 +331,8 @@ def test_unique_attachment_names(tmp_path: Path) -> None:
         )
 
 
-def test_acceptable_attachment_names(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_acceptable_attachment_names(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     with pytest.raises(ValueError):
         seg_layer.attachments.add_mesh(
@@ -358,8 +358,8 @@ def test_remote_dataset() -> None:
     assert seg_layer.attachments.meshes[0]._properties.path == "./seg/meshes/meshfile"
 
 
-def test_add_attachments(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_add_attachments(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     mesh = MeshAttachment.from_path_and_name(
         dataset.path / "seg" / "meshes" / "meshfile",
@@ -372,11 +372,11 @@ def test_add_attachments(tmp_path: Path) -> None:
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
 
 
-def test_add_copy_attachments(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_add_copy_attachments(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     # meshes
-    mesh_path = tmp_path / "meshfile"
+    mesh_path = tmp_upath / "meshfile"
     mesh_path.write_text("test")
 
     mesh = MeshAttachment.from_path_and_name(
@@ -396,7 +396,7 @@ def test_add_copy_attachments(tmp_path: Path) -> None:
     assert mesh_path.exists()
 
     # segment index (has camel-casing)
-    segment_index_path = tmp_path / "segment_index"
+    segment_index_path = tmp_upath / "segment_index"
     segment_index_path.write_text("test")
 
     segment_index = SegmentIndexAttachment.from_path_and_name(
@@ -412,11 +412,11 @@ def test_add_copy_attachments(tmp_path: Path) -> None:
     )
 
 
-def test_add_symlink_attachments(tmp_path: Path) -> None:
-    dataset, seg_layer = make_dataset(tmp_path)
+def test_add_symlink_attachments(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
 
     # meshes
-    mesh_path = tmp_path.resolve() / "meshfile"
+    mesh_path = tmp_upath.resolve() / "meshfile"
     mesh_path.write_text("test")
 
     mesh = MeshAttachment.from_path_and_name(
@@ -435,7 +435,7 @@ def test_add_symlink_attachments(tmp_path: Path) -> None:
     assert mesh_path.exists()
 
     # segment index (has camel-casing)
-    segment_index_path = tmp_path / "segment_index"
+    segment_index_path = tmp_upath / "segment_index"
     segment_index_path.write_text("test")
 
     segment_index = SegmentIndexAttachment.from_path_and_name(
@@ -456,8 +456,8 @@ def test_add_symlink_attachments(tmp_path: Path) -> None:
     ).resolve() == segment_index_path
 
 
-def test_detect_legacy_attachments(tmp_path: Path) -> None:
-    _, seg_layer = make_dataset(tmp_path)
+def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
+    _, seg_layer = make_dataset(tmp_upath)
 
     # legacy meshes
     mesh_path = seg_layer.path / "meshes" / "meshfile_4-4-1.hdf5"

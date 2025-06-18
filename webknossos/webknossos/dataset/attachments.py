@@ -56,13 +56,13 @@ def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -
 class Attachment:
     _properties: AttachmentProperties
     name: str
-    path: Path
+    path: UPath
     data_format: AttachmentDataFormat
 
     def __init__(
         self,
         properties: AttachmentProperties,
-        path: Path,
+        path: UPath,
     ):
         _validate_data_format(self.__class__, properties.data_format)
         _validate_name(properties.name)
@@ -74,11 +74,11 @@ class Attachment:
     @classmethod
     def from_path_and_name(
         cls,
-        path: Path,
+        path: UPath,
         name: str,
         *,
         data_format: AttachmentDataFormat,
-        dataset_path: Path | None = None,
+        dataset_path: UPath | None = None,
     ) -> Self:
         if not path.is_absolute():
             if dataset_path is None:

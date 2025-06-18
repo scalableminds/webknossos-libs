@@ -67,8 +67,8 @@ OUTPUT_PATHS = [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR]
 
 
 def copy_simple_dataset(
-    data_format: DataFormat, output_path: Path, suffix: str | None = None
-) -> Path:
+    data_format: DataFormat, output_path: UPath, suffix: str | None = None
+) -> UPath:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"simple_{data_format}_dataset{suffix}"
     rmtree(new_dataset_path)
@@ -80,8 +80,8 @@ def copy_simple_dataset(
 
 
 def prepare_dataset_path(
-    data_format: DataFormat, output_path: Path, suffix: str | None = None
-) -> Path:
+    data_format: DataFormat, output_path: UPath, suffix: str | None = None
+) -> UPath:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"{data_format}_dataset{suffix}"
     rmtree(new_dataset_path)
@@ -208,7 +208,7 @@ def assure_exported_properties(ds: Dataset) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_create_dataset_with_layer_and_mag(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
 
@@ -240,7 +240,7 @@ def test_create_dataset_with_layer_and_mag(
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_ome_ngff_0_4_metadata(output_path: Path) -> None:
+def test_ome_ngff_0_4_metadata(output_path: UPath) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
@@ -283,7 +283,7 @@ def test_ome_ngff_0_4_metadata(output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
-def test_ome_ngff_0_5_metadata(output_path: Path) -> None:
+def test_ome_ngff_0_5_metadata(output_path: UPath) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr3, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
@@ -478,7 +478,7 @@ def test_deprecated_chunks_per_shard() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_open_dataset(data_format: DataFormat, output_path: Path) -> None:
+def test_open_dataset(data_format: DataFormat, output_path: UPath) -> None:
     new_dataset_path = copy_simple_dataset(data_format, output_path)
     ds = Dataset.open(new_dataset_path)
 
@@ -488,7 +488,7 @@ def test_open_dataset(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> None:
+def test_modify_existing_dataset(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds1 = Dataset(ds_path, voxel_size=(1, 1, 1))
     ds1.add_layer(
@@ -516,7 +516,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> 
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_view_read(data_format: DataFormat, output_path: Path) -> None:
+def test_view_read(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
 
     with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
@@ -534,7 +534,7 @@ def test_view_read(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_view_write(data_format: DataFormat, output_path: Path) -> None:
+def test_view_write(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
     with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
         wk_view = (
@@ -557,7 +557,7 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
-def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
+def test_direct_zarr_access(output_path: UPath, data_format: DataFormat) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
     mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
@@ -577,7 +577,7 @@ def test_direct_zarr_access(output_path: Path, data_format: DataFormat) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) -> None:
+def test_view_write_out_of_bounds(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(
         data_format, output_path, "view_dataset_out_of_bounds"
     )
@@ -598,7 +598,7 @@ def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) ->
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_mag_view_write_out_of_bounds(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "dataset_out_of_bounds")
 
@@ -618,7 +618,7 @@ def test_mag_view_write_out_of_bounds(
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_mag_view_write_out_of_bounds_mag2(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "dataset_out_of_bounds")
 
@@ -641,7 +641,7 @@ def test_mag_view_write_out_of_bounds_mag2(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_view_write_allow_resize(data_format: DataFormat, output_path: Path) -> None:
+def test_view_write_allow_resize(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag("1")
@@ -679,7 +679,9 @@ def test_view_write_allow_resize(data_format: DataFormat, output_path: Path) -> 
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_view_write_allow_unaligned(data_format: DataFormat, output_path: Path) -> None:
+def test_view_write_allow_unaligned(
+    data_format: DataFormat, output_path: UPath
+) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
         "color",
@@ -726,7 +728,7 @@ def test_view_write_allow_unaligned(data_format: DataFormat, output_path: Path) 
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
+def test_views_are_equal(data_format: DataFormat, output_path: UPath) -> None:
     np.random.seed(1234)
     data: np.ndarray = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
 
@@ -764,7 +766,7 @@ def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_update_new_bounding_box_offset(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -825,7 +827,7 @@ def test_chunked_compressed_write() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_write_multi_channel_uint8(data_format: DataFormat, output_path: Path) -> None:
+def test_write_multi_channel_uint8(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "multichannel")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     mag = ds.add_layer(
@@ -843,7 +845,7 @@ def test_write_multi_channel_uint8(data_format: DataFormat, output_path: Path) -
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_wkw_write_multi_channel_uint16(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "multichannel")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -866,7 +868,7 @@ def test_wkw_write_multi_channel_uint16(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
+def test_empty_read(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     mag = (
         Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -881,7 +883,7 @@ def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 @pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
 def test_write_layer(
-    data_format: DataFormat, output_path: Path, absolute_offset: Vec3Int | None
+    data_format: DataFormat, output_path: UPath, absolute_offset: Vec3Int | None
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -907,7 +909,7 @@ def test_write_layer(
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 @pytest.mark.parametrize("absolute_offset", [None, Vec3Int(12, 12, 12)])
 def test_write_layer_mag2(
-    data_format: DataFormat, output_path: Path, absolute_offset: Vec3Int | None
+    data_format: DataFormat, output_path: UPath, absolute_offset: Vec3Int | None
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     ds = Dataset(ds_path, voxel_size=(12, 12, 24))
@@ -939,7 +941,7 @@ def test_write_layer_mag2(
 @pytest.mark.parametrize("absolute_offset", [None, (3, 12, 12, 12)])
 def test_write_layer_5d(
     data_format: DataFormat,
-    output_path: Path,
+    output_path: UPath,
     absolute_offset: VecIntLike | None,
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
@@ -964,7 +966,7 @@ def test_write_layer_5d(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_read_padded_data(data_format: DataFormat, output_path: Path) -> None:
+def test_read_padded_data(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "empty")
     mag = (
         Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -982,7 +984,7 @@ def test_read_padded_data(data_format: DataFormat, output_path: Path) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_num_channel_mismatch_assertion(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -1002,7 +1004,7 @@ def test_num_channel_mismatch_assertion(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
+def test_get_or_add_layer(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
 
@@ -1047,7 +1049,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_get_or_add_layer_idempotence(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -1062,7 +1064,7 @@ def test_get_or_add_layer_idempotence(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
+def test_get_or_add_mag(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
 
     layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
@@ -1215,7 +1217,7 @@ def test_properties_with_segmentation() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_relative_mag_paths(data_format: DataFormat, output_path: Path) -> None:
+def test_relative_mag_paths(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
 
     ds = Dataset.open(ds_path)
@@ -1235,7 +1237,7 @@ def test_relative_mag_paths(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
+def test_chunking_wk(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
     chunk_shape, shard_shape = default_chunk_config(data_format, 8)
@@ -1300,7 +1302,7 @@ def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_chunking_wkw_wrong_chunk_shape(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(
         data_format, output_path, "chunking_with_wrong_chunk_shape"
@@ -1375,7 +1377,7 @@ def test_dataset_exist_ok() -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_changing_layer_bounding_box(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "change_layer_bounding_box")
     ds = Dataset.open(ds_path)
@@ -1439,7 +1441,7 @@ def test_changing_layer_bounding_box(
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_dataset_bounding_box_calculation(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "change_layer_bounding_box")
     ds = Dataset.open(ds_path)
@@ -1587,7 +1589,7 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_writing_subset_of_compressed_data_multi_channel(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
     chunk_shape, shard_shape = default_chunk_config(data_format, 8)
@@ -1632,7 +1634,7 @@ def test_writing_subset_of_compressed_data_multi_channel(
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_writing_subset_of_compressed_data_single_channel(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
     chunk_shape, shard_shape = default_chunk_config(data_format, 8)
@@ -1678,7 +1680,7 @@ def test_writing_subset_of_compressed_data_single_channel(
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_writing_subset_of_compressed_data(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
     chunk_shape, shard_shape = default_chunk_config(data_format, 8)
@@ -1740,7 +1742,7 @@ def test_writing_subset_of_compressed_data(
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_writing_subset_of_chunked_compressed_data(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
     chunk_shape, shard_shape = default_chunk_config(data_format, 8)
@@ -2003,7 +2005,7 @@ def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
+def test_add_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
     original_ds_path = prepare_dataset_path(data_format, output_path, "original")
     copy_ds_path = prepare_dataset_path(data_format, output_path, "copy")
 
@@ -2051,7 +2053,7 @@ def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
+def test_add_fs_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
     original_ds_path = prepare_dataset_path(data_format, output_path, "original")
     copy_ds_path = prepare_dataset_path(data_format, output_path, "copy")
 
@@ -2101,7 +2103,7 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_search_dataset_also_for_long_layer_name(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "long_layer_name")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -2147,7 +2149,7 @@ def test_search_dataset_also_for_long_layer_name(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_dataset_shallow_copy(data_format: DataFormat, output_path: Path) -> None:
+def test_dataset_shallow_copy(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "original")
     copy_path = prepare_dataset_path(data_format, output_path, "copy")
 
@@ -2320,7 +2322,7 @@ def test_dataset_conversion_wkw_only() -> None:
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_dataset_conversion_from_wkw_to_zarr(
-    output_path: Path, data_format: DataFormat
+    output_path: UPath, data_format: DataFormat
 ) -> None:
     converted_path = prepare_dataset_path(data_format, output_path, "converted")
 
@@ -2416,7 +2418,7 @@ def _func_invalid_target_chunk_shape_wk(args: tuple[View, View, int]) -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
-    data_format: DataFormat, output_path: Path
+    data_format: DataFormat, output_path: UPath
 ) -> None:
     ds_path = prepare_dataset_path(
         data_format, output_path, "zipped_chunking_source_invalid"
@@ -2461,7 +2463,7 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
+def test_read_only_view(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "read_only_view")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     mag = ds.get_or_add_layer(
@@ -2486,7 +2488,7 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> None:
+def test_bounding_box_on_disk(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
     chunk_shape, shard_shape = default_chunk_config(data_format, 8)
@@ -2553,7 +2555,7 @@ def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> Non
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_compression(data_format: DataFormat, output_path: Path) -> None:
+def test_compression(data_format: DataFormat, output_path: UPath) -> None:
     new_dataset_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(new_dataset_path, voxel_size=(2, 2, 1))
     mag1 = ds.add_layer(
@@ -2815,7 +2817,7 @@ def test_read_bbox() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_add_copy_layer(data_format: DataFormat, output_path: Path) -> None:
+def test_add_copy_layer(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "original")
     copy_path = prepare_dataset_path(data_format, output_path, "copy")
 
@@ -2870,7 +2872,7 @@ def test_add_copy_layer(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
+def test_rename_layer(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
@@ -2908,7 +2910,7 @@ def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_delete_layer_and_mag(data_format: DataFormat, output_path: Path) -> None:
+def test_delete_layer_and_mag(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
@@ -2964,7 +2966,7 @@ def test_delete_layer_and_mag(data_format: DataFormat, output_path: Path) -> Non
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
+def test_add_layer_like(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     color_layer1 = ds.add_layer(
@@ -3108,7 +3110,7 @@ def test_pickle_view() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_warn_outdated_properties(data_format: DataFormat, output_path: Path) -> None:
+def test_warn_outdated_properties(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds1 = Dataset(ds_path, voxel_size=(1, 1, 1))
     ds2 = Dataset.open(ds_path)
@@ -3168,7 +3170,7 @@ def test_can_compress_mag8() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_downsampling(data_format: DataFormat, output_path: Path) -> None:
+def test_downsampling(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "downsampling")
 
     color_layer = Dataset.open(ds_path).get_layer("color")
@@ -3191,7 +3193,7 @@ def test_downsampling(data_format: DataFormat, output_path: Path) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> None:
+def test_aligned_downsampling(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "aligned_downsampling")
     dataset = Dataset.open(ds_path)
     input_layer = dataset.get_layer("color")
@@ -3236,7 +3238,7 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None:
+def test_guided_downsampling(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "guided_downsampling")
 
     input_dataset = Dataset.open(ds_path)
@@ -3315,7 +3317,9 @@ def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
 
 @pytest.mark.parametrize("input_path", OUTPUT_PATHS)
 @pytest.mark.parametrize("output_path", OUTPUT_PATHS)
-def test_fs_copy_dataset_with_attachments(input_path: Path, output_path: Path) -> None:
+def test_fs_copy_dataset_with_attachments(
+    input_path: UPath, output_path: UPath
+) -> None:
     ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, input_path)
     new_ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, output_path, "copied")
 

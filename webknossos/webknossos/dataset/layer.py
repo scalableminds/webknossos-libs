@@ -19,7 +19,8 @@ from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
-    determine_buffer_shape,
+    determine_downsample_buffer_shape,
+    determine_upsample_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
 )
@@ -174,15 +175,15 @@ def _get_shard_shape(
     return shard_shape
 
 
-def _is_foreign_mag(dataset_path: Path, layer_name: str, mag_path: Path) -> bool:
+def _is_foreign_mag(dataset_path: UPath, layer_name: str, mag_path: UPath) -> bool:
     return dataset_path / layer_name != resolve_if_fs_path(mag_path).parent
 
 
 def _find_mag_path(
-    layer_path: Path,
+    layer_path: UPath,
     mag_name: str | Mag,
-    path: Path | None = None,
-) -> Path:
+    path: UPath | None = None,
+) -> UPath:
     if path is not None:
         return path
 
@@ -244,7 +245,7 @@ class Layer:
         )
         self._mags: dict[Mag, MagView] = {}
         resolved_path = resolve_if_fs_path(self.dataset.resolved_path / self.name)
-        self._resolved_path: Path = resolved_path
+        self._resolved_path: UPath = resolved_path
         self._read_only = read_only
 
         for mag in properties.mags:
@@ -272,12 +273,12 @@ class Layer:
             )
 
     @property
-    def path(self) -> Path:
+    def path(self) -> UPath:
         """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
         Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
 
         Returns:
-            Path: Filesystem path to this layer's data directory
+            UPath: Filesystem path to this layer's data directory
 
         Raises:
             AssertionError: If mags in layer point to different layers
@@ -286,7 +287,7 @@ class Layer:
         return self.dataset.path / self.name
 
     @property
-    def resolved_path(self) -> Path:
+    def resolved_path(self) -> UPath:
         return self._resolved_path
 
     @property
@@ -637,7 +638,7 @@ class Layer:
     def _add_mag_for_existing_files(
         self,
         mag: MagLike,
-        mag_path: Path,
+        mag_path: UPath,
         read_only: bool,
         override_stored_path: str | None = None,
     ) -> MagView:
@@ -1042,7 +1043,7 @@ class Layer:
         the array is moved, otherwise a copy of the zarrarray is created.
         """
         self._ensure_writable()
-        source_path = Path(path)
+        source_path = enrich_path(path, self.dataset.resolved_path)
 
         try:
             TensorStoreArray.open(source_path)
@@ -1076,7 +1077,7 @@ class Layer:
 
             return mag_view
 
-    def _create_dir_for_mag(self, mag: MagLike) -> Path:
+    def _create_dir_for_mag(self, mag: MagLike) -> UPath:
         mag_name = Mag(mag).to_layer_name()
         full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
@@ -1303,7 +1304,7 @@ class Layer:
         # perform downsampling
         with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
-                buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                buffer_shape = determine_downsample_buffer_shape(prev_mag_view.info)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
@@ -1508,7 +1509,7 @@ class Layer:
             # perform upsampling
             with get_executor_for_args(None, executor) as actual_executor:
                 if buffer_shape is None:
-                    buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                    buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:
                     buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
                 func = named_partial(
@@ -1528,7 +1529,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, mag_path: Path, read_only: bool) -> None:
+    def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.
 
         Does not create storage headers/metadata, e.g. wk_header.

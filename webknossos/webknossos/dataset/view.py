@@ -1,6 +1,5 @@
 import warnings
 from collections.abc import Callable, Generator, Iterator
-from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -8,6 +7,7 @@ from typing import (
 
 import numpy as np
 from cluster_tools import Executor
+from upath import UPath
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.vec_int import VecIntLike
@@ -55,7 +55,7 @@ class View:
         ```
     """
 
-    _path: Path
+    _path: UPath
     _data_format: DataFormat
     _bounding_box: NDBoundingBox | None
     _read_only: bool
@@ -64,7 +64,7 @@ class View:
 
     def __init__(
         self,
-        path_to_mag_view: Path,
+        path_to_mag_view: UPath,
         bounding_box: NDBoundingBox
         | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,

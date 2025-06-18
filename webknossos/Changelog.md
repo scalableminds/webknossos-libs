@@ -10,20 +10,38 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.11...HEAD)
 
 ### Breaking Changes
 - `Dataset.add_symlink_layer`, `Layer.add_symlink_mag` and `Attachments.add_symlink_attachments` are deprecated. Please use `Dataset.add_remote_layer`, `Layer.add_remote_mag` and `Attachments.add_attachments` instead. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 - `Dataset.shallow_copy_dataset` does not symlink layers, mags and attachments anymore. Instead mags and attachments are referenced by their path. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 
 ### Added
-- Added `layers_to_ignore` argument to `Dataset.copy_dataset`. [#1321](https://github.com/scalableminds/webknossos-libs/pull/1321)
 
 ### Changed
+- Changed the default path type to `UPath` [#1326](https://github.com/scalableminds/webknossos-libs/pull/1326)
 - All mags now store their path in the `datasource-properties.json` file. This eliminates the need for symlinks and removes the need to check multiple possible mag paths (e.g. 1-1-1 or 1). It also unifies local and remote mags. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 - Dataset-local mags and attachments use the `./` prefix for their path in compliance with [IETF RFC1808](https://datatracker.ietf.org/doc/html/rfc1808). [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 
 ### Fixed
+
+
+## [2.3.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.11) - 2025-06-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.10...v2.3.11)
+
+### Fixed
+- Fixed excessive RAM consumption during downsampling by chunking the computation. [#1325](https://github.com/scalableminds/webknossos-libs/pull/1325)
+
+
+
+## [2.3.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.10) - 2025-06-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...v2.3.10)
+
+### Added
+- Added `layers_to_ignore` argument to `Dataset.copy_dataset`. [#1321](https://github.com/scalableminds/webknossos-libs/pull/1321)
+
+### Changed
+- Make number of retries and backoff factor configurable (mainly for tensorstore reads/writes). See `DEFAULT_NUM_RETRIES` and `DEFAULT_BACKOFF_FACTOR` environment variables. [#1323](https://github.com/scalableminds/webknossos-libs/pull/1323)
 
 
 ## [2.3.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.9) - 2025-06-13

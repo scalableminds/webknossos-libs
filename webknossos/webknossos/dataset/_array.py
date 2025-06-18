@@ -1,7 +1,6 @@
 import re
-import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
@@ -11,7 +10,6 @@ from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
-    TypeVar,
 )
 from urllib.parse import urlparse
 
@@ -22,14 +20,12 @@ from typing_extensions import Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import is_fs_path
+from ..utils import call_with_retries, is_fs_path
 from .data_format import DataFormat
 
 logger = getLogger(__name__)
 
 TS_CONTEXT = tensorstore.Context()
-
-DEFAULT_NUM_RETRIES = 5
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -38,35 +34,6 @@ def _is_power_of_two(num: int) -> bool:
 
 class ArrayException(Exception):
     pass
-
-
-ReturnType = TypeVar("ReturnType")
-
-
-def call_with_retries(
-    fn: Callable[[], ReturnType],
-    num_retries: int = DEFAULT_NUM_RETRIES,
-    description: str = "",
-) -> ReturnType:
-    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
-    last_exception = None
-    for i in range(num_retries):
-        try:
-            return fn()
-        except Exception as e:  # noqa: PERF203 # allow try except in loop
-            logger.warning(
-                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
-                f"Error was: {e}"
-            )
-            # We introduce some randomness to avoid multiple processes retrying at the same time
-            random_factor = np.random.uniform(0.5, 1.5)
-            time.sleep(1 * (1.5**i) * random_factor)
-            last_exception = e
-    # If the last attempt fails, we log the error and raise it.
-    # This is important to avoid silent failures.
-    logger.error(f"{description} failed after {num_retries} attempts.")
-    assert last_exception is not None, "last_exception should never be None here"
-    raise last_exception
 
 
 @dataclass
@@ -93,10 +60,10 @@ class ArrayInfo:
 class BaseArray(ABC):
     data_format = DataFormat.WKW
 
-    _path: Path
+    _path: UPath
 
     def __init__(self, path: Path):
-        self._path = path
+        self._path = UPath(path)
 
     @property
     @abstractmethod
@@ -450,10 +417,10 @@ class TensorStoreArray(BaseArray):
         )
 
     @staticmethod
-    def _make_kvstore(path: Path) -> str | dict[str, str | list[str]]:
+    def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
         if is_fs_path(path):
             return {"driver": "file", "path": str(path)}
-        elif isinstance(path, UPath) and path.protocol in ("http", "https"):
+        elif path.protocol in ("http", "https"):
             return {
                 "driver": "http",
                 "base_url": str(path),
@@ -462,7 +429,7 @@ class TensorStoreArray(BaseArray):
                     for key, value in path.storage_options.get("headers", {}).items()
                 ],
             }
-        elif isinstance(path, UPath) and path.protocol in ("s3"):
+        elif path.protocol in ("s3"):
             parsed_url = urlparse(str(path))
             kvstore_spec: dict[str, Any] = {
                 "driver": "s3",
@@ -480,7 +447,7 @@ class TensorStoreArray(BaseArray):
             else:
                 kvstore_spec["aws_credentials"] = {"type": "default"}
             return kvstore_spec
-        elif isinstance(path, UPath) and path.protocol == "memory":
+        elif path.protocol == "memory":
             # use memory driver (in-memory file systems), e.g. useful for testing
             # attention: this is not a persistent storage and it does not support
             # multiprocessing since memory is not shared between processes
@@ -506,7 +473,7 @@ class TensorStoreArray(BaseArray):
         raise ArrayException(f"Could not open the array at {path}.")
 
     @classmethod
-    def _open(cls, path: Path) -> Self:
+    def _open(cls, path: UPath) -> Self:
         try:
             uri = cls._make_kvstore(path)
             _array = call_with_retries(
@@ -728,7 +695,7 @@ class Zarr3Array(TensorStoreArray):
 
     @classmethod
     def open(cls, path: Path) -> "Zarr3Array":
-        return cls._open(path)
+        return cls._open(UPath(path))
 
     @property
     def info(self) -> ArrayInfo:
@@ -770,6 +737,7 @@ class Zarr3Array(TensorStoreArray):
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "Zarr3Array":
         assert array_info.data_format == cls.data_format
+        upath = UPath(path)
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]
@@ -785,7 +753,7 @@ class Zarr3Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": str(cls.data_format),
-                "kvstore": cls._make_kvstore(path),
+                "kvstore": cls._make_kvstore(upath),
                 "metadata": {
                     "data_type": str(array_info.voxel_type),
                     "shape": shape,
@@ -849,7 +817,7 @@ class Zarr3Array(TensorStoreArray):
             },
             context=TS_CONTEXT,
         ).result()
-        return cls(path, _array)
+        return cls(upath, _array)
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         metadata = self._array.spec().to_json()["metadata"]
@@ -868,7 +836,7 @@ class Zarr2Array(TensorStoreArray):
 
     @classmethod
     def open(cls, path: Path) -> "Zarr2Array":
-        return cls._open(path)
+        return cls._open(UPath(path))
 
     @property
     def info(self) -> ArrayInfo:
@@ -893,6 +861,7 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.chunks_per_shard == Vec3Int.full(1), (
             "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         )
+        upath = UPath(path)
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]
@@ -904,7 +873,7 @@ class Zarr2Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": "zarr",
-                "kvstore": cls._make_kvstore(path),
+                "kvstore": cls._make_kvstore(upath),
                 "metadata": {
                     "shape": shape,
                     "chunks": chunk_shape,
@@ -926,7 +895,7 @@ class Zarr2Array(TensorStoreArray):
             },
             context=TS_CONTEXT,
         ).result()
-        return cls(path, _array)
+        return cls(upath, _array)
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         metadata = self._array.spec().to_json()["metadata"]

@@ -111,7 +111,7 @@ class MagView(View):
         layer: "Layer",
         mag: Mag,
         *,
-        path: Path,
+        path: UPath,
         chunk_shape: Vec3Int,
         shard_shape: Vec3Int | None = None,
         chunks_per_shard: Vec3Int | None = None,
@@ -158,7 +158,7 @@ class MagView(View):
         self,
         layer: "Layer",
         mag: Mag,
-        path: Path,
+        path: UPath,
         read_only: bool = False,
     ) -> None:
         """
@@ -210,11 +210,11 @@ class MagView(View):
         return self._layer
 
     @property
-    def path(self) -> Path:
+    def path(self) -> UPath:
         """Get the path to this magnification level's data.
 
         Returns:
-            Path: Path to the data files on disk.
+            UPath: Path to the data files on disk.
 
         Notes:
             - Path may be local or remote depending on dataset configuration
@@ -667,10 +667,10 @@ class MagView(View):
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            path = enrich_path(
-                str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
+            maybe_path = UPath(mag_view)
+            mag_view_path = strip_trailing_slash(
+                enrich_path(maybe_path, maybe_path.parent.parent.resolve())
             )
-            mag_view_path = strip_trailing_slash(path)
             return (
                 Dataset.open(mag_view_path.parent.parent)
                 .get_layer(mag_view_path.parent.name)
