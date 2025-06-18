@@ -850,6 +850,33 @@ class Layer:
         executor: Executor | None = None,
         progress_desc: str | None = None,
     ) -> MagView:
+        """Deprecated. Use `Layer.add_mag_as_copy` instead."""
+        warn_deprecated("add_copy_mag", "add_mag_as_copy")
+        return self.add_mag_as_copy(
+            foreign_mag_view_or_path,
+            extend_layer_bounding_box=extend_layer_bounding_box,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+            chunks_per_shard=chunks_per_shard,
+            compress=compress,
+            exists_ok=exists_ok,
+            executor=executor,
+            progress_desc=progress_desc,
+        )
+
+    def add_mag_as_copy(
+        self,
+        foreign_mag_view_or_path: PathLike | str | MagView,
+        *,
+        extend_layer_bounding_box: bool = True,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        chunks_per_shard: Vec3IntLike | int | None = None,
+        compress: bool | None = None,
+        exists_ok: bool = False,
+        executor: Executor | None = None,
+        progress_desc: str | None = None,
+    ) -> MagView:
         """
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
         to the current dataset. Additionally, the relevant information from the
@@ -913,8 +940,9 @@ class Layer:
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
-        """
-        Deprecated. Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
+        """Deprecated. Use `Layer.add_mag_as_ref` instead.
+
+        Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
@@ -924,7 +952,7 @@ class Layer:
         self._ensure_writable()
         warnings.warn(
             "Using symlinks is deprecated and will be removed in a future version. "
-            + "Use `add_remote_mag` instead, which adds the mag as a reference to this layer.",
+            + "Use `add_mag_as_ref` instead, which adds the mag as a reference to this layer.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -966,6 +994,19 @@ class Layer:
         return mag
 
     def add_remote_mag(
+        self,
+        foreign_mag_view_or_path: PathLike | str | MagView,
+        *,
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView:
+        """Deprecated. Use `Layer.add_mag_as_ref` instead."""
+        warn_deprecated("add_remote_mag", "add_mag_as_ref")
+        return self.add_mag_as_ref(
+            foreign_mag_view_or_path,
+            extend_layer_bounding_box=extend_layer_bounding_box,
+        )
+
+    def add_mag_as_ref(
         self,
         foreign_mag_view_or_path: PathLike | str | MagView,
         *,

@@ -13,8 +13,19 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.11...HEAD)
 
 ### Breaking Changes
-- `Dataset.add_symlink_layer`, `Layer.add_symlink_mag` and `Attachments.add_symlink_attachments` are deprecated. Please use `Dataset.add_remote_layer`, `Layer.add_remote_mag` and `Attachments.add_attachments` instead. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 - `Dataset.shallow_copy_dataset` does not symlink layers, mags and attachments anymore. Instead mags and attachments are referenced by their path. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
+- Deprecated a number of methods [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290):
+  - `Dataset.add_symlink_layer`, use `Dataset.add_layer_as_ref` instead.
+  - `Dataset.add_remote_layer`, use `Dataset.add_layer_as_ref` instead (renamed).
+  - `Dataset.add_copy_layer`, use `Dataset.add_layer_as_copy` instead (renamed).
+  - `Layer.add_symlink_mag`, use `Layer.add_mag_as_ref` instead.
+  - `Layer.add_remote_mag`, use `Layer.add_mag_as_ref` instead (renamed).
+  - `Layer.add_copy_mag`, use `Layer.add_mag_as_copy` instead (renamed).
+  - `Attachments.add_symlink_attachments`, use `Attachments.add_attachment_as_ref` instead.
+  - `Attachments.add_attachments`, use `Attachments.add_attachment_as_ref` instead.
+  - `Attachments.add_copy_attachments`, use `Attachments.add_attachment_as_copy` instead.
+
+
 
 ### Added
 

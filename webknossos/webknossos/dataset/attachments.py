@@ -15,6 +15,7 @@ from ..utils import (
     is_fs_path,
     resolve_if_fs_path,
     snake_to_camel_case,
+    warn_deprecated,
 )
 from .data_format import AttachmentDataFormat
 from .properties import AttachmentProperties, AttachmentsProperties
@@ -300,38 +301,46 @@ class Attachments:
             raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
 
     def add_attachments(self, *other: Attachment) -> None:
+        warn_deprecated("add_attachments", "add_attachment_as_ref")
         for attachment in other:
-            new_attachment = type(attachment).from_path_and_name(
-                resolve_if_fs_path(attachment.path),
-                attachment.name,
-                data_format=attachment.data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
-            self._add_attachment(new_attachment)
+            self.add_attachment_as_ref(attachment)
+
+    def add_attachment_as_ref(self, attachment: Attachment) -> None:
+        new_attachment = type(attachment).from_path_and_name(
+            resolve_if_fs_path(attachment.path),
+            attachment.name,
+            data_format=attachment.data_format,
+            dataset_path=self._layer.dataset.resolved_path,
+        )
+        self._add_attachment(new_attachment)
 
     def add_copy_attachments(self, *other: Attachment) -> None:
+        warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
         for attachment in other:
-            new_path = resolve_if_fs_path(
-                self._layer.path
-                / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
-                / _maybe_add_suffix(attachment.name, attachment.data_format)
-            )
-            new_path.parent.mkdir(parents=True, exist_ok=True)
-            new_attachment = type(attachment).from_path_and_name(
-                new_path,
-                attachment.name,
-                data_format=attachment.data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
-            copytree(attachment.path, new_path)
-            self._add_attachment(new_attachment)
+            self.add_attachment_as_copy(*other)
+
+    def add_attachment_as_copy(self, attachment: Attachment) -> None:
+        new_path = resolve_if_fs_path(
+            self._layer.path
+            / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
+            / _maybe_add_suffix(attachment.name, attachment.data_format)
+        )
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+        new_attachment = type(attachment).from_path_and_name(
+            new_path,
+            attachment.name,
+            data_format=attachment.data_format,
+            dataset_path=self._layer.dataset.resolved_path,
+        )
+        copytree(attachment.path, new_path)
+        self._add_attachment(new_attachment)
 
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False
     ) -> None:
         warnings.warn(
             "Using symlinks is deprecated and will be removed in a future version. "
-            + "Use `add_attachments` instead, which adds the attachments as a reference to the layer.",
+            + "Use `add_attachment_as_ref` instead, which adds an attachment as a reference to the layer.",
             DeprecationWarning,
             stacklevel=2,
         )

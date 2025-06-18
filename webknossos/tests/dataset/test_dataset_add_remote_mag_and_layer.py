@@ -55,7 +55,7 @@ def test_add_remote_mags_from_mag_view(
             data_format=remote_mag.info.data_format,
             dtype_per_channel=remote_mag.get_dtype(),
         )
-        new_layer.add_remote_mag(remote_mag)
+        new_layer.add_mag_as_ref(remote_mag)
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
@@ -87,7 +87,7 @@ def test_add_remote_mags_from_path(
             data_format=remote_mag.info.data_format,
             dtype_per_channel=remote_mag.get_dtype(),
         )
-        new_layer.add_remote_mag(str(remote_mag.path))
+        new_layer.add_mag_as_ref(str(remote_mag.path))
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
@@ -95,7 +95,7 @@ def test_add_remote_mags_from_path(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-def test_add_remote_layer_from_object(sample_remote_dataset: Dataset) -> None:
+def test_ref_layer_from_object(sample_remote_dataset: Dataset) -> None:
     remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
@@ -103,14 +103,14 @@ def test_add_remote_layer_from_object(sample_remote_dataset: Dataset) -> None:
     for layer in sample_remote_layer:
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_object"
-        sample_remote_dataset.add_remote_layer(layer, layer_name)
+        sample_remote_dataset.add_layer_as_ref(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
         assert is_remote_path(new_layer.get_mag(1).path) and (
             str(layer.get_mag(1).path) == str(new_layer.get_mag(1).path)
         ), "Mag path of added layer should be equal to mag path in source layer."
 
 
-def test_add_remote_layer_from_path(sample_remote_dataset: Dataset) -> None:
+def test_ref_layer_from_path(sample_remote_dataset: Dataset) -> None:
     remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
@@ -118,14 +118,14 @@ def test_add_remote_layer_from_path(sample_remote_dataset: Dataset) -> None:
     for layer in sample_remote_layer:
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_path"
-        sample_remote_dataset.add_remote_layer(UPath(layer.path), layer_name)
+        sample_remote_dataset.add_layer_as_ref(UPath(layer.path), layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
         assert is_remote_path(new_layer.get_mag(1).path) and (
             str(new_layer.get_mag(1).path) == str(layer.get_mag(1).path)
         ), "Mag path of added layer should be equal to mag path is source layer."
 
 
-def test_add_remote_layer_non_public(tmp_path: Path) -> None:
+def test_ref_layer_non_public(tmp_path: Path) -> None:
     dataset = Dataset.open("testdata/simple_zarr3_dataset").copy_dataset(
         tmp_path / "simple_zarr3_dataset"
     )
@@ -133,7 +133,7 @@ def test_add_remote_layer_non_public(tmp_path: Path) -> None:
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
     remote_dataset.is_public = False
-    dataset.add_remote_layer(remote_dataset.get_layer("segmentation"), "segmentation")
+    dataset.add_layer_as_ref(remote_dataset.get_layer("segmentation"), "segmentation")
 
     assert dataset.layers["segmentation"].get_mag("16-16-4").read().shape == (
         1,
@@ -149,13 +149,13 @@ def test_shallow_copy_remote_layers(tmp_path: Path) -> None:
     remote_dataset = Dataset.open_remote(
         "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
     )
-    dataset.add_remote_layer(remote_dataset.get_layer("color"), "color")
+    dataset.add_layer_as_ref(remote_dataset.get_layer("color"), "color")
     dataset_copy = dataset.shallow_copy_dataset(tmp_path / "copy")
     data = dataset_copy.get_layer("color").get_mag("16-16-4").read()
     assert data.shape == (1, 64, 64, 256)
 
 
-def test_add_remote_mag_from_local_path(tmp_path: Path) -> None:
+def test_add_mag_ref_from_local_path(tmp_path: Path) -> None:
     dataset1 = Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
     dataset1.write_layer(
         "color",
@@ -165,7 +165,7 @@ def test_add_remote_mag_from_local_path(tmp_path: Path) -> None:
     )
 
     dataset2 = Dataset(tmp_path / "copy", voxel_size=(10, 10, 10))
-    layer1 = dataset2.add_remote_layer(tmp_path / "origin" / "color")
+    layer1 = dataset2.add_layer_as_ref(tmp_path / "origin" / "color")
     layer1_mag1 = layer1.get_mag(1)
 
     assert layer1_mag1.path == tmp_path / "origin" / "color" / "1"
@@ -173,7 +173,7 @@ def test_add_remote_mag_from_local_path(tmp_path: Path) -> None:
         (tmp_path / "origin" / "color" / "1").resolve()
     )
 
-    layer2_mag1 = dataset2.add_layer("color2", COLOR_CATEGORY).add_remote_mag(
+    layer2_mag1 = dataset2.add_layer("color2", COLOR_CATEGORY).add_mag_as_ref(
         tmp_path / "origin" / "color" / "1"
     )
     assert layer2_mag1.path == tmp_path / "origin" / "color" / "1"

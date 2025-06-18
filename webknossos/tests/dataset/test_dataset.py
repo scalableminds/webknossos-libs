@@ -2005,7 +2005,7 @@ def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_add_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
+def test_add_mag_as_copy(data_format: DataFormat, output_path: UPath) -> None:
     original_ds_path = prepare_dataset_path(data_format, output_path, "original")
     copy_ds_path = prepare_dataset_path(data_format, output_path, "copy")
 
@@ -2025,7 +2025,7 @@ def test_add_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
     copy_layer = copy_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
-    copy_mag = copy_layer.add_copy_mag(original_mag, extend_layer_bounding_box=True)
+    copy_mag = copy_layer.add_mag_as_copy(original_mag, extend_layer_bounding_box=True)
     assert not copy_mag.read_only
 
     assert (copy_ds_path / "color" / "1").exists()
@@ -2817,7 +2817,7 @@ def test_read_bbox() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_add_copy_layer(data_format: DataFormat, output_path: UPath) -> None:
+def test_add_layer_as_copy(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "original")
     copy_path = prepare_dataset_path(data_format, output_path, "copy")
 
@@ -2841,8 +2841,8 @@ def test_add_copy_layer(data_format: DataFormat, output_path: UPath) -> None:
     ).add_mag("1")
 
     # Copies the "color" layer from a different dataset
-    ds.add_copy_layer(copy_path / "color")
-    ds.add_copy_layer(copy_path / "segmentation")
+    ds.add_layer_as_copy(copy_path / "color")
+    ds.add_layer_as_copy(copy_path / "segmentation")
     assert len(ds.layers) == 2
     assert (
         ds.get_layer("segmentation").as_segmentation_layer().largest_segment_id == 999
@@ -2863,7 +2863,7 @@ def test_add_copy_layer(data_format: DataFormat, output_path: UPath) -> None:
 
     with pytest.raises(IndexError):
         # The dataset already has a layer called "color".
-        ds.add_copy_layer(copy_path / "color")
+        ds.add_layer_as_copy(copy_path / "color")
 
     # Test if the changes of the properties are persisted on disk by opening it again
     assert "color" in Dataset.open(ds_path).layers.keys()
