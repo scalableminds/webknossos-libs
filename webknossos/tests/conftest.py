@@ -5,18 +5,24 @@ from collections.abc import Generator
 from os import makedirs
 from pathlib import Path
 from shutil import rmtree, unpack_archive
-from typing import Any
+from typing import Any, Iterator
 
 import fsspec.implementations.http as http
 import httpx
 import pytest
 from hypothesis import strategies as st
+from upath import UPath
 
 import webknossos as wk
 from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
+
+
+@pytest.fixture()
+def tmp_upath(tmp_path: Path) -> Iterator[UPath]:
+    yield UPath(tmp_path)
 
 
 def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:

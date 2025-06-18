@@ -8,6 +8,7 @@ from typing import (
 
 import numpy as np
 from cluster_tools import Executor
+from upath import UPath
 
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.vec_int import VecIntLike
@@ -55,7 +56,7 @@ class View:
         ```
     """
 
-    _path: Path
+    _path: UPath
     _data_format: DataFormat
     _bounding_box: NDBoundingBox | None
     _read_only: bool
@@ -92,7 +93,7 @@ class View:
             view = mag_view.get_view(size=(100, 100, 10))
             ```
         """
-        self._path = path_to_mag_view
+        self._path = UPath(path_to_mag_view)
         self._data_format = data_format
         self._bounding_box = bounding_box
         self._read_only = read_only

@@ -11,8 +11,8 @@ from upath import UPath
 
 from webknossos.utils import rmtree
 
-TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
-TESTOUTPUT_DIR = Path(__file__).parent.parent / "testoutput"
+TESTDATA_DIR = UPath(__file__).parent.parent / "testdata"
+TESTOUTPUT_DIR = UPath(__file__).parent.parent / "testoutput"
 
 
 MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
@@ -31,7 +31,7 @@ REMOTE_TESTOUTPUT_DIR = UPath(
 def use_minio() -> Iterator[None]:
     """Minio is an S3 clone and is used as local test server"""
     if sys.platform == "darwin":
-        minio_path = Path("testoutput_minio")
+        minio_path = UPath("testoutput_minio")
         rmtree(minio_path)
         minio_process = subprocess.Popen(
             shlex.split(f"minio server --address :8000 ./{minio_path}"),

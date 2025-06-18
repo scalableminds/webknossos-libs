@@ -209,11 +209,11 @@ class MagView(View):
         return self._layer
 
     @property
-    def path(self) -> Path:
+    def path(self) -> UPath:
         """Get the path to this magnification level's data.
 
         Returns:
-            Path: Path to the data files on disk.
+            UPath: Path to the data files on disk.
 
         Notes:
             - Path may be local or remote depending on dataset configuration

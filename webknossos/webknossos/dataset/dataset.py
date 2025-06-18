@@ -317,8 +317,8 @@ class Dataset:
         path = strip_trailing_slash(UPath(dataset_path))
 
         self._read_only = read_only
-        self.path: Path = path
-        self._resolved_path: Path = resolve_if_fs_path(path)
+        self.path: UPath = path
+        self._resolved_path: UPath = resolve_if_fs_path(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -454,7 +454,7 @@ class Dataset:
         return dataset._init_from_properties(dataset_properties)
 
     @property
-    def resolved_path(self) -> Path:
+    def resolved_path(self) -> UPath:
         return self._resolved_path
 
     @classmethod

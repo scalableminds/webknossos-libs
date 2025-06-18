@@ -278,7 +278,7 @@ def count_defined_values(values: Iterable[Any | None]) -> int:
     return sum(i is not None for i in values)
 
 
-def is_fs_path(path: Path) -> bool:
+def is_fs_path(path: UPath) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
     return not isinstance(path, UPath) or isinstance(
@@ -286,32 +286,32 @@ def is_fs_path(path: Path) -> bool:
     )
 
 
-def is_remote_path(path: Path) -> bool:
+def is_remote_path(path: UPath) -> bool:
     return not is_fs_path(path)
 
 
-def resolve_if_fs_path(path: Path) -> Path:
+def resolve_if_fs_path(path: UPath) -> UPath:
     if is_fs_path(path):
         return path.resolve()
     return path
 
 
-def is_writable_path(path: Path) -> bool:
+def is_writable_path(path: UPath) -> bool:
     from upath.implementations.http import HTTPPath
 
     # cannot write to http paths
     return not isinstance(path, HTTPPath)
 
 
-def strip_trailing_slash(path: Path) -> Path:
+def strip_trailing_slash(path: UPath) -> UPath:
     if isinstance(path, UPath) and not is_fs_path(path):
         return UPath(str(path).rstrip("/"), **path.storage_options)
     else:
-        return Path(str(path).rstrip("/"))
+        return UPath(str(path).rstrip("/"))
 
 
-def rmtree(path: Path) -> None:
-    def _walk(path: Path) -> Iterator[Path]:
+def rmtree(path: UPath) -> None:
+    def _walk(path: UPath) -> Iterator[UPath]:
         if path.exists():
             if path.is_dir() and not path.is_symlink():
                 for p in path.iterdir():
@@ -332,13 +332,13 @@ def rmtree(path: Path) -> None:
 
 
 def copytree(
-    in_path: Path,
-    out_path: Path,
+    in_path: UPath,
+    out_path: UPath,
     *,
     threads: int | None = 10,
     progress_desc: str | None = None,
 ) -> None:
-    def _walk(path: Path, base_path: Path) -> Iterator[tuple[Path, tuple[str, ...]]]:
+    def _walk(path: UPath, base_path: UPath) -> Iterator[tuple[Path, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
         assert path.parts[: len(base_path.parts)] == base_path.parts
@@ -348,12 +348,12 @@ def copytree(
             for p in path.iterdir():
                 yield from _walk(p, base_path)
 
-    def _append(path: Path, parts: tuple[str, ...]) -> Path:
+    def _append(path: UPath, parts: tuple[str, ...]) -> UPath:
         for p in parts:
             path = path / p
         return path
 
-    def _copy(args: tuple[Path, Path, tuple[str, ...]]) -> None:
+    def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
         in_path, out_path, sub_path = args
         with (
             _append(in_path, sub_path).open("rb") as in_file,
@@ -361,7 +361,7 @@ def copytree(
         ):
             copyfileobj(in_file, out_file)
 
-    files_to_copy: list[tuple[Path, Path, tuple[str, ...]]] = []
+    files_to_copy: list[tuple[UPath, UPath, tuple[str, ...]]] = []
     for in_sub_path, sub_path in _walk(in_path, in_path):
         if in_sub_path.is_dir():
             _append(out_path, sub_path).mkdir(parents=True, exist_ok=True)
@@ -380,24 +380,24 @@ def copytree(
             pass
 
 
-def movetree(in_path: Path, out_path: Path) -> None:
+def movetree(in_path: UPath, out_path: UPath) -> None:
     move(in_path, out_path)
 
 
 class LazyPath:
-    paths: tuple[Path, ...]
+    paths: tuple[UPath, ...]
     resolution: int | None = None
 
-    def __init__(self, *paths: Path):
+    def __init__(self, *paths: UPath):
         self.paths = tuple(paths)
 
     @classmethod
-    def resolved(cls, path: Path) -> "LazyPath":
+    def resolved(cls, path: UPath) -> "LazyPath":
         obj = cls(path)
         obj.resolution = 0
         return obj
 
-    def resolve(self) -> Path:
+    def resolve(self) -> UPath:
         if self.resolution is not None:
             return self.paths[self.resolution]
         else:
@@ -502,7 +502,7 @@ def check_version_in_background(current_version: str) -> None:
     t.start()
 
 
-def safe_is_relative_to(path: Path, base_path: Path) -> bool:
+def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     if (
         (is_fs_path(path) and is_fs_path(base_path))
         or UPath(path).protocol == UPath(base_path).protocol
@@ -511,7 +511,7 @@ def safe_is_relative_to(path: Path, base_path: Path) -> bool:
     return False
 
 
-def enrich_path(path: str, dataset_path: Path) -> Path:
+def enrich_path(path: str, dataset_path: UPath) -> UPath:
     upath = UPath(path)
     if upath.protocol in ("http", "https"):
         from .client.context import _get_context
@@ -540,7 +540,7 @@ def enrich_path(path: str, dataset_path: Path) -> Path:
     return resolve_if_fs_path(upath)
 
 
-def dump_path(path: Path, dataset_path: Path | None) -> str:
+def dump_path(path: UPath, dataset_path: UPath | None) -> str:
     if is_fs_path(path) and not path.is_absolute():
         if dataset_path is None:
             raise ValueError("dataset_path must be provided when path is not absolute.")
