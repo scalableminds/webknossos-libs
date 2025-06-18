@@ -551,6 +551,6 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
             return str(path).removeprefix(str(dataset_path)).lstrip("/")
         if safe_is_relative_to(path, dataset_path):
             return str(path.relative_to(dataset_path))
-    if isinstance(path, UPath) and path.protocol == "s3":
+    if path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
     return str(path)
