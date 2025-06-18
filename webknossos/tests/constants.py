@@ -4,7 +4,6 @@ import subprocess
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
-from pathlib import Path
 from time import sleep
 
 from upath import UPath

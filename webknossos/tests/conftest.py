@@ -1,11 +1,11 @@
 import gc
 import os
 import warnings
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from os import makedirs
 from pathlib import Path
 from shutil import rmtree, unpack_archive
-from typing import Any, Iterator
+from typing import Any
 
 import fsspec.implementations.http as http
 import httpx
