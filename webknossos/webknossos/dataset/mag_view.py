@@ -110,7 +110,7 @@ class MagView(View):
         layer: "Layer",
         mag: Mag,
         *,
-        path: Path,
+        path: UPath,
         chunk_shape: Vec3Int,
         shard_shape: Vec3Int | None = None,
         chunks_per_shard: Vec3Int | None = None,
@@ -157,7 +157,7 @@ class MagView(View):
         self,
         layer: "Layer",
         mag: Mag,
-        path: Path,
+        path: UPath,
         read_only: bool = False,
     ) -> None:
         """

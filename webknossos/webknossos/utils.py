@@ -13,6 +13,7 @@ from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
+from os import PathLike
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
@@ -511,7 +512,7 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     return False
 
 
-def enrich_path(path: str, dataset_path: UPath) -> UPath:
+def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
     upath = UPath(path)
     if upath.protocol in ("http", "https"):
         from .client.context import _get_context

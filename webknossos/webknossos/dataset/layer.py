@@ -641,7 +641,7 @@ class Layer:
     def _add_mag_for_existing_files(
         self,
         mag: MagLike,
-        mag_path: Path,
+        mag_path: UPath,
         read_only: bool,
         # FIX when paths are merged
         # override_stored_path: str | None = None,
@@ -1041,7 +1041,7 @@ class Layer:
         the array is moved, otherwise a copy of the zarrarray is created.
         """
         self._ensure_writable()
-        source_path = UPath(path)
+        source_path = enrich_path(path, self.dataset.resolved_path)
 
         try:
             TensorStoreArray.open(source_path)
@@ -1527,7 +1527,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, mag_path: Path, read_only: bool) -> None:
+    def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.
 
         Does not create storage headers/metadata, e.g. wk_header.

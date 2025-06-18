@@ -1,6 +1,5 @@
 import warnings
 from collections.abc import Callable, Generator, Iterator
-from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -65,7 +64,7 @@ class View:
 
     def __init__(
         self,
-        path_to_mag_view: Path,
+        path_to_mag_view: UPath,
         bounding_box: NDBoundingBox
         | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
@@ -93,7 +92,7 @@ class View:
             view = mag_view.get_view(size=(100, 100, 10))
             ```
         """
-        self._path = UPath(path_to_mag_view)
+        self._path = path_to_mag_view
         self._data_format = data_format
         self._bounding_box = bounding_box
         self._read_only = read_only
