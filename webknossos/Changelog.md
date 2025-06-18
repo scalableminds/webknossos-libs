@@ -21,9 +21,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `Layer.add_symlink_mag`, use `Layer.add_mag_as_ref` instead.
   - `Layer.add_remote_mag`, use `Layer.add_mag_as_ref` instead (renamed).
   - `Layer.add_copy_mag`, use `Layer.add_mag_as_copy` instead (renamed).
-  - `Attachments.add_symlink_attachments`, use `Attachments.add_attachment_as_ref` instead.
-  - `Attachments.add_attachments`, use `Attachments.add_attachment_as_ref` instead.
-  - `Attachments.add_copy_attachments`, use `Attachments.add_attachment_as_copy` instead.
+  - `Attachments.add_symlink_attachments`, use `Attachments.add_attachment_as_ref` instead (note the singular form).
+  - `Attachments.add_attachments`, use `Attachments.add_attachment_as_ref` instead (note the singular form).
+  - `Attachments.add_copy_attachments`, use `Attachments.add_attachment_as_copy` instead (note the singular form).
 
 
 
