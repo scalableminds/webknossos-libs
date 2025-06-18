@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.11...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [2.3.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.11) - 2025-06-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.10...v2.3.11)
+
+### Fixed
 - Fixed excessive RAM consumption during downsampling by chunking the computation. [#1325](https://github.com/scalableminds/webknossos-libs/pull/1325)
+
 
 
 ## [2.3.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.10) - 2025-06-17
