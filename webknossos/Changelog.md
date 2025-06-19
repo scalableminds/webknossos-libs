@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Changed the default path type to `UPath` [#1326](https://github.com/scalableminds/webknossos-libs/pull/1326)
+- Warnings regarding missing pims image readers are only printed once during conversion. Error messages regarding wk-libs version are not displayed in slurm environments. [#1266](https://github.com/scalableminds/webknossos-libs/pull/1266)
 
 ### Fixed
 
@@ -36,7 +37,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added `layers_to_ignore` argument to `Dataset.copy_dataset`. [#1321](https://github.com/scalableminds/webknossos-libs/pull/1321)
 
-### Changed
+### Fixed
 - Make number of retries and backoff factor configurable (mainly for tensorstore reads/writes). See `DEFAULT_NUM_RETRIES` and `DEFAULT_BACKOFF_FACTOR` environment variables. [#1323](https://github.com/scalableminds/webknossos-libs/pull/1323)
 
 

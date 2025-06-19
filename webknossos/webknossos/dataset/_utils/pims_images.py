@@ -2,7 +2,7 @@ import warnings
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
-from os import PathLike
+from os import PathLike, environ
 from pathlib import Path
 from typing import TypeVar, Union, cast
 from urllib.error import HTTPError
@@ -20,6 +20,49 @@ from ..mag_view import MagView
 # Fix ImageIOReader not handling channels correctly. This might get fixed via
 # https://github.com/soft-matter/pims/pull/430
 pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
+
+
+def _pims_imports() -> str | None:
+    import_exceptions = []
+
+    try:
+        from .pims_czi_reader import PimsCziReader  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsCziReader: {import_error.msg}")
+
+    try:
+        from .pims_dm_readers import (  # noqa: F401 unused-import
+            PimsDm3Reader,
+            PimsDm4Reader,
+        )
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsDmReaders: {import_error.msg}")
+
+    try:
+        from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
+
+    if import_exceptions:
+        import_exception_string = "".join(
+            f"\t- {import_exception}\n" for import_exception in import_exceptions
+        )
+
+        return import_exception_string
+    return None
+
+
+if (pims_warnings := _pims_imports()) is not None:
+    if environ.get("WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING", "False") == "False":
+        # If the environment variable is not set, we assume that the user has not seen the warning yet.
+        # We set it to True to prevent showing the warning again.
+        environ["WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING"] = "True"
+        warnings.warn(
+            f"[WARNING] Not all pims readers could be imported:\n{pims_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
+            category=UserWarning,
+            source=None,
+            stacklevel=2,
+        )
 
 
 def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
@@ -306,33 +349,6 @@ class PimsImages:
     def _try_open_pims_images(
         self, original_images: str | list[str], exceptions: list[Exception]
     ) -> pims.FramesSequence | None:
-        import_exceptions = []
-
-        try:
-            from .pims_czi_reader import PimsCziReader  # noqa: F401 unused-import
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsCziReader: {import_error.msg}")
-
-        try:
-            from .pims_dm_readers import (  # noqa: F401 unused-import
-                PimsDm3Reader,
-                PimsDm4Reader,
-            )
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsDmReaders: {import_error.msg}")
-
-        try:
-            from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
-        except ImportError as import_error:
-            import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
-
-        if import_exceptions:
-            import_exception_string = "\n\t" + "\n\t".join(import_exceptions)
-            warnings.warn(
-                f"[WARNING] Not all pims readers could be imported: {import_exception_string}\nInstall the readers you need or use 'webknossos[all]' to install all readers.",
-                category=UserWarning,
-            )
-
         if self._use_bioformats:
             return None
 
