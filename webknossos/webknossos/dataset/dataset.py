@@ -40,6 +40,7 @@ from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._array import ArrayException, ArrayInfo, BaseArray
 from ._metadata import DatasetMetadata
+from ._utils import pims_images
 from .defaults import (
     DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
@@ -237,7 +238,6 @@ class Dataset:
             use_bioformats: bool | None,
         ) -> Callable[[Path], str]:
             ConversionLayerMapping = Dataset.ConversionLayerMapping
-            from ._utils import pims_images
 
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
                 return lambda p: p.as_posix().replace("/", "_")
@@ -892,15 +892,6 @@ class Dataset:
             This method needs extra packages like tifffile or pylibczirw.
             Install with `pip install "webknossos[all]"` and `pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[czi]"`.
         """
-        from ._utils import pims_images
-
-        if pims_images._PIMS_IMPORT_ERRORS is not None:
-            warnings.warn(
-                f"[WARNING] Not all pims readers could be imported:\n{pims_images._PIMS_IMPORT_ERRORS}Install the readers you need or use 'webknossos[all]' to install all readers.",
-                category=UserWarning,
-                source=None,
-                stacklevel=2,
-            )
 
         input_upath = UPath(input_path)
 
@@ -1699,8 +1690,6 @@ class Dataset:
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-        from ._utils import pims_images
-
         if category is None:
             image_path_for_category_guess: Path
             if isinstance(images, str) or isinstance(images, PathLike):

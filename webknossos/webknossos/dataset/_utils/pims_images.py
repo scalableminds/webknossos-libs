@@ -2,7 +2,7 @@ import warnings
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
-from os import PathLike
+from os import PathLike, environ
 from pathlib import Path
 from typing import TypeVar, Union, cast
 from urllib.error import HTTPError
@@ -52,7 +52,17 @@ def _pims_imports() -> str | None:
     return None
 
 
-_PIMS_IMPORT_ERRORS = _pims_imports()
+if environ.get("WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING", "False") == "False":
+    # If the environment variable is not set, we assume that the user has not seen the warning yet.
+    # We set it to True to prevent showing the warning again.
+    environ["WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING"] = "True"
+    if (pims_warnings := _pims_imports()) is not None:
+        warnings.warn(
+            f"[WARNING] Not all pims readers could be imported:\n{pims_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
+            category=UserWarning,
+            source=None,
+            stacklevel=2,
+        )
 
 
 def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
