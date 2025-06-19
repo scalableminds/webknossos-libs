@@ -52,11 +52,11 @@ def _pims_imports() -> str | None:
     return None
 
 
-if environ.get("WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING", "False") == "False":
-    # If the environment variable is not set, we assume that the user has not seen the warning yet.
-    # We set it to True to prevent showing the warning again.
-    environ["WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING"] = "True"
-    if (pims_warnings := _pims_imports()) is not None:
+if (pims_warnings := _pims_imports()) is not None:
+    if environ.get("WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING", "False") == "False":
+        # If the environment variable is not set, we assume that the user has not seen the warning yet.
+        # We set it to True to prevent showing the warning again.
+        environ["WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING"] = "True"
         warnings.warn(
             f"[WARNING] Not all pims readers could be imported:\n{pims_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
             category=UserWarning,
