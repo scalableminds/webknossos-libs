@@ -85,7 +85,7 @@ class AbstractApiClient(ABC):
             timeout_seconds=timeout_seconds,
         )
 
-    def _post_json_with_response_stream(
+    def _post_json_with_bytes_iterator_response(
         self,
         route: str,
         body_structured: Any,

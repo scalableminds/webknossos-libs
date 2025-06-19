@@ -56,7 +56,7 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
-from .api_client import DatastoreApiClient, TracingstoreApiClient, WkApiClient
+from .api_client import DatastoreApiClient, TracingStoreApiClient, WkApiClient
 
 load_dotenv()
 
@@ -166,12 +166,12 @@ class _WebknossosContext:
             headers=headers,
         )
 
-    def get_tracingstore_api_client(self) -> TracingstoreApiClient:
+    def get_tracingstore_api_client(self) -> TracingStoreApiClient:
         if self.datastore_token is not None:
             headers = {"X-Auth-Token": self.datastore_token}
-        api_tracingstore = self.api_client_with_auth.tracingstore()
+        api_tracingstore = self.api_client_with_auth.tracing_store()
 
-        return TracingstoreApiClient(
+        return TracingStoreApiClient(
             base_url=api_tracingstore.url,
             timeout_seconds=self.timeout,
             headers=headers,

@@ -364,7 +364,7 @@ class ApiFolder:
 
 
 @attr.s(auto_attribs=True)
-class ApiMeshPrecomputed:
+class ApiPrecomputedMeshInfo:
     lod: int
     mesh_file_name: str
     segment_id: int
@@ -372,7 +372,7 @@ class ApiMeshPrecomputed:
 
 
 @attr.s(auto_attribs=True)
-class ApiMeshAdHoc:
+class ApiAdHocMeshInfo:
     lod: int
     segment_id: int  # if mapping name is set, this is an agglomerate id
     mapping_name: str | None

@@ -136,7 +136,7 @@ class WkApiClient(AbstractApiClient):
         route = "/datastores"
         return self._get_json(route, list[ApiDataStore])
 
-    def tracingstore(self) -> ApiTracingStore:
+    def tracing_store(self) -> ApiTracingStore:
         route = "/tracingstore"
         return self._get_json(route, ApiTracingStore)
 

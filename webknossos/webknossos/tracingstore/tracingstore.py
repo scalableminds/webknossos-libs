@@ -4,8 +4,8 @@ from pathlib import Path
 import attr
 from upath import UPath
 
-from webknossos.client.api_client.models import ApiMeshAdHoc
-from webknossos.client.api_client.tracingstore_api_client import TracingstoreApiClient
+from webknossos.client.api_client.models import ApiAdHocMeshInfo
+from webknossos.client.api_client.tracingstore_api_client import TracingStoreApiClient
 from webknossos.geometry.mag import Mag
 
 
@@ -15,7 +15,7 @@ class Tracingstore:
 
     name: str
     url: str
-    _api_client: TracingstoreApiClient
+    _api_client: TracingStoreApiClient
 
     @classmethod
     def get_tracingstore(
@@ -37,7 +37,7 @@ class Tracingstore:
         from ..client.context import _get_context
 
         context = _get_context()
-        api_tracingstore = context.api_client_with_auth.tracingstore()
+        api_tracingstore = context.api_client_with_auth.tracing_store()
         api_client = context.get_tracingstore_api_client()
         return cls(api_tracingstore.name, api_tracingstore.url, api_client)
 
@@ -64,7 +64,7 @@ class Tracingstore:
         """
         download_path = UPath(download_path)
         download_path.parent.mkdir(parents=True, exist_ok=True)
-        mesh = ApiMeshAdHoc(
+        mesh = ApiAdHocMeshInfo(
             lod=0,
             segment_id=segment_id,
             mapping_name=None,
