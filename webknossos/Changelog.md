@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.11...HEAD)
 
 ### Breaking Changes
 
@@ -33,8 +33,27 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `TaskExperience` class to store domain and value pair.
 
 ### Changed
+- Changed the default path type to `UPath` [#1326](https://github.com/scalableminds/webknossos-libs/pull/1326)
 
 ### Fixed
+
+
+## [2.3.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.11) - 2025-06-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.10...v2.3.11)
+
+### Fixed
+- Fixed excessive RAM consumption during downsampling by chunking the computation. [#1325](https://github.com/scalableminds/webknossos-libs/pull/1325)
+
+
+
+## [2.3.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.10) - 2025-06-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.9...v2.3.10)
+
+### Added
+- Added `layers_to_ignore` argument to `Dataset.copy_dataset`. [#1321](https://github.com/scalableminds/webknossos-libs/pull/1321)
+
+### Changed
+- Make number of retries and backoff factor configurable (mainly for tensorstore reads/writes). See `DEFAULT_NUM_RETRIES` and `DEFAULT_BACKOFF_FACTOR` environment variables. [#1323](https://github.com/scalableminds/webknossos-libs/pull/1323)
 
 
 ## [2.3.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.9) - 2025-06-13
