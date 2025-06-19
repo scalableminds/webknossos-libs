@@ -864,7 +864,7 @@ class Dataset:
             voxel_size_with_unit: Optional voxel size with unit specification
             layer_name: Optional name for layer(s)
             layer_category: Optional category override (LayerCategoryType.color / LayerCategoryType.segmentation)
-            data_format: Format to store data in ('wkw'/'zarr')
+            data_format: Format to store data in ('wkw'/'zarr'/'zarr3)
             chunk_shape: Optional. Shape of chunks to store data in
             shard_shape: Optional. Shape of shards to store data in
             chunks_per_shard: Deprecated, use shard_shape. Optional. number of chunks per shard
@@ -1673,7 +1673,7 @@ class Dataset:
         Further Arguments:
 
         * `category`: `color` by default, may be set to "segmentation"
-        * `data_format`: by default wkw files are written, may be set to "zarr"
+        * `data_format`: by default zarr3 files are written, may be set to "wkw" or "zarr" to write in these formats.
         * `mag`: magnification to use for the written data
         * `chunk_shape`, `chunks_per_shard`, `shard_shape`, `compress`: adjust how the data is stored on disk
         * `topleft`: set an offset in Mag(1) to start writing the data, only affecting the output
