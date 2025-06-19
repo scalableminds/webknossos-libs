@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 import attr
 
@@ -196,21 +196,45 @@ class ApiTaskType:
     description: str
     team_id: str
     team_name: str
+    settings: dict[str, Any] | None = None
+    tracing_type: Literal["skeleton", "volume", "hybrid"] | None = None
 
 
 @attr.s(auto_attribs=True)
-class ApiTask:
-    id: str
-    project_id: str
-    dataset_name: str
-    status: ApiTaskStatus
-    type: ApiTaskType
+class ApiTaskTypeCreate:
+    summary: str
+    description: str
+    team_id: str
+    team_name: str
+    tracing_type: Literal["skeleton", "volume", "hybrid"]
+    settings: dict[str, Any] | None = None
 
 
 @attr.s(auto_attribs=True)
 class ApiExperience:
     domain: str
     value: int
+
+
+@attr.s(auto_attribs=True)
+class ApiScript:
+    id: str
+    name: str
+    owner: str
+
+
+@attr.s(auto_attribs=True)
+class ApiTask:
+    id: str
+    project_id: str
+    dataset_id: str
+    status: ApiTaskStatus
+    type: ApiTaskType
+    needed_experience: ApiExperience
+    bounding_box: ApiBoundingBox | None
+    edit_position: tuple[int, int, int]
+    edit_rotation: tuple[float, float, float]
+    script: ApiScript | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -238,8 +262,8 @@ class ApiTaskParameters:
 
 @attr.s(auto_attribs=True)
 class ApiSingleTaskCreationResult:
-    error: str | None
-    success: ApiTask | None
+    success: ApiTask | None = None
+    error: str | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -312,7 +336,19 @@ class ApiProject:
     priority: int
     paused: bool
     owner: ApiUserCompact | None  # None in case you have no read access on the owner
+    is_blacklisted_from_report: bool
     expected_time: int | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiProjectCreate:
+    name: str
+    team: str
+    priority: int
+    paused: bool
+    is_blacklisted_from_report: bool
+    expected_time: int | None = None
+    owner: str | None = None
 
 
 @attr.s(auto_attribs=True)
