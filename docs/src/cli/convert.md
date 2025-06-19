@@ -54,7 +54,7 @@ webknossos convert [OPTIONS] SOURCE TARGET
 - `--data-format`  
     Data format to store the target dataset.  
     Options: `wkw`, `zarr`, `zarr3`  
-    Default: `wkw`.
+    Default: `zarr3`.
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
@@ -134,7 +134,7 @@ webknossos convert-knossos [OPTIONS] SOURCE TARGET
 - `--data-format`  
     Data format to store the target dataset.  
     Options: `wkw`, `zarr`, `zarr3`  
-    Default: `wkw`
+    Default: `zarr3`
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
@@ -218,7 +218,7 @@ webknossos convert-raw [OPTIONS] SOURCE TARGET
 - `--data-format`  
     Data format to store the target dataset. 
     Options: `wkw`, `zarr`, `zarr3`   
-    Default: `wkw`.
+    Default: `zarr3`.
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
@@ -290,7 +290,7 @@ webknossos convert-zarr [OPTIONS] SOURCE TARGET
 - `--data-format`  
     Data format to store the target dataset.
     Options: `wkw`, `zarr`, `zarr3`  
-    Default: `wkw`.
+    Default: `zarr3`.
 
 - `--chunk-shape`  
     Number of voxels to be stored as a chunk in the output format.  
