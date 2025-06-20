@@ -49,7 +49,6 @@ from ..utils import (
     enrich_path,
     get_executor_for_args,
     is_fs_path,
-    is_remote_path,
     movetree,
     named_partial,
     resolve_if_fs_path,
@@ -337,17 +336,24 @@ class Layer:
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
         Only layers on local file systems can be renamed.
         """
+        from .dataset import _ALLOWED_LAYER_NAME_REGEX
+
         if layer_name == self.name:
             return
         self._ensure_metadata_writable()
-        assert layer_name not in self.dataset.layers.keys(), (
-            f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        )
-        assert is_fs_path(self.path), f"Cannot rename remote layer {self.path}"
-        assert "/" not in layer_name, (
-            f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
-        )
-        self.path.rename(self.dataset.path / layer_name)
+        if not is_fs_path(self.path):
+            raise RuntimeError(f"Cannot rename remote layer {self.path}")
+        if layer_name in self.dataset.layers.keys():
+            raise ValueError(
+                f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+            )
+        if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+            raise ValueError(
+                f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+            )
+
+        if self.path.exists():
+            self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
         self._resolved_path = resolve_if_fs_path(
             self.dataset.resolved_path / layer_name
@@ -359,14 +365,13 @@ class Layer:
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            # FIX when paths are merged
-            # if not mag.is_foreign:
-            #     mag._properties.path = str(
-            #         self.resolved_path.relative_to(self.dataset.resolved_path)
-            #         / mag.path.name
-            #     )
-            # else:
-            #     assert mag._properties.path is not None  # for type checking
+            if not mag.is_foreign:
+                mag._properties.path = str(
+                    self.resolved_path.relative_to(self.dataset.resolved_path)
+                    / mag.path.name
+                )
+            else:
+                assert mag._properties.path is not None  # for type checking
             mag._path = (
                 enrich_path(mag._properties.path, self.dataset.resolved_path)
                 if mag._properties.path is not None
@@ -629,8 +634,7 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
-                # FIX when paths are merged
-                # path=dump_path(mag_path, self.dataset.resolved_path),
+                path=dump_path(mag_path, self.dataset.resolved_path),
             )
         ]
 
@@ -643,8 +647,7 @@ class Layer:
         mag: MagLike,
         mag_path: UPath,
         read_only: bool,
-        # FIX when paths are merged
-        # override_stored_path: str | None = None,
+        override_stored_path: str | None = None,
     ) -> MagView:
         """Creates a MagView for existing data files.
 
@@ -669,12 +672,11 @@ class Layer:
         self._setup_mag(mag, mag_path=mag_path, read_only=read_only)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
-        # FIX when paths are merged
-        # stored_path = (
-        #     override_stored_path
-        #     if override_stored_path is not None
-        #     else dump_path(mag_path, self.dataset.resolved_path)
-        # )
+        stored_path = (
+            override_stored_path
+            if override_stored_path is not None
+            else dump_path(mag_path, self.dataset.resolved_path)
+        )
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag,
@@ -694,61 +696,7 @@ class Layer:
                     if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
-                # FIX when paths are merged
-                # path=stored_path,
-            )
-        )
-        self.dataset._export_as_json()
-
-        return mag_view
-
-    def _add_existing_remote_mag_view(
-        self,
-        mag_view_maybe: MagLike | MagView,
-    ) -> MagView:
-        """Adds a remote magnification view to this layer.
-
-        Links a magnification from a remote dataset into this layer. The remote
-        mag must already exist.
-
-        Args:
-            mag_view_maybe: Remote magnification to add, as view or identifier
-
-        Returns:
-            MagView: View of the added remote magnification
-
-        Raises:
-            AssertionError: If magnification exists or remote mag invalid
-            ArrayException: If remote data cannot be accessed
-        """
-
-        self._ensure_writable()
-        mag_path = (
-            mag_view_maybe.path
-            if isinstance(mag_view_maybe, MagView)
-            else self.path / Mag(mag_view_maybe).to_layer_name()
-        )
-        mag = (
-            mag_view_maybe.mag
-            if isinstance(mag_view_maybe, MagView)
-            else Mag(mag_view_maybe)
-        )
-        mag_view = (
-            mag_view_maybe
-            if isinstance(mag_view_maybe, MagView)
-            else MagView._ensure_mag_view(mag_path)
-        )
-        assert mag not in self.mags, (
-            f"Cannot add mag {mag} as it already exists for layer {self}"
-        )
-        self._setup_mag(mag, mag_path, read_only=True)
-        # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
-        self._properties.mags.append(
-            MagViewProperties(
-                mag=mag_view.mag,
-                path=dump_path(mag_view.path, self.dataset.resolved_path),
-                cube_length=mag_view._properties.cube_length,
-                axis_order=mag_view._properties.axis_order,
+                path=stored_path,
             )
         )
         self.dataset._export_as_json()
@@ -856,6 +804,33 @@ class Layer:
         executor: Executor | None = None,
         progress_desc: str | None = None,
     ) -> MagView:
+        """Deprecated. Use `Layer.add_mag_as_copy` instead."""
+        warn_deprecated("add_copy_mag", "add_mag_as_copy")
+        return self.add_mag_as_copy(
+            foreign_mag_view_or_path,
+            extend_layer_bounding_box=extend_layer_bounding_box,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+            chunks_per_shard=chunks_per_shard,
+            compress=compress,
+            exists_ok=exists_ok,
+            executor=executor,
+            progress_desc=progress_desc,
+        )
+
+    def add_mag_as_copy(
+        self,
+        foreign_mag_view_or_path: PathLike | str | MagView,
+        *,
+        extend_layer_bounding_box: bool = True,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        chunks_per_shard: Vec3IntLike | int | None = None,
+        compress: bool | None = None,
+        exists_ok: bool = False,
+        executor: Executor | None = None,
+        progress_desc: str | None = None,
+    ) -> MagView:
         """
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
         to the current dataset. Additionally, the relevant information from the
@@ -919,7 +894,8 @@ class Layer:
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
-        """
+        """Deprecated. Use `Layer.add_mag_as_ref` instead.
+
         Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
@@ -928,6 +904,12 @@ class Layer:
         Symlinked mags can only be added to layers on local file systems.
         """
         self._ensure_writable()
+        warnings.warn(
+            "Using symlinks is deprecated and will be removed in a future version. "
+            + "Use `add_mag_as_ref` instead, which adds the mag as a reference to this layer.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
@@ -946,11 +928,16 @@ class Layer:
 
         (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
+        new_mag_path = (
+            relpath(foreign_mag_view.path, self.dataset.resolved_path)
+            if make_relative
+            else str(foreign_mag_view.path.resolve())
+        )
+
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag,
             mag_path=foreign_mag_view.path,
-            # FIX when paths are merged
-            # override_stored_path=str(foreign_normalized_mag_path),
+            override_stored_path=new_mag_path,
             read_only=True,
         )
 
@@ -966,6 +953,19 @@ class Layer:
         *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
+        """Deprecated. Use `Layer.add_mag_as_ref` instead."""
+        warn_deprecated("add_remote_mag", "add_mag_as_ref")
+        return self.add_mag_as_ref(
+            foreign_mag_view_or_path,
+            extend_layer_bounding_box=extend_layer_bounding_box,
+        )
+
+    def add_mag_as_ref(
+        self,
+        foreign_mag_view_or_path: PathLike | str | MagView,
+        *,
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView:
         """
         Adds the mag at `foreign_mag_view_or_path` which belongs to foreign dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
@@ -976,9 +976,6 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_remote_path(foreign_mag_view.path), (
-            f"Cannot create foreign mag for local mag {foreign_mag_view.path}. Please use layer.add_mag in this case."
-        )
         assert self.data_format == foreign_mag_view.info.data_format, (
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"
@@ -988,13 +985,25 @@ class Layer:
             + f"must match the layer's dtype {self.dtype_per_channel}"
         )
 
-        mag = self._add_existing_remote_mag_view(foreign_mag_view)
+        self._setup_mag(foreign_mag_view.mag, foreign_mag_view.path, read_only=True)
+
+        # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
+        self._properties.mags.append(
+            MagViewProperties(
+                mag=foreign_mag_view.mag,
+                path=dump_path(foreign_mag_view.path, self.dataset.resolved_path),
+                cube_length=foreign_mag_view._properties.cube_length,
+                axis_order=foreign_mag_view._properties.axis_order,
+            )
+        )
+        self.dataset._export_as_json()
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
                 foreign_mag_view.layer.bounding_box
             )
-        return mag
+
+        return self.get_mag(foreign_mag_view.mag)
 
     def add_fs_copy_mag(
         self,

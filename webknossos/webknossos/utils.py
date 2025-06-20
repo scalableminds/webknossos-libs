@@ -305,10 +305,10 @@ def is_writable_path(path: UPath) -> bool:
 
 
 def strip_trailing_slash(path: UPath) -> UPath:
-    if isinstance(path, UPath) and not is_fs_path(path):
-        return UPath(str(path).rstrip("/"), **path.storage_options)
-    else:
-        return UPath(str(path).rstrip("/"))
+    path_parts = path.parts
+    if path_parts[-1] == "":
+        path_parts = path_parts[:-1]
+    return path.with_segments(*path_parts)
 
 
 def rmtree(path: UPath) -> None:
@@ -528,6 +528,11 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
         )
 
     elif upath.protocol == "s3":
+        if (
+            upath.storage_options.get("client_kwargs", {}).get("endpoint_url")
+            is not None
+        ):
+            return upath
         parsed_url = urlparse(str(upath))
         endpoint_url = f"https://{parsed_url.netloc}"
         bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
@@ -549,9 +554,9 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
     path = resolve_if_fs_path(path)
     if dataset_path is not None:
         if str(path).startswith(str(dataset_path)):
-            return str(path).removeprefix(str(dataset_path)).lstrip("/")
+            return "./" + str(path).removeprefix(str(dataset_path)).lstrip("/")
         if safe_is_relative_to(path, dataset_path):
-            return str(path.relative_to(dataset_path))
+            return "./" + str(path.relative_to(dataset_path))
     if path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
     return str(path)

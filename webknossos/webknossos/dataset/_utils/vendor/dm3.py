@@ -702,7 +702,7 @@ class DM3(object):
             # - fetch image data
             rawdata = self._f.read(data_size)
             # - convert raw to numpy array w/ correct dtype
-            ima = numpy.fromstring(rawdata, dtype=np_dt)
+            ima = numpy.frombuffer(rawdata, dtype=np_dt)
             # - reshape to matrix or stack
             if im_depth > 1:
                 ima = ima.reshape(im_depth, im_height, im_width)
@@ -860,7 +860,7 @@ class DM3(object):
             print("## rawdata:", len(rawtndata))
             # - read as 32-bit LE unsigned integer
             np_dt_tn = numpy.dtype("<u4")
-            tndata = numpy.fromstring(rawtndata, dtype=np_dt_tn)
+            tndata = numpy.frombuffer(rawtndata, dtype=np_dt_tn)
             print("## tndata:", len(tndata))
             tndata = tndata.reshape(tn_height, tn_width)
             # - revoxel_size and convert to integer

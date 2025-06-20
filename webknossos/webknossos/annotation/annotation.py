@@ -786,7 +786,7 @@ class Annotation:
             if volume_layer.zip is None:
                 logger.info("No volume annotation found. Copy fallback layer.")
                 with get_executor_for_args(args=None, executor=executor) as executor:
-                    output_dataset.add_copy_layer(
+                    output_dataset.add_layer_as_copy(
                         fallback_layer, compress=True, executor=executor
                     )
 
@@ -825,7 +825,7 @@ class Annotation:
                         fallback_layer.path,
                         output_layer.path,
                     )
-                    output_mag = output_layer.add_copy_mag(
+                    output_mag = output_layer.add_mag_as_copy(
                         fallback_mag,
                         compress=True,
                         executor=executor,
