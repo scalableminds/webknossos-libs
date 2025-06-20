@@ -2876,7 +2876,7 @@ def test_rename_layer(data_format: DataFormat, output_path: UPath) -> None:
 
     if output_path == REMOTE_TESTOUTPUT_DIR:
         # Cannot rename layers on remote storage
-        with pytest.raises(AssertionError):
+        with pytest.raises(RuntimeError):
             layer.name = "color2"
         return
     else:
