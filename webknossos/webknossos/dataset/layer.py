@@ -336,17 +336,24 @@ class Layer:
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
         Only layers on local file systems can be renamed.
         """
+        from .dataset import _ALLOWED_LAYER_NAME_REGEX
+
         if layer_name == self.name:
             return
         self._ensure_metadata_writable()
-        assert layer_name not in self.dataset.layers.keys(), (
-            f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        )
-        assert is_fs_path(self.path), f"Cannot rename remote layer {self.path}"
-        assert "/" not in layer_name, (
-            f"Cannot rename layer, because there is a '/' character in the layer name: {layer_name}"
-        )
-        self.path.rename(self.dataset.path / layer_name)
+        if not is_fs_path(self.path):
+            raise RuntimeError(f"Cannot rename remote layer {self.path}")
+        if layer_name in self.dataset.layers.keys():
+            raise ValueError(
+                f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+            )
+        if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+            raise ValueError(
+                f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+            )
+
+        if self.path.exists():
+            self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
         self._resolved_path = resolve_if_fs_path(
             self.dataset.resolved_path / layer_name
@@ -696,59 +703,6 @@ class Layer:
 
         return mag_view
 
-    def _add_existing_remote_mag_view(
-        self,
-        mag_view_maybe: MagLike | MagView,
-    ) -> MagView:
-        """Adds a remote magnification view to this layer.
-
-        Links a magnification from a remote dataset into this layer. The remote
-        mag must already exist.
-
-        Args:
-            mag_view_maybe: Remote magnification to add, as view or identifier
-
-        Returns:
-            MagView: View of the added remote magnification
-
-        Raises:
-            AssertionError: If magnification exists or remote mag invalid
-            ArrayException: If remote data cannot be accessed
-        """
-
-        self._ensure_writable()
-        mag_path = (
-            mag_view_maybe.path
-            if isinstance(mag_view_maybe, MagView)
-            else self.path / Mag(mag_view_maybe).to_layer_name()
-        )
-        mag = (
-            mag_view_maybe.mag
-            if isinstance(mag_view_maybe, MagView)
-            else Mag(mag_view_maybe)
-        )
-        mag_view = (
-            mag_view_maybe
-            if isinstance(mag_view_maybe, MagView)
-            else MagView._ensure_mag_view(mag_path)
-        )
-        assert mag not in self.mags, (
-            f"Cannot add mag {mag} as it already exists for layer {self}"
-        )
-        self._setup_mag(mag, mag_path, read_only=True)
-        # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
-        self._properties.mags.append(
-            MagViewProperties(
-                mag=mag_view.mag,
-                path=dump_path(mag_view.path, self.dataset.resolved_path),
-                cube_length=mag_view._properties.cube_length,
-                axis_order=mag_view._properties.axis_order,
-            )
-        )
-        self.dataset._export_as_json()
-
-        return mag_view
-
     def get_or_add_mag(
         self,
         mag: MagLike,
@@ -1031,13 +985,25 @@ class Layer:
             + f"must match the layer's dtype {self.dtype_per_channel}"
         )
 
-        mag = self._add_existing_remote_mag_view(foreign_mag_view)
+        self._setup_mag(foreign_mag_view.mag, foreign_mag_view.path, read_only=True)
+
+        # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
+        self._properties.mags.append(
+            MagViewProperties(
+                mag=foreign_mag_view.mag,
+                path=dump_path(foreign_mag_view.path, self.dataset.resolved_path),
+                cube_length=foreign_mag_view._properties.cube_length,
+                axis_order=foreign_mag_view._properties.axis_order,
+            )
+        )
+        self.dataset._export_as_json()
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
                 foreign_mag_view.layer.bounding_box
             )
-        return mag
+
+        return self.get_mag(foreign_mag_view.mag)
 
     def add_fs_copy_mag(
         self,

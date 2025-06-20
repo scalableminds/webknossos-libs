@@ -24,6 +24,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `Attachments.add_symlink_attachments`, use `Attachments.add_attachment_as_ref` instead (note the singular form).
   - `Attachments.add_attachments`, use `Attachments.add_attachment_as_ref` instead (note the singular form).
   - `Attachments.add_copy_attachments`, use `Attachments.add_attachment_as_copy` instead (note the singular form).
+- `Dataset.add_layer` and `Dataset.add_layer_like` as well as derived methods do not eagerly create a folder for the layer anymore. Folders will be created, if necessary, when mags or attachments are added.  [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 
 
 

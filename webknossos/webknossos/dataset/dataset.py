@@ -1362,7 +1362,6 @@ class Dataset:
 
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties, read_only=False)
         elif category == SEGMENTATION_CATEGORY:
             segmentation_layer_properties: SegmentationLayerProperties = (
@@ -1376,7 +1375,6 @@ class Dataset:
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
             self._properties.data_layers += [segmentation_layer_properties]
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
                 self, segmentation_layer_properties, read_only=False
             )
@@ -1503,10 +1501,8 @@ class Dataset:
 
         self._properties.data_layers += [layer_properties]
         if layer_properties.category == COLOR_CATEGORY:
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties, read_only=False)
         elif layer_properties.category == SEGMENTATION_CATEGORY:
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
                 self,
                 cast(SegmentationLayerProperties, layer_properties),
@@ -2505,7 +2501,7 @@ class Dataset:
 
         new_layer = self.add_layer_like(foreign_layer, new_layer_name)
         for mag_view in foreign_layer.mags.values():
-            new_layer.add_mag_as_ref(mag_view)
+            new_layer.add_mag_as_ref(mag_view, extend_layer_bounding_box=False)
 
         # reference-copy all attachments
         if isinstance(foreign_layer, SegmentationLayer) and isinstance(
@@ -2513,7 +2509,6 @@ class Dataset:
         ):
             for attachment in foreign_layer.attachments:
                 new_layer.attachments.add_attachment_as_ref(attachment)
-
         return new_layer
 
     def add_fs_copy_layer(
