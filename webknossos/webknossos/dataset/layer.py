@@ -6,14 +6,12 @@ from os import PathLike
 from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
-from urllib.parse import urlparse
 
 import numpy as np
 from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ..client.context import _get_context
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.mag import MagLike
 from ._array import ArrayException, TensorStoreArray
@@ -21,13 +19,14 @@ from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
-    determine_buffer_shape,
+    determine_downsample_buffer_shape,
+    determine_upsample_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
 )
 from ._upsampling_utils import upsample_cube_job
+from .attachments import Attachments
 from .data_format import DataFormat
-from .defaults import SSL_CONTEXT
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .mag_view import MagView
 from .properties import (
@@ -46,6 +45,8 @@ if TYPE_CHECKING:
 
 from ..utils import (
     copytree,
+    dump_path,
+    enrich_path,
     get_executor_for_args,
     is_fs_path,
     is_remote_path,
@@ -53,7 +54,6 @@ from ..utils import (
     named_partial,
     resolve_if_fs_path,
     rmtree,
-    safe_is_relative_to,
     warn_deprecated,
 )
 from .defaults import (
@@ -176,15 +176,15 @@ def _get_shard_shape(
     return shard_shape
 
 
-def _is_foreign_mag(dataset_path: Path, layer_name: str, mag_path: Path) -> bool:
+def _is_foreign_mag(dataset_path: UPath, layer_name: str, mag_path: UPath) -> bool:
     return dataset_path / layer_name != resolve_if_fs_path(mag_path).parent
 
 
 def _find_mag_path(
-    layer_path: Path,
+    layer_path: UPath,
     mag_name: str | Mag,
-    path: Path | None = None,
-) -> Path:
+    path: UPath | None = None,
+) -> UPath:
     if path is not None:
         return path
 
@@ -199,43 +199,6 @@ def _find_mag_path(
         raise FileNotFoundError(
             f"Could not find any valid mag `{mag}` in `{layer_path}`."
         )
-
-
-def _enrich_mag_path(path: str, dataset_path: Path) -> Path:
-    upath = UPath(path)
-    if upath.protocol in ("http", "https"):
-        # To setup the mag for non-public remote paths, we need to get the token from the context
-        wk_context = _get_context()
-        token = wk_context.datastore_token
-        return UPath(
-            path,
-            headers={} if token is None else {"X-Auth-Token": token},
-            ssl=SSL_CONTEXT,
-        )
-
-    elif upath.protocol == "s3":
-        parsed_url = urlparse(str(upath))
-        endpoint_url = f"https://{parsed_url.netloc}"
-        bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
-
-        return UPath(
-            f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
-        )
-
-    if not upath.is_absolute():
-        return resolve_if_fs_path(dataset_path / upath)
-    return resolve_if_fs_path(upath)
-
-
-def _dump_mag_path(path: Path, dataset_path: Path) -> str:
-    path = resolve_if_fs_path(path)
-    if str(path).startswith(str(dataset_path)):
-        return str(path).removeprefix(str(dataset_path)).lstrip("/")
-    if safe_is_relative_to(path, dataset_path):
-        return str(path.relative_to(dataset_path))
-    if isinstance(path, UPath) and path.protocol == "s3":
-        return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
-    return str(path)
 
 
 class Layer:
@@ -283,14 +246,14 @@ class Layer:
         )
         self._mags: dict[Mag, MagView] = {}
         resolved_path = resolve_if_fs_path(self.dataset.resolved_path / self.name)
-        self._resolved_path: Path = resolved_path
+        self._resolved_path: UPath = resolved_path
         self._read_only = read_only
 
         for mag in properties.mags:
             mag_path = (
                 _find_mag_path(resolved_path, mag.mag)
                 if mag.path is None
-                else _enrich_mag_path(mag.path, self.dataset.resolved_path)
+                else enrich_path(mag.path, self.dataset.resolved_path)
             )
             mag_is_read_only = read_only or _is_foreign_mag(
                 self.dataset.resolved_path, self.name, mag_path
@@ -311,12 +274,12 @@ class Layer:
             )
 
     @property
-    def path(self) -> Path:
+    def path(self) -> UPath:
         """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
         Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
 
         Returns:
-            Path: Filesystem path to this layer's data directory
+            UPath: Filesystem path to this layer's data directory
 
         Raises:
             AssertionError: If mags in layer point to different layers
@@ -325,7 +288,7 @@ class Layer:
         return self.dataset.path / self.name
 
     @property
-    def resolved_path(self) -> Path:
+    def resolved_path(self) -> UPath:
         return self._resolved_path
 
     @property
@@ -405,7 +368,7 @@ class Layer:
             # else:
             #     assert mag._properties.path is not None  # for type checking
             mag._path = (
-                _enrich_mag_path(mag._properties.path, self.dataset.resolved_path)
+                enrich_path(mag._properties.path, self.dataset.resolved_path)
                 if mag._properties.path is not None
                 else self._resolved_path / mag.path.name
             )
@@ -667,7 +630,7 @@ class Layer:
                     else None
                 ),
                 # FIX when paths are merged
-                # path=_dump_mag_path(mag_path, self.dataset.resolved_path),
+                # path=dump_path(mag_path, self.dataset.resolved_path),
             )
         ]
 
@@ -678,7 +641,7 @@ class Layer:
     def _add_mag_for_existing_files(
         self,
         mag: MagLike,
-        mag_path: Path,
+        mag_path: UPath,
         read_only: bool,
         # FIX when paths are merged
         # override_stored_path: str | None = None,
@@ -710,7 +673,7 @@ class Layer:
         # stored_path = (
         #     override_stored_path
         #     if override_stored_path is not None
-        #     else _dump_mag_path(mag_path, self.dataset.resolved_path)
+        #     else dump_path(mag_path, self.dataset.resolved_path)
         # )
         self._properties.mags.append(
             MagViewProperties(
@@ -783,7 +746,7 @@ class Layer:
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag_view.mag,
-                path=_dump_mag_path(mag_view.path, self.dataset.resolved_path),
+                path=dump_path(mag_view.path, self.dataset.resolved_path),
                 cube_length=mag_view._properties.cube_length,
                 axis_order=mag_view._properties.axis_order,
             )
@@ -1078,7 +1041,7 @@ class Layer:
         the array is moved, otherwise a copy of the zarrarray is created.
         """
         self._ensure_writable()
-        source_path = Path(path)
+        source_path = enrich_path(path, self.dataset.resolved_path)
 
         try:
             TensorStoreArray.open(source_path)
@@ -1112,7 +1075,7 @@ class Layer:
 
             return mag_view
 
-    def _create_dir_for_mag(self, mag: MagLike) -> Path:
+    def _create_dir_for_mag(self, mag: MagLike) -> UPath:
         mag_name = Mag(mag).to_layer_name()
         full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
@@ -1339,7 +1302,7 @@ class Layer:
         # perform downsampling
         with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
-                buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                buffer_shape = determine_downsample_buffer_shape(prev_mag_view.info)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
@@ -1544,7 +1507,7 @@ class Layer:
             # perform upsampling
             with get_executor_for_args(None, executor) as actual_executor:
                 if buffer_shape is None:
-                    buffer_shape = determine_buffer_shape(prev_mag_view.info)
+                    buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:
                     buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
                 func = named_partial(
@@ -1564,7 +1527,7 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, mag_path: Path, read_only: bool) -> None:
+    def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.
 
         Does not create storage headers/metadata, e.g. wk_header.
@@ -1648,6 +1611,7 @@ class SegmentationLayer(Layer):
     - Always uses the SEGMENTATION_CATEGORY category type
     - Tracks the largest segment ID present in the data
     - Provides methods for updating the largest segment ID
+    - Adds an `attachments` property for managing attachment files
 
     Attributes:
         largest_segment_id (int | None): Highest segment ID present in data, or None if empty
@@ -1659,6 +1623,16 @@ class SegmentationLayer(Layer):
     """
 
     _properties: SegmentationLayerProperties
+    _attachments: Attachments
+
+    def __init__(
+        self,
+        dataset: "Dataset",
+        properties: SegmentationLayerProperties,
+        read_only: bool,
+    ):
+        super().__init__(dataset, properties, read_only)
+        self._attachments = Attachments(self, properties.attachments)
 
     @property
     def largest_segment_id(self) -> int | None:
@@ -1702,6 +1676,31 @@ class SegmentationLayer(Layer):
     @property
     def category(self) -> LayerCategoryType:
         return SEGMENTATION_CATEGORY
+
+    @property
+    def attachments(self) -> Attachments:
+        """Access, add and remove the attachments of this layer.
+
+        Attachments are additional files that can be attached to a segmentation layer.
+        They can be used to store additional information, such as meshes, agglomerations, segment indices, cumsums and connectomes.
+
+        Examples:
+            ```
+            # Add a mesh attachment to the segmentation layer
+            layer.attachments.add_mesh(
+                mesh_path,
+                name="meshfile",
+                data_format=AttachmentDataFormat.Zarr3,
+            )
+
+            # Access the mesh attachment path
+            layer.attachments.meshes[0].path
+
+            # Remove the mesh attachment
+            layer.attachments.delete_attachment(layer.attachments.meshes[0])
+            ```
+        """
+        return self._attachments
 
     def _get_largest_segment_id_maybe(self) -> int | None:
         return self.largest_segment_id

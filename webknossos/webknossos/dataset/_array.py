@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
+from logging import getLogger
 from os.path import relpath
 from pathlib import Path
 from tempfile import mkdtemp
@@ -19,8 +20,10 @@ from typing_extensions import Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import is_fs_path
+from ..utils import call_with_retries, is_fs_path
 from .data_format import DataFormat
+
+logger = getLogger(__name__)
 
 TS_CONTEXT = tensorstore.Context()
 
@@ -57,10 +60,10 @@ class ArrayInfo:
 class BaseArray(ABC):
     data_format = DataFormat.WKW
 
-    _path: Path
+    _path: UPath
 
     def __init__(self, path: Path):
-        self._path = path
+        self._path = UPath(path)
 
     @property
     @abstractmethod
@@ -414,10 +417,10 @@ class TensorStoreArray(BaseArray):
         )
 
     @staticmethod
-    def _make_kvstore(path: Path) -> str | dict[str, str | list[str]]:
+    def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
         if is_fs_path(path):
             return {"driver": "file", "path": str(path)}
-        elif isinstance(path, UPath) and path.protocol in ("http", "https"):
+        elif path.protocol in ("http", "https"):
             return {
                 "driver": "http",
                 "base_url": str(path),
@@ -426,7 +429,7 @@ class TensorStoreArray(BaseArray):
                     for key, value in path.storage_options.get("headers", {}).items()
                 ],
             }
-        elif isinstance(path, UPath) and path.protocol in ("s3"):
+        elif path.protocol in ("s3"):
             parsed_url = urlparse(str(path))
             kvstore_spec: dict[str, Any] = {
                 "driver": "s3",
@@ -444,7 +447,7 @@ class TensorStoreArray(BaseArray):
             else:
                 kvstore_spec["aws_credentials"] = {"type": "default"}
             return kvstore_spec
-        elif isinstance(path, UPath) and path.protocol == "memory":
+        elif path.protocol == "memory":
             # use memory driver (in-memory file systems), e.g. useful for testing
             # attention: this is not a persistent storage and it does not support
             # multiprocessing since memory is not shared between processes
@@ -470,18 +473,21 @@ class TensorStoreArray(BaseArray):
         raise ArrayException(f"Could not open the array at {path}.")
 
     @classmethod
-    def _open(cls, path: Path) -> Self:
+    def _open(cls, path: UPath) -> Self:
         try:
             uri = cls._make_kvstore(path)
-            _array = tensorstore.open(
-                {
-                    "driver": str(cls.data_format),
-                    "kvstore": uri,
-                },
-                open=True,
-                create=False,
-                context=TS_CONTEXT,
-            ).result()  # check that everything exists
+            _array = call_with_retries(
+                lambda: tensorstore.open(
+                    {
+                        "driver": str(cls.data_format),
+                        "kvstore": uri,
+                    },
+                    open=True,
+                    create=False,
+                    context=TS_CONTEXT,
+                ).result(),
+                description="Opening tensorstore array",
+            )  # check that everything exists
             return cls(path, _array)
         except Exception as exc:
             raise ArrayException(f"Could not open array at {uri}.") from exc
@@ -506,18 +512,18 @@ class TensorStoreArray(BaseArray):
             )
             available_domain = requested_domain.intersect(array.domain)
 
+        data = call_with_retries(
+            lambda: array[available_domain].read(order="F").result(),
+            description="Reading tensorstore array",
+        )
         if available_domain != requested_domain:
             # needs padding
             out = np.zeros(
                 requested_domain.shape, dtype=array.dtype.numpy_dtype, order="F"
             )
-            data = array[available_domain].read(order="F").result()
             out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
-            if not has_channel_dimension:
-                out = np.expand_dims(out, 0)
-            return out
-
-        out = array[requested_domain].read(order="F").result()
+        else:
+            out = data
         if not has_channel_dimension:
             out = np.expand_dims(out, 0)
         return out
@@ -539,24 +545,30 @@ class TensorStoreArray(BaseArray):
 
         if new_domain != array.domain:
             # Check on-disk for changes to shape
-            current_array = tensorstore.open(
-                {
-                    "driver": str(self.data_format),
-                    "kvstore": self._make_kvstore(self._path),
-                },
-                context=TS_CONTEXT,
-            ).result()
+            current_array = call_with_retries(
+                lambda: tensorstore.open(
+                    {
+                        "driver": str(self.data_format),
+                        "kvstore": self._make_kvstore(self._path),
+                    },
+                    context=TS_CONTEXT,
+                ).result(),
+                description="Opening tensorstore array for resizing",
+            )
             if array.domain != current_array.domain:
                 raise RuntimeError(
                     f"While resizing the Zarr array at {self._path}, a differing shape ({array.domain} != {current_array.domain}) was found in the currently persisted metadata."
                     + "This is likely happening because multiple processes changed the metadata of this array."
                 )
 
-            self._cached_array = array.resize(
-                inclusive_min=None,
-                exclusive_max=new_domain.exclusive_max,
-                resize_metadata_only=True,
-            ).result()
+            self._cached_array = call_with_retries(
+                lambda: array.resize(
+                    inclusive_min=None,
+                    exclusive_max=new_domain.exclusive_max,
+                    resize_metadata_only=True,
+                ).result(),
+                description="Resizing tensorstore array",
+            )
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
         if data.ndim == len(bbox):
@@ -574,7 +586,10 @@ class TensorStoreArray(BaseArray):
             inclusive_min=(0,) + bbox.topleft.to_tuple(),
             shape=(self.info.num_channels,) + bbox.size.to_tuple(),
         )
-        array[requested_domain].write(data).result()
+        call_with_retries(
+            lambda: array[requested_domain].write(data).result(),
+            description="Writing tensorstore array",
+        )
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         raise NotImplementedError
@@ -593,7 +608,9 @@ class TensorStoreArray(BaseArray):
                     return None
             return output
 
-        keys = kvstore.list().result()
+        keys = call_with_retries(
+            lambda: kvstore.list().result(), description="Listing keys in kvstore"
+        )
         for key in keys:
             key_parts = key.decode("utf-8").split(separator)
             if _type == "default":
@@ -640,13 +657,16 @@ class TensorStoreArray(BaseArray):
     def _array(self) -> tensorstore.TensorStore:
         if self._cached_array is None:
             try:
-                self._cached_array = tensorstore.open(
-                    {
-                        "driver": str(self.data_format),
-                        "kvstore": self._make_kvstore(self._path),
-                    },
-                    context=TS_CONTEXT,
-                ).result()
+                self._cached_array = call_with_retries(
+                    lambda: tensorstore.open(
+                        {
+                            "driver": str(self.data_format),
+                            "kvstore": self._make_kvstore(self._path),
+                        },
+                        context=TS_CONTEXT,
+                    ).result(),
+                    description="Creating tensorstore array",
+                )
             except Exception as e:
                 raise ArrayException(
                     f"Exception while opening array for {self._make_kvstore(self._path)}"
@@ -675,7 +695,7 @@ class Zarr3Array(TensorStoreArray):
 
     @classmethod
     def open(cls, path: Path) -> "Zarr3Array":
-        return cls._open(path)
+        return cls._open(UPath(path))
 
     @property
     def info(self) -> ArrayInfo:
@@ -717,6 +737,7 @@ class Zarr3Array(TensorStoreArray):
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "Zarr3Array":
         assert array_info.data_format == cls.data_format
+        upath = UPath(path)
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]
@@ -732,7 +753,7 @@ class Zarr3Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": str(cls.data_format),
-                "kvstore": cls._make_kvstore(path),
+                "kvstore": cls._make_kvstore(upath),
                 "metadata": {
                     "data_type": str(array_info.voxel_type),
                     "shape": shape,
@@ -796,7 +817,7 @@ class Zarr3Array(TensorStoreArray):
             },
             context=TS_CONTEXT,
         ).result()
-        return cls(path, _array)
+        return cls(upath, _array)
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         metadata = self._array.spec().to_json()["metadata"]
@@ -815,7 +836,7 @@ class Zarr2Array(TensorStoreArray):
 
     @classmethod
     def open(cls, path: Path) -> "Zarr2Array":
-        return cls._open(path)
+        return cls._open(UPath(path))
 
     @property
     def info(self) -> ArrayInfo:
@@ -840,6 +861,7 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.chunks_per_shard == Vec3Int.full(1), (
             "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         )
+        upath = UPath(path)
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]
@@ -851,7 +873,7 @@ class Zarr2Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": "zarr",
-                "kvstore": cls._make_kvstore(path),
+                "kvstore": cls._make_kvstore(upath),
                 "metadata": {
                     "shape": shape,
                     "chunks": chunk_shape,
@@ -873,7 +895,7 @@ class Zarr2Array(TensorStoreArray):
             },
             context=TS_CONTEXT,
         ).result()
-        return cls(path, _array)
+        return cls(upath, _array)
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         metadata = self._array.spec().to_json()["metadata"]

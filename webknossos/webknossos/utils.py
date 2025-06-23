@@ -12,7 +12,8 @@ from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
-from os.path import relpath
+from multiprocessing.pool import ThreadPool
+from os import PathLike
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
@@ -21,6 +22,7 @@ from typing import (
     Protocol,
     TypeVar,
 )
+from urllib.parse import urlparse
 
 import httpx
 import numpy as np
@@ -30,7 +32,40 @@ from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
 
+from .dataset.defaults import DEFAULT_BACKOFF_FACTOR, DEFAULT_NUM_RETRIES
+
+logger = logging.getLogger(__name__)
+
 times = {}
+
+ReturnType = TypeVar("ReturnType")
+
+
+def call_with_retries(
+    fn: Callable[[], ReturnType],
+    num_retries: int = DEFAULT_NUM_RETRIES,
+    description: str = "",
+    backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
+) -> ReturnType:
+    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
+    last_exception = None
+    for i in range(num_retries):
+        try:
+            return fn()
+        except Exception as e:  # noqa: PERF203 # allow try except in loop
+            logger.warning(
+                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
+                f"Error was: {e}"
+            )
+            # We introduce some randomness to avoid multiple processes retrying at the same time
+            random_factor = np.random.uniform(0.66, 1.5)
+            time.sleep((backoff_factor**i) * random_factor)
+            last_exception = e
+    # If the last attempt fails, we log the error and raise it.
+    # This is important to avoid silent failures.
+    logger.error(f"{description} failed after {num_retries} attempts.")
+    assert last_exception is not None, "last_exception should never be None here"
+    raise last_exception
 
 
 def time_start(identifier: str) -> None:
@@ -183,28 +218,6 @@ def time_since_epoch_in_ms() -> int:
     return unixtime * 1000
 
 
-def copy_directory_with_symlinks(
-    src_path: Path,
-    dst_path: Path,
-    ignore: Iterable[str] = tuple(),
-    make_relative: bool = False,
-) -> None:
-    """
-    Links all directories in src_path / dir_name to dst_path / dir_name.
-    """
-    assert is_fs_path(src_path), f"Cannot create symlink with remote paths {src_path}."
-    assert is_fs_path(dst_path), f"Cannot create symlink with remote paths {dst_path}."
-
-    for item in src_path.iterdir():
-        if item.name not in ignore:
-            symlink_path = dst_path / item.name
-            if make_relative:
-                rel_or_abspath = Path(relpath(item, symlink_path.parent))
-            else:
-                rel_or_abspath = item.resolve()
-            symlink_path.symlink_to(rel_or_abspath)
-
-
 def setup_warnings() -> None:
     warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
 
@@ -266,7 +279,7 @@ def count_defined_values(values: Iterable[Any | None]) -> int:
     return sum(i is not None for i in values)
 
 
-def is_fs_path(path: Path) -> bool:
+def is_fs_path(path: UPath) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
     return not isinstance(path, UPath) or isinstance(
@@ -274,32 +287,32 @@ def is_fs_path(path: Path) -> bool:
     )
 
 
-def is_remote_path(path: Path) -> bool:
+def is_remote_path(path: UPath) -> bool:
     return not is_fs_path(path)
 
 
-def resolve_if_fs_path(path: Path) -> Path:
+def resolve_if_fs_path(path: UPath) -> UPath:
     if is_fs_path(path):
         return path.resolve()
     return path
 
 
-def is_writable_path(path: Path) -> bool:
+def is_writable_path(path: UPath) -> bool:
     from upath.implementations.http import HTTPPath
 
     # cannot write to http paths
     return not isinstance(path, HTTPPath)
 
 
-def strip_trailing_slash(path: Path) -> Path:
+def strip_trailing_slash(path: UPath) -> UPath:
     if isinstance(path, UPath) and not is_fs_path(path):
         return UPath(str(path).rstrip("/"), **path.storage_options)
     else:
-        return Path(str(path).rstrip("/"))
+        return UPath(str(path).rstrip("/"))
 
 
-def rmtree(path: Path) -> None:
-    def _walk(path: Path) -> Iterator[Path]:
+def rmtree(path: UPath) -> None:
+    def _walk(path: UPath) -> Iterator[UPath]:
         if path.exists():
             if path.is_dir() and not path.is_symlink():
                 for p in path.iterdir():
@@ -319,8 +332,14 @@ def rmtree(path: Path) -> None:
             pass
 
 
-def copytree(in_path: Path, out_path: Path) -> None:
-    def _walk(path: Path, base_path: Path) -> Iterator[tuple[Path, tuple[str, ...]]]:
+def copytree(
+    in_path: UPath,
+    out_path: UPath,
+    *,
+    threads: int | None = 10,
+    progress_desc: str | None = None,
+) -> None:
+    def _walk(path: UPath, base_path: UPath) -> Iterator[tuple[Path, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
         assert path.parts[: len(base_path.parts)] == base_path.parts
@@ -330,40 +349,56 @@ def copytree(in_path: Path, out_path: Path) -> None:
             for p in path.iterdir():
                 yield from _walk(p, base_path)
 
-    def _append(path: Path, parts: tuple[str, ...]) -> Path:
+    def _append(path: UPath, parts: tuple[str, ...]) -> UPath:
         for p in parts:
             path = path / p
         return path
 
+    def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
+        in_path, out_path, sub_path = args
+        with (
+            _append(in_path, sub_path).open("rb") as in_file,
+            _append(out_path, sub_path).open("wb") as out_file,
+        ):
+            copyfileobj(in_file, out_file)
+
+    files_to_copy: list[tuple[UPath, UPath, tuple[str, ...]]] = []
     for in_sub_path, sub_path in _walk(in_path, in_path):
         if in_sub_path.is_dir():
             _append(out_path, sub_path).mkdir(parents=True, exist_ok=True)
         else:
-            with (
-                _append(in_path, sub_path).open("rb") as in_file,
-                _append(out_path, sub_path).open("wb") as out_file,
-            ):
-                copyfileobj(in_file, out_file)
+            files_to_copy.append((in_path, out_path, sub_path))
+
+    with ThreadPool(threads) as pool:
+        iterator = pool.imap_unordered(_copy, files_to_copy)
+
+        if progress_desc:
+            with get_rich_progress() as progress:
+                task = progress.add_task(progress_desc, total=len(files_to_copy))
+                for _ in iterator:
+                    progress.update(task, advance=1)
+        for _ in iterator:
+            pass
 
 
-def movetree(in_path: Path, out_path: Path) -> None:
+def movetree(in_path: UPath, out_path: UPath) -> None:
     move(in_path, out_path)
 
 
 class LazyPath:
-    paths: tuple[Path, ...]
+    paths: tuple[UPath, ...]
     resolution: int | None = None
 
-    def __init__(self, *paths: Path):
+    def __init__(self, *paths: UPath):
         self.paths = tuple(paths)
 
     @classmethod
-    def resolved(cls, path: Path) -> "LazyPath":
+    def resolved(cls, path: UPath) -> "LazyPath":
         obj = cls(path)
         obj.resolution = 0
         return obj
 
-    def resolve(self) -> Path:
+    def resolve(self) -> UPath:
         if self.resolution is not None:
             return self.paths[self.resolution]
         else:
@@ -468,10 +503,55 @@ def check_version_in_background(current_version: str) -> None:
     t.start()
 
 
-def safe_is_relative_to(path: Path, base_path: Path) -> bool:
+def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     if (
         (is_fs_path(path) and is_fs_path(base_path))
         or UPath(path).protocol == UPath(base_path).protocol
     ) and path.is_relative_to(base_path):
         return True
     return False
+
+
+def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
+    upath = UPath(path)
+    if upath.protocol in ("http", "https"):
+        from .client.context import _get_context
+        from .dataset.defaults import SSL_CONTEXT
+
+        # To setup the mag for non-public remote paths, we need to get the token from the context
+        wk_context = _get_context()
+        token = wk_context.datastore_token
+        return UPath(
+            path,
+            headers={} if token is None else {"X-Auth-Token": token},
+            ssl=SSL_CONTEXT,
+        )
+
+    elif upath.protocol == "s3":
+        parsed_url = urlparse(str(upath))
+        endpoint_url = f"https://{parsed_url.netloc}"
+        bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+
+        return UPath(
+            f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
+        )
+
+    if not upath.is_absolute():
+        return resolve_if_fs_path(dataset_path / upath)
+    return resolve_if_fs_path(upath)
+
+
+def dump_path(path: UPath, dataset_path: UPath | None) -> str:
+    if is_fs_path(path) and not path.is_absolute():
+        if dataset_path is None:
+            raise ValueError("dataset_path must be provided when path is not absolute.")
+        path = dataset_path / path
+    path = resolve_if_fs_path(path)
+    if dataset_path is not None:
+        if str(path).startswith(str(dataset_path)):
+            return str(path).removeprefix(str(dataset_path)).lstrip("/")
+        if safe_is_relative_to(path, dataset_path):
+            return str(path.relative_to(dataset_path))
+    if path.protocol == "s3":
+        return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
+    return str(path)

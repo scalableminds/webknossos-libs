@@ -50,7 +50,6 @@ from .defaults import (
     PROPERTIES_FILE_NAME,
     SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
-    ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
 from .ome_metadata import write_ome_metadata
@@ -65,7 +64,6 @@ if TYPE_CHECKING:
     from ..client._upload_dataset import LayerToLink
 
 from ..utils import (
-    copy_directory_with_symlinks,
     copytree,
     count_defined_values,
     get_executor_for_args,
@@ -319,8 +317,8 @@ class Dataset:
         path = strip_trailing_slash(UPath(dataset_path))
 
         self._read_only = read_only
-        self.path: Path = path
-        self._resolved_path: Path = resolve_if_fs_path(path)
+        self.path: UPath = path
+        self._resolved_path: UPath = resolve_if_fs_path(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -456,7 +454,7 @@ class Dataset:
         return dataset._init_from_properties(dataset_properties)
 
     @property
-    def resolved_path(self) -> Path:
+    def resolved_path(self) -> UPath:
         return self._resolved_path
 
     @classmethod
@@ -866,7 +864,7 @@ class Dataset:
             voxel_size_with_unit: Optional voxel size with unit specification
             layer_name: Optional name for layer(s)
             layer_category: Optional category override (LayerCategoryType.color / LayerCategoryType.segmentation)
-            data_format: Format to store data in ('wkw'/'zarr')
+            data_format: Format to store data in ('wkw'/'zarr'/'zarr3)
             chunk_shape: Optional. Shape of chunks to store data in
             shard_shape: Optional. Shape of shards to store data in
             chunks_per_shard: Deprecated, use shard_shape. Optional. number of chunks per shard
@@ -1174,6 +1172,12 @@ class Dataset:
             ]
         )
 
+        for layer in self.get_segmentation_layers():
+            if not layer.attachments.is_empty:
+                raise NotImplementedError(
+                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attchments."
+                )
+
         dataset_id = upload_dataset(
             self, new_dataset_name, converted_layers_to_link, jobs
         )
@@ -1313,7 +1317,8 @@ class Dataset:
             if dtype_per_channel.name not in color_dtypes:
                 raise ValueError(
                     f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(color_dtypes)}.",
+                    f"Supported dtypes are: {', '.join(color_dtypes)}."
+                    "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
         else:
             segmentation_dtypes = (
@@ -1329,7 +1334,8 @@ class Dataset:
             if dtype_per_channel.name not in segmentation_dtypes:
                 raise ValueError(
                     f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}.",
+                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}."
+                    "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
 
         if layer_name in self.layers.keys():
@@ -1488,6 +1494,10 @@ class Dataset:
 
         layer_properties = copy.copy(other_layer._properties)
         layer_properties.mags = []
+        if isinstance(layer_properties, SegmentationLayerProperties):
+            from .properties import AttachmentsProperties
+
+            layer_properties.attachments = AttachmentsProperties()
         layer_properties.name = layer_name
 
         self._properties.data_layers += [layer_properties]
@@ -1497,7 +1507,9 @@ class Dataset:
         elif layer_properties.category == SEGMENTATION_CATEGORY:
             (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
-                self, layer_properties, read_only=False
+                self,
+                cast(SegmentationLayerProperties, layer_properties),
+                read_only=False,
             )
         else:
             raise RuntimeError(
@@ -1661,7 +1673,7 @@ class Dataset:
         Further Arguments:
 
         * `category`: `color` by default, may be set to "segmentation"
-        * `data_format`: by default wkw files are written, may be set to "zarr"
+        * `data_format`: by default zarr3 files are written, may be set to "wkw" or "zarr" to write in these formats.
         * `mag`: magnification to use for the written data
         * `chunk_shape`, `chunks_per_shard`, `shard_shape`, `compress`: adjust how the data is stored on disk
         * `topleft`: set an offset in Mag(1) to start writing the data, only affecting the output
@@ -2125,6 +2137,17 @@ class Dataset:
             if layer.category == COLOR_CATEGORY
         ]
 
+    def get_segmentation_layer(self, layer_name: str) -> SegmentationLayer:
+        """Get a segmentation layer by name.
+
+        Args:
+            layer_name: Name of the layer to get
+
+        Returns:
+            SegmentationLayer: The segmentation layer
+        """
+        return self.get_layer(layer_name).as_segmentation_layer()
+
     def delete_layer(self, layer_name: str) -> None:
         """Delete a layer from the dataset.
 
@@ -2174,6 +2197,7 @@ class Dataset:
         compress: bool | None = None,
         exists_ok: bool = False,
         executor: Executor | None = None,
+        with_attachments: bool = True,
     ) -> Layer:
         """Copy layer from another dataset to this one.
 
@@ -2262,6 +2286,13 @@ class Dataset:
                 progress_desc=progress_desc,
             )
 
+        if (
+            with_attachments
+            and isinstance(layer, SegmentationLayer)
+            and isinstance(foreign_layer, SegmentationLayer)
+        ):
+            layer.attachments.add_copy_attachments(*foreign_layer.attachments)
+
         return layer
 
     def add_symlink_layer(
@@ -2349,6 +2380,23 @@ class Dataset:
         #     else:
         #         mag_prop.path = str(foreign_mag.path)
 
+        if (
+            isinstance(new_layer_properties, SegmentationLayerProperties)
+            and new_layer_properties.attachments is not None
+        ):
+            for attachment in new_layer_properties.attachments:
+                old_path = UPath(attachment.path)
+                if is_fs_path(old_path):
+                    if not old_path.is_absolute():
+                        old_path = (
+                            foreign_layer.dataset.resolved_path / old_path
+                        ).resolve()
+                    attachment.path = str(
+                        Path(relpath(old_path, self.path))
+                        if make_relative
+                        else old_path.resolve()
+                    )
+
         self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
             new_layer_properties, read_only=True
@@ -2406,7 +2454,6 @@ class Dataset:
         assert foreign_layer.dataset.path != self.path, (
             "Cannot add layer with the same origin dataset as foreign layer"
         )
-        foreign_layer_path = foreign_layer.path
 
         assert all(is_remote_path(mag.path) for mag in foreign_layer.mags.values()), (
             f"Cannot add foreign layer {foreign_layer} as it is not remote. Try using dataset.add_copy_layer instead."
@@ -2420,7 +2467,6 @@ class Dataset:
         new_layer = self._initialize_layer_from_properties(
             layer_properties, read_only=False
         )
-        new_layer._resolved_path = foreign_layer_path
         self._layers[new_layer_name] = new_layer
 
         self._export_as_json()
@@ -2450,11 +2496,30 @@ class Dataset:
             )
 
         copytree(foreign_layer.path, self.path / new_layer_name)
-        layer_properties = copy.deepcopy(foreign_layer._properties)
-        layer_properties.name = new_layer_name
-        self._properties.data_layers += [layer_properties]
+        new_layer_properties = copy.deepcopy(foreign_layer._properties)
+        new_layer_properties.name = new_layer_name
+
+        if (
+            isinstance(new_layer_properties, SegmentationLayerProperties)
+            and new_layer_properties.attachments is not None
+        ):
+            for attachment in new_layer_properties.attachments:
+                old_path = UPath(attachment.path)
+                if is_fs_path(old_path):
+                    if not old_path.is_absolute():
+                        old_path = (
+                            foreign_layer.dataset.resolved_path / old_path
+                        ).resolve()
+                    else:
+                        old_path = old_path.resolve()
+                    # attachment has been a foreign attachment to the foreign layer
+                    # therefore it will not be copied
+                    if foreign_layer.resolved_path not in old_path.parents:
+                        attachment.path = str(old_path)
+
+        self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
-            layer_properties, read_only=False
+            new_layer_properties, read_only=False
         )
 
         self._export_as_json()
@@ -2499,6 +2564,7 @@ class Dataset:
         exists_ok: bool = False,
         executor: Executor | None = None,
         voxel_size_with_unit: VoxelSize | None = None,
+        layers_to_ignore: Iterable[str] | None = None,
     ) -> "Dataset":
         """
         Creates an independent copy of the dataset with all layers at a new location.
@@ -2515,6 +2581,7 @@ class Dataset:
             exists_ok: Whether to overwrite existing datasets and layers
             executor: Optional executor for parallel copying
             voxel_size_with_unit: Optional voxel size specification with units
+            layers_to_ignore: List of layer names to exclude from the copy
 
         Returns:
             Dataset: The newly created copy
@@ -2539,7 +2606,7 @@ class Dataset:
 
         Note:
             WKW layers can only be copied to datasets on local file systems.
-            For remote datasets, use data_format='zarr'.
+            For remote datasets, use data_format='zarr3'.
         """
 
         new_dataset_path = UPath(new_dataset_path)
@@ -2560,15 +2627,18 @@ class Dataset:
                 voxel_size_with_unit = self.voxel_size_with_unit
             else:
                 voxel_size_with_unit = VoxelSize(voxel_size)
-        new_ds = Dataset(
+        new_dataset = Dataset(
             new_dataset_path,
             voxel_size_with_unit=voxel_size_with_unit,
             exist_ok=exists_ok,
         )
+        new_dataset.default_view_configuration = self.default_view_configuration
 
         with get_executor_for_args(None, executor) as executor:
             for layer in self.layers.values():
-                new_ds.add_copy_layer(
+                if layers_to_ignore is not None and layer.name in layers_to_ignore:
+                    continue
+                new_dataset.add_copy_layer(
                     layer,
                     chunk_shape=chunk_shape,
                     shard_shape=shard_shape,
@@ -2578,8 +2648,75 @@ class Dataset:
                     exists_ok=exists_ok,
                     executor=executor,
                 )
-        new_ds._export_as_json()
-        return new_ds
+        new_dataset._export_as_json()
+        return new_dataset
+
+    def fs_copy_dataset(
+        self,
+        new_dataset_path: str | Path,
+        *,
+        exists_ok: bool = False,
+        layers_to_ignore: Iterable[str] | None = None,
+    ) -> "Dataset":
+        """
+        Creates an independent copy of the dataset with all layers at a new location.
+
+        This method copies the files of the dataset as is and, therefore, might be faster than Dataset.copy_dataset, which decodes and encodes all the data.
+        If you wish to change the data storage parameters, use Dataset.copy_dataset.
+
+        Args:
+            new_dataset_path: Path where new dataset should be created
+            exists_ok: Whether to overwrite existing datasets and layers
+            layers_to_ignore: List of layer names to exclude from the copy
+
+        Returns:
+            Dataset: The newly created copy
+
+        Raises:
+            AssertionError: If trying to copy WKW layers to remote dataset
+
+        Examples:
+            Basic copy:
+                ```
+                copied = ds.fs_copy_dataset("path/to/copy")
+                ```
+
+        Note:
+            WKW layers can only be copied to datasets on local file systems.
+        """
+
+        new_dataset_path = UPath(new_dataset_path)
+
+        if any(layer.data_format == DataFormat.WKW for layer in self.layers.values()):
+            assert is_fs_path(new_dataset_path), (
+                "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
+            )
+
+        new_dataset = Dataset(
+            new_dataset_path,
+            voxel_size_with_unit=self.voxel_size_with_unit,
+            exist_ok=exists_ok,
+        )
+        new_dataset.default_view_configuration = self.default_view_configuration
+
+        for layer in self.layers.values():
+            if layers_to_ignore is not None and layer.name in layers_to_ignore:
+                continue
+            new_layer = new_dataset.add_layer_like(layer, layer.name)
+            for mag_view in layer.mags.values():
+                new_mag = new_layer.add_mag(
+                    mag_view.mag,
+                    chunk_shape=mag_view.info.chunk_shape,
+                    shard_shape=mag_view.info.shard_shape,
+                    compress=mag_view.info.compression_mode,
+                )
+                copytree(mag_view.path, new_mag.path)
+            if isinstance(layer, SegmentationLayer) and isinstance(
+                new_layer, SegmentationLayer
+            ):
+                new_layer.attachments.add_copy_attachments(*layer.attachments)
+        new_dataset._export_as_json()
+        return new_dataset
 
     def shallow_copy_dataset(
         self,
@@ -2640,6 +2777,8 @@ class Dataset:
             name=name or self.name,
             exist_ok=False,
         )
+        new_dataset.default_view_configuration = self.default_view_configuration
+
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
@@ -2653,19 +2792,13 @@ class Dataset:
                     else:
                         new_layer.add_remote_mag(mag_view)
 
-                # copy all other directories with a dir scan
-                copy_directory_with_symlinks(
-                    layer.path,
-                    new_layer.path,
-                    ignore=[str(mag) for mag in layer.mags]
-                    + [
-                        PROPERTIES_FILE_NAME,
-                        ZGROUP_FILE_NAME,
-                        ZATTRS_FILE_NAME,
-                        ZARR_JSON_FILE_NAME,
-                    ],
-                    make_relative=make_relative,
-                )
+                # reference-copy all attachments
+                if isinstance(layer, SegmentationLayer) and isinstance(
+                    new_layer, SegmentationLayer
+                ):
+                    new_layer.attachments.add_symlink_attachments(
+                        *layer.attachments, make_relative=make_relative
+                    )
 
         return new_dataset
 
@@ -2819,7 +2952,7 @@ class Dataset:
 
         for layer in self.layers.values():
             # Only write out OME metadata if the layer is a child of the dataset
-            if not layer.is_foreign:
+            if not layer.is_foreign and layer.path.exists():
                 write_ome_metadata(self, layer)
 
     def _initialize_layer_from_properties(
@@ -2828,7 +2961,9 @@ class Dataset:
         if properties.category == COLOR_CATEGORY:
             return Layer(self, properties, read_only=read_only)
         elif properties.category == SEGMENTATION_CATEGORY:
-            return SegmentationLayer(self, properties, read_only=read_only)
+            return SegmentationLayer(
+                self, cast(SegmentationLayerProperties, properties), read_only=read_only
+            )
         else:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
