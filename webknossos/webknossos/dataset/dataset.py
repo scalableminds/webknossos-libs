@@ -867,7 +867,7 @@ class Dataset:
             voxel_size_with_unit: Optional voxel size with unit specification
             layer_name: Optional name for layer(s)
             layer_category: Optional category override (LayerCategoryType.color / LayerCategoryType.segmentation)
-            data_format: Format to store data in ('wkw'/'zarr')
+            data_format: Format to store data in ('wkw'/'zarr'/'zarr3)
             chunk_shape: Optional. Shape of chunks to store data in
             shard_shape: Optional. Shape of shards to store data in
             chunks_per_shard: Deprecated, use shard_shape. Optional. number of chunks per shard
@@ -1320,7 +1320,8 @@ class Dataset:
             if dtype_per_channel.name not in color_dtypes:
                 raise ValueError(
                     f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(color_dtypes)}.",
+                    f"Supported dtypes are: {', '.join(color_dtypes)}."
+                    "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
         else:
             segmentation_dtypes = (
@@ -1336,7 +1337,8 @@ class Dataset:
             if dtype_per_channel.name not in segmentation_dtypes:
                 raise ValueError(
                     f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}.",
+                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}."
+                    "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
 
         if layer_name in self.layers.keys():
@@ -1670,7 +1672,7 @@ class Dataset:
         Further Arguments:
 
         * `category`: `color` by default, may be set to "segmentation"
-        * `data_format`: by default wkw files are written, may be set to "zarr"
+        * `data_format`: by default zarr3 files are written, may be set to "wkw" or "zarr" to write in these formats.
         * `mag`: magnification to use for the written data
         * `chunk_shape`, `chunks_per_shard`, `shard_shape`, `compress`: adjust how the data is stored on disk
         * `topleft`: set an offset in Mag(1) to start writing the data, only affecting the output
