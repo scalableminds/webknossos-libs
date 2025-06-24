@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.11...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [2.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.0) - 2025-06-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.3.11...v2.4.0)
 
 ### Breaking Changes
 - `Dataset.shallow_copy_dataset` does not symlink layers, mags and attachments anymore. Instead mags and attachments are referenced by their path. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
@@ -28,14 +40,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 
 
-### Added
-
 ### Changed
 - Changed the default path type to `UPath` [#1326](https://github.com/scalableminds/webknossos-libs/pull/1326)
 - All mags now store their path in the `datasource-properties.json` file. This eliminates the need for symlinks and removes the need to check multiple possible mag paths (e.g. 1-1-1 or 1). It also unifies local and remote mags. [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
 - Dataset-local mags and attachments use the `./` prefix for their path in compliance with [IETF RFC1808](https://datatracker.ietf.org/doc/html/rfc1808). [#1290](https://github.com/scalableminds/webknossos-libs/pull/1290)
-
-### Fixed
 
 
 ## [2.3.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.11) - 2025-06-18
