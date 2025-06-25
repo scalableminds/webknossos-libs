@@ -172,10 +172,12 @@ class ClusterExecutor(futures.Executor):
     def _handle_shutdown(
         cls,
         existing_signal_handler: Callable[[int, FrameType | None], None] | int | None,
-        sig: int,
+        signum: int,
         frame: Any,
     ) -> None:
-        logging.critical(f"[{cls}] Caught signal {sig}, running shutdown hooks")
+        logging.critical(
+            f"[{cls.__name__}] Caught signal {signal.Signals(signum).name}, running shutdown hooks"
+        )
         try:
             for hook in cls._shutdown_hooks:
                 hook()
@@ -187,7 +189,7 @@ class ClusterExecutor(futures.Executor):
             signal.SIG_IGN,
             signal.default_int_handler,
         ):
-            existing_signal_handler(sig, frame)
+            existing_signal_handler(signum, frame)
 
     def handle_kill(self) -> None:
         if self.is_shutting_down:

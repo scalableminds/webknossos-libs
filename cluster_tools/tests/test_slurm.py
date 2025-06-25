@@ -213,6 +213,7 @@ def test_slurm_job_canceling_on_shutdown() -> None:
     # running and some will be pending.
     original_max_running_size = os.environ.get("SLURM_MAX_RUNNING_SIZE")
     os.environ["SLURM_MAX_RUNNING_SIZE"] = str(max_running_size)
+    os.environ["SIGTERM_WAIT_IN_S"] = "0"
 
     try:
         executor.map_to_futures(sleep, [10] * 4)
@@ -241,6 +242,7 @@ def test_slurm_job_canceling_on_shutdown() -> None:
             os.environ["SLURM_MAX_RUNNING_SIZE"] = original_max_running_size
         else:
             del os.environ["SLURM_MAX_RUNNING_SIZE"]
+        del os.environ["SIGTERM_WAIT_IN_S"]
 
 
 def test_slurm_number_of_submitted_jobs() -> None:
