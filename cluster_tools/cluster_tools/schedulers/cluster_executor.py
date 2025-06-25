@@ -9,13 +9,13 @@ from collections.abc import Callable, Iterable, Iterator
 from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
+from types import FrameType
 from typing import (
     Any,
     Literal,
     TypeVar,
     cast,
 )
-from weakref import ReferenceType, ref
 
 from typing_extensions import ParamSpec
 
@@ -36,18 +36,6 @@ NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
-
-
-def _handle_kill_through_weakref(
-    executor_ref: "ReferenceType[ClusterExecutor]",
-    existing_sigint_handler: Any,
-    signum: int | None,
-    frame: Any,
-) -> None:
-    executor = executor_ref()
-    if executor is None:
-        return
-    executor.handle_kill(existing_sigint_handler, signum, frame)
 
 
 def join_messages(strings: list[str]) -> str:
@@ -78,6 +66,9 @@ class RemoteTimeLimitException(RemoteResourceLimitException):
 
 class ClusterExecutor(futures.Executor):
     """Futures executor for executing jobs on a cluster."""
+
+    _shutdown_hooks: list[Callable[[], None]] = []
+    _installed_signal_handler: bool = False
 
     def __init__(
         self,
@@ -130,15 +121,7 @@ class ClusterExecutor(futures.Executor):
 
         os.makedirs(self.cfut_dir, exist_ok=True)
 
-        # Clean up if a SIGINT signal is received. However, do not interfere with the
-        # existing signal handler of the process or the
-        # shutdown of the main process which sends SIGTERM signals to terminate all
-        # child processes.
-        existing_sigint_handler = signal.getsignal(signal.SIGINT)
-        signal.signal(
-            signal.SIGINT,
-            partial(_handle_kill_through_weakref, ref(self), existing_sigint_handler),
-        )
+        self._register_shutdown_hook(self.handle_kill)
 
         self.metadata = {}
         assert not ("logging_config" in kwargs and "logging_setup_fn" in kwargs), (
@@ -158,26 +141,66 @@ class ClusterExecutor(futures.Executor):
     def executor_key(cls) -> str:
         pass
 
-    def handle_kill(
-        self, existing_sigint_handler: Any, signum: int | None, frame: Any
+    @classmethod
+    def _install_signal_handlers(cls) -> None:
+        # Only overwrite the signal handler once
+        if cls._installed_signal_handler:
+            return
+
+        # Clean up if a SIGINT or SIGTERM signal is received. However, do not
+        # interfere with the existing signal handler of the process and execute
+        # it afterwards.
+        existing_sigint_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(
+            signal.SIGINT,
+            partial(cls._handle_shutdown, existing_sigint_handler),
+        )
+        existing_sigterm_handler = signal.getsignal(signal.SIGTERM)
+        signal.signal(
+            signal.SIGTERM,
+            partial(cls._handle_shutdown, existing_sigterm_handler),
+        )
+
+        cls._installed_signal_handler = True
+
+    @classmethod
+    def _register_shutdown_hook(cls, hook: Callable[[], None]) -> None:
+        cls._shutdown_hooks.append(hook)
+        cls._install_signal_handlers()
+
+    @classmethod
+    def _handle_shutdown(
+        cls,
+        existing_signal_handler: Callable[[int, FrameType | None], None] | int | None,
+        sig: int,
+        frame: Any,
     ) -> None:
+        logging.critical(f"[{cls}] Caught signal {sig}, running shutdown hooks")
+        try:
+            for hook in cls._shutdown_hooks:
+                hook()
+        except Exception as e:
+            print(f"Error during shutdown: {e}")
+
+        if callable(existing_signal_handler) and existing_signal_handler not in (
+            signal.SIG_DFL,
+            signal.SIG_IGN,
+            signal.default_int_handler,
+        ):
+            existing_signal_handler(sig, frame)
+
+    def handle_kill(self) -> None:
         if self.is_shutting_down:
             return
 
         self.is_shutting_down = True
 
-        self.inner_handle_kill(signum, frame)
+        self.inner_handle_kill()
         self.wait_thread.stop()
         self.clean_up()
 
-        if (
-            existing_sigint_handler != signal.default_int_handler
-            and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
-        ):
-            existing_sigint_handler(signum, frame)
-
     @abstractmethod
-    def inner_handle_kill(self, _signum: Any, _frame: Any) -> None:
+    def inner_handle_kill(self) -> None:
         pass
 
     @abstractmethod

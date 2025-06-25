@@ -5,7 +5,6 @@ import logging
 import multiprocessing as mp
 import os
 import shutil
-import signal
 import sys
 import tempfile
 import time
@@ -188,7 +187,7 @@ def test_slurm_deferred_submit_shutdown() -> None:
         for submit_thread in executor.submit_threads:
             assert submit_thread.is_alive()
 
-        executor.handle_kill(signal.default_int_handler, None, None)
+        executor.handle_kill()
 
         # Wait for the threads to die down, but less than it would take to submit all jobs
         # which would take ~5 seconds since only one job is scheduled at a time
@@ -223,12 +222,7 @@ def test_slurm_job_canceling_on_shutdown() -> None:
 
         job_start_time = time.time()
 
-        # The job cancellation is flaky if jobs just switched from PENDING to RUNNING,
-        # probably because Python is not yet able to react to the SIGINT signal.
-        # This is an unsolved issue as of now.
-        time.sleep(1)
-
-        executor.handle_kill(signal.default_int_handler, None, None)
+        executor.handle_kill()
 
         # Wait for scheduled jobs to be canceled, so that the queue is empty again
         # and measure how long the cancellation takes
