@@ -195,8 +195,8 @@ class ClusterExecutor(futures.Executor):
 
         self.is_shutting_down = True
 
-        self.inner_handle_kill()
         self.wait_thread.stop()
+        self.inner_handle_kill()
         self.clean_up()
 
     @abstractmethod
