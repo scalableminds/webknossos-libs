@@ -269,7 +269,7 @@ class SlurmExecutor(ClusterExecutor):
             # didn't react to the SIGINT signal for some reason).
             _, stderr, _ = call(
                 f"scancel --state=PENDING {job_id_string}; scancel -s SIGINT --state=RUNNING {job_id_string};"
-                + "scancel --state=SUSPENDED {job_id_string}; sleep {SIGTERM_WAIT_IN_S}; scancel {job_id_string}"
+                + f"scancel --state=SUSPENDED {job_id_string}; sleep {SIGTERM_WAIT_IN_S}; scancel {job_id_string}"
             )
 
             maybe_error_or_warning = (
