@@ -226,7 +226,11 @@ def test_slurm_job_canceling_on_shutdown(
 
     # Wait for scheduled jobs to be canceled, so that the queue is empty again
     # and measure how long the cancellation takes
-    while executor.get_number_of_submitted_jobs() > 0:
+    # Since slurm jobs linger around in the squeue with state COMPLETING for some time
+    # after cancellation, we don't check for those
+    while executor.get_number_of_submitted_jobs(
+        "RUNNING"
+    ) > 0 or executor.get_number_of_submitted_jobs("PENDING"):
         time.sleep(0.5)
 
     job_cancellation_duration = time.time() - job_start_time
