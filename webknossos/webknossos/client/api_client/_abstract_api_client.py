@@ -18,9 +18,10 @@ LONG_TIMEOUT_SECONDS = 7200.0  # 2 hours
 
 
 class AbstractApiClient(ABC):
-    def __init__(self, timeout_seconds: float, headers: dict[str, str] | None = None):
+    def __init__(self, timeout_seconds: float, headers: dict[str, str] | None = None, webknossos_api_version: int = 9):
         self.headers = headers
         self.timeout_seconds = timeout_seconds
+        self.webknossos_api_version = webknossos_api_version
 
     @property
     @abstractmethod

@@ -20,13 +20,14 @@ class DatastoreApiClient(AbstractApiClient):
         datastore_base_url: str,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
+        webknossos_api_version: int = 9,
     ):
-        super().__init__(timeout_seconds, headers)
+        super().__init__(timeout_seconds, headers, webknossos_api_version)
         self.datastore_base_url = datastore_base_url
 
     @property
     def url_prefix(self) -> str:
-        return f"{self.datastore_base_url}/data"
+        return f"{self.datastore_base_url}/data/v{self.webknossos_api_version}"
 
     def dataset_finish_upload(
         self,
