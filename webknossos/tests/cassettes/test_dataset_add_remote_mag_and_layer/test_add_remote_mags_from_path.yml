@@ -18,12 +18,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:03 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -51,20 +49,18 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/json
         content-length: '1433'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424722251,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750943763903,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -85,18 +81,16 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424722661,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750943764340,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -118,29 +112,27 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"Tu22zO2eeyVqmvpH2lijEA"}'
+        data: '{"token":"V0eNWemIfVXh0P7wpAVWsg"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -149,7 +141,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -157,8 +148,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/octet-stream
         content-length: '1000'
       body:
@@ -168,14 +158,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -184,7 +174,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -192,8 +181,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/octet-stream
         content-length: '360'
       body:
@@ -203,14 +191,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -219,7 +207,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -227,8 +214,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/octet-stream
         content-length: '120'
       body:
@@ -238,14 +224,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -254,7 +240,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -262,8 +247,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/octet-stream
         content-length: '20'
       body:
@@ -272,14 +256,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -288,7 +272,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -296,8 +279,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/octet-stream
         content-length: '6'
       body:
@@ -306,14 +288,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -322,7 +304,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -330,8 +311,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:22 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:04 GMT
         content-type: application/octet-stream
         content-length: '4000'
       body:
@@ -341,14 +321,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -357,7 +337,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -365,8 +344,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:05 GMT
         content-type: application/octet-stream
         content-length: '1440'
       body:
@@ -376,14 +354,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -392,7 +370,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -400,8 +377,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:05 GMT
         content-type: application/octet-stream
         content-length: '480'
       body:
@@ -411,14 +387,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -427,7 +403,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -435,8 +410,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:05 GMT
         content-type: application/octet-stream
         content-length: '80'
       body:
@@ -446,14 +420,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Tu22zO2eeyVqmvpH2lijEA
+        x-auth-token: V0eNWemIfVXh0P7wpAVWsg
       body:
         encoding: utf8
         data: ''
@@ -462,7 +436,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -470,8 +443,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/octet-stream
         content-length: '24'
       body:
@@ -497,20 +469,18 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1433'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424722661,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750943764340,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -532,18 +502,16 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424724150,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750943766956,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
@@ -563,14 +531,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -596,14 +562,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -617,7 +581,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -633,14 +597,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -664,14 +626,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -695,14 +655,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -716,7 +674,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -730,14 +688,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -751,7 +707,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -765,14 +721,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -786,7 +740,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -802,14 +756,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -833,14 +785,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -864,14 +814,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -885,7 +833,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -899,14 +847,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -920,7 +866,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -934,14 +880,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -955,7 +899,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -971,14 +915,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:23 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1002,14 +944,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1033,14 +973,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1054,7 +992,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1068,14 +1006,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1089,7 +1025,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1103,14 +1039,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1124,7 +1058,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1140,14 +1074,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1171,14 +1103,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1202,14 +1132,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1223,7 +1151,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1237,14 +1165,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1258,7 +1184,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1272,14 +1198,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1293,7 +1217,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1309,14 +1233,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1340,14 +1262,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1371,14 +1291,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1392,7 +1310,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1406,14 +1324,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1427,7 +1343,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1441,14 +1357,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1462,7 +1376,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1478,14 +1392,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1509,14 +1421,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1540,14 +1450,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -1561,7 +1469,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1575,14 +1483,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -1596,7 +1502,7 @@ http_interactions:
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
@@ -1610,14 +1516,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:24 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:16:06 GMT
         content-type: application/json
         content-length: '166'
       body:

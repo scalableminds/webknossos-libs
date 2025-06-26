@@ -43,8 +43,7 @@ class WkApiClient(AbstractApiClient):
         headers: dict[str, str] | None = None,
         webknossos_api_version: int = 9,
     ):
-        super().__init__(timeout_seconds, headers)
-        self.webknossos_api_version = webknossos_api_version
+        super().__init__(timeout_seconds, headers, webknossos_api_version)
         self.base_wk_url = base_wk_url
 
     @property
