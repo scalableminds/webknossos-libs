@@ -211,6 +211,7 @@ def test_slurm_job_canceling_on_shutdown(
     # of whether they are pending or running.
     monkeypatch.setenv("SLURM_MAX_RUNNING_SIZE", "2")
     monkeypatch.setenv("SIGTERM_WAIT_IN_S", "0")
+    os.environ["SIGTERM_WAIT_IN_S"] = "0"
 
     executor = cluster_tools.get_executor("slurm", debug=True)
     # Only two jobs can run at once, so that some of the jobs will be
@@ -239,6 +240,8 @@ def test_slurm_job_canceling_on_shutdown(
     # of whether they were running or pending in much less time than it would
     # have taken the jobs to finish on their own
     assert job_cancellation_duration < 5
+
+    del os.environ["SIGTERM_WAIT_IN_S"]
 
 
 def test_slurm_number_of_submitted_jobs() -> None:
