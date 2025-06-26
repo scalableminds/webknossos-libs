@@ -5,7 +5,6 @@ import logging
 import multiprocessing as mp
 import os
 import shutil
-import signal
 import sys
 import tempfile
 import time
@@ -168,10 +167,11 @@ def wait_until_first_job_was_submitted(
         time.sleep(0.1)
 
 
-def test_slurm_deferred_submit_shutdown() -> None:
+def test_slurm_deferred_submit_shutdown(monkeypatch: pytest.MonkeyPatch) -> None:
     # Test that the SlurmExecutor stops scheduling jobs in a separate thread
     # once it was killed even if the executor was used multiple times and
     # therefore started multiple job submission threads
+    monkeypatch.setenv("SIGTERM_WAIT_IN_S", "0")
     max_submit_jobs = 1
 
     # Only one job can be scheduled at a time
@@ -188,7 +188,7 @@ def test_slurm_deferred_submit_shutdown() -> None:
         for submit_thread in executor.submit_threads:
             assert submit_thread.is_alive()
 
-        executor.handle_kill(signal.default_int_handler, None, None)
+        executor.handle_kill()
 
         # Wait for the threads to die down, but less than it would take to submit all jobs
         # which would take ~5 seconds since only one job is scheduled at a time
@@ -204,49 +204,44 @@ def test_slurm_deferred_submit_shutdown() -> None:
         call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
-def test_slurm_job_canceling_on_shutdown() -> None:
+def test_slurm_job_canceling_on_shutdown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     # Test that scheduled jobs are canceled on shutdown, regardless
     # of whether they are pending or running.
-    max_running_size = 2
+    monkeypatch.setenv("SLURM_MAX_RUNNING_SIZE", "2")
+    monkeypatch.setenv("SIGTERM_WAIT_IN_S", "0")
+    os.environ["SIGTERM_WAIT_IN_S"] = "0"
 
     executor = cluster_tools.get_executor("slurm", debug=True)
     # Only two jobs can run at once, so that some of the jobs will be
     # running and some will be pending.
-    original_max_running_size = os.environ.get("SLURM_MAX_RUNNING_SIZE")
-    os.environ["SLURM_MAX_RUNNING_SIZE"] = str(max_running_size)
+    executor.map_to_futures(sleep, [10] * 4)
 
-    try:
-        executor.map_to_futures(sleep, [10] * 4)
+    # Wait until first job is running
+    wait_until_first_job_was_submitted(executor, "RUNNING")
 
-        # Wait until first job is running
-        wait_until_first_job_was_submitted(executor, "RUNNING")
+    job_start_time = time.time()
 
-        job_start_time = time.time()
+    executor.handle_kill()
 
-        # The job cancellation is flaky if jobs just switched from PENDING to RUNNING,
-        # probably because Python is not yet able to react to the SIGINT signal.
-        # This is an unsolved issue as of now.
-        time.sleep(1)
+    # Wait for scheduled jobs to be canceled, so that the queue is empty again
+    # and measure how long the cancellation takes
+    # Since slurm jobs linger around in the squeue with state COMPLETING for some time
+    # after cancellation, we don't check for those
+    while executor.get_number_of_submitted_jobs(
+        "RUNNING"
+    ) > 0 or executor.get_number_of_submitted_jobs("PENDING"):
+        time.sleep(0.5)
 
-        executor.handle_kill(signal.default_int_handler, None, None)
+    job_cancellation_duration = time.time() - job_start_time
 
-        # Wait for scheduled jobs to be canceled, so that the queue is empty again
-        # and measure how long the cancellation takes
-        while executor.get_number_of_submitted_jobs() > 0:
-            time.sleep(0.5)
+    # Killing the executor should have canceled all submitted jobs, regardless
+    # of whether they were running or pending in much less time than it would
+    # have taken the jobs to finish on their own
+    assert job_cancellation_duration < 5
 
-        job_cancellation_duration = time.time() - job_start_time
-
-        # Killing the executor should have canceled all submitted jobs, regardless
-        # of whether they were running or pending in much less time than it would
-        # have taken the jobs to finish on their own
-        assert job_cancellation_duration < 5
-
-    finally:
-        if original_max_running_size is not None:
-            os.environ["SLURM_MAX_RUNNING_SIZE"] = original_max_running_size
-        else:
-            del os.environ["SLURM_MAX_RUNNING_SIZE"]
+    del os.environ["SIGTERM_WAIT_IN_S"]
 
 
 def test_slurm_number_of_submitted_jobs() -> None:
