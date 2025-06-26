@@ -18,18 +18,16 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/json
-        content-length: '682'
+        content-length: '717'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
         compression: none
   - request:
       method: GET
@@ -51,52 +49,18 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/json
-        content-length: '1586'
+        content-length: '1442'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1744722466378,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}]
-        compression: none
-  - request:
-      method: GET
-      path: /api/v9/datasets/59e9cfbdba632ac2ab8b23b5
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        connection: keep-alive
-        user-agent: python-httpx/0.27.2
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: application/json
-        content-length: '1584'
-      body:
-        encoding: utf8
-        data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1744722467473,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750943862489,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}]
         compression: none
   - request:
       method: POST
@@ -118,24 +82,53 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"0L0_elahUD1V-ZQJvs3-Yw"}'
+        data: '{"token":"RHXfR2bBvS_4wTifBLZVVA"}'
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=RHXfR2bBvS_4wTifBLZVVA
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 26 Jun 2025 13:17:42 GMT
+        content-type: application/json
+        content-length: '1440'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750943863284,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
+        x-auth-token: RHXfR2bBvS_4wTifBLZVVA
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.13 aiohttp/3.10.11
@@ -147,16 +140,14 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/json
-        content-length: '1152'
+        content-length: '1413'
       body:
         encoding: utf8
         data: ''
@@ -166,8 +157,8 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        range: bytes=0-1151
+        x-auth-token: RHXfR2bBvS_4wTifBLZVVA
+        range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
         user-agent: Python/3.13 aiohttp/3.10.11
@@ -179,780 +170,18 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/json
-        content-length: '1152'
+        content-length: '1413'
       body:
         encoding: utf8
         data: >-
-          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/1
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1289'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/1” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/2-2-1
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1293'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/2-2-1” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/4-4-1
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1293'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/4-4-1” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1293'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/8-8-2” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1295'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/color/16-16-4” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1296'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/1” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1300'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/2-2-1” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1300'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/4-4-1” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1300'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/8-8-2” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
-        compression: none
-  - request:
-      method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4
-      headers:
-        host: localhost:9000
-        x-auth-token: 0L0_elahUD1V-ZQJvs3-Yw
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        x-powered-by: Express
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
-        content-type: text/html; charset=UTF-8
-        content-length: '1302'
-      body:
-        encoding: utf8
-        data: |
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-              <title>WEBKNOSSOS Datastore</title>
-              <meta name="robot" content="noindex" />
-              <script type="text/javascript">
-                // forward to path with trailing slash
-                if (!window.location.pathname.endsWith('/')) {
-                  var url = window.location.protocol + '//' + 
-                            window.location.host + 
-                            window.location.pathname + '/' + 
-                            window.location.search;
-                  window.location.replace(url);
-                }
-              </script>
-              
-              <style>
-                * {
-                  font-family: "Monospaced Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-                  sans-serif;
-                  text-align: center
-                }
-                
-                ul {
-                  list-style: none;
-                }
-
-                p#hint {
-                  color: #777;
-                  margin-top: 4em
-                }
-              </style>
-            </head>
-            <body>
-              <p id="hint">This is the WEBKNOSSOS Datastore “Organization_X/l4_sample/segmentation/16-16-4” folder.</p>
-              <p>The following are the contents of the folder:</p>
-              <ul>
-                
-                  <li><a href=".zarray">.zarray</a></li>
-                
-              </ul>
-            </body>
-          </html>
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"numChannels":1,"dataFormat":"zarr","category":"segmentation"}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
         compression: none
   - request:
       method: GET
@@ -973,18 +202,16 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/json
-        content-length: '1584'
+        content-length: '1440'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1744722467654,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750943863326,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":1692207513}
         compression: none
   - request:
       method: POST
@@ -997,34 +224,32 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '996'
-        content-type: multipart/form-data; boundary=12a459cc696ed986247e2b73544eadc6
+        content-length: '995'
+        content-type: multipart/form-data; boundary=952e0bd09366bfe00fbb2ed016b0c22e
       body:
         encoding: base64
         data: >-
-          LS0xMmE0NTljYzY5NmVkOTg2MjQ3ZTJiNzM1NDRlYWRjNg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS0xMmE0NTljYzY5NmVkOTg2MjQ3ZTJiNzM1NDRlYWRjNg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgA93iPWu+6oRD3AQAAHwQAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjVNLb5wwEL7nV1i+Zxebl1eCRMqtUqWeWqW9rAw4YAVsZExL8+s7NvaWVK1ULsyM5/F986get2lE34VZpFY1JqcEI6Fa3UnV13i1L/cMPz7cVXYAw/Jwh1A1c8MnYSHEqWAQ2yyMnISySMFLjcfsuvBpHgVG2vRcyTduffpPB+36jNE5ZFhaPgq0QX1youkFvrIkhDBSZBj9/Lv5rcaUObgxiQUIaFrAu8yyktKsKJPk+M6X1ye9KkftSW+o1aM2Jw7+OMhNjZMTjRrwh+jdy7iXHKNOzHaoMUiDkP1gvSiXL3KRzQjMrVmB9N4FC/WuTaM3jKyeP4oX+wy1IGXQvr7Tvu3aD9mFApHWugjzH7BvJBxsB/UAHCgF4K6fEbmTZedJ/oPBZ+WYdCiWB+EPMhRy/KaTE6gUVMeHMowCIVfMM6rO7/dn36zDMNxId+x+HJfyQmieZGmRXlhG0vjoaRJKi4yxrCAsTZIyvc3OzwsMjOV5UhCaUbcTGPVGr/MHIA3tctwhYB8WR9YIgcM+Kt2JsN2w307z3lAcdjRxCGEp/R+20P/jtM6H0Ep0vVhu+wk3wztueeyDPyl/UY3hqh1mLZUN7lWrJ3dQ8cSCCo1RFsw19piAhPvXGICF5h7jKs82pvCKp+HC/J3yvR+34OhfneO5/wJQSwECFAMUAAAACAD3eI9a77qhEPcBAAAfBAAAHwAAAAAAAAAAAAAAgAEAAAAAdGVzdF9ib3VuZGluZ19ib3hfcm91bmR0cmlwLm5tbFBLBQYAAAAAAQABAE0AAAA0AgAAAAANCi0tMTJhNDU5Y2M2OTZlZDk4NjI0N2UyYjczNTQ0ZWFkYzYtLQ0K
+          LS05NTJlMGJkMDkzNjZiZmUwMGZiYjJlZDAxNmIwYzIyZQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS05NTJlMGJkMDkzNjZiZmUwMGZiYjJlZDAxNmIwYzIyZQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgANXraWjBXfnj2AQAAHwQAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjVNLb5wwEL7nV1i+Z9fmjQSJlFulSj21SntZGXDACtjINu02v75jY29J1Urlwozn9X3zaB6vy4y+c22Eki2mJ4IRl70ahBxbvNmX+wo/Ptw1doIH83CHULMyzRZuIcSp8MCvK9di4dIiCZYWz9nFsGWdOUZKj0yKN2Z9+k8H7fKM0TlkMD2bObpCfXpK0hq+sqSUVrTIMPr59+e3FieVgxuTWICAFgPeZU7qLK2KlJCjnZnXJ7VJR+1JXVGvZqVPDPxxkLsWk1MSNeAP0buXdpYco4GvdmoxSBMX42S9KMwXYUQ3A3OrNyC9d8FCvUvXqStGVq0f+Yt9hlqQMmhf32nfdu2HGEKBSGszXP8H7BsJB9tBPQAHSgG462dE7mQxeJL/YPBZOiYDiuVB+INMAjl+08kpVAqq45NUGAVCrphn1Jzf78++WYdhuJHu2P04aJqWlNQpbAMpyzSNRk+TkLzKyiLPSFEWpMyLIpr9wOo8pxVEpySvi4oChFGrbf0ApKFdjjvg3YfFkNWc47CPUg08bDfst9O8NxSHHSUOISyl/8MW+n+c1vkQ2vBh5Oa2n3AzbGCWxT74k/IX1Wkm+2lVQtrg3vRqcQcVTyyo0Bhp4bnFHhOQcP8WA7DQ3GNc49nGFF7xNFyYv1O29+MWHP2bczz3X1BLAQIUAxQAAAAIADV62lowV3549gEAAB8EAAAfAAAAAAAAAAAAAACAAQAAAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sUEsFBgAAAAABAAEATQAAADMCAAAAAA0KLS05NTJlMGJkMDkzNjZiZmUwMGZiYjJlZDAxNmIwYzIyZS0tDQo=
     response:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/json
         content-length: '124'
       body:
         encoding: utf8
         data: >-
-          {"annotation":{"typ":"Explorational","id":"67fe5a231d0100bd02f16a09"},"messages":[{"success":"Successfully
+          {"annotation":{"typ":"Explorational","id":"685d4877010000af00791e7c"},"messages":[{"success":"Successfully
           uploaded file"}]}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/annotations/67fe5a231d0100bd02f16a09/download?skipVolumeData=false
+        /api/v9/annotations/685d4877010000af00791e7c/download?skipVolumeData=false
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -1041,36 +266,34 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 15 Apr 2025 13:07:46 GMT
-        connection: close
+        date: Thu, 26 Jun 2025 13:17:42 GMT
         content-type: application/xml
-        content-length: '1742'
+        content-length: '1760'
       body:
         encoding: utf8
         data: |-
           <things>
             <meta name="writer" content="NmlWriter.scala"/>
-            <meta name="writerGitCommit" content="920807ab93ef60ae4fd1ba6341c72989f123e13d"/>
-            <meta name="timestamp" content="1744722467902"/>
-            <meta name="annotationId" content="67fe5a231d0100bd02f16a09"/>
+            <meta name="writerGitCommit" content="9395ef6e554bbdd3bb6ca3c983a6a46f78e07ae8"/>
+            <meta name="timestamp" content="1750943863446"/>
+            <meta name="annotationId" content="685d4877010000af00791e7c"/>
             <meta name="username" content="user_A last_A"/>
             <parameters>
               <experiment name="l4_sample" organization="Organization_X" datasetId="59e9cfbdba632ac2ab8b23b5" description="" wkUrl="http://localhost:9000"/>
               <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
               <offset x="0" y="0" z="0"/>
-              <time ms="1744722467760"/>
+              <time ms="1750943863379"/>
               <editPosition x="0" y="0" z="0"/>
               <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
               <zoomLevel zoom="2.0"/>
               <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
-              <userBoundingBox id="1" name="task bounding box" color.r="0.0407118656598614" color.g="0.4121877349021619" color.b="0.014995271581114022" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.45816832929507423" color.g="0.7732897861127619" color.b="0.35803062150611564" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
             </parameters>
-            <thing id="2" color.r="0.07388550788164139" color.g="0.12264884263277054" color.b="0.9791250228881836" color.a="1.0" name="a tree" groupId="1">
+            <thing id="2" color.r="0.9551870822906494" color.g="0.005847653839737177" color.b="0.13371093571186066" color.a="1.0" name="a tree" isVisible="true" groupId="1">
               <nodes>
                 <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
               </nodes>
