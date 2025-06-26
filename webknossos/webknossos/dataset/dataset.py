@@ -12,7 +12,7 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, Union, cast
 
 import attr
 import numpy as np
@@ -69,7 +69,6 @@ from ..utils import (
     get_executor_for_args,
     infer_metadata_type,
     is_fs_path,
-    is_remote_path,
     named_partial,
     resolve_if_fs_path,
     rmtree,
@@ -125,6 +124,9 @@ _ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$"
 _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
+
+SUPPORTED_VERSIONS: list[Literal[1]] = [1]
+DEFAULT_VERSION: Literal[1] = 1
 
 
 def _find_array_info(layer_path: Path) -> ArrayInfo | None:
@@ -376,7 +378,7 @@ class Dataset:
                 id={"name": name, "team": ""},
                 scale=voxel_size_with_unit,
                 data_layers=[],
-                version=1,
+                version=DEFAULT_VERSION,
             )
             (self.path / PROPERTIES_FILE_NAME).write_text(
                 json.dumps(
@@ -408,9 +410,10 @@ class Dataset:
         assert dataset_properties is not None
         self._properties = dataset_properties
         self._last_read_properties = copy.deepcopy(self._properties)
-        assert self._properties.version is None or self._properties.version == 1, (
-            f"Unsupported dataset version {self._properties.version}"
-        )
+        assert (
+            self._properties.version is None
+            or self._properties.version in SUPPORTED_VERSIONS
+        ), f"Unsupported dataset version {self._properties.version}"
 
         self._layers: dict[str, Layer] = {}
         # construct self.layers
@@ -1361,7 +1364,6 @@ class Dataset:
 
         if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties, read_only=False)
         elif category == SEGMENTATION_CATEGORY:
             segmentation_layer_properties: SegmentationLayerProperties = (
@@ -1375,7 +1377,6 @@ class Dataset:
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
             self._properties.data_layers += [segmentation_layer_properties]
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
                 self, segmentation_layer_properties, read_only=False
             )
@@ -1502,10 +1503,8 @@ class Dataset:
 
         self._properties.data_layers += [layer_properties]
         if layer_properties.category == COLOR_CATEGORY:
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = Layer(self, layer_properties, read_only=False)
         elif layer_properties.category == SEGMENTATION_CATEGORY:
-            (self.path / layer_name).mkdir(parents=True, exist_ok=True)
             self._layers[layer_name] = SegmentationLayer(
                 self,
                 cast(SegmentationLayerProperties, layer_properties),
@@ -2199,6 +2198,35 @@ class Dataset:
         executor: Executor | None = None,
         with_attachments: bool = True,
     ) -> Layer:
+        """Deprecated. Use `Dataset.add_layer_as_copy` instead."""
+        warn_deprecated("add_copy_layer", "add_layer_as_copy")
+        return self.add_layer_as_copy(
+            foreign_layer,
+            new_layer_name,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+            chunks_per_shard=chunks_per_shard,
+            data_format=data_format,
+            compress=compress,
+            exists_ok=exists_ok,
+            executor=executor,
+            with_attachments=with_attachments,
+        )
+
+    def add_layer_as_copy(
+        self,
+        foreign_layer: str | Path | Layer,
+        new_layer_name: str | None = None,
+        *,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        chunks_per_shard: Vec3IntLike | int | None = None,
+        data_format: str | DataFormat | None = None,
+        compress: bool | None = None,
+        exists_ok: bool = False,
+        executor: Executor | None = None,
+        with_attachments: bool = True,
+    ) -> Layer:
         """Copy layer from another dataset to this one.
 
         Creates a new layer in this dataset by copying data and metadata from
@@ -2226,12 +2254,12 @@ class Dataset:
             Copy layer keeping same name:
             ```
             other_ds = Dataset.open("other/dataset")
-            copied = ds.add_copy_layer(other_ds.get_layer("color"))
+            copied = ds.add_layer_as_copy(other_ds.get_layer("color"))
             ```
 
             Copy with new name:
             ```
-            copied = ds.add_copy_layer(
+            copied = ds.add_layer_as_copy(
                 other_ds.get_layer("color"),
                 new_layer_name="color_copy",
                 compress=True
@@ -2274,7 +2302,7 @@ class Dataset:
                 f"Copying {mag_view.layer.name}/{mag_view.mag.to_layer_name()}"
             )
 
-            layer.add_copy_mag(
+            layer.add_mag_as_copy(
                 mag_view,
                 extend_layer_bounding_box=False,
                 chunk_shape=chunk_shape,
@@ -2291,7 +2319,8 @@ class Dataset:
             and isinstance(layer, SegmentationLayer)
             and isinstance(foreign_layer, SegmentationLayer)
         ):
-            layer.attachments.add_copy_attachments(*foreign_layer.attachments)
+            for attachment in foreign_layer.attachments:
+                layer.attachments.add_attachment_as_copy(attachment)
 
         return layer
 
@@ -2302,7 +2331,9 @@ class Dataset:
         *,
         make_relative: bool = False,
     ) -> Layer:
-        """Create symbolic link to layer from another dataset.
+        """Deprecated. Use `Dataset.add_layer_as_ref` instead.
+
+        Create symbolic link to layer from another dataset.
 
         Instead of copying data, creates a symbolic link to the original layer's data and copies
         only the layer metadata. Changes to the original layer's properties, e.g. bounding box, afterwards won't
@@ -2336,6 +2367,13 @@ class Dataset:
         """
 
         self._ensure_writable()
+        warnings.warn(
+            "Using symlinks is deprecated and will be removed in a future version. "
+            + "Use `add_layer_as_ref` instead, which adds the mags and attachments of the layer as references to this dataset.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         foreign_layer = Layer._ensure_layer(foreign_layer)
 
         if new_layer_name is None:
@@ -2365,20 +2403,19 @@ class Dataset:
         new_layer_properties = copy.deepcopy(foreign_layer._properties)
         new_layer_properties.name = new_layer_name
 
-        # FIX when paths are merged
-        # # Add correct paths to mag properties
-        # for foreign_mag in foreign_layer.mags.values():
-        #     mag_prop = next(
-        #         m for m in new_layer_properties.mags if m.mag == foreign_mag.mag
-        #     )
-        #     if is_fs_path(foreign_mag.path):
-        #         mag_prop.path = str(
-        #             Path(relpath(foreign_mag.path, self.path))
-        #             if make_relative
-        #             else foreign_mag.path.resolve()
-        #         )
-        #     else:
-        #         mag_prop.path = str(foreign_mag.path)
+        # Add correct paths to mag properties
+        for foreign_mag in foreign_layer.mags.values():
+            mag_prop = next(
+                m for m in new_layer_properties.mags if m.mag == foreign_mag.mag
+            )
+            if is_fs_path(foreign_mag.path):
+                mag_prop.path = str(
+                    Path(relpath(foreign_mag.path.resolve(), self.path))
+                    if make_relative
+                    else foreign_mag.path.resolve()
+                )
+            else:
+                mag_prop.path = str(foreign_mag.path)
 
         if (
             isinstance(new_layer_properties, SegmentationLayerProperties)
@@ -2407,16 +2444,25 @@ class Dataset:
 
     def add_remote_layer(
         self,
-        foreign_layer: str | UPath | Layer,
+        foreign_layer: str | PathLike | Layer,
         new_layer_name: str | None = None,
     ) -> Layer:
-        """Add a remote layer from another dataset.
+        """Deprecated. Use `Dataset.add_layer_as_ref` instead."""
+        warn_deprecated("add_remote_layer", "add_layer_as_ref")
+        return self.add_layer_as_ref(foreign_layer, new_layer_name)
+
+    def add_layer_as_ref(
+        self,
+        foreign_layer: str | PathLike | Layer,
+        new_layer_name: str | None = None,
+    ) -> Layer:
+        """Add a layer from another dataset by reference.
 
         Creates a layer that references data from a remote dataset. The image data
         will be streamed on-demand when accessed.
 
         Args:
-            foreign_layer: Remote layer to add (path or Layer object)
+            foreign_layer: Foreign layer to add (path or Layer object)
             new_layer_name: Optional name for the new layer, uses original name if None
 
         Returns:
@@ -2431,7 +2477,7 @@ class Dataset:
             ```
             ds = Dataset.open("other/dataset")
             remote_ds = Dataset.open_remote("my_dataset", "my_org_id")
-            new_layer = ds.add_remote_layer(
+            new_layer = ds.add_layer_as_ref(
                 remote_ds.get_layer("color")
             )
             ```
@@ -2455,21 +2501,16 @@ class Dataset:
             "Cannot add layer with the same origin dataset as foreign layer"
         )
 
-        assert all(is_remote_path(mag.path) for mag in foreign_layer.mags.values()), (
-            f"Cannot add foreign layer {foreign_layer} as it is not remote. Try using dataset.add_copy_layer instead."
-        )
+        new_layer = self.add_layer_like(foreign_layer, new_layer_name)
+        for mag_view in foreign_layer.mags.values():
+            new_layer.add_mag_as_ref(mag_view, extend_layer_bounding_box=False)
 
-        layer_properties = copy.deepcopy(foreign_layer._properties)
-        for mag in layer_properties.mags:
-            mag.path = str(foreign_layer.mags[mag.mag].path)
-        layer_properties.name = new_layer_name
-        self._properties.data_layers += [layer_properties]
-        new_layer = self._initialize_layer_from_properties(
-            layer_properties, read_only=False
-        )
-        self._layers[new_layer_name] = new_layer
-
-        self._export_as_json()
+        # reference-copy all attachments
+        if isinstance(foreign_layer, SegmentationLayer) and isinstance(
+            new_layer, SegmentationLayer
+        ):
+            for attachment in foreign_layer.attachments:
+                new_layer.attachments.add_attachment_as_ref(attachment)
         return new_layer
 
     def add_fs_copy_layer(
@@ -2638,7 +2679,7 @@ class Dataset:
             for layer in self.layers.values():
                 if layers_to_ignore is not None and layer.name in layers_to_ignore:
                     continue
-                new_dataset.add_copy_layer(
+                new_dataset.add_layer_as_copy(
                     layer,
                     chunk_shape=chunk_shape,
                     shard_shape=shard_shape,
@@ -2714,7 +2755,8 @@ class Dataset:
             if isinstance(layer, SegmentationLayer) and isinstance(
                 new_layer, SegmentationLayer
             ):
-                new_layer.attachments.add_copy_attachments(*layer.attachments)
+                for attachment in layer.attachments:
+                    new_layer.attachments.add_attachment_as_copy(attachment)
         new_dataset._export_as_json()
         return new_dataset
 
@@ -2723,20 +2765,18 @@ class Dataset:
         new_dataset_path: str | PathLike,
         *,
         name: str | None = None,
-        make_relative: bool = False,
         layers_to_ignore: Iterable[str] | None = None,
+        make_relative: bool | None = None,  # deprecated
     ) -> "Dataset":
-        """Create a new dataset that uses symlinks to reference data.
+        """Create a new dataset that contains references to the layers, mags and attachments of another dataset.
 
-        Links all magnifications and layer directories from the original dataset via symlinks
-        rather than copying data. Remote layers are referenced as well. Useful for creating alternative views or exposing datasets
-        to webknossos.
+        Useful for creating alternative views or exposing datasets to WEBKNOSOSS.
 
         Args:
             new_dataset_path: Path where new dataset should be created
             name: Optional name for the new dataset, uses original name if None
-            make_relative: Whether to create relative symlinks
             layers_to_ignore: Optional iterable of layer names to exclude
+            executor: Optional executor for copy operations
 
         Returns:
             Dataset: The newly created dataset with linked layers
@@ -2758,19 +2798,15 @@ class Dataset:
                     layers_to_ignore=["temp_layer"]
                 )
                 ```
-
-        Note:
-            Only works with datasets on local filesystems. Cannot create shallow
-            copies of remote datasets or create shallow copies in remote locations.
         """
+        if make_relative is not None:
+            warnings.warn(
+                "make_relative is deprecated and has no utility anymore, because shallow_copy_dataset does not use symlinks anymore.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
-        assert is_fs_path(self.path), (
-            f"Cannot create symlinks to remote dataset {self.path}"
-        )
         new_dataset_path = UPath(new_dataset_path)
-        assert is_fs_path(new_dataset_path), (
-            f"Cannot create symlink in remote path {new_dataset_path}"
-        )
         new_dataset = Dataset(
             new_dataset_path,
             voxel_size_with_unit=self.voxel_size_with_unit,
@@ -2782,23 +2818,7 @@ class Dataset:
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
-            if all(is_remote_path(mag.path) for mag in layer.mags.values()):
-                new_dataset.add_remote_layer(layer, layer_name)
-            else:
-                new_layer = new_dataset.add_layer_like(layer, layer_name)
-                for mag_view in layer.mags.values():
-                    if is_fs_path(mag_view.path):
-                        new_layer.add_symlink_mag(mag_view, make_relative=make_relative)
-                    else:
-                        new_layer.add_remote_mag(mag_view)
-
-                # reference-copy all attachments
-                if isinstance(layer, SegmentationLayer) and isinstance(
-                    new_layer, SegmentationLayer
-                ):
-                    new_layer.attachments.add_symlink_attachments(
-                        *layer.attachments, make_relative=make_relative
-                    )
+            new_dataset.add_layer_as_ref(layer, layer_name)
 
         return new_dataset
 
