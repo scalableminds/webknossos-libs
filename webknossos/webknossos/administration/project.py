@@ -27,13 +27,55 @@ class Project:
 
     @classmethod
     def get_by_id(cls, project_id: str) -> "Project":
-        """Returns the project specified by the passed id if your token authorizes you to see it."""
+        """
+        Retrieve a project by its unique identifier.
+
+        Fetches the project with the specified `project_id` from the backend, provided the current
+        user can access the project. This method requires valid authentication.
+
+        Args:
+            project_id (str): The unique identifier of the project to retrieve.
+
+        Returns:
+            Project: An instance of the Project class corresponding to the specified ID.
+
+        Raises:
+            UnexpectedStatusError: If the project does not exist or the user is not authorized to access it.
+
+        Examples:
+            Retrieve a project by ID:
+                ```
+                project = Project.get_by_id("project_12345")
+                print(project.name)
+                ```
+        """
         api_project = _get_api_client(enforce_auth=True).project_info_by_id(project_id)
         return cls._from_api_project(api_project)
 
     @classmethod
     def get_by_name(cls, name: str) -> "Project":
-        """Returns the user specified by the passed name if your token authorizes you to see it."""
+        """
+        Retrieve a project by its unique name.
+
+        Fetches the project with the specified `name` from the backend, provided the current
+        user can access the project. This method requires valid authentication.
+
+        Args:
+            name (str): The unique name of the project to retrieve.
+
+        Returns:
+            Project: An instance of the Project class corresponding to the specified name.
+
+        Raises:
+            UnexpectedStatusError: If the project does not exist or the user is not authorized to access it.
+
+        Examples:
+            Retrieve a project by name:
+                ```
+                project = Project.get_by_name("my_project")
+                print(project.project_id)
+                ```
+        """
         api_project = _get_api_client(enforce_auth=True).project_info_by_name(name)
         return cls._from_api_project(api_project)
 
@@ -41,11 +83,11 @@ class Project:
     def create(
         cls,
         name: str,
-        priority: int,
-        paused: bool,
-        expected_time: int | None,
         team: str | Team,
-        is_blacklisted_from_report: bool,
+        expected_time: int | None,
+        priority: int = 100,
+        paused: bool = False,
+        is_blacklisted_from_report: bool = False,
         owner: str | User | None = None,
     ) -> "Project":
         """Creates a new project and returns it.
@@ -57,7 +99,7 @@ class Project:
             paused (bool): Whether the project is paused or not.
             expected_time (int | None): The expected time for the project in minutes.
             team_id (str): The ID of the team to which the project belongs.
-            owner_id: (str | None): The ID of the owner of the project. If None, the current user will be used.
+            owner_id: (str | None): The ID of the owner user of the project. If None, the current user will be used.
 
         Returns:
             Project: The created project.
@@ -80,7 +122,7 @@ class Project:
         return cls._from_api_project(api_client.project_create(api_project))
 
     def delete(self) -> None:
-        """Deletes this project. WARNING: This is irreversible!"""
+        """Deletes this project from server. WARNING: This is irreversible!"""
         client = _get_api_client(enforce_auth=True)
         client.project_delete(self.project_id)
 
@@ -90,7 +132,31 @@ class Project:
         expected_time: int | None = None,
         is_blacklisted_from_report: bool | None = None,
     ) -> "Project":
-        """Updates the project with the given name and returns it."""
+        """
+        Update the project's properties and return the updated Project instance.
+
+        This method updates the project's priority, expected time, and blacklist status for reporting.
+        Only the parameters provided (not None) will be updated; others remain unchanged.
+
+        Args:
+            priority (int | None): Optional new priority for the project. If not provided, the current priority is kept.
+            expected_time (int | None): Optional new expected time (in minutes or relevant unit) for the project. If not provided, the current expected time is kept.
+            is_blacklisted_from_report (bool | None): Optional flag to set whether the project should be excluded from reports. If not provided, the current blacklist status is kept.
+
+        Returns:
+            Project: The updated Project instance reflecting the new properties.
+
+        Examples:
+            Update only the priority:
+                ```
+                project = project.update(priority=5)
+                ```
+
+            Update expected time and blacklist status:
+                ```
+                project = project.update(expected_time=120, is_blacklisted_from_report=True)
+                ```
+        """
         api_project = ApiProjectCreate(
             name=self.name,
             team=self.team_id,
@@ -110,9 +176,33 @@ class Project:
         return Project._from_api_project(updated)
 
     def get_tasks(self, fetch_all: bool = False) -> list["Task"]:
-        """Returns the tasks of this project.
-        Note: will fetch only the first 1000 entries by default, warns if that means some are missing.
-        set parameter pass fetch_all=True to use pagination to fetch all tasks iteratively with pagination.
+        """Retrieve the list of tasks associated with this project.
+
+        By default, this method fetches up to the first 1000 tasks for the project. If the project contains more than 1000 tasks,
+        a warning is issued unless `fetch_all=True` is passed, in which case all tasks are fetched using pagination.
+
+        Args:
+            fetch_all (bool, optional): If True, fetches all tasks for the project using pagination. If False (default),
+                only the first 1000 tasks are returned and a warning is issued if more tasks exist.
+
+        Returns:
+            list[Task]: A list of Task objects associated with this project.
+
+        Raises:
+            Any exceptions raised by the underlying API client.
+
+        Examples:
+            Fetch up to 1000 tasks:
+                ```
+                tasks = project.get_tasks()
+                print(f"Fetched {len(tasks)} tasks")
+                ```
+
+            Fetch all tasks, regardless of count:
+                ```
+                all_tasks = project.get_tasks(fetch_all=True)
+                print(f"Total tasks: {len(all_tasks)}")
+                ```
         """
 
         from .task import Task
