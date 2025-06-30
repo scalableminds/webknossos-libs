@@ -222,9 +222,9 @@ def test_slurm_job_canceling_on_shutdown(
     wait_until_first_job_was_submitted(executor, "RUNNING")
 
     job_start_time = time.time()
-
+    logging.warning(f"job_start_time {job_start_time}")
     executor.handle_kill()
-
+    logging.warning(f"after kill {time.time()}")
     # Wait for scheduled jobs to be canceled, so that the queue is empty again
     # and measure how long the cancellation takes
     # Since slurm jobs linger around in the squeue with state COMPLETING for some time
@@ -232,10 +232,13 @@ def test_slurm_job_canceling_on_shutdown(
     while executor.get_number_of_submitted_jobs(
         "RUNNING"
     ) > 0 or executor.get_number_of_submitted_jobs("PENDING"):
+        logging.warning(f"while jobs are still submitted {job_start_time}")
         time.sleep(0.5)
 
     job_cancellation_duration = time.time() - job_start_time
-
+    logging.warning(
+        f"job_cancellation_duration {job_cancellation_duration}, {time.time()}"
+    )
     # Killing the executor should have canceled all submitted jobs, regardless
     # of whether they were running or pending in much less time than it would
     # have taken the jobs to finish on their own
