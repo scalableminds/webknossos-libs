@@ -58,9 +58,6 @@ SLURM_QUEUE_CHECK_INTERVAL = 1 if "pytest" in sys.modules else 60
 
 T = TypeVar("T")
 
-# Allow to speed up the shutdown, for example, when running voxelytics locally
-SIGTERM_WAIT_IN_S = float(os.environ.get("SIGTERM_WAIT_IN_S", 5))
-
 
 def noopDecorator(func: T) -> T:
     return func
@@ -263,13 +260,15 @@ class SlurmExecutor(ClusterExecutor):
             # but can be canceled together using the job_id.
             unique_job_ids = set(map(lambda x: str(x).split("_")[0], scheduled_job_ids))
             job_id_string = " ".join(unique_job_ids)
+            # Allow to speed up the shutdown, for example, when running voxelytics locally
+            sigterm_wait_in_s_env = float(os.environ.get("SIGTERM_WAIT_IN_S", 5))
             # Send SIGINT signal to running jobs instead of terminating the jobs right away. This way, the jobs can
             # react to the signal, safely shutdown and signal (cancel) jobs they possibly scheduled, recursively.
             # After a short waiting time kill all jobs that are still running (due to race conditions or because they
             # didn't react to the SIGINT signal for some reason).
             _, stderr, _ = call(
                 f"scancel --state=PENDING {job_id_string}; scancel -s SIGINT --state=RUNNING {job_id_string};"
-                + f"scancel --state=SUSPENDED {job_id_string}; sleep {SIGTERM_WAIT_IN_S}; scancel {job_id_string}"
+                + f"scancel --state=SUSPENDED {job_id_string}; sleep {sigterm_wait_in_s_env}; scancel {job_id_string}"
             )
 
             maybe_error_or_warning = (
