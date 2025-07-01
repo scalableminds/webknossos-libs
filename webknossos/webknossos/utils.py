@@ -547,18 +547,21 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
 
 
 def dump_path(path: UPath, dataset_path: UPath | None) -> str:
+    def to_str(path: UPath) -> str:
+        if is_fs_path(path):
+            return str(path.as_posix())
+        return str(path)
+
     if is_fs_path(path) and not path.is_absolute():
         if dataset_path is None:
             raise ValueError("dataset_path must be provided when path is not absolute.")
         path = dataset_path / path
     path = resolve_if_fs_path(path)
-    if is_fs_path(path):
-        path = path.as_posix()  # required for WindowsPath
     if dataset_path is not None:
-        if str(path).startswith(str(dataset_path)):
-            return "./" + str(path).removeprefix(str(dataset_path)).lstrip("/")
+        if to_str(path).startswith(to_str(dataset_path)):
+            return "./" + to_str(path).removeprefix(to_str(dataset_path)).lstrip("/")
         if safe_is_relative_to(path, dataset_path):
-            return "./" + str(path.relative_to(dataset_path))
+            return "./" + to_str(path.relative_to(dataset_path))
     if path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
-    return str(path)
+    return to_str(path)
