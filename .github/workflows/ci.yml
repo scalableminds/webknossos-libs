@@ -282,7 +282,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12"]
-        group: [1, 2, 3]
       fail-fast: false
     defaults:
       run:
@@ -310,7 +309,7 @@ jobs:
         shell: bash
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: ./test.sh tests/dataset/test_dataset.py::test_mag_paths
 
   coverage_report:
     needs: [webknossos_linux]

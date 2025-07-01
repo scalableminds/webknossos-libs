@@ -49,6 +49,8 @@ def use_minio() -> Iterator[None]:
             minio_process.terminate()
             sleep(1)
             rmtree(minio_path)
+    elif sys.platform == "win32":
+        yield
     else:
         container_name = "minio"
         cmd = (
