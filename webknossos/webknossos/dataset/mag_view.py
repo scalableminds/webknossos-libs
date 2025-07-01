@@ -645,7 +645,9 @@ class MagView(View):
         self.write(data_buffer, absolute_offset=shard.topleft)
 
     @classmethod
-    def _ensure_mag_view(cls, mag_view: Union[str, PathLike, "MagView"]) -> "MagView":
+    def _ensure_mag_view(
+        cls, mag_view_or_path: Union[str, PathLike, "MagView"]
+    ) -> "MagView":
         """Ensure input is a MagView object, converting path-like objects if needed.
 
         Internal helper method that converts various input types into a MagView object.
@@ -660,16 +662,13 @@ class MagView(View):
         Returns:
             MagView: A valid MagView object.
         """
-        if isinstance(mag_view, MagView):
-            return mag_view
+        if isinstance(mag_view_or_path, MagView):
+            return mag_view_or_path
         else:
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            path = UPath(
-                str(mag_view.path) if isinstance(mag_view, MagView) else str(mag_view)
-            )
-            mag_view_path = strip_trailing_slash(path)
+            mag_view_path = strip_trailing_slash(UPath(mag_view_or_path))
             return (
                 Dataset.open(mag_view_path.parent.parent)
                 .get_layer(mag_view_path.parent.name)
