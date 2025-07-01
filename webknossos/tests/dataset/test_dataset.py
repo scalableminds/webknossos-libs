@@ -360,6 +360,22 @@ def test_ome_ngff_0_5_metadata_symlink() -> None:
         recursive_chmod(ds_path, 0o777)
 
 
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_mag_paths(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    layer = Dataset(ds_path, voxel_size=(1, 1, 4)).add_layer(
+        "color",
+        COLOR_CATEGORY,
+        bounding_box=BoundingBox((0, 0, 0), (32, 32, 32)),
+        data_format=data_format,
+    )
+    mag1 = layer.add_mag("1")
+    mag2 = layer.add_mag("2-2-1")
+
+    assert mag1._properties.path == "./color/1"
+    assert mag2._properties.path == "./color/2-2-1"
+
+
 def test_create_default_layer() -> None:
     ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
