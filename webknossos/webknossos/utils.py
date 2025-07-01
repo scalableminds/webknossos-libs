@@ -554,4 +554,6 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
             return str(path.relative_to(dataset_path))
     if path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
+    elif is_fs_path(path):
+        return str(path.as_posix())
     return str(path)

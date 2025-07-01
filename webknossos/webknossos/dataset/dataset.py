@@ -928,9 +928,15 @@ class Dataset:
                     category=UserWarning,
                     module="pims_images",
                 )
-                map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
-                    input_upath, input_files=input_files, use_bioformats=use_bioformats
+                map_filepath_to_layer_name_func = (
+                    map_filepath_to_layer_name._to_callable(
+                        input_upath,
+                        input_files=input_files,
+                        use_bioformats=use_bioformats,
+                    )
                 )
+        else:
+            map_filepath_to_layer_name_func = map_filepath_to_layer_name
         if voxel_size_with_unit is None:
             assert voxel_size is not None, (
                 "Please supply either voxel_size or voxel_size_with_unit."
@@ -945,7 +951,7 @@ class Dataset:
 
         filepaths_per_layer: dict[str, list[Path]] = {}
         for input_file in input_files:
-            layer_name_from_mapping = map_filepath_to_layer_name(input_file)
+            layer_name_from_mapping = map_filepath_to_layer_name_func(input_file)
             # Remove characters from layer name that are not allowed
             layer_name_from_mapping = _UNALLOWED_LAYER_NAME_CHARS.sub(
                 "", layer_name_from_mapping

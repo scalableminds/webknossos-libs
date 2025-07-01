@@ -218,7 +218,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
-          version: "0.5.26"
+          version: "0.7.17"
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
@@ -272,6 +272,44 @@ jobs:
         run: |
           git diff --no-ext-diff --exit-code
           [[ -z $(git status -s) ]]
+
+  webknossos_windows:
+    needs: changes
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }}
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+        group: [1, 2, 3]
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          # Install a specific version of uv.
+          version: "0.7.17"
+          enable-cache: true
+          cache-dependency-glob: "webknossos/uv.lock"
+
+      - name: Install proxay
+        run: npm install -g proxay
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Python tests
+        timeout-minutes: 30
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
   coverage_report:
     needs: [webknossos_linux]
