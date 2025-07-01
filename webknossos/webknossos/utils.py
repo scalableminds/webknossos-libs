@@ -61,7 +61,8 @@ def call_with_retries(
             return fn()
         except Exception as e:  # noqa: PERF203 # allow try except in loop
             last_exception = e
-            if _is_exception_retryable(e):
+            # We only sleep and retry if it was not the last attempt and the exception is retryable and.
+            if current_retry_number < num_retries - 1 and _is_exception_retryable(e):
                 logger.warning(
                     f"{description} attempt {current_retry_number + 1}/{num_retries} failed, retrying..."
                     f"Error was: {e}"
