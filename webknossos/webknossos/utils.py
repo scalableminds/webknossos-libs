@@ -41,29 +41,43 @@ times = {}
 ReturnType = TypeVar("ReturnType")
 
 
+def _is_exception_retryable(exception: Exception) -> bool:
+    exception_str_lower = str(exception).lower()
+    if (
+        "too many requests" in exception_str_lower
+        or "gatewaytimeout" in exception_str_lower
+    ):
+        return True
+    return False
+
+
 def call_with_retries(
     fn: Callable[[], ReturnType],
     num_retries: int = DEFAULT_NUM_RETRIES,
     description: str = "",
     backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
 ) -> ReturnType:
-    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
+    """Call a function, retrying up to `num_retries` times on common retryable (network) exceptions. Useful for retrying requests or network io."""
     last_exception = None
-    for i in range(num_retries):
+    for current_retry_number in range(num_retries):
         try:
             return fn()
         except Exception as e:  # noqa: PERF203 # allow try except in loop
-            logger.warning(
-                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
-                f"Error was: {e}"
-            )
-            # We introduce some randomness to avoid multiple processes retrying at the same time
-            random_factor = np.random.uniform(0.66, 1.5)
-            time.sleep((backoff_factor**i) * random_factor)
             last_exception = e
+            if _is_exception_retryable(e):
+                logger.warning(
+                    f"{description} attempt {current_retry_number + 1}/{num_retries} failed, retrying..."
+                    f"Error was: {e}"
+                )
+                # We introduce some randomness to avoid multiple processes retrying at the same time
+                random_factor = np.random.uniform(0.66, 1.5)
+                time.sleep((backoff_factor**current_retry_number) * random_factor)
+            else:
+                break
     # If the last attempt fails, we log the error and raise it.
     # This is important to avoid silent failures.
-    logger.error(f"{description} failed after {num_retries} attempts.")
+    if current_retry_number > 0:
+        logger.error(f"{description} failed after {current_retry_number + 1} attempts.")
     assert last_exception is not None, "last_exception should never be None here"
     raise last_exception
 
