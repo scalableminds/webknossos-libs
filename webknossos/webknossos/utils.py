@@ -43,10 +43,7 @@ ReturnType = TypeVar("ReturnType")
 
 def _is_exception_retryable(exception: Exception) -> bool:
     exception_str_lower = str(exception).lower()
-    if (
-        "too many requests" in exception_str_lower
-        or "gatewaytimeout" in exception_str_lower
-    ):
+    if "too many requests" in exception_str_lower or "gateway" in exception_str_lower:
         return True
     return False
 
