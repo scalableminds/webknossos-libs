@@ -213,7 +213,7 @@ def get_chunks(arr: list[Any], chunk_size: int) -> Iterable[list[Any]]:
 
 
 def time_since_epoch_in_ms() -> int:
-    d = datetime.utcnow()
+    d = datetime.now(datetime.UTC)
     unixtime = calendar.timegm(d.utctimetuple())
     return unixtime * 1000
 
