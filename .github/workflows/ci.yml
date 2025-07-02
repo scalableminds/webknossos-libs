@@ -294,7 +294,7 @@ jobs:
         run: npm install -g proxay
 
       - name: Install minio
-        run: wget "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
+        run: Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "minio.exe"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
