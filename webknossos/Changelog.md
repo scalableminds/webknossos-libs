@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Limit custom retries (e.g. additional to tensorstore internal retries) to certain network errors ("Too Many Requests", "GatewayTimeout"). [#1330](https://github.com/scalableminds/webknossos-libs/pull/1330)
 
 ### Fixed
 
