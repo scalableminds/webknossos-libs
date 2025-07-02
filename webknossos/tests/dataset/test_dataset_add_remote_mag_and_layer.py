@@ -1,8 +1,8 @@
 import itertools
 import os
-import sys
 from collections.abc import Iterable, Iterator
 from pathlib import Path
+import sys
 
 import numpy as np
 import pytest
@@ -13,8 +13,8 @@ from webknossos.geometry import BoundingBox
 from webknossos.utils import is_remote_path
 
 pytestmark = [
-    pytest.mark.use_proxay,
     pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows"),
+    pytest.mark.use_proxay,
 ]
 
 
@@ -25,9 +25,6 @@ def sample_remote_dataset(tmp_path: Path) -> Iterator[Dataset]:
         path=tmp_path / "l4_sample",
         bbox=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
     )
-
-
-pytestmark = [pytest.mark.use_proxay]
 
 
 @pytest.fixture(scope="module")
