@@ -304,7 +304,7 @@ jobs:
         shell: bash
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: ./test.sh tests/dataset/test_dataset.py::test_mag_paths
+        run: ./test.sh tests/dataset/test_dataset.py
 
   coverage_report:
     needs: [webknossos_linux]
