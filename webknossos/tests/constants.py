@@ -50,7 +50,25 @@ def use_minio() -> Iterator[None]:
             sleep(1)
             rmtree(minio_path)
     elif sys.platform == "win32":
-        yield
+        minio_path = UPath("testoutput_minio")
+        rmtree(minio_path)
+        minio_process = subprocess.Popen(
+            shlex.split(f"minio.exe server --address :8000 {minio_path.absolute()}"),
+            env={
+                **os.environ,
+                "MINIO_ROOT_USER": MINIO_ROOT_USER,
+                "MINIO_ROOT_PASSWORD": MINIO_ROOT_PASSWORD,
+            },
+        )
+        sleep(3)
+        assert minio_process.poll() is None
+        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+        try:
+            yield
+        finally:
+            minio_process.terminate()
+            sleep(1)
+            rmtree(minio_path)
     else:
         container_name = "minio"
         cmd = (

@@ -23,8 +23,6 @@ jobs:
         
     - name: Install uv
       uses: astral-sh/setup-uv@v3
-      with:
-        version: "0.7.17"
 
     - name: Install proxay
       run: npm install -g proxay

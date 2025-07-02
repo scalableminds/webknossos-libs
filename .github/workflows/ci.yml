@@ -44,7 +44,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.7.17"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - run: uv python install ${{ matrix.python-version }}
@@ -104,7 +103,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.7.17"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - name: Set up Python ${{ matrix.python-version }}
@@ -142,7 +140,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.7.17"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - name: Set up Python ${{ matrix.python-version }}
@@ -184,7 +181,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.7.17"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - name: Set up Python ${{ matrix.python-version }}
@@ -217,8 +213,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          # Install a specific version of uv.
-          version: "0.7.17"
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
@@ -293,13 +287,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          # Install a specific version of uv.
-          version: "0.7.17"
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
       - name: Install proxay
         run: npm install -g proxay
+
+      - name: Install minio
+        run: wget "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -367,7 +362,6 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
-          version: "0.7.17"
       - name: Write version file
         run: |
           pushd webknossos
@@ -450,7 +444,6 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
-          version: "0.7.17"
       - name: Build Docs
         run: |
           cd docs
@@ -508,7 +501,6 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           # Install a specific version of uv.
-          version: "0.7.17"
       - name: Publish python packages
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
