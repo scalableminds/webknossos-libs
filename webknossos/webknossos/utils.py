@@ -9,7 +9,7 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from concurrent.futures import Future
 from contextlib import AbstractContextManager, nullcontext
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
@@ -213,7 +213,7 @@ def get_chunks(arr: list[Any], chunk_size: int) -> Iterable[list[Any]]:
 
 
 def time_since_epoch_in_ms() -> int:
-    d = datetime.now(UTC)
+    d = datetime.now(timezone.utc)
     unixtime = calendar.timegm(d.utctimetuple())
     return unixtime * 1000
 
