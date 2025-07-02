@@ -1,8 +1,8 @@
 import itertools
 import os
+import sys
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-import sys
 
 import numpy as np
 import pytest
