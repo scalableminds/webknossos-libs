@@ -38,7 +38,7 @@ def test_add_remote_mags_from_mag_view(
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
     remote_dataset = Dataset.open_remote(
-        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+        "l4_sample", "Organization_X"
     )
     sample_remote_mags = [
         remote_dataset.get_layer(layer).get_mag(mag)
@@ -68,7 +68,7 @@ def test_add_remote_mags_from_path(
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
     remote_dataset = Dataset.open_remote(
-        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+        "l4_sample", "Organization_X"
     )
     sample_remote_mags = [
         remote_dataset.get_layer(layer).get_mag(mag)
@@ -97,7 +97,7 @@ def test_add_remote_mags_from_path(
 
 def test_ref_layer_from_object(sample_remote_dataset: Dataset) -> None:
     remote_dataset = Dataset.open_remote(
-        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+        "l4_sample", "Organization_X"
     )
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
@@ -112,7 +112,7 @@ def test_ref_layer_from_object(sample_remote_dataset: Dataset) -> None:
 
 def test_ref_layer_from_path(sample_remote_dataset: Dataset) -> None:
     remote_dataset = Dataset.open_remote(
-        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+        "l4_sample", "Organization_X"
     )
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
@@ -130,7 +130,7 @@ def test_ref_layer_non_public(tmp_path: Path) -> None:
         tmp_path / "simple_zarr3_dataset"
     )
     remote_dataset = Dataset.open_remote(
-        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+        "l4_sample", "Organization_X"
     )
     remote_dataset.is_public = False
     dataset.add_layer_as_ref(remote_dataset.get_layer("segmentation"), "segmentation")
@@ -147,7 +147,7 @@ def test_ref_layer_non_public(tmp_path: Path) -> None:
 def test_shallow_copy_remote_layers(tmp_path: Path) -> None:
     dataset = Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
     remote_dataset = Dataset.open_remote(
-        "l4_sample", "Organization_X", os.getenv("WK_TOKEN")
+        "l4_sample", "Organization_X"
     )
     dataset.add_layer_as_ref(remote_dataset.get_layer("color"), "color")
     dataset_copy = dataset.shallow_copy_dataset(tmp_path / "copy")

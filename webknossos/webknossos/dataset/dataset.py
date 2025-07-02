@@ -3489,7 +3489,7 @@ class RemoteDataset(Dataset):
         context.api_client_with_auth.dataset_explore_and_add_remote(dataset)
 
         return cls.open_remote(
-            dataset_name, context.organization_id, context.datastore_token
+            dataset_name, context.organization_id
         )
 
     @property
