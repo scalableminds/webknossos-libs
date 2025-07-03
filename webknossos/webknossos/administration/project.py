@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from ..client.api_client.models import ApiProject, ApiProjectCreate
 from ..client.api_client.errors import UnexpectedStatusError
+from ..client.api_client.models import ApiProject, ApiProjectCreate
 from ..client.context import _get_api_client
 from .user import Team, User
 
