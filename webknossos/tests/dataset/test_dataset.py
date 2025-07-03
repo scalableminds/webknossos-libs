@@ -19,7 +19,6 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
-from webknossos.client.context import webknossos_context
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -1135,13 +1134,12 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
 
 @pytest.mark.use_proxay
 def test_explore_and_add_remote() -> None:
-    with webknossos_context("http://localhost:9000", os.environ.get("WK_TOKEN")):
-        remote_ds = RemoteDataset.explore_and_add_remote(
-            "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
-            "added_remote_ds",
-            "/Organization_X",
-        )
-        assert remote_ds.name == "added_remote_ds"
+    remote_ds = RemoteDataset.explore_and_add_remote(
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
+        "added_remote_ds",
+        "/Organization_X",
+    )
+    assert remote_ds.name == "added_remote_ds"
 
 
 def test_no_largest_segment_id() -> None:
