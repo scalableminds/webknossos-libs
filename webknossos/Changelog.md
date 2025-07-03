@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+<<<<<<< Updated upstream
 - Added operations for `Project`, `Task` and `TaskType` classes and objects: [#1294](https://github.com/scalableminds/webknossos-libs/pull/1294)
   - Added operations for `Project` class:
     - `Project.create()` for creating a new project.
@@ -31,10 +32,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `my_task.update()` to update a `Task` object.
     - `my_task.delete()` to delete a `Task` object.
 - Added `TaskExperience` class to store domain and value pair.
+||||||| constructed merge base
+=======
+- The libs client now uses versioned datastore routes for improved compatibility across webknossos versions. [#1328](https://github.com/scalableminds/webknossos-libs/pull/1328)
+>>>>>>> Stashed changes
 
 ### Changed
 
 ### Fixed
+- Fixed the tests for the newest WEBKNOSSOS version. [#1328](https://github.com/scalableminds/webknossos-libs/pull/1328)
 
 
 ## [2.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.1) - 2025-07-03
