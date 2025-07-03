@@ -225,8 +225,9 @@ def test_fs_copy_layer(tmp_upath: UPath) -> None:
 
     # has not been copied
     assert copy_layer.attachments.agglomerates[0].path == agglomerate_path
-    assert copy_layer.attachments.agglomerates[0]._properties.path == str(
-        agglomerate_path
+    assert (
+        copy_layer.attachments.agglomerates[0]._properties.path
+        == agglomerate_path.as_posix()
     )
 
 
@@ -427,7 +428,7 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
     with pytest.warns(DeprecationWarning):
         seg_layer.attachments.add_symlink_attachments(mesh)
     assert seg_layer._properties.attachments.meshes is not None
-    assert seg_layer._properties.attachments.meshes[0].path == str(mesh_path)
+    assert seg_layer._properties.attachments.meshes[0].path == mesh_path.as_posix()
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
     assert (dataset.path / "seg" / "meshes" / "meshfile_4-4-1").exists()
     assert (dataset.path / "seg" / "meshes" / "meshfile_4-4-1").is_symlink()
@@ -446,8 +447,9 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
     with pytest.warns(DeprecationWarning):
         seg_layer.attachments.add_symlink_attachments(segment_index)
     assert seg_layer._properties.attachments.segment_index is not None
-    assert seg_layer._properties.attachments.segment_index.path == str(
-        segment_index_path
+    assert (
+        seg_layer._properties.attachments.segment_index.path
+        == segment_index_path.as_posix()
     )
     assert (dataset.path / "seg" / "segmentIndex" / "main").exists()
     assert (dataset.path / "seg" / "segmentIndex" / "main").is_symlink()

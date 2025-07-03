@@ -66,6 +66,7 @@ if TYPE_CHECKING:
 from ..utils import (
     copytree,
     count_defined_values,
+    dump_path,
     get_executor_for_args,
     infer_metadata_type,
     is_fs_path,
@@ -2415,13 +2416,13 @@ class Dataset:
                 m for m in new_layer_properties.mags if m.mag == foreign_mag.mag
             )
             if is_fs_path(foreign_mag.path):
-                mag_prop.path = str(
+                mag_prop.path = (
                     Path(relpath(foreign_mag.path.resolve(), self.path))
                     if make_relative
                     else foreign_mag.path.resolve()
-                )
+                ).as_posix()
             else:
-                mag_prop.path = str(foreign_mag.path)
+                mag_prop.path = dump_path(foreign_mag.path, self.resolved_path)
 
         if (
             isinstance(new_layer_properties, SegmentationLayerProperties)
@@ -2434,11 +2435,11 @@ class Dataset:
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
-                    attachment.path = str(
+                    attachment.path = (
                         Path(relpath(old_path, self.path))
                         if make_relative
                         else old_path.resolve()
-                    )
+                    ).as_posix()
 
         self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
