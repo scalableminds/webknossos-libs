@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         content-type: application/json
         content-length: '333'
       body:
@@ -51,7 +51,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -84,7 +84,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         content-type: application/json
         content-length: '1421'
       body:
@@ -115,17 +115,17 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"bWO_vgSA1PeCMzrL2_zHSw"}'
+        data: '{"token":"bhFH6W9VWyfLENiGemPh0g"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=bWO_vgSA1PeCMzrL2_zHSw
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=bhFH6W9VWyfLENiGemPh0g
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -145,20 +145,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         content-type: application/json
         content-length: '1431'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751544457689,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751545096810,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: bWO_vgSA1PeCMzrL2_zHSw
+        x-auth-token: bhFH6W9VWyfLENiGemPh0g
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -175,7 +175,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -188,7 +188,7 @@ http_interactions:
       path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: bWO_vgSA1PeCMzrL2_zHSw
+        x-auth-token: bhFH6W9VWyfLENiGemPh0g
         range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -206,7 +206,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -237,7 +237,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:16 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -272,13 +272,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:17 GMT
         content-type: application/json
         content-length: '627'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_get_task_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68667289010000ac00f4b2ee","created":1751544457914}
+          {"name":"test_get_task_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68667509010000b600655999","created":1751545097047}
         compression: none
   - request:
       method: GET
@@ -302,7 +302,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:17 GMT
         content-type: application/json
         content-length: '333'
       body:
@@ -352,13 +352,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:36 GMT
+        date: Thu, 03 Jul 2025 12:18:17 GMT
         content-type: application/json
         content-length: '390'
       body:
         encoding: utf8
         data: >-
-          {"id":"686672890100002b00f4b2ef","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
+          {"id":"68667509010000b80065599a","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
   - request:
       method: POST
@@ -376,7 +376,7 @@ http_interactions:
       body:
         encoding: utf8
         data: >-
-          [{"taskTypeId": "686672890100002b00f4b2ef", "neededExperience":
+          [{"taskTypeId": "68667509010000b80065599a", "neededExperience":
           {"domain": "test_domain", "value": 3}, "pendingInstances": 1,
           "projectName": "test_get_task_project", "scriptId": null,
           "boundingBox": null, "datasetId": "59e9cfbdba632ac2ab8b23b5",
@@ -389,13 +389,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:38 GMT
+        date: Thu, 03 Jul 2025 12:18:17 GMT
         content-type: application/json
         content-length: '884'
       body:
         encoding: utf8
         data: >-
-          {"tasks":[{"status":200,"success":{"id":"6866728a010000b100f4b2f1","projectId":"68667289010000ac00f4b2ee","projectName":"test_get_task_project","team":"team_X1","type":{"id":"686672890100002b00f4b2ef","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751544458210,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
+          {"tasks":[{"status":200,"success":{"id":"68667509010000ac0065599c","projectId":"68667509010000b600655999","projectName":"test_get_task_project","team":"team_X1","type":{"id":"68667509010000b80065599a","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751545097347,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
         compression: none
   - request:
       method: POST
@@ -413,7 +413,7 @@ http_interactions:
       body:
         encoding: utf8
         data: >-
-          [{"taskTypeId": "686672890100002b00f4b2ef", "neededExperience":
+          [{"taskTypeId": "68667509010000b80065599a", "neededExperience":
           {"domain": "test_domain", "value": 3}, "pendingInstances": 1,
           "projectName": "test_get_task_project", "scriptId": null,
           "boundingBox": null, "datasetId": "59e9cfbdba632ac2ab8b23b5",
@@ -426,13 +426,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:38 GMT
+        date: Thu, 03 Jul 2025 12:18:17 GMT
         content-type: application/json
         content-length: '884'
       body:
         encoding: utf8
         data: >-
-          {"tasks":[{"status":200,"success":{"id":"6866728a010000a400f4b2f4","projectId":"68667289010000ac00f4b2ee","projectName":"test_get_task_project","team":"team_X1","type":{"id":"686672890100002b00f4b2ef","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751544458345,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
+          {"tasks":[{"status":200,"success":{"id":"68667509010000ac0065599f","projectId":"68667509010000b600655999","projectName":"test_get_task_project","team":"team_X1","type":{"id":"68667509010000b80065599a","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751545097486,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
         compression: none
   - request:
       method: POST
@@ -450,7 +450,7 @@ http_interactions:
       body:
         encoding: utf8
         data: >-
-          [{"taskTypeId": "686672890100002b00f4b2ef", "neededExperience":
+          [{"taskTypeId": "68667509010000b80065599a", "neededExperience":
           {"domain": "test_domain", "value": 3}, "pendingInstances": 1,
           "projectName": "test_get_task_project", "scriptId": null,
           "boundingBox": null, "datasetId": "59e9cfbdba632ac2ab8b23b5",
@@ -463,18 +463,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:38 GMT
+        date: Thu, 03 Jul 2025 12:18:17 GMT
         content-type: application/json
         content-length: '884'
       body:
         encoding: utf8
         data: >-
-          {"tasks":[{"status":200,"success":{"id":"6866728a010000a400f4b2f7","projectId":"68667289010000ac00f4b2ee","projectName":"test_get_task_project","team":"team_X1","type":{"id":"686672890100002b00f4b2ef","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751544458449,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
+          {"tasks":[{"status":200,"success":{"id":"68667509010000ac006559a2","projectId":"68667509010000b600655999","projectName":"test_get_task_project","team":"team_X1","type":{"id":"68667509010000b80065599a","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751545097588,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/projects/68667289010000ac00f4b2ee/tasks?limit=1000&pageNumber=0&includeTotalCount=true
+        /api/v9/projects/68667509010000b600655999/tasks?limit=1000&pageNumber=0&includeTotalCount=true
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -495,11 +495,11 @@ http_interactions:
         x-total-count: '3'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 12:07:38 GMT
+        date: Thu, 03 Jul 2025 12:18:17 GMT
         content-type: application/json
         content-length: '2503'
       body:
         encoding: utf8
         data: >-
-          [{"id":"6866728a010000b100f4b2f1","projectId":"68667289010000ac00f4b2ee","projectName":"test_get_task_project","team":"team_X1","type":{"id":"686672890100002b00f4b2ef","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751544458210,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"6866728a010000a400f4b2f7","projectId":"68667289010000ac00f4b2ee","projectName":"test_get_task_project","team":"team_X1","type":{"id":"686672890100002b00f4b2ef","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751544458449,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"6866728a010000a400f4b2f4","projectId":"68667289010000ac00f4b2ee","projectName":"test_get_task_project","team":"team_X1","type":{"id":"686672890100002b00f4b2ef","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751544458345,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}]
+          [{"id":"68667509010000ac006559a2","projectId":"68667509010000b600655999","projectName":"test_get_task_project","team":"team_X1","type":{"id":"68667509010000b80065599a","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751545097588,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"68667509010000ac0065599f","projectId":"68667509010000b600655999","projectName":"test_get_task_project","team":"team_X1","type":{"id":"68667509010000b80065599a","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751545097486,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]},{"id":"68667509010000ac0065599c","projectId":"68667509010000b600655999","projectName":"test_get_task_project","team":"team_X1","type":{"id":"68667509010000b80065599a","summary":"test_task_type","description":"test_task_type_description","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"test_domain","value":3},"created":1751545097347,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}]
         compression: none
