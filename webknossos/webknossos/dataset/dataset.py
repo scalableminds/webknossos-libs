@@ -750,9 +750,10 @@ class Dataset:
             directory_name = api_dataset_info.directory_name
             organization_id = api_dataset_info.owning_organization
             datastore_url = api_dataset_info.data_store.url
+            url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
             zarr_path = UPath(
-                f"{datastore_url}/data/zarr/{organization_id}/{directory_name}/",
+                f"{url_prefix}/zarr/{organization_id}/{directory_name}/",
                 headers={} if token is None else {"X-Auth-Token": token},
                 ssl=SSL_CONTEXT,
             )
