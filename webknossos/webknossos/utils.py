@@ -41,29 +41,41 @@ times = {}
 ReturnType = TypeVar("ReturnType")
 
 
+def _is_exception_retryable(exception: Exception) -> bool:
+    exception_str_lower = str(exception).lower()
+    if "too many requests" in exception_str_lower or "gateway" in exception_str_lower:
+        return True
+    return False
+
+
 def call_with_retries(
     fn: Callable[[], ReturnType],
     num_retries: int = DEFAULT_NUM_RETRIES,
     description: str = "",
     backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
 ) -> ReturnType:
-    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
+    """Call a function, retrying up to `num_retries` times on common retryable (network) exceptions. Useful for retrying requests or network io."""
     last_exception = None
-    for i in range(num_retries):
+    for current_retry_number in range(num_retries):
         try:
             return fn()
         except Exception as e:  # noqa: PERF203 # allow try except in loop
-            logger.warning(
-                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
-                f"Error was: {e}"
-            )
-            # We introduce some randomness to avoid multiple processes retrying at the same time
-            random_factor = np.random.uniform(0.66, 1.5)
-            time.sleep((backoff_factor**i) * random_factor)
             last_exception = e
+            # We only sleep and retry if it was not the last attempt and the exception is retryable and.
+            if current_retry_number < num_retries - 1 and _is_exception_retryable(e):
+                logger.warning(
+                    f"{description} attempt {current_retry_number + 1}/{num_retries} failed, retrying..."
+                    f"Error was: {e}"
+                )
+                # We introduce some randomness to avoid multiple processes retrying at the same time
+                random_factor = np.random.uniform(0.66, 1.5)
+                time.sleep((backoff_factor**current_retry_number) * random_factor)
+            else:
+                break
     # If the last attempt fails, we log the error and raise it.
     # This is important to avoid silent failures.
-    logger.error(f"{description} failed after {num_retries} attempts.")
+    if current_retry_number > 0:
+        logger.error(f"{description} failed after {current_retry_number + 1} attempts.")
     assert last_exception is not None, "last_exception should never be None here"
     raise last_exception
 
@@ -305,10 +317,10 @@ def is_writable_path(path: UPath) -> bool:
 
 
 def strip_trailing_slash(path: UPath) -> UPath:
-    if isinstance(path, UPath) and not is_fs_path(path):
-        return UPath(str(path).rstrip("/"), **path.storage_options)
-    else:
-        return UPath(str(path).rstrip("/"))
+    path_parts = path.parts
+    if path_parts[-1] == "":
+        path_parts = path_parts[:-1]
+    return path.with_segments(*path_parts)
 
 
 def rmtree(path: UPath) -> None:
@@ -528,6 +540,11 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
         )
 
     elif upath.protocol == "s3":
+        if (
+            upath.storage_options.get("client_kwargs", {}).get("endpoint_url")
+            is not None
+        ):
+            return upath
         parsed_url = urlparse(str(upath))
         endpoint_url = f"https://{parsed_url.netloc}"
         bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
@@ -549,9 +566,9 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
     path = resolve_if_fs_path(path)
     if dataset_path is not None:
         if str(path).startswith(str(dataset_path)):
-            return str(path).removeprefix(str(dataset_path)).lstrip("/")
+            return "./" + str(path).removeprefix(str(dataset_path)).lstrip("/")
         if safe_is_relative_to(path, dataset_path):
-            return str(path.relative_to(dataset_path))
+            return "./" + str(path.relative_to(dataset_path))
     if path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
     return str(path)
