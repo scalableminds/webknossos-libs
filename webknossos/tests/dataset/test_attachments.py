@@ -82,14 +82,14 @@ def test_attachments(tmp_upath: UPath) -> None:
 
     # segment index
     seg_layer.attachments.set_segment_index(
-        "/usr/segment_index.hdf5",
+        Path.home() / "segment_index.hdf5",
         name="main",
         data_format=AttachmentDataFormat.HDF5,
     )
     assert seg_layer._properties.attachments.segment_index is not None
     assert (
         seg_layer._properties.attachments.segment_index.path
-        == "/usr/segment_index.hdf5"
+        == (Path.home() / "segment_index.hdf5").as_posix()
     )
     assert (
         seg_layer._properties.attachments.segment_index.data_format
