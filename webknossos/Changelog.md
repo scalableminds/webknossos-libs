@@ -10,15 +10,38 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.1...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- Added operations for `Project`, `Task` and `TaskType` classes and objects: [#1294](https://github.com/scalableminds/webknossos-libs/pull/1294)
+  - Added operations for `Project` class:
+    - `Project.create()` for creating a new project.
+    - `my_project.delete()` to delete a project object
+  - Added `my_project.update()` to update `priority`, `expected_time` and `is_blacklisted_from_report` values of an existing project object.
+  - Added operations for `TaskType` class:
+    - `TaskType.get_list()` to get all `TaskType` objects.
+    - `TaskType.get_by_id()` to get a `TaskType` by id.
+    - `TaskType.get_by_name()` to get a `TaskType` by name.
+    - `TaskType.create()` to create a new `TaskType`.
+  - Added operations `my_task_type.delete()` method for `TaskType` objects.
+  - Added `Task.get_list()`to get all `Task` objects.
+  - Added operations for `Task` objects:
+    - `my_task.update()` to update a `Task` object.
+    - `my_task.delete()` to delete a `Task` object.
+- Added `TaskExperience` class to store domain and value pair.
 
 ### Changed
 
 ### Fixed
+
+
+## [2.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.1) - 2025-07-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.0...v2.4.1)
+
+### Changed
+- Limit custom retries (e.g. additional to tensorstore internal retries) to certain network errors ("Too Many Requests", "GatewayTimeout"). [#1330](https://github.com/scalableminds/webknossos-libs/pull/1330)
 
 
 ## [2.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.0) - 2025-06-24
@@ -78,7 +101,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue that creates an Error when `add_mag()` was called just with a `chunk_shape`. [#1315](https://github.com/scalableminds/webknossos-libs/pull/1315)
-
 
 
 ## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28
