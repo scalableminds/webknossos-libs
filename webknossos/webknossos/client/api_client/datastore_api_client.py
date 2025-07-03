@@ -20,9 +20,8 @@ class DatastoreApiClient(AbstractApiClient):
         datastore_base_url: str,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
-        webknossos_api_version: int = 9,
     ):
-        super().__init__(timeout_seconds, headers, webknossos_api_version)
+        super().__init__(timeout_seconds, headers)
         self.datastore_base_url = datastore_base_url
 
     @property

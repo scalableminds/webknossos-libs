@@ -54,7 +54,6 @@ function ensure_local_test_wk {
         echo "Please ensure that the test-db is prepared by running this in the webknossos repo"
         echo "(⚠️ this overwrites your local webknossos database):"
         echo "tools/postgres/dbtool.js prepare-test-db"
-        curl -s -H "X-Auth-Token: $WK_TOKEN" localhost:9000/api/user
         exit 1
     fi
 
