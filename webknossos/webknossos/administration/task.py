@@ -166,7 +166,7 @@ class TaskType:
             "somaClickingAllowed": True,
             "volumeInterpolationAllowed": False,
             "allowedModes": [],
-            "preferredMode": "Any",
+            "preferredMode": None,
             "branchPointsAllowed": True,
             "clippingDistance": 80,
             "moveValue": 500,

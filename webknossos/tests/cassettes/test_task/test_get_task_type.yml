@@ -21,13 +21,47 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
         content-length: '333'
       body:
         encoding: utf8
         data: >-
           [{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X"},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X"},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X"}]
+        compression: none
+  - request:
+      method: GET
+      path: /api/v9/taskTypes
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 03 Jul 2025 19:17:33 GMT
+        content-type: application/json
+        content-length: '822'
+      body:
+        encoding: utf8
+        data: >-
+          [{"id":"570b9f4c2a7c0e4c008da6ee","summary":"ek_0563_BipolarCells","description":"Check
+          those cells
+          out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
+          those cells
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"}]
         compression: none
   - request:
       method: POST
@@ -40,7 +74,7 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '351'
+        content-length: '1117'
         content-type: application/json
       body:
         encoding: utf8
@@ -48,9 +82,21 @@ http_interactions:
           {"summary": "test_task_type", "description": "This is a test task
           type", "teamId": "570b9f4b2a7c0e3b008da6ec", "teamName": "team_X1",
           "tracingType": "volume", "settings": {"mergerMode": false,
-          "magRestrictions": {"min": 1, "max": 1}, "somaClickingAllowed": false,
+          "magRestrictions": {"min": 1, "max": 1}, "somaClickingAllowed": true,
           "volumeInterpolationAllowed": false, "allowedModes": [],
-          "branchPointsAllowed": false}}
+          "preferredMode": null, "branchPointsAllowed": true,
+          "clippingDistance": 80, "moveValue": 500, "displayScalebars": false,
+          "newNodeNewTree": false, "centerNewNode": true, "tdViewDisplayPlanes":
+          "WIREFRAME", "tdViewDisplayDatasetBorders": true,
+          "tdViewDisplayLayerBorders": false, "dynamicSpaceDirection": true,
+          "highlightCommentedNodes": false, "overrideNodeRadius": true,
+          "particleSize": 5, "keyboardDelay": 0, "displayCrosshair": true,
+          "useLegacyBindings": false, "fourBit": false, "interpolation": true,
+          "segmentationOpacity": 0, "segmentationPatternOpacity": 40, "zoom":
+          0.8, "renderMissingDataBlack": false, "loadingStrategy":
+          "BEST_QUALITY_FIRST", "clippingDistanceArbitrary": 60, "moveValue3d":
+          600, "mouseRotateValue": 0.001, "rotateValue": 0.01,
+          "sphericalCapRadius": 500, "brushSize": 50}}
         compression: none
     response:
       status:
@@ -59,15 +105,44 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
-        content-length: '390'
+        content-length: '388'
       body:
         encoding: utf8
         data: >-
-          {"id":"68419af90100009a007d285b","summary":"test_task_type","description":"This
+          {"id":"6866d74e010000a80039fe41","summary":"test_task_type","description":"This
           is a test task
-          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
+        compression: none
+  - request:
+      method: GET
+      path: /api/v9/projects/byName/test_project
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 404
+      headers:
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Thu, 03 Jul 2025 19:17:33 GMT
+        content-type: application/json
+        content-length: '53'
+      body:
+        encoding: utf8
+        data: '{"messages":[{"error":"Project could not be found"}]}'
         compression: none
   - request:
       method: GET
@@ -91,7 +166,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -126,13 +201,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
         content-length: '618'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68419af90100009a007d285c","created":1749129977142}
+          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"6866d74e010000bc0039fe42","created":1751570254454}
         compression: none
   - request:
       method: GET
@@ -156,9 +231,9 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
-        content-length: '1213'
+        content-length: '1211'
       body:
         encoding: utf8
         data: >-
@@ -166,13 +241,13 @@ http_interactions:
           those cells
           out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
           those cells
-          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68419af90100009a007d285b","summary":"test_task_type","description":"This
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"6866d74e010000a80039fe41","summary":"test_task_type","description":"This
           is a test task
-          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}]
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}]
         compression: none
   - request:
       method: GET
-      path: /api/v9/taskTypes/68419af90100009a007d285b
+      path: /api/v9/taskTypes/6866d74e010000a80039fe41
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -192,19 +267,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
-        content-length: '390'
+        content-length: '388'
       body:
         encoding: utf8
         data: >-
-          {"id":"68419af90100009a007d285b","summary":"test_task_type","description":"This
+          {"id":"6866d74e010000a80039fe41","summary":"test_task_type","description":"This
           is a test task
-          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":false,"somaClickingAllowed":false,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/taskTypes/68419af90100009a007d285b
+      path: /api/v9/taskTypes/6866d74e010000a80039fe41
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -224,7 +299,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
         content-length: '80'
       body:
@@ -235,7 +310,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/projects/68419af90100009a007d285c
+      path: /api/v9/projects/6866d74e010000bc0039fe42
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -255,7 +330,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 05 Jun 2025 13:26:16 GMT
+        date: Thu, 03 Jul 2025 19:17:33 GMT
         content-type: application/json
         content-length: '61'
       body:

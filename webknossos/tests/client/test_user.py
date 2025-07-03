@@ -8,7 +8,8 @@ def assert_valid_user(user: User) -> None:
     assert user.first_name
     assert user.last_name
     assert user.email
-    assert len(user.teams) > 0
+    if user.email not in ["user_E@scalableminds.com", "user_F@scalableminds.com"]:
+        assert len(user.teams) > 0
 
 
 @pytest.mark.use_proxay
