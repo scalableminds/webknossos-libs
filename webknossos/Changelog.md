@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.1...HEAD)
 
 ### Breaking Changes
 
@@ -33,9 +33,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `TaskExperience` class to store domain and value pair.
 
 ### Changed
-- Limit custom retries (e.g. additional to tensorstore internal retries) to certain network errors ("Too Many Requests", "GatewayTimeout"). [#1330](https://github.com/scalableminds/webknossos-libs/pull/1330)
 
 ### Fixed
+
+
+## [2.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.1) - 2025-07-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.0...v2.4.1)
+
+### Changed
+- Limit custom retries (e.g. additional to tensorstore internal retries) to certain network errors ("Too Many Requests", "GatewayTimeout"). [#1330](https://github.com/scalableminds/webknossos-libs/pull/1330)
 
 
 ## [2.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.0) - 2025-06-24
