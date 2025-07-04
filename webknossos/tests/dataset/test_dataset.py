@@ -359,6 +359,22 @@ def test_ome_ngff_0_5_metadata_symlink() -> None:
         recursive_chmod(ds_path, 0o777)
 
 
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_mag_paths(data_format: DataFormat) -> None:
+    ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR)
+    layer = Dataset(ds_path, voxel_size=(1, 1, 4)).add_layer(
+        "color",
+        COLOR_CATEGORY,
+        bounding_box=BoundingBox((0, 0, 0), (32, 32, 32)),
+        data_format=data_format,
+    )
+    mag1 = layer.add_mag("1")
+    mag2 = layer.add_mag("2-2-1")
+
+    assert mag1._properties.path == "./color/1"
+    assert mag2._properties.path == "./color/2-2-1"
+
+
 def test_create_default_layer() -> None:
     ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -2890,7 +2906,7 @@ def test_rename_layer(data_format: DataFormat, output_path: UPath) -> None:
         len([layer for layer in ds._properties.data_layers if layer.name == "color2"])
         == 1
     )
-    assert ds._properties.data_layers[0].mags[0].path == "color2/1"
+    assert ds._properties.data_layers[0].mags[0].path == "./color2/1"
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
     assert ds.get_layer("color2").data_format == data_format

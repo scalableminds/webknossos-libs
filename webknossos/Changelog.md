@@ -35,6 +35,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed mag and attachment paths under Windows. [#1329](https://github.com/scalableminds/webknossos-libs/pull/1329)
 
 
 ## [2.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.1) - 2025-07-03

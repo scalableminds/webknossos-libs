@@ -366,9 +366,8 @@ class Layer:
         # The MagViews need to be updated
         for mag in self._mags.values():
             if not mag.is_foreign:
-                mag._properties.path = str(
-                    self.resolved_path.relative_to(self.dataset.resolved_path)
-                    / mag.path.name
+                mag._properties.path = dump_path(
+                    self.resolved_path / mag.path.name, self.dataset.resolved_path
                 )
             else:
                 assert mag._properties.path is not None  # for type checking

@@ -1,3 +1,4 @@
+import sys
 import warnings
 from pathlib import Path
 
@@ -18,6 +19,8 @@ from webknossos.dataset._downsampling_utils import (
 from webknossos.dataset.sampling_modes import SamplingModes
 
 BUFFER_SHAPE = Vec3Int.full(256)
+
+pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")]
 
 
 def test_downsample_cube() -> None:

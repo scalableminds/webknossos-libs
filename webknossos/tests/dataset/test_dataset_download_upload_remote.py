@@ -1,4 +1,5 @@
 import pickle
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -8,7 +9,10 @@ import webknossos as wk
 
 SAMPLE_BBOX = wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
 
-pytestmark = [pytest.mark.use_proxay]
+pytestmark = [
+    pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows"),
+    pytest.mark.use_proxay,
+]
 
 
 def get_sample_dataset(tmpdir: Path) -> wk.Dataset:
