@@ -2563,7 +2563,7 @@ class Dataset:
                     # attachment has been a foreign attachment to the foreign layer
                     # therefore it will not be copied
                     if foreign_layer.resolved_path not in old_path.parents:
-                        attachment.path = str(old_path)
+                        attachment.path = old_path.as_posix()
 
         self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
