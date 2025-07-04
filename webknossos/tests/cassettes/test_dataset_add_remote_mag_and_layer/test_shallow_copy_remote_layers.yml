@@ -19,7 +19,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
@@ -54,7 +53,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
@@ -76,7 +74,7 @@ http_interactions:
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         accept-encoding: identity
         accept: '*/*'
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -85,7 +83,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
@@ -109,7 +106,7 @@ http_interactions:
         range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -118,7 +115,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
@@ -155,7 +151,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
@@ -303,7 +298,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
@@ -562,7 +556,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
@@ -598,7 +591,6 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
