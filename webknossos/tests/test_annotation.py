@@ -193,6 +193,7 @@ def test_remote_annotation_list() -> None:
 
 
 @pytest.mark.use_proxay
+@pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")
 def test_annotation_upload_download_roundtrip() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     annotation_from_file = wk.Annotation.load(path)
