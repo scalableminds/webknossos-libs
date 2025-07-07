@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.2...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+- Fixed mag and attachment paths under Windows. [#1329](https://github.com/scalableminds/webknossos-libs/pull/1329)
+
+## [2.4.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.2) - 2025-07-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.1...v2.4.2)
 
 ### Added
 - Added operations for `Project`, `Task` and `TaskType` classes and objects: [#1294](https://github.com/scalableminds/webknossos-libs/pull/1294)
@@ -31,11 +41,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `my_task.update()` to update a `Task` object.
     - `my_task.delete()` to delete a `Task` object.
 - Added `TaskExperience` class to store domain and value pair.
-
-### Changed
+- The libs client now uses versioned datastore routes for improved compatibility across webknossos versions. [#1328](https://github.com/scalableminds/webknossos-libs/pull/1328)
 
 ### Fixed
-- Fixed mag and attachment paths under Windows. [#1329](https://github.com/scalableminds/webknossos-libs/pull/1329)
+- Fixed the tests for the newest WEBKNOSSOS version. [#1328](https://github.com/scalableminds/webknossos-libs/pull/1328)
 
 
 ## [2.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.1) - 2025-07-03

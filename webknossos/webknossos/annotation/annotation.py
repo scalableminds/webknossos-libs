@@ -966,9 +966,10 @@ class Annotation:
         dataset_info = context.api_client.dataset_info(dataset_id)
 
         datastore_url = dataset_info.data_store.url
+        url_prefix = context.get_datastore_api_client(datastore_url).url_prefix
 
         zarr_path = UPath(
-            f"{datastore_url}/data/annotations/zarr/{self.annotation_id}/",
+            f"{url_prefix}/annotations/zarr/{self.annotation_id}/",
             headers={} if token is None else {"X-Auth-Token": token},
             ssl=SSL_CONTEXT,
         )

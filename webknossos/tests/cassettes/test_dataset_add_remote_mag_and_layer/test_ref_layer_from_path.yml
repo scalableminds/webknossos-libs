@@ -21,8 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:25 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:54 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -55,14 +54,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:54 GMT
         content-type: application/json
-        content-length: '1433'
+        content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424726187,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570274300,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -86,14 +84,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:54 GMT
         content-type: application/json
-        content-length: '1431'
+        content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424726452,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570275008,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -118,25 +115,24 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:54 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"Sr_O4ylshjxREpWThECFWA"}'
+        data: '{"token":"YfIiiuYnHk-bTW_EWLt8-Q"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -152,8 +148,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:55 GMT
         content-type: application/octet-stream
         content-length: '1000'
       body:
@@ -163,14 +158,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -186,8 +181,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:55 GMT
         content-type: application/octet-stream
         content-length: '360'
       body:
@@ -197,14 +191,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -220,8 +214,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:55 GMT
         content-type: application/octet-stream
         content-length: '120'
       body:
@@ -231,14 +224,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -254,8 +247,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:55 GMT
         content-type: application/octet-stream
         content-length: '20'
       body:
@@ -264,14 +256,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
+        /data/v9/datasets/Organization_X/l4_sample/layers/color/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -287,8 +279,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:55 GMT
         content-type: application/octet-stream
         content-length: '6'
       body:
@@ -297,14 +288,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=1-1-1&x=3457&y=3323&z=1204&width=10&height=10&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -320,8 +311,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:56 GMT
         content-type: application/octet-stream
         content-length: '4000'
       body:
@@ -331,14 +321,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=2-2-1&x=3456&y=3322&z=1204&width=6&height=6&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -354,8 +344,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:56 GMT
         content-type: application/octet-stream
         content-length: '1440'
       body:
@@ -365,14 +354,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=4-4-1&x=3456&y=3320&z=1204&width=3&height=4&depth=10
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -388,8 +377,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:56 GMT
         content-type: application/octet-stream
         content-length: '480'
       body:
@@ -399,14 +387,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=8-8-2&x=3456&y=3320&z=1204&width=2&height=2&depth=5
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -422,8 +410,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:26 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:57 GMT
         content-type: application/octet-stream
         content-length: '80'
       body:
@@ -433,14 +420,14 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
+        /data/v9/datasets/Organization_X/l4_sample/layers/segmentation/data?mag=16-16-4&x=3456&y=3312&z=1204&width=1&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: Sr_O4ylshjxREpWThECFWA
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -456,8 +443,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:57 GMT
         content-type: application/octet-stream
         content-length: '24'
       body:
@@ -488,19 +474,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:57 GMT
         content-type: application/json
-        content-length: '1433'
+        content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424726452,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570275008,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=YfIiiuYnHk-bTW_EWLt8-Q
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -520,22 +505,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
-        connection: close
+        date: Thu, 03 Jul 2025 19:17:57 GMT
         content-type: application/json
-        content-length: '1431'
+        content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1750424727783,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570278077,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.11 aiohttp/3.10.11
@@ -552,7 +535,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -562,11 +545,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
         range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -584,7 +566,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -595,14 +577,13 @@ http_interactions:
         compression: none
   - request:
       method: HEAD
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
         accept-encoding: identity
         accept: '*/*'
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -611,13 +592,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -627,11 +607,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
         range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -649,7 +628,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -660,18 +639,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/1/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/color/1/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -680,13 +658,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -697,18 +674,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/color/2-2-1/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -717,13 +693,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -734,18 +709,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/color/4-4-1/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -754,13 +728,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -771,18 +744,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/color/8-8-2/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -791,13 +763,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -808,18 +779,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/color/16-16-4/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -828,13 +798,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -845,14 +814,13 @@ http_interactions:
         compression: none
   - request:
       method: HEAD
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
         accept-encoding: identity
         accept: '*/*'
-        user-agent: Python/3.13 aiohttp/3.10.11
+        user-agent: Python/3.11 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -861,13 +829,12 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -877,11 +844,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
         range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -899,7 +865,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '1413'
@@ -910,18 +876,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/1/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/segmentation/1/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -935,7 +900,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -946,18 +911,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/segmentation/2-2-1/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -971,7 +935,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -982,18 +946,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/segmentation/4-4-1/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -1007,7 +970,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1018,18 +981,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/segmentation/8-8-2/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -1043,7 +1005,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1054,18 +1016,17 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
+      path: /data/v9/zarr/Organization_X/l4_sample/segmentation/16-16-4/.zarray
       headers:
         host: localhost:9000
         user-agent: >-
-          tensorstore/0.1 libcurl/8.13.0 SecureTransport zlib/1.3.1 brotli/1.1.0
+          tensorstore/0.1 libcurl/8.13.0 BoringSSL zlib/1.3.1 brotli/1.1.0
           zstd/1.5.7 nghttp2/1.55.0
         accept: '*/*'
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        x-auth-token: YfIiiuYnHk-bTW_EWLt8-Q
       body:
         encoding: utf8
         data: ''
@@ -1079,7 +1040,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 20 Jun 2025 13:05:27 GMT
+        date: Thu, 03 Jul 2025 19:17:58 GMT
         connection: close
         content-type: application/json
         content-length: '163'

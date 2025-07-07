@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import attr
 
+from ..client.api_client.errors import UnexpectedStatusError
 from ..client.api_client.models import ApiProject, ApiProjectCreate
 from ..client.context import _get_api_client
 from .user import Team, User
@@ -76,7 +77,13 @@ class Project:
                 print(project.project_id)
                 ```
         """
-        api_project = _get_api_client(enforce_auth=True).project_info_by_name(name)
+        api_client = _get_api_client(enforce_auth=True)
+        try:
+            api_project = api_client.project_info_by_name(name)
+        except UnexpectedStatusError as e:
+            if "Project could not be found" in str(e):
+                raise ValueError(f"Project with name '{name}' does not exist.")
+            raise e
         return cls._from_api_project(api_project)
 
     @classmethod
