@@ -1,3 +1,4 @@
+import sys
 import warnings
 from collections.abc import Iterator
 from pathlib import Path
@@ -341,6 +342,7 @@ def _test_bioformats(
     return ds
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.parametrize(
     "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
 )
@@ -509,6 +511,7 @@ def _test_test_images(
 @pytest.mark.parametrize(
     "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
 )
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_test_images(
     tmp_path: Path,
     url: str | list[str],

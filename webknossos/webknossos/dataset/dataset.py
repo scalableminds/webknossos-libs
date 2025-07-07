@@ -66,6 +66,7 @@ if TYPE_CHECKING:
 from ..utils import (
     copytree,
     count_defined_values,
+    dump_path,
     get_executor_for_args,
     infer_metadata_type,
     is_fs_path,
@@ -932,9 +933,15 @@ class Dataset:
                     category=UserWarning,
                     module="pims_images",
                 )
-                map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
-                    input_upath, input_files=input_files, use_bioformats=use_bioformats
+                map_filepath_to_layer_name_func = (
+                    map_filepath_to_layer_name._to_callable(
+                        input_upath,
+                        input_files=input_files,
+                        use_bioformats=use_bioformats,
+                    )
                 )
+        else:
+            map_filepath_to_layer_name_func = map_filepath_to_layer_name
         if voxel_size_with_unit is None:
             assert voxel_size is not None, (
                 "Please supply either voxel_size or voxel_size_with_unit."
@@ -949,7 +956,7 @@ class Dataset:
 
         filepaths_per_layer: dict[str, list[Path]] = {}
         for input_file in input_files:
-            layer_name_from_mapping = map_filepath_to_layer_name(input_file)
+            layer_name_from_mapping = map_filepath_to_layer_name_func(input_file)
             # Remove characters from layer name that are not allowed
             layer_name_from_mapping = _UNALLOWED_LAYER_NAME_CHARS.sub(
                 "", layer_name_from_mapping
@@ -2410,13 +2417,13 @@ class Dataset:
                 m for m in new_layer_properties.mags if m.mag == foreign_mag.mag
             )
             if is_fs_path(foreign_mag.path):
-                mag_prop.path = str(
+                mag_prop.path = (
                     Path(relpath(foreign_mag.path.resolve(), self.path))
                     if make_relative
                     else foreign_mag.path.resolve()
-                )
+                ).as_posix()
             else:
-                mag_prop.path = str(foreign_mag.path)
+                mag_prop.path = dump_path(foreign_mag.path, self.resolved_path)
 
         if (
             isinstance(new_layer_properties, SegmentationLayerProperties)
@@ -2429,11 +2436,11 @@ class Dataset:
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
-                    attachment.path = str(
+                    attachment.path = (
                         Path(relpath(old_path, self.path))
                         if make_relative
                         else old_path.resolve()
-                    )
+                    ).as_posix()
 
         self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(
@@ -2557,7 +2564,7 @@ class Dataset:
                     # attachment has been a foreign attachment to the foreign layer
                     # therefore it will not be copied
                     if foreign_layer.resolved_path not in old_path.parents:
-                        attachment.path = str(old_path)
+                        attachment.path = old_path.as_posix()
 
         self._properties.data_layers += [new_layer_properties]
         self._layers[new_layer_name] = self._initialize_layer_from_properties(

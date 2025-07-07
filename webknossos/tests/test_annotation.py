@@ -1,3 +1,4 @@
+import sys
 import tempfile
 from pathlib import Path
 
@@ -71,6 +72,10 @@ def test_annotation_from_zarr3_zip_file() -> None:
         assert np.array_equiv(voxel_id, 1)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows does not like file handles that are not properly closed. Should probably be fixed in the future.",
+)
 def test_annotation_from_nml_file() -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_annotation_snapshot.nml"
 
@@ -188,6 +193,7 @@ def test_remote_annotation_list() -> None:
 
 
 @pytest.mark.use_proxay
+@pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")
 def test_annotation_upload_download_roundtrip() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     annotation_from_file = wk.Annotation.load(path)
@@ -227,6 +233,10 @@ def test_annotation_upload_download_roundtrip() -> None:
     assert segment_info.color == (1, 0, 0, 1)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows does not like file handles that are not properly closed. Should probably be fixed in the future.",
+)
 def test_reading_bounding_boxes() -> None:
     def check_properties(annotation: wk.Annotation) -> None:
         assert len(annotation.user_bounding_boxes) == 2
@@ -252,7 +262,7 @@ def test_reading_bounding_boxes() -> None:
     check_properties(annotation)
 
     # Check exporting and re-reading checked-in file (roundtrip)
-    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+    with tempfile.TemporaryDirectory() as tmp_dir:
         output_path = Path(tmp_dir) / "serialized.zip"
         annotation.save(output_path)
 

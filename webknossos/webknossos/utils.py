@@ -9,7 +9,7 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from concurrent.futures import Future
 from contextlib import AbstractContextManager, nullcontext
-from datetime import datetime
+from datetime import datetime, timezone
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
@@ -225,7 +225,7 @@ def get_chunks(arr: list[Any], chunk_size: int) -> Iterable[list[Any]]:
 
 
 def time_since_epoch_in_ms() -> int:
-    d = datetime.utcnow()
+    d = datetime.now(timezone.utc)
     unixtime = calendar.timegm(d.utctimetuple())
     return unixtime * 1000
 
@@ -565,10 +565,12 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         path = dataset_path / path
     path = resolve_if_fs_path(path)
     if dataset_path is not None:
-        if str(path).startswith(str(dataset_path)):
-            return "./" + str(path).removeprefix(str(dataset_path)).lstrip("/")
+        if path.as_posix().startswith(dataset_path.as_posix()):
+            return "./" + path.as_posix().removeprefix(dataset_path.as_posix()).lstrip(
+                "/"
+            )
         if safe_is_relative_to(path, dataset_path):
-            return "./" + str(path.relative_to(dataset_path))
+            return "./" + path.relative_to(dataset_path).as_posix()
     if path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
-    return str(path)
+    return path.as_posix()
