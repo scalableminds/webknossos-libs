@@ -14,12 +14,20 @@ TEST_TASK_TYPE_NAME = "test_task_type"
 @pytest.fixture(autouse=True)
 def setup_task_type_and_project() -> Iterator[None]:
     team = wk.Team.get_list()[0]
+    try:
+        wk.TaskType.get_by_name(TEST_TASK_TYPE_NAME).delete()
+    except ValueError:
+        pass
     task_type = wk.TaskType.create(
         name="test_task_type",
         description="This is a test task type",
         team=team,
         tracing_type="volume",
     )
+    try:
+        wk.Project.get_by_name(TEST_PROJECT_NAME).delete()
+    except ValueError:
+        pass
     project = wk.Project.create(
         name=TEST_PROJECT_NAME,
         priority=1,
