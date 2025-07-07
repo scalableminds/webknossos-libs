@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.3...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [2.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.3) - 2025-07-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.2...v2.4.3)
+
+### Changed
 - Warnings regarding missing pims image readers are only printed once during conversion. Error messages regarding wk-libs version are not displayed in slurm environments. [#1266](https://github.com/scalableminds/webknossos-libs/pull/1266)
 
 ### Fixed
 - Fixed mag and attachment paths under Windows. [#1329](https://github.com/scalableminds/webknossos-libs/pull/1329)
+
 
 ## [2.4.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.2) - 2025-07-07
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.1...v2.4.2)
