@@ -1,10 +1,12 @@
 import concurrent.futures
 import contextlib
+import gc
 import io
 import logging
 import multiprocessing as mp
 import os
 import shutil
+import signal
 import sys
 import tempfile
 import time
@@ -188,7 +190,9 @@ def test_slurm_deferred_submit_shutdown(monkeypatch: pytest.MonkeyPatch) -> None
         for submit_thread in executor.submit_threads:
             assert submit_thread.is_alive()
 
-        executor.handle_kill()
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        assert callable(sigint_handler)  # Mainly for typechecking
+        sigint_handler(signal.SIGINT, None)
 
         # Wait for the threads to die down, but less than it would take to submit all jobs
         # which would take ~5 seconds since only one job is scheduled at a time
@@ -222,7 +226,9 @@ def test_slurm_job_canceling_on_shutdown(
 
     job_start_time = time.time()
 
-    executor.handle_kill()
+    sigint_handler = signal.getsignal(signal.SIGINT)
+    assert callable(sigint_handler)  # Mainly for typechecking
+    sigint_handler(signal.SIGINT, None)
 
     # Wait for scheduled jobs to be canceled, so that the queue is empty again
     # and measure how long the cancellation takes
@@ -235,6 +241,54 @@ def test_slurm_job_canceling_on_shutdown(
     # of whether they were running or pending in much less time than it would
     # have taken the jobs to finish on their own
     assert job_cancellation_duration < 5
+
+
+def test_slurm_signal_handling() -> None:
+    original_sigint_handler_was_called = False
+
+    def original_sigint_handler(_signum: int | None, _frame: Any) -> None:
+        nonlocal original_sigint_handler_was_called
+        original_sigint_handler_was_called = True
+
+    signal.signal(
+        signal.SIGINT,
+        original_sigint_handler,
+    )
+
+    with cluster_tools.get_executor("slurm", debug=True) as executor1:
+        futures = executor1.map_to_futures(square, [2])
+        concurrent.futures.wait(futures)
+
+    # Let the first executor be no longer referenced to provoke potential bugs in the signal handler chaining
+    # See https://github.com/scalableminds/webknossos-libs/pull/1317
+    del executor1
+    gc.collect()
+
+    with cluster_tools.get_executor("slurm", debug=True) as executor2:
+        executor2.map_to_futures(sleep, [10] * 4)
+
+        # Wait until first job is running
+        wait_until_first_job_was_submitted(executor2, "RUNNING")
+
+        job_start_time = time.time()
+
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        assert callable(sigint_handler)  # Mainly for typechecking
+        sigint_handler(signal.SIGINT, None)
+
+        assert original_sigint_handler_was_called
+
+        # Wait for scheduled jobs to be canceled, so that the queue is empty again
+        # and measure how long the cancellation takes
+        while executor2.get_number_of_submitted_jobs() > 0:
+            time.sleep(0.5)
+
+        job_cancellation_duration = time.time() - job_start_time
+
+        # Killing the executor should have canceled all submitted jobs, regardless
+        # of whether they were running or pending in much less time than it would
+        # have taken the jobs to finish on their own
+        assert job_cancellation_duration < 5
 
 
 def test_slurm_number_of_submitted_jobs() -> None:
