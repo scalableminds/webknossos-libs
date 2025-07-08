@@ -1,5 +1,6 @@
 import concurrent.futures
 import contextlib
+import gc
 import io
 import logging
 import multiprocessing as mp
@@ -281,6 +282,8 @@ def test_slurm_signal_handling() -> None:
 
     # Let the first executor be no longer referenced to provoke potential bugs in the signal handler chaining
     # See https://github.com/scalableminds/webknossos-libs/pull/1317
+    gc.collect()
+
     with cluster_tools.get_executor("slurm", debug=True) as executor2:
         executor2.map_to_futures(sleep, [10] * 4)
 
