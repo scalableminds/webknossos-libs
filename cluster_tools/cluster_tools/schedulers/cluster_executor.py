@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable, Iterator
 from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
+from types import TracebackType
 from typing import (
     Any,
     Literal,
@@ -590,6 +591,17 @@ class ClusterExecutor(futures.Executor):
                     output_path,
                     should_keep_output,
                 )
+
+    # Overwrite the context manager __exit as it doesn't forward the information whether an exception was thrown or not otherwise
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> Literal[False]:
+        # Don't wait if an exception was thrown since the cleanup might never succeed
+        self.shutdown(wait=exc_type is None)
+        return False
 
     def shutdown(self, wait: bool = True, cancel_futures: bool = True) -> None:
         """Close the pool."""

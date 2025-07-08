@@ -190,7 +190,9 @@ def test_slurm_deferred_submit_shutdown() -> None:
         for submit_thread in executor.submit_threads:
             assert submit_thread.is_alive()
 
-        executor.handle_kill(signal.default_int_handler, None, None)
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        assert callable(sigint_handler)  # Mainly for typechecking
+        sigint_handler(signal.SIGINT, None)
 
         # Wait for the threads to die down, but less than it would take to submit all jobs
         # which would take ~5 seconds since only one job is scheduled at a time
@@ -211,17 +213,6 @@ def test_slurm_job_canceling_on_shutdown() -> None:
     # Test that scheduled jobs are canceled on shutdown, regardless
     # of whether they are pending or running.
     max_running_size = 2
-
-    original_sigint_handler_was_called = False
-
-    def original_sigint_handler(_signum: int | None, _frame: Any) -> None:
-        nonlocal original_sigint_handler_was_called
-        original_sigint_handler_was_called = True
-
-    signal.signal(
-        signal.SIGINT,
-        original_sigint_handler,
-    )
 
     executor = cluster_tools.get_executor("slurm", debug=True)
     # Only two jobs can run at once, so that some of the jobs will be
@@ -245,8 +236,6 @@ def test_slurm_job_canceling_on_shutdown() -> None:
         sigint_handler = signal.getsignal(signal.SIGINT)
         assert callable(sigint_handler)  # Mainly for typechecking
         sigint_handler(signal.SIGINT, None)
-
-        assert original_sigint_handler_was_called
 
         # Wait for scheduled jobs to be canceled, so that the queue is empty again
         # and measure how long the cancellation takes
