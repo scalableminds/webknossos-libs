@@ -264,6 +264,50 @@ def test_slurm_job_canceling_on_shutdown() -> None:
             del os.environ["SLURM_MAX_RUNNING_SIZE"]
 
 
+def test_slurm_signal_handling() -> None:
+    original_sigint_handler_was_called = False
+
+    def original_sigint_handler(_signum: int | None, _frame: Any) -> None:
+        nonlocal original_sigint_handler_was_called
+        original_sigint_handler_was_called = True
+
+    signal.signal(
+        signal.SIGINT,
+        original_sigint_handler,
+    )
+
+    with cluster_tools.get_executor("slurm", debug=True) as executor1:
+        executor1.map_to_futures(sleep, [0.1])
+
+    # Let the first executor be no longer referenced to provoke potential bugs in the signal handler chaining
+    # See https://github.com/scalableminds/webknossos-libs/pull/1317
+    with cluster_tools.get_executor("slurm", debug=True) as executor2:
+        executor2.map_to_futures(sleep, [10] * 4)
+
+        # Wait until first job is running
+        wait_until_first_job_was_submitted(executor2, "RUNNING")
+
+        job_start_time = time.time()
+
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        assert callable(sigint_handler)  # Mainly for typechecking
+        sigint_handler(signal.SIGINT, None)
+
+        assert original_sigint_handler_was_called
+
+        # Wait for scheduled jobs to be canceled, so that the queue is empty again
+        # and measure how long the cancellation takes
+        while executor2.get_number_of_submitted_jobs() > 0:
+            time.sleep(0.5)
+
+        job_cancellation_duration = time.time() - job_start_time
+
+        # Killing the executor should have canceled all submitted jobs, regardless
+        # of whether they were running or pending in much less time than it would
+        # have taken the jobs to finish on their own
+        assert job_cancellation_duration < 5
+
+
 def test_slurm_number_of_submitted_jobs() -> None:
     number_of_jobs = 6
     executor = cluster_tools.get_executor("slurm", debug=True)
