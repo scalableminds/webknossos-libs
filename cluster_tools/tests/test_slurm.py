@@ -278,10 +278,11 @@ def test_slurm_signal_handling() -> None:
     )
 
     with cluster_tools.get_executor("slurm", debug=True) as executor1:
-        executor1.map_to_futures(sleep, [0.1])
+        executor1.map_to_futures(square, [2])
 
     # Let the first executor be no longer referenced to provoke potential bugs in the signal handler chaining
     # See https://github.com/scalableminds/webknossos-libs/pull/1317
+    del executor1
     gc.collect()
 
     with cluster_tools.get_executor("slurm", debug=True) as executor2:
