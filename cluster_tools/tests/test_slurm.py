@@ -49,9 +49,9 @@ def test_map_with_spawn() -> None:
     with cluster_tools.get_executor(
         "slurm", max_workers=5, start_method="spawn"
     ) as executor:
-        assert executor.submit(expect_fork).result(), (
-            "Slurm should ignore provided start_method"
-        )
+        assert executor.submit(
+            expect_fork
+        ).result(), "Slurm should ignore provided start_method"
 
 
 def test_slurm_submit_returns_job_ids() -> None:
@@ -243,7 +243,10 @@ def test_slurm_job_canceling_on_shutdown(
     assert job_cancellation_duration < 5
 
 
-def test_slurm_signal_handling() -> None:
+def test_slurm_signal_handling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SIGTERM_WAIT_IN_S", "0")
     original_sigint_handler_was_called = False
 
     def original_sigint_handler(_signum: int | None, _frame: Any) -> None:
@@ -256,6 +259,8 @@ def test_slurm_signal_handling() -> None:
     )
 
     with cluster_tools.get_executor("slurm", debug=True) as executor1:
+        assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 1
+
         futures = executor1.map_to_futures(square, [2])
         concurrent.futures.wait(futures)
 
@@ -265,6 +270,8 @@ def test_slurm_signal_handling() -> None:
     gc.collect()
 
     with cluster_tools.get_executor("slurm", debug=True) as executor2:
+        assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 1
+
         executor2.map_to_futures(sleep, [10] * 4)
 
         # Wait until first job is running
@@ -289,6 +296,10 @@ def test_slurm_signal_handling() -> None:
         # of whether they were running or pending in much less time than it would
         # have taken the jobs to finish on their own
         assert job_cancellation_duration < 5
+
+    assert (
+        len(cluster_tools.SlurmExecutor._shutdown_hooks) == 0
+    ), "The cluster executor shutdown hooks should have been cleaned up"
 
 
 def test_slurm_number_of_submitted_jobs() -> None:
@@ -474,9 +485,9 @@ def test_preliminary_file_submit() -> None:
             )
             with pytest.raises(Exception):
                 fut.result()
-            assert preliminary_output_path.exists(), (
-                "Preliminary output file should exist"
-            )
+            assert (
+                preliminary_output_path.exists()
+            ), "Preliminary output file should exist"
             assert not output_pickle_path.exists(), "Final output file should not exist"
 
             # Schedule succeeding job with same output path
@@ -487,9 +498,9 @@ def test_preliminary_file_submit() -> None:
             )
             assert fut_2.result() == 9
             assert output_pickle_path.exists(), "Final output file should exist"
-            assert not preliminary_output_path.exists(), (
-                "Preliminary output file should not exist anymore"
-            )
+            assert (
+                not preliminary_output_path.exists()
+            ), "Preliminary output file should not exist anymore"
 
 
 def test_executor_args() -> None:
@@ -527,12 +538,12 @@ def test_preliminary_file_map() -> None:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
                 preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
 
-                assert preliminary_output_path.exists(), (
-                    "Preliminary output file should exist"
-                )
-                assert not output_pickle_path.exists(), (
-                    "Final output file should not exist"
-                )
+                assert (
+                    preliminary_output_path.exists()
+                ), "Preliminary output file should exist"
+                assert (
+                    not output_pickle_path.exists()
+                ), "Final output file should not exist"
 
             # Schedule succeeding jobs with same output paths
             futs_2 = executor.map_to_futures(
@@ -547,9 +558,9 @@ def test_preliminary_file_map() -> None:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
                 preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
                 assert output_pickle_path.exists(), "Final output file should exist"
-                assert not preliminary_output_path.exists(), (
-                    "Preliminary output file should not exist anymore"
-                )
+                assert (
+                    not preliminary_output_path.exists()
+                ), "Preliminary output file should not exist anymore"
 
 
 def test_cpu_bind_regression() -> None:
@@ -558,9 +569,9 @@ def test_cpu_bind_regression() -> None:
     )
 
     stdout, _ = chcall("scontrol show config | sed -n '/^TaskPlugin/s/.*= *//p'")
-    assert "task/affinity" in stdout, (
-        "The task/affinity TaskPlugin needs to be enabled in order for SLURM_CPU_BIND to have an effect."
-    )
+    assert (
+        "task/affinity" in stdout
+    ), "The task/affinity TaskPlugin needs to be enabled in order for SLURM_CPU_BIND to have an effect."
 
     with cluster_tools.get_executor("slurm") as executor:
         # The slurm job should not fail, although an invalid CPU mask was set before the submission
