@@ -653,6 +653,8 @@ class ClusterExecutor(futures.Executor):
             with self.jobs_lock:
                 if self.jobs and self.wait_thread.is_alive():
                     self.jobs_empty_cond.wait()
+        else:
+            self.inner_handle_kill()
 
         self.wait_thread.stop()
         self.wait_thread.join()
