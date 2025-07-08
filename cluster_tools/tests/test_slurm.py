@@ -211,7 +211,7 @@ def test_slurm_job_canceling_on_shutdown() -> None:
 
     original_sigint_handler_was_called = False
 
-    def original_sigint_handler(_signum: int | None, _frame: Any):
+    def original_sigint_handler(_signum: int | None, _frame: Any) -> None:
         original_sigint_handler_was_called = True
 
     signal.signal(
