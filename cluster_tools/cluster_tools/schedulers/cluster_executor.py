@@ -142,7 +142,7 @@ class ClusterExecutor(futures.Executor):
         pass
 
     @classmethod
-    def _install_signal_handlers(cls) -> None:
+    def _ensure_signal_handlers_are_installed(cls) -> None:
         # Only overwrite the signal handler once
         if cls._installed_signal_handler:
             return
@@ -166,7 +166,16 @@ class ClusterExecutor(futures.Executor):
     @classmethod
     def _register_shutdown_hook(cls, hook: Callable[[], None]) -> None:
         cls._shutdown_hooks.append(hook)
-        cls._install_signal_handlers()
+        cls._ensure_signal_handlers_are_installed()
+
+    @classmethod
+    def _deregister_shutdown_hook(cls, hook: Callable[[], None]) -> None:
+        if hook in cls._shutdown_hooks:
+            cls._shutdown_hooks.remove(hook)
+        else:
+            logging.warning(
+                "Cannot deregister executors shutdown hook since it's not registered."
+            )
 
     @classmethod
     def _handle_shutdown(
@@ -184,10 +193,14 @@ class ClusterExecutor(futures.Executor):
         except Exception as e:
             print(f"Error during shutdown: {e}")
 
-        if callable(existing_signal_handler) and existing_signal_handler not in (
-            signal.SIG_DFL,
-            signal.SIG_IGN,
-            signal.default_int_handler,
+        if (
+            callable(existing_signal_handler)
+            and existing_signal_handler
+            not in (
+                signal.SIG_DFL,  # For completeness sake (since it's not callable anyways). The system's default signal handler
+                signal.SIG_IGN,  # For completeness sake (since it's not callable anyways). The instruction to ignore a signal
+                signal.default_int_handler,  # Python's default SIGINT handler
+            )
         ):
             existing_signal_handler(signum, frame)
 
