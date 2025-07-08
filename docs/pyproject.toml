@@ -19,7 +19,7 @@ dependencies = [
 
 [tool.uv.sources]
 webknossos = { path = "../webknossos"}
-mkdocs-video = {branch="master", git="https://github.com/calmzhu/mkdocs-video.git"}
+mkdocs-video = {branch="master", git="https://github.com/scalableminds/mkdocs-video.git"}
 
 [build-system]
 requires = ["setuptools>=70.0"]
