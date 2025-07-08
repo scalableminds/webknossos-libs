@@ -593,13 +593,15 @@ class ClusterExecutor(futures.Executor):
                 )
 
     # Overwrite the context manager __exit as it doesn't forward the information whether an exception was thrown or not otherwise
+    # which may lead to a deadlock if an exception is thrown within a cluster executor with statement, because self.jobs_empty_cond.wait()
+    # never succeeds.
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
         _exc_val: BaseException | None,
         _exc_tb: TracebackType | None,
     ) -> Literal[False]:
-        # Don't wait if an exception was thrown since the cleanup might never succeed
+        # Don't wait if an exception was thrown
         self.shutdown(wait=exc_type is None)
         return False
 
