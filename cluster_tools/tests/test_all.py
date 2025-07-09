@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import pytest
 
