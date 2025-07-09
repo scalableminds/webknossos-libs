@@ -371,7 +371,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cluster-tools", extras = ["kubernetes"], marker = "extra == 'all'" },
-    { name = "distributed", marker = "extra == 'kubernetes'", specifier = "~=2023.9.1" },
+    { name = "kubernetes", marker = "extra == 'kubernetes'", specifier = "~=27.2.0" },
     { name = "typing-extensions", specifier = "~=4.12.0" },
 ]
 provides-extras = ["kubernetes", "all"]
