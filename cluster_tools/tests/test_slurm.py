@@ -169,6 +169,7 @@ def wait_until_first_job_was_submitted(
         time.sleep(0.1)
 
 
+@pytest.mark.timeout(30)
 def test_slurm_deferred_submit_shutdown(monkeypatch: pytest.MonkeyPatch) -> None:
     # Test that the SlurmExecutor stops scheduling jobs in a separate thread
     # once it was killed even if the executor was used multiple times and
@@ -209,6 +210,7 @@ def test_slurm_deferred_submit_shutdown(monkeypatch: pytest.MonkeyPatch) -> None
         call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
+@pytest.mark.timeout(30)
 def test_slurm_job_canceling_on_shutdown(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -246,6 +248,7 @@ def test_slurm_job_canceling_on_shutdown(
     assert job_cancellation_duration < 5
 
 
+@pytest.mark.timeout(30)
 def test_slurm_signal_handling(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
