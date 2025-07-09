@@ -370,11 +370,13 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cluster-tools", extras = ["dask"], marker = "extra == 'all'" },
     { name = "cluster-tools", extras = ["kubernetes"], marker = "extra == 'all'" },
+    { name = "distributed", marker = "extra == 'dask'", specifier = "~=2023.9.1" },
     { name = "kubernetes", marker = "extra == 'kubernetes'", specifier = "~=27.2.0" },
     { name = "typing-extensions", specifier = "~=4.12.0" },
 ]
-provides-extras = ["kubernetes", "all"]
+provides-extras = ["dask", "kubernetes", "all"]
 
 [package.metadata.requires-dev]
 dev = [

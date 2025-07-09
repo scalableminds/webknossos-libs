@@ -17,8 +17,9 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/cluste
 
 
 [project.optional-dependencies]
+dask = ["distributed ~=2023.9.1"]
 kubernetes = ["kubernetes ~=27.2.0"]
-all=["cluster_tools[kubernetes]"]
+all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 
 [tool.uv]
 dev-dependencies = [

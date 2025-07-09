@@ -165,6 +165,33 @@ jobs:
           cd tests
           PYTEST_EXECUTORS=kubernetes uv run --frozen python -m pytest -sv test_all.py test_kubernetes.py
 
+  cluster_tools_dask:
+    needs: changes
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        python-version: ["3.13", "3.12", "3.11", "3.10"]
+    defaults:
+      run:
+        working-directory: cluster_tools
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "cluster_tools/uv.lock"
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies (without docker)
+        run: uv sync --all-extras --frozen
+      - name: "Run Dask"
+        run: |
+          cd tests
+          PYTEST_EXECUTORS=dask uv run --frozen python -m pytest -sv test_all.py test_dask.py
+
   webknossos_linux:
     needs: changes
     if: |
@@ -363,6 +390,7 @@ jobs:
       - cluster_tools_slurm
       - cluster_tools_multiprocessing
       - cluster_tools_kubernetes
+      - cluster_tools_dask
       - webknossos_linux
       - webknossos_windows
       - webknossos_macos
@@ -438,6 +466,7 @@ jobs:
       - cluster_tools_slurm
       - cluster_tools_multiprocessing
       - cluster_tools_kubernetes
+      - cluster_tools_dask
       - webknossos_linux
       - webknossos_windows
       - webknossos_macos
@@ -497,6 +526,7 @@ jobs:
       - cluster_tools_slurm
       - cluster_tools_multiprocessing
       - cluster_tools_kubernetes
+      - cluster_tools_dask
       - webknossos_linux
       - webknossos_windows
       - webknossos_macos
@@ -533,6 +563,7 @@ jobs:
 
   complete:
     needs:
+      - cluster_tools_dask
       - cluster_tools_kubernetes
       - cluster_tools_multiprocessing
       - cluster_tools_slurm

@@ -9,9 +9,13 @@ from typing import Any, Literal
 
 import pytest
 
-import cluster_tools
 import cluster_tools.executors
 import cluster_tools.schedulers
+
+if TYPE_CHECKING:
+    from distributed import LocalCluster
+
+import cluster_tools
 
 
 # "Worker" functions.
@@ -25,6 +29,8 @@ def sleep(duration: float) -> float:
 
 
 logging.basicConfig()
+
+_dask_cluster: Optional["LocalCluster"] = None
 
 
 def raise_if(msg: str, _bool: bool) -> None:
@@ -67,6 +73,7 @@ def get_executor_keys(with_pickling: bool = False) -> set[str]:
     executor_keys = {
         "slurm",
         "kubernetes",
+        "dask",
         "multiprocessing",
         "sequential",
     }
@@ -84,6 +91,8 @@ def get_executor_keys(with_pickling: bool = False) -> set[str]:
 
 
 def get_executor(environment: str) -> cluster_tools.Executor:
+    global _dask_cluster
+
     if environment == "slurm":
         return cluster_tools.get_executor(
             "slurm", debug=True, job_resources={"mem": "100M"}
@@ -101,6 +110,16 @@ def get_executor(environment: str) -> cluster_tools.Executor:
         return cluster_tools.get_executor("multiprocessing", max_workers=5)
     if environment == "sequential":
         return cluster_tools.get_executor("sequential")
+    if environment == "dask":
+        if not _dask_cluster:
+            from distributed import LocalCluster, Worker
+
+            _dask_cluster = LocalCluster(
+                worker_class=Worker, resources={"mem": 20e9, "cpus": 4}, nthreads=6
+            )
+        return cluster_tools.get_executor(
+            "dask", job_resources={"address": _dask_cluster}
+        )
     if environment == "multiprocessing_with_pickling":
         return cluster_tools.get_executor("multiprocessing_with_pickling")
     if environment == "pbs":
@@ -325,9 +344,10 @@ def test_map(exc: cluster_tools.Executor) -> None:
 
 
 def test_map_lazy(exc: cluster_tools.Executor) -> None:
-    with exc:
-        result = exc.map(square, [2, 3, 4])
-    assert list(result) == [4, 9, 16]
+    if not isinstance(exc, cluster_tools.DaskExecutor):
+        with exc:
+            result = exc.map(square, [2, 3, 4])
+        assert list(result) == [4, 9, 16]
 
 
 def test_executor_args() -> None:
