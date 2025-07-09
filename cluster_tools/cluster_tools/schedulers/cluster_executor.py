@@ -670,6 +670,7 @@ class ClusterExecutor(futures.Executor):
                     f"Could not delete file during clean up. Path: {file_to_clean_up} Exception: {exc}. Continuing..."
                 )
         self.files_to_clean_up = []
+        self._deregister_shutdown_hook(self.handle_kill)
 
     def map(  # type: ignore[override]
         self,
