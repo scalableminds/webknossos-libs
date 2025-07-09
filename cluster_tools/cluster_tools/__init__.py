@@ -1,7 +1,6 @@
 from typing import Any, Literal, overload
 
 from cluster_tools.executor_protocol import Executor
-from cluster_tools.executors.dask import DaskExecutor
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 from cluster_tools.executors.multiprocessing_pickle import MultiprocessingPickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
@@ -65,10 +64,6 @@ def get_executor(
 
 
 @overload
-def get_executor(environment: Literal["dask"], **kwargs: Any) -> DaskExecutor: ...
-
-
-@overload
 def get_executor(
     environment: Literal["multiprocessing"], **kwargs: Any
 ) -> MultiprocessingExecutor: ...
@@ -99,11 +94,6 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         return PBSExecutor(**kwargs)
     elif environment == "kubernetes":
         return KubernetesExecutor(**kwargs)
-    elif environment == "dask":
-        if "client" in kwargs:
-            return DaskExecutor(kwargs["client"])
-        else:
-            return DaskExecutor.from_config(**kwargs)
     elif environment == "multiprocessing":
         global did_start_test_multiprocessing
         if not did_start_test_multiprocessing:

@@ -4,7 +4,7 @@
 [![Code Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 
 
-This package provides python `Executor` classes for distributing tasks on a Slurm cluster, Kubernetes, Dask or via multi processing.
+This package provides python `Executor` classes for distributing tasks on a Slurm cluster, Kubernetes or via multi processing.
 
 ## Example
 
@@ -31,11 +31,10 @@ pip install cluster_tools
 ```
 
 By default only the dependencies for running jobs on Slurm and via multiprocessing are installed. 
-For Kubernetes and Dask run:
+For Kubernetes run:
 
 ```bash
 pip install cluster_tools[kubernetes]
-pip install cluster_tools[dask]
 ```
 
 ## Configuration
