@@ -286,16 +286,19 @@ def test_slurm_signal_handling(
         wait_until_first_job_was_submitted(executor2, "RUNNING")
 
         job_start_time = time.time()
-
+        logging.warning(f"job_start_time {job_start_time}")
         sigint_handler = signal.getsignal(signal.SIGINT)
         assert callable(sigint_handler)  # Mainly for typechecking
         sigint_handler(signal.SIGINT, None)
-
+        logging.warning(f"At time {time.time()} signal handlers succeeded")
         assert original_sigint_handler_was_called
 
         # Wait for scheduled jobs to be canceled, so that the queue is empty again
         # and measure how long the cancellation takes
         while executor2.get_number_of_submitted_jobs() > 0:
+            logging.warning(
+                f"At time {time.time()} {executor2.get_number_of_submitted_jobs()} jobs are still running"
+            )
             time.sleep(0.5)
 
         job_cancellation_duration = time.time() - job_start_time
