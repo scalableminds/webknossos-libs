@@ -10,6 +10,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.3...HEAD)
 
 ### Breaking Changes
+-  The 'dask' execution strategy was removed. [#1317](https://github.com/scalableminds/webknossos-libs/pull/1317)
 
 ### Added
 
