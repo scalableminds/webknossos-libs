@@ -94,7 +94,6 @@ class ClusterExecutor(futures.Executor):
         self.job_resources = job_resources
         self.additional_setup_lines = additional_setup_lines or []
         self.job_name = job_name
-        self.was_requested_to_shutdown = False
         self.cfut_dir = (
             cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
         )
@@ -401,9 +400,9 @@ class ClusterExecutor(futures.Executor):
         self._maybe_mark_logs_for_cleanup(jobid)
 
     def ensure_not_shutdown(self) -> None:
-        if self.was_requested_to_shutdown:
+        if self.is_shutting_down:
             raise RuntimeError(
-                "submit() was invoked on a ClusterExecutor instance even though shutdown() was executed for that instance."
+                "submit() was invoked on a ClusterExecutor instance even though shutdown() or handle_kill() was executed for that instance."
             )
 
     def create_enriched_future(self) -> Future:
@@ -644,11 +643,14 @@ class ClusterExecutor(futures.Executor):
 
     def shutdown(self, wait: bool = True, cancel_futures: bool = True) -> None:
         """Close the pool."""
+        if self.is_shutting_down:
+            return
+
+        self.is_shutting_down = True
         if not cancel_futures:
             logging.warning(
                 "The provided cancel_futures argument is ignored by ClusterExecutor."
             )
-        self.was_requested_to_shutdown = True
         if wait:
             with self.jobs_lock:
                 if self.jobs and self.wait_thread.is_alive():
