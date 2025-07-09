@@ -265,6 +265,7 @@ def test_slurm_signal_handling(
     )
 
     with cluster_tools.get_executor("slurm", debug=True) as executor1:
+        assert executor1.get_number_of_submitted_jobs() == 0
         assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 1
 
         futures = executor1.map_to_futures(square, [2])
@@ -276,6 +277,7 @@ def test_slurm_signal_handling(
     gc.collect()
 
     with cluster_tools.get_executor("slurm", debug=True) as executor2:
+        assert executor2.get_number_of_submitted_jobs() == 0
         assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 1
 
         executor2.map_to_futures(sleep, [10] * 4)
