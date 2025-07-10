@@ -17,7 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
-- Every file that send logging messages has its own logger now. This can be used to selectively disable loggers. [#1335](https://github.com/scalableminds/webknossos-libs/pull/1335)
+- Every file that sends logging messages has its own logger now. This can be used to selectively disable loggers. [#1335](https://github.com/scalableminds/webknossos-libs/pull/1335)
 
 ### Fixed
 
