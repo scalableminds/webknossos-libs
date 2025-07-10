@@ -470,7 +470,7 @@ class Dataset:
         folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
         token: str | None = None,
-        datastore_url: str | None = None
+        datastore_url: str | None = None,
     ) -> tuple[str, str]:
         """Announce a manual dataset upload to WEBKNOSSOS.
 
