@@ -6,6 +6,8 @@ from ..geometry import Vec3Int
 from .data_format import DataFormat
 from .view import View
 
+logger = logging.getLogger(__name__)
+
 
 def upsample_cube(cube_buffer: np.ndarray, factors: list[int]) -> np.ndarray:
     ds = cube_buffer.shape
@@ -69,7 +71,7 @@ def upsample_cube_job(
             target_view.write(file_buffer, absolute_bounding_box=chunk)
 
     except Exception as exc:
-        logging.error(
+        logger.error(
             f"Upsampling of target {target_view.bounding_box} failed with {exc}"
         )
         raise exc

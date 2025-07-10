@@ -1,8 +1,8 @@
+import logging
 import os
 import traceback
 import warnings
 from collections.abc import Generator
-from logging import error, info
 from os import getpid
 from types import TracebackType
 from typing import TYPE_CHECKING
@@ -16,10 +16,13 @@ if TYPE_CHECKING:
     from ..view import View
 
 
+logger = logging.getLogger(__name__)
+
+
 def log_memory_consumption(additional_output: str = "") -> None:
     pid = os.getpid()
     process = psutil.Process(pid)
-    info(
+    logger.info(
         f"Currently consuming {process.memory_info().rss / 1024**3:.2f} GB of memory ({psutil.virtual_memory().available / 1024**3:.2f} GB still available) "
         f"in process {pid}. {additional_output}"
     )
@@ -105,7 +108,7 @@ class BufferedSliceWriter:
         )
 
         if self._use_logging:
-            info(
+            logger.info(
                 f"({getpid()}) Writing {len(self._slices_to_write)} slices at position {self._buffer_start_slice}."
             )
             log_memory_consumption()
@@ -136,7 +139,7 @@ class BufferedSliceWriter:
             ).moveaxis(-1, self.dimension)
             for chunk_bbox in bbox.chunk(chunk_size):
                 if self._use_logging:
-                    info(f"Writing chunk {chunk_bbox}.")
+                    logger.info(f"Writing chunk {chunk_bbox}.")
 
                 data = np.zeros(
                     (channel_count, *chunk_bbox.size),
@@ -199,12 +202,12 @@ class BufferedSliceWriter:
                 del data
 
         except Exception as exc:
-            error(
+            logger.error(
                 f"({getpid()}) An exception occurred in BufferedSliceWriter._flush_buffer with {len(self._slices_to_write)} "
                 f"slices at position {self._buffer_start_slice}. Original error is:\n{type(exc).__name__}:{exc}\n\nTraceback:"
             )
             traceback.print_tb(exc.__traceback__)
-            error("\n")
+            logger.error("\n")
 
             raise exc
         finally:
