@@ -1,5 +1,6 @@
 import concurrent.futures
 import contextlib
+import gc
 import io
 import logging
 import multiprocessing as mp
@@ -168,10 +169,12 @@ def wait_until_first_job_was_submitted(
         time.sleep(0.1)
 
 
-def test_slurm_deferred_submit_shutdown() -> None:
+@pytest.mark.timeout(30)
+def test_slurm_deferred_submit_shutdown(monkeypatch: pytest.MonkeyPatch) -> None:
     # Test that the SlurmExecutor stops scheduling jobs in a separate thread
     # once it was killed even if the executor was used multiple times and
     # therefore started multiple job submission threads
+    monkeypatch.setenv("SIGTERM_WAIT_IN_S", "0")
     max_submit_jobs = 1
 
     # Only one job can be scheduled at a time
@@ -179,43 +182,48 @@ def test_slurm_deferred_submit_shutdown() -> None:
     executor = cluster_tools.get_executor("slurm", debug=True)
 
     try:
-        # Use the executor twice to start multiple job submission threads
-        executor.map_to_futures(sleep, [0.5] * 10)
-        executor.map_to_futures(sleep, [0.5] * 10)
+        with executor:
+            # Use the executor twice to start multiple job submission threads
+            executor.map_to_futures(sleep, [0.5] * 10)
+            executor.map_to_futures(sleep, [0.5] * 10)
 
-        wait_until_first_job_was_submitted(executor)
+            wait_until_first_job_was_submitted(executor)
 
-        for submit_thread in executor.submit_threads:
-            assert submit_thread.is_alive()
+            for submit_thread in executor.submit_threads:
+                assert submit_thread.is_alive()
 
-        executor.handle_kill(signal.default_int_handler, None, None)
+            sigint_handler = signal.getsignal(signal.SIGINT)
+            assert callable(sigint_handler)  # Mainly for typechecking
+            sigint_handler(signal.SIGINT, None)
 
-        # Wait for the threads to die down, but less than it would take to submit all jobs
-        # which would take ~5 seconds since only one job is scheduled at a time
-        for submit_thread in executor.submit_threads:
-            submit_thread.join(1)
-            assert not submit_thread.is_alive()
+            # Wait for the threads to die down, but less than it would take to submit all jobs
+            # which would take ~5 seconds since only one job is scheduled at a time
+            for submit_thread in executor.submit_threads:
+                submit_thread.join(1)
+                assert not submit_thread.is_alive()
 
-        # Wait for scheduled jobs to be canceled, so that the queue is empty again
-        while executor.get_number_of_submitted_jobs() > 0:
-            time.sleep(0.5)
+            # Wait for scheduled jobs to be canceled, so that the queue is empty again
+            while executor.get_number_of_submitted_jobs() > 0:
+                time.sleep(0.5)
 
     finally:
         call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
-def test_slurm_job_canceling_on_shutdown() -> None:
+@pytest.mark.timeout(30)
+def test_slurm_job_canceling_on_shutdown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     # Test that scheduled jobs are canceled on shutdown, regardless
     # of whether they are pending or running.
-    max_running_size = 2
+    monkeypatch.setenv("SLURM_MAX_RUNNING_SIZE", "2")
+    monkeypatch.setenv("SIGTERM_WAIT_IN_S", "0")
 
     executor = cluster_tools.get_executor("slurm", debug=True)
-    # Only two jobs can run at once, so that some of the jobs will be
-    # running and some will be pending.
-    original_max_running_size = os.environ.get("SLURM_MAX_RUNNING_SIZE")
-    os.environ["SLURM_MAX_RUNNING_SIZE"] = str(max_running_size)
 
-    try:
+    with executor:
+        # Only two jobs can run at once, so that some of the jobs will be
+        # running and some will be pending.
         executor.map_to_futures(sleep, [10] * 4)
 
         # Wait until first job is running
@@ -223,16 +231,75 @@ def test_slurm_job_canceling_on_shutdown() -> None:
 
         job_start_time = time.time()
 
-        # The job cancellation is flaky if jobs just switched from PENDING to RUNNING,
-        # probably because Python is not yet able to react to the SIGINT signal.
-        # This is an unsolved issue as of now.
-        time.sleep(1)
-
-        executor.handle_kill(signal.default_int_handler, None, None)
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        assert callable(sigint_handler)  # Mainly for typechecking
+        sigint_handler(signal.SIGINT, None)
 
         # Wait for scheduled jobs to be canceled, so that the queue is empty again
         # and measure how long the cancellation takes
         while executor.get_number_of_submitted_jobs() > 0:
+            time.sleep(0.5)
+
+    job_cancellation_duration = time.time() - job_start_time
+
+    # Killing the executor should have canceled all submitted jobs, regardless
+    # of whether they were running or pending in much less time than it would
+    # have taken the jobs to finish on their own
+    assert job_cancellation_duration < 5
+
+
+@pytest.mark.timeout(30)
+def test_slurm_signal_handling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SIGTERM_WAIT_IN_S", "0")
+    original_sigint_handler_was_called = False
+
+    def original_sigint_handler(_signum: int | None, _frame: Any) -> None:
+        nonlocal original_sigint_handler_was_called
+        original_sigint_handler_was_called = True
+
+    signal.signal(
+        signal.SIGINT,
+        original_sigint_handler,
+    )
+
+    assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 0
+    # Reset class variable after changing signal handler so it will be set again when the next cluster executor is instantiated
+    cluster_tools.SlurmExecutor._installed_signal_handler = False
+
+    with cluster_tools.get_executor("slurm", debug=True) as executor1:
+        assert executor1.get_number_of_submitted_jobs() == 0
+        assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 1
+
+        futures = executor1.map_to_futures(square, [2])
+        concurrent.futures.wait(futures)
+
+    # Let the first executor be no longer referenced to provoke potential bugs in the signal handler chaining
+    # See https://github.com/scalableminds/webknossos-libs/pull/1317
+    del executor1
+    gc.collect()
+
+    with cluster_tools.get_executor("slurm", debug=True) as executor2:
+        assert executor2.get_number_of_submitted_jobs() == 0
+        assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 1
+
+        executor2.map_to_futures(sleep, [10] * 4)
+
+        # Wait until first job is running
+        wait_until_first_job_was_submitted(executor2, "RUNNING")
+
+        job_start_time = time.time()
+
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        assert callable(sigint_handler)  # Mainly for typechecking
+        sigint_handler(signal.SIGINT, None)
+
+        assert original_sigint_handler_was_called
+
+        # Wait for scheduled jobs to be canceled, so that the queue is empty again
+        # and measure how long the cancellation takes
+        while executor2.get_number_of_submitted_jobs() > 0:
             time.sleep(0.5)
 
         job_cancellation_duration = time.time() - job_start_time
@@ -242,11 +309,9 @@ def test_slurm_job_canceling_on_shutdown() -> None:
         # have taken the jobs to finish on their own
         assert job_cancellation_duration < 5
 
-    finally:
-        if original_max_running_size is not None:
-            os.environ["SLURM_MAX_RUNNING_SIZE"] = original_max_running_size
-        else:
-            del os.environ["SLURM_MAX_RUNNING_SIZE"]
+    assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 0, (
+        "The cluster executor shutdown hooks should have been cleaned up"
+    )
 
 
 def test_slurm_number_of_submitted_jobs() -> None:

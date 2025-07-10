@@ -113,11 +113,7 @@ class KubernetesExecutor(ClusterExecutor):
             return job_id
         return cls.get_jobid_with_index(job_id, job_index)
 
-    def inner_handle_kill(
-        self,
-        *args: Any,  # noqa: ARG002 Unused method argument: `args`
-        **kwargs: Any,  # noqa: ARG002 Unused method argument: `kwargs`
-    ) -> None:
+    def inner_handle_kill(self) -> None:
         job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
         print(

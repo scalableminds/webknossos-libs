@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from concurrent.futures import Future
-from typing import Any, Literal
+from typing import Literal
 
 from cluster_tools._utils.call import call, chcall
 from cluster_tools._utils.string_ import random_string
@@ -56,7 +56,7 @@ class PBSExecutor(ClusterExecutor):
     def get_job_id_string(cls) -> str:
         return cls.get_current_job_id()
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002 Unused method argument: `args`, kwargs
+    def inner_handle_kill(self) -> None:
         scheduled_job_ids: list[int | str] = list(self.jobs.keys())
 
         if len(scheduled_job_ids):
