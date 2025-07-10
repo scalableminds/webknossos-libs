@@ -470,6 +470,7 @@ class Dataset:
         folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
         token: str | None = None,
+        datastore_url: str | None = None
     ) -> tuple[str, str]:
         """Announce a manual dataset upload to WEBKNOSSOS.
 
@@ -483,6 +484,7 @@ class Dataset:
             folder_id: Optional ID of folder where dataset should be placed
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             token: Optional authentication token
+            datastore_url: If the WEBKNOSSOS instance has multiple datastores, supply a url to select one.
 
         Note:
             This is typically only used by administrators with direct file system
@@ -514,8 +516,9 @@ class Dataset:
             folder_id=folder_id,
             require_unique_name=require_unique_name,
         )
-        upload_url = _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(upload_url)
+        if datastore_url is None:
+            datastore_url = _cached_get_upload_datastore(context)
+        datastore_api = context.get_datastore_api_client(datastore_url)
         response = datastore_api.dataset_reserve_manual_upload(
             dataset_announce, token=token
         )
