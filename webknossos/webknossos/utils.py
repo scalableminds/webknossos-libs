@@ -82,12 +82,12 @@ def call_with_retries(
 
 def time_start(identifier: str) -> None:
     times[identifier] = time.time()
-    logging.debug(f"{identifier} started")
+    logger.debug(f"{identifier} started")
 
 
 def time_stop(identifier: str) -> None:
     _time = times.pop(identifier)
-    logging.debug(f"{identifier} took {time.time() - _time:.8f}s")
+    logger.debug(f"{identifier} took {time.time() - _time:.8f}s")
 
 
 def get_executor_for_args(
@@ -103,7 +103,7 @@ def get_executor_for_args(
         # to these values:
         jobs = cpu_count()
         executor = get_executor("multiprocessing", max_workers=jobs)
-        logging.info(f"Using pool of {jobs} workers.")
+        logger.info(f"Using pool of {jobs} workers.")
     elif args.distribution_strategy == "multiprocessing":
         # Also accept "processes" instead of job to be compatible with segmentation-tools.
         # In the long run, the args should be unified and provided by the clustertools.
@@ -115,7 +115,7 @@ def get_executor_for_args(
             jobs = cpu_count()
 
         executor = get_executor("multiprocessing", max_workers=jobs)
-        logging.info(f"Using pool of {jobs} workers.")
+        logger.info(f"Using pool of {jobs} workers.")
     elif args.distribution_strategy in ("slurm", "kubernetes"):
         if args.job_resources is None:
             resources_example = (
@@ -133,7 +133,7 @@ def get_executor_for_args(
             keep_logs=True,
             job_resources=json.loads(args.job_resources),
         )
-        logging.info(f"Using {args.distribution_strategy} cluster.")
+        logger.info(f"Using {args.distribution_strategy} cluster.")
     elif args.distribution_strategy == "sequential":
         executor = get_executor(
             args.distribution_strategy,
@@ -141,7 +141,7 @@ def get_executor_for_args(
             keep_logs=True,
         )
     else:
-        logging.error(f"Unknown distribution strategy: {args.distribution_strategy}")
+        logger.error(f"Unknown distribution strategy: {args.distribution_strategy}")
 
     return executor
 
@@ -498,7 +498,6 @@ def check_version_in_background(current_version: str) -> None:
 
             # Compare versions and log warning if needed
             if Version(current_version) < latest_version:
-                logger = logging.getLogger(__name__)
                 logger.warning(
                     f"Your current version {current_version} of the webknossos-libs is outdated. "
                     f"The latest version available on PyPI is {latest_version}. "

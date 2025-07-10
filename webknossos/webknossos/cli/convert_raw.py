@@ -50,7 +50,7 @@ def _raw_chunk_converter(
     order: Literal["C", "F"],
     flip_axes: int | tuple[int, ...] | None,
 ) -> None:
-    logging.info("Conversion of %s", bounding_box.topleft)
+    logger.info("Conversion of %s", bounding_box.topleft)
     source_data: np.ndarray = np.memmap(
         source_raw_path,
         dtype=np.dtype(input_dtype),

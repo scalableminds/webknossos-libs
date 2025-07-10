@@ -1,5 +1,5 @@
+import logging
 from collections.abc import Generator
-from logging import info
 from os import getpid
 from types import TracebackType
 from typing import TYPE_CHECKING
@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from ..view import View
 
 from ...geometry import NDBoundingBox
+
+logger = logging.getLogger(__name__)
 
 
 class BufferedSliceReader:
@@ -50,7 +52,7 @@ class BufferedSliceReader:
 
         for chunk in self.bbox_current_mag.chunk(chunk_size):
             if self.use_logging:
-                info(f"({getpid()}) Reading data from bbox {chunk}.")
+                logger.info(f"({getpid()}) Reading data from bbox {chunk}.")
             data = self.view.read(
                 absolute_bounding_box=chunk.from_mag_to_mag1(self.view.mag)
             )

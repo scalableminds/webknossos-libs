@@ -774,7 +774,7 @@ class Annotation:
         fallback_layer_name = volume_layer.fallback_layer_name
 
         if fallback_layer_name is None:
-            logging.info("No fallback layer found, save annotation as dataset.")
+            logger.info("No fallback layer found, save annotation as dataset.")
             self.export_volume_layer_to_dataset(output_dataset)
 
         else:
@@ -833,9 +833,9 @@ class Annotation:
 
                     output_mag.merge_with_view(input_annotation_mag, executor)
 
-                logging.info("Delete temporary annotation layer")
+                logger.info("Delete temporary annotation layer")
                 output_dataset.delete_layer(tmp_annotation_layer_name)
-                logging.info("Done.")
+                logger.info("Done.")
 
     def upload(self) -> str:
         """Uploads the annotation to WEBKNOSSOS.

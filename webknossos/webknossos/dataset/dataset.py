@@ -1989,7 +1989,7 @@ class Dataset:
                     if guessed_category != layer.category:
                         new_layer_properties: LayerProperties
                         if guessed_category == SEGMENTATION_CATEGORY:
-                            logging.info("The layer category is set to segmentation.")
+                            logger.info("The layer category is set to segmentation.")
                             new_layer_properties = SegmentationLayerProperties(
                                 **(
                                     attr.asdict(layer._properties, recurse=False)
@@ -2001,7 +2001,7 @@ class Dataset:
                                 self, new_layer_properties, read_only=False
                             )
                         else:
-                            logging.info("The layer category is set to color.")
+                            logger.info("The layer category is set to color.")
                             _properties = attr.asdict(layer._properties, recurse=False)
                             _properties.pop("largest_segment_id", None)
                             _properties.pop("mappings", None)
