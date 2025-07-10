@@ -31,7 +31,6 @@ from .dataset import *
 from .datastore import *
 from .geometry import *
 from .skeleton import *
-from .tracingstore import *
 from .utils import check_version_in_background
 from .version import __version__ as current_version
 

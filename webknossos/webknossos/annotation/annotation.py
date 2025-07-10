@@ -500,10 +500,10 @@ class Annotation:
         context = _get_context()
         datastore_url = datastore_url or Datastore.get_upload_url()
         tracingstore = context.get_tracingstore_api_client()
-        mesh: ApiAdHocMeshInfo | ApiPrecomputedMeshInfo
+        mesh_info: ApiAdHocMeshInfo | ApiPrecomputedMeshInfo
         if is_precomputed:
             assert mesh_file_name is not None
-            mesh = ApiPrecomputedMeshInfo(
+            mesh_info = ApiPrecomputedMeshInfo(
                 lod=lod,
                 mesh_file_name=mesh_file_name,
                 segment_id=segment_id,
@@ -512,7 +512,7 @@ class Annotation:
         else:
             assert mag is not None
             assert seed_position is not None
-            mesh = ApiAdHocMeshInfo(
+            mesh_info = ApiAdHocMeshInfo(
                 lod=lod,
                 segment_id=segment_id,
                 mapping_name=mapping_name,
@@ -527,7 +527,7 @@ class Annotation:
                 "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
             )
             mesh_download = datastore.download_mesh(
-                mesh,
+                mesh_info,
                 organization_id=self.organization_id or context.organization_id,
                 directory_name=self.dataset_name,
                 layer_name=layer_name,
@@ -538,7 +538,7 @@ class Annotation:
             )
         else:
             mesh_download = tracingstore.annotation_download_mesh(
-                mesh=mesh,
+                mesh=mesh_info,
                 tracing_id=tracing_id,
                 token=token,
             )

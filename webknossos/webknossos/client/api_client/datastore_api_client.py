@@ -114,7 +114,7 @@ class DatastoreApiClient(AbstractApiClient):
 
     def download_mesh(
         self,
-        mesh: ApiPrecomputedMeshInfo | ApiAdHocMeshInfo,
+        mesh_info: ApiPrecomputedMeshInfo | ApiAdHocMeshInfo,
         organization_id: str,
         directory_name: str,
         layer_name: str,
@@ -124,6 +124,6 @@ class DatastoreApiClient(AbstractApiClient):
         query: Query = {"token": token}
         yield from self._post_json_with_bytes_iterator_response(
             route=route,
-            body_structured=mesh,
+            body_structured=mesh_info,
             query=query,
         )
