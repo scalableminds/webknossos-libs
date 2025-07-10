@@ -9,7 +9,7 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from concurrent.futures import Future
 from contextlib import AbstractContextManager, nullcontext
-from datetime import datetime
+from datetime import datetime, timezone
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
@@ -41,41 +41,53 @@ times = {}
 ReturnType = TypeVar("ReturnType")
 
 
+def _is_exception_retryable(exception: Exception) -> bool:
+    exception_str_lower = str(exception).lower()
+    if "too many requests" in exception_str_lower or "gateway" in exception_str_lower:
+        return True
+    return False
+
+
 def call_with_retries(
     fn: Callable[[], ReturnType],
     num_retries: int = DEFAULT_NUM_RETRIES,
     description: str = "",
     backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
 ) -> ReturnType:
-    """Call a function, retrying up to `num_retries` times on an exception during the call. Useful for retrying requests or network io."""
+    """Call a function, retrying up to `num_retries` times on common retryable (network) exceptions. Useful for retrying requests or network io."""
     last_exception = None
-    for i in range(num_retries):
+    for current_retry_number in range(num_retries):
         try:
             return fn()
         except Exception as e:  # noqa: PERF203 # allow try except in loop
-            logger.warning(
-                f"{description} attempt {i + 1}/{num_retries} failed, retrying..."
-                f"Error was: {e}"
-            )
-            # We introduce some randomness to avoid multiple processes retrying at the same time
-            random_factor = np.random.uniform(0.66, 1.5)
-            time.sleep((backoff_factor**i) * random_factor)
             last_exception = e
+            # We only sleep and retry if it was not the last attempt and the exception is retryable and.
+            if current_retry_number < num_retries - 1 and _is_exception_retryable(e):
+                logger.warning(
+                    f"{description} attempt {current_retry_number + 1}/{num_retries} failed, retrying..."
+                    f"Error was: {e}"
+                )
+                # We introduce some randomness to avoid multiple processes retrying at the same time
+                random_factor = np.random.uniform(0.66, 1.5)
+                time.sleep((backoff_factor**current_retry_number) * random_factor)
+            else:
+                break
     # If the last attempt fails, we log the error and raise it.
     # This is important to avoid silent failures.
-    logger.error(f"{description} failed after {num_retries} attempts.")
+    if current_retry_number > 0:
+        logger.error(f"{description} failed after {current_retry_number + 1} attempts.")
     assert last_exception is not None, "last_exception should never be None here"
     raise last_exception
 
 
 def time_start(identifier: str) -> None:
     times[identifier] = time.time()
-    logging.debug(f"{identifier} started")
+    logger.debug(f"{identifier} started")
 
 
 def time_stop(identifier: str) -> None:
     _time = times.pop(identifier)
-    logging.debug(f"{identifier} took {time.time() - _time:.8f}s")
+    logger.debug(f"{identifier} took {time.time() - _time:.8f}s")
 
 
 def get_executor_for_args(
@@ -91,7 +103,7 @@ def get_executor_for_args(
         # to these values:
         jobs = cpu_count()
         executor = get_executor("multiprocessing", max_workers=jobs)
-        logging.info(f"Using pool of {jobs} workers.")
+        logger.info(f"Using pool of {jobs} workers.")
     elif args.distribution_strategy == "multiprocessing":
         # Also accept "processes" instead of job to be compatible with segmentation-tools.
         # In the long run, the args should be unified and provided by the clustertools.
@@ -103,7 +115,7 @@ def get_executor_for_args(
             jobs = cpu_count()
 
         executor = get_executor("multiprocessing", max_workers=jobs)
-        logging.info(f"Using pool of {jobs} workers.")
+        logger.info(f"Using pool of {jobs} workers.")
     elif args.distribution_strategy in ("slurm", "kubernetes"):
         if args.job_resources is None:
             resources_example = (
@@ -121,7 +133,7 @@ def get_executor_for_args(
             keep_logs=True,
             job_resources=json.loads(args.job_resources),
         )
-        logging.info(f"Using {args.distribution_strategy} cluster.")
+        logger.info(f"Using {args.distribution_strategy} cluster.")
     elif args.distribution_strategy == "sequential":
         executor = get_executor(
             args.distribution_strategy,
@@ -129,7 +141,7 @@ def get_executor_for_args(
             keep_logs=True,
         )
     else:
-        logging.error(f"Unknown distribution strategy: {args.distribution_strategy}")
+        logger.error(f"Unknown distribution strategy: {args.distribution_strategy}")
 
     return executor
 
@@ -213,7 +225,7 @@ def get_chunks(arr: list[Any], chunk_size: int) -> Iterable[list[Any]]:
 
 
 def time_since_epoch_in_ms() -> int:
-    d = datetime.utcnow()
+    d = datetime.now(timezone.utc)
     unixtime = calendar.timegm(d.utctimetuple())
     return unixtime * 1000
 
@@ -305,10 +317,10 @@ def is_writable_path(path: UPath) -> bool:
 
 
 def strip_trailing_slash(path: UPath) -> UPath:
-    if isinstance(path, UPath) and not is_fs_path(path):
-        return UPath(str(path).rstrip("/"), **path.storage_options)
-    else:
-        return UPath(str(path).rstrip("/"))
+    path_parts = path.parts
+    if path_parts[-1] == "":
+        path_parts = path_parts[:-1]
+    return path.with_segments(*path_parts)
 
 
 def rmtree(path: UPath) -> None:
@@ -486,7 +498,6 @@ def check_version_in_background(current_version: str) -> None:
 
             # Compare versions and log warning if needed
             if Version(current_version) < latest_version:
-                logger = logging.getLogger(__name__)
                 logger.warning(
                     f"Your current version {current_version} of the webknossos-libs is outdated. "
                     f"The latest version available on PyPI is {latest_version}. "
@@ -528,6 +539,11 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
         )
 
     elif upath.protocol == "s3":
+        if (
+            upath.storage_options.get("client_kwargs", {}).get("endpoint_url")
+            is not None
+        ):
+            return upath
         parsed_url = urlparse(str(upath))
         endpoint_url = f"https://{parsed_url.netloc}"
         bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
@@ -548,10 +564,12 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         path = dataset_path / path
     path = resolve_if_fs_path(path)
     if dataset_path is not None:
-        if str(path).startswith(str(dataset_path)):
-            return str(path).removeprefix(str(dataset_path)).lstrip("/")
+        if path.as_posix().startswith(dataset_path.as_posix()):
+            return "./" + path.as_posix().removeprefix(dataset_path.as_posix()).lstrip(
+                "/"
+            )
         if safe_is_relative_to(path, dataset_path):
-            return str(path.relative_to(dataset_path))
+            return "./" + path.relative_to(dataset_path).as_posix()
     if path.protocol == "s3":
         return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
-    return str(path)
+    return path.as_posix()

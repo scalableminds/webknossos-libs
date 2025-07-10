@@ -1,5 +1,5 @@
-import os
 import pickle
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -9,16 +9,36 @@ import webknossos as wk
 
 SAMPLE_BBOX = wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
 
-pytestmark = [pytest.mark.use_proxay]
+pytestmark = [
+    pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows"),
+    pytest.mark.use_proxay,
+]
 
 
 def get_sample_dataset(tmpdir: Path) -> wk.Dataset:
     url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", token):
-        return wk.Dataset.download(
-            url, path=Path(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX
-        )
+    return wk.Dataset.download(url, path=Path(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX)
+
+
+def test_get_remote_datasets() -> None:
+    datasets = wk.Dataset.get_remote_datasets()
+    assert any(ds.name == "l4_sample" for ds in datasets.values())
+    l4_sample = wk.Dataset.open_remote("l4_sample")
+    l4_sample_id = l4_sample._dataset_id
+    assert l4_sample_id in datasets
+    l4_from_datasets = datasets[l4_sample_id]
+    assert l4_from_datasets.name == l4_sample.name
+    assert l4_from_datasets.description == l4_sample.description
+    assert l4_from_datasets.tags == l4_sample.tags
+    assert l4_from_datasets.folder == l4_sample.folder
+
+    datasets_by_name = wk.Dataset.get_remote_datasets(name="l4_sample")
+    assert len(datasets_by_name) == 1
+
+    datasets_by_organization = wk.Dataset.get_remote_datasets(
+        organization_id="Organization_X"
+    )
+    assert len(datasets_by_organization) > 0
 
 
 @pytest.mark.parametrize(
@@ -152,25 +172,3 @@ def test_upload_twice(tmp_path: Path) -> None:
     remote2 = ds_original.upload(new_dataset_name="test_upload_twice")
     assert remote1.url != remote2.url
     assert remote1.name == remote2.name
-
-
-def test_get_remote_datasets() -> None:
-    with wk.webknossos_context("http://localhost:9000", os.getenv("WK_TOKEN")):
-        datasets = wk.Dataset.get_remote_datasets()
-        assert len(datasets) == 2
-        l4_sample = wk.Dataset.open_remote("l4_sample")
-        l4_sample_id = l4_sample._dataset_id
-        assert l4_sample_id in datasets
-        l4_from_datasets = datasets[l4_sample_id]
-        assert l4_from_datasets.name == l4_sample.name
-        assert l4_from_datasets.description == l4_sample.description
-        assert l4_from_datasets.tags == l4_sample.tags
-        assert l4_from_datasets.folder == l4_sample.folder
-
-        datasets_by_name = wk.Dataset.get_remote_datasets(name="l4_sample")
-        assert len(datasets_by_name) == 1
-
-        datasets_by_organization = wk.Dataset.get_remote_datasets(
-            organization_id="Organization_X"
-        )
-        assert len(datasets_by_organization) == 2

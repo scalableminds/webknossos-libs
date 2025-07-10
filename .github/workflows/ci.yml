@@ -44,7 +44,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.6.3"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - run: uv python install ${{ matrix.python-version }}
@@ -104,7 +103,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.6.3"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - name: Set up Python ${{ matrix.python-version }}
@@ -142,7 +140,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.6.3"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - name: Set up Python ${{ matrix.python-version }}
@@ -184,7 +181,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.6.3"
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
       - name: Set up Python ${{ matrix.python-version }}
@@ -217,8 +213,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          # Install a specific version of uv.
-          version: "0.5.26"
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
@@ -273,6 +267,88 @@ jobs:
           git diff --no-ext-diff --exit-code
           [[ -z $(git status -s) ]]
 
+  webknossos_windows:
+    needs: changes
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }}
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+        group: [1, 2, 3]
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "webknossos/uv.lock"
+
+      - name: Install proxay
+        run: npm install -g proxay
+
+      - name: Install minio
+        run: Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "minio.exe"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Python tests
+        timeout-minutes: 30
+        shell: bash
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          MULTIPROCESSING_DEFAULT_START_METHOD: spawn
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+
+  webknossos_macos:
+    needs: changes
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+        group: [1, 2, 3]
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "webknossos/uv.lock"
+
+      - name: Install proxay
+        run: npm install -g proxay
+
+      - name: Install minio
+        run: brew install minio/stable/minio
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Python tests
+        timeout-minutes: 30
+        shell: bash
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+
+
   coverage_report:
     needs: [webknossos_linux]
     if: success()
@@ -315,6 +391,8 @@ jobs:
       - cluster_tools_kubernetes
       - cluster_tools_dask
       - webknossos_linux
+      - webknossos_windows
+      - webknossos_macos
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -325,9 +403,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-        with:
-          # Install a specific version of uv.
-          version: "0.6.3"
       - name: Write version file
         run: |
           pushd webknossos
@@ -392,6 +467,8 @@ jobs:
       - cluster_tools_kubernetes
       - cluster_tools_dask
       - webknossos_linux
+      - webknossos_windows
+      - webknossos_macos
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -407,9 +484,6 @@ jobs:
           path: docs/wk-repo
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-        with:
-          # Install a specific version of uv.
-          version: "0.6.3"
       - name: Build Docs
         run: |
           cd docs
@@ -453,6 +527,8 @@ jobs:
       - cluster_tools_kubernetes
       - cluster_tools_dask
       - webknossos_linux
+      - webknossos_windows
+      - webknossos_macos
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -464,9 +540,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-        with:
-          # Install a specific version of uv.
-          version: "0.6.3"
       - name: Publish python packages
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
@@ -489,16 +562,16 @@ jobs:
 
   complete:
     needs:
-      [
-        cluster_tools_dask,
-        cluster_tools_kubernetes,
-        cluster_tools_multiprocessing,
-        cluster_tools_slurm,
-        webknossos_linux,
-        webknossos_cli_docker,
-        docs,
-        pypi_and_gh_release,
-      ]
+      - cluster_tools_dask
+      - cluster_tools_kubernetes
+      - cluster_tools_multiprocessing
+      - cluster_tools_slurm
+      - webknossos_linux
+      - webknossos_windows
+      - webknossos_macos
+      - webknossos_cli_docker
+      - docs
+      - pypi_and_gh_release
     if: always()
     runs-on: ubuntu-latest
     steps:

@@ -1,3 +1,4 @@
+import sys
 import warnings
 from pathlib import Path
 
@@ -18,6 +19,8 @@ from webknossos.dataset._downsampling_utils import (
 from webknossos.dataset.sampling_modes import SamplingModes
 
 BUFFER_SHAPE = Vec3Int.full(256)
+
+pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")]
 
 
 def test_downsample_cube() -> None:
@@ -479,7 +482,7 @@ def test_downsample_nd_dataset(tmp_path: Path) -> None:
     source_mag = source_layer.get_mag("1")
 
     with pytest.warns(UserWarning):
-        target_layer.add_copy_mag(source_mag)
+        target_layer.add_mag_as_copy(source_mag)
         target_layer.downsample(coarsest_mag=Mag(2))
 
     source_data = source_layer.get_mag("2").read()

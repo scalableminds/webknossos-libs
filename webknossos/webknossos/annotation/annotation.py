@@ -851,7 +851,7 @@ class Annotation:
         fallback_layer_name = volume_layer.fallback_layer_name
 
         if fallback_layer_name is None:
-            logging.info("No fallback layer found, save annotation as dataset.")
+            logger.info("No fallback layer found, save annotation as dataset.")
             self.export_volume_layer_to_dataset(output_dataset)
 
         else:
@@ -863,7 +863,7 @@ class Annotation:
             if volume_layer.zip is None:
                 logger.info("No volume annotation found. Copy fallback layer.")
                 with get_executor_for_args(args=None, executor=executor) as executor:
-                    output_dataset.add_copy_layer(
+                    output_dataset.add_layer_as_copy(
                         fallback_layer, compress=True, executor=executor
                     )
 
@@ -902,7 +902,7 @@ class Annotation:
                         fallback_layer.path,
                         output_layer.path,
                     )
-                    output_mag = output_layer.add_copy_mag(
+                    output_mag = output_layer.add_mag_as_copy(
                         fallback_mag,
                         compress=True,
                         executor=executor,
@@ -910,9 +910,9 @@ class Annotation:
 
                     output_mag.merge_with_view(input_annotation_mag, executor)
 
-                logging.info("Delete temporary annotation layer")
+                logger.info("Delete temporary annotation layer")
                 output_dataset.delete_layer(tmp_annotation_layer_name)
-                logging.info("Done.")
+                logger.info("Done.")
 
     def upload(self) -> str:
         """Uploads the annotation to WEBKNOSSOS.
@@ -1043,9 +1043,10 @@ class Annotation:
         dataset_info = context.api_client.dataset_info(dataset_id)
 
         datastore_url = dataset_info.data_store.url
+        url_prefix = context.get_datastore_api_client(datastore_url).url_prefix
 
         zarr_path = UPath(
-            f"{datastore_url}/data/annotations/zarr/{self.annotation_id}/",
+            f"{url_prefix}/annotations/zarr/{self.annotation_id}/",
             headers={} if token is None else {"X-Auth-Token": token},
             ssl=SSL_CONTEXT,
         )

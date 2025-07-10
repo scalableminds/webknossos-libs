@@ -46,7 +46,7 @@ function ensure_local_test_wk {
         OUT=$(docker compose exec -T webknossos tools/postgres/dbtool.js prepare-test-db 2>&1) || echo "$OUT"
         popd > /dev/null
     else
-        echo "Using the already running local webknossos setup at localhost:9000"
+        echo "Using the already running local webknossos setup at localhost:9000. Make sure l4_sample exists and is set to public first!"
     fi
 
     if ! curl -s -H "X-Auth-Token: $WK_TOKEN" localhost:9000/api/user | grep user_A@scalableminds.com > /dev/null; then

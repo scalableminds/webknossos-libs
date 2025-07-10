@@ -116,7 +116,7 @@ def compare_layers(
     """Compares one layer with another layer"""
 
     layer_name = source_layer.name
-    logging.info("Checking layer_name: %s", layer_name)
+    logger.info("Checking layer_name: %s", layer_name)
 
     assert source_layer.bounding_box == target_layer.bounding_box, (
         f"The bounding boxes of '{layer_name}' layer of source and target \
@@ -135,7 +135,7 @@ are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
         source_mag = source_layer.mags[mag]
         target_mag = target_layer.mags[mag]
 
-        logging.info("Start verification of %s in mag %s", layer_name, mag)
+        logger.info("Start verification of %s in mag %s", layer_name, mag)
         with get_executor_for_args(args=executor_args) as executor:
             assert source_mag.content_is_equal(target_mag, executor=executor), (
                 f"The contents of {source_mag} and {target_mag} differ."
