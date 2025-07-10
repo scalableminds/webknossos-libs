@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- The function `Dataset.announce_manual_upload` now takes an additional optional parameter `dataset_url` to select the correct datastore in a multi-datastore setup. [#1336](https://github.com/scalableminds/webknossos-libs/pull/1336)
 
 ### Changed
 - Every file that sends logging messages has its own logger now. This can be used to selectively disable loggers. [#1335](https://github.com/scalableminds/webknossos-libs/pull/1335)
