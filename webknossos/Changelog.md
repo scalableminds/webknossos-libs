@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an issue where the unit of the scale (voxel_size) was not considered when reading the NML. [#1339](https://github.com/scalableminds/webknossos-libs/pull/1339)
 
 
 ## [2.4.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.4) - 2025-07-14

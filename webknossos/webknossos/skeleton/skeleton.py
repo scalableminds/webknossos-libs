@@ -6,6 +6,9 @@ from pathlib import Path
 import attr
 import networkx as nx
 
+from webknossos.dataset.length_unit import _LENGTH_UNIT_TO_NANOMETER
+from webknossos.dataset.properties import VoxelSize
+
 from .group import Group
 
 Vector3 = tuple[float, float, float]
@@ -79,7 +82,7 @@ class Skeleton(Group):
         - Annotation: Container class for working with WEBKNOSSOS
     """
 
-    voxel_size: Vector3
+    _voxel_size: VoxelSize | Vector3
     dataset_name: str
     dataset_id: str | None = None
     organization_id: str | None = None
@@ -96,9 +99,59 @@ class Skeleton(Group):
     _skeleton: "Skeleton" = attr.field(init=False, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
+        if not isinstance(self._voxel_size, VoxelSize):
+            self._voxel_size = VoxelSize(self._voxel_size)
         self._element_id_generator = itertools.count()
         self._skeleton = self
         super().__attrs_post_init__()  # sets self._id
+
+    @property
+    def voxel_size(self) -> Vector3:
+        """Get the voxel size of the skeleton in nanometers.
+
+        Returns:
+            Vector3: A tuple (x, y, z) representing the voxel size in nanometers.
+        """
+        assert isinstance(self._voxel_size, VoxelSize)
+        return self._voxel_size.to_nanometer()
+
+    @voxel_size.setter
+    def voxel_size(self, voxel_size: Vector3) -> None:
+        """Set the voxel size of the skeleton in nanometers.
+
+        Args:
+            voxel_size (Vector3): A tuple (x, y, z) representing the new voxel size in nanometers.
+        """
+        assert isinstance(self._voxel_size, VoxelSize)
+        conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self._voxel_size.unit]
+        new_factor = (
+            voxel_size[0] / conversion_factor,
+            voxel_size[1] / conversion_factor,
+            voxel_size[2] / conversion_factor,
+        )
+        self._voxel_size = VoxelSize(
+            factor=new_factor,
+            unit=self._voxel_size.unit,
+        )
+
+    @property
+    def voxel_size_with_unit(self) -> VoxelSize:
+        """Get the voxel size of the skeleton with unit.
+
+        Returns:
+            VoxelSize: An instance of VoxelSize containing the scale factor and unit.
+        """
+        assert isinstance(self._voxel_size, VoxelSize)
+        return self._voxel_size
+
+    @voxel_size_with_unit.setter
+    def voxel_size_with_unit(self, voxel_size: VoxelSize) -> None:
+        """Set the voxel size of the skeleton with unit.
+
+        Args:
+            voxel_size (VoxelSize): An instance of VoxelSize containing the new scale factor and unit.
+        """
+        self._voxel_size = voxel_size
 
     @staticmethod
     def load(file_path: PathLike | str) -> "Skeleton":
