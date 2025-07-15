@@ -1,7 +1,7 @@
 <things>
   <parameters>
     <experiment name="ds_name" organization="orga" description="" />
-    <scale x="4.0" y="4.0" z="35.0" />
+    <scale x="4.0" y="4.0" z="35.0" unit="micrometer" />
     <offset x="0" y="0" z="0" />
     <time ms="1644425515615" />
     <editPosition x="199480" y="199906" z="3593" />

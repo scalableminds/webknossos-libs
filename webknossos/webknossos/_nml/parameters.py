@@ -3,6 +3,9 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
+from webknossos.dataset.length_unit import length_unit_from_str
+from webknossos.dataset.properties import VoxelSize
+
 from ..geometry import BoundingBox, NDBoundingBox
 from ..geometry.bounding_box import _DEFAULT_BBOX_NAME
 from .utils import Vector3, enforce_not_null, filter_none_values
@@ -12,7 +15,7 @@ DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]
 
 class Parameters(NamedTuple):
     name: str  # dataset name
-    scale: Vector3  # dataset voxel_size
+    scale: VoxelSize  # dataset voxel_size
     description: str | None = None
     organization: str | None = None
     dataset_id: str | None = None
@@ -95,9 +98,10 @@ class Parameters(NamedTuple):
         xf.tag(
             "scale",
             {
-                "x": str(float(self.scale[0])),
-                "y": str(float(self.scale[1])),
-                "z": str(float(self.scale[2])),
+                "x": str(float(self.scale.factor[0])),
+                "y": str(float(self.scale.factor[1])),
+                "z": str(float(self.scale.factor[2])),
+                "unit": self.scale.unit.value,
             },
         )
 
@@ -241,10 +245,13 @@ class Parameters(NamedTuple):
             description=experiment_element.get("description"),
             organization=experiment_element.get("organization"),
             dataset_id=experiment_element.get("datasetId"),
-            scale=(
-                float(scale_element.get("x", 0)),
-                float(scale_element.get("y", 0)),
-                float(scale_element.get("z", 0)),
+            scale=VoxelSize(
+                factor=(
+                    float(scale_element.get("x", 0)),
+                    float(scale_element.get("y", 0)),
+                    float(scale_element.get("z", 0)),
+                ),
+                unit=length_unit_from_str(scale_element.get("unit", "nm")),
             ),
             offset=offset,
             time=time,

@@ -154,7 +154,7 @@ def annotation_to_nml(
     nml_parameters = wknml.Parameters(
         dataset_id=annotation.dataset_id,
         name=annotation.dataset_name,
-        scale=annotation.voxel_size,
+        scale=annotation.voxel_size_with_unit,
         description=annotation.description,
         organization=annotation.organization_id,
         time=annotation.time,
