@@ -101,7 +101,7 @@ class Parameters(NamedTuple):
                 "x": str(float(self.scale.factor[0])),
                 "y": str(float(self.scale.factor[1])),
                 "z": str(float(self.scale.factor[2])),
-                "unit":  self.scale.unit.value
+                "unit": self.scale.unit.value,
             },
         )
 

@@ -120,7 +120,11 @@ class Skeleton(Group):
             voxel_size (Vector3): A tuple (x, y, z) representing the new voxel size in nanometers.
         """
         conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self._voxel_size.unit]
-        new_factor = voxel_size[0] / conversion_factor, voxel_size[1] / conversion_factor, voxel_size[2] / conversion_factor
+        new_factor = (
+            voxel_size[0] / conversion_factor,
+            voxel_size[1] / conversion_factor,
+            voxel_size[2] / conversion_factor,
+        )
         self._voxel_size = VoxelSize(
             factor=new_factor,
             unit=self._voxel_size.unit,
