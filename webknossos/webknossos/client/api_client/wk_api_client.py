@@ -47,7 +47,7 @@ class WkApiClient(AbstractApiClient):
         headers: dict[str, str] | None = None,
     ):
         super().__init__(timeout_seconds, headers)
-        self.base_wk_url = base_wk_url
+        self.base_wk_url = base_wk_url.rstrip("/")
 
     @property
     def url_prefix(self) -> str:

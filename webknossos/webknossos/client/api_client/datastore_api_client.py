@@ -26,7 +26,7 @@ class DatastoreApiClient(AbstractApiClient):
         headers: dict[str, str] | None = None,
     ):
         super().__init__(timeout_seconds, headers)
-        self.datastore_base_url = datastore_base_url
+        self.datastore_base_url = datastore_base_url.rstrip("/")
 
     @property
     def url_prefix(self) -> str:
