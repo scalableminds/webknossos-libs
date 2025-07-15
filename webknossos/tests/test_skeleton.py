@@ -375,6 +375,12 @@ def test_load_nml(tmp_path: Path) -> None:
     assert skeleton_a == wk.Skeleton.load(output_path)
 
 
+def test_load_nml_with_scale_unit() -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+    assert skeleton_a.voxel_size == (4000.0, 4000.0, 35000.0)
+
+
 def test_remove_tree(tmp_path: Path) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
     output_path = tmp_path / "test_a.nml"

@@ -3,6 +3,9 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
+from webknossos.dataset.length_unit import length_unit_from_str
+from webknossos.dataset.properties import VoxelSize
+
 from ..geometry import BoundingBox, NDBoundingBox
 from ..geometry.bounding_box import _DEFAULT_BBOX_NAME
 from .utils import Vector3, enforce_not_null, filter_none_values
@@ -241,11 +244,14 @@ class Parameters(NamedTuple):
             description=experiment_element.get("description"),
             organization=experiment_element.get("organization"),
             dataset_id=experiment_element.get("datasetId"),
-            scale=(
-                float(scale_element.get("x", 0)),
-                float(scale_element.get("y", 0)),
-                float(scale_element.get("z", 0)),
-            ),
+            scale=VoxelSize(
+                factor=(
+                    float(scale_element.get("x", 0)),
+                    float(scale_element.get("y", 0)),
+                    float(scale_element.get("z", 0)),
+                ),
+                unit=length_unit_from_str(scale_element.get("unit", "nm")),
+            ).to_nanometer(),
             offset=offset,
             time=time,
             editPosition=editPosition,
