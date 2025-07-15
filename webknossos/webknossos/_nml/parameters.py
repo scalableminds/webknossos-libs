@@ -15,7 +15,7 @@ DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]
 
 class Parameters(NamedTuple):
     name: str  # dataset name
-    scale: Vector3  # dataset voxel_size
+    scale: VoxelSize  # dataset voxel_size
     description: str | None = None
     organization: str | None = None
     dataset_id: str | None = None
@@ -98,9 +98,10 @@ class Parameters(NamedTuple):
         xf.tag(
             "scale",
             {
-                "x": str(float(self.scale[0])),
-                "y": str(float(self.scale[1])),
-                "z": str(float(self.scale[2])),
+                "x": str(float(self.scale.factor[0])),
+                "y": str(float(self.scale.factor[1])),
+                "z": str(float(self.scale.factor[2])),
+                "unit":  self.scale.unit.value
             },
         )
 
@@ -251,7 +252,7 @@ class Parameters(NamedTuple):
                     float(scale_element.get("z", 0)),
                 ),
                 unit=length_unit_from_str(scale_element.get("unit", "nm")),
-            ).to_nanometer(),
+            ),
             offset=offset,
             time=time,
             editPosition=editPosition,
