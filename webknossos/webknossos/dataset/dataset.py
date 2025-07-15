@@ -24,9 +24,11 @@ from upath import UPath
 
 from ..client.api_client.errors import UnexpectedStatusError
 from ..client.api_client.models import (
+    ApiAdHocMeshInfo,
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
+    ApiPrecomputedMeshInfo,
 )
 from ..geometry import (
     BoundingBox,
@@ -3527,3 +3529,78 @@ class RemoteDataset(Dataset):
     def folder(self, folder: RemoteFolder) -> None:
         """Move the dataset to a folder. Specify the folder like this `RemoteFolder.get_by_path("Datasets/Folder_A")`."""
         self._update_dataset_info(folder_id=folder.id)
+
+    def download_mesh(
+        self,
+        segment_id: int,
+        output_dir: PathLike | str,
+        tracing_id: str | None = None,
+        layer_name: str | None = None,
+        is_precomputed: bool = False,
+        mesh_file_name: str | None = None,
+        datastore_url: str | None = None,
+        lod: int = 0,
+        mapping_name: str | None = None,
+        mapping_type: Literal["agglomerate", "json"] | None = None,
+        mag: Mag | None = None,
+        seed_position: Vec3Int | None = None,
+        token: str | None = None,
+    ) -> UPath:
+        from ..client.context import _get_context
+        from ..datastore import Datastore
+
+        context = _get_context()
+        datastore_url = datastore_url or Datastore.get_upload_url()
+        tracingstore = context.get_tracingstore_api_client()
+        mesh_info: ApiAdHocMeshInfo | ApiPrecomputedMeshInfo
+        if is_precomputed:
+            assert mesh_file_name is not None
+            mesh_info = ApiPrecomputedMeshInfo(
+                lod=lod,
+                mesh_file_name=mesh_file_name,
+                segment_id=segment_id,
+                mapping_name=mapping_name,
+            )
+        else:
+            assert mag is not None
+            assert seed_position is not None
+            mesh_info = ApiAdHocMeshInfo(
+                lod=lod,
+                segment_id=segment_id,
+                mapping_name=mapping_name,
+                mapping_type=mapping_type,
+                mag=mag.to_tuple(),
+                seed_position=seed_position.to_tuple(),
+            )
+        file_path: UPath
+        if tracing_id is None:
+            datastore = context.get_datastore_api_client(datastore_url=datastore_url)
+            api_dataset = context.api_client.dataset_info(self._dataset_id)
+            directory_name = api_dataset.directory_name
+            organization_id = api_dataset.owning_organization
+            assert layer_name is not None, (
+                "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
+            )
+            mesh_download = datastore.download_mesh(
+                mesh_info,
+                organization_id=organization_id or context.organization_id,
+                directory_name=directory_name,
+                layer_name=layer_name,
+                token=token,
+            )
+            file_path = (
+                UPath(output_dir) / f"{directory_name}_{layer_name}_{segment_id}.stl"
+            )
+        else:
+            mesh_download = tracingstore.annotation_download_mesh(
+                mesh=mesh_info,
+                tracing_id=tracing_id,
+                token=token,
+            )
+            file_path = UPath(output_dir) / f"{tracing_id}_{segment_id}.stl"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with file_path.open("wb") as f:
+            for chunk in mesh_download:
+                f.write(chunk)
+        return file_path
