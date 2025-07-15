@@ -82,7 +82,7 @@ class Skeleton(Group):
         - Annotation: Container class for working with WEBKNOSSOS
     """
 
-    _voxel_size: VoxelSize
+    _voxel_size: VoxelSize | Vector3
     dataset_name: str
     dataset_id: str | None = None
     organization_id: str | None = None
@@ -99,6 +99,8 @@ class Skeleton(Group):
     _skeleton: "Skeleton" = attr.field(init=False, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
+        if not isinstance(self._voxel_size, VoxelSize):
+            self._voxel_size = VoxelSize(self._voxel_size)
         self._element_id_generator = itertools.count()
         self._skeleton = self
         super().__attrs_post_init__()  # sets self._id
@@ -110,6 +112,7 @@ class Skeleton(Group):
         Returns:
             Vector3: A tuple (x, y, z) representing the voxel size in nanometers.
         """
+        assert isinstance(self._voxel_size, VoxelSize)
         return self._voxel_size.to_nanometer()
 
     @voxel_size.setter
@@ -119,6 +122,7 @@ class Skeleton(Group):
         Args:
             voxel_size (Vector3): A tuple (x, y, z) representing the new voxel size in nanometers.
         """
+        assert isinstance(self._voxel_size, VoxelSize)
         conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self._voxel_size.unit]
         new_factor = (
             voxel_size[0] / conversion_factor,
@@ -137,6 +141,7 @@ class Skeleton(Group):
         Returns:
             VoxelSize: An instance of VoxelSize containing the scale factor and unit.
         """
+        assert isinstance(self._voxel_size, VoxelSize)
         return self._voxel_size
 
     @voxel_size_with_unit.setter
