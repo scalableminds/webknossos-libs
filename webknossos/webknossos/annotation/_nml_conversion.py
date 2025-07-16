@@ -220,7 +220,7 @@ def annotation_to_nml(
             format=str(volume.data_format),
             largest_segment_id=volume.largest_segment_id,
         )
-        for volume in annotation._volume_layers
+        for volume in annotation.volume_layers
     ]
 
     meta = [
