@@ -54,7 +54,7 @@ def _zarr_chunk_converter(
     target_mag_view: MagView,
     flip_axes: int | tuple[int, ...] | None,
 ) -> int:
-    logging.info("Conversion of %s", bounding_box.topleft)
+    logger.info("Conversion of %s", bounding_box.topleft)
 
     slices = bounding_box.to_slices()
     zarr_file = _try_open_zarr(source_zarr_path)
@@ -231,7 +231,7 @@ def main(
     ] = None,
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
-    ] = False,
+    ] = True,
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,

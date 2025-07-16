@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.4...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,18 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed an issue where the unit of the scale (voxel_size) was not considered when reading the NML. [#1339](https://github.com/scalableminds/webknossos-libs/pull/1339)
+
+
+## [2.4.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.4) - 2025-07-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.3...v2.4.4)
+
+### Added
+- The function `Dataset.announce_manual_upload` now takes an additional optional parameter `dataset_url` to select the correct datastore in a multi-datastore setup. [#1336](https://github.com/scalableminds/webknossos-libs/pull/1336)
+
+### Changed
+- Every file that sends logging messages has its own logger now. This can be used to selectively disable loggers. [#1335](https://github.com/scalableminds/webknossos-libs/pull/1335)
+- Enabled compression by default for `convert-zarr` and `convert-raw` CLI commands. [#1338](https://github.com/scalableminds/webknossos-libs/pull/1338)
 
 
 ## [2.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.3) - 2025-07-07

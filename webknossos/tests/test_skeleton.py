@@ -251,7 +251,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 <things>
   <parameters>
     <experiment name="ds_name" />
-    <scale x="0.5" y="0.5" z="0.5" />
+    <scale unit="nanometer" x="0.5" y="0.5" z="0.5" />
   </parameters>
   <branchpoints />
   <comments />
@@ -266,7 +266,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         )
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(_child_groups=<No child groups>, _child_trees=<No child trees>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
+        "Skeleton(_child_groups=<No child groups>, _child_trees=<No child trees>, _voxel_size=VoxelSize(factor=(0.5, 0.5, 0.5), unit=<LengthUnit.NANOMETER: 'nanometer'>), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
     )
 
     my_group = nml.add_group("my_group")
@@ -280,7 +280,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 <things>
   <parameters>
     <experiment name="ds_name" />
-    <scale x="0.5" y="0.5" z="0.5" />
+    <scale unit="nanometer" x="0.5" y="0.5" z="0.5" />
   </parameters>
   <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="3" name="my_other_tree">
     <nodes />
@@ -316,7 +316,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         )
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(_child_groups=<1 child group>, _child_trees=<1 child tree>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
+        "Skeleton(_child_groups=<1 child group>, _child_trees=<1 child tree>, _voxel_size=VoxelSize(factor=(0.5, 0.5, 0.5), unit=<LengthUnit.NANOMETER: 'nanometer'>), dataset_name='ds_name', dataset_id=None, organization_id=None, description=None)"
     )
     assert (
         str(my_group)
@@ -373,6 +373,12 @@ def test_load_nml(tmp_path: Path) -> None:
     skeleton_a = wk.Skeleton.load(input_path)
     skeleton_a.save(output_path)
     assert skeleton_a == wk.Skeleton.load(output_path)
+
+
+def test_load_nml_with_scale_unit() -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+    assert skeleton_a.voxel_size == (4000.0, 4000.0, 35000.0)
 
 
 def test_remove_tree(tmp_path: Path) -> None:
