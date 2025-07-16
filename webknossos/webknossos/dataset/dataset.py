@@ -1145,7 +1145,7 @@ class Dataset:
         self,
         new_dataset_name: str | None = None,
         *,
-        layers_to_link: list[Union["LayerToLink", Layer]] | None = None,
+        layers_to_link: Sequence[Union["LayerToLink", Layer]] | None = None,
         jobs: int | None = None,
     ) -> "RemoteDataset":
         """Upload this dataset to webknossos.
