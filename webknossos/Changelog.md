@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.5...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [2.4.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.5) - 2025-07-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.4...v2.4.5)
+
+### Fixed
 - Fixed an issue where the unit of the scale (voxel_size) was not considered when reading the NML. [#1339](https://github.com/scalableminds/webknossos-libs/pull/1339)
+
 
 
 ## [2.4.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.4) - 2025-07-14
