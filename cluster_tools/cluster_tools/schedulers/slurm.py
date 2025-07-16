@@ -244,7 +244,7 @@ class SlurmExecutor(ClusterExecutor):
 
         return str(int(job_id))  # int() ensures coherent parsing
 
-    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:  # noqa ARG002 Unused method argument: `args`, kwargs
+    def inner_handle_kill(self) -> None:
         for submit_thread in self.submit_threads:
             submit_thread.stop()
 
@@ -260,10 +260,15 @@ class SlurmExecutor(ClusterExecutor):
             # but can be canceled together using the job_id.
             unique_job_ids = set(map(lambda x: str(x).split("_")[0], scheduled_job_ids))
             job_id_string = " ".join(unique_job_ids)
+            # Allow to speed up the shutdown, for example, when running voxelytics locally
+            sigterm_wait_in_s_env = float(os.environ.get("SIGTERM_WAIT_IN_S", 5))
             # Send SIGINT signal to running jobs instead of terminating the jobs right away. This way, the jobs can
             # react to the signal, safely shutdown and signal (cancel) jobs they possibly scheduled, recursively.
+            # After a short waiting time kill all jobs that are still running (due to race conditions or because they
+            # didn't react to the SIGINT signal for some reason).
             _, stderr, _ = call(
-                f"scancel --state=PENDING {job_id_string}; scancel -s SIGINT --state=RUNNING {job_id_string}; scancel --state=SUSPENDED {job_id_string}"
+                f"scancel --state=PENDING {job_id_string}; scancel -s SIGINT --state=RUNNING {job_id_string};"
+                + f"scancel --state=SUSPENDED {job_id_string}; sleep {sigterm_wait_in_s_env}; scancel {job_id_string}"
             )
 
             maybe_error_or_warning = (
