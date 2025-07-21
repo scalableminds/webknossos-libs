@@ -3534,7 +3534,6 @@ class RemoteDataset(Dataset):
         self,
         segment_id: int,
         output_dir: PathLike | str,
-        tracing_id: str | None = None,
         layer_name: str | None = None,
         is_precomputed: bool = False,
         mesh_file_name: str | None = None,
@@ -3551,7 +3550,6 @@ class RemoteDataset(Dataset):
 
         context = _get_context()
         datastore_url = datastore_url or Datastore.get_upload_url()
-        tracingstore = context.get_tracingstore_api_client()
         mesh_info: ApiAdHocMeshInfo | ApiPrecomputedMeshInfo
         if is_precomputed:
             assert mesh_file_name is not None
@@ -3573,31 +3571,24 @@ class RemoteDataset(Dataset):
                 seed_position=seed_position.to_tuple(),
             )
         file_path: UPath
-        if tracing_id is None:
-            datastore = context.get_datastore_api_client(datastore_url=datastore_url)
-            api_dataset = context.api_client.dataset_info(self._dataset_id)
-            directory_name = api_dataset.directory_name
-            organization_id = api_dataset.owning_organization
-            assert layer_name is not None, (
-                "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
-            )
-            mesh_download = datastore.download_mesh(
-                mesh_info,
-                organization_id=organization_id or context.organization_id,
-                directory_name=directory_name,
-                layer_name=layer_name,
-                token=token,
-            )
-            file_path = (
-                UPath(output_dir) / f"{directory_name}_{layer_name}_{segment_id}.stl"
-            )
-        else:
-            mesh_download = tracingstore.annotation_download_mesh(
-                mesh=mesh_info,
-                tracing_id=tracing_id,
-                token=token,
-            )
-            file_path = UPath(output_dir) / f"{tracing_id}_{segment_id}.stl"
+        datastore = context.get_datastore_api_client(datastore_url=datastore_url)
+        api_dataset = context.api_client.dataset_info(self._dataset_id)
+        directory_name = api_dataset.directory_name
+        organization_id = api_dataset.owning_organization
+        assert layer_name is not None, (
+            "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
+        )
+        mesh_download = datastore.download_mesh(
+            mesh_info,
+            organization_id=organization_id or context.organization_id,
+            directory_name=directory_name,
+            layer_name=layer_name,
+            token=token,
+        )
+        file_path = (
+            UPath(output_dir) / f"{directory_name}_{layer_name}_{segment_id}.stl"
+        )
+
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         with file_path.open("wb") as f:
