@@ -370,11 +370,13 @@ def test_tree_metadata(tmp_path: Path) -> None:
         == "test"
     )
 
+
 def test_volume_annotations() -> None:
     data = np.ones((1, 10, 10, 10), dtype=np.uint32)
     ann = wk.Annotation(
         name="my_annotation",
-        dataset_name="sample_dataset", voxel_size=(11.2, 11.2, 25.0), # better: dataset=Dataset.open_remote("...")
+        dataset_name="sample_dataset",
+        voxel_size=(11.2, 11.2, 25.0),  # better: dataset=Dataset.open_remote("...")
     )
     # # with memory backing
     # volume_layer = ann.add_volume_layer(name="segmentation")
@@ -387,7 +389,9 @@ def test_volume_annotations() -> None:
     # or with a temp directory
     volume_layer = ann.add_volume_layer(name="segmentation")
 
-    with volume_layer.edit(True, TESTOUTPUT_DIR / "test_volume_annotations.zip") as seg_layer:
+    with volume_layer.edit(
+        True, TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    ) as seg_layer:
         assert isinstance(seg_layer, SegmentationLayer)
         mag = seg_layer.add_mag(1)
         mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
@@ -398,10 +402,10 @@ def test_volume_annotations() -> None:
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
         assert np.array_equal(data, read_data)
 
-
     # ann.save("...")
     # # or
     # ann.upload()
+
 
 def test_volume_annotations_upload_roundtrip() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
@@ -409,12 +413,16 @@ def test_volume_annotations_upload_roundtrip() -> None:
     annotation_from_file.organization_id = "Organization_X"
 
     volume_layer = annotation_from_file.add_volume_layer(name="segmentation")
-    with volume_layer.edit(True, TESTOUTPUT_DIR / "test_volume_annotations.zip") as seg_layer:
+    with volume_layer.edit(
+        True, TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    ) as seg_layer:
         seg_layer.add_mag(1)
 
     test_token = os.getenv("WK_TOKEN")
     with wk.webknossos_context("http://localhost:9000", test_token):
         url = annotation_from_file.upload()
         annotation = wk.Annotation.download(url)
-    with annotation.get_volume_layer(volume_layer_name="segmentation").edit(True) as seg_layer:
+    with annotation.get_volume_layer(volume_layer_name="segmentation").edit(
+        True
+    ) as seg_layer:
         assert len(seg_layer.mags) == 1

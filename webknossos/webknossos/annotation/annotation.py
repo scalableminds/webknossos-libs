@@ -52,7 +52,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import BinaryIO, Union, cast, overload, Any, Generator
+from typing import Any, BinaryIO, Generator, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -113,8 +113,9 @@ class VolumeLayer:
         return f"data_{self.id}_{self.name}.zip"
 
     @contextmanager
-    def edit(self, store_in_temp_dir: bool = False, zip_path: ZipPath | None = None) -> Generator[
-        Layer | Any, None, None]:
+    def edit(
+        self, store_in_temp_dir: bool = False, zip_path: ZipPath | None = None
+    ) -> Generator[Layer | Any, None, None]:
         """
         Context manager to edit the volume layer.
 
@@ -128,25 +129,36 @@ class VolumeLayer:
 
         if self.zip is None:
             if zip_path is None:
-                raise ValueError("zip_path argument is required if VolumeLayer.zip is not specified")
+                raise ValueError(
+                    "zip_path argument is required if VolumeLayer.zip is not specified"
+                )
             self.zip = zip_path
         else:
             if zip_path is not None and self.zip != zip_path:
-                raise ValueError("zip_path argument must not be provided if VolumeLayer.zip is already set")
+                raise ValueError(
+                    "zip_path argument must not be provided if VolumeLayer.zip is already set"
+                )
 
         if store_in_temp_dir:
             with TemporaryDirectory() as tmp_dir:
                 dataset_path = Path(tmp_dir)
                 dataset = Dataset(dataset_path, voxel_size=voxel_size)
                 if not self.zip.exists():
-                    segmentation_layer = dataset.add_layer("volume_layer", SEGMENTATION_CATEGORY)
+                    segmentation_layer = dataset.add_layer(
+                        "volume_layer", SEGMENTATION_CATEGORY
+                    )
                 else:
-                    segmentation_layer = self.export_to_dataset(dataset, layer_name="volume_layer")
+                    segmentation_layer = self.export_to_dataset(
+                        dataset, layer_name="volume_layer"
+                    )
 
                 yield segmentation_layer
 
                 with ZipFile(
-                        self.zip, mode="w", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
+                    self.zip,
+                    mode="w",
+                    compression=ZIP_DEFLATED,
+                    compresslevel=Z_BEST_SPEED,
                 ) as zipfile:
                     for root, dirs, files in os.walk(dataset_path):
                         for file in files:
@@ -155,12 +167,12 @@ class VolumeLayer:
                             zipfile.write(full_path, arcname)
         else:
             # Use memory for temporary data store memory:// kvstore in tensorstore
-            raise NotImplementedError() # TODO
+            raise NotImplementedError()  # TODO
 
     def export_to_dataset(
-            self,
-            dataset: Dataset,
-            layer_name: str = "volume_layer",
+        self,
+        dataset: Dataset,
+        layer_name: str = "volume_layer",
     ) -> SegmentationLayer:
         """Exports the volume layer to a dataset as a SegmentationLayer.
 
@@ -240,6 +252,7 @@ class VolumeLayer:
             layer.largest_segment_id = self.largest_segment_id
 
         return layer
+
 
 def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
     for zip_entry in zip_file.filelist:
@@ -1162,7 +1175,6 @@ class Annotation:
         """
         return (i.name for i in self.volume_layers)
 
-
     def add_volume_layer(
         self,
         name: str,
@@ -1212,14 +1224,14 @@ class Annotation:
         else:
             fallback_layer_name = None
         volume_layer = VolumeLayer(
-                id=volume_layer_id,
-                name=name,
-                fallback_layer_name=fallback_layer_name,
-                data_format=DataFormat.Zarr3,
-                zip=None,
-                segments={},
-                largest_segment_id=None,
-            )
+            id=volume_layer_id,
+            name=name,
+            fallback_layer_name=fallback_layer_name,
+            data_format=DataFormat.Zarr3,
+            zip=None,
+            segments={},
+            largest_segment_id=None,
+        )
         self.volume_layers.append(volume_layer)
         return volume_layer
 
