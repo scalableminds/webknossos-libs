@@ -44,7 +44,7 @@ import logging
 import os
 import re
 import warnings
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Generator, Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
@@ -52,7 +52,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import Any, BinaryIO, Generator, Union, cast, overload
+from typing import Any, BinaryIO, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -124,7 +124,7 @@ class VolumeLayer:
         zip_path: The zip path, where the data will be saved to. Only required and accepted if
             VolumeLayer.zip is None
         """
-        # TODO set values
+        # TO DO set values
         voxel_size = (1.0, 1.0, 1.0)
 
         if self.zip is None:
@@ -167,7 +167,7 @@ class VolumeLayer:
                             zipfile.write(full_path, arcname)
         else:
             # Use memory for temporary data store memory:// kvstore in tensorstore
-            raise NotImplementedError()  # TODO
+            raise NotImplementedError()  # TO DO
 
     def export_to_dataset(
         self,
