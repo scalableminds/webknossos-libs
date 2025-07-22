@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 
 from .view import View
 
+logger = logging.getLogger(__name__)
+
 
 def _compress_cube_job(args: tuple[View, View, int]) -> None:
     source_view, target_view, _i = args
@@ -479,7 +481,7 @@ class MagView(View):
         path = self._path
         if target_path is None:
             if self._is_compressed():
-                logging.info(f"Mag {self.name} is already compressed")
+                logger.info(f"Mag {self.name} is already compressed")
                 return
             else:
                 assert is_fs_path(path), (
@@ -515,7 +517,7 @@ class MagView(View):
             compress=True,
         )
 
-        logging.info(f"Compressing mag {self.name} in '{str(uncompressed_full_path)}'")
+        logger.info(f"Compressing mag {self.name} in '{str(uncompressed_full_path)}'")
         with get_executor_for_args(None, executor) as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()
@@ -595,10 +597,10 @@ class MagView(View):
             f"To merge two Views, both need the same mag: Own mag {self.mag} does not match other mag {other.mag}"
         )
 
-        logging.info("Scan disk for annotation shards.")
+        logger.info("Scan disk for annotation shards.")
         bboxes = list(bbox for bbox in other.get_bounding_boxes_on_disk())
 
-        logging.info("Grouping %s bboxes according to output shards.", len(bboxes))
+        logger.info("Grouping %s bboxes according to output shards.", len(bboxes))
         shards_with_bboxes = NDBoundingBox.group_boxes_with_aligned_mag(
             bboxes, Mag(self.info.shard_shape * self.mag)
         )
@@ -607,12 +609,12 @@ class MagView(View):
         for shard_bbox in shards_with_bboxes.keys():
             new_bbox = new_bbox.extended_by(shard_bbox)
 
-        logging.info(f"Set mag layer bounding box to {new_bbox}")
+        logger.info(f"Set mag layer bounding box to {new_bbox}")
         self.layer.bounding_box = new_bbox
 
         args = [(other, shard, bboxes) for shard, bboxes in shards_with_bboxes.items()]
 
-        logging.info("Merging %s shards.", len(args))
+        logger.info("Merging %s shards.", len(args))
         wait_and_ensure_success(
             executor.map_to_futures(self.merge_chunk, args),
             executor,

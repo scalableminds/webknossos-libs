@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.5...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,68 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [2.4.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.5) - 2025-07-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.4...v2.4.5)
+
+### Fixed
+- Fixed an issue where the unit of the scale (voxel_size) was not considered when reading the NML. [#1339](https://github.com/scalableminds/webknossos-libs/pull/1339)
+
+
+
+## [2.4.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.4) - 2025-07-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.3...v2.4.4)
+
+### Added
+- The function `Dataset.announce_manual_upload` now takes an additional optional parameter `dataset_url` to select the correct datastore in a multi-datastore setup. [#1336](https://github.com/scalableminds/webknossos-libs/pull/1336)
+
+### Changed
+- Every file that sends logging messages has its own logger now. This can be used to selectively disable loggers. [#1335](https://github.com/scalableminds/webknossos-libs/pull/1335)
+- Enabled compression by default for `convert-zarr` and `convert-raw` CLI commands. [#1338](https://github.com/scalableminds/webknossos-libs/pull/1338)
+
+
+## [2.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.3) - 2025-07-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.2...v2.4.3)
+
+### Changed
+- Warnings regarding missing pims image readers are only printed once during conversion. Error messages regarding wk-libs version are not displayed in slurm environments. [#1266](https://github.com/scalableminds/webknossos-libs/pull/1266)
+
+### Fixed
+- Fixed mag and attachment paths under Windows. [#1329](https://github.com/scalableminds/webknossos-libs/pull/1329)
+
+
+## [2.4.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.2) - 2025-07-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.1...v2.4.2)
+
+### Added
+- Added operations for `Project`, `Task` and `TaskType` classes and objects: [#1294](https://github.com/scalableminds/webknossos-libs/pull/1294)
+  - Added operations for `Project` class:
+    - `Project.create()` for creating a new project.
+    - `my_project.delete()` to delete a project object
+  - Added `my_project.update()` to update `priority`, `expected_time` and `is_blacklisted_from_report` values of an existing project object.
+  - Added operations for `TaskType` class:
+    - `TaskType.get_list()` to get all `TaskType` objects.
+    - `TaskType.get_by_id()` to get a `TaskType` by id.
+    - `TaskType.get_by_name()` to get a `TaskType` by name.
+    - `TaskType.create()` to create a new `TaskType`.
+  - Added operations `my_task_type.delete()` method for `TaskType` objects.
+  - Added `Task.get_list()`to get all `Task` objects.
+  - Added operations for `Task` objects:
+    - `my_task.update()` to update a `Task` object.
+    - `my_task.delete()` to delete a `Task` object.
+- Added `TaskExperience` class to store domain and value pair.
+- The libs client now uses versioned datastore routes for improved compatibility across webknossos versions. [#1328](https://github.com/scalableminds/webknossos-libs/pull/1328)
+
+### Fixed
+- Fixed the tests for the newest WEBKNOSSOS version. [#1328](https://github.com/scalableminds/webknossos-libs/pull/1328)
+
+
+## [2.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.1) - 2025-07-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.0...v2.4.1)
+
+### Changed
+- Limit custom retries (e.g. additional to tensorstore internal retries) to certain network errors ("Too Many Requests", "GatewayTimeout"). [#1330](https://github.com/scalableminds/webknossos-libs/pull/1330)
 
 
 ## [2.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.0) - 2025-06-24
@@ -60,7 +122,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added `layers_to_ignore` argument to `Dataset.copy_dataset`. [#1321](https://github.com/scalableminds/webknossos-libs/pull/1321)
 
-### Changed
+### Fixed
 - Make number of retries and backoff factor configurable (mainly for tensorstore reads/writes). See `DEFAULT_NUM_RETRIES` and `DEFAULT_BACKOFF_FACTOR` environment variables. [#1323](https://github.com/scalableminds/webknossos-libs/pull/1323)
 
 
@@ -78,7 +140,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed an issue that creates an Error when `add_mag()` was called just with a `chunk_shape`. [#1315](https://github.com/scalableminds/webknossos-libs/pull/1315)
-
 
 
 ## [2.3.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.3.8) - 2025-05-28

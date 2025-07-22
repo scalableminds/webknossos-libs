@@ -9,13 +9,13 @@ from collections.abc import Callable, Iterable, Iterator
 from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
+from types import FrameType, TracebackType
 from typing import (
     Any,
     Literal,
     TypeVar,
     cast,
 )
-from weakref import ReferenceType, ref
 
 from typing_extensions import ParamSpec
 
@@ -36,18 +36,6 @@ NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
-
-
-def _handle_kill_through_weakref(
-    executor_ref: "ReferenceType[ClusterExecutor]",
-    existing_sigint_handler: Any,
-    signum: int | None,
-    frame: Any,
-) -> None:
-    executor = executor_ref()
-    if executor is None:
-        return
-    executor.handle_kill(existing_sigint_handler, signum, frame)
 
 
 def join_messages(strings: list[str]) -> str:
@@ -79,6 +67,9 @@ class RemoteTimeLimitException(RemoteResourceLimitException):
 class ClusterExecutor(futures.Executor):
     """Futures executor for executing jobs on a cluster."""
 
+    _shutdown_hooks: list[Callable[[], None]] = []
+    _installed_signal_handler: bool = False
+
     def __init__(
         self,
         debug: bool = False,
@@ -103,7 +94,6 @@ class ClusterExecutor(futures.Executor):
         self.job_resources = job_resources
         self.additional_setup_lines = additional_setup_lines or []
         self.job_name = job_name
-        self.was_requested_to_shutdown = False
         self.cfut_dir = (
             cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
         )
@@ -130,15 +120,7 @@ class ClusterExecutor(futures.Executor):
 
         os.makedirs(self.cfut_dir, exist_ok=True)
 
-        # Clean up if a SIGINT signal is received. However, do not interfere with the
-        # existing signal handler of the process or the
-        # shutdown of the main process which sends SIGTERM signals to terminate all
-        # child processes.
-        existing_sigint_handler = signal.getsignal(signal.SIGINT)
-        signal.signal(
-            signal.SIGINT,
-            partial(_handle_kill_through_weakref, ref(self), existing_sigint_handler),
-        )
+        self._register_shutdown_hook(self.handle_kill)
 
         self.metadata = {}
         assert not ("logging_config" in kwargs and "logging_setup_fn" in kwargs), (
@@ -158,26 +140,81 @@ class ClusterExecutor(futures.Executor):
     def executor_key(cls) -> str:
         pass
 
-    def handle_kill(
-        self, existing_sigint_handler: Any, signum: int | None, frame: Any
+    @classmethod
+    def _ensure_signal_handlers_are_installed(cls) -> None:
+        # Only overwrite the signal handler once
+        if cls._installed_signal_handler:
+            return
+
+        # Clean up if a SIGINT or SIGTERM signal is received. However, do not
+        # interfere with the existing signal handler of the process and execute
+        # it afterwards.
+        existing_sigint_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(
+            signal.SIGINT,
+            partial(cls._handle_shutdown, existing_sigint_handler),
+        )
+        existing_sigterm_handler = signal.getsignal(signal.SIGTERM)
+        signal.signal(
+            signal.SIGTERM,
+            partial(cls._handle_shutdown, existing_sigterm_handler),
+        )
+
+        cls._installed_signal_handler = True
+
+    @classmethod
+    def _register_shutdown_hook(cls, hook: Callable[[], None]) -> None:
+        cls._shutdown_hooks.append(hook)
+        cls._ensure_signal_handlers_are_installed()
+
+    @classmethod
+    def _deregister_shutdown_hook(cls, hook: Callable[[], None]) -> None:
+        if hook in cls._shutdown_hooks:
+            cls._shutdown_hooks.remove(hook)
+        else:
+            logging.warning(
+                "Cannot deregister executors shutdown hook since it's not registered."
+            )
+
+    @classmethod
+    def _handle_shutdown(
+        cls,
+        existing_signal_handler: Callable[[int, FrameType | None], None] | int | None,
+        signum: int,
+        frame: Any,
     ) -> None:
+        logging.critical(
+            f"[{cls.__name__}] Caught signal {signal.Signals(signum).name}, running shutdown hooks"
+        )
+        try:
+            for hook in cls._shutdown_hooks:
+                hook()
+        except Exception as e:
+            print(f"Error during shutdown: {e}")
+
+        if (
+            callable(existing_signal_handler)
+            and existing_signal_handler
+            not in (
+                signal.SIG_DFL,  # For completeness sake (since it's not callable anyways). The system's default signal handler
+                signal.SIG_IGN,  # For completeness sake (since it's not callable anyways). The instruction to ignore a signal
+                signal.default_int_handler,  # Python's default SIGINT handler
+            )
+        ):
+            existing_signal_handler(signum, frame)
+
+    def handle_kill(self) -> None:
         if self.is_shutting_down:
             return
 
         self.is_shutting_down = True
 
-        self.inner_handle_kill(signum, frame)
         self.wait_thread.stop()
+        self.inner_handle_kill()
         self.clean_up()
 
-        if (
-            existing_sigint_handler != signal.default_int_handler
-            and callable(existing_sigint_handler)  # Could also be signal.SIG_IGN
-        ):
-            existing_sigint_handler(signum, frame)
-
     @abstractmethod
-    def inner_handle_kill(self, _signum: Any, _frame: Any) -> None:
+    def inner_handle_kill(self) -> None:
         pass
 
     @abstractmethod
@@ -363,9 +400,9 @@ class ClusterExecutor(futures.Executor):
         self._maybe_mark_logs_for_cleanup(jobid)
 
     def ensure_not_shutdown(self) -> None:
-        if self.was_requested_to_shutdown:
+        if self.is_shutting_down:
             raise RuntimeError(
-                "submit() was invoked on a ClusterExecutor instance even though shutdown() was executed for that instance."
+                "submit() was invoked on a ClusterExecutor instance even though shutdown() or handle_kill() was executed for that instance."
             )
 
     def create_enriched_future(self) -> Future:
@@ -591,17 +628,35 @@ class ClusterExecutor(futures.Executor):
                     should_keep_output,
                 )
 
+    # Overwrite the context manager __exit as it doesn't forward the information whether an exception was thrown or not otherwise
+    # which may lead to a deadlock if an exception is thrown within a cluster executor with statement, because self.jobs_empty_cond.wait()
+    # never succeeds.
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> Literal[False]:
+        # Don't wait if an exception was thrown
+        self.shutdown(wait=exc_type is None)
+        return False
+
     def shutdown(self, wait: bool = True, cancel_futures: bool = True) -> None:
         """Close the pool."""
+        if self.is_shutting_down:
+            return
+
+        self.is_shutting_down = True
         if not cancel_futures:
             logging.warning(
                 "The provided cancel_futures argument is ignored by ClusterExecutor."
             )
-        self.was_requested_to_shutdown = True
         if wait:
             with self.jobs_lock:
                 if self.jobs and self.wait_thread.is_alive():
                     self.jobs_empty_cond.wait()
+        else:
+            self.inner_handle_kill()
 
         self.wait_thread.stop()
         self.wait_thread.join()
@@ -617,6 +672,7 @@ class ClusterExecutor(futures.Executor):
                     f"Could not delete file during clean up. Path: {file_to_clean_up} Exception: {exc}. Continuing..."
                 )
         self.files_to_clean_up = []
+        self._deregister_shutdown_hook(self.handle_kill)
 
     def map(  # type: ignore[override]
         self,

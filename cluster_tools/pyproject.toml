@@ -17,8 +17,8 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/cluste
 
 
 [project.optional-dependencies]
-kubernetes = ["distributed ~=2023.9.1"]
-dask = ["kubernetes ~=27.2.0"]
+dask = ["distributed ~=2023.9.1"]
+kubernetes = ["kubernetes ~=27.2.0"]
 all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 
 [tool.uv]
@@ -26,6 +26,7 @@ dev-dependencies = [
     "icecream ~=2.1.1",
     "mypy ~=1.15.0",
     "pytest ~=8.3.3",
+    "pytest-timeout>=2.4.0",
     "ruff ~=0.11.0",
 ]
 

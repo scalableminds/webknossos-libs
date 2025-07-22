@@ -18,9 +18,15 @@ LONG_TIMEOUT_SECONDS = 7200.0  # 2 hours
 
 
 class AbstractApiClient(ABC):
-    def __init__(self, timeout_seconds: float, headers: dict[str, str] | None = None):
+    def __init__(
+        self,
+        timeout_seconds: float,
+        headers: dict[str, str] | None = None,
+        webknossos_api_version: int = 9,
+    ):
         self.headers = headers
         self.timeout_seconds = timeout_seconds
+        self.webknossos_api_version = webknossos_api_version
 
     @property
     @abstractmethod
@@ -62,6 +68,25 @@ class AbstractApiClient(ABC):
     def _put_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
         self._put(route, body_json)
+
+    def _put_json_with_json_response(
+        self,
+        route: str,
+        body_structured: Any,
+        response_type: type[T],
+        query: Query | None = None,
+        retry_count: int = 0,
+        timeout_seconds: float | None = None,
+    ) -> T:
+        body_json = self._prepare_for_json(body_structured)
+        response = self._put(
+            route,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+            body_json=body_json,
+        )
+        return self._parse_json(response, response_type)
 
     def _patch_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
@@ -193,6 +218,15 @@ class AbstractApiClient(ABC):
             query=query,
             retry_count=retry_count,
             timeout_seconds=timeout_seconds,
+        )
+
+    def _delete(
+        self,
+        route: str,
+    ) -> httpx.Response:
+        return self._request(
+            "DELETE",
+            route,
         )
 
     def _request(

@@ -73,7 +73,7 @@ from ..dataset import (
     SegmentationLayer,
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
-from ..dataset.properties import DatasetProperties, dataset_converter
+from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, time_since_epoch_in_ms
@@ -429,6 +429,14 @@ class Annotation:
     @voxel_size.setter
     def voxel_size(self, voxel_size: tuple[float, float, float]) -> None:
         self.skeleton.voxel_size = voxel_size
+
+    @property
+    def voxel_size_with_unit(self) -> VoxelSize:
+        return self.skeleton.voxel_size_with_unit
+
+    @voxel_size_with_unit.setter
+    def voxel_size_with_unit(self, voxel_size: VoxelSize) -> None:
+        self.skeleton.voxel_size_with_unit = voxel_size
 
     @property
     def organization_id(self) -> str | None:
@@ -903,7 +911,7 @@ class Annotation:
         fallback_layer_name = volume_layer.fallback_layer_name
 
         if fallback_layer_name is None:
-            logging.info("No fallback layer found, save annotation as dataset.")
+            logger.info("No fallback layer found, save annotation as dataset.")
             self.export_volume_layer_to_dataset(output_dataset)
 
         else:
@@ -962,9 +970,9 @@ class Annotation:
 
                     output_mag.merge_with_view(input_annotation_mag, executor)
 
-                logging.info("Delete temporary annotation layer")
+                logger.info("Delete temporary annotation layer")
                 output_dataset.delete_layer(tmp_annotation_layer_name)
-                logging.info("Done.")
+                logger.info("Done.")
 
     def upload(self) -> str:
         """Uploads the annotation to WEBKNOSSOS.
@@ -1095,9 +1103,10 @@ class Annotation:
         dataset_info = context.api_client.dataset_info(dataset_id)
 
         datastore_url = dataset_info.data_store.url
+        url_prefix = context.get_datastore_api_client(datastore_url).url_prefix
 
         zarr_path = UPath(
-            f"{datastore_url}/data/annotations/zarr/{self.annotation_id}/",
+            f"{url_prefix}/annotations/zarr/{self.annotation_id}/",
             headers={} if token is None else {"X-Auth-Token": token},
             ssl=SSL_CONTEXT,
         )

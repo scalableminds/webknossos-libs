@@ -17,6 +17,8 @@ from ._array import ArrayInfo
 from .layer_categories import LayerCategoryType
 from .view import View
 
+logger = logging.getLogger(__name__)
+
 
 class InterpolationModes(Enum):
     MEDIAN = 0
@@ -367,7 +369,7 @@ def downsample_cube_job(
         target_view.write(file_buffer, absolute_bounding_box=target_view.bounding_box)
 
     except Exception as exc:
-        logging.error(
+        logger.error(
             f"Downsampling of target {target_view.bounding_box} failed with {exc}"
         )
         raise exc

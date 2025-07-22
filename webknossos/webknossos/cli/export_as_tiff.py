@@ -26,6 +26,8 @@ from ._utils import (
     parse_vec2int,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def _make_tiff_name(name: str, slice_index: int) -> str:
     if name is None or name == "":
@@ -96,7 +98,7 @@ def export_tiff_slice(
 
             image = _slice_to_image(tiff_data[:, :, :, slice_index], downsample)
             image.save(tiff_file_path)
-            logging.debug("Saved slice %s", slice_name_number)
+            logger.debug("Saved slice %s", slice_name_number)
 
         else:
             for y_tile_index in range(ceil(tiff_bbox.size.y / tiling_size[1])):
@@ -120,9 +122,9 @@ def export_tiff_slice(
 
                     tile_image.save(tile_tiff_path / tile_tiff_filename)
 
-            logging.debug("Saved tiles for slice %s", slice_name_number)
+            logger.debug("Saved tiles for slice %s", slice_name_number)
 
-    logging.debug("Saved all tiles of bbox %s", tiff_bbox)
+    logger.debug("Saved all tiles of bbox %s", tiff_bbox)
 
 
 def export_tiff_stack(
@@ -264,7 +266,7 @@ def main(
     bbox = BoundingBox.from_ndbbox(mag_view.bounding_box) if bbox is None else bbox
     bbox = bbox.align_with_mag(mag_view.mag)
 
-    logging.info("Starting tiff export for bounding box: %s", bbox)
+    logger.info("Starting tiff export for bounding box: %s", bbox)
     executor_args = Namespace(
         jobs=jobs,
         distribution_strategy=distribution_strategy.value,
@@ -273,7 +275,7 @@ def main(
     used_tile_size = None
     if tiles_per_dimension is not None:
         tile_size = tiles_per_dimension
-        logging.info(
+        logger.info(
             "Using tiling with %d,%d tiles in the dimensions.",
             tile_size[0],
             tile_size[1],
@@ -284,7 +286,7 @@ def main(
         )
 
     elif tile_size is not None:
-        logging.info("Using tiling with the size of %d,%d.", tile_size[0], tile_size[1])
+        logger.info("Using tiling with the size of %d,%d.", tile_size[0], tile_size[1])
         used_tile_size = tile_size
 
     export_tiff_stack(

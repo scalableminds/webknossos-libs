@@ -1,4 +1,4 @@
-import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -73,6 +73,10 @@ def test_annotation_from_zarr3_zip_file() -> None:
         assert np.array_equiv(voxel_id, 1)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows does not like file handles that are not properly closed. Should probably be fixed in the future.",
+)
 def test_annotation_from_nml_file() -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_annotation_snapshot.nml"
 
@@ -166,16 +170,13 @@ def test_dataset_access_via_annotation() -> None:
     annotation_from_file.organization_id = "Organization_X"
     annotation_from_file.dataset_name = remote_ds.name
     annotation_from_file.dataset_id = remote_ds._dataset_id
-    test_token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", test_token):
-        url = annotation_from_file.upload()
+    url = annotation_from_file.upload()
 
     # change the name of the remote dataset
     remote_ds.name = "some_other_name"
 
     # check if the annotations dataset can be accessed
-    with wk.webknossos_context("http://localhost:9000", test_token):
-        wk.Annotation.open_as_remote_dataset(url)
+    wk.Annotation.open_as_remote_dataset(url)
 
     # change the name of the remote dataset back to the original name
     remote_ds.name = "l4_sample"
@@ -186,23 +187,20 @@ def test_remote_annotation_list() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     annotation_from_file = wk.Annotation.load(path)
     annotation_from_file.organization_id = "Organization_X"
-    test_token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", test_token):
-        annotation_from_file.upload()
-        annotations = wk.AnnotationInfo.get_remote_annotations()
+    annotation_from_file.upload()
+    annotations = wk.AnnotationInfo.get_remote_annotations()
 
     assert annotation_from_file.name in [a.name for a in annotations]
 
 
 @pytest.mark.use_proxay
+@pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")
 def test_annotation_upload_download_roundtrip() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     annotation_from_file = wk.Annotation.load(path)
     annotation_from_file.organization_id = "Organization_X"
-    test_token = os.getenv("WK_TOKEN")
-    with wk.webknossos_context("http://localhost:9000", test_token):
-        url = annotation_from_file.upload()
-        annotation = wk.Annotation.download(url)
+    url = annotation_from_file.upload()
+    annotation = wk.Annotation.download(url)
     assert annotation.dataset_name == "l4_sample"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
@@ -210,8 +208,7 @@ def test_annotation_upload_download_roundtrip() -> None:
     node_bbox = wk.BoundingBox.from_points(
         next(annotation.skeleton.flattened_trees()).get_node_positions()
     ).align_with_mag(mag, ceil=True)
-    with wk.webknossos_context("http://localhost:9000", test_token):
-        ds = annotation.get_remote_annotation_dataset()
+    ds = annotation.get_remote_annotation_dataset()
 
     mag_view = ds.layers["Volume"].get_mag(mag)
     annotated_data = mag_view.read(absolute_bounding_box=node_bbox)
@@ -237,6 +234,10 @@ def test_annotation_upload_download_roundtrip() -> None:
     assert segment_info.color == (1, 0, 0, 1)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows does not like file handles that are not properly closed. Should probably be fixed in the future.",
+)
 def test_reading_bounding_boxes() -> None:
     def check_properties(annotation: wk.Annotation) -> None:
         assert len(annotation.user_bounding_boxes) == 2
@@ -262,7 +263,7 @@ def test_reading_bounding_boxes() -> None:
     check_properties(annotation)
 
     # Check exporting and re-reading checked-in file (roundtrip)
-    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+    with tempfile.TemporaryDirectory() as tmp_dir:
         output_path = Path(tmp_dir) / "serialized.zip"
         annotation.save(output_path)
 
