@@ -407,6 +407,7 @@ def test_volume_annotations() -> None:
     # # or
     # ann.upload()
 
+
 @pytest.mark.use_proxay
 def test_volume_annotations_upload_roundtrip() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
