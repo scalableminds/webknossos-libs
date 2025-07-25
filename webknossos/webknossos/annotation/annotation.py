@@ -41,9 +41,10 @@ See Also:
 
 import json
 import logging
+import os
 import re
 import warnings
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Generator, Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
@@ -51,7 +52,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import BinaryIO, Union, cast, overload
+from typing import Any, BinaryIO, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -99,7 +100,7 @@ class SegmentInformation:
 
 
 @attr.define
-class _VolumeLayer:
+class VolumeLayer:
     id: int
     name: str
     fallback_layer_name: str | None
@@ -110,6 +111,147 @@ class _VolumeLayer:
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
+
+    @contextmanager
+    def edit(
+        self, store_in_temp_dir: bool = False, zip_path: ZipPath | None = None
+    ) -> Generator[Layer | Any, None, None]:
+        """
+        Context manager to edit the volume layer.
+
+        store_in_temp_dir: If True, use a temporary directory for storing the edited layer. Else,
+            use an in-memory store.
+        zip_path: The zip path, where the data will be saved to. Only required and accepted if
+            VolumeLayer.zip is None
+        """
+        # TO DO set values
+        voxel_size = (1.0, 1.0, 1.0)
+
+        if self.zip is None:
+            if zip_path is None:
+                raise ValueError(
+                    "zip_path argument is required if VolumeLayer.zip is not specified"
+                )
+            self.zip = zip_path
+        else:
+            if zip_path is not None and self.zip != zip_path:
+                raise ValueError(
+                    "zip_path argument must not be provided if VolumeLayer.zip is already set"
+                )
+
+        if store_in_temp_dir:
+            with TemporaryDirectory() as tmp_dir:
+                dataset_path = Path(tmp_dir)
+                dataset = Dataset(dataset_path, voxel_size=voxel_size)
+                if not self.zip.exists():
+                    segmentation_layer = dataset.add_layer(
+                        "volume_layer", SEGMENTATION_CATEGORY
+                    )
+                else:
+                    segmentation_layer = self.export_to_dataset(
+                        dataset, layer_name="volume_layer"
+                    )
+
+                yield segmentation_layer
+
+                with ZipFile(
+                    self.zip,
+                    mode="w",
+                    compression=ZIP_DEFLATED,
+                    compresslevel=Z_BEST_SPEED,
+                ) as zipfile:
+                    for root, dirs, files in os.walk(dataset_path):
+                        for file in files:
+                            full_path = os.path.join(root, file)
+                            arcname = os.path.relpath(full_path, dataset_path)
+                            zipfile.write(full_path, arcname)
+        else:
+            # Use memory for temporary data store memory:// kvstore in tensorstore
+            raise NotImplementedError()  # TO DO
+
+    def export_to_dataset(
+        self,
+        dataset: Dataset,
+        layer_name: str = "volume_layer",
+    ) -> SegmentationLayer:
+        """Exports the volume layer to a dataset as a SegmentationLayer.
+
+        Args:
+            dataset: The target dataset to export to.
+            layer_name: Name of the layer in the dataset.
+
+        Returns:
+            SegmentationLayer: The created segmentation layer.
+
+        Raises:
+            AssertionError: If the volume layer is not set up correctly.
+
+        Examples:
+            ```python
+            # Export volume layer to dataset
+            exported_layer = volume_layer.export_to_dataset(my_dataset, "my_volume_layer")
+            ```
+        """
+
+        assert self.zip is not None, (
+            "The selected volume layer data is not available and cannot be exported."
+        )
+
+        with self.zip.open(mode="rb") as f:
+            data_zip = ZipFile(f)
+            if self.data_format == DataFormat.WKW:
+                wrong_files = [
+                    i.filename
+                    for i in data_zip.filelist
+                    if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
+                ]
+                assert len(wrong_files) == 0, (
+                    f"The annotation contains unexpected files: {wrong_files}"
+                )
+                data_zip.extractall(dataset.path / layer_name)
+                layer = cast(
+                    SegmentationLayer,
+                    dataset.add_layer_for_existing_files(
+                        layer_name,
+                        category=SEGMENTATION_CATEGORY,
+                        largest_segment_id=self.largest_segment_id,
+                    ),
+                )
+            elif self.data_format == DataFormat.Zarr3:
+                datasource_properties = dataset_converter.structure(
+                    json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
+                )
+                assert len(datasource_properties.data_layers) == 1, (
+                    f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
+                )
+                layer_properties = datasource_properties.data_layers[0]
+                internal_layer_name = layer_properties.name
+                layer_properties.name = layer_name
+
+                _extract_zip_folder(
+                    data_zip, dataset.path / layer_name, f"{internal_layer_name}/"
+                )
+
+                layer = cast(
+                    SegmentationLayer,
+                    dataset._add_existing_layer(layer_properties),
+                )
+
+        best_mag_view = layer.get_finest_mag()
+
+        if self.largest_segment_id is None:
+            max_value = max(
+                (
+                    view.read().max()
+                    for view in best_mag_view.get_views_on_disk(read_only=True)
+                ),
+                default=0,
+            )
+            layer.largest_segment_id = int(max_value)
+        else:
+            layer.largest_segment_id = self.largest_segment_id
+
+        return layer
 
 
 def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
@@ -199,7 +341,7 @@ class Annotation:
     metadata: dict[str, str] = attr.Factory(dict)
     task_bounding_box: NDBoundingBox | None = None
     user_bounding_boxes: list[NDBoundingBox] = attr.Factory(list)
-    _volume_layers: list[_VolumeLayer] = attr.field(factory=list, init=False)
+    volume_layers: list[VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
     def _set_init_docstring(cls) -> None:
@@ -594,13 +736,13 @@ class Annotation:
                 if i.name not in ["username", "annotationId"]
             },
         )
-        annotation._volume_layers = cls._parse_volumes(nml, possible_volume_paths)
+        annotation.volume_layers = cls._parse_volumes(nml, possible_volume_paths)
         return annotation
 
     @staticmethod
     def _parse_volumes(
         nml: wknml.Nml, possible_paths: list[ZipPath] | None
-    ) -> list[_VolumeLayer]:
+    ) -> list[VolumeLayer]:
         volume_layers = []
         layers_with_not_found_location = []
         layers_without_location = []
@@ -640,7 +782,7 @@ class Annotation:
                         metadata={i.key: i.value for i in segment.metadata},
                     )
             volume_layers.append(
-                _VolumeLayer(
+                VolumeLayer(
                     id=volume.id,
                     name="Volume" if volume.name is None else volume.name,
                     fallback_layer_name=volume.fallback_layer,
@@ -719,7 +861,7 @@ class Annotation:
             ) as zipfile:
                 self._write_to_zip(zipfile)
         else:
-            assert len(self._volume_layers) == 0, (
+            assert len(self.volume_layers) == 0, (
                 f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
                 + "Please use a .zip path instead."
             )
@@ -778,7 +920,7 @@ class Annotation:
             )
             volume_layer_name = annotation_volumes[0]
 
-        volume_layer = self._get_volume_layer(volume_layer_name=volume_layer_name)
+        volume_layer = self.get_volume_layer(volume_layer_name=volume_layer_name)
         fallback_layer_name = volume_layer.fallback_layer_name
 
         if fallback_layer_name is None:
@@ -901,7 +1043,7 @@ class Annotation:
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
 
-        for volume_layer in self._volume_layers:
+        for volume_layer in self.volume_layers:
             if volume_layer.zip is None:
                 with BytesIO() as buffer:
                     with ZipFile(buffer, mode="a"):
@@ -1031,14 +1173,14 @@ class Annotation:
                 print(f"Found layer: {name}")
             ```
         """
-        return (i.name for i in self._volume_layers)
+        return (i.name for i in self.volume_layers)
 
     def add_volume_layer(
         self,
         name: str,
         fallback_layer: Layer | str | None = None,
         volume_layer_id: int | None = None,
-    ) -> None:
+    ) -> VolumeLayer:
         """Adds a new volume layer to the annotation.
 
         Volume layers can be used to store segmentation data. Using fallback layers
@@ -1066,9 +1208,9 @@ class Annotation:
         """
 
         if volume_layer_id is None:
-            volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
+            volume_layer_id = max((i.id for i in self.volume_layers), default=-1) + 1
         else:
-            assert volume_layer_id not in [i.id for i in self._volume_layers], (
+            assert volume_layer_id not in [i.id for i in self.volume_layers], (
                 f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
             )
         fallback_layer_name: str | None
@@ -1081,27 +1223,27 @@ class Annotation:
             fallback_layer_name = str(fallback_layer)
         else:
             fallback_layer_name = None
-        self._volume_layers.append(
-            _VolumeLayer(
-                id=volume_layer_id,
-                name=name,
-                fallback_layer_name=fallback_layer_name,
-                data_format=DataFormat.Zarr3,
-                zip=None,
-                segments={},
-                largest_segment_id=None,
-            )
+        volume_layer = VolumeLayer(
+            id=volume_layer_id,
+            name=name,
+            fallback_layer_name=fallback_layer_name,
+            data_format=DataFormat.Zarr3,
+            zip=None,
+            segments={},
+            largest_segment_id=None,
         )
+        self.volume_layers.append(volume_layer)
+        return volume_layer
 
-    def _get_volume_layer(
+    def get_volume_layer(
         self,
         volume_layer_name: str | None = None,
         volume_layer_id: int | None = None,
-    ) -> _VolumeLayer:
-        assert len(self._volume_layers) > 0, "No volume annotations present."
+    ) -> VolumeLayer:
+        assert len(self.volume_layers) > 0, "No volume annotations present."
 
-        if len(self._volume_layers) == 1:
-            volume_layer = self._volume_layers[0]
+        if len(self.volume_layers) == 1:
+            volume_layer = self.volume_layers[0]
             if volume_layer_id is not None and volume_layer_id != volume_layer.id:
                 warnings.warn(
                     f"[INFO] Only a single volume annotation is present and its id {volume_layer.id} does not fit the given id {volume_layer_id}."
@@ -1118,7 +1260,7 @@ class Annotation:
             return volume_layer
 
         if volume_layer_id is not None:
-            for volume_layer in self._volume_layers:
+            for volume_layer in self.volume_layers:
                 if volume_layer_id == volume_layer.id:
                     if (
                         volume_layer_name is not None
@@ -1130,13 +1272,13 @@ class Annotation:
                             + f"but its name {volume_layer.name} does not fit the given name {volume_layer_name}."
                         )
                     return volume_layer
-            available_ids = [volume_layer.id for volume_layer in self._volume_layers]
+            available_ids = [volume_layer.id for volume_layer in self.volume_layers]
             raise ValueError(
                 f"Couldn't find a volume annotation with the id {volume_layer_id}, available are {available_ids}."
             )
         elif volume_layer_name is not None:
             fitting_volume_layers = [
-                i for i in self._volume_layers if i.name == volume_layer_name
+                i for i in self.volume_layers if i.name == volume_layer_name
             ]
             assert len(fitting_volume_layers) != 0, (
                 f"The specified volume name {volume_layer_name} could not be found in this annotation."
@@ -1177,11 +1319,11 @@ class Annotation:
             annotation.delete_volume_layer(volume_layer_id=2)
             ```
         """
-        layer_id = self._get_volume_layer(
+        layer_id = self.get_volume_layer(
             volume_layer_name=volume_layer_name,
             volume_layer_id=volume_layer_id,
         ).id
-        self._volume_layers = [i for i in self._volume_layers if i.id != layer_id]
+        self.volume_layers = [i for i in self.volume_layers if i.id != layer_id]
 
     def export_volume_layer_to_dataset(
         self,
@@ -1217,72 +1359,11 @@ class Annotation:
             ```
         """
 
-        volume_layer = self._get_volume_layer(
+        volume_layer = self.get_volume_layer(
             volume_layer_name=volume_layer_name,
             volume_layer_id=volume_layer_id,
         )
-        volume_zip_path = volume_layer.zip
-
-        largest_segment_id = volume_layer.largest_segment_id
-
-        assert volume_zip_path is not None, (
-            "The selected volume layer data is not available and cannot be exported."
-        )
-
-        with volume_zip_path.open(mode="rb") as f:
-            data_zip = ZipFile(f)
-            if volume_layer.data_format == DataFormat.WKW:
-                wrong_files = [
-                    i.filename
-                    for i in data_zip.filelist
-                    if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
-                ]
-                assert len(wrong_files) == 0, (
-                    f"The annotation contains unexpected files: {wrong_files}"
-                )
-                data_zip.extractall(dataset.path / layer_name)
-                layer = cast(
-                    SegmentationLayer,
-                    dataset.add_layer_for_existing_files(
-                        layer_name,
-                        category=SEGMENTATION_CATEGORY,
-                        largest_segment_id=largest_segment_id,
-                    ),
-                )
-            elif volume_layer.data_format == DataFormat.Zarr3:
-                datasource_properties = dataset_converter.structure(
-                    json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
-                )
-                assert len(datasource_properties.data_layers) == 1, (
-                    f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
-                )
-                layer_properties = datasource_properties.data_layers[0]
-                internal_layer_name = layer_properties.name
-                layer_properties.name = layer_name
-
-                _extract_zip_folder(
-                    data_zip, dataset.path / layer_name, f"{internal_layer_name}/"
-                )
-
-                layer = cast(
-                    SegmentationLayer,
-                    dataset._add_existing_layer(layer_properties),
-                )
-
-        best_mag_view = layer.get_finest_mag()
-
-        if largest_segment_id is None:
-            max_value = max(
-                (
-                    view.read().max()
-                    for view in best_mag_view.get_views_on_disk(read_only=True)
-                ),
-                default=0,
-            )
-            layer.largest_segment_id = int(max_value)
-        else:
-            layer.largest_segment_id = largest_segment_id
-        return layer
+        return volume_layer.export_to_dataset(dataset, layer_name)
 
     @contextmanager
     def temporary_volume_layer_copy(
@@ -1365,7 +1446,7 @@ class Annotation:
             synced automatically. The annotation needs to be re-downloaded to update segment information.
         """
 
-        layer = self._get_volume_layer(
+        layer = self.get_volume_layer(
             volume_layer_name=volume_layer_name,
             volume_layer_id=volume_layer_id,
         )
