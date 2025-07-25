@@ -38,6 +38,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 - Every file that sends logging messages has its own logger now. This can be used to selectively disable loggers. [#1335](https://github.com/scalableminds/webknossos-libs/pull/1335)
 - Enabled compression by default for `convert-zarr` and `convert-raw` CLI commands. [#1338](https://github.com/scalableminds/webknossos-libs/pull/1338)
+- Add more (network) errors ("UNAVAILABLE", "Unknown error") to list of retryable errors. [#1341](https://github.com/scalableminds/webknossos-libs/pull/1341)
 
 
 ## [2.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.3) - 2025-07-07
