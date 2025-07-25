@@ -1,6 +1,6 @@
 import logging
 import warnings
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
@@ -19,7 +19,19 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
+from ._array import (
+    ArrayInfo,
+    BaseArray,
+    TensorStoreArray,
+    WKWArray,
+    Zarr3Array,
+    Zarr3ArrayInfo,
+    Zarr3ChunkKeyEncoding,
+    Zarr3Codec,
+    _default_zarr3_chunk_key_encoding,
+    _default_zarr3_codecs,
+)
+from .data_format import DataFormat
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -118,6 +130,8 @@ class MagView(View):
         chunks_per_shard: Vec3Int | None = None,
         compression_mode: bool,
         read_only: bool = False,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -134,25 +148,47 @@ class MagView(View):
                 warn_deprecated("chunks_per_shard", "shard_shape")
                 shard_shape = chunk_shape * chunks_per_shard
 
-        array_info = ArrayInfo(
-            data_format=layer._properties.data_format,
-            voxel_type=layer.dtype_per_channel,
-            num_channels=layer.num_channels,
-            chunk_shape=chunk_shape,
-            shard_shape=shard_shape,
-            compression_mode=compression_mode,
-            axis_order=VecInt(
-                0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
-            ),
-            shape=VecInt(
-                layer.num_channels,
-                *VecInt.ones(layer.bounding_box.axes),
-                axes=("c",) + layer.bounding_box.axes,
-            ),
-            dimension_names=("c",) + layer.bounding_box.axes,
+        axis_order = VecInt(
+            0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
         )
+        shape = VecInt(
+            layer.num_channels,
+            *VecInt.ones(layer.bounding_box.axes),
+            axes=("c",) + layer.bounding_box.axes,
+        )
+        dimension_names = ("c",) + layer.bounding_box.axes
 
-        BaseArray.get_class(array_info.data_format).create(path, array_info)
+        if layer.data_format == DataFormat.Zarr3:
+            zarr3_array_info = Zarr3ArrayInfo(
+                data_format=DataFormat.Zarr3,
+                voxel_type=layer.dtype_per_channel,
+                num_channels=layer.num_channels,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                axis_order=axis_order,
+                shape=shape,
+                dimension_names=dimension_names,
+                codecs=tuple(zarr3_codecs)
+                if zarr3_codecs is not None
+                else _default_zarr3_codecs(len(dimension_names), compression_mode),
+                chunk_key_encoding=zarr3_chunk_key_encoding
+                or _default_zarr3_chunk_key_encoding(),
+            )
+            Zarr3Array.create(path, zarr3_array_info)
+        else:
+            array_info = ArrayInfo(
+                data_format=layer._properties.data_format,
+                voxel_type=layer.dtype_per_channel,
+                num_channels=layer.num_channels,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                compression_mode=compression_mode,
+                axis_order=axis_order,
+                shape=shape,
+                dimension_names=dimension_names,
+            )
+            BaseArray.get_class(array_info.data_format).create(path, array_info)
+
         return cls(layer, mag, path, read_only=read_only)
 
     def __init__(
@@ -475,33 +511,82 @@ class MagView(View):
             - Progress is displayed during compression
             - Compressed data may have slower read/write speeds
         """
+        if self._is_compressed():
+            logger.info(f"Mag {self.name} is already compressed")
+            return
+        self.rechunk(
+            chunk_shape=self.info.chunk_shape,
+            shard_shape=self.info.shard_shape,
+            compress=True,
+            target_path=target_path,
+            executor=executor,
+            _progress_desc=f"Compressing {self.layer.name} {self.name}",
+        )
+
+    def rechunk(
+        self,
+        *,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        compress: bool | None = None,
+        target_path: str | Path | None = None,
+        executor: Executor | None = None,
+        _progress_desc: str | None = None,
+    ) -> None:
+        """Rechunks the files on disk.
+
+        Rechunks the magnification level's data, either in-place or to a new location.
+
+        Args:
+            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
+            compress: Whether to compress the data
+            target_path: Optional path to write compressed data. If None, compresses in-place.
+            executor: Optional executor for parallel rechunking.
+
+        Examples:
+            ```python
+            # Rechunk in-place
+            mag1.rechunk(chunk_shape=(32,32,32))
+
+            # Rechunk with custom parameters
+            mag1.rechunk(
+                chunk_shape=(32, 32, 32),
+                shard_shape=(64, 64, 64),
+                compress=True,
+                target_path="path/to/new/dataset"
+            )
+            ```
+
+        Notes:
+            - In-place rechunking requires local filesystem
+            - Remote rechunking requires target_path
+            - Rechunking is parallelized when executor is provided
+            - Progress is displayed during rechunking
+            - Compressed data may have slower read/write speeds
+        """
         from .dataset import Dataset
 
         self._ensure_writable()
         path = self._path
         if target_path is None:
-            if self._is_compressed():
-                logger.info(f"Mag {self.name} is already compressed")
-                return
-            else:
-                assert is_fs_path(path), (
-                    "Cannot compress a remote mag without `target_path`."
-                )
+            assert is_fs_path(path), (
+                "Cannot rechunk a remote mag without `target_path`."
+            )
         else:
             target_path = UPath(target_path)
 
-        uncompressed_full_path = path
-        compressed_dataset_path = (
-            self.layer.dataset.path / f".compress-{uuid4()}"
+        rechunked_dataset_path = (
+            self.layer.dataset.path / f".rechunk-{uuid4()}"
             if target_path is None
             else target_path
         )
-        compressed_dataset = Dataset(
-            compressed_dataset_path,
+        rechunked_dataset = Dataset(
+            rechunked_dataset_path,
             voxel_size=self.layer.dataset.voxel_size,
             exist_ok=True,
         )
-        compressed_layer = compressed_dataset.get_or_add_layer(
+        rechunked_layer = rechunked_dataset.get_or_add_layer(
             layer_name=self.layer.name,
             category=self.layer.category,
             dtype_per_channel=self.layer.dtype_per_channel,
@@ -509,15 +594,44 @@ class MagView(View):
             data_format=self.layer.data_format,
             largest_segment_id=self.layer._get_largest_segment_id_maybe(),
         )
-        compressed_layer.bounding_box = self.layer.bounding_box
-        compressed_mag = compressed_layer.get_or_add_mag(
+        rechunked_layer.bounding_box = self.layer.bounding_box
+        rechunked_mag = rechunked_layer.get_or_add_mag(
             mag=self.mag,
-            chunk_shape=self.info.chunk_shape,
-            shard_shape=self.info.shard_shape,
-            compress=True,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+            compress=compress,
         )
 
-        logger.info(f"Compressing mag {self.name} in '{str(uncompressed_full_path)}'")
+        def _rechunk_bboxes(
+            source_bbox_iterator: Iterator[NDBoundingBox],
+        ) -> Iterator[NDBoundingBox]:
+            source_shard_shape = self.info.shard_shape
+            target_shard_shape = rechunked_mag.info.shard_shape
+            if source_shard_shape == target_shard_shape:
+                for bbox in source_bbox_iterator:
+                    bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
+                        self.layer.bounding_box, dont_assert=True
+                    )
+                    if not bbox.is_empty():
+                        yield bbox
+
+            else:
+                combined_shard_shape = (
+                    source_shard_shape.pairmax(target_shard_shape)
+                    * self.mag.to_vec3_int()
+                )
+                all_source_bboxes = [
+                    bbox.from_mag_to_mag1(self._mag) for bbox in source_bbox_iterator
+                ]
+                for bbox in rechunked_layer.bounding_box.chunk(combined_shard_shape):
+                    if any(
+                        not bbox.intersected_with(
+                            source_bbox, dont_assert=True
+                        ).is_empty()
+                        for source_bbox in all_source_bboxes
+                    ):
+                        yield bbox
+
         with get_executor_for_args(None, executor) as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()
@@ -525,24 +639,17 @@ class MagView(View):
                 bbox_iterator = None
             if bbox_iterator is not None:
                 job_args = []
-                for i, bbox in enumerate(bbox_iterator):
-                    bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
-                        self.layer.bounding_box, dont_assert=True
-                    )
-                    if not bbox.is_empty():
-                        bbox = bbox.align_with_mag(self.mag, ceil=True)
-                        source_view = self.get_view(
-                            absolute_offset=bbox.topleft, size=bbox.size
-                        )
-                        target_view = compressed_mag.get_view(
-                            absolute_offset=bbox.topleft, size=bbox.size
-                        )
-                        job_args.append((source_view, target_view, i))
+                for i, bbox in enumerate(_rechunk_bboxes(bbox_iterator)):
+                    bbox = bbox.align_with_mag(self.mag, ceil=True)
+                    source_view = self.get_view(absolute_bounding_box=bbox)
+                    target_view = rechunked_mag.get_view(absolute_bounding_box=bbox)
+                    job_args.append((source_view, target_view, i))
 
                 wait_and_ensure_success(
                     executor.map_to_futures(_compress_cube_job, job_args),
                     executor=executor,
-                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                    progress_desc=_progress_desc
+                    or f"Rechunking {self.layer.name} {self.name}",
                 )
             else:
                 warnings.warn(
@@ -550,16 +657,17 @@ class MagView(View):
                     + "Instead all bounding boxes are iterated, which can be slow."
                 )
                 self.for_zipped_chunks(
-                    target_view=compressed_mag,
+                    target_view=rechunked_mag,
                     executor=executor,
                     func_per_chunk=_compress_cube_job,
-                    progress_desc=f"Compressing {self.layer.name} {self.name}",
+                    progress_desc=_progress_desc
+                    or f"Rechunking {self.layer.name} {self.name}",
                 )
 
         if target_path is None:
             rmtree(path)
-            compressed_mag.path.rename(path)
-            rmtree(compressed_dataset.path)
+            rechunked_mag.path.rename(path)
+            rmtree(rechunked_dataset.path)
 
             # update the handle to the new dataset
             MagView.__init__(self, self.layer, self._mag, path)

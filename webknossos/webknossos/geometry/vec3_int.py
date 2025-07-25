@@ -86,6 +86,16 @@ class Vec3Int(VecInt):
     def to_tuple(self) -> tuple[int, int, int]:
         return (self.x, self.y, self.z)
 
+    def _is_power_of_two(self) -> bool:
+        return (
+            self.x > 0
+            and self.x & (self.x - 1) == 0
+            and self.y > 0
+            and self.y & (self.y - 1) == 0
+            and self.z > 0
+            and self.z & (self.z - 1) == 0
+        )
+
     @staticmethod
     def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
         """Use Vec3Int.from_xyz for fast construction."""
