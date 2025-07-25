@@ -109,7 +109,6 @@ class Zarr3ArrayInfo(ArrayInfo):
             object.__setattr__(
                 self, "codecs", _default_zarr3_codecs(self.ndim, True)
             )  #
-        print(self.codecs)
         object.__setattr__(
             self,
             "compression_mode",
