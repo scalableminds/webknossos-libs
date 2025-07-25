@@ -29,6 +29,7 @@ from ._array import (
     Zarr3ChunkKeyEncoding,
     Zarr3Codec,
     _default_zarr3_chunk_key_encoding,
+    _default_zarr3_codecs,
 )
 from .data_format import DataFormat
 from .properties import MagViewProperties
@@ -167,7 +168,9 @@ class MagView(View):
                 axis_order=axis_order,
                 shape=shape,
                 dimension_names=dimension_names,
-                codecs=tuple(zarr3_codecs) if zarr3_codecs is not None else (),
+                codecs=tuple(zarr3_codecs)
+                if zarr3_codecs is not None
+                else _default_zarr3_codecs(len(dimension_names), compression_mode),
                 chunk_key_encoding=zarr3_chunk_key_encoding
                 or _default_zarr3_chunk_key_encoding(),
             )

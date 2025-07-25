@@ -2696,6 +2696,13 @@ def test_zarr3_config(output_path: UPath) -> None:
         "name": "default",
         "configuration": {"separator": "."},
     }
+    assert (mag1.path / "c.0.0.0.0").exists()
+    assert json.loads((mag1.path / "zarr.json").read_bytes())["codecs"][0][
+        "configuration"
+    ]["codecs"] == [
+        {"name": "bytes"},
+        {"name": "gzip", "configuration": {"level": 3}},
+    ]
 
     np.testing.assert_array_equal(
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
