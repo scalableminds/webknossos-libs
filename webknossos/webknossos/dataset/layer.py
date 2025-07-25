@@ -596,6 +596,16 @@ class Layer:
                 + f"performance in WEBKNOSSOS. Got {chunk_shape}."
             )
 
+        if not shard_shape._is_power_of_two():
+            raise ValueError(
+                f"The shard shape must be a power of two. Got {shard_shape}."
+            )
+
+        if not chunk_shape._is_power_of_two():
+            raise ValueError(
+                f"The chunk shape must be a power of two. Got {chunk_shape}."
+            )
+
         self._assert_mag_does_not_exist_yet(mag)
         mag_path = self._create_dir_for_mag(mag)
 
