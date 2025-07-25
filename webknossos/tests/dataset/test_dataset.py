@@ -27,6 +27,7 @@ from webknossos.dataset import (
     RemoteDataset,
     View,
 )
+from webknossos.dataset._array import Zarr3ArrayInfo
 from webknossos.dataset.data_format import AttachmentDataFormat, DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
@@ -2659,6 +2660,45 @@ def test_rechunking(data_format: DataFormat, output_path: UPath) -> None:
     # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
     mag1.write(
         (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+    )
+
+    assure_exported_properties(mag1.layer.dataset)
+
+
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
+def test_zarr3_config(output_path: UPath) -> None:
+    new_dataset_path = prepare_dataset_path(DataFormat.Zarr3, output_path)
+    ds = Dataset(new_dataset_path, voxel_size=(2, 2, 1))
+    mag1 = ds.add_layer(
+        "color", COLOR_CATEGORY, num_channels=3, data_format=DataFormat.Zarr3
+    ).add_mag(
+        1,
+        zarr3_codecs=(
+            {"name": "bytes"},
+            {"name": "gzip", "configuration": {"level": 3}},
+        ),
+        zarr3_chunk_key_encoding={
+            "name": "default",
+            "configuration": {"separator": "."},
+        },
+    )
+
+    # writing unaligned data to an uncompressed dataset
+    write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
+    mag1.write(write_data, absolute_offset=(60, 80, 100), allow_resize=True)
+
+    assert isinstance(mag1.info, Zarr3ArrayInfo)
+    assert mag1.info.codecs == (
+        {"name": "bytes"},
+        {"name": "gzip", "configuration": {"level": 3}},
+    )
+    assert mag1.info.chunk_key_encoding == {
+        "name": "default",
+        "configuration": {"separator": "."},
+    }
+
+    np.testing.assert_array_equal(
+        write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
     )
 
     assure_exported_properties(mag1.layer.dataset)
