@@ -2,6 +2,7 @@ import logging
 import operator
 import re
 import warnings
+from collections.abc import Sequence
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -14,7 +15,7 @@ from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.mag import MagLike
-from ._array import ArrayException, TensorStoreArray
+from ._array import ArrayException, TensorStoreArray, Zarr3ChunkKeyEncoding, Zarr3Codec
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -548,6 +549,8 @@ class Layer:
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: int | Vec3IntLike | None = None,
         compress: bool = True,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
     ) -> MagView:
         """Creates and adds a new magnification level to the layer.
 
@@ -561,6 +564,8 @@ class Layer:
             shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
             chunks_per_shard: Deprecated, use shard_shape. Number of chunks per shards. If specified, shard_shape must not be specified.
             compress: Whether to enable compression. Defaults to True.
+            zarr3_codecs: For zarr3 datasets, a list of codecs to use. Overrides the compress parameter. Defaults to None.
+            zarr3_chunk_key_encoding: For zarr3 datasets, the chunk key encoding to use. Defaults to None.
 
         Returns:
             MagView: View of newly created magnification level
@@ -606,6 +611,16 @@ class Layer:
                 f"The chunk shape must be a power of two. Got {chunk_shape}."
             )
 
+        if zarr3_codecs is not None and self.data_format != DataFormat.Zarr3:
+            raise ValueError("zarr3_codecs can only be specified for zarr3 datasets.")
+        if (
+            zarr3_chunk_key_encoding is not None
+            and self.data_format != DataFormat.Zarr3
+        ):
+            raise ValueError(
+                "zarr3_chunk_key_encoding can only be specified for zarr3 datasets."
+            )
+
         self._assert_mag_does_not_exist_yet(mag)
         mag_path = self._create_dir_for_mag(mag)
 
@@ -617,6 +632,8 @@ class Layer:
             compression_mode=compression_mode,
             path=mag_path,
             read_only=False,
+            zarr3_codecs=zarr3_codecs,
+            zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
         )
 
         mag_view._array.resize(

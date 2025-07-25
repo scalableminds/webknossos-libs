@@ -1,6 +1,6 @@
 import logging
 import warnings
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
@@ -19,7 +19,18 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
+from ._array import (
+    ArrayInfo,
+    BaseArray,
+    TensorStoreArray,
+    WKWArray,
+    Zarr3Array,
+    Zarr3ArrayInfo,
+    Zarr3ChunkKeyEncoding,
+    Zarr3Codec,
+    _default_zarr3_chunk_key_encoding,
+)
+from .data_format import DataFormat
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -118,6 +129,8 @@ class MagView(View):
         chunks_per_shard: Vec3Int | None = None,
         compression_mode: bool,
         read_only: bool = False,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -134,25 +147,45 @@ class MagView(View):
                 warn_deprecated("chunks_per_shard", "shard_shape")
                 shard_shape = chunk_shape * chunks_per_shard
 
-        array_info = ArrayInfo(
-            data_format=layer._properties.data_format,
-            voxel_type=layer.dtype_per_channel,
-            num_channels=layer.num_channels,
-            chunk_shape=chunk_shape,
-            shard_shape=shard_shape,
-            compression_mode=compression_mode,
-            axis_order=VecInt(
-                0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
-            ),
-            shape=VecInt(
-                layer.num_channels,
-                *VecInt.ones(layer.bounding_box.axes),
-                axes=("c",) + layer.bounding_box.axes,
-            ),
-            dimension_names=("c",) + layer.bounding_box.axes,
+        axis_order = VecInt(
+            0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
         )
+        shape = VecInt(
+            layer.num_channels,
+            *VecInt.ones(layer.bounding_box.axes),
+            axes=("c",) + layer.bounding_box.axes,
+        )
+        dimension_names = ("c",) + layer.bounding_box.axes
 
-        BaseArray.get_class(array_info.data_format).create(path, array_info)
+        if layer.data_format == DataFormat.Zarr3:
+            zarr3_array_info = Zarr3ArrayInfo(
+                data_format=DataFormat.Zarr3,
+                voxel_type=layer.dtype_per_channel,
+                num_channels=layer.num_channels,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                axis_order=axis_order,
+                shape=shape,
+                dimension_names=dimension_names,
+                codecs=tuple(zarr3_codecs) if zarr3_codecs is not None else (),
+                chunk_key_encoding=zarr3_chunk_key_encoding
+                or _default_zarr3_chunk_key_encoding(),
+            )
+            Zarr3Array.create(path, zarr3_array_info)
+        else:
+            array_info = ArrayInfo(
+                data_format=layer._properties.data_format,
+                voxel_type=layer.dtype_per_channel,
+                num_channels=layer.num_channels,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                compression_mode=compression_mode,
+                axis_order=axis_order,
+                shape=shape,
+                dimension_names=dimension_names,
+            )
+            BaseArray.get_class(array_info.data_format).create(path, array_info)
+
         return cls(layer, mag, path, read_only=read_only)
 
     def __init__(
