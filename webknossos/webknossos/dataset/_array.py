@@ -10,6 +10,7 @@ from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
+    NotRequired,
     TypedDict,
 )
 from urllib.parse import urlparse
@@ -69,7 +70,7 @@ class Zarr3ChunkKeyEncoding(TypedDict):
 
 class Zarr3Codec(TypedDict):
     name: Literal["bytes", "gzip", "zstd", "blosc", "crc32c", "transpose"]
-    configuration: dict[str, Any]
+    configuration: NotRequired[dict[str, Any]]
 
 
 def _default_zarr3_codecs(ndim: int, compression: bool) -> tuple[Zarr3Codec, ...]:
