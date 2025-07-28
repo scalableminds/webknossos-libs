@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator
-from dataclasses import dataclass, field
+from collections.abc import Iterable, Iterator, Sequence
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from logging import getLogger
 from os.path import relpath
@@ -132,6 +132,34 @@ class Zarr3ArrayInfo(ArrayInfo):
                 ),
                 axis_order=array_info.axis_order,
             )
+
+
+@dataclass(frozen=True)
+class Zarr3Config:
+    codecs: Sequence[Zarr3Codec] | None = None
+    chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None
+
+    @classmethod
+    def with_defaults(
+        cls, config: "Zarr3Config | bool | None", ndim: int
+    ) -> "Zarr3Config":
+        if isinstance(config, bool):
+            return cls(
+                codecs=_default_zarr3_codecs(ndim, config),
+                chunk_key_encoding=_default_zarr3_chunk_key_encoding(),
+            )
+        if config is None:
+            return cls(
+                codecs=_default_zarr3_codecs(ndim, True),
+                chunk_key_encoding=_default_zarr3_chunk_key_encoding(),
+            )
+        if config.codecs is None:
+            config = replace(config, codecs=_default_zarr3_codecs(ndim, True))
+        if config.chunk_key_encoding is None:
+            config = replace(
+                config, chunk_key_encoding=_default_zarr3_chunk_key_encoding()
+            )
+        return config
 
 
 class BaseArray(ABC):

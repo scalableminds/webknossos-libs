@@ -1,6 +1,6 @@
 import logging
 import warnings
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
@@ -26,10 +26,7 @@ from ._array import (
     WKWArray,
     Zarr3Array,
     Zarr3ArrayInfo,
-    Zarr3ChunkKeyEncoding,
-    Zarr3Codec,
-    _default_zarr3_chunk_key_encoding,
-    _default_zarr3_codecs,
+    Zarr3Config,
 )
 from .data_format import DataFormat
 from .properties import MagViewProperties
@@ -128,10 +125,8 @@ class MagView(View):
         chunk_shape: Vec3Int,
         shard_shape: Vec3Int | None = None,
         chunks_per_shard: Vec3Int | None = None,
-        compression_mode: bool,
+        compression_mode: bool | Zarr3Config,
         read_only: bool = False,
-        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
-        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
     ) -> "MagView":
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
@@ -159,6 +154,11 @@ class MagView(View):
         dimension_names = ("c",) + layer.bounding_box.axes
 
         if layer.data_format == DataFormat.Zarr3:
+            compression_mode = Zarr3Config.with_defaults(
+                compression_mode, len(dimension_names)
+            )
+            assert compression_mode.codecs is not None  # for mypy
+            assert compression_mode.chunk_key_encoding is not None  # for mypy
             zarr3_array_info = Zarr3ArrayInfo(
                 data_format=DataFormat.Zarr3,
                 voxel_type=layer.dtype_per_channel,
@@ -168,14 +168,14 @@ class MagView(View):
                 axis_order=axis_order,
                 shape=shape,
                 dimension_names=dimension_names,
-                codecs=tuple(zarr3_codecs)
-                if zarr3_codecs is not None
-                else _default_zarr3_codecs(len(dimension_names), compression_mode),
-                chunk_key_encoding=zarr3_chunk_key_encoding
-                or _default_zarr3_chunk_key_encoding(),
+                codecs=tuple(compression_mode.codecs),
+                chunk_key_encoding=compression_mode.chunk_key_encoding,
             )
             Zarr3Array.create(path, zarr3_array_info)
         else:
+            assert isinstance(compression_mode, bool), (
+                "Zarr3 config is only supported for Zarr3 layers."
+            )
             array_info = ArrayInfo(
                 data_format=layer._properties.data_format,
                 voxel_type=layer.dtype_per_channel,

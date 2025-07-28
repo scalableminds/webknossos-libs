@@ -27,7 +27,7 @@ from webknossos.dataset import (
     RemoteDataset,
     View,
 )
-from webknossos.dataset._array import Zarr3ArrayInfo
+from webknossos.dataset._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset.data_format import AttachmentDataFormat, DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
@@ -2695,14 +2695,16 @@ def test_zarr3_config(output_path: UPath) -> None:
         "color", COLOR_CATEGORY, num_channels=3, data_format=DataFormat.Zarr3
     ).add_mag(
         1,
-        zarr3_codecs=(
-            {"name": "bytes"},
-            {"name": "gzip", "configuration": {"level": 3}},
+        compress=Zarr3Config(
+            codecs=(
+                {"name": "bytes"},
+                {"name": "gzip", "configuration": {"level": 3}},
+            ),
+            chunk_key_encoding={
+                "name": "default",
+                "configuration": {"separator": "."},
+            },
         ),
-        zarr3_chunk_key_encoding={
-            "name": "default",
-            "configuration": {"separator": "."},
-        },
     )
 
     # writing unaligned data to an uncompressed dataset
