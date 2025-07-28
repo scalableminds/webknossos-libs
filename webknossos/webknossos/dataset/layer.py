@@ -1377,9 +1377,9 @@ class Layer:
             target_mag_view = self._initialize_mag_from_other_mag(
                 target_mag,
                 prev_mag_view,
-                compress,
-                zarr3_codecs,
-                zarr3_chunk_key_encoding,
+                compress=compress,
+                zarr3_codecs=zarr3_codecs,
+                zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
             )
 
         if only_setup_mag:
@@ -1604,9 +1604,9 @@ class Layer:
             target_mag_view = self._initialize_mag_from_other_mag(
                 target_mag,
                 prev_mag_view,
-                compress,
-                zarr3_codecs,
-                zarr3_chunk_key_encoding,
+                compress=compress,
+                zarr3_codecs=zarr3_codecs,
+                zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
             )
 
             # We need to make sure the layer's bounding box is aligned
@@ -1674,9 +1674,10 @@ class Layer:
         self,
         new_mag_name: str | Mag,
         other_mag: MagView,
-        compress: bool,
-        zarr3_codecs: Sequence[Zarr3Codec] | None,
-        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None,
+        *,
+        compress: bool | None = None,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
     ) -> MagView:
         """Creates a new magnification based on settings from existing mag.
 
