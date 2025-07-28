@@ -15,8 +15,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `MagView.rechunk` methods to allow for rechunking of datasets. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 
 ### Changed
+- Enforces that `chunk_shape` and `shard_shape` have power-of-two values. This assumptions was used in the code previously, but not explicitly enforced. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 
 ### Fixed
 
