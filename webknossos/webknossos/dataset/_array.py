@@ -10,7 +10,6 @@ from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
-    NotRequired,
     TypedDict,
 )
 from urllib.parse import urlparse
@@ -18,7 +17,7 @@ from urllib.parse import urlparse
 import numpy as np
 import tensorstore
 import wkw
-from typing_extensions import Self
+from typing_extensions import NotRequired, Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
