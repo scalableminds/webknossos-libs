@@ -2471,6 +2471,25 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     assure_exported_properties(ds)
 
 
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
+def test_invalid_chunk_shard_shape(output_path: UPath) -> None:
+    ds_path = prepare_dataset_path(
+        DEFAULT_DATA_FORMAT, output_path, "invalid_chunk_shape"
+    )
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DEFAULT_DATA_FORMAT)
+
+    with pytest.raises(ValueError, match=".*must be a power of two.*"):
+        layer.add_mag("1", chunk_shape=(3, 4, 4))
+
+    with pytest.raises(ValueError, match=".*must be a multiple.*"):
+        layer.add_mag("1", chunk_shape=(16, 16, 16), shard_shape=(8, 16, 16))
+
+    with pytest.raises(ValueError, match=".*must be a multiple.*"):
+        # also not a power-of-two shard shape
+        layer.add_mag("1", chunk_shape=(16, 16, 16), shard_shape=(53, 16, 16))
+
+
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_read_only_view(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "read_only_view")

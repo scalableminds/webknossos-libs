@@ -10,15 +10,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- Added `MagView.rechunk` methods to allow for rechunking of datasets. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 
 ### Changed
+- Enforces that `chunk_shape` and `shard_shape` have power-of-two values. This assumptions was used in the code previously, but not explicitly enforced. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 
 ### Fixed
+
+
+## [2.4.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.6) - 2025-07-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.5...v2.4.6)
 
 
 ## [2.4.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.5) - 2025-07-16
