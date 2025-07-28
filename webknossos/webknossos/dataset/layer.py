@@ -737,6 +737,8 @@ class Layer:
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,
         compress: bool | None = None,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
     ) -> MagView:
         """
         Creates a new mag and adds it to the dataset, in case it did not exist before.
@@ -766,9 +768,19 @@ class Layer:
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the shard shapes do not match. Expected {mag_view.info.shard_shape}, got {shard_shape}."
                 )
-            if compress is not None and mag_view.info.compression_mode != compress:
+            if zarr3_codecs is not None:
+                if not self.data_format != DataFormat.Zarr3:
+                    raise ValueError(
+                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the data format is not Zarr3 and zarr3_codecs are specified."
+                    )
+            else:
+                if compress is not None and mag_view.info.compression_mode != compress:
+                    raise ValueError(
+                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match. Expected {mag_view.info.compression_mode}, got {compress}."
+                    )
+            if zarr3_codecs is not None and mag_view.info.codecs != zarr3_codecs:
                 raise ValueError(
-                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match. Expected {mag_view.info.compression_mode}, got {compress}."
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the zarr3 codecs do not match. Expected {mag_view.info.compression_mode}, got {compress}."
                 )
             return self.get_mag(mag)
         else:
@@ -783,6 +795,8 @@ class Layer:
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compress=compress if compress is not None else True,
+                zarr3_codecs=zarr3_codecs,
+                zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
             )
 
     def delete_mag(self, mag: MagLike) -> None:
