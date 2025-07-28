@@ -548,7 +548,7 @@ class Layer:
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: int | Vec3IntLike | None = None,
-        compress: bool = True,
+        compress: bool | None = None,
         zarr3_codecs: Sequence[Zarr3Codec] | None = None,
         zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
     ) -> MagView:
@@ -577,7 +577,6 @@ class Layer:
         self._ensure_writable()
         # normalize the name of the mag
         mag = Mag(mag)
-        compression_mode = compress
 
         chunk_shape = (
             DEFAULT_CHUNK_SHAPE
@@ -620,6 +619,13 @@ class Layer:
             raise ValueError(
                 "zarr3_chunk_key_encoding can only be specified for zarr3 datasets."
             )
+
+        if zarr3_codecs is not None and compress is not None:
+            raise ValueError(
+                "zarr3_codecs can only be specified if compress is not specified."
+            )
+
+        compression_mode = compress if compress is not None else True
 
         self._assert_mag_does_not_exist_yet(mag)
         mag_path = self._create_dir_for_mag(mag)
@@ -747,6 +753,8 @@ class Layer:
         See `add_mag` for more information.
         """
 
+        from ._array import Zarr3ArrayInfo
+
         # normalize the name of the mag
         mag = Mag(mag)
 
@@ -760,28 +768,47 @@ class Layer:
                 chunks_per_shard=chunks_per_shard,
                 shard_shape=shard_shape,
             )
+
             if chunk_shape is not None and mag_view.info.chunk_shape != chunk_shape:
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk shapes do not match. Expected {mag_view.info.chunk_shape}, got {chunk_shape}."
                 )
+
             if shard_shape is not None and mag_view.info.shard_shape != shard_shape:
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the shard shapes do not match. Expected {mag_view.info.shard_shape}, got {shard_shape}."
                 )
+
             if zarr3_codecs is not None:
                 if not self.data_format != DataFormat.Zarr3:
                     raise ValueError(
                         f"Cannot get_or_add_mag: The mag {mag} already exists, but the data format is not Zarr3 and zarr3_codecs are specified."
                     )
-            else:
-                if compress is not None and mag_view.info.compression_mode != compress:
+                assert isinstance(mag_view.info, Zarr3ArrayInfo)
+                if mag_view.info.codecs != zarr3_codecs:
                     raise ValueError(
-                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match. Expected {mag_view.info.compression_mode}, got {compress}."
+                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the zarr3 codecs do not match. Expected {mag_view.info.codecs}, got {zarr3_codecs}."
                     )
-            if zarr3_codecs is not None and mag_view.info.codecs != zarr3_codecs:
+                if compress is not None:
+                    raise ValueError(
+                        "Cannot get_or_add_mag: zarr3_codecs can only be specified if compress is not specified."
+                    )
+
+            if compress is not None and mag_view.info.compression_mode != compress:
                 raise ValueError(
-                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the zarr3 codecs do not match. Expected {mag_view.info.compression_mode}, got {compress}."
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match. Expected {mag_view.info.compression_mode}, got {compress}."
                 )
+
+            if zarr3_chunk_key_encoding is not None:
+                if not self.data_format != DataFormat.Zarr3:
+                    raise ValueError(
+                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the data format is not Zarr3 and zarr3_chunk_key_encoding are specified."
+                    )
+                assert isinstance(mag_view.info, Zarr3ArrayInfo)
+                if mag_view.info.chunk_key_encoding != zarr3_chunk_key_encoding:
+                    raise ValueError(
+                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the zarr3 chunk key encoding does not match. Expected {mag_view.info.chunk_key_encoding}, got {zarr3_chunk_key_encoding}."
+                    )
             return self.get_mag(mag)
         else:
             chunk_shape = Vec3Int.from_vec_or_int(chunk_shape or DEFAULT_CHUNK_SHAPE)
@@ -867,6 +894,8 @@ class Layer:
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,
         compress: bool | None = None,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
         exists_ok: bool = False,
         executor: Executor | None = None,
         progress_desc: str | None = None,
@@ -900,6 +929,8 @@ class Layer:
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compress=compress,
+                zarr3_codecs=zarr3_codecs,
+                zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
             )
         else:
             self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
@@ -908,6 +939,8 @@ class Layer:
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compress=compress,
+                zarr3_codecs=zarr3_codecs,
+                zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
             )
 
         if extend_layer_bounding_box:
@@ -1160,6 +1193,8 @@ class Layer:
         coarsest_mag: Mag | None = None,
         interpolation_mode: str = "default",
         compress: bool = True,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Vec3Int | None = None,
@@ -1179,6 +1214,8 @@ class Layer:
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
                 Supported modes: "median", "mode", "nearest", "bilinear", "bicubic"
             compress (bool): Whether to compress the generated magnifications. Defaults to True.
+            zarr3_codecs (Sequence[Zarr3Codec] | None): For zarr3 datasets, a list of codecs to use. Overrides the compress parameter. Defaults to None.
+            zarr3_chunk_key_encoding (Zarr3ChunkKeyEncoding | None): For zarr3 datasets, the chunk key encoding to use. Defaults to None.
             sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
             align_with_other_layers (bool | Dataset): Whether to align with other layers. True by default.
@@ -1275,6 +1312,8 @@ class Layer:
                 target_mag=target_mag,
                 interpolation_mode=interpolation_mode,
                 compress=compress,
+                zarr3_codecs=zarr3_codecs,
+                zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
                 buffer_shape=buffer_shape,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
@@ -1288,6 +1327,8 @@ class Layer:
         *,
         interpolation_mode: str = "default",
         compress: bool = True,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
         buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
@@ -1300,6 +1341,8 @@ class Layer:
             target_mag: Target magnification level
             interpolation_mode: Method for interpolation ("median", "mode", "nearest", "bilinear", "bicubic")
             compress: Whether to compress target data
+            zarr3_codecs: For zarr3 datasets, a list of codecs to use. Overrides the compress parameter. Defaults to None.
+            zarr3_chunk_key_encoding: For zarr3 datasets, the chunk key encoding to use. Defaults to None.
             buffer_shape: Shape of processing buffer
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
@@ -1332,7 +1375,11 @@ class Layer:
         else:
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compress
+                target_mag,
+                prev_mag_view,
+                compress,
+                zarr3_codecs,
+                zarr3_chunk_key_encoding,
             )
 
         if only_setup_mag:
@@ -1372,6 +1419,8 @@ class Layer:
         *,
         interpolation_mode: str = "default",
         compress: bool = True,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
         buffer_shape: Vec3Int | None = None,
         executor: Executor | None = None,
     ) -> None:
@@ -1383,6 +1432,8 @@ class Layer:
         Args:
             interpolation_mode: Method for interpolation
             compress: Whether to compress recomputed data
+            zarr3_codecs: For zarr3 datasets, a list of codecs to use. Overrides the compress parameter. Defaults to None.
+            zarr3_chunk_key_encoding: For zarr3 datasets, the chunk key encoding to use. Defaults to None.
             buffer_shape: Shape of processing buffer
             executor: Executor for parallel processing
         """
@@ -1398,6 +1449,8 @@ class Layer:
             target_mags=target_mags,
             interpolation_mode=interpolation_mode,
             compress=compress,
+            zarr3_codecs=zarr3_codecs,
+            zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
             buffer_shape=buffer_shape,
             allow_overwrite=True,
             executor=executor,
@@ -1410,6 +1463,8 @@ class Layer:
         *,
         interpolation_mode: str = "default",
         compress: bool = True,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
         buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
@@ -1425,6 +1480,8 @@ class Layer:
             target_mags (List[Mag]): Ordered list of target magnifications
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
             compress (bool): Whether to compress outputs. Defaults to True.
+            zarr3_codecs (Sequence[Zarr3Codec] | None): For zarr3 datasets, a list of codecs to use. Overrides the compress parameter. Defaults to None.
+            zarr3_chunk_key_encoding (Zarr3ChunkKeyEncoding | None): For zarr3 datasets, the chunk key encoding to use. Defaults to None.
             buffer_shape (Vec3Int | None): Shape of processing buffer.
             allow_overwrite (bool): Whether to allow overwriting mags. Defaults to False.
             only_setup_mags (bool): Only create mag structures without data. Defaults to False.
@@ -1457,6 +1514,8 @@ class Layer:
                 target_mag,
                 interpolation_mode=interpolation_mode,
                 compress=compress,
+                zarr3_codecs=zarr3_codecs,
+                zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
                 buffer_shape=buffer_shape,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
@@ -1470,6 +1529,8 @@ class Layer:
         *,
         finest_mag: Mag = Mag(1),
         compress: bool = True,
+        zarr3_codecs: Sequence[Zarr3Codec] | None = None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Vec3IntLike | None = None,
@@ -1541,7 +1602,11 @@ class Layer:
 
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compress
+                target_mag,
+                prev_mag_view,
+                compress,
+                zarr3_codecs,
+                zarr3_chunk_key_encoding,
             )
 
             # We need to make sure the layer's bounding box is aligned
@@ -1606,7 +1671,12 @@ class Layer:
             )
 
     def _initialize_mag_from_other_mag(
-        self, new_mag_name: str | Mag, other_mag: MagView, compress: bool
+        self,
+        new_mag_name: str | Mag,
+        other_mag: MagView,
+        compress: bool,
+        zarr3_codecs: Sequence[Zarr3Codec] | None,
+        zarr3_chunk_key_encoding: Zarr3ChunkKeyEncoding | None,
     ) -> MagView:
         """Creates a new magnification based on settings from existing mag.
 
@@ -1614,6 +1684,8 @@ class Layer:
             new_mag_name: Name/identifier for new mag
             other_mag: Existing mag to copy settings from
             compress: Whether to enable compression
+            zarr3_codecs: For zarr3 datasets, a list of codecs to use. Overrides the compress parameter. Defaults to None.
+            zarr3_chunk_key_encoding: For zarr3 datasets, the chunk key encoding to use. Defaults to None.
 
         Returns:
             MagView: View of newly created magnification
@@ -1623,6 +1695,8 @@ class Layer:
             chunk_shape=other_mag.info.chunk_shape,
             shard_shape=other_mag.info.shard_shape,
             compress=compress,
+            zarr3_codecs=zarr3_codecs,
+            zarr3_chunk_key_encoding=zarr3_chunk_key_encoding,
         )
 
     def __repr__(self) -> str:
