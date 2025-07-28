@@ -1606,7 +1606,6 @@ class Layer:
         self,
         new_mag_name: str | Mag,
         other_mag: MagView,
-        *,
         compress: bool | Zarr3Config | None = None,
     ) -> MagView:
         """Creates a new magnification based on settings from existing mag.
