@@ -569,6 +569,13 @@ class MagView(View):
         def _rechunk_bboxes(
             source_bbox_iterator: Iterator[NDBoundingBox],
         ) -> Iterator[NDBoundingBox]:
+            # Finding suitable bounding boxes for rechunking
+            # The boxes need to be compatible with the source shard shape and target shard shape
+            # If both are equal, the boxes are compatible and can be used directly
+            # If they differ, we calculate the pairwise maximum of the two shard shapes
+            # and use that for iterating over the full mag view
+            # Additionally, we filter out boxes that are empty based on bounding boxes in
+            # the source on disk
             source_shard_shape = self.info.shard_shape
             target_shard_shape = rechunked_mag.info.shard_shape
             if source_shard_shape == target_shard_shape:
