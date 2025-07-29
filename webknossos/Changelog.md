@@ -16,7 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added `MagView.rechunk` methods to allow for rechunking of datasets. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
-- Added `zarr3_codecs` and `zarr3_chunk_key_encoding` parameters to `MagView.add_mag` to allow for configuring Zarr3 datasets. [#1343](https://github.com/scalableminds/webknossos-libs/pull/1343)
+- Added the option to configure the codecs of Zarr3 datasets. Supply a `Zarr3Config` to the `compress` argument in `Layer.add_mag` or similar methods. `codecs` and `chunk_key_encoding` can be customized. [#1343](https://github.com/scalableminds/webknossos-libs/pull/1343)
 
 ### Changed
 - Enforces that `chunk_shape` and `shard_shape` have power-of-two values. This assumptions was used in the code previously, but not explicitly enforced. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)

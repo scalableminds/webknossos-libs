@@ -43,7 +43,7 @@ from .view import View
 logger = logging.getLogger(__name__)
 
 
-def _compress_cube_job(args: tuple[View, View, int]) -> None:
+def _copy_view_data(args: tuple[View, View, int]) -> None:
     source_view, target_view, _i = args
     target_view.write(
         source_view.read(), absolute_bounding_box=target_view.bounding_box
@@ -528,7 +528,7 @@ class MagView(View):
         *,
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
-        compress: bool | None = None,
+        compress: bool | Zarr3Config | None = None,
         target_path: str | Path | None = None,
         executor: Executor | None = None,
         _progress_desc: str | None = None,
@@ -653,7 +653,7 @@ class MagView(View):
                     job_args.append((source_view, target_view, i))
 
                 wait_and_ensure_success(
-                    executor.map_to_futures(_compress_cube_job, job_args),
+                    executor.map_to_futures(_copy_view_data, job_args),
                     executor=executor,
                     progress_desc=_progress_desc
                     or f"Rechunking {self.layer.name} {self.name}",
@@ -666,7 +666,7 @@ class MagView(View):
                 self.for_zipped_chunks(
                     target_view=rechunked_mag,
                     executor=executor,
-                    func_per_chunk=_compress_cube_job,
+                    func_per_chunk=_copy_view_data,
                     progress_desc=_progress_desc
                     or f"Rechunking {self.layer.name} {self.name}",
                 )
