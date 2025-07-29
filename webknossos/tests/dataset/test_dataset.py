@@ -164,7 +164,7 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
             .get_view(absolute_offset=offset, size=size)
         )
         chunk_data = chunk.read()
-        assert np.array_equal(
+        np.testing.assert_array_equal(
             np.ones(chunk_data.shape, dtype=np.dtype("uint8"))
             * (sum(chunk.bounding_box.topleft) % 256),
             chunk_data,
@@ -566,7 +566,7 @@ def test_view_write(data_format: DataFormat, output_path: UPath) -> None:
     wk_view.write(write_data, allow_unaligned=True)
 
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-    assert np.array_equal(data, write_data)
+    np.testing.assert_array_equal(data, write_data)
 
 
 @pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
@@ -581,13 +581,13 @@ def test_direct_zarr_access(output_path: UPath, data_format: DataFormat) -> None
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     mag.get_zarr_array()[:, 0:10, 0:10, 0:10].write(write_data).result()
     data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-    assert np.array_equal(data, write_data)
+    np.testing.assert_array_equal(data, write_data)
 
     # write: wk, read: zarr
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data, absolute_offset=(0, 0, 0), allow_unaligned=True)
     data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10].read().result()
-    assert np.array_equal(data, write_data)
+    np.testing.assert_array_equal(data, write_data)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -852,7 +852,7 @@ def test_write_multi_channel_uint8(data_format: DataFormat, output_path: UPath) 
 
     mag.write(data, allow_resize=True)
 
-    assert np.array_equal(data, mag.read())
+    np.testing.assert_array_equal(data, mag.read())
 
     assure_exported_properties(ds)
 
@@ -876,7 +876,7 @@ def test_wkw_write_multi_channel_uint16(
     mag.write(data, allow_resize=True)
     written_data = mag.read()
 
-    assert np.array_equal(data, written_data)
+    np.testing.assert_array_equal(data, written_data)
 
     assure_exported_properties(ds)
 
@@ -993,7 +993,7 @@ def test_read_padded_data(data_format: DataFormat, output_path: UPath) -> None:
     data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
 
     assert data.shape == (3, 10, 10, 10)
-    assert np.array_equal(data, np.zeros((3, 10, 10, 10)))
+    np.testing.assert_array_equal(data, np.zeros((3, 10, 10, 10)))
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1272,7 +1272,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: UPath) -> None:
             chunk_shape=shard_shape,
             executor=executor,
         )
-    assert np.array_equal(original_data + 50, mag.get_view().read()[0])
+    np.testing.assert_array_equal(original_data + 50, mag.get_view().read()[0])
 
     # Reset the data
     mag.write(absolute_offset=(70, 80, 90), data=original_data, allow_resize=True)
@@ -1282,7 +1282,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: UPath) -> None:
         chunk_job,
         chunk_shape=shard_shape,
     )
-    assert np.array_equal(original_data + 50, mag.get_view().read()[0])
+    np.testing.assert_array_equal(original_data + 50, mag.get_view().read()[0])
 
     assure_exported_properties(ds)
 
@@ -1410,7 +1410,7 @@ def test_changing_layer_bounding_box(
     assert tuple(bbox_size) == (12, 12, 10)
     less_data = mag.read(absolute_offset=(0, 0, 0), size=bbox_size)
     assert less_data.shape == (3, 12, 12, 10)
-    assert np.array_equal(original_data[:, :12, :12, :10], less_data)
+    np.testing.assert_array_equal(original_data[:, :12, :12, :10], less_data)
 
     layer.bounding_box = layer.bounding_box.with_size(
         [36, 48, 60]
@@ -1420,7 +1420,7 @@ def test_changing_layer_bounding_box(
     assert tuple(bbox_size) == (36, 48, 60)
     more_data = mag.read(absolute_offset=(0, 0, 0), size=bbox_size)
     assert more_data.shape == (3, 36, 48, 60)
-    assert np.array_equal(more_data[:, :24, :24, :24], original_data)
+    np.testing.assert_array_equal(more_data[:, :24, :24, :24], original_data)
 
     assert tuple(ds.get_layer("color").bounding_box.topleft) == (0, 0, 0)
 
@@ -1432,12 +1432,12 @@ def test_changing_layer_bounding_box(
     new_bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(new_bbox_offset) == (10, 10, 0)
     assert tuple(new_bbox_size) == (14, 14, 24)
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         original_data,
         mag.read(absolute_offset=(0, 0, 0), size=mag.bounding_box.bottomright),
     )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         original_data[:, 10:, 10:, :],
         mag.read(absolute_offset=(10, 10, 0), size=(14, 14, 24)),
     )
@@ -1447,7 +1447,7 @@ def test_changing_layer_bounding_box(
     layer.bounding_box = BoundingBox((0, 0, 0), new_bbox_size)
     new_data = mag.read()
     assert new_data.shape == (3, 14, 14, 24)
-    assert np.array_equal(original_data[:, :14, :14, :], new_data)
+    np.testing.assert_array_equal(original_data[:, :14, :14, :], new_data)
 
     assure_exported_properties(ds)
 
@@ -1635,11 +1635,11 @@ def test_writing_subset_of_compressed_data_multi_channel(
         view.write(relative_offset=(10, 20, 30), data=write_data2)
     view.write(relative_offset=(10, 20, 30), data=write_data2, allow_unaligned=True)
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         write_data2,
         compressed_mag.read(relative_offset=(60, 80, 100), size=(10, 10, 10)),
     )  # the new data was written
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         write_data1[:, :60, :80, :100],
         compressed_mag.read(relative_offset=(0, 0, 0), size=(60, 80, 100)),
     )  # the old data is still there
@@ -1681,11 +1681,11 @@ def test_writing_subset_of_compressed_data_single_channel(
         view.write(relative_offset=(10, 20, 30), data=write_data2)
     view.write(relative_offset=(10, 20, 30), data=write_data2, allow_unaligned=True)
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         write_data2,
         compressed_mag.read(absolute_offset=(60, 80, 100), size=(10, 10, 10))[0],
     )  # the new data was written
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         write_data1[:60, :80, :100],
         compressed_mag.read(absolute_offset=(0, 0, 0), size=(60, 80, 100))[0],
     )  # the old data is still there
@@ -1861,7 +1861,7 @@ def test_add_layer_as_ref(data_format: DataFormat, output_path: UPath) -> None:
             (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8), allow_unaligned=True
         )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
         original_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)),
     )
@@ -1963,7 +1963,7 @@ def test_add_mag_as_ref(data_format: DataFormat, output_path: UPath) -> None:
     assert not layer.get_mag(1).read_only
     assert ref_mag_2.read_only
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         ref_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0],
         original_layer.get_mag(2).read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0],
     )
@@ -2051,10 +2051,10 @@ def test_add_mag_as_copy(data_format: DataFormat, output_path: UPath) -> None:
         allow_unaligned=True,
     )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
     )
-    assert np.array_equal(original_mag.read()[0], original_data)
+    np.testing.assert_array_equal(original_mag.read()[0], original_data)
 
     assure_exported_properties(original_ds)
     assure_exported_properties(copy_ds)
@@ -2100,10 +2100,10 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
         allow_unaligned=True,
     )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
     )
-    assert np.array_equal(original_mag.read()[0], original_data)
+    np.testing.assert_array_equal(original_mag.read()[0], original_data)
 
     assure_exported_properties(original_ds)
     assure_exported_properties(copy_ds)
@@ -2127,7 +2127,7 @@ def test_search_dataset_also_for_long_layer_name(
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data, absolute_offset=(20, 20, 20), allow_resize=True)
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)),
         np.expand_dims(write_data, 0),
     )
@@ -2146,7 +2146,7 @@ def test_search_dataset_also_for_long_layer_name(
     # when opening the dataset, it searches both for the long and the short path
     layer = Dataset.open(ds_path).get_layer("color")
     mag = layer.get_mag("2")
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)),
         np.expand_dims(write_data, 0),
     )
@@ -2318,7 +2318,7 @@ def test_dataset_conversion_wkw_only() -> None:
             assert origin_info.compression_mode == converted_info.compression_mode
             assert origin_info.chunk_shape == converted_info.chunk_shape
             assert origin_info.data_format == converted_info.data_format
-            assert np.array_equal(
+            np.testing.assert_array_equal(
                 origin_ds.layers[layer_name].mags[mag].read(),
                 converted_ds.layers[layer_name].mags[mag].read(),
             )
@@ -2412,7 +2412,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
             executor=executor,
         )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         source_view.read() + 50,
         target_view.read(),
     )
@@ -2468,6 +2468,25 @@ def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
                 )
 
     assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
+def test_invalid_chunk_shard_shape(output_path: UPath) -> None:
+    ds_path = prepare_dataset_path(
+        DEFAULT_DATA_FORMAT, output_path, "invalid_chunk_shape"
+    )
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DEFAULT_DATA_FORMAT)
+
+    with pytest.raises(ValueError, match=".*must be a power of two.*"):
+        layer.add_mag("1", chunk_shape=(3, 4, 4))
+
+    with pytest.raises(ValueError, match=".*must be a multiple.*"):
+        layer.add_mag("1", chunk_shape=(16, 16, 16), shard_shape=(8, 16, 16))
+
+    with pytest.raises(ValueError, match=".*must be a multiple.*"):
+        # also not a power-of-two shard shape
+        layer.add_mag("1", chunk_shape=(16, 16, 16), shard_shape=(53, 16, 16))
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -2590,12 +2609,69 @@ def test_compression(data_format: DataFormat, output_path: UPath) -> None:
             )
         mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
     else:
-        mag1.compress()
+        with get_executor("sequential") as executor:
+            mag1.compress(executor=executor)
 
     assert mag1._is_compressed()
     assert mag1.info.data_format == data_format
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
+        write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
+    )
+
+    # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+    mag1.write(
+        (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+    )
+
+    assure_exported_properties(mag1.layer.dataset)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_rechunking(data_format: DataFormat, output_path: UPath) -> None:
+    new_dataset_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(new_dataset_path, voxel_size=(2, 2, 1))
+    mag1 = ds.add_layer(
+        "color", COLOR_CATEGORY, num_channels=3, data_format=data_format
+    ).add_mag(
+        1,
+        compress=False,
+        chunk_shape=(16, 16, 16),
+        shard_shape=(16, 16, 16) if data_format == DataFormat.Zarr else (64, 64, 64),
+    )
+
+    # writing unaligned data to an uncompressed dataset
+    write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
+    mag1.write(write_data, absolute_offset=(60, 80, 100), allow_resize=True)
+
+    assert not mag1._is_compressed()
+
+    if output_path == REMOTE_TESTOUTPUT_DIR:
+        # Remote datasets require a `target_path` for rechunking
+        with pytest.raises(AssertionError):
+            mag1.rechunk()
+
+        compressed_dataset_path = (
+            REMOTE_TESTOUTPUT_DIR / f"simple_{data_format}_dataset_compressed"
+        )
+        with pytest.warns(UserWarning, match=".*can be slow.*"):
+            mag1.rechunk(
+                target_path=compressed_dataset_path,
+            )
+        mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
+    else:
+        with get_executor("sequential") as executor:
+            mag1.rechunk(executor=executor)
+
+    assert mag1.info.data_format == data_format
+    assert mag1._is_compressed()
+    assert mag1.info.chunk_shape == Vec3Int.full(32)
+    if data_format == DataFormat.Zarr:
+        assert mag1.info.shard_shape == Vec3Int.full(32)
+    else:
+        assert mag1.info.shard_shape == Vec3Int.full(1024)
+
+    np.testing.assert_array_equal(
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
     )
 
@@ -2816,7 +2892,7 @@ def test_read_bbox() -> None:
         allow_resize=True,
     )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         mag.read(absolute_offset=(20, 30, 40), size=(40, 50, 60)),
         mag.read(
             absolute_bounding_box=BoundingBox(topleft=(20, 30, 40), size=(40, 50, 60))
@@ -2863,7 +2939,7 @@ def test_add_layer_as_copy(data_format: DataFormat, output_path: UPath) -> None:
     assert color_layer.mags.keys() == original_color_layer.mags.keys()
     assert len(color_layer.mags.keys()) >= 1
     for mag in color_layer.mags.keys():
-        assert np.array_equal(
+        np.testing.assert_array_equal(
             color_layer.get_mag(mag).read(), original_color_layer.get_mag(mag).read()
         )
         # Test if the copied layer contains actual data
@@ -2912,7 +2988,7 @@ def test_rename_layer(data_format: DataFormat, output_path: UPath) -> None:
     assert ds.get_layer("color2").data_format == data_format
 
     # The "mag" object which was created before renaming the layer is still valid
-    assert np.array_equal(mag.read()[0], write_data)
+    np.testing.assert_array_equal(mag.read()[0], write_data)
 
     assure_exported_properties(ds)
 
@@ -3107,7 +3183,7 @@ def test_pickle_view() -> None:
 
     # Make sure that the pickled mag can still read data
     assert pickled_mag1._cached_array is None
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         data_to_write,
         pickled_mag1.read(relative_offset=(0, 0, 0), size=data_to_write.shape[-3:]),
     )
