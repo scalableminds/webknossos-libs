@@ -547,7 +547,7 @@ class Layer:
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: int | Vec3IntLike | None = None,
-        compress: bool | Zarr3Config | None = None,
+        compress: bool | Zarr3Config = True,
     ) -> MagView:
         """Creates and adds a new magnification level to the layer.
 
@@ -1606,14 +1606,14 @@ class Layer:
         self,
         new_mag_name: str | Mag,
         other_mag: MagView,
-        compress: bool | Zarr3Config | None = None,
+        compress: bool | Zarr3Config,
     ) -> MagView:
         """Creates a new magnification based on settings from existing mag.
 
         Args:
             new_mag_name: Name/identifier for new mag
             other_mag: Existing mag to copy settings from
-            compress: Whether to enable compression. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
+            compress: Whether to enable compression. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied.
 
         Returns:
             MagView: View of newly created magnification
