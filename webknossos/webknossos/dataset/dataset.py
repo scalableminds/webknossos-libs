@@ -3535,13 +3535,12 @@ class RemoteDataset(Dataset):
         segment_id: int,
         output_dir: PathLike | str,
         layer_name: str | None = None,
-        is_precomputed: bool = False,
         mesh_file_name: str | None = None,
         datastore_url: str | None = None,
         lod: int = 0,
         mapping_name: str | None = None,
         mapping_type: Literal["agglomerate", "json"] | None = None,
-        mag: Mag | None = None,
+        mag: MagLike | None = None,
         seed_position: Vec3Int | None = None,
         token: str | None = None,
     ) -> UPath:
@@ -3551,8 +3550,7 @@ class RemoteDataset(Dataset):
         context = _get_context()
         datastore_url = datastore_url or Datastore.get_upload_url()
         mesh_info: ApiAdHocMeshInfo | ApiPrecomputedMeshInfo
-        if is_precomputed:
-            assert mesh_file_name is not None
+        if mesh_file_name is not None:
             mesh_info = ApiPrecomputedMeshInfo(
                 lod=lod,
                 mesh_file_name=mesh_file_name,
@@ -3560,14 +3558,16 @@ class RemoteDataset(Dataset):
                 mapping_name=mapping_name,
             )
         else:
-            assert mag is not None
-            assert seed_position is not None
+            assert mag is not None, "mag is required for downloading ad-hoc mesh"
+            assert seed_position is not None, (
+                "seed_position is required for downloading ad-hoc mesh"
+            )
             mesh_info = ApiAdHocMeshInfo(
                 lod=lod,
                 segment_id=segment_id,
                 mapping_name=mapping_name,
                 mapping_type=mapping_type,
-                mag=mag.to_tuple(),
+                mag=Mag(mag).to_tuple(),
                 seed_position=seed_position.to_tuple(),
             )
         file_path: UPath
