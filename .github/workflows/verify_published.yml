@@ -1,6 +1,6 @@
 name: Verify Published Package
 
-# Verifies that the published webknossos package on PyPi.org can be installed and imported 
+# Verifies that the published webknossos package on PyPi.org can be installed and imported
 # across different Python versions. Tests both basic installation and "all" optional
 # dependencies. Runs nightly to ensure consistent package availability.
 
@@ -35,8 +35,26 @@ jobs:
       - name: Verify installation
         run: |
           python -c "import webknossos; from webknossos import version; print(f'webknossos version: {version.__version__}')"
-          
+
           if [ "${{ matrix.extras }}" = "[all]" ]; then
             # Verify some of the optional dependencies are available
             python -c "import tifffile; import imagecodecs; import pandas;"
           fi
+
+      - uses: slackapi/slack-github-action@v2.1.1
+        if: failure() || cancelled()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            attachments:
+              - color: "#f00"
+                blocks:
+                  - type: "section"
+                    text:
+                      type: "mrkdwn"
+                      text: ':fire: Job <${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}|{job}> of workflow "{workflow}" {status_message}'
+                  - type: "context"
+                    elements:
+                      - type: mrkdwn
+                        text: '<{repo_url}|{repo}>'
