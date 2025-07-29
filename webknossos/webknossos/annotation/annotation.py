@@ -187,7 +187,7 @@ class Annotation:
     # The following underscored attributes are just for initialization
     # in case the skeleton is not given. They are always None as attributes.
     _dataset_name: str | None = None
-    _voxel_size: Vector3 | None = None
+    _voxel_size: VoxelSize | Vector3 | None = None
     _organization_id: str | None = None
     _description: str | None = None
     owner_name: str | None = None
