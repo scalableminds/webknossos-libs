@@ -173,7 +173,7 @@ class MagView(View):
             )
             Zarr3Array.create(path, zarr3_array_info)
         else:
-            assert isinstance(compression_mode, bool), (
+            assert not isinstance(compression_mode, Zarr3Config), (
                 "Zarr3 config is only supported for Zarr3 layers."
             )
             array_info = ArrayInfo(
