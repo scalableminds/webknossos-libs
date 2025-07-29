@@ -87,6 +87,7 @@ class Vec3Int(VecInt):
         return (self.x, self.y, self.z)
 
     def _is_power_of_two(self) -> bool:
+        # see https://stackoverflow.com/questions/1053582/how-does-this-bitwise-operation-check-for-a-power-of-2
         return (
             self.x > 0
             and self.x & (self.x - 1) == 0
