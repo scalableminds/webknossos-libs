@@ -10,16 +10,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- Added `MagView.rechunk` methods to allow for rechunking of datasets. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 - Added method download_mesh() to the Annotation class to allow download of .stl files. [#1307](https://github.com/scalableminds/webknossos-libs/pull/1307)
 
 ### Changed
+- Enforces that `chunk_shape` and `shard_shape` have power-of-two values. This assumptions was used in the code previously, but not explicitly enforced. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 
 ### Fixed
+
+
+## [2.4.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.6) - 2025-07-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.5...v2.4.6)
+
+
+## [2.4.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.5) - 2025-07-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.4...v2.4.5)
+
+### Fixed
+- Fixed an issue where the unit of the scale (voxel_size) was not considered when reading the NML. [#1339](https://github.com/scalableminds/webknossos-libs/pull/1339)
+
 
 
 ## [2.4.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.4) - 2025-07-14
@@ -30,6 +44,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Every file that sends logging messages has its own logger now. This can be used to selectively disable loggers. [#1335](https://github.com/scalableminds/webknossos-libs/pull/1335)
+- Enabled compression by default for `convert-zarr` and `convert-raw` CLI commands. [#1338](https://github.com/scalableminds/webknossos-libs/pull/1338)
+- Add more (network) errors ("UNAVAILABLE", "Unknown error") to list of retryable errors. [#1341](https://github.com/scalableminds/webknossos-libs/pull/1341)
 
 
 ## [2.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.3) - 2025-07-07

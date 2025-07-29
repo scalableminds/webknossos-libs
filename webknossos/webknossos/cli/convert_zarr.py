@@ -231,7 +231,7 @@ def main(
     ] = None,
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
-    ] = False,
+    ] = True,
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,

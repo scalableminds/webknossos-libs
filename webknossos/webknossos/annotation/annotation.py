@@ -77,7 +77,7 @@ from ..dataset import (
     SegmentationLayer,
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
-from ..dataset.properties import DatasetProperties, dataset_converter
+from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, time_since_epoch_in_ms
@@ -192,7 +192,7 @@ class Annotation:
     # The following underscored attributes are just for initialization
     # in case the skeleton is not given. They are always None as attributes.
     _dataset_name: str | None = None
-    _voxel_size: Vector3 | None = None
+    _voxel_size: VoxelSize | Vector3 | None = None
     _organization_id: str | None = None
     _description: str | None = None
     owner_name: str | None = None
@@ -305,6 +305,14 @@ class Annotation:
     @voxel_size.setter
     def voxel_size(self, voxel_size: tuple[float, float, float]) -> None:
         self.skeleton.voxel_size = voxel_size
+
+    @property
+    def voxel_size_with_unit(self) -> VoxelSize:
+        return self.skeleton.voxel_size_with_unit
+
+    @voxel_size_with_unit.setter
+    def voxel_size_with_unit(self, voxel_size: VoxelSize) -> None:
+        self.skeleton.voxel_size_with_unit = voxel_size
 
     @property
     def organization_id(self) -> str | None:

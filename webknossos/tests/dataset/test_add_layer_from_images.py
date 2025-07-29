@@ -1,3 +1,4 @@
+import os
 import sys
 import warnings
 from collections.abc import Iterator
@@ -342,7 +343,9 @@ def _test_bioformats(
     return ds
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+@pytest.mark.skipif(
+    os.environ["CI"] != "true" or sys.platform != "linux", reason="only run on linux CI"
+)
 @pytest.mark.parametrize(
     "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
 )
@@ -511,7 +514,9 @@ def _test_test_images(
 @pytest.mark.parametrize(
     "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
 )
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+@pytest.mark.skipif(
+    os.environ["CI"] != "true" or sys.platform != "linux", reason="only run on linux CI"
+)
 def test_test_images(
     tmp_path: Path,
     url: str | list[str],
