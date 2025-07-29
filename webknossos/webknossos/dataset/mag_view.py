@@ -540,7 +540,7 @@ class MagView(View):
         Args:
             chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
             shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
-            compress: Whether to compress the data
+            compress: Whether to compress the data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied.
             target_path: Optional path to write compressed data. If None, compresses in-place.
             executor: Optional executor for parallel rechunking.
 
