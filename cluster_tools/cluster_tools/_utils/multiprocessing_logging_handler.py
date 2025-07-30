@@ -69,7 +69,7 @@ class _MultiprocessingLoggingHandler(logging.Handler):
                 ConnectionResetError,
                 multiprocessing.managers.RemoteError,
             ) as e:
-                print("LOGGING ERROR", e)
+                print(os.getpid(), "LOGGING ERROR", e)
                 break
             except QueueEmpty:
                 # This case is reached when the timeout in queue.get is hit. Pass, to
@@ -115,7 +115,7 @@ def _setup_logging_multiprocessing(
     so that log messages are piped to the original loggers in the main process.
     """
     warnings.filters = filters
-    print("RESETUP LOGGING for multiprocessing", queues, levels)
+    print(os.getpid(), "RESETUP LOGGING for multiprocessing", queues, levels)
     root_logger = getLogger()
     for handler in root_logger.handlers:
         root_logger.removeHandler(handler)
@@ -130,7 +130,7 @@ def _setup_logging_multiprocessing(
 class _MultiprocessingLoggingHandlerPool:
     def __init__(self) -> None:
         root_logger = getLogger()
-
+        print(os.getpid(), "INSTANTIATE _MultiprocessingLoggingHandlerPool")
         self.handlers = []
         for i, handler in enumerate(list(root_logger.handlers)):
             # Wrap logging handlers in _MultiprocessingLoggingHandlers to make them work in a multiprocessing setup
@@ -139,7 +139,7 @@ class _MultiprocessingLoggingHandlerPool:
                 mp_handler = _MultiprocessingLoggingHandler(
                     f"multi-processing-handler-{i}", handler
                 )
-                print("EXISTING LOGGER", handler)
+                print(os.getpid(), "EXISTING LOGGER", handler)
                 root_logger.removeHandler(handler)
                 root_logger.addHandler(mp_handler)
                 self.handlers.append(mp_handler)
@@ -152,7 +152,8 @@ class _MultiprocessingLoggingHandlerPool:
         # using the queues of the _MultiprocessingLoggingHandlers. This way all log messages
         # are forwarded to the main process.
         print(
-            "LOGGING",
+            os.getpid(),
+            "GET LOGGING",
             [handler for handler in self.handlers],
             [handler.level for handler in self.handlers],
         )
