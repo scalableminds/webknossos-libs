@@ -68,7 +68,8 @@ class _MultiprocessingLoggingHandler(logging.Handler):
                 EOFError,
                 ConnectionResetError,
                 multiprocessing.managers.RemoteError,
-            ):
+            ) as e:
+                print("LOGGING ERROR", e)
                 break
             except QueueEmpty:
                 # This case is reached when the timeout in queue.get is hit. Pass, to
@@ -114,7 +115,7 @@ def _setup_logging_multiprocessing(
     so that log messages are piped to the original loggers in the main process.
     """
     warnings.filters = filters
-
+    print("RESETUP LOGGING for multiprocessing", queues, levels)
     root_logger = getLogger()
     for handler in root_logger.handlers:
         root_logger.removeHandler(handler)
