@@ -372,86 +372,46 @@ def test_tree_metadata(tmp_path: Path) -> None:
     )
 
 
-def test_volume_annotations() -> None:
+def test_edit_volume_annotation() -> None:
     data = np.ones((1, 10, 10, 10), dtype=np.uint32)
     ann = wk.Annotation(
         name="my_annotation",
         dataset_name="sample_dataset",
-        voxel_size=(11.2, 11.2, 25.0),  # better: dataset=Dataset.open_remote("...")
+        voxel_size=(11.2, 11.2, 25.0),
     )
-    # # with memory backing
-    # volume_layer = ann.add_volume_layer(name="segmentation")
-    # assert isinstance(volume_layer, wk.SegmentationLayer)
-    # mag = volume_layer.add_mag(1)
-    # mag.write(data, absolute_offset=(0, 0, 0))
-    # volume_layer.downsample()
-    # ann.save("...") # or ann.upload()
 
-    # or with a temp directory
     volume_layer = ann.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
-
-    with volume_layer.edit(True) as seg_layer:
+    with volume_layer.edit() as seg_layer:
         assert isinstance(seg_layer, SegmentationLayer)
         mag = seg_layer.add_mag(1)
         mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
         # seg_layer.downsample(coarsest_mag=wk.Mag(2))
-    with volume_layer.edit(True) as seg_layer:
+    with volume_layer.edit() as seg_layer:
         assert len(seg_layer.mags) == 1
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
         assert np.array_equal(data, read_data)
 
-    # ann.save("...")
-    # # or
-    # ann.upload()
-
-
-@pytest.mark.use_proxay
-def test_volume_annotations_upload_roundtrip() -> None:
-    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
-    # annotation_from_file = wk.Annotation.load(path)
-    # annotation_from_file.organization_id = "Organization_X"
-    annotation_from_file = wk.Annotation(
-        name="my_annotation",
-        dataset_name="sample_dataset",
-        voxel_size=(11.2, 11.2, 25.0),  # better: dataset=Dataset.open_remote("...")
-    )
-
-    volume_layer = annotation_from_file.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
-    with volume_layer.edit(True) as seg_layer:
-        seg_layer.add_mag(1)
-    # annotation_from_file.save("/home/hannes/Downloads/test_volume_annotations.zip")
-    # test_token = os.getenv("WK_TOKEN")
-    # with wk.webknossos_context("http://localhost:9000", test_token):
-    url = annotation_from_file.upload()
-    annotation = wk.Annotation.download(url)
-    with annotation.get_volume_layer(volume_layer_name="segmentation").edit(
-        True
-    ) as seg_layer:
-        assert len(seg_layer.mags) == 1
-
-@pytest.mark.use_proxay
-def test_volume_annotation_upload_download_roundtrip2() -> None:
-    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
-    ann = wk.Annotation.load(path)
-    ann.organization_id = "Organization_X"
-    print(ann)
-    data = np.ones(shape=(10, 10, 10))
-
-    volume_layer = ann.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
-    with volume_layer.edit(True) as seg_layer:
-        mag_view = seg_layer.add_mag(1)
-        mag_view.write(data, allow_resize=True)
-    volume_layer.segments = ann.volume_layers[0].segments
-    ann.save(TESTOUTPUT_DIR / "export_volume_layer.zip")
+def test_save_edited_volume_annotation() -> None:
     import tensorstore
     import zipfile
 
-    zip_path = TESTOUTPUT_DIR / "export_volume_layer.zip"
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    ann = wk.Annotation.load(path)
+    data = np.ones(shape=(10, 10, 10))
+
+    volume_layer = ann.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
+    with volume_layer.edit() as seg_layer:
+        mag_view = seg_layer.add_mag(1)
+        mag_view.write(data, allow_resize=True)
+
+    export_path = TESTOUTPUT_DIR / "export_volume_layer.zip"
+    ann.save(export_path)
     unpack_dir = TESTOUTPUT_DIR / "unpacked_volume_layer"
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+    with zipfile.ZipFile(export_path, "r") as zip_ref:
         zip_ref.extractall(unpack_dir)
 
+    # test for the format assumptions as mentioned in https://github.com/scalableminds/webknossos/issues/8604
     ts = tensorstore.open(
         {"driver": "zarr3",
          "kvstore": {"driver": "zip",
@@ -463,29 +423,25 @@ def test_volume_annotation_upload_download_roundtrip2() -> None:
         create=False,
         open=True,
     ).result()
+    metadata = ts.spec().to_json()["metadata"]
 
-    # expected_metadata = tensorstore.open(
-    #     {"driver": "zarr3",
-    #      "kvstore": {"driver": "zip",
-    #          "path": "volumeAnnotationData/1/",
-    #          "base": {"driver": "file",
-    #                   "path": str(unpack_dir / "data_0_Volume.zip")}
-    #         }
-    #      },
-    #     create=False,
-    #     open=True,
-    # ).result().spec().to_json()["metadata"]
-    result_metadata = ts.spec().to_json()["metadata"]
-
-    assert(result_metadata["chunk_key_encoding"] == {
+    assert(metadata["chunk_key_encoding"] == {
                                     "configuration": {"separator": "."},
                                     "name": "v2",
                                 },)
+    assert(["transpose", "bytes", "blosc"] == [codec["name"] for codec in metadata["codecs"]])
 
-    assert(["transpose", "bytes", "blosc"] == [codec["name"] for codec in result_metadata["codecs"]])
-
+@pytest.mark.use_proxay
+def test_edited_volume_annotation_upload_download() -> None:
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    ann = wk.Annotation.load(path)
+    # better: dataset=Dataset.open_remote("...")
+    ann.organization_id = "Organization_X"
+    volume_layer = ann.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
+    with volume_layer.edit() as seg_layer:
+        mag_view = seg_layer.add_mag(1)
     # read_data = ts.read().result()
     # print(read_data)
     url = ann.upload()
-    # ann = wk.Annotation.download(url)
+    ann = wk.Annotation.download(url)
 
