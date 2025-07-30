@@ -415,5 +415,3 @@ class ApiAdHocMeshInfo:
     mapping_type: Literal["json", "agglomerate"] | None
     mag: tuple[int, int, int]
     seed_position: tuple[int, int, int]
-    mesh_file_name: None = None  # None means ad-hoc mesh
-    additional_coordinates: None = None  # ND datasets are not supported yet
