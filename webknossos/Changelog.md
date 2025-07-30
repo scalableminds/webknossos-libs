@@ -10,19 +10,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.7...HEAD)
 
 ### Breaking Changes
 
 ### Added
+
+### Changed
+
+### Fixed
+
+
+## [2.4.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.7) - 2025-07-30
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.6...v2.4.7)
+
+### Added
 - Added `MagView.rechunk` methods to allow for rechunking of datasets. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 - Added the option to configure the codecs of Zarr3 datasets. Supply a `Zarr3Config` to the `compress` argument in `Layer.add_mag` or similar methods. `codecs` and `chunk_key_encoding` can be customized. [#1343](https://github.com/scalableminds/webknossos-libs/pull/1343)
+- Added method `download_mesh` to the `RemoteDataset` and `RemoteAnnotation` classes to allow download of .stl files. [#1307](https://github.com/scalableminds/webknossos-libs/pull/1307)
 
 ### Changed
 - Enforces that `chunk_shape` and `shard_shape` have power-of-two values. This assumptions was used in the code previously, but not explicitly enforced. [#1342](https://github.com/scalableminds/webknossos-libs/pull/1342)
 - The `sharding_indexed` codec is no longer used if `chunk_shape == shard_shape`. [#1343](https://github.com/scalableminds/webknossos-libs/pull/1343)
-
-### Fixed
 
 
 ## [2.4.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.6) - 2025-07-28

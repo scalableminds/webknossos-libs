@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from typing import Any, TypeVar
 
 import httpx
@@ -108,6 +109,24 @@ class AbstractApiClient(ABC):
             retry_count=retry_count,
             timeout_seconds=timeout_seconds,
         )
+
+    def _post_json_with_bytes_iterator_response(
+        self,
+        route: str,
+        body_structured: Any,
+        query: Query | None = None,
+        retry_count: int = 0,
+        timeout_seconds: float | None = None,
+    ) -> Iterator[bytes]:
+        body_json = self._prepare_for_json(body_structured)
+        response = self._post(
+            route,
+            body_json=body_json,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+        )
+        yield from response.iter_bytes()
 
     def _get_file(
         self, route: str, query: Query | None = None, retry_count: int = 0
