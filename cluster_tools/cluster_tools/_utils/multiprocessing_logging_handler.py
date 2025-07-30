@@ -37,10 +37,10 @@ class _MultiprocessingLoggingHandler(logging.Handler):
 
         # Make sure to use a multiprocessing context with
         # explicit start method to avoid unwanted forks
-        self._manager = multiprocessing.get_context(
+        mp_context = multiprocessing.get_context(
             os.environ.get("MULTIPROCESSING_DEFAULT_START_METHOD", "spawn")
         ).Manager()
-        self.queue = self._manager.Queue(-1)
+        self.queue = mp_context.Queue(-1)
         self._is_closed = False
         # Use thread to asynchronously receive messages from the queue
         self._queue_thread = threading.Thread(target=self._receive, name=name)
@@ -94,7 +94,6 @@ class _MultiprocessingLoggingHandler(logging.Handler):
 
             self._is_closed = True
             self._queue_thread.join(30)
-            self._manager.shutdown()
             self.wrapped_handler.close()
             super().close()
 
@@ -102,7 +101,6 @@ class _MultiprocessingLoggingHandler(logging.Handler):
         if not self._is_closed:
             self._is_closed = True
             self._queue_thread.join(30)
-            self._manager.shutdown()
             self.wrapped_handler.close()
             super().close()
 
