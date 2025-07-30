@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 import webknossos as wk
+from webknossos import SegmentationLayer
 from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
@@ -368,3 +369,92 @@ def test_tree_metadata(tmp_path: Path) -> None:
         list(tmp_annotation.skeleton.flattened_trees())[0].metadata["test_tree"]
         == "test"
     )
+
+
+def test_edit_volume_annotation() -> None:
+    data = np.ones((1, 10, 10, 10), dtype=np.uint32)
+    ann = wk.Annotation(
+        name="my_annotation",
+        dataset_name="sample_dataset",
+        voxel_size=(11.2, 11.2, 25.0),
+    )
+
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    )
+    with volume_layer.edit() as seg_layer:
+        assert isinstance(seg_layer, SegmentationLayer)
+        mag = seg_layer.add_mag(1)
+        mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
+        # seg_layer.downsample(coarsest_mag=wk.Mag(2))
+    with volume_layer.edit() as seg_layer:
+        assert len(seg_layer.mags) == 1
+        mag = seg_layer.get_mag(1)
+        read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+        assert np.array_equal(data, read_data)
+
+
+def test_save_edited_volume_annotation() -> None:
+    import zipfile
+
+    import tensorstore
+
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    ann = wk.Annotation.load(path)
+    data = np.ones(shape=(10, 10, 10))
+
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    )
+    with volume_layer.edit() as seg_layer:
+        mag_view = seg_layer.add_mag(1)
+        mag_view.write(data, allow_resize=True)
+
+    export_path = TESTOUTPUT_DIR / "export_volume_layer.zip"
+    ann.save(export_path)
+    unpack_dir = TESTOUTPUT_DIR / "unpacked_volume_layer"
+    with zipfile.ZipFile(export_path, "r") as zip_ref:
+        zip_ref.extractall(unpack_dir)
+
+    # test for the format assumptions as mentioned in https://github.com/scalableminds/webknossos/issues/8604
+    ts = tensorstore.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {
+                "driver": "zip",
+                "path": "volumeAnnotationData/1/",
+                "base": {
+                    "driver": "file",
+                    "path": str(unpack_dir / "data_1_segmentation.zip"),
+                },
+            },
+        },
+        create=False,
+        open=True,
+    ).result()
+    metadata = ts.spec().to_json()["metadata"]
+
+    assert metadata["chunk_key_encoding"] == {
+        "configuration": {"separator": "."},
+        "name": "v2",
+    }
+    assert ["transpose", "bytes", "blosc"] == [
+        codec["name"] for codec in metadata["codecs"]
+    ]
+
+
+@pytest.mark.use_proxay
+def test_edited_volume_annotation_upload_download() -> None:
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    ann = wk.Annotation.load(path)
+    # better: dataset=Dataset.open_remote("...")
+    ann.organization_id = "Organization_X"
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    )
+    with volume_layer.edit() as seg_layer:
+        seg_layer.add_mag(1)
+    # read_data = ts.read().result()
+    # print(read_data)
+    url = ann.upload()
+    ann = wk.Annotation.download(url)
