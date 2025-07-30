@@ -1,5 +1,6 @@
 import concurrent.futures
 import contextlib
+import functools
 import gc
 import io
 import logging
@@ -14,6 +15,7 @@ from collections import Counter
 from functools import partial
 from pathlib import Path
 from typing import Any
+from collections.abc import Callable
 
 import pytest
 
@@ -49,9 +51,9 @@ def test_map_with_spawn() -> None:
     with cluster_tools.get_executor(
         "slurm", max_workers=5, start_method="spawn"
     ) as executor:
-        assert executor.submit(expect_fork).result(), (
-            "Slurm should ignore provided start_method"
-        )
+        assert executor.submit(
+            expect_fork
+        ).result(), "Slurm should ignore provided start_method"
 
 
 def test_slurm_submit_returns_job_ids() -> None:
@@ -309,9 +311,9 @@ def test_slurm_signal_handling(
         # have taken the jobs to finish on their own
         assert job_cancellation_duration < 5
 
-    assert len(cluster_tools.SlurmExecutor._shutdown_hooks) == 0, (
-        "The cluster executor shutdown hooks should have been cleaned up"
-    )
+    assert (
+        len(cluster_tools.SlurmExecutor._shutdown_hooks) == 0
+    ), "The cluster executor shutdown hooks should have been cleaned up"
 
 
 def test_slurm_number_of_submitted_jobs() -> None:
@@ -426,9 +428,10 @@ def test_slurm_max_array_size_env() -> None:
 
 
 test_output_str = "Test-Output"
+test_output_strs = ["Test-Output-1", "Test-Output-2", "Test-Output-3"]
 
 
-def log(string: str) -> None:
+def log_debug(string: str) -> None:
     logging.debug(string)
 
 
@@ -441,7 +444,7 @@ def test_pickled_logging() -> None:
             job_resources={"mem": "10M"},
             logging_config=logging_config,
         ) as executor:
-            fut = executor.submit(log, test_output_str)
+            fut = executor.submit(log_debug, test_output_str)
             fut.result()
 
             output = f".cfut/slurmpy.{fut.cluster_jobid}.log.stdout"  # type: ignore[attr-defined]
@@ -450,10 +453,95 @@ def test_pickled_logging() -> None:
                 return file.read()
 
     debug_out = execute_with_log_level(logging.DEBUG)
+    print(f"Debug out {debug_out}")
     assert test_output_str in debug_out
 
     info_out = execute_with_log_level(logging.INFO)
+    print(f"Info out {info_out}")
     assert test_output_str not in info_out
+
+
+def multiprocessing_job() -> None:
+    with cluster_tools.get_executor(
+        "multiprocessing",
+        debug=True,
+        max_workers=3,
+    ) as executor:
+        futures = executor.map_to_futures(log_debug, test_output_strs)
+        concurrent.futures.wait(futures)
+
+
+def test_pickled_logging_with_logging_config_and_nested_multiprocessing() -> None:
+    def execute_with_log_level(log_level: int) -> str:
+        logging_config = {"level": log_level}
+        with cluster_tools.get_executor(
+            "slurm",
+            debug=True,
+            job_resources={"mem": "100M"},
+            logging_config=logging_config,
+        ) as executor:
+            fut = executor.submit(multiprocessing_job)
+            fut.result()
+
+            output = f".cfut/slurmpy.{fut.cluster_jobid}.log.stdout"  # type: ignore[attr-defined]
+
+            with open(output) as file:
+                return file.read()
+
+    debug_out = execute_with_log_level(logging.DEBUG)
+    print(f"Debug out {debug_out}")
+    assert all(string in debug_out for string in test_output_strs)
+
+    info_out = execute_with_log_level(logging.INFO)
+    print(f"Info out {info_out}")
+    assert all(string not in info_out for string in test_output_strs)
+
+
+F = Callable[..., Any]
+
+
+def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
+    # Propagate __name__ and __doc__ attributes to partial function
+    partial_func = functools.partial(func, *args, **kwargs)
+    functools.update_wrapper(partial_func, func)
+    if hasattr(func, "__annotations__"):
+        # Otherwise pickling causes this error: "TypeError: cannot pickle code objects"
+        partial_func.__annotations__ = {}
+    return partial_func
+
+
+def logging_setup_fn(log_level: int, _log_file_path: str) -> None:
+    import logging
+
+    root_logger = logging.getLogger()
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(log_level)
+    root_logger.addHandler(console)
+
+
+def test_pickled_logging_with_logging_setup_fn_and_nested_multiprocessing() -> None:
+    def execute_with_log_level(log_level: int) -> str:
+        with cluster_tools.get_executor(
+            "slurm",
+            debug=True,
+            job_resources={"mem": "200M"},
+            logging_setup_fn=named_partial(logging_setup_fn, log_level),
+        ) as executor:
+            fut = executor.submit(multiprocessing_job)
+            fut.result()
+
+            output = f".cfut/slurmpy.{fut.cluster_jobid}.log.stdout"  # type: ignore[attr-defined]
+
+            with open(output) as file:
+                return file.read()
+
+    debug_out = execute_with_log_level(logging.DEBUG)
+    print(f"Debug out {debug_out}")
+    assert all(string in debug_out for string in test_output_strs)
+
+    info_out = execute_with_log_level(logging.INFO)
+    print(f"Info out {info_out}")
+    assert all(string not in info_out for string in test_output_strs)
 
 
 def test_tailed_logging() -> None:
@@ -497,9 +585,9 @@ def test_preliminary_file_submit() -> None:
             )
             with pytest.raises(Exception):
                 fut.result()
-            assert preliminary_output_path.exists(), (
-                "Preliminary output file should exist"
-            )
+            assert (
+                preliminary_output_path.exists()
+            ), "Preliminary output file should exist"
             assert not output_pickle_path.exists(), "Final output file should not exist"
 
             # Schedule succeeding job with same output path
@@ -510,9 +598,9 @@ def test_preliminary_file_submit() -> None:
             )
             assert fut_2.result() == 9
             assert output_pickle_path.exists(), "Final output file should exist"
-            assert not preliminary_output_path.exists(), (
-                "Preliminary output file should not exist anymore"
-            )
+            assert (
+                not preliminary_output_path.exists()
+            ), "Preliminary output file should not exist anymore"
 
 
 def test_executor_args() -> None:
@@ -550,12 +638,12 @@ def test_preliminary_file_map() -> None:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
                 preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
 
-                assert preliminary_output_path.exists(), (
-                    "Preliminary output file should exist"
-                )
-                assert not output_pickle_path.exists(), (
-                    "Final output file should not exist"
-                )
+                assert (
+                    preliminary_output_path.exists()
+                ), "Preliminary output file should exist"
+                assert (
+                    not output_pickle_path.exists()
+                ), "Final output file should not exist"
 
             # Schedule succeeding jobs with same output paths
             futs_2 = executor.map_to_futures(
@@ -570,9 +658,9 @@ def test_preliminary_file_map() -> None:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
                 preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
                 assert output_pickle_path.exists(), "Final output file should exist"
-                assert not preliminary_output_path.exists(), (
-                    "Preliminary output file should not exist anymore"
-                )
+                assert (
+                    not preliminary_output_path.exists()
+                ), "Preliminary output file should not exist anymore"
 
 
 def test_cpu_bind_regression() -> None:
@@ -581,9 +669,9 @@ def test_cpu_bind_regression() -> None:
     )
 
     stdout, _ = chcall("scontrol show config | sed -n '/^TaskPlugin/s/.*= *//p'")
-    assert "task/affinity" in stdout, (
-        "The task/affinity TaskPlugin needs to be enabled in order for SLURM_CPU_BIND to have an effect."
-    )
+    assert (
+        "task/affinity" in stdout
+    ), "The task/affinity TaskPlugin needs to be enabled in order for SLURM_CPU_BIND to have an effect."
 
     with cluster_tools.get_executor("slurm") as executor:
         # The slurm job should not fail, although an invalid CPU mask was set before the submission

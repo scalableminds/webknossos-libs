@@ -138,6 +138,7 @@ class _MultiprocessingLoggingHandlerPool:
                 mp_handler = _MultiprocessingLoggingHandler(
                     f"multi-processing-handler-{i}", handler
                 )
+                print("EXISTING LOGGER", handler)
                 root_logger.removeHandler(handler)
                 root_logger.addHandler(mp_handler)
                 self.handlers.append(mp_handler)
@@ -149,6 +150,11 @@ class _MultiprocessingLoggingHandlerPool:
         # Return a logging setup function that when called will setup QueueHandler loggers
         # using the queues of the _MultiprocessingLoggingHandlers. This way all log messages
         # are forwarded to the main process.
+        print(
+            "LOGGING",
+            [handler for handler in self.handlers],
+            [handler.level for handler in self.handlers],
+        )
         return functools.partial(
             _setup_logging_multiprocessing,
             queues=[handler.queue for handler in self.handlers],

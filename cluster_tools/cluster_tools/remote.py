@@ -46,7 +46,6 @@ def worker(
     cfut_dir: str,
 ) -> None:
     """Called to execute a job on a remote host."""
-
     if job_array_index is not None:
         workerid_with_idx = (
             worker_id + "_" + str(int(job_array_index_offset) + job_array_index)
@@ -119,12 +118,17 @@ def setup_logging(
 
         # Call basicConfig which is necessary for the logging to work.
         logging.basicConfig(**logging_config)
-
+        logging.info(f"LOGGING REMOTE SETUP setting logging config {logging_config}")
         # It can happen that the pickled logger was already initialized. In this case,
         # the above basicConfig call was a noop. Therefore, we have to set the level explicitly.
         logger = logging.getLogger()
         if "level" in logging_config:
             logger.setLevel(logging_config["level"])
+            for handler in logger.handlers:
+                handler.setLevel(logging_config["level"])
+            logging.info(
+                f"LOGGING REMOTE LEVEL setting logging level {logging_config['level']} {logger.handlers}"
+            )
 
 
 if __name__ == "__main__":
