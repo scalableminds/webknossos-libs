@@ -104,6 +104,10 @@ class SegmentInformation:
     color: Vector4 | None
     metadata: dict[str, str | int | float | Sequence[str]]
 
+class VolumeLayerEditMode(Enum):
+    """Defines the edit mode for volume layers."""
+    TEMPORARY_DIRECTORY = "temporary_directory"  # Use a temporary directory for edits
+    MEMORY = "memory"  # Use an in-memory store for edits
 
 @attr.define
 class VolumeLayer:
@@ -120,13 +124,13 @@ class VolumeLayer:
 
     @contextmanager
     def edit(
-        self, store_in_temp_dir: bool = False
+        self, volume_layer_edit_mode: VolumeLayerEditMode = VolumeLayerEditMode.TEMPORARY_DIRECTORY,
     ) -> Generator[Layer | Any, None, None]:
         """
         Context manager to edit the volume layer.
 
-        store_in_temp_dir: If True, use a temporary directory for storing the edited layer. Else,
-            use an in-memory store.
+        volume_layer_edit_mode: Specifies the edit mode for the volume layer.
+
         """
 
         voxel_size = (1.0, 1.0, 1.0) # TO DO change to actual voxel size if needed?
@@ -136,7 +140,7 @@ class VolumeLayer:
                 "VolumeLayer.zip is not specified but required for editing."
             )
 
-        if store_in_temp_dir:
+        if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
             with TemporaryDirectory() as tmp_dir:
                 dataset_path = Path(tmp_dir)
                 dataset = Dataset(dataset_path, voxel_size=voxel_size)
@@ -190,9 +194,11 @@ class VolumeLayer:
                             if arcname=="zarr.json" or arcname=="volumeAnnotationData/zarr.json":
                                 continue
                             zipfile.write(full_path, arcname)
-        else:
+        elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             # Use memory for temporary data store memory:// kvstore in tensorstore
             raise NotImplementedError()  # TO DO
+        else:
+            raise ValueError(f"Unsupported volume layer edit mode: {volume_layer_edit_mode}")
 
     def export_to_dataset(
         self,
