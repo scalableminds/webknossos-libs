@@ -20,13 +20,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-        
+
     - name: Install uv
       uses: astral-sh/setup-uv@v3
 
     - name: Install proxay
       run: npm install -g proxay
-        
+
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
 
@@ -44,3 +44,21 @@ jobs:
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
       run: ./test.sh --refresh-snapshots --splits 3 --group ${{ matrix.group }}
+
+    - uses: slackapi/slack-github-action@v2.1.1
+      if: failure() || cancelled()
+      with:
+        webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        webhook-type: incoming-webhook
+        payload: |
+          attachments:
+            - color: "#f00"
+              blocks:
+                - type: "section"
+                  text:
+                    type: "mrkdwn"
+                    text: ':fire: Job <${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}|{job}> of workflow "{workflow}" {status_message}'
+                - type: "context"
+                  elements:
+                    - type: mrkdwn
+                      text: '<{repo_url}|{repo}>'
