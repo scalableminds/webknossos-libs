@@ -77,6 +77,7 @@ from ..dataset import (
     RemoteDataset,
     SegmentationLayer,
 )
+from ..dataset._array import Zarr3Config
 from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
 from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
@@ -119,30 +120,21 @@ class VolumeLayer:
 
     @contextmanager
     def edit(
-        self, store_in_temp_dir: bool = False, zip_path: ZipPath | None = None
+        self, store_in_temp_dir: bool = False
     ) -> Generator[Layer | Any, None, None]:
         """
         Context manager to edit the volume layer.
 
         store_in_temp_dir: If True, use a temporary directory for storing the edited layer. Else,
             use an in-memory store.
-        zip_path: The zip path, where the data will be saved to. Only required and accepted if
-            VolumeLayer.zip is None
         """
-        # TO DO set values
-        voxel_size = (1.0, 1.0, 1.0)
+
+        voxel_size = (1.0, 1.0, 1.0) # TO DO change to actual voxel size if needed?
 
         if self.zip is None:
-            if zip_path is None:
-                raise ValueError(
-                    "zip_path argument is required if VolumeLayer.zip is not specified"
-                )
-            self.zip = zip_path
-        else:
-            if zip_path is not None and self.zip != zip_path:
-                raise ValueError(
-                    "zip_path argument must not be provided if VolumeLayer.zip is already set"
-                )
+            raise ValueError(
+                "VolumeLayer.zip is not specified but required for editing."
+            )
 
         if store_in_temp_dir:
             with TemporaryDirectory() as tmp_dir:
@@ -150,17 +142,43 @@ class VolumeLayer:
                 dataset = Dataset(dataset_path, voxel_size=voxel_size)
                 if not self.zip.exists():
                     segmentation_layer = dataset.add_layer(
-                        "volume_layer", SEGMENTATION_CATEGORY
+                        "volumeAnnotationData", SEGMENTATION_CATEGORY
                     )
                 else:
                     segmentation_layer = self.export_to_dataset(
-                        dataset, layer_name="volume_layer"
+                        dataset, layer_name="volumeAnnotationData"
                     )
 
                 yield segmentation_layer
 
+                volume_annotation_zarr3_config = Zarr3Config(
+                    codecs=(
+                        {"name": "transpose", "configuration": {"order": "F"}},
+                        {"name": "bytes"},
+                        {"name": "blosc",
+                         "configuration": {
+                                "blocksize": 0,
+                                "clevel": 5,
+                                "cname": "lz4",
+                                "shuffle": "shuffle",
+                                "typesize": 1,
+                            },
+                        },
+                    ),
+                    chunk_key_encoding={
+                        "name": "default",
+                        "configuration": {"separator": "."},
+                    },
+                )
+                for mag, mag_view in segmentation_layer.mags.items():
+                    mag_view.rechunk(
+                        chunk_shape=mag_view.info.chunk_shape,
+                        shard_shape=mag_view.info.chunk_shape, # same as chunk_shape to disable sharding
+                        compress=volume_annotation_zarr3_config,
+                        _progress_desc=f"Compressing {mag_view.layer.name} {mag_view.name}",
+                    )
                 with ZipFile(
-                    self.zip,
+                    str(self.zip),
                     mode="w",
                     compression=ZIP_DEFLATED,
                     compresslevel=Z_BEST_SPEED,
@@ -169,6 +187,8 @@ class VolumeLayer:
                         for file in files:
                             full_path = os.path.join(root, file)
                             arcname = os.path.relpath(full_path, dataset_path)
+                            if arcname=="zarr.json" or arcname=="volumeAnnotationData/zarr.json":
+                                continue
                             zipfile.write(full_path, arcname)
         else:
             # Use memory for temporary data store memory:// kvstore in tensorstore
@@ -1183,6 +1203,7 @@ class Annotation:
     def add_volume_layer(
         self,
         name: str,
+        zip_path: ZipPath | None = None,
         fallback_layer: Layer | str | None = None,
         volume_layer_id: int | None = None,
     ) -> VolumeLayer:
@@ -1193,6 +1214,8 @@ class Annotation:
 
         Args:
             name: Name of the volume layer.
+            zip_path: Path to zip storage for volume annotations. Required, if volume annotation
+                        is edited
             fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
                           Can be Layer instance or layer name.
             volume_layer_id: Optional explicit ID for the layer.
@@ -1233,7 +1256,7 @@ class Annotation:
             name=name,
             fallback_layer_name=fallback_layer_name,
             data_format=DataFormat.Zarr3,
-            zip=None,
+            zip=zip_path,
             segments={},
             largest_segment_id=None,
         )
