@@ -52,7 +52,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import Any, BinaryIO, Union, cast, overload
+from typing import Any, BinaryIO, Literal, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -62,8 +62,13 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
+from webknossos.geometry.mag import Mag, MagLike
 
-from ..client.api_client.models import ApiAnnotation
+from ..client.api_client.models import (
+    ApiAdHocMeshInfo,
+    ApiAnnotation,
+    ApiPrecomputedMeshInfo,
+)
 from ..dataset import (
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -1603,3 +1608,55 @@ class RemoteAnnotation(Annotation):
         raise NotImplementedError(
             "Remote annotations cannot be saved. Changes are applied ."
         )
+
+    def download_mesh(
+        self,
+        segment_id: int,
+        output_dir: PathLike | str,
+        tracing_id: str,
+        mesh_file_name: str | None = None,
+        lod: int = 0,
+        mapping_name: str | None = None,
+        mapping_type: Literal["agglomerate", "json"] | None = None,
+        mag: MagLike | None = None,
+        seed_position: Vec3Int | None = None,
+        token: str | None = None,
+    ) -> UPath:
+        from ..client.context import _get_context
+
+        context = _get_context()
+        tracingstore = context.get_tracingstore_api_client()
+        mesh_info: ApiAdHocMeshInfo | ApiPrecomputedMeshInfo
+        if mesh_file_name is not None:
+            mesh_info = ApiPrecomputedMeshInfo(
+                lod=lod,
+                mesh_file_name=mesh_file_name,
+                segment_id=segment_id,
+                mapping_name=mapping_name,
+            )
+        else:
+            assert mag is not None, "mag is required for downloading ad-hoc mesh"
+            assert seed_position is not None, (
+                "seed_position is required for downloading ad-hoc mesh"
+            )
+            mesh_info = ApiAdHocMeshInfo(
+                lod=lod,
+                segment_id=segment_id,
+                mapping_name=mapping_name,
+                mapping_type=mapping_type,
+                mag=Mag(mag).to_tuple(),
+                seed_position=seed_position.to_tuple(),
+            )
+        file_path: UPath
+        mesh_download = tracingstore.annotation_download_mesh(
+            mesh=mesh_info,
+            tracing_id=tracing_id,
+            token=token,
+        )
+        file_path = UPath(output_dir) / f"{tracing_id}_{segment_id}.stl"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with file_path.open("wb") as f:
+            for chunk in mesh_download:
+                f.write(chunk)
+        return file_path
