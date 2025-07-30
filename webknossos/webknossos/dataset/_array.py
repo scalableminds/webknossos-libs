@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator
-from dataclasses import dataclass
+from collections.abc import Iterable, Iterator, Sequence
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from logging import getLogger
 from os.path import relpath
@@ -10,13 +10,14 @@ from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
+    TypedDict,
 )
 from urllib.parse import urlparse
 
 import numpy as np
 import tensorstore
 import wkw
-from typing_extensions import Self
+from typing_extensions import NotRequired, Self
 from upath import UPath
 
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
@@ -36,7 +37,7 @@ class ArrayException(Exception):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class ArrayInfo:
     data_format: DataFormat
     num_channels: int
@@ -55,6 +56,110 @@ class ArrayInfo:
     @property
     def ndim(self) -> int:
         return len(self.shape)
+
+
+class Zarr3ChunkKeyEncodingConfiguration(TypedDict):
+    separator: Literal["/", "."]
+
+
+class Zarr3ChunkKeyEncoding(TypedDict):
+    name: Literal["default"]
+    configuration: Zarr3ChunkKeyEncodingConfiguration
+
+
+class Zarr3Codec(TypedDict):
+    name: Literal["bytes", "gzip", "zstd", "blosc", "crc32c", "transpose"]
+    configuration: NotRequired[dict[str, Any]]
+
+
+def _default_zarr3_codecs(ndim: int, compression: bool) -> tuple[Zarr3Codec, ...]:
+    codecs: tuple[Zarr3Codec, ...] = (
+        {
+            "name": "transpose",
+            "configuration": {"order": [ndim - i - 1 for i in range(ndim)]},
+        },
+        {
+            "name": "bytes",
+            "configuration": {"endian": "little"},
+        },
+    )
+    if compression:
+        codecs += ({"name": "zstd", "configuration": {"level": 5, "checksum": True}},)
+    return codecs
+
+
+def _default_zarr3_chunk_key_encoding() -> Zarr3ChunkKeyEncoding:
+    return {
+        "name": "default",
+        "configuration": {"separator": "/"},
+    }
+
+
+@dataclass(frozen=True)
+class Zarr3ArrayInfo(ArrayInfo):
+    data_format = DataFormat.Zarr3
+    codecs: tuple[Zarr3Codec, ...] = ()
+    chunk_key_encoding: Zarr3ChunkKeyEncoding = field(
+        default_factory=_default_zarr3_chunk_key_encoding
+    )
+    compression_mode: bool = field(init=False, default=True)
+
+    def __post_init__(self) -> None:
+        if len(self.codecs) == 0:
+            object.__setattr__(
+                self, "codecs", _default_zarr3_codecs(self.ndim, True)
+            )  #
+        object.__setattr__(
+            self,
+            "compression_mode",
+            any(c["name"] in ("gzip", "zstd", "blosc") for c in self.codecs),
+        )
+
+    @classmethod
+    def from_array_info(cls, array_info: ArrayInfo) -> "Zarr3ArrayInfo":
+        if isinstance(array_info, cls):
+            return array_info
+        else:
+            return cls(
+                data_format=DataFormat.Zarr3,
+                shape=array_info.shape,
+                num_channels=array_info.num_channels,
+                voxel_type=array_info.voxel_type,
+                chunk_shape=array_info.chunk_shape,
+                shard_shape=array_info.shard_shape,
+                codecs=_default_zarr3_codecs(
+                    array_info.ndim, array_info.compression_mode
+                ),
+                axis_order=array_info.axis_order,
+            )
+
+
+@dataclass(frozen=True)
+class Zarr3Config:
+    codecs: Sequence[Zarr3Codec] | None = None
+    chunk_key_encoding: Zarr3ChunkKeyEncoding | None = None
+
+    @classmethod
+    def with_defaults(
+        cls, config: "Zarr3Config | bool | None", ndim: int
+    ) -> "Zarr3Config":
+        if isinstance(config, bool):
+            return cls(
+                codecs=_default_zarr3_codecs(ndim, config),
+                chunk_key_encoding=_default_zarr3_chunk_key_encoding(),
+            )
+        if config is None:
+            return cls(
+                codecs=_default_zarr3_codecs(ndim, True),
+                chunk_key_encoding=_default_zarr3_chunk_key_encoding(),
+            )
+        if config.codecs is None:
+            config = replace(config, codecs=_default_zarr3_codecs(ndim, True))
+        if config.chunk_key_encoding is None:
+            config = replace(
+                config, chunk_key_encoding=_default_zarr3_chunk_key_encoding()
+            )
+        return config
 
 
 class BaseArray(ABC):
@@ -700,36 +805,37 @@ class Zarr3Array(TensorStoreArray):
         return cls._open(UPath(path))
 
     @property
-    def info(self) -> ArrayInfo:
+    def info(self) -> Zarr3ArrayInfo:
         array = self._array
         array_codecs = array.codec.to_json()["codecs"]
+        chunk_key_encoding = array.spec().to_json()["metadata"]["chunk_key_encoding"]
 
         dimension_names, chunk_shape, shard_shape, num_channels, shape = (
             self._get_array_dimensions(array)
         )
 
         if len(array_codecs) == 1 and array_codecs[0]["name"] == "sharding_indexed":
-            return ArrayInfo(
+            return Zarr3ArrayInfo(
                 data_format=DataFormat.Zarr3,
                 num_channels=num_channels,
                 voxel_type=array.dtype.numpy_dtype,
-                compression_mode=self._has_compression_codecs(
-                    array_codecs[0]["configuration"]["codecs"]
-                ),
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 shape=shape,
                 dimension_names=dimension_names,
+                codecs=tuple(array_codecs[0]["configuration"]["codecs"]),
+                chunk_key_encoding=chunk_key_encoding,
             )
-        return ArrayInfo(
+        return Zarr3ArrayInfo(
             data_format=DataFormat.Zarr3,
             num_channels=num_channels,
             voxel_type=array.dtype.numpy_dtype,
-            compression_mode=self._has_compression_codecs(array_codecs),
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
             shape=shape,
             dimension_names=dimension_names,
+            codecs=tuple(array_codecs),
+            chunk_key_encoding=chunk_key_encoding,
         )
 
     @staticmethod
@@ -739,6 +845,7 @@ class Zarr3Array(TensorStoreArray):
     @classmethod
     def create(cls, path: Path, array_info: ArrayInfo) -> "Zarr3Array":
         assert array_info.data_format == cls.data_format
+        array_info = Zarr3ArrayInfo.from_array_info(array_info)
         upath = UPath(path)
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
@@ -752,6 +859,25 @@ class Zarr3Array(TensorStoreArray):
             shape_a - (shape_a % shard_shape_a)
             for shape_a, shard_shape_a in zip(array_info.shape, shard_shape)
         )
+        if chunk_shape == shard_shape:
+            codecs: tuple[Any, ...] = array_info.codecs
+        else:
+            codecs = (
+                {
+                    "name": "sharding_indexed",
+                    "configuration": {
+                        "chunk_shape": chunk_shape,
+                        "codecs": array_info.codecs,
+                        "index_codecs": [
+                            {
+                                "name": "bytes",
+                                "configuration": {"endian": "little"},
+                            },
+                            {"name": "crc32c"},
+                        ],
+                    },
+                },
+            )
         _array = tensorstore.open(
             {
                 "driver": str(cls.data_format),
@@ -763,57 +889,10 @@ class Zarr3Array(TensorStoreArray):
                         "name": "regular",
                         "configuration": {"chunk_shape": shard_shape},
                     },
-                    "chunk_key_encoding": {
-                        "name": "default",
-                        "configuration": {"separator": "/"},
-                    },
+                    "chunk_key_encoding": array_info.chunk_key_encoding,
                     "fill_value": 0,
                     "dimension_names": array_info.dimension_names,
-                    "codecs": [
-                        {
-                            "name": "sharding_indexed",
-                            "configuration": {
-                                "chunk_shape": chunk_shape,
-                                "codecs": (
-                                    [
-                                        {
-                                            "name": "transpose",
-                                            "configuration": {"order": "F"},
-                                        },
-                                        {
-                                            "name": "bytes",
-                                            "configuration": {"endian": "little"},
-                                        },
-                                        {
-                                            "name": "zstd",
-                                            "configuration": {
-                                                "level": 5,
-                                                "checksum": True,
-                                            },
-                                        },
-                                    ]
-                                    if array_info.compression_mode
-                                    else [
-                                        {
-                                            "name": "transpose",
-                                            "configuration": {"order": "F"},
-                                        },
-                                        {
-                                            "name": "bytes",
-                                            "configuration": {"endian": "little"},
-                                        },
-                                    ]
-                                ),
-                                "index_codecs": [
-                                    {
-                                        "name": "bytes",
-                                        "configuration": {"endian": "little"},
-                                    },
-                                    {"name": "crc32c"},
-                                ],
-                            },
-                        }
-                    ],
+                    "codecs": codecs,
                 },
                 "create": True,
             },

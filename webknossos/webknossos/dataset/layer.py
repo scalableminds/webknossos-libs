@@ -14,7 +14,7 @@ from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.mag import MagLike
-from ._array import ArrayException, TensorStoreArray
+from ._array import ArrayException, TensorStoreArray, Zarr3Config
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -547,7 +547,7 @@ class Layer:
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: int | Vec3IntLike | None = None,
-        compress: bool = True,
+        compress: bool | Zarr3Config = True,
     ) -> MagView:
         """Creates and adds a new magnification level to the layer.
 
@@ -560,7 +560,7 @@ class Layer:
             chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
             shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
             chunks_per_shard: Deprecated, use shard_shape. Number of chunks per shards. If specified, shard_shape must not be specified.
-            compress: Whether to enable compression. Defaults to True.
+            compress: Whether to enable compression. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
 
         Returns:
             MagView: View of newly created magnification level
@@ -572,7 +572,6 @@ class Layer:
         self._ensure_writable()
         # normalize the name of the mag
         mag = Mag(mag)
-        compression_mode = compress
 
         chunk_shape = (
             DEFAULT_CHUNK_SHAPE
@@ -605,6 +604,8 @@ class Layer:
             raise ValueError(
                 f"The chunk shape must be a power of two. Got {chunk_shape}."
             )
+
+        compression_mode = compress if compress is not None else True
 
         self._assert_mag_does_not_exist_yet(mag)
         mag_path = self._create_dir_for_mag(mag)
@@ -719,7 +720,7 @@ class Layer:
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,
-        compress: bool | None = None,
+        compress: bool | Zarr3Config | None = None,
     ) -> MagView:
         """
         Creates a new mag and adds it to the dataset, in case it did not exist before.
@@ -727,6 +728,8 @@ class Layer:
 
         See `add_mag` for more information.
         """
+
+        from ._array import Zarr3ArrayInfo
 
         # normalize the name of the mag
         mag = Mag(mag)
@@ -741,18 +744,39 @@ class Layer:
                 chunks_per_shard=chunks_per_shard,
                 shard_shape=shard_shape,
             )
+
             if chunk_shape is not None and mag_view.info.chunk_shape != chunk_shape:
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk shapes do not match. Expected {mag_view.info.chunk_shape}, got {chunk_shape}."
                 )
+
             if shard_shape is not None and mag_view.info.shard_shape != shard_shape:
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the shard shapes do not match. Expected {mag_view.info.shard_shape}, got {shard_shape}."
                 )
-            if compress is not None and mag_view.info.compression_mode != compress:
+
+            if (
+                isinstance(compress, bool)
+                and mag_view.info.compression_mode != compress
+            ):
                 raise ValueError(
                     f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match. Expected {mag_view.info.compression_mode}, got {compress}."
                 )
+            if isinstance(compress, Zarr3Config):
+                if not self.data_format != DataFormat.Zarr3:
+                    raise ValueError(
+                        "Cannot get_or_add_mag: A Zarr3 config can only be supplied for Zarr3 layers."
+                    )
+                assert isinstance(mag_view.info, Zarr3ArrayInfo)
+                if mag_view.info.codecs != compress.codecs:
+                    raise ValueError(
+                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the codecs do not match. Expected {mag_view.info.codecs}, got {compress.codecs}."
+                    )
+                if mag_view.info.chunk_key_encoding != compress.chunk_key_encoding:
+                    raise ValueError(
+                        f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk key encoding does not match. Expected {mag_view.info.chunk_key_encoding}, got {compress.chunk_key_encoding}."
+                    )
+
             return self.get_mag(mag)
         else:
             chunk_shape = Vec3Int.from_vec_or_int(chunk_shape or DEFAULT_CHUNK_SHAPE)
@@ -835,7 +859,7 @@ class Layer:
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,
-        compress: bool | None = None,
+        compress: bool | Zarr3Config | None = None,
         exists_ok: bool = False,
         executor: Executor | None = None,
         progress_desc: str | None = None,
@@ -1128,7 +1152,7 @@ class Layer:
         from_mag: Mag | None = None,
         coarsest_mag: Mag | None = None,
         interpolation_mode: str = "default",
-        compress: bool = True,
+        compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Vec3Int | None = None,
@@ -1147,7 +1171,7 @@ class Layer:
             coarsest_mag (Mag | None): Target magnification to stop at. Defaults to calculated value.
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
                 Supported modes: "median", "mode", "nearest", "bilinear", "bicubic"
-            compress (bool): Whether to compress the generated magnifications. Defaults to True.
+            compress (bool | Zarr3Config): Whether to compress the generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
             align_with_other_layers (bool | Dataset): Whether to align with other layers. True by default.
@@ -1256,7 +1280,7 @@ class Layer:
         target_mag: Mag,
         *,
         interpolation_mode: str = "default",
-        compress: bool = True,
+        compress: bool | Zarr3Config = True,
         buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
@@ -1268,7 +1292,7 @@ class Layer:
             from_mag: Source magnification level
             target_mag: Target magnification level
             interpolation_mode: Method for interpolation ("median", "mode", "nearest", "bilinear", "bicubic")
-            compress: Whether to compress target data
+            compress: Whether to compress target data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
@@ -1301,7 +1325,9 @@ class Layer:
         else:
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compress
+                target_mag,
+                prev_mag_view,
+                compress=compress,
             )
 
         if only_setup_mag:
@@ -1340,7 +1366,7 @@ class Layer:
         self,
         *,
         interpolation_mode: str = "default",
-        compress: bool = True,
+        compress: bool | Zarr3Config = True,
         buffer_shape: Vec3Int | None = None,
         executor: Executor | None = None,
     ) -> None:
@@ -1351,7 +1377,7 @@ class Layer:
 
         Args:
             interpolation_mode: Method for interpolation
-            compress: Whether to compress recomputed data
+            compress: Whether to compress recomputed data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
             executor: Executor for parallel processing
         """
@@ -1378,7 +1404,7 @@ class Layer:
         target_mags: list[Mag],
         *,
         interpolation_mode: str = "default",
-        compress: bool = True,
+        compress: bool | Zarr3Config = True,
         buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
@@ -1393,7 +1419,7 @@ class Layer:
             from_mag (Mag): Source magnification to start from
             target_mags (List[Mag]): Ordered list of target magnifications
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
-            compress (bool): Whether to compress outputs. Defaults to True.
+            compress (bool | Zarr3Config): Whether to compress outputs. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape (Vec3Int | None): Shape of processing buffer.
             allow_overwrite (bool): Whether to allow overwriting mags. Defaults to False.
             only_setup_mags (bool): Only create mag structures without data. Defaults to False.
@@ -1438,7 +1464,7 @@ class Layer:
         from_mag: Mag,
         *,
         finest_mag: Mag = Mag(1),
-        compress: bool = True,
+        compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Vec3IntLike | None = None,
@@ -1452,7 +1478,7 @@ class Layer:
         Args:
             from_mag (Mag): Source coarse magnification
             finest_mag (Mag): Target finest magnification (default Mag(1))
-            compress (bool): Whether to compress upsampled data. Defaults to True.
+            compress (bool | Zarr3Config): Whether to compress upsampled data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             sampling_mode (str | SamplingModes): How dimensions should be upsampled:
                 - 'anisotropic': Equalizes voxel dimensions based on voxel_size
                 - 'isotropic': Equal upsampling in all dimensions
@@ -1510,7 +1536,9 @@ class Layer:
 
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compress
+                target_mag,
+                prev_mag_view,
+                compress=compress,
             )
 
             # We need to make sure the layer's bounding box is aligned
@@ -1575,14 +1603,17 @@ class Layer:
             )
 
     def _initialize_mag_from_other_mag(
-        self, new_mag_name: str | Mag, other_mag: MagView, compress: bool
+        self,
+        new_mag_name: str | Mag,
+        other_mag: MagView,
+        compress: bool | Zarr3Config,
     ) -> MagView:
         """Creates a new magnification based on settings from existing mag.
 
         Args:
             new_mag_name: Name/identifier for new mag
             other_mag: Existing mag to copy settings from
-            compress: Whether to enable compression
+            compress: Whether to enable compression. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied.
 
         Returns:
             MagView: View of newly created magnification
