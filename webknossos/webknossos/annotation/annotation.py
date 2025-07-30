@@ -104,10 +104,13 @@ class SegmentInformation:
     color: Vector4 | None
     metadata: dict[str, str | int | float | Sequence[str]]
 
+
 class VolumeLayerEditMode(Enum):
     """Defines the edit mode for volume layers."""
+
     TEMPORARY_DIRECTORY = "temporary_directory"  # Use a temporary directory for edits
     MEMORY = "memory"  # Use an in-memory store for edits
+
 
 @attr.define
 class VolumeLayer:
@@ -124,7 +127,8 @@ class VolumeLayer:
 
     @contextmanager
     def edit(
-        self, volume_layer_edit_mode: VolumeLayerEditMode = VolumeLayerEditMode.TEMPORARY_DIRECTORY,
+        self,
+        volume_layer_edit_mode: VolumeLayerEditMode = VolumeLayerEditMode.TEMPORARY_DIRECTORY,
     ) -> Generator[Layer | Any, None, None]:
         """
         Context manager to edit the volume layer.
@@ -133,7 +137,7 @@ class VolumeLayer:
 
         """
 
-        voxel_size = (1.0, 1.0, 1.0) # TO DO change to actual voxel size if needed?
+        voxel_size = (1.0, 1.0, 1.0)  # TO DO change to actual voxel size if needed?
 
         if self.zip is None:
             raise ValueError(
@@ -159,8 +163,9 @@ class VolumeLayer:
                     codecs=(
                         {"name": "transpose", "configuration": {"order": "F"}},
                         {"name": "bytes"},
-                        {"name": "blosc",
-                         "configuration": {
+                        {
+                            "name": "blosc",
+                            "configuration": {
                                 "blocksize": 0,
                                 "clevel": 5,
                                 "cname": "lz4",
@@ -174,10 +179,10 @@ class VolumeLayer:
                         "configuration": {"separator": "."},
                     },
                 )
-                for mag, mag_view in segmentation_layer.mags.items():
+                for mag_view in segmentation_layer.mags.values():
                     mag_view.rechunk(
                         chunk_shape=mag_view.info.chunk_shape,
-                        shard_shape=mag_view.info.chunk_shape, # same as chunk_shape to disable sharding
+                        shard_shape=mag_view.info.chunk_shape,  # same as chunk_shape to disable sharding
                         compress=volume_annotation_zarr3_config,
                         _progress_desc=f"Compressing {mag_view.layer.name} {mag_view.name}",
                     )
@@ -191,14 +196,19 @@ class VolumeLayer:
                         for file in files:
                             full_path = os.path.join(root, file)
                             arcname = os.path.relpath(full_path, dataset_path)
-                            if arcname=="zarr.json" or arcname=="volumeAnnotationData/zarr.json":
+                            if (
+                                arcname == "zarr.json"
+                                or arcname == "volumeAnnotationData/zarr.json"
+                            ):
                                 continue
                             zipfile.write(full_path, arcname)
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             # Use memory for temporary data store memory:// kvstore in tensorstore
             raise NotImplementedError()  # TO DO
         else:
-            raise ValueError(f"Unsupported volume layer edit mode: {volume_layer_edit_mode}")
+            raise ValueError(
+                f"Unsupported volume layer edit mode: {volume_layer_edit_mode}"
+            )
 
     def export_to_dataset(
         self,

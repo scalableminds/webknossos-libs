@@ -1,4 +1,3 @@
-import os
 import sys
 import tempfile
 from pathlib import Path
@@ -380,7 +379,9 @@ def test_edit_volume_annotation() -> None:
         voxel_size=(11.2, 11.2, 25.0),
     )
 
-    volume_layer = ann.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    )
     with volume_layer.edit() as seg_layer:
         assert isinstance(seg_layer, SegmentationLayer)
         mag = seg_layer.add_mag(1)
@@ -392,15 +393,19 @@ def test_edit_volume_annotation() -> None:
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
         assert np.array_equal(data, read_data)
 
+
 def test_save_edited_volume_annotation() -> None:
-    import tensorstore
     import zipfile
+
+    import tensorstore
 
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     ann = wk.Annotation.load(path)
     data = np.ones(shape=(10, 10, 10))
 
-    volume_layer = ann.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    )
     with volume_layer.edit() as seg_layer:
         mag_view = seg_layer.add_mag(1)
         mag_view.write(data, allow_resize=True)
@@ -413,23 +418,30 @@ def test_save_edited_volume_annotation() -> None:
 
     # test for the format assumptions as mentioned in https://github.com/scalableminds/webknossos/issues/8604
     ts = tensorstore.open(
-        {"driver": "zarr3",
-         "kvstore": {"driver": "zip",
-             "path": "volumeAnnotationData/1/",
-             "base": {"driver": "file",
-                      "path": str(unpack_dir / "data_1_segmentation.zip")}
-            }
-         },
+        {
+            "driver": "zarr3",
+            "kvstore": {
+                "driver": "zip",
+                "path": "volumeAnnotationData/1/",
+                "base": {
+                    "driver": "file",
+                    "path": str(unpack_dir / "data_1_segmentation.zip"),
+                },
+            },
+        },
         create=False,
         open=True,
     ).result()
     metadata = ts.spec().to_json()["metadata"]
 
-    assert(metadata["chunk_key_encoding"] == {
-                                    "configuration": {"separator": "."},
-                                    "name": "v2",
-                                },)
-    assert(["transpose", "bytes", "blosc"] == [codec["name"] for codec in metadata["codecs"]])
+    assert metadata["chunk_key_encoding"] == {
+        "configuration": {"separator": "."},
+        "name": "v2",
+    }
+    assert ["transpose", "bytes", "blosc"] == [
+        codec["name"] for codec in metadata["codecs"]
+    ]
+
 
 @pytest.mark.use_proxay
 def test_edited_volume_annotation_upload_download() -> None:
@@ -437,11 +449,12 @@ def test_edited_volume_annotation_upload_download() -> None:
     ann = wk.Annotation.load(path)
     # better: dataset=Dataset.open_remote("...")
     ann.organization_id = "Organization_X"
-    volume_layer = ann.add_volume_layer(name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip")
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+    )
     with volume_layer.edit() as seg_layer:
-        mag_view = seg_layer.add_mag(1)
+        seg_layer.add_mag(1)
     # read_data = ts.read().result()
     # print(read_data)
     url = ann.upload()
     ann = wk.Annotation.download(url)
-
