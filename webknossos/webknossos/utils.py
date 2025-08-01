@@ -569,7 +569,7 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         path = dataset_path / path
     path = resolve_if_fs_path(path)
     if dataset_path is not None:
-        if path.as_posix().startswith(dataset_path.as_posix()):
+        if path.as_posix().startswith(dataset_path.as_posix() + "/"):
             return "./" + path.as_posix().removeprefix(dataset_path.as_posix()).lstrip(
                 "/"
             )
