@@ -1883,21 +1883,21 @@ def test_add_layer_as_ref(
 
 
 def test_add_layer_as_ref_prefix(tmp_path: Path) -> None:
-    tmp_path = tmp_path.resolve()
+    tmp_path = tmp_path.resolve()  # hi macos
 
-    ds1 = Dataset(tmp_path / "name_with_suffix", (1, 1, 1))
-    ds1.add_layer(
+    source = Dataset(tmp_path / "name_with_suffix", (1, 1, 1))
+    source.add_layer(
         "consensus", SEGMENTATION_CATEGORY, dtype_per_channel="uint8"
     ).add_mag(1)
 
-    ds2 = Dataset(tmp_path / "name", (1, 1, 1))
-    ds2.add_layer("raw", COLOR_CATEGORY, dtype_per_channel="uint8").add_mag(1)
+    target = Dataset(tmp_path / "name", (1, 1, 1))
+    target.add_layer("raw", COLOR_CATEGORY, dtype_per_channel="uint8").add_mag(1)
 
-    glom = ds1.get_layer("consensus")
-    ds2.add_layer_as_ref(foreign_layer=glom, new_layer_name="glomeruli")
+    glom = source.get_layer("consensus")
+    target.add_layer_as_ref(foreign_layer=glom, new_layer_name="glomeruli")
 
-    assert ds2._properties.data_layers[1].mags[0].path == str(
-        ds1.get_layer("consensus").get_mag(1).path
+    assert target._properties.data_layers[1].mags[0].path == str(
+        source.get_layer("consensus").get_mag(1).path
     )
 
 
