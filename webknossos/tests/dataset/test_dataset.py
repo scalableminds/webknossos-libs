@@ -1815,7 +1815,10 @@ def test_writing_subset_of_chunked_compressed_data(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_add_layer_as_ref(data_format: DataFormat, output_path: UPath) -> None:
+@pytest.mark.parametrize("as_object", [True, False])
+def test_add_layer_as_ref(
+    data_format: DataFormat, output_path: UPath, as_object: bool
+) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "original")
     new_path = prepare_dataset_path(data_format, output_path, "with_refs")
 
@@ -1832,10 +1835,17 @@ def test_add_layer_as_ref(data_format: DataFormat, output_path: UPath) -> None:
 
     ds = Dataset(new_path, voxel_size=(1, 1, 1))
     # add color layer
-    new_layer = ds.add_layer_as_ref(ds_path / "color")
+    new_layer = ds.add_layer_as_ref(
+        original_ds.get_layer("color") if as_object else ds_path / "color"
+    )
     mag = new_layer.get_mag("1")
     # add segmentation layer
-    new_segmentation_layer = ds.add_layer_as_ref(ds_path / "segmentation")
+    new_segmentation_layer = ds.add_layer_as_ref(
+        original_ds.get_layer("segmentation")
+        if as_object
+        else ds_path / "segmentation",
+        new_layer_name="seg",
+    )
 
     color_mag_path = original_mag.path.name
     assert ds._properties.data_layers[0].mags[0].path == dump_path(
@@ -1847,6 +1857,8 @@ def test_add_layer_as_ref(data_format: DataFormat, output_path: UPath) -> None:
     )
     assert not (new_path / "segmentation" / "1").exists()
     assert not (new_path / "segmentation").exists()
+    assert not (new_path / "seg" / "1").exists()
+    assert not (new_path / "seg").exists()
 
     assert len(ds.layers) == 2
     assert len(ds.get_layer("color").mags) == 1
@@ -1868,6 +1880,25 @@ def test_add_layer_as_ref(data_format: DataFormat, output_path: UPath) -> None:
     )
 
     assure_exported_properties(ds)
+
+
+def test_add_layer_as_ref_prefix(tmp_path: Path) -> None:
+    tmp_path = tmp_path.resolve()
+
+    ds1 = Dataset(tmp_path / "name_with_suffix", (1, 1, 1))
+    ds1.add_layer(
+        "consensus", SEGMENTATION_CATEGORY, dtype_per_channel="uint8"
+    ).add_mag(1)
+
+    ds2 = Dataset(tmp_path / "name", (1, 1, 1))
+    ds2.add_layer("raw", COLOR_CATEGORY, dtype_per_channel="uint8").add_mag(1)
+
+    glom = ds1.get_layer("consensus")
+    ds2.add_layer_as_ref(foreign_layer=glom, new_layer_name="glomeruli")
+
+    assert ds2._properties.data_layers[1].mags[0].path == str(
+        ds1.get_layer("consensus").get_mag(1).path
+    )
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
