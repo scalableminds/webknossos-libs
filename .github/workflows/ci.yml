@@ -79,7 +79,7 @@ jobs:
       - name: Restart Slurm Cluster
         run: cd ./dockered-slurm && docker compose restart slurmctld c1 c2
 
-      - name: "Run Tests (test_all, test_slurm) with modified slurn.conf"
+      - name: "Run Tests (test_all, test_slurm) with modified slurm.conf"
         run: |
           # Run tests requiring a modified slurm config
           docker exec \

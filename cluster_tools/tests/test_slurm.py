@@ -374,7 +374,11 @@ def test_slurm_time_limit() -> None:
 
 
 @pytest.mark.requires_modified_slurm_config
-def test_slurm_memory_limit() -> None:
+def test_slurm_memory_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SLURM_MAX_RUNNING_SIZE", "2")
+
     # Request 30 MB
     executor = cluster_tools.get_executor(
         "slurm",
@@ -382,20 +386,38 @@ def test_slurm_memory_limit() -> None:
         job_resources={"mem": "30M"},  # 30M is the smallest limit enforced by Cgroups
     )
 
-    with executor:
-        # Schedule a job that allocates more than 30 MB and let it run for more than 1 second
-        # because the frequency of the memory polling is 1 second
-        duration = 3
-        futures = executor.map_to_futures(
-            partial(allocate, duration), [1024 * 1024 * 50]
+    job_ids = []
+    with pytest.raises(
+        (
+            cluster_tools.RemoteOutOfMemoryException,
+            cluster_tools.schedulers.cluster_executor.RemoteException,
         )
-        concurrent.futures.wait(futures)
+    ):
+        with executor:
+            # Schedule a job that allocates more than 30 MB and let it run for more than 1 second
+            # because the frequency of the memory polling is 1 second
+            duration = 3
+            futures = executor.map_to_futures(
+                partial(allocate, duration), [1024 * 1024 * 50, 10, 20, 30]
+            )
+            for future in futures:
+                future.add_done_callback(
+                    lambda f: job_ids.append(f"{f.cluster_jobid}_{f.cluster_jobindex}")
+                )
+            # Wait for jobs to finish
+            [fut.result() for fut in futures]
 
-        # Job should have been killed with a RemoteOutOfMemoryException
-        assert all(
-            isinstance(fut.exception(), cluster_tools.RemoteOutOfMemoryException)
-            for fut in futures
-        )
+    # Check that all jobs but one ran successfully
+    job_states = []
+    for job_id in job_ids:
+        # Show the overall job state (-X), without a header (-n) and without extra whitespace (-P)
+        stdout, _, exit_code = call(f"sacct -j {job_id} -o State -P -n -X")
+        assert exit_code == 0
+        job_states.append(stdout.strip())
+
+    # Although one job failed, the other jobs should have continued running and succeeded
+    assert job_states.count("FAILED") == 1
+    assert job_states.count("COMPLETED") == 3
 
 
 def test_slurm_max_array_size_env() -> None:
