@@ -402,7 +402,7 @@ def test_slurm_memory_limit(
             )
             for future in futures:
                 future.add_done_callback(
-                    lambda f: job_ids.append(f"{f.cluster_jobid}_{f.cluster_jobindex}")
+                    lambda f: job_ids.append(f"{f.cluster_jobid}_{f.cluster_jobindex}")  # type: ignore[attr-defined]
                 )
             # Wait for jobs to finish
             [fut.result() for fut in futures]
