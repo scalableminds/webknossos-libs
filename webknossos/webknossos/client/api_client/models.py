@@ -35,6 +35,12 @@ class ApiDataStore:
 
 
 @attr.s(auto_attribs=True)
+class ApiTracingStore:
+    name: str
+    url: str
+
+
+@attr.s(auto_attribs=True)
 class ApiTeam:
     id: str
     name: str
@@ -391,3 +397,21 @@ class ApiFolder:
     allowed_teams_cumulative: list[ApiTeam]
     is_editable: bool
     metadata: list[ApiMetadata] | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiPrecomputedMeshInfo:
+    lod: int
+    mesh_file_name: str
+    segment_id: int
+    mapping_name: str | None
+
+
+@attr.s(auto_attribs=True)
+class ApiAdHocMeshInfo:
+    lod: int
+    segment_id: int  # if mapping name is set, this is an agglomerate id
+    mapping_name: str | None
+    mapping_type: Literal["json", "agglomerate"] | None
+    mag: tuple[int, int, int]
+    seed_position: tuple[int, int, int]

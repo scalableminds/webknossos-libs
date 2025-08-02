@@ -25,6 +25,7 @@ from webknossos.client.api_client.models import (
     ApiTaskTypeCreate,
     ApiTeam,
     ApiTeamAdd,
+    ApiTracingStore,
     ApiUser,
     ApiWkBuildInfo,
 )
@@ -135,6 +136,10 @@ class WkApiClient(AbstractApiClient):
     def datastore_list(self) -> list[ApiDataStore]:
         route = "/datastores"
         return self._get_json(route, list[ApiDataStore])
+
+    def tracing_store(self) -> ApiTracingStore:
+        route = "/tracingstore"
+        return self._get_json(route, ApiTracingStore)
 
     def project_create(self, project: ApiProjectCreate) -> ApiProject:
         route = "/projects"

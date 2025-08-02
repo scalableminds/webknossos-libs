@@ -19,7 +19,16 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray, TensorStoreArray, WKWArray
+from ._array import (
+    ArrayInfo,
+    BaseArray,
+    TensorStoreArray,
+    WKWArray,
+    Zarr3Array,
+    Zarr3ArrayInfo,
+    Zarr3Config,
+)
+from .data_format import DataFormat
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -34,7 +43,7 @@ from .view import View
 logger = logging.getLogger(__name__)
 
 
-def _compress_cube_job(args: tuple[View, View, int]) -> None:
+def _copy_view_data(args: tuple[View, View, int]) -> None:
     source_view, target_view, _i = args
     target_view.write(
         source_view.read(), absolute_bounding_box=target_view.bounding_box
@@ -116,7 +125,7 @@ class MagView(View):
         chunk_shape: Vec3Int,
         shard_shape: Vec3Int | None = None,
         chunks_per_shard: Vec3Int | None = None,
-        compression_mode: bool,
+        compression_mode: bool | Zarr3Config,
         read_only: bool = False,
     ) -> "MagView":
         """
@@ -134,25 +143,52 @@ class MagView(View):
                 warn_deprecated("chunks_per_shard", "shard_shape")
                 shard_shape = chunk_shape * chunks_per_shard
 
-        array_info = ArrayInfo(
-            data_format=layer._properties.data_format,
-            voxel_type=layer.dtype_per_channel,
-            num_channels=layer.num_channels,
-            chunk_shape=chunk_shape,
-            shard_shape=shard_shape,
-            compression_mode=compression_mode,
-            axis_order=VecInt(
-                0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
-            ),
-            shape=VecInt(
-                layer.num_channels,
-                *VecInt.ones(layer.bounding_box.axes),
-                axes=("c",) + layer.bounding_box.axes,
-            ),
-            dimension_names=("c",) + layer.bounding_box.axes,
+        axis_order = VecInt(
+            0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
         )
+        shape = VecInt(
+            layer.num_channels,
+            *VecInt.ones(layer.bounding_box.axes),
+            axes=("c",) + layer.bounding_box.axes,
+        )
+        dimension_names = ("c",) + layer.bounding_box.axes
 
-        BaseArray.get_class(array_info.data_format).create(path, array_info)
+        if layer.data_format == DataFormat.Zarr3:
+            compression_mode = Zarr3Config.with_defaults(
+                compression_mode, len(dimension_names)
+            )
+            assert compression_mode.codecs is not None  # for mypy
+            assert compression_mode.chunk_key_encoding is not None  # for mypy
+            zarr3_array_info = Zarr3ArrayInfo(
+                data_format=DataFormat.Zarr3,
+                voxel_type=layer.dtype_per_channel,
+                num_channels=layer.num_channels,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                axis_order=axis_order,
+                shape=shape,
+                dimension_names=dimension_names,
+                codecs=tuple(compression_mode.codecs),
+                chunk_key_encoding=compression_mode.chunk_key_encoding,
+            )
+            Zarr3Array.create(path, zarr3_array_info)
+        else:
+            assert not isinstance(compression_mode, Zarr3Config), (
+                "Zarr3 config is only supported for Zarr3 layers."
+            )
+            array_info = ArrayInfo(
+                data_format=layer._properties.data_format,
+                voxel_type=layer.dtype_per_channel,
+                num_channels=layer.num_channels,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                compression_mode=compression_mode,
+                axis_order=axis_order,
+                shape=shape,
+                dimension_names=dimension_names,
+            )
+            BaseArray.get_class(array_info.data_format).create(path, array_info)
+
         return cls(layer, mag, path, read_only=read_only)
 
     def __init__(
@@ -492,7 +528,7 @@ class MagView(View):
         *,
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
-        compress: bool | None = None,
+        compress: bool | Zarr3Config | None = None,
         target_path: str | Path | None = None,
         executor: Executor | None = None,
         _progress_desc: str | None = None,
@@ -504,7 +540,7 @@ class MagView(View):
         Args:
             chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
             shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. If specified, chunks_per_shard must not be specified. Defaults to (1024, 1024, 1024).
-            compress: Whether to compress the data
+            compress: Whether to compress the data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied.
             target_path: Optional path to write compressed data. If None, compresses in-place.
             executor: Optional executor for parallel rechunking.
 
@@ -617,7 +653,7 @@ class MagView(View):
                     job_args.append((source_view, target_view, i))
 
                 wait_and_ensure_success(
-                    executor.map_to_futures(_compress_cube_job, job_args),
+                    executor.map_to_futures(_copy_view_data, job_args),
                     executor=executor,
                     progress_desc=_progress_desc
                     or f"Rechunking {self.layer.name} {self.name}",
@@ -630,7 +666,7 @@ class MagView(View):
                 self.for_zipped_chunks(
                     target_view=rechunked_mag,
                     executor=executor,
-                    func_per_chunk=_compress_cube_job,
+                    func_per_chunk=_copy_view_data,
                     progress_desc=_progress_desc
                     or f"Rechunking {self.layer.name} {self.name}",
                 )
