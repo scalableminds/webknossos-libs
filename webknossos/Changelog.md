@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added support for reading wkw datasets with the new "mag" key in datasource-properties.json, which replaces "wkwResolutions" for datasets written out by the webknossos server. [#1349](https://github.com/scalableminds/webknossos-libs/pull/1349)
 
 ### Changed
 
