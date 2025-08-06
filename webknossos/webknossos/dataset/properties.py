@@ -368,10 +368,11 @@ def layer_properties_pre_structure(
         type_value: type[LayerProperties | SegmentationLayerProperties],
     ) -> LayerProperties | SegmentationLayerProperties:
         if d["dataFormat"] == "wkw":
-            d["mags"] = [
-                mag_view_properties_pre_structure(m) for m in d["wkwResolutions"]
-            ]
-            del d["wkwResolutions"]
+            if "wkwResolutions" in d:
+                d["mags"] = [
+                    mag_view_properties_pre_structure(m) for m in d["wkwResolutions"]
+                ]
+                del d["wkwResolutions"]
         # bounding_box and additional_axes are internally handled as nd_bounding_box
         if "additionalAxes" in d:
             d["boundingBox"]["additionalAxes"] = copy.deepcopy(d["additionalAxes"])
