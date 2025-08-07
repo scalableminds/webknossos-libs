@@ -19,6 +19,8 @@ class Volume(NamedTuple):
     segments: list[Segment]
     format: str | None = None
     largest_segment_id: int | None = None
+    edited_mapping_edges_location: str | None = None
+    edited_mapping_base_mapping_name: str | None = None
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag(
@@ -56,4 +58,10 @@ class Volume(NamedTuple):
             largest_segment_id=None
             if largest_segment_id_str is None
             else int(largest_segment_id_str),
+            edited_mapping_edges_location=nml_volume.get(
+                "editedMappingEdgesLocation", default=None
+            ),
+            edited_mapping_base_mapping_name=nml_volume.get(
+                "editedMappingBaseMappingName", default=None
+            ),
         )
