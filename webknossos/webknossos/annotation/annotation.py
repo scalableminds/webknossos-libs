@@ -134,10 +134,10 @@ class VolumeLayer:
         Context manager to edit the volume layer.
 
         volume_layer_edit_mode: Specifies the edit mode for the volume layer.
-
         """
 
-        voxel_size = (1.0, 1.0, 1.0)  # TO DO change to actual voxel size if needed?
+        voxel_size = (1.0, 1.0, 1.0)  # TODO change to actual voxel size if needed?
+        dtype = "uint32"  # TODO change to actual dtype?
 
         if self.zip is None:
             raise ValueError(
@@ -150,7 +150,10 @@ class VolumeLayer:
                 dataset = Dataset(dataset_path, voxel_size=voxel_size)
                 if not self.zip.exists():
                     segmentation_layer = dataset.add_layer(
-                        "volumeAnnotationData", SEGMENTATION_CATEGORY
+                        "volumeAnnotationData",
+                        SEGMENTATION_CATEGORY,
+                        data_format=DataFormat.Zarr3,
+                        dtype_per_channel=dtype,
                     )
                 else:
                     segmentation_layer = self.export_to_dataset(
@@ -162,7 +165,9 @@ class VolumeLayer:
                 volume_annotation_zarr3_config = Zarr3Config(
                     codecs=(
                         {"name": "transpose", "configuration": {"order": "F"}},
-                        {"name": "bytes"},
+                        {
+                            "name": "bytes",
+                        },
                         {
                             "name": "blosc",
                             "configuration": {
@@ -204,7 +209,7 @@ class VolumeLayer:
                             zipfile.write(full_path, arcname)
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             # Use memory for temporary data store memory:// kvstore in tensorstore
-            raise NotImplementedError()  # TO DO
+            raise NotImplementedError()  # TODO
         else:
             raise ValueError(
                 f"Unsupported volume layer edit mode: {volume_layer_edit_mode}"
