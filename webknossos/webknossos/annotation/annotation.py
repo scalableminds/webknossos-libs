@@ -1520,6 +1520,7 @@ class RemoteAnnotation(Annotation):
                 modified=annotation_info.modified,
                 data_store=annotation_info.data_store,
                 tracing_time=annotation_info.tracing_time,
+                annotation_layers=None,
             ),
         )
 
@@ -1527,6 +1528,36 @@ class RemoteAnnotation(Annotation):
         raise NotImplementedError(
             "Remote annotations cannot be saved. Changes are applied ."
         )
+
+    def get_segments_for_agglomerate(self, agglomerate_id: int) -> list[int]:
+        """Get the segment ids for a given agglomerate id.
+
+        Args:
+            agglomerate_id (int): The agglomerate id.
+
+        Returns:
+            np.ndarray: The segment ids.
+        """
+        from ..client.context import _get_context
+
+        context = _get_context()
+        annotation_info = self._get_annotation_info()
+        assert annotation_info.annotation_layers is not None, "Annotation has no layers"
+        tracingstore_client = context.get_tracingstore_api_client()
+        volume_layer = [
+            layer
+            for layer in annotation_info.annotation_layers
+            if layer.typ == "Volume"
+        ]
+        assert len(volume_layer) == 1, "Expected exactly one volume layer"
+        segment_list_result = tracingstore_client.get_segments_for_agglomerate(
+            volume_layer[0].tracing_id, agglomerate_id
+        )
+        segment_list = segment_list_result.segmentIds
+        assert segment_list_result.agglomerateIdIsPresent, (
+            "This agglomerate was not edited in this annotation. To get the segment ids, check the underlying agglomerate view"
+        )
+        return segment_list
 
     def download_mesh(
         self,

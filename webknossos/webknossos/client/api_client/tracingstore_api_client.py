@@ -2,6 +2,7 @@ from collections.abc import Iterator
 
 from webknossos.client.api_client.models import (
     ApiAdHocMeshInfo,
+    ApiEditableMappingSegmentListResult,
     ApiPrecomputedMeshInfo,
 )
 
@@ -25,6 +26,16 @@ class TracingStoreApiClient(AbstractApiClient):
     @property
     def url_prefix(self) -> str:
         return f"{self.base_url}/tracings"
+
+    def get_segments_for_agglomerate(
+        self, tracing_id: str, agglomerate_id: int
+    ) -> ApiEditableMappingSegmentListResult:
+        route = f"/mapping/{tracing_id}/segmentsForAgglomerate"
+        query: Query = {"agglomerateId": agglomerate_id}
+
+        return self._get_json(
+            route, query=query, response_type=ApiEditableMappingSegmentListResult
+        )
 
     def annotation_download_mesh(
         self,
