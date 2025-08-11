@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from ..client._upload_dataset import LayerToLink
 
 from ..utils import (
+    cheap_resolve,
     copytree,
     count_defined_values,
     dump_path,
@@ -73,7 +74,6 @@ from ..utils import (
     infer_metadata_type,
     is_fs_path,
     named_partial,
-    resolve_if_fs_path,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
@@ -323,7 +323,7 @@ class Dataset:
 
         self._read_only = read_only
         self.path: UPath = path
-        self._resolved_path: UPath = resolve_if_fs_path(path)
+        self._resolved_path: UPath = cheap_resolve(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -456,7 +456,7 @@ class Dataset:
         dataset = cls.__new__(cls)
         dataset.path = dataset_path
         dataset._read_only = read_only
-        dataset._resolved_path = resolve_if_fs_path(dataset_path)
+        dataset._resolved_path = cheap_resolve(dataset_path)
         return dataset._init_from_properties(dataset_properties)
 
     @property
@@ -1626,7 +1626,7 @@ class Dataset:
             except ValueError:
                 continue
             # Mags are only writable if they are local to the dataset
-            resolved_mag_path = resolve_if_fs_path(mag_dir)
+            resolved_mag_path = cheap_resolve(mag_dir)
             read_only = resolved_mag_path.parent != self.resolved_path / layer_name
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only

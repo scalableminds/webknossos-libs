@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 from ..utils import (
+    cheap_resolve,
     copytree,
     dump_path,
     enrich_path,
@@ -51,7 +52,6 @@ from ..utils import (
     is_fs_path,
     movetree,
     named_partial,
-    resolve_if_fs_path,
     rmtree,
     warn_deprecated,
 )
@@ -176,7 +176,7 @@ def _get_shard_shape(
 
 
 def _is_foreign_mag(dataset_path: UPath, layer_name: str, mag_path: UPath) -> bool:
-    return dataset_path / layer_name != resolve_if_fs_path(mag_path).parent
+    return dataset_path / layer_name != cheap_resolve(mag_path).parent
 
 
 def _find_mag_path(
@@ -191,9 +191,9 @@ def _find_mag_path(
     short_mag_file_path = layer_path / mag.to_layer_name()
     long_mag_file_path = layer_path / mag.to_long_layer_name()
     if short_mag_file_path.exists():
-        return resolve_if_fs_path(short_mag_file_path)
+        return cheap_resolve(short_mag_file_path)
     elif long_mag_file_path.exists():
-        return resolve_if_fs_path(long_mag_file_path)
+        return cheap_resolve(long_mag_file_path)
     else:
         raise FileNotFoundError(
             f"Could not find any valid mag `{mag}` in `{layer_path}`."
@@ -244,7 +244,7 @@ class Layer:
             properties.element_class, properties.num_channels
         )
         self._mags: dict[Mag, MagView] = {}
-        resolved_path = resolve_if_fs_path(self.dataset.resolved_path / self.name)
+        resolved_path = cheap_resolve(self.dataset.resolved_path / self.name)
         self._resolved_path: UPath = resolved_path
         self._read_only = read_only
 
@@ -355,9 +355,7 @@ class Layer:
         if self.path.exists():
             self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
-        self._resolved_path = resolve_if_fs_path(
-            self.dataset.resolved_path / layer_name
-        )
+        self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
@@ -1121,7 +1119,7 @@ class Layer:
         mag_name = Mag(mag).to_layer_name()
         full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
-        full_path = resolve_if_fs_path(full_path)
+        full_path = cheap_resolve(full_path)
         return full_path
 
     def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:

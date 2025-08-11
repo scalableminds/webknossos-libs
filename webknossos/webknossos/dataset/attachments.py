@@ -9,11 +9,11 @@ from typing_extensions import Self
 from upath import UPath
 
 from ..utils import (
+    cheap_resolve,
     copytree,
     dump_path,
     enrich_path,
     is_fs_path,
-    resolve_if_fs_path,
     snake_to_camel_case,
     warn_deprecated,
 )
@@ -307,7 +307,7 @@ class Attachments:
 
     def add_attachment_as_ref(self, attachment: Attachment) -> None:
         new_attachment = type(attachment).from_path_and_name(
-            resolve_if_fs_path(attachment.path),
+            cheap_resolve(attachment.path),
             attachment.name,
             data_format=attachment.data_format,
             dataset_path=self._layer.dataset.resolved_path,
@@ -320,7 +320,7 @@ class Attachments:
             self.add_attachment_as_copy(*other)
 
     def add_attachment_as_copy(self, attachment: Attachment) -> None:
-        new_path = resolve_if_fs_path(
+        new_path = cheap_resolve(
             self._layer.path
             / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
             / _maybe_add_suffix(attachment.name, attachment.data_format)
@@ -345,7 +345,7 @@ class Attachments:
             stacklevel=2,
         )
         for attachment in other:
-            new_path = resolve_if_fs_path(attachment.path)
+            new_path = cheap_resolve(attachment.path)
             if is_fs_path(attachment.path):
                 new_path = (
                     self._layer.resolved_path
