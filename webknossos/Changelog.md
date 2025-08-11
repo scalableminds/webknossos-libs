@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.8...HEAD)
 
 ### Breaking Changes
 
@@ -20,6 +20,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug where paths of references mags were wrong, if the target dataset's path was a prefix of the source dataset's path. [#1346](https://github.com/scalableminds/webknossos-libs/pull/1346)
+
+
+## [2.4.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.8) - 2025-08-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.7...v2.4.8)
+
+### Added
+- Added support for reading wkw datasets with the new "mag" key in datasource-properties.json, which replaces "wkwResolutions" for datasets written out by the webknossos server. [#1349](https://github.com/scalableminds/webknossos-libs/pull/1349)
 
 
 ## [2.4.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.7) - 2025-07-30
