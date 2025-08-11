@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug where paths of references mags were wrong, if the target dataset's path was a prefix of the source dataset's path. [#1346](https://github.com/scalableminds/webknossos-libs/pull/1346)
 
 
 ## [2.4.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.8) - 2025-08-06
