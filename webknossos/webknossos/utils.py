@@ -309,9 +309,11 @@ def is_remote_path(path: UPath) -> bool:
 
 
 def resolve_if_fs_path(path: UPath) -> UPath:
-    if is_fs_path(path):
-        return path.resolve()
-    return path
+    from upath.implementations.http import HTTPPath
+
+    if isinstance(path, HTTPPath):
+        return path.resolve(follow_redirects=False, strict=False)
+    return path.resolve()
 
 
 def is_writable_path(path: UPath) -> bool:
@@ -569,6 +571,10 @@ def _ensure_trailing_slash(path: str) -> str:
 
 
 def dump_path(path: UPath, dataset_path: UPath | None) -> str:
+    if dataset_path is not None:
+        if not dataset_path.is_absolute():
+            raise ValueError("dataset_path must be an absolute path.")
+        dataset_path = resolve_if_fs_path(dataset_path)
     if is_fs_path(path) and not path.is_absolute():
         if dataset_path is None:
             raise ValueError("dataset_path must be provided when path is not absolute.")
