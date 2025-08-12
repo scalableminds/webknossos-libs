@@ -57,6 +57,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
 import attr
+from cluster_tools import Executor, SequentialExecutor
 from cluster_tools.executor_protocol import Executor
 from upath import UPath
 from zipp import Path as ZipPath
@@ -112,6 +113,30 @@ class VolumeLayerEditMode(Enum):
     MEMORY = "memory"  # Use an in-memory store for edits
 
 
+VOLUME_ANNOTATION_ZARR3_CONFIG = Zarr3Config(
+    codecs=(
+        {"name": "transpose", "configuration": {"order": "F"}},
+        {
+            "name": "bytes",
+        },
+        {
+            "name": "blosc",
+            "configuration": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "shuffle": "shuffle",
+                "typesize": 1,
+            },
+        },
+    ),
+    chunk_key_encoding={
+        "name": "default",
+        "configuration": {"separator": "."},
+    },
+)
+
+
 @attr.define
 class VolumeLayer:
     id: int
@@ -138,78 +163,70 @@ class VolumeLayer:
 
         voxel_size = (1.0, 1.0, 1.0)  # TODO change to actual voxel size if needed?
         dtype = "uint32"  # TODO change to actual dtype?
+        layer_name = "volumeAnnotationData"
 
         if self.zip is None:
             raise ValueError(
                 "VolumeLayer.zip is not specified but required for editing."
             )
 
-        if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
-            with TemporaryDirectory() as tmp_dir:
-                dataset_path = Path(tmp_dir)
-                dataset = Dataset(dataset_path, voxel_size=voxel_size)
-                if not self.zip.exists():
-                    segmentation_layer = dataset.add_layer(
-                        "volumeAnnotationData",
-                        SEGMENTATION_CATEGORY,
-                        data_format=DataFormat.Zarr3,
-                        dtype_per_channel=dtype,
-                    )
-                else:
-                    segmentation_layer = self.export_to_dataset(
-                        dataset, layer_name="volumeAnnotationData"
-                    )
-
-                yield segmentation_layer
-
-                volume_annotation_zarr3_config = Zarr3Config(
-                    codecs=(
-                        {"name": "transpose", "configuration": {"order": "F"}},
-                        {
-                            "name": "bytes",
-                        },
-                        {
-                            "name": "blosc",
-                            "configuration": {
-                                "blocksize": 0,
-                                "clevel": 5,
-                                "cname": "lz4",
-                                "shuffle": "shuffle",
-                                "typesize": 1,
-                            },
-                        },
-                    ),
-                    chunk_key_encoding={
-                        "name": "default",
-                        "configuration": {"separator": "."},
-                    },
+        def edit_with_upath(
+            dataset_path: UPath, executor: Executor | None = None
+        ) -> Generator[Layer, None, None]:
+            dataset = Dataset(dataset_path, voxel_size=voxel_size)
+            if not self.zip.exists():
+                segmentation_layer = dataset.add_layer(
+                    layer_name,
+                    SEGMENTATION_CATEGORY,
+                    data_format=DataFormat.Zarr3,
+                    dtype_per_channel=dtype,
                 )
+            else:
+                segmentation_layer = self.export_to_dataset(
+                    dataset, layer_name=layer_name
+                )
+
+            yield segmentation_layer
+
+            with TemporaryDirectory() as rechunked_dir:
                 for mag_view in segmentation_layer.mags.values():
                     mag_view.rechunk(
                         chunk_shape=mag_view.info.chunk_shape,
                         shard_shape=mag_view.info.chunk_shape,  # same as chunk_shape to disable sharding
-                        compress=volume_annotation_zarr3_config,
+                        compress=VOLUME_ANNOTATION_ZARR3_CONFIG,
                         _progress_desc=f"Compressing {mag_view.layer.name} {mag_view.name}",
+                        executor=executor,
+                        target_path=rechunked_dir,
                     )
+
                 with ZipFile(
                     str(self.zip),
                     mode="w",
                     compression=ZIP_DEFLATED,
                     compresslevel=Z_BEST_SPEED,
-                ) as zipfile:
-                    for root, dirs, files in os.walk(dataset_path):
+                ) as zf:
+                    for dirname, _, files in os.walk(rechunked_dir):
                         for file in files:
-                            full_path = os.path.join(root, file)
-                            arcname = os.path.relpath(full_path, dataset_path)
+                            full_path = os.path.join(dirname, file)
+                            arcname = os.path.relpath(full_path, rechunked_dir)
                             if (
                                 arcname == "zarr.json"
-                                or arcname == "volumeAnnotationData/zarr.json"
+                                or arcname == layer_name + "/zarr.json"
                             ):
                                 continue
-                            zipfile.write(full_path, arcname)
+                            zf.write(full_path, arcname)
+
+        if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
+            with TemporaryDirectory() as tmp_dir:
+                return edit_with_upath(UPath(tmp_dir))
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
-            # Use memory for temporary data store memory:// kvstore in tensorstore
-            raise NotImplementedError()  # TODO
+            with SequentialExecutor() as executor:
+                return edit_with_upath(
+                    UPath(
+                        self._default_zip_name(), protocol="memory"
+                    ),  # TODO maybe add random suffix to avoid collisions?
+                    executor,
+                )
         else:
             raise ValueError(
                 f"Unsupported volume layer edit mode: {volume_layer_edit_mode}"

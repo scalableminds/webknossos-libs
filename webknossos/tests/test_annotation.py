@@ -7,6 +7,7 @@ import pytest
 
 import webknossos as wk
 from webknossos import SegmentationLayer
+from webknossos.annotation.annotation import VolumeLayerEditMode
 from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
@@ -371,6 +372,8 @@ def test_tree_metadata(tmp_path: Path) -> None:
     )
 
 
+# TODO this is very slow
+# TODO test for combinations of Memory and TempDir
 def test_edit_volume_annotation() -> None:
     data = np.ones((1, 10, 10, 10), dtype=np.uint32)
     ann = wk.Annotation(
@@ -382,11 +385,10 @@ def test_edit_volume_annotation() -> None:
     volume_layer = ann.add_volume_layer(
         name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
     )
-    with volume_layer.edit() as seg_layer:
+    with volume_layer.edit(VolumeLayerEditMode.MEMORY) as seg_layer:
         assert isinstance(seg_layer, SegmentationLayer)
         mag = seg_layer.add_mag(1)
         mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
-        # seg_layer.downsample(coarsest_mag=wk.Mag(2))
     with volume_layer.edit() as seg_layer:
         assert len(seg_layer.mags) == 1
         mag = seg_layer.get_mag(1)
@@ -394,7 +396,7 @@ def test_edit_volume_annotation() -> None:
         assert np.array_equal(data, read_data)
 
 
-def test_save_edited_volume_annotation() -> None:
+def test_edited_volume_annotation_format() -> None:
     import zipfile
 
     import tensorstore
@@ -441,6 +443,8 @@ def test_save_edited_volume_annotation() -> None:
     assert ["transpose", "bytes", "blosc"] == [
         codec["name"] for codec in metadata["codecs"]
     ]
+    data_read = ts.read().result()[0, :10, :10, :10]
+    assert np.array_equal(data, data_read)
 
 
 @pytest.mark.use_proxay
