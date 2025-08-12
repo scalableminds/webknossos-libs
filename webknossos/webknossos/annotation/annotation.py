@@ -58,7 +58,6 @@ from zlib import Z_BEST_SPEED
 
 import attr
 from cluster_tools import Executor, SequentialExecutor
-from cluster_tools.executor_protocol import Executor
 from upath import UPath
 from zipp import Path as ZipPath
 
@@ -146,6 +145,7 @@ class VolumeLayer:
     zip: ZipPath | None
     segments: dict[int, SegmentInformation]
     largest_segment_id: int | None
+    voxel_size: Vector3 | None
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
@@ -161,7 +161,6 @@ class VolumeLayer:
         volume_layer_edit_mode: Specifies the edit mode for the volume layer.
         """
 
-        voxel_size = (1.0, 1.0, 1.0)  # TODO change to actual voxel size if needed?
         dtype = "uint32"  # TODO change to actual dtype?
         layer_name = "volumeAnnotationData"
 
@@ -173,7 +172,7 @@ class VolumeLayer:
         def edit_with_upath(
             dataset_path: UPath, executor: Executor | None = None
         ) -> Generator[Layer, None, None]:
-            dataset = Dataset(dataset_path, voxel_size=voxel_size)
+            dataset = Dataset(dataset_path, voxel_size=self.voxel_size)
             if not self.zip.exists():
                 segmentation_layer = dataset.add_layer(
                     layer_name,
@@ -857,6 +856,7 @@ class Annotation:
                     zip=volume_path,
                     segments=segments,
                     largest_segment_id=volume.largest_segment_id,
+                    voxel_size=nml.parameters.scale.factor
                 )
             )
         assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
@@ -1297,6 +1297,7 @@ class Annotation:
             zip=zip_path,
             segments={},
             largest_segment_id=None,
+            voxel_size=self.voxel_size
         )
         self.volume_layers.append(volume_layer)
         return volume_layer
