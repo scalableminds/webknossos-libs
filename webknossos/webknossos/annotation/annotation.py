@@ -1529,14 +1529,14 @@ class RemoteAnnotation(Annotation):
             "Remote annotations cannot be saved. Changes are applied ."
         )
 
-    def get_segments_for_agglomerate(self, agglomerate_id: int) -> list[int]:
+    def get_segments_for_agglomerate(self, agglomerate_id: int) -> list[int] | None:
         """Get the segment ids for a given agglomerate id.
 
         Args:
             agglomerate_id (int): The agglomerate id.
 
         Returns:
-            np.ndarray: The segment ids.
+            List[int] | None: The segment ids if the agglomerate was edited, None otherwise.
         """
         from ..client.context import _get_context
 
@@ -1554,10 +1554,10 @@ class RemoteAnnotation(Annotation):
             volume_layer[0].tracing_id, agglomerate_id
         )
         segment_list = segment_list_result.segmentIds
-        assert segment_list_result.agglomerateIdIsPresent, (
-            "This agglomerate was not edited in this annotation. To get the segment ids, check the underlying agglomerate view"
-        )
-        return segment_list
+        if segment_list_result.agglomerateIdIsPresent:
+            return segment_list
+        else:
+            return None
 
     def download_mesh(
         self,
