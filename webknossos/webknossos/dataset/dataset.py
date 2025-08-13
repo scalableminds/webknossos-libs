@@ -1191,7 +1191,7 @@ class Dataset:
         for layer in self.get_segmentation_layers():
             if not layer.attachments.is_empty:
                 raise NotImplementedError(
-                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attchments."
+                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
                 )
 
         dataset_id = upload_dataset(
