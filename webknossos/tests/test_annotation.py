@@ -154,7 +154,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
 @pytest.mark.use_proxay
 def test_dataset_access_via_annotation() -> None:
-    # This is a regression test for a bug occuring when the dataset name was changed
+    # This is a regression test for a bug occurring when the dataset name was changed
     # while it was referenced in an annotation.
 
     # load a remote dataset
