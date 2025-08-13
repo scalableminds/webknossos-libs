@@ -1152,7 +1152,7 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
 @pytest.mark.use_proxay
 def test_explore_and_add_remote() -> None:
     remote_ds = RemoteDataset.explore_and_add_remote(
-        "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
+        "http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/",
         "added_remote_ds",
         "/Organization_X",
     )

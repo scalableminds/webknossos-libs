@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:41 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -54,13 +54,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:41 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/json
         content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570261672,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1755083992162,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
@@ -84,13 +84,13 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:41 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/json
         content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570262641,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1755083992585,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: POST
@@ -115,12 +115,12 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:41 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"JbYIOL-eiSJ5lBdhyThK-Q"}'
+        data: '{"token":"EhP3rs-apcdEIGK8rmA8og"}'
         compression: none
   - request:
       method: GET
@@ -132,7 +132,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -148,7 +148,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:42 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/octet-stream
         content-length: '1000'
       body:
@@ -165,7 +165,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -181,7 +181,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:42 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/octet-stream
         content-length: '360'
       body:
@@ -198,7 +198,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -214,7 +214,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:42 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/octet-stream
         content-length: '120'
       body:
@@ -231,7 +231,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -247,7 +247,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:42 GMT
+        date: Wed, 13 Aug 2025 11:19:52 GMT
         content-type: application/octet-stream
         content-length: '20'
       body:
@@ -263,7 +263,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -279,7 +279,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:43 GMT
+        date: Wed, 13 Aug 2025 11:19:53 GMT
         content-type: application/octet-stream
         content-length: '6'
       body:
@@ -295,7 +295,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -311,7 +311,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:43 GMT
+        date: Wed, 13 Aug 2025 11:19:53 GMT
         content-type: application/octet-stream
         content-length: '4000'
       body:
@@ -328,7 +328,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -344,7 +344,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:43 GMT
+        date: Wed, 13 Aug 2025 11:19:53 GMT
         content-type: application/octet-stream
         content-length: '1440'
       body:
@@ -361,7 +361,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -377,7 +377,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:44 GMT
+        date: Wed, 13 Aug 2025 11:19:53 GMT
         content-type: application/octet-stream
         content-length: '480'
       body:
@@ -394,7 +394,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -410,7 +410,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:44 GMT
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/octet-stream
         content-length: '80'
       body:
@@ -427,7 +427,7 @@ http_interactions:
         accept-encoding: gzip, deflate
         connection: keep-alive
         user-agent: python-httpx/0.27.2
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -443,7 +443,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/octet-stream
         content-length: '24'
       body:
@@ -474,18 +474,18 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '1577'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570262641,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1755083992585,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=JbYIOL-eiSJ5lBdhyThK-Q
+        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=EhP3rs-apcdEIGK8rmA8og
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -505,23 +505,23 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '1575'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1751570266450,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1755083995436,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
       path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
         accept-encoding: identity
         accept: '*/*'
-        user-agent: Python/3.11 aiohttp/3.10.11
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -535,8 +535,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -548,11 +547,11 @@ http_interactions:
       path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
         range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
-        user-agent: Python/3.11 aiohttp/3.10.11
+        user-agent: Python/3.13 aiohttp/3.10.11
       body:
         encoding: utf8
         data: ''
@@ -566,8 +565,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '1413'
       body:
@@ -587,7 +585,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -601,8 +599,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -622,7 +619,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -636,8 +633,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -657,7 +653,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -671,8 +667,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -692,7 +687,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -706,8 +701,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -727,7 +721,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -741,8 +735,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:54 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -762,7 +755,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -776,8 +769,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:55 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -797,7 +789,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -811,8 +803,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:55 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -832,7 +823,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -846,8 +837,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:55 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -867,7 +857,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -881,8 +871,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:55 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -902,7 +891,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -916,8 +905,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:55 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -937,7 +925,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -951,8 +939,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:55 GMT
         content-type: application/json
         content-length: '166'
       body:
@@ -972,7 +959,7 @@ http_interactions:
         accept-encoding: deflate, gzip, br, zstd
         proxy-connection: Keep-Alive
         cache-control: no-cache
-        x-auth-token: JbYIOL-eiSJ5lBdhyThK-Q
+        x-auth-token: EhP3rs-apcdEIGK8rmA8og
       body:
         encoding: utf8
         data: ''
@@ -986,8 +973,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 03 Jul 2025 19:17:45 GMT
-        connection: close
+        date: Wed, 13 Aug 2025 11:19:55 GMT
         content-type: application/json
         content-length: '166'
       body:
