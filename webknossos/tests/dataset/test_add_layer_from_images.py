@@ -344,7 +344,7 @@ def _test_bioformats(
 
 
 @pytest.mark.skipif(
-    os.environ["CI"] != "true" or sys.platform != "linux", reason="only run on linux CI"
+    "CI" not in os.environ or os.environ["CI"] != "true" or sys.platform != "linux", reason="only run on linux CI"
 )
 @pytest.mark.parametrize(
     "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
@@ -515,7 +515,7 @@ def _test_test_images(
     "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
 )
 @pytest.mark.skipif(
-    os.environ["CI"] != "true" or sys.platform != "linux", reason="only run on linux CI"
+    "CI" not in os.environ or os.environ["CI"] != "true" or sys.platform != "linux", reason="only run on linux CI"
 )
 def test_test_images(
     tmp_path: Path,
