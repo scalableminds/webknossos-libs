@@ -58,6 +58,7 @@ from zlib import Z_BEST_SPEED
 
 import attr
 from cluster_tools import Executor, SequentialExecutor
+from numpy._typing import DTypeLike
 from upath import UPath
 from zipp import Path as ZipPath
 
@@ -146,9 +147,49 @@ class VolumeLayer:
     segments: dict[int, SegmentInformation]
     largest_segment_id: int | None
     voxel_size: Vector3 | None
+    dtype: DTypeLike | None = None
+    layer_name: str = "volumeAnnotationData"
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
+
+    def _init_zip(self):
+        assert not self.zip.exists()
+        assert self.dtype is not None
+
+        with TemporaryDirectory() as tempdir:
+            dataset = Dataset(tempdir, voxel_size=self.voxel_size)
+            dataset.add_layer(
+                self.layer_name,
+                SEGMENTATION_CATEGORY,
+                data_format=DataFormat.Zarr3,
+                dtype_per_channel=self.dtype,
+            )
+            self.write_dir_to_zip(tempdir)
+
+    def write_dir_to_zip(self, source: str):
+        """
+        Write all files from the given source directory into the volume layer's zip archive.
+
+        Parameters:
+            source: Path to the directory whose contents will be added to the zip archive.
+        """
+        with ZipFile(
+            str(self.zip),
+            mode="w",
+            compression=ZIP_DEFLATED,
+            compresslevel=Z_BEST_SPEED,
+        ) as zf:
+            for dirname, _, files in os.walk(source):
+                for file in files:
+                    full_path = os.path.join(dirname, file)
+                    arcname = os.path.relpath(full_path, source)
+                    if (
+                        arcname == "zarr.json"
+                        or arcname == self.layer_name + "/zarr.json"
+                    ):
+                        continue
+                    zf.write(full_path, arcname)
 
     @contextmanager
     def edit(
@@ -158,11 +199,9 @@ class VolumeLayer:
         """
         Context manager to edit the volume layer.
 
-        volume_layer_edit_mode: Specifies the edit mode for the volume layer.
+        Args:
+            volume_layer_edit_mode: Specifies the edit mode for the volume layer.
         """
-
-        dtype = "uint32"  # TODO change to actual dtype?
-        layer_name = "volumeAnnotationData"
 
         if self.zip is None:
             raise ValueError(
@@ -173,17 +212,11 @@ class VolumeLayer:
             dataset_path: UPath, executor: Executor | None = None
         ) -> Generator[Layer, None, None]:
             dataset = Dataset(dataset_path, voxel_size=self.voxel_size)
-            if not self.zip.exists():
-                segmentation_layer = dataset.add_layer(
-                    layer_name,
-                    SEGMENTATION_CATEGORY,
-                    data_format=DataFormat.Zarr3,
-                    dtype_per_channel=dtype,
-                )
-            else:
-                segmentation_layer = self.export_to_dataset(
-                    dataset, layer_name=layer_name
-                )
+            assert self.zip.exists()
+
+            segmentation_layer = self.export_to_dataset(
+                dataset, layer_name=self.layer_name
+            )
 
             yield segmentation_layer
 
@@ -197,35 +230,22 @@ class VolumeLayer:
                         executor=executor,
                         target_path=rechunked_dir,
                     )
-
-                with ZipFile(
-                    str(self.zip),
-                    mode="w",
-                    compression=ZIP_DEFLATED,
-                    compresslevel=Z_BEST_SPEED,
-                ) as zf:
-                    for dirname, _, files in os.walk(rechunked_dir):
-                        for file in files:
-                            full_path = os.path.join(dirname, file)
-                            arcname = os.path.relpath(full_path, rechunked_dir)
-                            if (
-                                arcname == "zarr.json"
-                                or arcname == layer_name + "/zarr.json"
-                            ):
-                                continue
-                            zf.write(full_path, arcname)
+                self.write_dir_to_zip(rechunked_dir)
 
         if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
             with TemporaryDirectory() as tmp_dir:
                 return edit_with_upath(UPath(tmp_dir))
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             with SequentialExecutor() as executor:
-                return edit_with_upath(
-                    UPath(
-                        self._default_zip_name(), protocol="memory"
-                    ),  # TODO maybe add random suffix to avoid collisions?
-                    executor,
-                )
+                path = UPath(self._default_zip_name(), protocol="memory")
+                try:
+                    return edit_with_upath(
+                        path,
+                        executor,
+                    )
+                finally:
+                    if path.exists():
+                        path.rmdir(recursive=True)
         else:
             raise ValueError(
                 f"Unsupported volume layer edit mode: {volume_layer_edit_mode}"
@@ -299,19 +319,20 @@ class VolumeLayer:
                     dataset._add_existing_layer(layer_properties),
                 )
 
-        best_mag_view = layer.get_finest_mag()
+        if len(layer.mags) > 0:
+            best_mag_view = layer.get_finest_mag()
 
-        if self.largest_segment_id is None:
-            max_value = max(
-                (
-                    view.read().max()
-                    for view in best_mag_view.get_views_on_disk(read_only=True)
-                ),
-                default=0,
-            )
-            layer.largest_segment_id = int(max_value)
-        else:
-            layer.largest_segment_id = self.largest_segment_id
+            if self.largest_segment_id is None:
+                max_value = max(
+                    (
+                        view.read().max()
+                        for view in best_mag_view.get_views_on_disk(read_only=True)
+                    ),
+                    default=0,
+                )
+                layer.largest_segment_id = int(max_value)
+            else:
+                layer.largest_segment_id = self.largest_segment_id
 
         return layer
 
@@ -379,7 +400,7 @@ class Annotation:
 
         Add volume layer:
         ```
-        ann.add_volume_layer(
+        ann.create_volume_layer(
             name="segmentation",
             fallback_layer="segmentation_layer"
         )
@@ -856,7 +877,7 @@ class Annotation:
                     zip=volume_path,
                     segments=segments,
                     largest_segment_id=volume.largest_segment_id,
-                    voxel_size=nml.parameters.scale.factor
+                    voxel_size=nml.parameters.scale.factor,
                 )
             )
         assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
@@ -1238,13 +1259,14 @@ class Annotation:
         """
         return (i.name for i in self.volume_layers)
 
-    def add_volume_layer(
+    def create_volume_layer(
         self,
         name: str,
         zip_path: ZipPath | None = None,
+        dtype: DTypeLike | None = None,
         fallback_layer: Layer | str | None = None,
         volume_layer_id: int | None = None,
-    ) -> VolumeLayer:
+    ):
         """Adds a new volume layer to the annotation.
 
         Volume layers can be used to store segmentation data. Using fallback layers
@@ -1252,8 +1274,9 @@ class Annotation:
 
         Args:
             name: Name of the volume layer.
-            zip_path: Path to zip storage for volume annotations. Required, if volume annotation
-                        is edited
+            zip_path: Path to zip storage for volume annotations. Required, for the volume annotation
+                        to be editable
+            dtype: Datatype of the volume layer. Required, if zip_path is specified
             fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
                           Can be Layer instance or layer name.
             volume_layer_id: Optional explicit ID for the layer.
@@ -1262,17 +1285,99 @@ class Annotation:
         Raises:
             AssertionError: If volume_layer_id already exists.
             AssertionError: If fallback_layer is provided but not a segmentation layer.
+            AssertionError: If zip_path already contains data
 
         Examples:
             ```python
             # Add basic layer
-            annotation.add_volume_layer("segmentation")
+            annotation.create_volume_layer("segmentation")
 
             # Add with fallback
-            annotation.add_volume_layer("segmentation", fallback_layer="base_segmentation")
+            annotation.create_volume_layer("segmentation", fallback_layer="base_segmentation")
+
+            # Editable layer
+            annotation.create_volume_layer("segmentation", zip_path="/path/to/zip_path.zip")
             ```
         """
+        if zip_path is not None:
+            assert not zip_path.exists(), (
+                f"Can not create volume layer at zip_path {zip_path} because path already exists."
+            )
+        volume_layer = self._add_volume_layer(
+            name=name,
+            zip_path=zip_path,
+            fallback_layer=fallback_layer,
+            volume_layer_id=volume_layer_id,
+            dtype=dtype,
+        )
 
+        if zip_path is not None:
+            assert dtype is not None, "Can not create editable volume layer without specifying its dtype."
+
+            with TemporaryDirectory() as tempdir:
+                dataset = Dataset(tempdir, voxel_size=volume_layer.voxel_size)
+                dataset.add_layer(
+                    volume_layer.layer_name,
+                    SEGMENTATION_CATEGORY,
+                    data_format=DataFormat.Zarr3,
+                    dtype_per_channel=dtype,
+                )
+                volume_layer.write_dir_to_zip(tempdir)
+
+        return volume_layer
+
+    def add_volume_layer(
+        self,
+        name: str,
+        zip_path: ZipPath,
+        fallback_layer: Layer | str | None = None,
+        volume_layer_id: int | None = None,
+    ) -> VolumeLayer:
+        """Adds an existing volume layer to the annotation.
+
+        Volume layers can be used to store segmentation data. Using fallback layers
+        is recommended for better performance in WEBKNOSSOS.
+
+        Args:
+            name: Name of the volume layer.
+            zip_path: Path to zip storage containing the volume annotation.
+            fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
+                          Can be Layer instance or layer name.
+            volume_layer_id: Optional explicit ID for the layer.
+                           Auto-generated if not provided.
+
+        Raises:
+            AssertionError: If volume_layer_id already exists.
+            AssertionError: If fallback_layer is provided but not a segmentation layer.
+            AssertionError: If zip_path does not contain a volume annotation zip
+
+        Examples:
+            ```python
+            # Add basic layer
+            annotation.add_volume_layer("segmentation", zip_path="/path/to/zip_path.zip")
+
+            # Add with fallback
+            annotation.add_volume_layer("segmentation", zip_path="/path/to/zip_path.zip", fallback_layer="base_segmentation")
+            ```
+        """
+        assert zip_path.exists(), (
+            f"Provided zip_path {zip_path} does not exist. Use `create_volume_layer` to create a new volume layer instead."
+        )
+        return self._add_volume_layer(
+            name=name,
+            zip_path=zip_path,
+            fallback_layer=fallback_layer,
+            volume_layer_id=volume_layer_id,
+        )
+
+    def _add_volume_layer(
+        self,
+        name: str,
+        zip_path: ZipPath | None = None,
+        fallback_layer: Layer | str | None = None,
+        volume_layer_id: int | None = None,
+        dtype: DTypeLike | None = None,
+    ) -> VolumeLayer:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self.volume_layers), default=-1) + 1
         else:
@@ -1297,7 +1402,8 @@ class Annotation:
             zip=zip_path,
             segments={},
             largest_segment_id=None,
-            voxel_size=self.voxel_size
+            voxel_size=self.voxel_size,
+            dtype=dtype,
         )
         self.volume_layers.append(volume_layer)
         return volume_layer

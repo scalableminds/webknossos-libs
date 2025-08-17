@@ -668,7 +668,7 @@ def test_merge_fallback_no_fallback_layer(
                 segments={},
                 data_format=DataFormat.WKW,
                 largest_segment_id=largest_segment_id,
-                voxel_size=tmp_dataset.voxel_size
+                voxel_size=tmp_dataset.voxel_size,
             ),
         ]
 
