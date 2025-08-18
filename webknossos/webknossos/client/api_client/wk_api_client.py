@@ -306,5 +306,9 @@ class WkApiClient(AbstractApiClient):
     ) -> ApiDatasetReserveManualUploadResponse:
         route = "/datasets/reserveManualUpload"
         return self._post_json_with_json_response(
-            route, dataset_announce, ApiDatasetAnnounceManualUploadResponse
+            route, reserve_manual_upload_parameters, ApiDatasetReserveManualUploadResponse
         )
+
+    def dataset_finish_manual_upload(self, dataset_id: str) -> None:
+        route = "/datasets/finishManualUpload"
+        self._post(route, query={"datasetId": dataset_id})

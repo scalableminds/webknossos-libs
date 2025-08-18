@@ -29,6 +29,8 @@ from ..client.api_client.models import (
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
+    ApiDatasetReserveManualUploadParameters,
+    ApiDataSource, ApiDataSourceWithPaths
 )
 from ..geometry import (
     BoundingBox,
@@ -464,17 +466,16 @@ class Dataset:
         return self._resolved_path
 
     @classmethod
-    def announce_manual_upload(
+    def reserve_manual_upload(
         cls,
         dataset_name: str,
-        organization: str,
+        data_source: ApiDataSourceWithPaths,
         initial_team_ids: list[str],
         folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
-        token: str | None = None,
-        datastore_url: str | None = None,
-    ) -> tuple[str, str]:
-        """Announce a manual dataset upload to WEBKNOSSOS.
+         # TODO remove, Api classes should not be exposed to users
+    ) -> tuple[str, ApiDataSource]:
+        """Reserve a manual dataset upload to WEBKNOSSOS.
 
         Used when manually uploading datasets to the file system of a datastore.
         Creates database entries and sets access rights on the webknossos instance before the actual data upload.
@@ -494,37 +495,39 @@ class Dataset:
 
         Examples:
             ```
-            Dataset.announce_manual_upload(
+            Dataset.reserve_manual_upload(
                 "my_dataset",
                 "my_organization",
                 ["team_a", "team_b"],
                 "folder_123"
             )
             ```
+            :param data_source:
         """
 
-        from ..client._upload_dataset import _cached_get_upload_datastore
-        from ..client.api_client.models import ApiDatasetAnnounceUpload
         from ..client.context import _get_context
 
         if isinstance(folder_id, RemoteFolder):
             folder_id = folder_id.id
 
         context = _get_context()
-        dataset_announce = ApiDatasetAnnounceUpload(
-            dataset_name=dataset_name,
-            organization=organization,
-            initial_team_ids=initial_team_ids,
-            folder_id=folder_id,
-            require_unique_name=require_unique_name,
+        response = context.api_client_with_auth.dataset_reserve_manual_upload(
+            ApiDatasetReserveManualUploadParameters(
+                dataset_name=dataset_name,
+                initial_team_ids=initial_team_ids,
+                folder_id=folder_id,
+                require_unique_name=require_unique_name,
+                data_source=data_source,
+                layers_to_link=[]
+            )
         )
-        if datastore_url is None:
-            datastore_url = _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(datastore_url)
-        response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce, token=token
-        )
-        return response.new_dataset_id, response.directory_name
+        return response.new_dataset_id, response.data_source
+
+    @classmethod
+    def finish_manual_upload(cls, dataset_id: str) -> None:
+        from ..client.context import _get_context
+        _get_context().api_client_with_auth.dataset_finish_manual_upload(dataset_id)
+
 
     @classmethod
     def trigger_reload_in_datastore(
