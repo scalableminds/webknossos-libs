@@ -28,6 +28,8 @@ from webknossos.client.api_client.models import (
     ApiTracingStore,
     ApiUser,
     ApiWkBuildInfo,
+    ApiDatasetReserveManualUploadParameters,
+    ApiDatasetReserveManualUploadResponse
 )
 
 from ...utils import time_since_epoch_in_ms
@@ -296,4 +298,13 @@ class WkApiClient(AbstractApiClient):
         }
         return self.post_multipart_with_json_response(
             route, ApiTaskCreationResult, multipart_data=data, files=files
+        )
+
+    def dataset_reserve_manual_upload(
+            self,
+            reserve_manual_upload_parameters: ApiDatasetReserveManualUploadParameters
+    ) -> ApiDatasetReserveManualUploadResponse:
+        route = "/datasets/reserveManualUpload"
+        return self._post_json_with_json_response(
+            route, dataset_announce, ApiDatasetAnnounceManualUploadResponse
         )

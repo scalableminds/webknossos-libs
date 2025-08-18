@@ -142,6 +142,22 @@ class ApiDatasetAnnounceUpload:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadParameters:
+    dataset_name: str
+    initial_team_ids: list[str]
+    folder_id: str | None
+    require_unique_name: bool
+    layers_to_link: ApiLinkedLayerIdentifier
+    data_source: ApiDataSource
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadResponse:
+    id: str
+    data_source: ApiDataSource
+
+
+@attr.s(auto_attribs=True)
 class ApiDatasetIsValidNewNameResponse:
     is_valid: bool
     errors: list[str] | None = None
