@@ -625,7 +625,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[AbstractContextManager, str]:
+    ) -> tuple[AbstractContextManager, str, str | None]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -697,10 +697,7 @@ class Dataset:
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
                 context_manager = webknossos_context(webknossos_url, None)
-        return (
-            context_manager,
-            dataset_id,
-        )
+        return (context_manager, dataset_id, sharing_token)
 
     @classmethod
     def open_remote(
@@ -738,10 +735,7 @@ class Dataset:
 
         from ..client.context import _get_context
 
-        (
-            context_manager,
-            dataset_id,
-        ) = cls._parse_remote(
+        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
             sharing_token,
@@ -799,10 +793,7 @@ class Dataset:
 
         from ..client._download_dataset import download_dataset
 
-        (
-            context_manager,
-            dataset_id,
-        ) = cls._parse_remote(
+        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
             dataset_name_or_url, organization_id, sharing_token, webknossos_url
         )
 
