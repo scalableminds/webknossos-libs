@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.10...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added support for remote datasets and annotations to `webknossos export-as-tiff`. [#1356](https://github.com/scalableminds/webknossos-libs/pull/1356)
 
 ### Changed
 
 ### Fixed
+
+
+## [2.4.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.10) - 2025-08-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.9...v2.4.10)
+
+### Added
+- Added support for remote datasets and annotations to `webknossos export-as-tiff`. [#1356](https://github.com/scalableminds/webknossos-libs/pull/1356)
 
 
 ## [2.4.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.9) - 2025-08-11
