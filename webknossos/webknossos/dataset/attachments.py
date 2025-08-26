@@ -344,6 +344,7 @@ class Attachments:
             DeprecationWarning,
             stacklevel=2,
         )
+        assert self._layer.resolved_path is not None
         for attachment in other:
             new_path = cheap_resolve(attachment.path)
             if is_fs_path(attachment.path):
@@ -368,11 +369,13 @@ class Attachments:
     def detect_legacy_attachments(self) -> None:
         """Detects and adds legacy attachments.
         Legacy attachments are attachments that were stored in the folder hierarchy of the layer without explicit metadata."""
-        if not is_fs_path(self._layer.resolved_path):
+        if self._layer.resolved_path is None or not is_fs_path(self._layer.resolved_path):
             return
 
         def _detect_hdf5(typ: type[Attachment]) -> None:
             folder_name = snake_to_camel_case(TYPE_MAPPING[typ])
+            if self._layer.resolved_path is None or self._layer.dataset.resolved_path is None:
+                return
             if (self._layer.resolved_path / folder_name).exists():
                 for attachment_path in (self._layer.resolved_path / folder_name).glob(
                     "*.hdf5"

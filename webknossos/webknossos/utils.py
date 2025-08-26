@@ -530,7 +530,7 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     return False
 
 
-def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
+def enrich_path(path: str | PathLike | UPath, dataset_path: UPath | None) -> UPath:
     upath = UPath(path)
     if upath.protocol in ("http", "https"):
         from .client.context import _get_context
@@ -560,6 +560,7 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
         )
 
     if not upath.is_absolute():
+        assert dataset_path is not None, f"dataset_path must be set if {path} is not absolute"
         return cheap_resolve(dataset_path / upath)
     return cheap_resolve(upath)
 

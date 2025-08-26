@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, Dict
 
 import attr
 
@@ -86,10 +86,8 @@ class ApiVoxelSize:
 
 
 @attr.s(auto_attribs=True)
-class ApiDataSource:
-    data_layers: list[ApiDataLayer] | None = None
-    status: str | None = None
-    scale: ApiVoxelSize | None = None
+class ApiUnusableDataSource:
+    status: str
 
 
 @attr.s(auto_attribs=True)
@@ -110,7 +108,7 @@ class ApiDataset:
     directory_name: str
     owning_organization: str
     data_store: ApiDataStore
-    data_source: ApiDataSource
+    data_source: ApiUnusableDataSource | Dict[str, Any]
     created: float
     metadata: list[ApiMetadata] | None = None
     description: str | None = None

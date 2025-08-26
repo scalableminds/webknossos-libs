@@ -28,7 +28,7 @@ from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
-    ApiPrecomputedMeshInfo,
+    ApiPrecomputedMeshInfo, ApiUnusableDataSource,
 )
 from ..geometry import (
     BoundingBox,
@@ -460,7 +460,7 @@ class Dataset:
         return dataset._init_from_properties(dataset_properties)
 
     @property
-    def resolved_path(self) -> UPath:
+    def resolved_path(self) -> UPath | None:
         return self._resolved_path
 
     @classmethod
@@ -707,6 +707,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
+        use_zarr_streaming: bool = True,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -719,6 +720,7 @@ class Dataset:
             sharing_token: Optional sharing token for dataset access
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
             dataset_id: Optional unique ID of the dataset
+            use_zarr_streaming: Whether to use zarr streaming
 
         Returns:
             RemoteDataset: Dataset instance for remote access
@@ -746,18 +748,26 @@ class Dataset:
         with context_manager:
             wk_context = _get_context()
             token = sharing_token or wk_context.datastore_token
-            api_dataset_info = wk_context.api_client.dataset_info(dataset_id, token)
+            api_dataset_info = wk_context.api_client.dataset_info(dataset_id, token, include_paths=True)
             directory_name = api_dataset_info.directory_name
             organization_id = api_dataset_info.owning_organization
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
-            zarr_path = UPath(
-                f"{url_prefix}/zarr/{organization_id}/{directory_name}/",
-                headers={} if token is None else {"X-Auth-Token": token},
-                ssl=SSL_CONTEXT,
-            )
-            return RemoteDataset(zarr_path, dataset_id, context_manager)
+            if use_zarr_streaming:
+                zarr_path = UPath(
+                    f"{url_prefix}/zarr/{organization_id}/{directory_name}/",
+                    headers={} if token is None else {"X-Auth-Token": token},
+                    ssl=SSL_CONTEXT,
+                )
+                return RemoteDataset(zarr_path, None, dataset_id, context_manager)
+            else:
+                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+                    raise RuntimeError(
+                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
+                    )
+                properties = dataset_converter.structure(api_dataset_info.data_source, DatasetProperties)
+                return RemoteDataset(None, properties, dataset_id, context_manager)
 
     @classmethod
     def download(
@@ -1618,7 +1628,7 @@ class Dataset:
                 continue
             # Mags are only writable if they are local to the dataset
             resolved_mag_path = cheap_resolve(mag_dir)
-            read_only = resolved_mag_path.parent != self.resolved_path / layer_name
+            read_only = self.resolved_path is None or resolved_mag_path.parent != self.resolved_path / layer_name
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
             )
@@ -2419,6 +2429,7 @@ class Dataset:
                     else foreign_mag.path.resolve()
                 ).as_posix()
             else:
+                assert self.resolved_path is not None, "resolved_path is not set as it is a remote dataset"
                 mag_prop.path = dump_path(foreign_mag.path, self.resolved_path)
 
         if (
@@ -2429,6 +2440,7 @@ class Dataset:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
+                        assert foreign_layer.dataset.resolved_path is not None, "resolved_path is not set. This should only happen for remote datasets"
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
@@ -2552,6 +2564,7 @@ class Dataset:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
+                        assert foreign_layer.dataset.resolved_path is not None
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
@@ -3096,17 +3109,17 @@ class RemoteDataset(Dataset):
 
     def __init__(
         self,
-        dataset_path: UPath,
+        zarr_streaming_path: UPath | None,
+        dataset_properties: DatasetProperties | None,
         dataset_id: str,
         context: AbstractContextManager,
     ) -> None:
         """Initialize a remote dataset instance.
 
         Args:
-            dataset_path: Path to remote dataset location
-            dataset_name: Name of dataset in WEBKNOSSOS
-            organization_id: Organization that owns the dataset
-            sharing_token: Optional token for shared access
+            zarr_streaming_path: Path to the zarr streaming directory
+            dataset_properties: Properties of the remote dataset
+            dataset_id: dataset id of the remote dataset
             context: Context manager for WEBKNOSSOS connection
 
         Raises:
@@ -3116,16 +3129,22 @@ class RemoteDataset(Dataset):
             Do not call this constructor directly, use Dataset.open_remote() instead.
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
-        self.path = dataset_path
-        self._resolved_path = dataset_path
+        assert zarr_streaming_path is not None != dataset_properties is not None, (
+            "Either zarr_streaming_path or dataset_properties must be set, but not both."
+        )
+        self.path = zarr_streaming_path
+        self._resolved_path = zarr_streaming_path
         self._read_only = True
+        self._use_zarr_streaming = zarr_streaming_path is not None
+
         try:
-            dataset_properties = self._load_properties(self.path)
+            if self._use_zarr_streaming:
+                dataset_properties = self._load_properties(self.path)
             self._init_from_properties(dataset_properties)
         except FileNotFoundError as e:
             if hasattr(self, "_properties"):
                 warnings.warn(
-                    f"[WARNING] Cannot open remote webknossos dataset {dataset_path} as zarr. "
+                    f"[WARNING] Cannot open remote webknossos dataset {dataset_id}. "
                     + "Returning a stub dataset instead, accessing metadata properties might still work.",
                 )
                 self.path = None  # type: ignore[assignment]
@@ -3482,7 +3501,7 @@ class RemoteDataset(Dataset):
 
         Note:
             The dataset files must be accessible from the WEBKNOSSOS server
-            for this to work. The data will be streamed directly from the source.
+            for this to work. The data will be streamed through webknossos from the source.
         """
         from ..client.context import _get_context
 
