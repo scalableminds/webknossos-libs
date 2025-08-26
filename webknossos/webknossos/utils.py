@@ -560,7 +560,9 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath | None) -> UPa
         )
 
     if not upath.is_absolute():
-        assert dataset_path is not None, f"dataset_path must be set if {path} is not absolute"
+        assert dataset_path is not None, (
+            f"dataset_path must be set if {path} is not absolute"
+        )
         return cheap_resolve(dataset_path / upath)
     return cheap_resolve(upath)
 

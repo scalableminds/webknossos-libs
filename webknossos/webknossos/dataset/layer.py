@@ -244,18 +244,26 @@ class Layer:
             properties.element_class, properties.num_channels
         )
         self._mags: dict[Mag, MagView] = {}
-        resolved_path = cheap_resolve(self.dataset.resolved_path / self.name) if self.dataset.resolved_path is not None else None
+        resolved_path = (
+            cheap_resolve(self.dataset.resolved_path / self.name)
+            if self.dataset.resolved_path is not None
+            else None
+        )
         self._resolved_path: UPath | None = resolved_path
         self._read_only = read_only
 
         for mag in properties.mags:
             if mag.path is None:
-                assert resolved_path is not None, "Layer has no resolved path, but mag has no path"
+                assert resolved_path is not None, (
+                    "Layer has no resolved path, but mag has no path"
+                )
                 mag_path = _find_mag_path(resolved_path, mag.mag)
             else:
                 mag_path = enrich_path(mag.path, self.dataset.resolved_path)
-            mag_is_read_only = read_only or self.dataset.resolved_path is None or _is_foreign_mag(
-                self.dataset.resolved_path, self.name, mag_path
+            mag_is_read_only = (
+                read_only
+                or self.dataset.resolved_path is None
+                or _is_foreign_mag(self.dataset.resolved_path, self.name, mag_path)
             )
             self._setup_mag(Mag(mag.mag), mag_path, read_only=mag_is_read_only)
         self._properties.mags = [
@@ -343,7 +351,12 @@ class Layer:
         if layer_name == self.name:
             return
         self._ensure_metadata_writable()
-        if self.path is None or self.dataset.path is None or self.dataset.resolved_path is None or not is_fs_path(self.path):
+        if (
+            self.path is None
+            or self.dataset.path is None
+            or self.dataset.resolved_path is None
+            or not is_fs_path(self.path)
+        ):
             raise RuntimeError(f"Cannot rename remote layer {self.path}")
         if layer_name in self.dataset.layers.keys():
             raise ValueError(
@@ -1119,7 +1132,9 @@ class Layer:
 
     def _create_dir_for_mag(self, mag: MagLike) -> UPath:
         if self.resolved_path is None:
-            raise RuntimeError("Cannot create directory for magnification, layer has no resolved path.")
+            raise RuntimeError(
+                "Cannot create directory for magnification, layer has no resolved path."
+            )
         mag_name = Mag(mag).to_layer_name()
         full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)

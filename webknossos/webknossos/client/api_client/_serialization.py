@@ -5,6 +5,7 @@ import cattrs
 from attrs import fields as attr_fields
 from attrs import has as is_attr_class
 
+from ...dataset.properties import DatasetProperties, dataset_converter
 from ...utils import snake_to_camel_case
 
 T = TypeVar("T")
@@ -41,6 +42,7 @@ def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]
     )
 
 
+custom_converter.register_structure_hook(DatasetProperties, dataset_converter.structure)
 custom_converter.register_structure_hook_factory(
     is_attr_class, attr_to_camel_case_structure
 )

@@ -28,7 +28,8 @@ from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
-    ApiPrecomputedMeshInfo, ApiUnusableDataSource,
+    ApiPrecomputedMeshInfo,
+    ApiUnusableDataSource,
 )
 from ..geometry import (
     BoundingBox,
@@ -748,7 +749,9 @@ class Dataset:
         with context_manager:
             wk_context = _get_context()
             token = sharing_token or wk_context.datastore_token
-            api_dataset_info = wk_context.api_client.dataset_info(dataset_id, token, include_paths=True)
+            api_dataset_info = wk_context.api_client.dataset_info(
+                dataset_id, token, include_paths=True
+            )
             directory_name = api_dataset_info.directory_name
             organization_id = api_dataset_info.owning_organization
             datastore_url = api_dataset_info.data_store.url
@@ -766,7 +769,9 @@ class Dataset:
                     raise RuntimeError(
                         f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
                     )
-                properties = dataset_converter.structure(api_dataset_info.data_source, DatasetProperties)
+                properties = dataset_converter.structure(
+                    api_dataset_info.data_source, DatasetProperties
+                )
                 return RemoteDataset(None, properties, dataset_id, context_manager)
 
     @classmethod
@@ -1628,7 +1633,10 @@ class Dataset:
                 continue
             # Mags are only writable if they are local to the dataset
             resolved_mag_path = cheap_resolve(mag_dir)
-            read_only = self.resolved_path is None or resolved_mag_path.parent != self.resolved_path / layer_name
+            read_only = (
+                self.resolved_path is None
+                or resolved_mag_path.parent != self.resolved_path / layer_name
+            )
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
             )
@@ -2429,7 +2437,9 @@ class Dataset:
                     else foreign_mag.path.resolve()
                 ).as_posix()
             else:
-                assert self.resolved_path is not None, "resolved_path is not set as it is a remote dataset"
+                assert self.resolved_path is not None, (
+                    "resolved_path is not set as it is a remote dataset"
+                )
                 mag_prop.path = dump_path(foreign_mag.path, self.resolved_path)
 
         if (
@@ -2440,7 +2450,9 @@ class Dataset:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
-                        assert foreign_layer.dataset.resolved_path is not None, "resolved_path is not set. This should only happen for remote datasets"
+                        assert foreign_layer.dataset.resolved_path is not None, (
+                            "resolved_path is not set. This should only happen for remote datasets"
+                        )
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()

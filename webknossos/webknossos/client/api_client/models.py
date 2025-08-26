@@ -1,6 +1,8 @@
-from typing import Any, Literal, Dict
+from typing import Any, Literal
 
 import attr
+
+from webknossos.dataset.properties import DatasetProperties
 
 # Request and response bodies for wk/datastore routes
 # Should contain only the fields that are actually used by the python libs
@@ -108,7 +110,7 @@ class ApiDataset:
     directory_name: str
     owning_organization: str
     data_store: ApiDataStore
-    data_source: ApiUnusableDataSource | Dict[str, Any]
+    data_source: ApiUnusableDataSource | DatasetProperties
     created: float
     metadata: list[ApiMetadata] | None = None
     description: str | None = None
