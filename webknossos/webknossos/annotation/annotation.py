@@ -51,7 +51,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import BinaryIO, Literal, Union, cast, overload
+from typing import Any, BinaryIO, Literal, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -1520,6 +1520,7 @@ class RemoteAnnotation(Annotation):
                 modified=annotation_info.modified,
                 data_store=annotation_info.data_store,
                 tracing_time=annotation_info.tracing_time,
+                annotation_layers=None,
             ),
         )
 
@@ -1579,3 +1580,35 @@ class RemoteAnnotation(Annotation):
             for chunk in mesh_download:
                 f.write(chunk)
         return file_path
+
+    def get_agglomerate_graph(self, agglomerate_id: int) -> Any:
+        """Get the agglomerate graph for the specified agglomerate id.
+
+        Args:
+            agglomerate_id (int): The id of the agglomerate to get the graph for.
+
+        Returns:
+            AgglomerateGraph: The agglomerate graph for the specified agglomerate id.
+
+        Raises:
+            ValueError: If the agglomerate id is not valid.
+        """
+        if agglomerate_id < 0:
+            raise ValueError("agglomerate_id must be a positive integer")
+
+        from ..client.context import _get_context
+
+        context = _get_context()
+        annotation_info = self._get_annotation_info()
+        assert annotation_info.annotation_layers is not None, "Annotation has no layers"
+        tracingstore_client = context.get_tracingstore_api_client()
+        volume_layer = [
+            layer
+            for layer in annotation_info.annotation_layers
+            if layer.typ == "Volume"
+        ]
+        assert len(volume_layer) == 1, "Expected exactly one volume layer"
+        graph = tracingstore_client.get_agglomerate_graph(
+            volume_layer[0].tracing_id, agglomerate_id
+        )
+        return graph
