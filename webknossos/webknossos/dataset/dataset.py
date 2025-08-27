@@ -323,8 +323,8 @@ class Dataset:
         path = strip_trailing_slash(UPath(dataset_path))
 
         self._read_only = read_only
-        self.path: UPath = path
-        self._resolved_path: UPath = cheap_resolve(path)
+        self.path: UPath | None = path
+        self._resolved_path: UPath | None = cheap_resolve(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
