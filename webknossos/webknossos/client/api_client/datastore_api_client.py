@@ -2,8 +2,6 @@ from collections.abc import Iterator
 
 from webknossos.client.api_client.models import (
     ApiAdHocMeshInfo,
-    ApiDatasetAnnounceUpload,
-    ApiDatasetManualUploadSuccess,
     ApiDatasetUploadInformation,
     ApiDatasetUploadSuccess,
     ApiPrecomputedMeshInfo,
@@ -72,17 +70,6 @@ class DatastoreApiClient(AbstractApiClient):
         route = f"/triggers/reload/{organization_id}/{dataset_name}"
         query: Query = {"token": token}
         self._post(route, query=query)
-
-    def dataset_reserve_manual_upload(
-        self,
-        dataset_announce: ApiDatasetAnnounceUpload,
-        token: str | None,
-    ) -> ApiDatasetManualUploadSuccess:
-        route = "/datasets/reserveManualUpload"
-        query: Query = {"token": token}
-        return self._post_json_with_json_response(
-            route, dataset_announce, ApiDatasetManualUploadSuccess, query
-        )
 
     def dataset_get_raw_data(
         self,

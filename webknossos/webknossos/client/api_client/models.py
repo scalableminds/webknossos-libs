@@ -80,14 +80,60 @@ class ApiDataLayer:
 
 
 @attr.s(auto_attribs=True)
+class ApiMagLocator:
+    mag: tuple[int, int, int]
+    path: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiLayerAttachment:
+    name: str
+    dataFormat: str
+    path: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiLayerAttachments:
+    agglomerates: list[ApiLayerAttachment]
+
+
+@attr.s(auto_attribs=True)
+class ApiDataLayerWithPaths:
+    name: str
+    category: str
+    dataFormat: str
+    element_class: str
+    bounding_box: ApiBoundingBox
+    mags: list[ApiMagLocator]
+    attachments: ApiLayerAttachments | None = None
+    additional_axes: list[ApiAdditionalAxis] | None = None
+    largest_segment_id: int | None = None
+    default_view_configuration: dict[str, Any] | None = None
+
+
+@attr.s(auto_attribs=True)
 class ApiVoxelSize:
     unit: str
     factor: tuple[float, float, float]
 
 
 @attr.s(auto_attribs=True)
+class ApiDataSourceId:
+    name: str
+    team: str
+
+
+@attr.s(auto_attribs=True)
 class ApiDataSource:
     data_layers: list[ApiDataLayer] | None = None
+    status: str | None = None
+    scale: ApiVoxelSize | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDataSourceWithPaths:
+    id: ApiDataSourceId = ApiDataSourceId("", "")
+    data_layers: list[ApiDataLayerWithPaths] | None = None
     status: str | None = None
     scale: ApiVoxelSize | None = None
 
@@ -133,15 +179,6 @@ class ApiDatasetExploreAndAddRemote:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetAnnounceUpload:
-    dataset_name: str
-    organization: str
-    initial_team_ids: list[str]
-    folder_id: str | None
-    require_unique_name: bool
-
-
-@attr.s(auto_attribs=True)
 class ApiDatasetIsValidNewNameResponse:
     is_valid: bool
     errors: list[str] | None = None
@@ -163,17 +200,35 @@ class ApiDatasetUploadSuccess:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetManualUploadSuccess:
-    new_dataset_id: str
-    directory_name: str
-
-
-@attr.s(auto_attribs=True)
 class ApiLinkedLayerIdentifier:
     organization_id: str
     data_set_name: str
     layer_name: str
     new_layer_name: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadParameters:
+    dataset_name: str
+    initial_team_ids: list[str]
+    folder_id: str | None
+    require_unique_name: bool
+    layers_to_link: list[ApiLinkedLayerIdentifier]
+    data_source: ApiDataSourceWithPaths
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadResponse:
+    new_dataset_id: str
+    data_source: ApiDataSourceWithPaths
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualAttachmentUploadParameters:
+    layer_name: str
+    attachment_name: str
+    attachment_type: str
+    attachment_dataformat: str
 
 
 @attr.s(auto_attribs=True)
