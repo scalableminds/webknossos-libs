@@ -146,6 +146,7 @@ exclude = [
     "site-packages",
     "venv",
     "webknossos/dataset/_utils/vendor",
+    "webknossos/proofreading/agglomerate_graph_pb2.py",
 ]
 
 # Same as Black.

@@ -1,3 +1,4 @@
+// refresh with `protoc --python_out .  webknossos/proofreading/agglomerate_graph.proto --pyi_out .`
 syntax = "proto2";
 
 package com.scalableminds.webknossos.datastore;
