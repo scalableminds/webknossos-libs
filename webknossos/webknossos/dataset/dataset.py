@@ -769,10 +769,10 @@ class Dataset:
                     raise RuntimeError(
                         f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
                     )
-                properties = dataset_converter.structure(
-                    api_dataset_info.data_source, DatasetProperties
+
+                return RemoteDataset(
+                    None, api_dataset_info.data_source, dataset_id, context_manager
                 )
-                return RemoteDataset(None, properties, dataset_id, context_manager)
 
     @classmethod
     def download(
@@ -3141,7 +3141,7 @@ class RemoteDataset(Dataset):
             Do not call this constructor directly, use Dataset.open_remote() instead.
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
-        assert zarr_streaming_path is not None != dataset_properties is not None, (
+        assert (zarr_streaming_path is not None) != (dataset_properties is not None), (
             "Either zarr_streaming_path or dataset_properties must be set, but not both."
         )
         self.path = zarr_streaming_path
