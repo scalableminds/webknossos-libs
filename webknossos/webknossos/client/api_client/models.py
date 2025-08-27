@@ -2,7 +2,6 @@ from typing import Any, Literal
 
 import attr
 
-
 # Request and response bodies for wk/datastore routes
 # Should contain only the fields that are actually used by the python libs
 # Note that keys are converted to/from camelCase to match this
@@ -86,7 +85,6 @@ class ApiMagLocator:
     path: str | None = None
 
 
-
 @attr.s(auto_attribs=True)
 class ApiLayerAttachment:
     name: str
@@ -103,6 +101,7 @@ class ApiLayerAttachments:
 class ApiDataLayerWithPaths:
     name: str
     category: str
+    dataFormat: str
     element_class: str
     bounding_box: ApiBoundingBox
     mags: list[ApiMagLocator]
@@ -133,7 +132,7 @@ class ApiDataSource:
 
 @attr.s(auto_attribs=True)
 class ApiDataSourceWithPaths:
-    id: ApiDataSourceId = ApiDataSourceId("","")
+    id: ApiDataSourceId = ApiDataSourceId("", "")
     data_layers: list[ApiDataLayerWithPaths] | None = None
     status: str | None = None
     scale: ApiVoxelSize | None = None
@@ -222,6 +221,14 @@ class ApiDatasetReserveManualUploadParameters:
 class ApiDatasetReserveManualUploadResponse:
     new_dataset_id: str
     data_source: ApiDataSourceWithPaths
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualAttachmentUploadParameters:
+    layer_name: str
+    attachment_name: str
+    attachment_type: str
+    attachment_dataformat: str
 
 
 @attr.s(auto_attribs=True)

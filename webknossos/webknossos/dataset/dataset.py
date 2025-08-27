@@ -27,10 +27,11 @@ from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
+    ApiDatasetReserveManualUploadParameters,
+    ApiDataSource,
+    ApiDataSourceWithPaths,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
-    ApiDatasetReserveManualUploadParameters,
-    ApiDataSource, ApiDataSourceWithPaths
 )
 from ..geometry import (
     BoundingBox,
@@ -473,7 +474,7 @@ class Dataset:
         initial_team_ids: list[str],
         folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
-         # TODO remove, Api classes should not be exposed to users
+        # TODO remove, Api classes should not be exposed to users
     ) -> tuple[str, ApiDataSource]:
         """Reserve a manual dataset upload to WEBKNOSSOS.
 
@@ -517,8 +518,8 @@ class Dataset:
                 initial_team_ids=initial_team_ids,
                 folder_id=folder_id,
                 require_unique_name=require_unique_name,
-                data_source=data_source,
-                layers_to_link=[]
+                data_source=data_source,  # TODO set status
+                layers_to_link=[],
             )
         )
         return response.new_dataset_id, response.data_source
@@ -526,8 +527,8 @@ class Dataset:
     @classmethod
     def finish_manual_upload(cls, dataset_id: str) -> None:
         from ..client.context import _get_context
-        _get_context().api_client_with_auth.dataset_finish_manual_upload(dataset_id)
 
+        _get_context().api_client_with_auth.dataset_finish_manual_upload(dataset_id)
 
     @classmethod
     def trigger_reload_in_datastore(
