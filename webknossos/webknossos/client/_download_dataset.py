@@ -36,7 +36,6 @@ def download_dataset(
     api_dataset = api_client.dataset_info(
         dataset_id=dataset_id, sharing_token=sharing_token
     )
-    organization_id = api_dataset.owning_organization
 
     datastore_client = context.get_datastore_api_client(api_dataset.data_store.url)
 
@@ -120,7 +119,6 @@ def download_dataset(
             ):
                 chunk_in_mag = chunk.in_mag(mag)
                 chunk_bytes, missing_buckets = datastore_client.dataset_get_raw_data(
-                    organization_id=organization_id,
                     dataset_id=dataset_id,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),

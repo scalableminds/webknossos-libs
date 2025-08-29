@@ -779,13 +779,12 @@ class Dataset:
             api_dataset_info = wk_context.api_client.dataset_info(
                 dataset_id=dataset_id, sharing_token=token
             )
-            directory_name = api_dataset_info.directory_name
             organization_id = api_dataset_info.owning_organization
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
             zarr_path = UPath(
-                f"{url_prefix}/zarr/{organization_id}/{directory_name}/",
+                f"{url_prefix}/zarr/{dataset_id}/",
                 headers={} if token is None else {"X-Auth-Token": token},
                 ssl=SSL_CONTEXT,
             )
@@ -3601,13 +3600,11 @@ class RemoteDataset(Dataset):
         datastore = context.get_datastore_api_client(datastore_url=datastore_url)
         api_dataset = context.api_client.dataset_info(dataset_id=self._dataset_id)
         directory_name = api_dataset.directory_name
-        organization_id = api_dataset.owning_organization
         assert layer_name is not None, (
             "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
         )
         mesh_download = datastore.download_mesh(
             mesh_info=mesh_info,
-            organization_id=organization_id or context.organization_id,
             dataset_id=self._dataset_id,
             layer_name=layer_name,
             token=token,

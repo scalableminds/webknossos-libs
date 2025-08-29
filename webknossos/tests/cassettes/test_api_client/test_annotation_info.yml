@@ -2,7 +2,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v9/annotations/570ba0092a7c0e980056fe9b/info?timestamp=1755084091000
+        /api/v10/annotations/570ba0092a7c0e980056fe9b/info?timestamp=1756482217000
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -19,10 +19,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:21:31 GMT
+        date: Fri, 29 Aug 2025 15:43:37 GMT
+        connection: close
         content-type: application/json
         content-length: '1911'
       body:

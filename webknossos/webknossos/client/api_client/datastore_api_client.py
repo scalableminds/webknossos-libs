@@ -92,7 +92,6 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_get_raw_data(
         self,
         *,
-        organization_id: str,
         dataset_id: str,
         data_layer_name: str,
         mag: str,
@@ -104,9 +103,7 @@ class DatastoreApiClient(AbstractApiClient):
         height: int,
         depth: int,
     ) -> tuple[bytes, str]:
-        route = (
-            f"/datasets/{organization_id}/{dataset_id}/layers/{data_layer_name}/data"
-        )
+        route = f"/datasets/{dataset_id}/layers/{data_layer_name}/data"
         query: Query = {
             "mag": mag,
             "x": x,
@@ -124,12 +121,11 @@ class DatastoreApiClient(AbstractApiClient):
         self,
         *,
         mesh_info: ApiPrecomputedMeshInfo | ApiAdHocMeshInfo,
-        organization_id: str,
         dataset_id: str,
         layer_name: str,
         token: str | None,
     ) -> Iterator[bytes]:
-        route = f"/datasets/{organization_id}/{dataset_id}/layers/{layer_name}/meshes/fullMesh.stl"
+        route = f"/datasets/{dataset_id}/layers/{layer_name}/meshes/fullMesh.stl"
         query: Query = {"token": token}
         yield from self._post_json_with_bytes_iterator_response(
             route=route,

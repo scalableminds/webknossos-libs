@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v9/teams
+      path: /api/v10/teams
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -18,20 +18,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:44 GMT
+        date: Fri, 29 Aug 2025 15:42:25 GMT
+        connection: close
         content-type: application/json
-        content-length: '333'
+        content-length: '440'
       body:
         encoding: utf8
         data: >-
-          [{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X"},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X"},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X"}]
+          [{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X","isOrganizationTeam":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X","isOrganizationTeam":false},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X","isOrganizationTeam":false}]
         compression: none
   - request:
       method: GET
-      path: /api/v9/user
+      path: /api/v10/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -48,10 +50,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:44 GMT
+        date: Fri, 29 Aug 2025 15:42:25 GMT
+        connection: close
         content-type: application/json
         content-length: '717'
       body:
@@ -61,7 +65,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v9/projects
+      path: /api/v10/projects
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -83,20 +87,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:44 GMT
+        date: Fri, 29 Aug 2025 15:42:25 GMT
+        connection: close
         content-type: application/json
         content-length: '625'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_update_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"689c74d0010000b500845343","created":1755083984638}
+          {"name":"test_update_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68b1ca61d7842513c391090d","created":1756482145524}
         compression: none
   - request:
       method: PUT
-      path: /api/v9/projects/689c74d0010000b500845343
+      path: /api/v10/projects/68b1ca61d7842513c391090d
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -118,14 +124,16 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:44 GMT
+        date: Fri, 29 Aug 2025 15:42:25 GMT
+        connection: close
         content-type: application/json
         content-length: '624'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_update_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":2,"paused":false,"expectedTime":5678,"isBlacklistedFromReport":true,"id":"689c74d0010000b500845343","created":1755083984638}
+          {"name":"test_update_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":2,"paused":false,"expectedTime":5678,"isBlacklistedFromReport":true,"id":"68b1ca61d7842513c391090d","created":1756482145524}
         compression: none

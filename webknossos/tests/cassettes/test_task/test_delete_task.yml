@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v9/teams
+      path: /api/v10/teams
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -18,20 +18,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:47 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
-        content-length: '333'
+        content-length: '440'
       body:
         encoding: utf8
         data: >-
-          [{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X"},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X"},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X"}]
+          [{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X","isOrganizationTeam":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X","isOrganizationTeam":false},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X","isOrganizationTeam":false}]
         compression: none
   - request:
       method: GET
-      path: /api/v9/taskTypes
+      path: /api/v10/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -48,10 +50,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:47 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '822'
       body:
@@ -65,7 +69,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v9/taskTypes
+      path: /api/v10/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -102,22 +106,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:47 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '388'
       body:
         encoding: utf8
         data: >-
-          {"id":"689c74d4010000b700845367","summary":"test_task_type","description":"This
+          {"id":"68b1ca64d784259fc3910931","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
   - request:
       method: GET
-      path: /api/v9/projects/byName/test_project
+      path: /api/v10/projects/byName/test_project
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -134,10 +140,12 @@ http_interactions:
       status:
         code: 404
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:47 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '53'
       body:
@@ -146,7 +154,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v9/user
+      path: /api/v10/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -163,10 +171,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:47 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '717'
       body:
@@ -176,7 +186,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v9/projects
+      path: /api/v10/projects
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -198,20 +208,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '618'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"689c74d4010000b600845368","created":1755083988412}
+          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68b1ca64d784259fc3910932","created":1756482148715}
         compression: none
   - request:
       method: GET
-      path: /api/v9/taskTypes
+      path: /api/v10/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -228,10 +240,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '1211'
       body:
@@ -241,13 +255,13 @@ http_interactions:
           those cells
           out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
           those cells
-          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"689c74d4010000b700845367","summary":"test_task_type","description":"This
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68b1ca64d784259fc3910931","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}]
         compression: none
   - request:
       method: GET
-      path: /api/v9/user
+      path: /api/v10/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -264,10 +278,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '717'
       body:
@@ -278,7 +294,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v9/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+        /api/v10/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -295,22 +311,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
-        content-length: '1433'
+        content-length: '1485'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1755083988001,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1756482148369,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
         compression: none
   - request:
       method: POST
-      path: /api/v9/userToken/generate
+      path: /api/v10/userToken/generate
       headers:
         host: localhost:9000
         content-length: '0'
@@ -328,20 +346,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"ZBkodene7PCxX6dmJCzruQ"}'
+        data: '{"token":"Um-101zJycYbpFPpWo6Xyw"}'
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v9/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=ZBkodene7PCxX6dmJCzruQ
+        /api/v10/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=Um-101zJycYbpFPpWo6Xyw
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -358,23 +378,25 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
-        content-length: '1431'
+        content-length: '1483'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1755083988509,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1756482148815,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
         compression: none
   - request:
       method: HEAD
-      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v10/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: ZBkodene7PCxX6dmJCzruQ
+        x-auth-token: Um-101zJycYbpFPpWo6Xyw
         accept-encoding: identity
         accept: '*/*'
         user-agent: Python/3.13 aiohttp/3.10.11
@@ -386,12 +408,14 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '1413'
       body:
@@ -400,10 +424,10 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/v9/zarr/Organization_X/l4_sample/datasource-properties.json
+      path: /data/v10/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
       headers:
         host: localhost:9000
-        x-auth-token: ZBkodene7PCxX6dmJCzruQ
+        x-auth-token: Um-101zJycYbpFPpWo6Xyw
         range: bytes=0-1412
         accept: '*/*'
         accept-encoding: gzip, deflate
@@ -416,12 +440,14 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '1413'
       body:
@@ -431,7 +457,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v9/tasks
+      path: /api/v10/tasks
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -445,7 +471,7 @@ http_interactions:
       body:
         encoding: utf8
         data: >-
-          [{"taskTypeId": "689c74d4010000b700845367", "neededExperience":
+          [{"taskTypeId": "68b1ca64d784259fc3910931", "neededExperience":
           {"domain": "testing", "value": 0}, "pendingInstances": 1,
           "projectName": "test_project", "scriptId": null, "boundingBox": null,
           "datasetId": "59e9cfbdba632ac2ab8b23b5", "editPosition": [0, 0, 0],
@@ -455,22 +481,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '869'
       body:
         encoding: utf8
         data: >-
-          {"tasks":[{"status":200,"success":{"id":"689c74d4010000b50084536b","projectId":"689c74d4010000b600845368","projectName":"test_project","team":"team_X1","type":{"id":"689c74d4010000b700845367","summary":"test_task_type","description":"This
+          {"tasks":[{"status":200,"success":{"id":"68b1ca64d7842513c3910935","projectId":"68b1ca64d784259fc3910932","projectName":"test_project","team":"team_X1","type":{"id":"68b1ca64d784259fc3910931","summary":"test_task_type","description":"This
           is a test task
-          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1755083988615,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1756482148908,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/tasks/689c74d4010000b50084536b
+      path: /api/v10/tasks/68b1ca64d7842513c3910935
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -487,10 +515,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '45'
       body:
@@ -499,7 +529,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v9/tasks/689c74d4010000b50084536b
+      path: /api/v10/tasks/68b1ca64d7842513c3910935
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -516,10 +546,12 @@ http_interactions:
       status:
         code: 404
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '50'
       body:
@@ -528,7 +560,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/taskTypes/689c74d4010000b700845367
+      path: /api/v10/taskTypes/68b1ca64d784259fc3910931
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -545,10 +577,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '80'
       body:
@@ -559,7 +593,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v9/projects/689c74d4010000b600845368
+      path: /api/v10/projects/68b1ca64d784259fc3910932
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -576,10 +610,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 13 Aug 2025 11:19:48 GMT
+        date: Fri, 29 Aug 2025 15:42:28 GMT
+        connection: close
         content-type: application/json
         content-length: '61'
       body:
