@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import webknossos as wk
-from webknossos import SegmentationLayer, Annotation
+from webknossos import Annotation, SegmentationLayer
 from webknossos.annotation.annotation import VolumeLayerEditMode
 from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
@@ -201,7 +201,9 @@ def test_annotation_upload_download_roundtrip() -> None:
     annotation_from_file = wk.Annotation.load(path)
     annotation_from_file.organization_id = "Organization_X"
     url = annotation_from_file.upload()
-    annotation = wk.Annotation.download(url)
+    annotation = wk.Annotation.download(
+        url, volume_layers_root=TESTOUTPUT_DIR / "volume_layers_root.zip"
+    )
     assert annotation.dataset_name == "l4_sample"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
@@ -383,7 +385,7 @@ def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode) -> None:
         name="my_annotation",
         dataset_name="sample_dataset",
         voxel_size=(11.2, 11.2, 25.0),
-        volume_layers_root=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+        volume_layers_root=TESTOUTPUT_DIR / "test_volume_annotations.zip",
     )
 
     volume_layer = ann.add_volume_layer(
@@ -453,6 +455,7 @@ def test_edited_volume_annotation_format() -> None:
     data_read = ts.read().result()[0, :10, :10, :10]
     assert np.array_equal(data, data_read)
 
+
 @pytest.mark.parametrize(
     "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
 )
@@ -463,12 +466,10 @@ def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> N
         name="my_annotation",
         dataset_name="sample_dataset",
         voxel_size=(11.2, 11.2, 25.0),
-        volume_layers_root=TESTOUTPUT_DIR / "volume_annotations.zip"
+        volume_layers_root=TESTOUTPUT_DIR / "volume_annotations.zip",
     )
 
-    volume_layer = ann.add_volume_layer(
-        name="segmentation", dtype=np.uint32
-    )
+    volume_layer = ann.add_volume_layer(name="segmentation", dtype=np.uint32)
     with volume_layer.edit(edit_mode) as seg_layer:
         mag_view = seg_layer.add_mag(1)
         mag_view.write(data, allow_resize=True)
@@ -496,14 +497,18 @@ def test_edited_volume_annotation_upload_download() -> None:
     ann.organization_id = "Organization_X"
 
     volume_layer = ann.add_volume_layer(
-        name="segmentation", volume_layers_root=TESTOUTPUT_DIR / "volume_annotations.zip", dtype=np.uint32
+        name="segmentation",
+        volume_layers_root=TESTOUTPUT_DIR / "volume_annotations.zip",
+        dtype=np.uint32,
     )
     with volume_layer.edit() as seg_layer:
         mag_view = seg_layer.add_mag(1)
         mag_view.write(data, allow_resize=True)
 
     url = ann.upload()
-    ann_downloaded = Annotation.download(url, volume_layers_root=TESTOUTPUT_DIR / "volume_annotations_downloaded.zip")
+    ann_downloaded = Annotation.download(
+        url, volume_layers_root=TESTOUTPUT_DIR / "volume_annotations_downloaded.zip"
+    )
 
     assert {layer.name for layer in ann_downloaded.volume_layers} == {
         "Volume",
@@ -517,9 +522,3 @@ def test_edited_volume_annotation_upload_download() -> None:
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
         assert np.array_equal(data, read_data)
-
-
-def test_asd():
-    annotation = wk.Annotation.download(
-        "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
-    )

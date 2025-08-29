@@ -13,7 +13,8 @@ def main() -> None:
     ####################################
 
     nml = wk.Annotation.download(
-        "https://webknossos.org/annotations/6748612b0100001101c81156"
+        "https://webknossos.org/annotations/6748612b0100001101c81156",
+        skip_volume_data=True,
     ).skeleton
 
     ###############################################

@@ -38,6 +38,7 @@ See Also:
     * Skeleton documentation: /webknossos/skeleton_annotation/index.html
     * Volume annotation documentation: /webknossos/volume_annotation/index.html
 """
+
 import io
 import json
 import logging
@@ -198,11 +199,10 @@ class VolumeLayer:
             mode="w",
             compression=ZIP_DEFLATED,
             compresslevel=Z_BEST_SPEED,
-
         ) as annotation_zip:
             annotation_zip.writestr(self.zip.at, volume_zip_buffer.read())
 
-        #TODO is there a better way to update the self.zip.root.__lookup ?
+        # TODO is there a better way to update the self.zip.root.__lookup ?
         self.zip = ZipPath(self.zip.root.filename, self.zip.at)
         assert self.zip.exists()
 
@@ -725,9 +725,9 @@ class Annotation:
 
         annotation.volume_layers_root = volume_layers_root
         if any(layer.zip is not None for layer in annotation.volume_layers):
-            assert (
-                volume_layers_root is not None
-            ), "The downloaded annotation contains volume layer data, please provide volume_layers_root to store the data at."
+            assert volume_layers_root is not None, (
+                "The downloaded annotation contains volume layer data, please provide volume_layers_root to store the data at."
+            )
             annotation._write_volume_layers(volume_layers_root)
 
         if _return_context:
@@ -955,7 +955,6 @@ class Annotation:
 
         for layer in layers_to_write:
             layer.zip = ZipPath(volume_layers_root, layer.zip.at)
-
 
     def save(self, path: str | PathLike) -> None:
         """Saves the annotation to a file.
@@ -1343,11 +1342,13 @@ class Annotation:
         """
         if volume_layers_root is not None:
             self.volume_layers_root = Path(volume_layers_root)
-        assert self.volume_layers_root is not None, f"volume_layers_root path is required to create new volume layers"
+        assert self.volume_layers_root is not None, (
+            "volume_layers_root path is required to create new volume layers"
+        )
         os.makedirs(os.path.dirname(self.volume_layers_root), exist_ok=True)
         if not self.volume_layers_root.exists():
             # create zip file if it does not exist
-            with ZipFile(self.volume_layers_root, 'w'):
+            with ZipFile(self.volume_layers_root, "w"):
                 pass  # No files added, just creates an empty archive
 
         zip_path = ZipPath(self.volume_layers_root, f"{name}.zip")

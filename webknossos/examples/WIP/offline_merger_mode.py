@@ -12,10 +12,10 @@ nml = wk.open("merger-mode.nml")
 # wk.Skeleton.load or wk.open_skeleton works, too (and is type-safe)
 
 # for online annotation:
-annotation = wk.Annotation.download(
-    "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
-)
-nml = annotation.skeleton
+nml = wk.Annotation.download(
+    "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640",
+    skip_volume_data=True,
+).skeleton
 # should this save anything to disk, or just happen in memory?
 
 dataset = wk.download(nml.dataset_name, organization=nml.dataset_organization)

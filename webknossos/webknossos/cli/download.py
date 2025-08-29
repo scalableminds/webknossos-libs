@@ -1,6 +1,8 @@
 """This module takes care of downloading WEBKNOSSOS datasets."""
 
 import re
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Annotated, Any
 from urllib.parse import urlparse
 
@@ -90,7 +92,12 @@ def main(
                 mags=mags,
             )
         elif re.match(_ANNOTATION_URL_REGEX, url):
-            Annotation.download(annotation_id_or_url=url).save(target)
+            with TemporaryDirectory() as volume_layers_root:
+                Annotation.download(
+                    annotation_id_or_url=url,
+                    volume_layers_root=Path(volume_layers_root)
+                    / "volumeAnnotation.zip",
+                ).save(target)
         else:
             raise RuntimeError(
                 "The provided URL does not lead to a dataset or annotation."
