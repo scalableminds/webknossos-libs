@@ -14,7 +14,7 @@ from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.mag import MagLike
-from ._array import ArrayException, TensorStoreArray, Zarr3Config
+from ._array import ArrayException, TensorStoreArray, Zarr3ArrayInfo, Zarr3Config
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -59,6 +59,8 @@ from .defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_SHARD_SHAPE,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _is_int(s: str) -> bool:
@@ -870,6 +872,44 @@ class Layer:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
+        if (
+            (
+                chunk_shape is None
+                or Vec3Int.from_vec_or_int(chunk_shape)
+                == foreign_mag_view.info.chunk_shape
+            )
+            and (
+                shard_shape is None
+                or Vec3Int.from_vec_or_int(shard_shape)
+                == foreign_mag_view.info.shard_shape
+            )
+            and (
+                chunks_per_shard is None
+                or Vec3Int.from_vec_or_int(chunks_per_shard)
+                == foreign_mag_view.info.chunks_per_shard
+            )
+            and (self.data_format == foreign_mag_view.info.data_format)
+            and (
+                compress is None
+                or (
+                    (
+                        not isinstance(compress, Zarr3Config)
+                        or not isinstance(foreign_mag_view.info, Zarr3ArrayInfo)
+                        or compress == foreign_mag_view.info.zarr3_config
+                    )
+                    and compress == foreign_mag_view.info.compression_mode
+                )
+            )
+        ):
+            logger.debug(
+                f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
+            )
+            return self.add_fs_copy_mag(
+                foreign_mag_view,
+                extend_layer_bounding_box=extend_layer_bounding_box,
+                exists_ok=exists_ok,
+            )
+
         chunk_shape = Vec3Int.from_vec_or_int(
             chunk_shape or foreign_mag_view.info.chunk_shape
         )
@@ -1041,6 +1081,7 @@ class Layer:
         foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
+        exists_ok: bool = False,
     ) -> MagView:
         """
         Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
@@ -1050,7 +1091,12 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
+        assert foreign_mag_view.info.data_format == self.data_format
+
         mag_path = self.path / str(foreign_mag_view.mag)
+        assert exists_ok or not mag_path.exists(), (
+            f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists and `exist_ok` is set to False."
+        )
         copytree(
             foreign_mag_view.path,
             mag_path,

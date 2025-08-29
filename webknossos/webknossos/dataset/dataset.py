@@ -40,7 +40,7 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
-from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3ArrayInfo, Zarr3Config
+from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3Config
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
 from .defaults import (
@@ -2308,48 +2308,17 @@ class Dataset:
                 f"Copying {mag_view.layer.name}/{mag_view.mag.to_layer_name()}"
             )
 
-            can_use_fs_copy = True
-            if (
-                (chunk_shape is not None and chunk_shape != mag_view.info.chunk_shape)
-                or (
-                    shard_shape is not None and shard_shape != mag_view.info.shard_shape
-                )
-                or (
-                    chunks_per_shard is not None
-                    and chunks_per_shard != mag_view.info.chunks_per_shard
-                )
-                or (
-                    data_format is not None and data_format != mag_view.info.data_format
-                )
-                or (
-                    compress is not None
-                    and (
-                        isinstance(compress, Zarr3Config)
-                        and isinstance(mag_view.info, Zarr3ArrayInfo)
-                        and compress != mag_view.info.zarr3_config
-                    )
-                    or compress != mag_view.info.compression_mode
-                )
-            ):
-                can_use_fs_copy = False
-
-            if can_use_fs_copy:
-                layer.add_fs_copy_mag(
-                    mag_view,
-                    extend_layer_bounding_box=False,
-                )
-            else:
-                layer.add_mag_as_copy(
-                    mag_view,
-                    extend_layer_bounding_box=False,
-                    chunk_shape=chunk_shape,
-                    shard_shape=shard_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    compress=compress,
-                    exists_ok=exists_ok,
-                    executor=executor,
-                    progress_desc=progress_desc,
-                )
+            layer.add_mag_as_copy(
+                mag_view,
+                extend_layer_bounding_box=False,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                chunks_per_shard=chunks_per_shard,
+                compress=compress,
+                exists_ok=exists_ok,
+                executor=executor,
+                progress_desc=progress_desc,
+            )
 
         if (
             with_attachments
