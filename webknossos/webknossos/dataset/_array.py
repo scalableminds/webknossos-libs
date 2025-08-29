@@ -133,6 +133,13 @@ class Zarr3ArrayInfo(ArrayInfo):
                 axis_order=array_info.axis_order,
             )
 
+    @property
+    def zarr3_config(self) -> "Zarr3Config":
+        return Zarr3Config(
+            codecs=self.codecs,
+            chunk_key_encoding=self.chunk_key_encoding,
+        )
+
 
 @dataclass(frozen=True)
 class Zarr3Config:

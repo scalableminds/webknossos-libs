@@ -40,7 +40,7 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
-from ._array import ArrayException, ArrayInfo, BaseArray
+from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3ArrayInfo, Zarr3Config
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
 from .defaults import (
@@ -522,7 +522,7 @@ class Dataset:
             datastore_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(datastore_url)
         response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce, token=token
+            dataset_announce=dataset_announce, token=token
         )
         return response.new_dataset_id, response.directory_name
 
@@ -563,7 +563,9 @@ class Dataset:
         context = _get_context()
         upload_url = datastore_url or _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
-        datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
+        datastore_api.dataset_trigger_reload(
+            organization_id=organization, dataset_name=dataset_name, token=token
+        )
 
     @classmethod
     def trigger_dataset_import(
@@ -2235,7 +2237,7 @@ class Dataset:
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,
         data_format: str | DataFormat | None = None,
-        compress: bool | None = None,
+        compress: bool | Zarr3Config | None = None,
         exists_ok: bool = False,
         executor: Executor | None = None,
         with_attachments: bool = True,
@@ -2315,17 +2317,48 @@ class Dataset:
                 f"Copying {mag_view.layer.name}/{mag_view.mag.to_layer_name()}"
             )
 
-            layer.add_mag_as_copy(
-                mag_view,
-                extend_layer_bounding_box=False,
-                chunk_shape=chunk_shape,
-                shard_shape=shard_shape,
-                chunks_per_shard=chunks_per_shard,
-                compress=compress,
-                exists_ok=exists_ok,
-                executor=executor,
-                progress_desc=progress_desc,
-            )
+            can_use_fs_copy = True
+            if (
+                (chunk_shape is not None and chunk_shape != mag_view.info.chunk_shape)
+                or (
+                    shard_shape is not None and shard_shape != mag_view.info.shard_shape
+                )
+                or (
+                    chunks_per_shard is not None
+                    and chunks_per_shard != mag_view.info.chunks_per_shard
+                )
+                or (
+                    data_format is not None and data_format != mag_view.info.data_format
+                )
+                or (
+                    compress is not None
+                    and (
+                        isinstance(compress, Zarr3Config)
+                        and isinstance(mag_view.info, Zarr3ArrayInfo)
+                        and compress != mag_view.info.zarr3_config
+                    )
+                    or compress != mag_view.info.compression_mode
+                )
+            ):
+                can_use_fs_copy = False
+
+            if can_use_fs_copy:
+                layer.add_fs_copy_mag(
+                    mag_view,
+                    extend_layer_bounding_box=False,
+                )
+            else:
+                layer.add_mag_as_copy(
+                    mag_view,
+                    extend_layer_bounding_box=False,
+                    chunk_shape=chunk_shape,
+                    shard_shape=shard_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    compress=compress,
+                    exists_ok=exists_ok,
+                    executor=executor,
+                    progress_desc=progress_desc,
+                )
 
         if (
             with_attachments
@@ -2743,7 +2776,7 @@ class Dataset:
 
         if any(layer.data_format == DataFormat.WKW for layer in self.layers.values()):
             assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
+                "Cannot create WKW layers in remote datasets. Use `Dataset.copy_dataset` with `data_format='zarr3'`."
             )
 
         new_dataset = Dataset(
@@ -3579,7 +3612,7 @@ class RemoteDataset(Dataset):
             "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
         )
         mesh_download = datastore.download_mesh(
-            mesh_info,
+            mesh_info=mesh_info,
             organization_id=organization_id or context.organization_id,
             directory_name=directory_name,
             layer_name=layer_name,
