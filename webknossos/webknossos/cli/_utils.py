@@ -162,15 +162,6 @@ def parse_path(value: str) -> UPath:
             auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
     if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
-        if "AWS_ACCESS_KEY_ID" in environ and "AWS_SECRET_ACCESS_KEY" in environ:
-            return UPath(
-                value,
-                client_kwargs={
-                    "endpoint_url": environ["S3_ENDPOINT_URL"],
-                    "key": environ["AWS_ACCESS_KEY_ID"],
-                    "secret": environ["AWS_SECRET_ACCESS_KEY"],
-                },
-            )
         return UPath(
             value,
             client_kwargs={"endpoint_url": environ["S3_ENDPOINT_URL"]},

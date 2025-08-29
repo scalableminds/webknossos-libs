@@ -575,10 +575,7 @@ class Dataset:
                     "Both organization and organization_id were provided. Only one is allowed."
                 )
 
-        (
-            context_manager,
-            dataset_id,
-        ) = cls._parse_remote(
+        (context_manager, dataset_id, _) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
             None,
