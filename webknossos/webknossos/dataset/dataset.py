@@ -2524,13 +2524,15 @@ class Dataset:
         foreign_layer: str | Path | Layer,
         new_layer_name: str | None = None,
     ) -> Layer:
-        """
+        """Deprecated. File-based copy is automatically used in `Dataset.add_layer_as_copy`.
+
         Copies the files at `foreign_layer` which belongs to another dataset
         to the current dataset via the filesystem. Additionally, the relevant
         information from the `datasource-properties.json` of the other dataset
         are copied too. If new_layer_name is None, the name of the foreign
         layer is used.
         """
+        warn_deprecated("add_fs_copy_layer", "add_layer_as_copy")
         self._ensure_writable()
         foreign_layer = Layer._ensure_layer(foreign_layer)
 
@@ -2705,7 +2707,8 @@ class Dataset:
         exists_ok: bool = False,
         layers_to_ignore: Iterable[str] | None = None,
     ) -> "Dataset":
-        """
+        """Deprecated. File-based copy is automatically used by `Dataset.copy_dataset`.
+
         Creates an independent copy of the dataset with all layers at a new location.
 
         This method copies the files of the dataset as is and, therefore, might be faster than Dataset.copy_dataset, which decodes and encodes all the data.
@@ -2731,6 +2734,7 @@ class Dataset:
         Note:
             WKW layers can only be copied to datasets on local file systems.
         """
+        warn_deprecated("fs_copy_dataset", "copy_dataset")
 
         new_dataset_path = UPath(new_dataset_path)
 

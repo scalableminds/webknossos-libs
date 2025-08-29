@@ -2,6 +2,7 @@ import logging
 import operator
 import re
 import warnings
+from inspect import getframeinfo, stack
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -1076,17 +1077,13 @@ class Layer:
 
         return self.get_mag(foreign_mag_view.mag)
 
-    def add_fs_copy_mag(
+    def _add_fs_copy_mag(
         self,
         foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
     ) -> MagView:
-        """
-        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
-        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied, too.
-        """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
@@ -1112,6 +1109,30 @@ class Layer:
             )
 
         return mag
+
+    def add_fs_copy_mag(
+        self,
+        foreign_mag_view_or_path: PathLike | str | MagView,
+        *,
+        extend_layer_bounding_box: bool = True,
+        exists_ok: bool = False,
+    ) -> MagView:
+        """Deprecated. File-copy is automatically selected when using `Layer.add_mag_as_copy`.
+
+        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied, too.
+        """
+        caller = getframeinfo(stack()[2][0])
+        warnings.warn(
+            f"[DEPRECATION] Direct use of `Layer.add_fs_copy_mag` is deprecated, please use `Layer.add_mag_as_copy` instead (see {caller.filename}:{caller.lineno}), which automatically uses file-based copy if available.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._add_fs_copy_mag(
+            foreign_mag_view_or_path,
+            extend_layer_bounding_box=extend_layer_bounding_box,
+            exists_ok=exists_ok,
+        )
 
     def add_mag_from_zarrarray(
         self,
