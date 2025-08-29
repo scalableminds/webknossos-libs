@@ -522,7 +522,7 @@ class Dataset:
             datastore_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(datastore_url)
         response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce, token=token
+            dataset_announce=dataset_announce, token=token
         )
         return response.new_dataset_id, response.directory_name
 
@@ -563,7 +563,9 @@ class Dataset:
         context = _get_context()
         upload_url = datastore_url or _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(upload_url)
-        datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
+        datastore_api.dataset_trigger_reload(
+            organization_id=organization, dataset_name=dataset_name, token=token
+        )
 
     @classmethod
     def trigger_dataset_import(
@@ -602,7 +604,7 @@ class Dataset:
         if len(possible_ids) == 0:
             try:
                 dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
-                    dataset_name, organization_id
+                    directory_name=dataset_name, organization_id=organization_id
                 )
                 possible_ids.append(dataset_id)
             except UnexpectedStatusError:
@@ -752,7 +754,9 @@ class Dataset:
         with context_manager:
             wk_context = _get_context()
             token = sharing_token or wk_context.datastore_token
-            api_dataset_info = wk_context.api_client.dataset_info(dataset_id, token)
+            api_dataset_info = wk_context.api_client.dataset_info(
+                dataset_id=dataset_id, sharing_token=token
+            )
             directory_name = api_dataset_info.directory_name
             organization_id = api_dataset_info.owning_organization
             datastore_url = api_dataset_info.data_store.url
@@ -3193,7 +3197,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            return client.dataset_info(self._dataset_id)
+            return client.dataset_info(dataset_id=self._dataset_id)
 
     def _update_dataset_info(
         self,
@@ -3225,7 +3229,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update(self._dataset_id, info)
+            client.dataset_update(dataset_id=self._dataset_id, updated_dataset=info)
 
     @property
     def metadata(self) -> DatasetMetadata:
@@ -3410,7 +3414,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             api_sharing_token = _get_api_client().dataset_sharing_token(
-                self._dataset_id
+                dataset_id=self._dataset_id
             )
             return api_sharing_token.sharing_token
 
@@ -3461,7 +3465,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update_teams(self._dataset_id, team_ids)
+            client.dataset_update_teams(dataset_id=self._dataset_id, team_ids=team_ids)
 
     @classmethod
     def explore_and_add_remote(
@@ -3499,7 +3503,7 @@ class RemoteDataset(Dataset):
         dataset = ApiDatasetExploreAndAddRemote(
             UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
         )
-        context.api_client_with_auth.dataset_explore_and_add_remote(dataset)
+        context.api_client_with_auth.dataset_explore_and_add_remote(dataset=dataset)
 
         return cls.open_remote(dataset_name, context.organization_id)
 
@@ -3572,14 +3576,14 @@ class RemoteDataset(Dataset):
             )
         file_path: UPath
         datastore = context.get_datastore_api_client(datastore_url=datastore_url)
-        api_dataset = context.api_client.dataset_info(self._dataset_id)
+        api_dataset = context.api_client.dataset_info(dataset_id=self._dataset_id)
         directory_name = api_dataset.directory_name
         organization_id = api_dataset.owning_organization
         assert layer_name is not None, (
             "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
         )
         mesh_download = datastore.download_mesh(
-            mesh_info,
+            mesh_info=mesh_info,
             organization_id=organization_id or context.organization_id,
             directory_name=directory_name,
             layer_name=layer_name,

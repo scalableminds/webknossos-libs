@@ -33,7 +33,9 @@ def download_dataset(
 ) -> Dataset:
     context = _get_context()
     api_client = context.api_client
-    api_dataset = api_client.dataset_info(dataset_id, sharing_token=sharing_token)
+    api_dataset = api_client.dataset_info(
+        dataset_id=dataset_id, sharing_token=sharing_token
+    )
     organization_id = api_dataset.owning_organization
     directory_name = api_dataset.directory_name
 
