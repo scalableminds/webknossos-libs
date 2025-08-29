@@ -507,7 +507,7 @@ class SlurmExecutor(ClusterExecutor):
         elif max_rss > req_mem:
             # Check if job accounting canceled the job. This is the case if JobAcctGatherParam=OverMemoryKill
             # is enabled.
-            reason = f"The job was probably terminated because it consumed too much memory. Required {max_rss / 1000} MB but requeseted {req_mem / 1000} MB."
+            reason = f"The job was probably terminated because it consumed too much memory. Required {max_rss / 1000} MB but requested {req_mem / 1000} MB."
         else:
             return None
         return (reason, RemoteOutOfMemoryException)

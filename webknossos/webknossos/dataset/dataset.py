@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from ..client._upload_dataset import LayerToLink
 
 from ..utils import (
+    cheap_resolve,
     copytree,
     count_defined_values,
     dump_path,
@@ -73,7 +74,6 @@ from ..utils import (
     infer_metadata_type,
     is_fs_path,
     named_partial,
-    resolve_if_fs_path,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
@@ -323,7 +323,7 @@ class Dataset:
 
         self._read_only = read_only
         self.path: UPath = path
-        self._resolved_path: UPath = resolve_if_fs_path(path)
+        self._resolved_path: UPath = cheap_resolve(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -456,7 +456,7 @@ class Dataset:
         dataset = cls.__new__(cls)
         dataset.path = dataset_path
         dataset._read_only = read_only
-        dataset._resolved_path = resolve_if_fs_path(dataset_path)
+        dataset._resolved_path = cheap_resolve(dataset_path)
         return dataset._init_from_properties(dataset_properties)
 
     @property
@@ -625,7 +625,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[AbstractContextManager, str]:
+    ) -> tuple[AbstractContextManager, str, str | None]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -697,10 +697,7 @@ class Dataset:
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
                 context_manager = webknossos_context(webknossos_url, None)
-        return (
-            context_manager,
-            dataset_id,
-        )
+        return (context_manager, dataset_id, sharing_token)
 
     @classmethod
     def open_remote(
@@ -738,10 +735,7 @@ class Dataset:
 
         from ..client.context import _get_context
 
-        (
-            context_manager,
-            dataset_id,
-        ) = cls._parse_remote(
+        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
             sharing_token,
@@ -799,10 +793,7 @@ class Dataset:
 
         from ..client._download_dataset import download_dataset
 
-        (
-            context_manager,
-            dataset_id,
-        ) = cls._parse_remote(
+        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
             dataset_name_or_url, organization_id, sharing_token, webknossos_url
         )
 
@@ -1191,7 +1182,7 @@ class Dataset:
         for layer in self.get_segmentation_layers():
             if not layer.attachments.is_empty:
                 raise NotImplementedError(
-                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attchments."
+                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
                 )
 
         dataset_id = upload_dataset(
@@ -1626,7 +1617,7 @@ class Dataset:
             except ValueError:
                 continue
             # Mags are only writable if they are local to the dataset
-            resolved_mag_path = resolve_if_fs_path(mag_dir)
+            resolved_mag_path = cheap_resolve(mag_dir)
             read_only = resolved_mag_path.parent != self.resolved_path / layer_name
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
