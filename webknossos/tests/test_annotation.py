@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import webknossos as wk
-from webknossos import SegmentationLayer
+from webknossos import SegmentationLayer, Annotation
 from webknossos.annotation.annotation import VolumeLayerEditMode
 from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
@@ -42,7 +42,7 @@ def test_annotation_from_wkw_zip_file() -> None:
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
     assert len(list(copied_annotation.skeleton.flattened_trees())) == 1
 
-    copied_annotation.create_volume_layer(name="new_volume_layer")
+    copied_annotation.add_volume_layer(name="new_volume_layer")
     assert len(list(copied_annotation.get_volume_layer_names())) == 2
     copied_annotation.delete_volume_layer(volume_layer_name="new_volume_layer")
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
@@ -383,11 +383,11 @@ def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode) -> None:
         name="my_annotation",
         dataset_name="sample_dataset",
         voxel_size=(11.2, 11.2, 25.0),
+        volume_layers_root=TESTOUTPUT_DIR / "test_volume_annotations.zip"
     )
 
-    volume_layer = ann.create_volume_layer(
+    volume_layer = ann.add_volume_layer(
         name="segmentation",
-        zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip",
         dtype=dtype,
     )
     with volume_layer.edit(edit_mode) as seg_layer:
@@ -407,22 +407,22 @@ def test_edited_volume_annotation_format() -> None:
     import tensorstore
 
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
-    ann = wk.Annotation.load(path)
+    ann = Annotation.load(path)
     data = np.ones(shape=(10, 10, 10))
 
-    volume_layer = ann.create_volume_layer(
+    volume_layer = ann.add_volume_layer(
         name="segmentation",
-        zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip",
+        volume_layers_root=TESTOUTPUT_DIR / "volume_annotations.zip",
         dtype=np.uint32,
     )
     with volume_layer.edit() as seg_layer:
         mag_view = seg_layer.add_mag(1)
         mag_view.write(data, allow_resize=True)
 
-    export_path = TESTOUTPUT_DIR / "export_volume_layer.zip"
-    ann.save(export_path)
-    unpack_dir = TESTOUTPUT_DIR / "unpacked_volume_layer"
-    with zipfile.ZipFile(export_path, "r") as zip_ref:
+    save_path = TESTOUTPUT_DIR / "saved_annotation.zip"
+    ann.save(save_path)
+    unpack_dir = TESTOUTPUT_DIR / "unpacked_annotation"
+    with zipfile.ZipFile(save_path, "r") as zip_ref:
         zip_ref.extractall(unpack_dir)
 
     # test for the format assumptions as mentioned in https://github.com/scalableminds/webknossos/issues/8604
@@ -453,43 +453,73 @@ def test_edited_volume_annotation_format() -> None:
     data_read = ts.read().result()[0, :10, :10, :10]
     assert np.array_equal(data, data_read)
 
+@pytest.mark.parametrize(
+    "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
+)
+def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> None:
+    data = np.ones((1, 10, 10, 10))
+
+    ann = wk.Annotation(
+        name="my_annotation",
+        dataset_name="sample_dataset",
+        voxel_size=(11.2, 11.2, 25.0),
+        volume_layers_root=TESTOUTPUT_DIR / "volume_annotations.zip"
+    )
+
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", dtype=np.uint32
+    )
+    with volume_layer.edit(edit_mode) as seg_layer:
+        mag_view = seg_layer.add_mag(1)
+        mag_view.write(data, allow_resize=True)
+
+    save_path = TESTOUTPUT_DIR / "annotation_saved.zip"
+    ann.save(save_path)
+    ann_loaded = Annotation.load(save_path)
+
+    volume_layer_downloaded = ann_loaded.get_volume_layer("segmentation")
+
+    with volume_layer_downloaded.edit(edit_mode) as seg_layer:
+        assert len(seg_layer.mags) == 1
+        mag = seg_layer.get_mag(1)
+        read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+        assert np.array_equal(data, read_data)
+
 
 @pytest.mark.use_proxay
 def test_edited_volume_annotation_upload_download() -> None:
     data = np.ones((1, 10, 10, 10))
 
-    ann = wk.Annotation.load(
+    ann = Annotation.load(
         TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     )
     ann.organization_id = "Organization_X"
-    volume_layer = ann.create_volume_layer(
-        name="segmentation", zip_path=TESTOUTPUT_DIR / "test_volume_annotations.zip"
+
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", volume_layers_root=TESTOUTPUT_DIR / "volume_annotations.zip", dtype=np.uint32
     )
     with volume_layer.edit() as seg_layer:
         mag_view = seg_layer.add_mag(1)
         mag_view.write(data, allow_resize=True)
-    # url = ann.upload()
-    #
-    # ann_downloaded = wk.Annotation.download(url)
-    # assert {layer.name for layer in ann_downloaded.volume_layers} == {
-    #     "Volume",
-    #     "segmentation",
-    # }
-    # ann_downloaded.save("/home/hannes/Downloads/tes2tss.zip")
 
-    # TODO this fails. the read data is all 0 and has offset
-    # ds = ann_downloaded.get_remote_annotation_dataset()
-    # mag_view = ds.layers["segmentation"].get_mag("1")
-    # assert mag_view.bounding_box == BoundingBox((0,0,0), (10, 10, 10))
-    # read_data = mag_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-    # assert np.array_equal(data, read_data)
+    url = ann.upload()
+    ann_downloaded = Annotation.download(url, volume_layers_root=TESTOUTPUT_DIR / "volume_annotations_downloaded.zip")
 
-    # todo change this back to ann_downloaded
-    with ann.temporary_volume_layer_copy(
-        volume_layer_name="segmentation"
-    ) as read_layer:
-        read_data = read_layer.get_finest_mag().read(
-            absolute_offset=(0, 0, 0),
-            size=(10, 10, 10),
-        )
+    assert {layer.name for layer in ann_downloaded.volume_layers} == {
+        "Volume",
+        "segmentation",
+    }
+
+    volume_layer_downloaded = ann_downloaded.get_volume_layer("segmentation")
+
+    with volume_layer_downloaded.edit() as seg_layer:
+        assert len(seg_layer.mags) == 1
+        mag = seg_layer.get_mag(1)
+        read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
         assert np.array_equal(data, read_data)
+
+
+def test_asd():
+    annotation = wk.Annotation.download(
+        "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
+    )

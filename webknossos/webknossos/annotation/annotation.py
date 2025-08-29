@@ -38,7 +38,7 @@ See Also:
     * Skeleton documentation: /webknossos/skeleton_annotation/index.html
     * Volume annotation documentation: /webknossos/volume_annotation/index.html
 """
-
+import io
 import json
 import logging
 import os
@@ -174,12 +174,13 @@ class VolumeLayer:
         Parameters:
             source: Path to the directory whose contents will be added to the zip archive.
         """
+        volume_zip_buffer = io.BytesIO()
         with ZipFile(
-            str(self.zip),
+            volume_zip_buffer,
             mode="w",
             compression=ZIP_DEFLATED,
             compresslevel=Z_BEST_SPEED,
-        ) as zf:
+        ) as volume_layer_zipfile:
             for dirname, _, files in os.walk(source):
                 for file in files:
                     full_path = os.path.join(dirname, file)
@@ -189,7 +190,21 @@ class VolumeLayer:
                         or arcname == self.layer_name + "/zarr.json"
                     ):
                         continue
-                    zf.write(full_path, arcname)
+                    volume_layer_zipfile.write(full_path, arcname)
+
+        volume_zip_buffer.seek(0)
+        with ZipFile(
+            self.zip.root.filename,
+            mode="w",
+            compression=ZIP_DEFLATED,
+            compresslevel=Z_BEST_SPEED,
+
+        ) as annotation_zip:
+            annotation_zip.writestr(self.zip.at, volume_zip_buffer.read())
+
+        #TODO is there a better way to update the self.zip.root.__lookup ?
+        self.zip = ZipPath(self.zip.root.filename, self.zip.at)
+        assert self.zip.exists()
 
     @contextmanager
     def edit(
@@ -208,7 +223,7 @@ class VolumeLayer:
                 "VolumeLayer.zip is not specified but required for editing."
             )
 
-        def edit_with_upath(
+        def _edit(
             dataset_path: UPath, executor: Executor | None = None
         ) -> Generator[Layer, None, None]:
             dataset = Dataset(dataset_path, voxel_size=self.voxel_size)
@@ -234,12 +249,12 @@ class VolumeLayer:
 
         if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
             with TemporaryDirectory() as tmp_dir:
-                return edit_with_upath(UPath(tmp_dir))
+                return _edit(UPath(tmp_dir))
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             with SequentialExecutor() as executor:
                 path = UPath(self._default_zip_name(), protocol="memory")
                 try:
-                    return edit_with_upath(
+                    return _edit(
                         path,
                         executor,
                     )
@@ -400,7 +415,7 @@ class Annotation:
 
         Add volume layer:
         ```
-        ann.create_volume_layer(
+        ann.add_volume_layer(
             name="segmentation",
             fallback_layer="segmentation_layer"
         )
@@ -425,6 +440,7 @@ class Annotation:
     task_bounding_box: NDBoundingBox | None = None
     user_bounding_boxes: list[NDBoundingBox] = attr.Factory(list)
     volume_layers: list[VolumeLayer] = attr.field(factory=list, init=False)
+    volume_layers_root: Path | None = None
 
     @classmethod
     def _set_init_docstring(cls) -> None:
@@ -452,6 +468,7 @@ class Annotation:
             metadata: Optional dictionary of custom metadata.
             task_bounding_box: Optional bounding box for task annotations.
             user_bounding_boxes: Optional list of user-defined bounding boxes.
+            volume_layers_root: Optional path to zip, where new volume layers will be stored at
 
         Raises:
             AssertionError: If neither skeleton nor dataset_name/voxel_size are provided,
@@ -605,6 +622,7 @@ class Annotation:
         cls,
         annotation_id_or_url: str,
         webknossos_url: str | None = None,
+        volume_layers_root: Path | None = None,
         *,
         skip_volume_data: bool = False,
     ) -> "Annotation": ...
@@ -615,6 +633,7 @@ class Annotation:
         cls,
         annotation_id_or_url: str,
         webknossos_url: str | None = None,
+        volume_layers_root: Path | None = None,
         *,
         skip_volume_data: bool = False,
         _return_context: bool,
@@ -625,6 +644,7 @@ class Annotation:
         cls,
         annotation_id_or_url: str,
         webknossos_url: str | None = None,
+        volume_layers_root: Path | None = None,
         *,
         skip_volume_data: bool = False,
         retry_count: int = 5,
@@ -636,6 +656,8 @@ class Annotation:
             annotation_id_or_url: Either an annotation ID or complete WEBKNOSSOS URL.
                 Example URL: https://webknossos.org/annotations/[id]
             webknossos_url: Optional custom WEBKNOSSOS instance URL.
+            volume_layers_root: Path to zip, where volume layers will be stored at.
+                Required if annotation contains volume layer data and skip_volume_data is False.
             skip_volume_data: If True, omits downloading volume layer data.
             _return_context: Internal use only.
 
@@ -700,6 +722,13 @@ class Annotation:
                 f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
             )
             annotation = Annotation._load_from_zip(BytesIO(file_body))
+
+        annotation.volume_layers_root = volume_layers_root
+        if any(layer.zip is not None for layer in annotation.volume_layers):
+            assert (
+                volume_layers_root is not None
+            ), "The downloaded annotation contains volume layer data, please provide volume_layers_root to store the data at."
+            annotation._write_volume_layers(volume_layers_root)
 
         if _return_context:
             return annotation, context
@@ -909,6 +938,24 @@ class Annotation:
         )
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
+
+    def _write_volume_layers(self, volume_layers_root: Path) -> None:
+        volume_layers_root.parent.mkdir(parents=True, exist_ok=True)
+        layers_to_write = [i for i in self.volume_layers if i.zip is not None]
+
+        with ZipFile(
+            volume_layers_root,
+            mode="w",
+            compression=ZIP_DEFLATED,
+            compresslevel=Z_BEST_SPEED,
+        ) as zf:
+            for layer in layers_to_write:
+                with layer.zip.open(mode="rb") as f:
+                    zf.writestr(layer.zip.at, f.read())
+
+        for layer in layers_to_write:
+            layer.zip = ZipPath(volume_layers_root, layer.zip.at)
+
 
     def save(self, path: str | PathLike) -> None:
         """Saves the annotation to a file.
@@ -1126,7 +1173,6 @@ class Annotation:
             nml.write(buffer)
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
-
         for volume_layer in self.volume_layers:
             if volume_layer.zip is None:
                 with BytesIO() as buffer:
@@ -1259,14 +1305,14 @@ class Annotation:
         """
         return (i.name for i in self.volume_layers)
 
-    def create_volume_layer(
+    def add_volume_layer(
         self,
         name: str,
-        zip_path: ZipPath | None = None,
-        dtype: DTypeLike | None = None,
+        dtype: DTypeLike,
+        volume_layers_root: Path | None = None,
         fallback_layer: Layer | str | None = None,
         volume_layer_id: int | None = None,
-    ):
+    ) -> VolumeLayer:
         """Adds a new volume layer to the annotation.
 
         Volume layers can be used to store segmentation data. Using fallback layers
@@ -1274,9 +1320,9 @@ class Annotation:
 
         Args:
             name: Name of the volume layer.
-            zip_path: Path to zip storage for volume annotations. Required, for the volume annotation
-                        to be editable
-            dtype: Datatype of the volume layer. Required, if zip_path is specified
+            dtype: Datatype of the volume layer.
+            volume_layers_root: Optional path to zip, where new volume layers will be stored at.
+                    If provided, the `self.volume_layers_root` will be updated
             fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
                           Can be Layer instance or layer name.
             volume_layer_id: Optional explicit ID for the layer.
@@ -1285,99 +1331,27 @@ class Annotation:
         Raises:
             AssertionError: If volume_layer_id already exists.
             AssertionError: If fallback_layer is provided but not a segmentation layer.
-            AssertionError: If zip_path already contains data
 
         Examples:
             ```python
             # Add basic layer
-            annotation.create_volume_layer("segmentation")
+            annotation.add_volume_layer("segmentation", dtype=np.uint32)
 
             # Add with fallback
-            annotation.create_volume_layer("segmentation", fallback_layer="base_segmentation")
-
-            # Editable layer
-            annotation.create_volume_layer("segmentation", zip_path="/path/to/zip_path.zip")
+            annotation.add_volume_layer("segmentation", fallback_layer="base_segmentation", dtype=np.uint32)
             ```
         """
-        if zip_path is not None:
-            assert not zip_path.exists(), (
-                f"Can not create volume layer at zip_path {zip_path} because path already exists."
-            )
-        volume_layer = self._add_volume_layer(
-            name=name,
-            zip_path=zip_path,
-            fallback_layer=fallback_layer,
-            volume_layer_id=volume_layer_id,
-            dtype=dtype,
-        )
+        if volume_layers_root is not None:
+            self.volume_layers_root = Path(volume_layers_root)
+        assert self.volume_layers_root is not None, f"volume_layers_root path is required to create new volume layers"
+        os.makedirs(os.path.dirname(self.volume_layers_root), exist_ok=True)
+        if not self.volume_layers_root.exists():
+            # create zip file if it does not exist
+            with ZipFile(self.volume_layers_root, 'w'):
+                pass  # No files added, just creates an empty archive
 
-        if zip_path is not None:
-            assert dtype is not None, "Can not create editable volume layer without specifying its dtype."
+        zip_path = ZipPath(self.volume_layers_root, f"{name}.zip")
 
-            with TemporaryDirectory() as tempdir:
-                dataset = Dataset(tempdir, voxel_size=volume_layer.voxel_size)
-                dataset.add_layer(
-                    volume_layer.layer_name,
-                    SEGMENTATION_CATEGORY,
-                    data_format=DataFormat.Zarr3,
-                    dtype_per_channel=dtype,
-                )
-                volume_layer.write_dir_to_zip(tempdir)
-
-        return volume_layer
-
-    def add_volume_layer(
-        self,
-        name: str,
-        zip_path: ZipPath,
-        fallback_layer: Layer | str | None = None,
-        volume_layer_id: int | None = None,
-    ) -> VolumeLayer:
-        """Adds an existing volume layer to the annotation.
-
-        Volume layers can be used to store segmentation data. Using fallback layers
-        is recommended for better performance in WEBKNOSSOS.
-
-        Args:
-            name: Name of the volume layer.
-            zip_path: Path to zip storage containing the volume annotation.
-            fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
-                          Can be Layer instance or layer name.
-            volume_layer_id: Optional explicit ID for the layer.
-                           Auto-generated if not provided.
-
-        Raises:
-            AssertionError: If volume_layer_id already exists.
-            AssertionError: If fallback_layer is provided but not a segmentation layer.
-            AssertionError: If zip_path does not contain a volume annotation zip
-
-        Examples:
-            ```python
-            # Add basic layer
-            annotation.add_volume_layer("segmentation", zip_path="/path/to/zip_path.zip")
-
-            # Add with fallback
-            annotation.add_volume_layer("segmentation", zip_path="/path/to/zip_path.zip", fallback_layer="base_segmentation")
-            ```
-        """
-        assert zip_path.exists(), (
-            f"Provided zip_path {zip_path} does not exist. Use `create_volume_layer` to create a new volume layer instead."
-        )
-        return self._add_volume_layer(
-            name=name,
-            zip_path=zip_path,
-            fallback_layer=fallback_layer,
-            volume_layer_id=volume_layer_id,
-        )
-
-    def _add_volume_layer(
-        self,
-        name: str,
-        zip_path: ZipPath | None = None,
-        fallback_layer: Layer | str | None = None,
-        volume_layer_id: int | None = None,
-        dtype: DTypeLike | None = None,
-    ) -> VolumeLayer:
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self.volume_layers), default=-1) + 1
         else:
@@ -1406,6 +1380,16 @@ class Annotation:
             dtype=dtype,
         )
         self.volume_layers.append(volume_layer)
+
+        with TemporaryDirectory() as tempdir:
+            dataset = Dataset(tempdir, voxel_size=volume_layer.voxel_size)
+            dataset.add_layer(
+                volume_layer.layer_name,
+                SEGMENTATION_CATEGORY,
+                data_format=DataFormat.Zarr3,
+                dtype_per_channel=dtype,
+            )
+            volume_layer.write_dir_to_zip(tempdir)
         return volume_layer
 
     def get_volume_layer(
