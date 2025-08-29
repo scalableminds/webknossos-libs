@@ -649,7 +649,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[webknossos_context, str]:
+    ) -> tuple["webknossos_context", str]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -3133,7 +3133,7 @@ class RemoteDataset(Dataset):
         self,
         dataset_path: UPath,
         dataset_id: str,
-        context: webknossos_context,
+        context: "webknossos_context",
     ) -> None:
         """Initialize a remote dataset instance.
 
