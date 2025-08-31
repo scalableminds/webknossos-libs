@@ -42,7 +42,7 @@ def test_annotation_from_wkw_zip_file() -> None:
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
     assert len(list(copied_annotation.skeleton.flattened_trees())) == 1
 
-    copied_annotation.add_volume_layer(name="new_volume_layer")
+    copied_annotation.add_volume_layer(name="new_volume_layer", dtype=np.uint32, volume_layers_root=TESTOUTPUT_DIR / "volume_layers_root.zip")
     assert len(list(copied_annotation.get_volume_layer_names())) == 2
     copied_annotation.delete_volume_layer(volume_layer_name="new_volume_layer")
     assert len(list(copied_annotation.get_volume_layer_names())) == 1

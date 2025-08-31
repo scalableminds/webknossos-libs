@@ -84,7 +84,7 @@ from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
 from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
-from ..utils import get_executor_for_args, time_since_epoch_in_ms
+from ..utils import get_executor_for_args, time_since_epoch_in_ms, is_fs_path
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
 logger = logging.getLogger(__name__)
@@ -229,9 +229,20 @@ class VolumeLayer:
             dataset = Dataset(dataset_path, voxel_size=self.voxel_size)
             assert self.zip.exists()
 
-            segmentation_layer = self.export_to_dataset(
-                dataset, layer_name=self.layer_name
-            )
+            if is_fs_path(dataset_path):
+                segmentation_layer = self.export_to_dataset(
+                    dataset, layer_name=self.layer_name
+                )
+            else:
+                # copy to temporary directory first, as tensorstore cannot read from MemoryFileSystem
+                with TemporaryDirectory() as tempdir:
+                    temp_dataset = Dataset(tempdir, voxel_size=self.voxel_size)
+                    temp_segmentation_layer = self.export_to_dataset(
+                        temp_dataset, layer_name=self.layer_name
+                    )
+                    segmentation_layer = dataset.add_layer_as_copy(
+                        foreign_layer=temp_segmentation_layer,
+                    )
 
             yield segmentation_layer
 
@@ -252,7 +263,7 @@ class VolumeLayer:
                 return _edit(UPath(tmp_dir))
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             with SequentialExecutor() as executor:
-                path = UPath(self._default_zip_name(), protocol="memory")
+                path = UPath(f"edit_{self.id}_{self.name}_{id(self)}.zip", protocol="memory")
                 try:
                     return _edit(
                         path,
