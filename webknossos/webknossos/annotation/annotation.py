@@ -84,7 +84,7 @@ from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
 from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
-from ..utils import get_executor_for_args, time_since_epoch_in_ms, is_fs_path
+from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
 logger = logging.getLogger(__name__)
@@ -154,27 +154,15 @@ class VolumeLayer:
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
 
-    def _init_zip(self):
-        assert not self.zip.exists()
-        assert self.dtype is not None
-
-        with TemporaryDirectory() as tempdir:
-            dataset = Dataset(tempdir, voxel_size=self.voxel_size)
-            dataset.add_layer(
-                self.layer_name,
-                SEGMENTATION_CATEGORY,
-                data_format=DataFormat.Zarr3,
-                dtype_per_channel=self.dtype,
-            )
-            self.write_dir_to_zip(tempdir)
-
-    def write_dir_to_zip(self, source: str):
+    def write_dir_to_zip(self, source: str) -> None:
         """
         Write all files from the given source directory into the volume layer's zip archive.
 
         Parameters:
             source: Path to the directory whose contents will be added to the zip archive.
         """
+        assert self.zip is not None
+
         volume_zip_buffer = io.BytesIO()
         with ZipFile(
             volume_zip_buffer,
@@ -227,7 +215,7 @@ class VolumeLayer:
             dataset_path: UPath, executor: Executor | None = None
         ) -> Generator[Layer, None, None]:
             dataset = Dataset(dataset_path, voxel_size=self.voxel_size)
-            assert self.zip.exists()
+            assert self.zip is not None and self.zip.exists()
 
             if is_fs_path(dataset_path):
                 segmentation_layer = self.export_to_dataset(
@@ -240,8 +228,11 @@ class VolumeLayer:
                     temp_segmentation_layer = self.export_to_dataset(
                         temp_dataset, layer_name=self.layer_name
                     )
-                    segmentation_layer = dataset.add_layer_as_copy(
-                        foreign_layer=temp_segmentation_layer,
+                    segmentation_layer = cast(
+                        SegmentationLayer,
+                        dataset.add_layer_as_copy(
+                            foreign_layer=temp_segmentation_layer,
+                        ),
                     )
 
             yield segmentation_layer
@@ -263,7 +254,9 @@ class VolumeLayer:
                 return _edit(UPath(tmp_dir))
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             with SequentialExecutor() as executor:
-                path = UPath(f"edit_{self.id}_{self.name}_{id(self)}.zip", protocol="memory")
+                path = UPath(
+                    f"edit_{self.id}_{self.name}_{id(self)}.zip", protocol="memory"
+                )
                 try:
                     return _edit(
                         path,
@@ -951,8 +944,11 @@ class Annotation:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
     def _write_volume_layers(self, volume_layers_root: Path) -> None:
+        """
+        Writes all volume layers with zip data to a single zip file at the specified location.
+        """
+
         volume_layers_root.parent.mkdir(parents=True, exist_ok=True)
-        layers_to_write = [i for i in self.volume_layers if i.zip is not None]
 
         with ZipFile(
             volume_layers_root,
@@ -960,12 +956,14 @@ class Annotation:
             compression=ZIP_DEFLATED,
             compresslevel=Z_BEST_SPEED,
         ) as zf:
-            for layer in layers_to_write:
-                with layer.zip.open(mode="rb") as f:
-                    zf.writestr(layer.zip.at, f.read())
+            for layer in self.volume_layers:
+                if layer.zip is not None:
+                    with layer.zip.open(mode="rb") as f:
+                        zf.writestr(layer.zip.at, f.read())
 
-        for layer in layers_to_write:
-            layer.zip = ZipPath(volume_layers_root, layer.zip.at)
+        for layer in self.volume_layers:
+            if layer.zip is not None:
+                layer.zip = ZipPath(volume_layers_root, layer.zip.at)
 
     def save(self, path: str | PathLike) -> None:
         """Saves the annotation to a file.
