@@ -44,6 +44,7 @@ import json
 import logging
 import os
 import re
+import uuid
 import warnings
 from collections.abc import Generator, Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
@@ -190,7 +191,7 @@ class VolumeLayer:
         ) as annotation_zip:
             annotation_zip.writestr(self.zip.at, volume_zip_buffer.read())
 
-        # TODO is there a better way to update the self.zip.root.__lookup ?
+        # updating self.zip.root.__lookup to include the new file
         self.zip = ZipPath(self.zip.root.filename, self.zip.at)
         assert self.zip.exists()
 
@@ -255,7 +256,7 @@ class VolumeLayer:
         elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
             with SequentialExecutor() as executor:
                 path = UPath(
-                    f"edit_{self.id}_{self.name}_{id(self)}.zip", protocol="memory"
+                    f"edit_{self.id}_{self.name}_{uuid.uuid4()}.zip", protocol="memory"
                 )
                 try:
                     return _edit(

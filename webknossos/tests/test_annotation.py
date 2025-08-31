@@ -378,7 +378,6 @@ def test_tree_metadata(tmp_path: Path) -> None:
     )
 
 
-# TODO this is very slow
 @pytest.mark.parametrize(
     "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
 )
