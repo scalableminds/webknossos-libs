@@ -5,7 +5,6 @@ import logging
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from contextlib import AbstractContextManager
 from datetime import datetime
 from enum import Enum, unique
 from itertools import product
@@ -65,6 +64,7 @@ if TYPE_CHECKING:
 
     from ..administration.user import Team
     from ..client._upload_dataset import LayerToLink
+    from ..client.context import webknossos_context
 
 from ..utils import (
     cheap_resolve,
@@ -523,15 +523,18 @@ class Dataset:
             datastore_url = _cached_get_upload_datastore(context)
         datastore_api = context.get_datastore_api_client(datastore_url)
         response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce, token=token
+            dataset_announce=dataset_announce, token=token
         )
         return response.new_dataset_id, response.directory_name
 
     @classmethod
     def trigger_reload_in_datastore(
         cls,
-        dataset_name: str,
-        organization: str,
+        dataset_name_or_url: str | None = None,
+        organization_id: str | None = None,
+        webknossos_url: str | None = None,
+        dataset_id: str | None = None,
+        organization: str | None = None,
         token: str | None = None,
         datastore_url: str | None = None,
     ) -> None:
@@ -544,8 +547,11 @@ class Dataset:
         Cannot be used for local datasets.
 
         Args:
-            dataset_name: Name of dataset to reload
-            organization: Organization ID where dataset is located
+            dataset_name_or_url: Name or URL of dataset to reload
+            dataset_id: ID of dataset to reload
+            organization_id: Organization ID where dataset is located
+            datastore_url: Optional URL to the datastore
+            webknossos_url: Optional URL to the webknossos server
             token: Optional authentication token
 
         Examples:
@@ -561,30 +567,45 @@ class Dataset:
         from ..client._upload_dataset import _cached_get_upload_datastore
         from ..client.context import _get_context
 
-        context = _get_context()
-        upload_url = datastore_url or _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(upload_url)
-        datastore_api.dataset_trigger_reload(organization, dataset_name, token=token)
+        if organization is not None:
+            warn_deprecated("organization", "organization_id")
+            if organization_id is None:
+                organization_id = organization
+            else:
+                raise ValueError(
+                    "Both organization and organization_id were provided. Only one is allowed."
+                )
+
+        (context_manager, dataset_id, _) = cls._parse_remote(
+            dataset_name_or_url,
+            organization_id,
+            None,
+            webknossos_url,
+            dataset_id,
+        )
+
+        with context_manager:
+            context = _get_context()
+            datastore_url = datastore_url or _cached_get_upload_datastore(context)
+            organization_id = organization_id or context.organization_id
+
+            datastore_api = context.get_datastore_api_client(datastore_url)
+            datastore_api.dataset_trigger_reload(
+                organization_id=organization_id, dataset_id=dataset_id, token=token
+            )
 
     @classmethod
     def trigger_dataset_import(
         cls, directory_name: str, organization: str, token: str | None = None
     ) -> None:
-        """Trigger a manual lookup of the dataset in the datastore.
+        """Deprecated. Use `Dataset.trigger_reload_in_datastore` instead."""
+        warn_deprecated("trigger_dataset_import", "trigger_reload_in_datastore")
 
-        Args:
-            directory_name: Directory name of the dataset in the datastore
-            organization: Organization ID where dataset is located
-            token: Optional authentication token
-
-        Examples:
-            ```
-            # Trigger a manual lookup of the dataset in the datastore
-            Dataset.trigger_dataset_upload("l4_sample", "scalable_minds")
-            ```
-        """
-
-        cls.trigger_reload_in_datastore(directory_name, organization, token)
+        cls.trigger_reload_in_datastore(
+            dataset_name_or_url=directory_name,
+            organization_id=organization,
+            token=token,
+        )
 
     @classmethod
     def _disambiguate_remote(
@@ -603,12 +624,12 @@ class Dataset:
         if len(possible_ids) == 0:
             try:
                 dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
-                    dataset_name, organization_id
+                    directory_name=dataset_name, organization_id=organization_id
                 )
                 possible_ids.append(dataset_id)
             except UnexpectedStatusError:
                 raise ValueError(
-                    f"Dataset {dataset_name} not found in organization {organization_id}"
+                    f"Dataset with name {dataset_name} not found in organization {organization_id}"
                 )
         elif len(possible_ids) > 1:
             logger.warning(
@@ -626,7 +647,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[AbstractContextManager, str, str | None]:
+    ) -> tuple["webknossos_context", str, str | None]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
@@ -687,7 +708,7 @@ class Dataset:
         if webknossos_url is None:
             webknossos_url = current_context.url
         webknossos_url = webknossos_url.rstrip("/")
-        context_manager: AbstractContextManager[None] = webknossos_context(
+        context_manager = webknossos_context(
             webknossos_url, token=sharing_token or current_context.token
         )
         if webknossos_url != current_context.url:
@@ -750,16 +771,15 @@ class Dataset:
             wk_context = _get_context()
             token = sharing_token or wk_context.datastore_token
             api_dataset_info = wk_context.api_client.dataset_info(
-                dataset_id, token, include_paths=True
+                dataset_id=dataset_id, sharing_token=token
             )
-            directory_name = api_dataset_info.directory_name
             organization_id = api_dataset_info.owning_organization
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
             if use_zarr_streaming:
                 zarr_path = UPath(
-                    f"{url_prefix}/zarr/{organization_id}/{directory_name}/",
+                    f"{url_prefix}/zarr/{dataset_id}/",
                     headers={} if token is None else {"X-Auth-Token": token},
                     ssl=SSL_CONTEXT,
                 )
@@ -3124,7 +3144,7 @@ class RemoteDataset(Dataset):
         zarr_streaming_path: UPath | None,
         dataset_properties: DatasetProperties | None,
         dataset_id: str,
-        context: AbstractContextManager,
+        context: "webknossos_context",
     ) -> None:
         """Initialize a remote dataset instance.
 
@@ -3215,7 +3235,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            return client.dataset_info(self._dataset_id)
+            return client.dataset_info(dataset_id=self._dataset_id)
 
     def _update_dataset_info(
         self,
@@ -3247,7 +3267,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update(self._dataset_id, info)
+            client.dataset_update(dataset_id=self._dataset_id, updated_dataset=info)
 
     @property
     def metadata(self) -> DatasetMetadata:
@@ -3432,7 +3452,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             api_sharing_token = _get_api_client().dataset_sharing_token(
-                self._dataset_id
+                dataset_id=self._dataset_id
             )
             return api_sharing_token.sharing_token
 
@@ -3483,7 +3503,7 @@ class RemoteDataset(Dataset):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update_teams(self._dataset_id, team_ids)
+            client.dataset_update_teams(dataset_id=self._dataset_id, team_ids=team_ids)
 
     @classmethod
     def explore_and_add_remote(
@@ -3521,9 +3541,11 @@ class RemoteDataset(Dataset):
         dataset = ApiDatasetExploreAndAddRemote(
             UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
         )
-        context.api_client_with_auth.dataset_explore_and_add_remote(dataset)
+        context.api_client_with_auth.dataset_explore_and_add_remote(dataset=dataset)
 
-        return cls.open_remote(dataset_name, context.organization_id)
+        return cls.open_remote(
+            dataset_name_or_url=dataset_name, organization_id=context.organization_id
+        )
 
     @property
     def folder(self) -> RemoteFolder:
@@ -3594,16 +3616,14 @@ class RemoteDataset(Dataset):
             )
         file_path: UPath
         datastore = context.get_datastore_api_client(datastore_url=datastore_url)
-        api_dataset = context.api_client.dataset_info(self._dataset_id)
+        api_dataset = context.api_client.dataset_info(dataset_id=self._dataset_id)
         directory_name = api_dataset.directory_name
-        organization_id = api_dataset.owning_organization
         assert layer_name is not None, (
             "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
         )
         mesh_download = datastore.download_mesh(
-            mesh_info,
-            organization_id=organization_id or context.organization_id,
-            directory_name=directory_name,
+            mesh_info=mesh_info,
+            dataset_id=self._dataset_id,
             layer_name=layer_name,
             token=token,
         )
