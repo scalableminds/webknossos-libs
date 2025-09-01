@@ -32,7 +32,7 @@ class User:
         Returns a list of `LoggedTime` objects where one represents one month."""
         client = _get_api_client(enforce_auth=True)
         api_logged_times: ApiLoggedTimeGroupedByMonth = client.user_logged_time(
-            self.user_id
+            user_id=self.user_id
         )
         return [
             LoggedTime(
@@ -67,7 +67,7 @@ class User:
     def get_by_id(cls, id: str) -> "User":  # noqa: A002 Argument `id` is shadowing a Python builtin
         """Returns the user specified by the passed id if your token authorizes you to see them."""
         client = _get_api_client(enforce_auth=True)
-        api_user = client.user_by_id(id)
+        api_user = client.user_by_id(user_id=id)
         return cls._from_api_user(api_user)
 
     @classmethod
@@ -87,7 +87,7 @@ class User:
     def assign_team_roles(self, team_name: str, is_team_manager: bool) -> None:
         """Assigns the specified roles to the user for the specified team."""
         client = _get_api_client(enforce_auth=True)
-        api_user = client.user_by_id(self.user_id)
+        api_user = client.user_by_id(user_id=self.user_id)
         if team_name in [team.name for team in api_user.teams]:
             api_user.teams = [
                 team
@@ -101,7 +101,7 @@ class User:
                     Team.get_by_name(team_name).id, team_name, is_team_manager
                 )
             )
-        client.user_update(api_user)
+        client.user_update(user=api_user)
 
 
 @attr.frozen
@@ -134,7 +134,7 @@ class Team:
     def add(cls, team_name: str) -> None:
         """Adds a new team with the specified name."""
         client = _get_api_client(enforce_auth=True)
-        client.team_add(ApiTeamAdd(team_name))
+        client.team_add(team=ApiTeamAdd(team_name))
 
 
 @attr.frozen

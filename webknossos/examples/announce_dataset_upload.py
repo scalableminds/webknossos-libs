@@ -22,7 +22,7 @@ def main() -> None:
     # To trigger a reload of the dataset properties manually, use:
 
     wk.Dataset.trigger_reload_in_datastore(
-        dataset_name="my_new_dataset_name", organization="sample_organization"
+        dataset_name_or_url="my_new_dataset_name", organization="sample_organization"
     )
 
 
