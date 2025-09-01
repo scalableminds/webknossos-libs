@@ -873,7 +873,7 @@ class Layer:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
-        if (
+        has_same_shapes = (
             (
                 chunk_shape is None
                 or Vec3Int.from_vec_or_int(chunk_shape)
@@ -889,19 +889,18 @@ class Layer:
                 or Vec3Int.from_vec_or_int(chunks_per_shard)
                 == foreign_mag_view.info.chunks_per_shard
             )
-            and (self.data_format == foreign_mag_view.info.data_format)
-            and (
-                compress is None
-                or (
-                    (
-                        not isinstance(compress, Zarr3Config)
-                        or not isinstance(foreign_mag_view.info, Zarr3ArrayInfo)
-                        or compress == foreign_mag_view.info.zarr3_config
-                    )
-                    and compress == foreign_mag_view.info.compression_mode
-                )
-            )
+        )
+        has_same_format = self.data_format == foreign_mag_view.info.data_format
+        if compress is None:
+            has_same_compression = True
+        elif isinstance(compress, Zarr3Config) and isinstance(
+            foreign_mag_view.info, Zarr3ArrayInfo
         ):
+            has_same_compression = compress == foreign_mag_view.info.zarr3_config
+        else:
+            has_same_compression = compress == foreign_mag_view.info.compression_mode
+
+        if has_same_shapes and has_same_format and has_same_compression:
             logger.debug(
                 f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
             )
@@ -1088,12 +1087,15 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert foreign_mag_view.info.data_format == self.data_format
+        assert foreign_mag_view.info.data_format == self.data_format, (
+            f"Cannot use file-based copy, because the foreign data format {foreign_mag_view.info.data_format} does not match the layer's data format {self.data_format}."
+        )
 
         mag_path = self.path / str(foreign_mag_view.mag)
-        assert exists_ok or not mag_path.exists(), (
-            f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists and `exist_ok` is set to False."
-        )
+        if not exists_ok and mag_path.exists():
+            raise FileExistsError(
+                f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists."
+            )
         copytree(
             foreign_mag_view.path,
             mag_path,
