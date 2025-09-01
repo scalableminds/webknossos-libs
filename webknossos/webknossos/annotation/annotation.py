@@ -468,7 +468,7 @@ class Annotation:
         with context:
             client = _get_api_client()
             file_body, filename = client.annotation_download(
-                annotation_id,
+                annotation_id=annotation_id,
                 skip_volume_data=skip_volume_data,
                 retry_count=retry_count,
             )
@@ -886,7 +886,9 @@ class Annotation:
 
         client = _get_api_client(enforce_auth=True)
         response_annotation_info = client.annotation_upload(
-            self._binary_zip(), f"{self.name}.zip", createGroupForEachFile=False
+            file_body=self._binary_zip(),
+            filename=f"{self.name}.zip",
+            createGroupForEachFile=False,
         )
 
         return f"{context.url}/annotations/{response_annotation_info.annotation.typ}/{response_annotation_info.annotation.id}"
@@ -971,12 +973,12 @@ class Annotation:
                     )
         if self.dataset_id is None:
             dataset_id = context.api_client.dataset_id_from_name(
-                self.dataset_name, organization_id
+                directory_name=self.dataset_name, organization_id=organization_id
             )
         else:
             dataset_id = self.dataset_id
 
-        dataset_info = context.api_client.dataset_info(dataset_id)
+        dataset_info = context.api_client.dataset_info(dataset_id=dataset_id)
 
         datastore_url = dataset_info.data_store.url
         url_prefix = context.get_datastore_api_client(datastore_url).url_prefix
@@ -1493,7 +1495,7 @@ class RemoteAnnotation(Annotation):
 
         client = _get_api_client(True)
         assert self.annotation_id is not None, "Annotation ID must be set."
-        return client.annotation_info(self.annotation_id)
+        return client.annotation_info(annotation_id=self.annotation_id)
 
     def _set_annotation_info(
         self, name: str | None = None, description: str | None = None

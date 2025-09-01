@@ -15,6 +15,7 @@ class TracingStoreApiClient(AbstractApiClient):
 
     def __init__(
         self,
+        *,
         base_url: str,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
@@ -28,6 +29,7 @@ class TracingStoreApiClient(AbstractApiClient):
 
     def annotation_download_mesh(
         self,
+        *,
         mesh: ApiPrecomputedMeshInfo | ApiAdHocMeshInfo,
         tracing_id: str,
         token: str | None,
