@@ -214,7 +214,7 @@ def test_fs_copy_layer(tmp_upath: UPath) -> None:
     )
 
     copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
-    copy_layer = copy_dataset.add_fs_copy_layer(seg_layer).as_segmentation_layer()
+    copy_layer = copy_dataset.add_layer_as_copy(seg_layer).as_segmentation_layer()
 
     # has been copied
     assert (

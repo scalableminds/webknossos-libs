@@ -905,7 +905,7 @@ class Layer:
             logger.debug(
                 f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
             )
-            return self.add_fs_copy_mag(
+            return self._add_fs_copy_mag(
                 foreign_mag_view,
                 extend_layer_bounding_box=extend_layer_bounding_box,
                 exists_ok=exists_ok,
