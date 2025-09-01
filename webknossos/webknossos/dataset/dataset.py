@@ -3512,7 +3512,6 @@ class RemoteDataset(Dataset):
         )
         context.api_client_with_auth.dataset_explore_and_add_remote(dataset=dataset)
 
-        # FIX: use returned dataset_id once available in WK API
         return cls.open_remote(
             dataset_name_or_url=dataset_name, organization_id=context.organization_id
         )
