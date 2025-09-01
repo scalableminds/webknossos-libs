@@ -57,8 +57,8 @@ jobs:
                 - type: "section"
                   text:
                     type: "mrkdwn"
-                    text: ':fire: Job <${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}|{job}> of workflow "{workflow}" {status_message}'
+                    text: ':fire: Job <${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}|${{github.job}}> of workflow "${{github.workflow}}" failed'
                 - type: "context"
                   elements:
                     - type: mrkdwn
-                      text: '<{repo_url}|{repo}>'
+                      text: '<${{github.repositoryUrl}}|${{github.repository}}>'

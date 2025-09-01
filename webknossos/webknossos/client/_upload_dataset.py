@@ -116,7 +116,7 @@ def upload_dataset(
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
     is_valid_new_name_response = context.api_client_with_auth.dataset_is_valid_new_name(
-        new_dataset_name
+        dataset_name=new_dataset_name
     )
     if not is_valid_new_name_response.is_valid:
         problems_str = ""
@@ -127,7 +127,7 @@ def upload_dataset(
         )
 
     datastore_api_client.dataset_reserve_upload(
-        ApiReserveDatasetUploadInformation(
+        reserve_upload_information=ApiReserveDatasetUploadInformation(
             upload_id,
             new_dataset_name,
             context.organization_id,
@@ -167,7 +167,7 @@ def upload_dataset(
                 )
 
     dataset_id = datastore_api_client.dataset_finish_upload(
-        ApiDatasetUploadInformation(upload_id),
+        upload_information=ApiDatasetUploadInformation(upload_id),
         token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )

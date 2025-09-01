@@ -308,10 +308,12 @@ def is_remote_path(path: UPath) -> bool:
     return not is_fs_path(path)
 
 
-def resolve_if_fs_path(path: UPath) -> UPath:
-    if is_fs_path(path):
-        return path.resolve()
-    return path
+def cheap_resolve(path: UPath) -> UPath:
+    from upath.implementations.http import HTTPPath
+
+    if isinstance(path, HTTPPath):
+        return path.resolve(follow_redirects=False, strict=False)
+    return path.resolve()
 
 
 def is_writable_path(path: UPath) -> bool:
@@ -558,21 +560,31 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
         )
 
     if not upath.is_absolute():
-        return resolve_if_fs_path(dataset_path / upath)
-    return resolve_if_fs_path(upath)
+        return cheap_resolve(dataset_path / upath)
+    return cheap_resolve(upath)
+
+
+def _ensure_trailing_slash(path: str) -> str:
+    if not path.endswith("/"):
+        return path + "/"
+    return path
 
 
 def dump_path(path: UPath, dataset_path: UPath | None) -> str:
+    if dataset_path is not None:
+        if not dataset_path.is_absolute():
+            raise ValueError("dataset_path must be an absolute path.")
+        dataset_path = cheap_resolve(dataset_path)
     if is_fs_path(path) and not path.is_absolute():
         if dataset_path is None:
             raise ValueError("dataset_path must be provided when path is not absolute.")
         path = dataset_path / path
-    path = resolve_if_fs_path(path)
+    path = cheap_resolve(path)
     if dataset_path is not None:
-        if path.as_posix().startswith(dataset_path.as_posix()):
-            return "./" + path.as_posix().removeprefix(dataset_path.as_posix()).lstrip(
-                "/"
-            )
+        path_str = path.as_posix()
+        dataset_path_str = _ensure_trailing_slash(dataset_path.as_posix())
+        if path_str.startswith(dataset_path_str):
+            return "./" + path_str.removeprefix(dataset_path_str)
         if safe_is_relative_to(path, dataset_path):
             return "./" + path.relative_to(dataset_path).as_posix()
     if path.protocol == "s3":
