@@ -43,6 +43,7 @@ def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]
 
 
 custom_converter.register_structure_hook(DatasetProperties, dataset_converter.structure)
+custom_converter.register_unstructure_hook(DatasetProperties, dataset_converter.unstructure)
 custom_converter.register_structure_hook_factory(
     is_attr_class, attr_to_camel_case_structure
 )

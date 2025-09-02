@@ -170,6 +170,13 @@ class ApiDatasetManualUploadSuccess:
 
 @attr.s(auto_attribs=True)
 class ApiLinkedLayerIdentifier:
+    dataset_id: str
+    layer_name: str
+    new_layer_name: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiLinkedLayerIdentifierLegacy:
     organization_id: str
     data_set_name: str
     layer_name: str
@@ -184,7 +191,7 @@ class ApiReserveDatasetUploadInformation:
     total_file_count: int
     total_file_size_in_bytes: int
     initial_teams: list[str]
-    layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
+    layers_to_link: list[ApiLinkedLayerIdentifierLegacy] | None = None
     folder_id: str | None = None
 
 
@@ -415,3 +422,28 @@ class ApiAdHocMeshInfo:
     mapping_type: Literal["json", "agglomerate"] | None
     mag: tuple[int, int, int]
     seed_position: tuple[int, int, int]
+
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadParameters:
+    dataset_name: str
+    initial_team_ids: list[str]
+    folder_id: str | None
+    require_unique_name: bool
+    layers_to_link: list[ApiLinkedLayerIdentifier]
+    data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadResponse:
+    new_dataset_id: str
+    data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualAttachmentUploadParameters:
+    layer_name: str
+    attachment_name: str
+    attachment_type: str
+    attachment_dataformat: str

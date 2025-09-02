@@ -28,7 +28,7 @@ from ..client.api_client.models import (
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
-    ApiUnusableDataSource,
+    ApiUnusableDataSource, ApiDatasetReserveManualUploadParameters,
 )
 from ..geometry import (
     BoundingBox,
@@ -465,15 +465,13 @@ class Dataset:
         return self._resolved_path
 
     @classmethod
-    def announce_manual_upload(
+    def reserve_manual_upload(
         cls,
         dataset_name: str,
-        organization: str,
+        data_source: DatasetProperties,
         initial_team_ids: list[str],
         folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
-        token: str | None = None,
-        datastore_url: str | None = None,
     ) -> tuple[str, str]:
         """Announce a manual dataset upload to WEBKNOSSOS.
 
@@ -512,20 +510,23 @@ class Dataset:
             folder_id = folder_id.id
 
         context = _get_context()
-        dataset_announce = ApiDatasetAnnounceUpload(
-            dataset_name=dataset_name,
-            organization=organization,
-            initial_team_ids=initial_team_ids,
-            folder_id=folder_id,
-            require_unique_name=require_unique_name,
+        response = context.api_client_with_auth.dataset_reserve_manual_upload(
+            ApiDatasetReserveManualUploadParameters(
+                dataset_name=dataset_name,
+                initial_team_ids=initial_team_ids,
+                folder_id=folder_id,
+                require_unique_name=require_unique_name,
+                data_source=data_source,  # TODO set status
+                layers_to_link=[],
+            )
         )
-        if datastore_url is None:
-            datastore_url = _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(datastore_url)
-        response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce=dataset_announce, token=token
-        )
-        return response.new_dataset_id, response.directory_name
+        return response.new_dataset_id, response.data_source
+
+    @classmethod
+    def finish_manual_upload(cls, dataset_id: str) -> None:
+        from ..client.context import _get_context
+
+        _get_context().api_client_with_auth.dataset_finish_manual_upload(dataset_id)
 
     @classmethod
     def trigger_reload_in_datastore(
