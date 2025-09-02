@@ -161,6 +161,24 @@ class AxisProperties:
 
 
 @attr.define
+class AffineCoordinateTransformation:
+    type: Literal["affine"]
+    matrix: list[list[float]]
+
+
+@attr.define
+class TPSCoordinateTransformationCorrespondences:
+    source: list[tuple[float, float, float]]
+    target: list[tuple[float, float, float]]
+
+
+@attr.define
+class TPSCoordinateTransformation:
+    type: Literal["thin_plate_spline"]
+    coorespondences: TPSCoordinateTransformationCorrespondences
+
+
+@attr.define
 class LayerProperties:
     name: str
     category: LayerCategoryType
@@ -170,6 +188,8 @@ class LayerProperties:
     mags: list[MagViewProperties]
     num_channels: int | None = None
     default_view_configuration: LayerViewConfiguration | None = None
+    admin_view_configuration: LayerViewConfiguration | None = None
+    coordinate_transformations: list[AffineCoordinateTransformation] | None = None
 
 
 @attr.define
@@ -380,9 +400,10 @@ def layer_properties_pre_structure(
         if len(d["mags"]) > 0:
             first_mag = d["mags"][0]
             if "axisOrder" in first_mag:
-                assert first_mag["axisOrder"]["c"] == 0, (
-                    "The channels c must have index 0 in axis order."
-                )
+                if "c" in first_mag["axisOrder"]:
+                    assert first_mag["axisOrder"]["c"] == 0, (
+                        "The channels c must have index 0 in axis order."
+                    )
                 assert all(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
                 )

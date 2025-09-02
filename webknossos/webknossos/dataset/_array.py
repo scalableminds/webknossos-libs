@@ -227,7 +227,7 @@ class BaseArray(ABC):
             return Zarr3Array
         if data_format == DataFormat.Zarr:
             return Zarr2Array
-        raise ValueError(f"Array format `{data_format}` is invalid.")
+        raise ValueError(f"Array format `{data_format}` is not supported.")
 
 
 class WKWArray(BaseArray):
