@@ -402,7 +402,7 @@ def layer_properties_pre_structure(
             if "axisOrder" in first_mag:
                 if "c" in first_mag["axisOrder"]:
                     assert first_mag["axisOrder"]["c"] == 0, (
-                        "The channels c must have index 0 in axis order."
+                        f"The channels c must have index 0 in axis order. Got {first_mag['axisOrder']}"
                     )
                 assert all(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
