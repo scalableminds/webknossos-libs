@@ -2,6 +2,7 @@ import copy
 import inspect
 import json
 import logging
+import os
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -12,6 +13,7 @@ from os import PathLike
 from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Union, cast
+from urllib.parse import urlparse
 
 import attr
 import numpy as np
@@ -464,15 +466,14 @@ class Dataset:
     def resolved_path(self) -> UPath | None:
         return self._resolved_path
 
-    @classmethod
-    def reserve_manual_upload(
-        cls,
+
+    def upload_dataset_to_webknossos(
+        self,
         dataset_name: str,
-        data_source: DatasetProperties,
         initial_team_ids: list[str],
         folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
-    ) -> tuple[str, str]:
+    ) -> str:
         """Announce a manual dataset upload to WEBKNOSSOS.
 
         Used when manually uploading datasets to the file system of a datastore.
@@ -486,7 +487,8 @@ class Dataset:
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             token: Optional authentication token
             datastore_url: If the WEBKNOSSOS instance has multiple datastores, supply a url to select one.
-
+        Returns:
+            The ID of the newly created dataset.
         Note:
             This is typically only used by administrators with direct file system
             access to the WEBKNOSSOS datastore. Most users should use upload() instead.
@@ -516,17 +518,74 @@ class Dataset:
                 initial_team_ids=initial_team_ids,
                 folder_id=folder_id,
                 require_unique_name=require_unique_name,
-                data_source=data_source,  # TODO set status
+                data_source=self._properties,
                 layers_to_link=[],
             )
         )
-        return response.new_dataset_id, response.data_source
+        new_dataset_id = response.new_dataset_id
+        data_source = response.data_source
 
-    @classmethod
-    def finish_manual_upload(cls, dataset_id: str) -> None:
-        from ..client.context import _get_context
+        def construct_rich_path(
+                path: str | os.PathLike, warn_on_no_op: bool = True
+        ) -> UPath:
+            """
+            Constructs a RichPath object from a string or PathLike object.
+            A RichPath is a standard UPath with the additional convention that all S3 paths have specific storage options (endpoint URL, request retries) configured.
+            If the input is already well formed (a RichPath which, for S3 paths, has the relevant storage options set) a warning can be raised (if `warn_on_no_op` is True).
+            """
+            # First, we convert any input into a UPath.
+            if isinstance(path, UPath):
+                upath = path
+                # If we already have an UPath with the relevant storage options configured we will assume that it already is an enriched path and that we can omit this construct_rich_path(...) call.
+                if (
+                        warn_on_no_op
+                        and "endpoint_url" in path.storage_options.get("client_kwargs", {})
+                        and "retries" in path.storage_options.get("config_kwargs", {})
+                ):
+                    logger.warning(
+                        "construct_rich_path(...) was called with an S3 path that already seems to be properly enriched (contains an endpoint URL etc.). Consider removing this call to construct_rich_path(...).",
+                        stack_info=True,
+                    )
+            else:
+                upath = UPath(path)
 
-        _get_context().api_client_with_auth.dataset_finish_manual_upload(dataset_id)
+            # Only for S3 paths we need to do some additional checks and enrich the UPath with additional storage options.
+            if upath.protocol == "s3":
+                # In any case we set the retries to the voxelytics default value.
+                config_kwargs = upath.storage_options.get("config_kwargs", {})
+                config_kwargs["retries"] = {
+                    "max_attempts": 10,
+                    "mode": "standard",
+                }
+                # If the endpoint URL is not set, it must be parsed from the path string.
+                client_kwargs = upath.storage_options.get("client_kwargs", {})
+                s3_path = upath.path
+                if "endpoint_url" not in client_kwargs:
+                    parsed_url = urlparse(str(upath))
+                    endpoint_url = f"https://{parsed_url.netloc}"
+                    bucket, key = parsed_url.path.strip("/").split("/", maxsplit=1)
+                    client_kwargs["endpoint_url"] = endpoint_url
+                    s3_path = f"{bucket}/{key}"
+                else:
+                    s3_path = upath.path
+                upath = UPath(
+                    s3_path,
+                    protocol="s3",
+                    client_kwargs=client_kwargs,
+                    config_kwargs=config_kwargs,
+                )
+
+            return UPath(upath)
+        # upload data
+        for layer in data_source.data_layers:
+            src_layer = self.layers[layer.name]
+            for mag in layer.mags:
+                src_mag = src_layer.mags[mag.mag]
+                copytree(src_mag.path, construct_rich_path(mag.path), progress_desc=f"copying mag {src_mag.path} to {mag.path}")
+
+        # announce finished upload
+        context.api_client_with_auth.dataset_finish_manual_upload(new_dataset_id)
+        return new_dataset_id
 
     @classmethod
     def trigger_reload_in_datastore(
