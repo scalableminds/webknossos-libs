@@ -2,6 +2,7 @@ import copy
 import inspect
 import json
 import logging
+import os
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -12,6 +13,7 @@ from os import PathLike
 from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Union, cast
+from urllib.parse import urlparse
 
 import attr
 import numpy as np
@@ -28,6 +30,7 @@ from ..client.api_client.models import (
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
+    ApiUnusableDataSource, ApiDatasetReserveManualUploadParameters,
 )
 from ..geometry import (
     BoundingBox,
@@ -322,8 +325,8 @@ class Dataset:
         path = strip_trailing_slash(UPath(dataset_path))
 
         self._read_only = read_only
-        self.path: UPath = path
-        self._resolved_path: UPath = cheap_resolve(path)
+        self.path: UPath | None = path
+        self._resolved_path: UPath | None = cheap_resolve(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -460,20 +463,17 @@ class Dataset:
         return dataset._init_from_properties(dataset_properties)
 
     @property
-    def resolved_path(self) -> UPath:
+    def resolved_path(self) -> UPath | None:
         return self._resolved_path
 
-    @classmethod
-    def announce_manual_upload(
-        cls,
+
+    def upload_dataset_to_webknossos(
+        self,
         dataset_name: str,
-        organization: str,
         initial_team_ids: list[str],
         folder_id: str | RemoteFolder | None,
         require_unique_name: bool = False,
-        token: str | None = None,
-        datastore_url: str | None = None,
-    ) -> tuple[str, str]:
+    ) -> str:
         """Announce a manual dataset upload to WEBKNOSSOS.
 
         Used when manually uploading datasets to the file system of a datastore.
@@ -487,7 +487,8 @@ class Dataset:
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             token: Optional authentication token
             datastore_url: If the WEBKNOSSOS instance has multiple datastores, supply a url to select one.
-
+        Returns:
+            The ID of the newly created dataset.
         Note:
             This is typically only used by administrators with direct file system
             access to the WEBKNOSSOS datastore. Most users should use upload() instead.
@@ -511,20 +512,80 @@ class Dataset:
             folder_id = folder_id.id
 
         context = _get_context()
-        dataset_announce = ApiDatasetAnnounceUpload(
-            dataset_name=dataset_name,
-            organization=organization,
-            initial_team_ids=initial_team_ids,
-            folder_id=folder_id,
-            require_unique_name=require_unique_name,
+        response = context.api_client_with_auth.dataset_reserve_manual_upload(
+            ApiDatasetReserveManualUploadParameters(
+                dataset_name=dataset_name,
+                initial_team_ids=initial_team_ids,
+                folder_id=folder_id,
+                require_unique_name=require_unique_name,
+                data_source=self._properties,
+                layers_to_link=[],
+            )
         )
-        if datastore_url is None:
-            datastore_url = _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(datastore_url)
-        response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce=dataset_announce, token=token
-        )
-        return response.new_dataset_id, response.directory_name
+        new_dataset_id = response.new_dataset_id
+        data_source = response.data_source
+
+        def construct_rich_path(
+                path: str | os.PathLike, warn_on_no_op: bool = True
+        ) -> UPath:
+            """
+            Constructs a RichPath object from a string or PathLike object.
+            A RichPath is a standard UPath with the additional convention that all S3 paths have specific storage options (endpoint URL, request retries) configured.
+            If the input is already well formed (a RichPath which, for S3 paths, has the relevant storage options set) a warning can be raised (if `warn_on_no_op` is True).
+            """
+            # First, we convert any input into a UPath.
+            if isinstance(path, UPath):
+                upath = path
+                # If we already have an UPath with the relevant storage options configured we will assume that it already is an enriched path and that we can omit this construct_rich_path(...) call.
+                if (
+                        warn_on_no_op
+                        and "endpoint_url" in path.storage_options.get("client_kwargs", {})
+                        and "retries" in path.storage_options.get("config_kwargs", {})
+                ):
+                    logger.warning(
+                        "construct_rich_path(...) was called with an S3 path that already seems to be properly enriched (contains an endpoint URL etc.). Consider removing this call to construct_rich_path(...).",
+                        stack_info=True,
+                    )
+            else:
+                upath = UPath(path)
+
+            # Only for S3 paths we need to do some additional checks and enrich the UPath with additional storage options.
+            if upath.protocol == "s3":
+                # In any case we set the retries to the voxelytics default value.
+                config_kwargs = upath.storage_options.get("config_kwargs", {})
+                config_kwargs["retries"] = {
+                    "max_attempts": 10,
+                    "mode": "standard",
+                }
+                # If the endpoint URL is not set, it must be parsed from the path string.
+                client_kwargs = upath.storage_options.get("client_kwargs", {})
+                s3_path = upath.path
+                if "endpoint_url" not in client_kwargs:
+                    parsed_url = urlparse(str(upath))
+                    endpoint_url = f"https://{parsed_url.netloc}"
+                    bucket, key = parsed_url.path.strip("/").split("/", maxsplit=1)
+                    client_kwargs["endpoint_url"] = endpoint_url
+                    s3_path = f"{bucket}/{key}"
+                else:
+                    s3_path = upath.path
+                upath = UPath(
+                    s3_path,
+                    protocol="s3",
+                    client_kwargs=client_kwargs,
+                    config_kwargs=config_kwargs,
+                )
+
+            return UPath(upath)
+        # upload data
+        for layer in data_source.data_layers:
+            src_layer = self.layers[layer.name]
+            for mag in layer.mags:
+                src_mag = src_layer.mags[mag.mag]
+                copytree(src_mag.path, construct_rich_path(mag.path), progress_desc=f"copying mag {src_mag.path} to {mag.path}")
+
+        # announce finished upload
+        context.api_client_with_auth.dataset_finish_manual_upload(new_dataset_id)
+        return new_dataset_id
 
     @classmethod
     def trigger_reload_in_datastore(
@@ -728,6 +789,7 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
+        use_zarr_streaming: bool = True,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -740,6 +802,7 @@ class Dataset:
             sharing_token: Optional sharing token for dataset access
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
             dataset_id: Optional unique ID of the dataset
+            use_zarr_streaming: Whether to use zarr streaming
 
         Returns:
             RemoteDataset: Dataset instance for remote access
@@ -774,12 +837,22 @@ class Dataset:
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
-            zarr_path = UPath(
-                f"{url_prefix}/zarr/{dataset_id}/",
-                headers={} if token is None else {"X-Auth-Token": token},
-                ssl=SSL_CONTEXT,
-            )
-            return RemoteDataset(zarr_path, dataset_id, context_manager)
+            if use_zarr_streaming:
+                zarr_path = UPath(
+                    f"{url_prefix}/zarr/{dataset_id}/",
+                    headers={} if token is None else {"X-Auth-Token": token},
+                    ssl=SSL_CONTEXT,
+                )
+                return RemoteDataset(zarr_path, None, dataset_id, context_manager)
+            else:
+                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+                    raise RuntimeError(
+                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
+                    )
+
+                return RemoteDataset(
+                    None, api_dataset_info.data_source, dataset_id, context_manager
+                )
 
     @classmethod
     def download(
@@ -1640,7 +1713,10 @@ class Dataset:
                 continue
             # Mags are only writable if they are local to the dataset
             resolved_mag_path = cheap_resolve(mag_dir)
-            read_only = resolved_mag_path.parent != self.resolved_path / layer_name
+            read_only = (
+                self.resolved_path is None
+                or resolved_mag_path.parent != self.resolved_path / layer_name
+            )
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
             )
@@ -2441,6 +2517,9 @@ class Dataset:
                     else foreign_mag.path.resolve()
                 ).as_posix()
             else:
+                assert self.resolved_path is not None, (
+                    "resolved_path is not set as it is a remote dataset"
+                )
                 mag_prop.path = dump_path(foreign_mag.path, self.resolved_path)
 
         if (
@@ -2451,6 +2530,9 @@ class Dataset:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
+                        assert foreign_layer.dataset.resolved_path is not None, (
+                            "resolved_path is not set. This should only happen for remote datasets"
+                        )
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
@@ -2576,6 +2658,7 @@ class Dataset:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
+                        assert foreign_layer.dataset.resolved_path is not None
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
@@ -3122,15 +3205,17 @@ class RemoteDataset(Dataset):
 
     def __init__(
         self,
-        dataset_path: UPath,
+        zarr_streaming_path: UPath | None,
+        dataset_properties: DatasetProperties | None,
         dataset_id: str,
         context: "webknossos_context",
     ) -> None:
         """Initialize a remote dataset instance.
 
         Args:
-            dataset_path: Path to remote dataset location
-            dataset_id: ID of dataset in WEBKNOSSOS
+            zarr_streaming_path: Path to the zarr streaming directory
+            dataset_properties: Properties of the remote dataset
+            dataset_id: dataset id of the remote dataset
             context: Context manager for WEBKNOSSOS connection
 
         Raises:
@@ -3140,16 +3225,22 @@ class RemoteDataset(Dataset):
             Do not call this constructor directly, use Dataset.open_remote() instead.
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
-        self.path = dataset_path
-        self._resolved_path = dataset_path
+        assert (zarr_streaming_path is not None) != (dataset_properties is not None), (
+            "Either zarr_streaming_path or dataset_properties must be set, but not both."
+        )
+        self.path = zarr_streaming_path
+        self._resolved_path = zarr_streaming_path
         self._read_only = True
+        self._use_zarr_streaming = zarr_streaming_path is not None
+
         try:
-            dataset_properties = self._load_properties(self.path)
+            if self._use_zarr_streaming:
+                dataset_properties = self._load_properties(self.path)
             self._init_from_properties(dataset_properties)
         except FileNotFoundError as e:
             if hasattr(self, "_properties"):
                 warnings.warn(
-                    f"[WARNING] Cannot open remote webknossos dataset {dataset_path} as zarr. "
+                    f"[WARNING] Cannot open remote webknossos dataset {dataset_id}. "
                     + "Returning a stub dataset instead, accessing metadata properties might still work.",
                 )
                 self.path = None  # type: ignore[assignment]
@@ -3506,7 +3597,7 @@ class RemoteDataset(Dataset):
 
         Note:
             The dataset files must be accessible from the WEBKNOSSOS server
-            for this to work. The data will be streamed directly from the source.
+            for this to work. The data will be streamed through webknossos from the source.
         """
         from ..client.context import _get_context
 

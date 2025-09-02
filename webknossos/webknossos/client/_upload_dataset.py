@@ -17,7 +17,7 @@ from ._resumable import Resumable
 from .api_client.models import (
     ApiDatasetUploadInformation,
     ApiLinkedLayerIdentifier,
-    ApiReserveDatasetUploadInformation,
+    ApiReserveDatasetUploadInformation, ApiLinkedLayerIdentifierLegacy,
 )
 from .context import _get_context, _WebknossosContext, webknossos_context
 
@@ -49,6 +49,13 @@ class LayerToLink(NamedTuple):
     def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
         context = _get_context()
         return ApiLinkedLayerIdentifier(
+            self.dataset_name, # TODO: dataset_id
+            self.layer_name,
+            self.new_layer_name,
+        )
+    def as_api_linked_layer_identifier_legacy(self) -> ApiLinkedLayerIdentifierLegacy:
+        context = _get_context()
+        return ApiLinkedLayerIdentifierLegacy(
             self.organization_id or context.organization_id,
             self.dataset_name,
             self.layer_name,
