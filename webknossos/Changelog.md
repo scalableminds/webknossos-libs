@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- `Layer.add_mag_as_copy` now automatically uses file-based copy, if possible. Therefore, `Dataset.fs_copy_dataset`, `Dataset.add_fs_copy_layer` and `Layer.add_fs_copy_mag` are deprecated. [#1362](https://github.com/scalableminds/webknossos-libs/pull/1362)
 - The API methods now use `v10` API version of Webknossos. Datasets are now referenced by ID instead of dataset name or directory name. [#1363](https://github.com/scalableminds/webknossos-libs/pull/1363)
 
 ### Fixed
