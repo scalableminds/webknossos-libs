@@ -900,7 +900,17 @@ class Layer:
         else:
             has_same_compression = compress == foreign_mag_view.info.compression_mode
 
-        if has_same_shapes and has_same_format and has_same_compression:
+        uses_memory_store = (
+            foreign_mag_view.path.protocol == "memory"
+            or (self.path / foreign_mag_view.mag.to_layer_name()).protocol == "memory"
+        )
+
+        if (
+            has_same_shapes
+            and has_same_format
+            and has_same_compression
+            and not uses_memory_store
+        ):
             logger.debug(
                 f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
             )
