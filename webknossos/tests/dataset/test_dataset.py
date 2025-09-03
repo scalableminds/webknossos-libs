@@ -5,6 +5,7 @@ import pickle
 from collections.abc import Iterator
 from pathlib import Path
 from typing import cast
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -2113,7 +2114,15 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
     copy_layer = copy_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
-    copy_mag = copy_layer.add_fs_copy_mag(original_mag, extend_layer_bounding_box=True)
+
+    with mock.patch.object(
+        copy_layer, "_add_fs_copy_mag", wraps=copy_layer._add_fs_copy_mag
+    ) as mocked_method:
+        copy_mag = copy_layer.add_mag_as_copy(
+            original_mag, extend_layer_bounding_box=True
+        )
+        mocked_method.assert_called_once()
+
     assert not copy_layer.read_only
     assert not copy_mag.read_only
 
@@ -3533,9 +3542,7 @@ def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
 
 @pytest.mark.parametrize("input_path", OUTPUT_PATHS)
 @pytest.mark.parametrize("output_path", OUTPUT_PATHS)
-def test_fs_copy_dataset_with_attachments(
-    input_path: UPath, output_path: UPath
-) -> None:
+def test_copy_dataset_with_attachments(input_path: UPath, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(DEFAULT_DATA_FORMAT, input_path)
     new_ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, output_path, "copied")
 
@@ -3562,7 +3569,7 @@ def test_fs_copy_dataset_with_attachments(
     )
 
     # Copy
-    copy_ds = ds.fs_copy_dataset(new_ds_path)
+    copy_ds = ds.copy_dataset(new_ds_path)
 
     assert (
         copy_ds.default_view_configuration

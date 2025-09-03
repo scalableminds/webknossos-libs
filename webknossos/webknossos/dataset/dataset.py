@@ -42,7 +42,7 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
-from ._array import ArrayException, ArrayInfo, BaseArray
+from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3Config
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
 from .defaults import (
@@ -2324,7 +2324,7 @@ class Dataset:
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,
         data_format: str | DataFormat | None = None,
-        compress: bool | None = None,
+        compress: bool | Zarr3Config | None = None,
         exists_ok: bool = False,
         executor: Executor | None = None,
         with_attachments: bool = True,
@@ -2626,13 +2626,15 @@ class Dataset:
         foreign_layer: str | Path | Layer,
         new_layer_name: str | None = None,
     ) -> Layer:
-        """
+        """Deprecated. File-based copy is automatically used in `Dataset.add_layer_as_copy`.
+
         Copies the files at `foreign_layer` which belongs to another dataset
         to the current dataset via the filesystem. Additionally, the relevant
         information from the `datasource-properties.json` of the other dataset
         are copied too. If new_layer_name is None, the name of the foreign
         layer is used.
         """
+        warn_deprecated("add_fs_copy_layer", "add_layer_as_copy")
         self._ensure_writable()
         foreign_layer = Layer._ensure_layer(foreign_layer)
 
@@ -2808,7 +2810,8 @@ class Dataset:
         exists_ok: bool = False,
         layers_to_ignore: Iterable[str] | None = None,
     ) -> "Dataset":
-        """
+        """Deprecated. File-based copy is automatically used by `Dataset.copy_dataset`.
+
         Creates an independent copy of the dataset with all layers at a new location.
 
         This method copies the files of the dataset as is and, therefore, might be faster than Dataset.copy_dataset, which decodes and encodes all the data.
@@ -2834,12 +2837,13 @@ class Dataset:
         Note:
             WKW layers can only be copied to datasets on local file systems.
         """
+        warn_deprecated("fs_copy_dataset", "copy_dataset")
 
         new_dataset_path = UPath(new_dataset_path)
 
         if any(layer.data_format == DataFormat.WKW for layer in self.layers.values()):
             assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
+                "Cannot create WKW layers in remote datasets. Use `Dataset.copy_dataset` with `data_format='zarr3'`."
             )
 
         new_dataset = Dataset(
