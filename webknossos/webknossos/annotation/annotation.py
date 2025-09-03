@@ -51,7 +51,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import Any, BinaryIO, Literal, Union, cast, overload
+from typing import BinaryIO, Literal, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -79,6 +79,7 @@ from ..dataset import (
 from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
 from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
+from ..proofreading.agglomerate_graph import AgglomerateGraph
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
@@ -1581,7 +1582,7 @@ class RemoteAnnotation(Annotation):
                 f.write(chunk)
         return file_path
 
-    def get_agglomerate_graph(self, agglomerate_id: int) -> Any:
+    def get_agglomerate_graph(self, agglomerate_id: int) -> AgglomerateGraph:
         """Get the agglomerate graph for the specified agglomerate id.
 
         Args:
