@@ -80,7 +80,7 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
-    warn_deprecated,
+    warn_deprecated, enrich_path,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from ._utils.segmentation_recognition import (
@@ -525,63 +525,12 @@ class Dataset:
         new_dataset_id = response.new_dataset_id
         data_source = response.data_source
 
-        def construct_rich_path(
-                path: str | os.PathLike, warn_on_no_op: bool = True
-        ) -> UPath:
-            """
-            Constructs a RichPath object from a string or PathLike object.
-            A RichPath is a standard UPath with the additional convention that all S3 paths have specific storage options (endpoint URL, request retries) configured.
-            If the input is already well formed (a RichPath which, for S3 paths, has the relevant storage options set) a warning can be raised (if `warn_on_no_op` is True).
-            """
-            # First, we convert any input into a UPath.
-            if isinstance(path, UPath):
-                upath = path
-                # If we already have an UPath with the relevant storage options configured we will assume that it already is an enriched path and that we can omit this construct_rich_path(...) call.
-                if (
-                        warn_on_no_op
-                        and "endpoint_url" in path.storage_options.get("client_kwargs", {})
-                        and "retries" in path.storage_options.get("config_kwargs", {})
-                ):
-                    logger.warning(
-                        "construct_rich_path(...) was called with an S3 path that already seems to be properly enriched (contains an endpoint URL etc.). Consider removing this call to construct_rich_path(...).",
-                        stack_info=True,
-                    )
-            else:
-                upath = UPath(path)
-
-            # Only for S3 paths we need to do some additional checks and enrich the UPath with additional storage options.
-            if upath.protocol == "s3":
-                # In any case we set the retries to the voxelytics default value.
-                config_kwargs = upath.storage_options.get("config_kwargs", {})
-                config_kwargs["retries"] = {
-                    "max_attempts": 10,
-                    "mode": "standard",
-                }
-                # If the endpoint URL is not set, it must be parsed from the path string.
-                client_kwargs = upath.storage_options.get("client_kwargs", {})
-                s3_path = upath.path
-                if "endpoint_url" not in client_kwargs:
-                    parsed_url = urlparse(str(upath))
-                    endpoint_url = f"https://{parsed_url.netloc}"
-                    bucket, key = parsed_url.path.strip("/").split("/", maxsplit=1)
-                    client_kwargs["endpoint_url"] = endpoint_url
-                    s3_path = f"{bucket}/{key}"
-                else:
-                    s3_path = upath.path
-                upath = UPath(
-                    s3_path,
-                    protocol="s3",
-                    client_kwargs=client_kwargs,
-                    config_kwargs=config_kwargs,
-                )
-
-            return UPath(upath)
         # upload data
         for layer in data_source.data_layers:
             src_layer = self.layers[layer.name]
             for mag in layer.mags:
                 src_mag = src_layer.mags[mag.mag]
-                copytree(src_mag.path, construct_rich_path(mag.path), progress_desc=f"copying mag {src_mag.path} to {mag.path}")
+                copytree(src_mag.path, enrich_path(mag.path), progress_desc=f"copying mag {src_mag.path} to {mag.path}")
 
         # announce finished upload
         context.api_client_with_auth.dataset_finish_manual_upload(new_dataset_id)
