@@ -72,13 +72,12 @@ class WkApiClient(AbstractApiClient):
         *,
         dataset_id: str,
         sharing_token: str | None = None,
-        include_paths: bool = False,
     ) -> ApiDataset:
         route = f"/datasets/{dataset_id}"
         return self._get_json(
             route,
             ApiDataset,
-            query={"sharingToken": sharing_token, "includePaths": include_paths},
+            query={"sharingToken": sharing_token, "includePaths": True},
         )
 
     def dataset_id_from_name(self, *, directory_name: str, organization_id: str) -> str:
