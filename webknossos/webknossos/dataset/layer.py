@@ -873,6 +873,9 @@ class Layer:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
+        if progress_desc is None:
+            progress_desc = f"Copying mag {foreign_mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {self}"
+
         has_same_shapes = (
             (
                 chunk_shape is None
@@ -918,6 +921,7 @@ class Layer:
                 foreign_mag_view,
                 extend_layer_bounding_box=extend_layer_bounding_box,
                 exists_ok=exists_ok,
+                progress_desc=progress_desc,
             )
 
         chunk_shape = Vec3Int.from_vec_or_int(
@@ -955,9 +959,6 @@ class Layer:
             self.bounding_box = self.bounding_box.extended_by(
                 foreign_mag_view.layer.bounding_box
             )
-
-        if progress_desc is None:
-            progress_desc = f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}"
 
         foreign_mag_view.for_zipped_chunks(
             func_per_chunk=_copy_job,
@@ -1092,6 +1093,7 @@ class Layer:
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
+        progress_desc: str | None = None,
     ) -> MagView:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -1106,10 +1108,7 @@ class Layer:
             raise FileExistsError(
                 f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists."
             )
-        copytree(
-            foreign_mag_view.path,
-            mag_path,
-        )
+        copytree(foreign_mag_view.path, mag_path, progress_desc=progress_desc)
 
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag, mag_path=mag_path, read_only=False
