@@ -3,6 +3,7 @@ import json
 import os
 import re
 import uuid
+from argparse import Namespace
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from enum import Enum
@@ -19,6 +20,7 @@ from numpy._typing import DTypeLike
 from upath import UPath
 from zipp import Path as ZipPath
 
+from ..cli._utils import DistributionStrategy
 from ..dataset import (
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -30,7 +32,7 @@ from ..dataset._array import Zarr3Config
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.properties import DatasetProperties, dataset_converter
 from ..geometry import Vec3Int
-from ..utils import is_fs_path
+from ..utils import get_executor_for_args, is_fs_path
 
 Vector3 = tuple[float, float, float]
 Vector4 = tuple[float, float, float, float]
@@ -141,12 +143,15 @@ class VolumeLayer:
     def edit(
         self,
         volume_layer_edit_mode: VolumeLayerEditMode = VolumeLayerEditMode.TEMPORARY_DIRECTORY,
+        executor: Executor | None = None,
     ) -> Generator[Layer | Any, None, None]:
         """
         Context manager to edit the volume layer.
 
         Args:
             volume_layer_edit_mode: Specifies the edit mode for the volume layer.
+            executor: Optional executor for parallel rechunking.
+
         """
 
         if self.zip is None:
@@ -192,26 +197,31 @@ class VolumeLayer:
                     )
                 self._write_dir_to_zip(rechunked_dir)
 
-        if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
-            with TemporaryDirectory() as tmp_dir:
-                return _edit(UPath(tmp_dir))
-        elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
-            with SequentialExecutor() as executor:
+        fallback_executor_args = Namespace(
+            distribution_strategy=DistributionStrategy.SEQUENTIAL.value,
+        )
+        with get_executor_for_args(fallback_executor_args, executor) as executor:
+            if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
+                with TemporaryDirectory() as tmp_dir:
+                    return _edit(UPath(tmp_dir), executor)
+            elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
+                if not isinstance(executor, SequentialExecutor):
+                    raise ValueError(
+                        "In-memory editing only supports SequentialExecutor to avoid data"
+                        " corruption due to concurrent writes."
+                    )
                 path = UPath(
                     f"edit_{self.id}_{self.name}_{uuid.uuid4()}.zip", protocol="memory"
                 )
                 try:
-                    return _edit(
-                        path,
-                        executor,
-                    )
+                    return _edit(path, executor)
                 finally:
                     if path.exists():
                         path.rmdir(recursive=True)
-        else:
-            raise ValueError(
-                f"Unsupported volume layer edit mode: {volume_layer_edit_mode}"
-            )
+            else:
+                raise ValueError(
+                    f"Unsupported volume layer edit mode: {volume_layer_edit_mode}"
+                )
 
     def export_to_dataset(
         self,

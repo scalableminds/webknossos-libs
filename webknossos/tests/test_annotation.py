@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from cluster_tools import Executor, MultiprocessingExecutor, SequentialExecutor
 
 import webknossos as wk
 from webknossos import Annotation, SegmentationLayer
@@ -378,7 +379,10 @@ def test_tree_metadata(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
 )
-def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode) -> None:
+@pytest.mark.parametrize("executor", [SequentialExecutor(), MultiprocessingExecutor()])
+def test_edit_volume_annotation(
+    edit_mode: VolumeLayerEditMode, executor: Executor
+) -> None:
     dtype = np.uint32
     data = np.ones((1, 10, 10, 10), dtype=dtype)
     ann = wk.Annotation(
@@ -391,15 +395,22 @@ def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode) -> None:
         name="segmentation",
         dtype=dtype,
     )
-    with volume_layer.edit(edit_mode) as seg_layer:
-        assert isinstance(seg_layer, SegmentationLayer)
-        mag = seg_layer.add_mag(1)
-        mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
-    with volume_layer.edit(edit_mode) as seg_layer:
-        assert len(seg_layer.mags) == 1
-        mag = seg_layer.get_mag(1)
-        read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-        assert np.array_equal(data, read_data)
+    if edit_mode == VolumeLayerEditMode.MEMORY and isinstance(
+        executor, MultiprocessingExecutor
+    ):
+        with pytest.raises(ValueError, match="SequentialExecutor"):
+            with volume_layer.edit(edit_mode, executor=executor) as seg_layer:
+                pass
+    else:
+        with volume_layer.edit(edit_mode, executor=executor) as seg_layer:
+            assert isinstance(seg_layer, SegmentationLayer)
+            mag = seg_layer.add_mag(1)
+            mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
+        with volume_layer.edit(edit_mode) as seg_layer:
+            assert len(seg_layer.mags) == 1
+            mag = seg_layer.get_mag(1)
+            read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+            assert np.array_equal(data, read_data)
 
 
 def test_edited_volume_annotation_format() -> None:
