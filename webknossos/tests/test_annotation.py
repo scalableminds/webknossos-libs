@@ -204,9 +204,7 @@ def test_annotation_upload_download_roundtrip() -> None:
     annotation_from_file = wk.Annotation.load(path)
     annotation_from_file.organization_id = "Organization_X"
     url = annotation_from_file.upload()
-    annotation = wk.Annotation.download(
-        url,
-    )
+    annotation = wk.Annotation.download(url)
     assert annotation.dataset_name == "l4_sample"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 

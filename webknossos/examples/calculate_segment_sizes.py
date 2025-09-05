@@ -6,9 +6,7 @@ ANNOTATION_URL = "https://webknossos.org/annotations/622b130a010000220122ebd1"
 
 
 def main() -> None:
-    annotation = wk.Annotation.download(
-        ANNOTATION_URL,
-    )
+    annotation = wk.Annotation.download(ANNOTATION_URL)
     stats_per_id = {}
     with annotation.temporary_volume_layer_copy() as seg_layer:
         voxel_size = (
@@ -22,8 +20,10 @@ def main() -> None:
             if _id == 0:
                 continue
             voxel_size_in_nm3 = voxel_size[0] * voxel_size[1] * voxel_size[2]
+
             volume = count * voxel_size_in_nm3
             stats_per_id[_id] = (count, volume)
+
     for _id, (count, volume) in stats_per_id.items():
         print(f"ID={_id} Voxel Count={count} Volume={volume}nm³")
 

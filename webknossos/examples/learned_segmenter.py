@@ -11,8 +11,9 @@ import webknossos as wk
 
 def main() -> None:
     # We are going to use a public demo annotation for this example
+
     annotation = wk.Annotation.download(
-        "https://webknossos.org/annotations/616457c2010000870032ced4",
+        "https://webknossos.org/annotations/616457c2010000870032ced4"
     )
 
     # Step 1: Read the training data from the annotation and the dataset's color

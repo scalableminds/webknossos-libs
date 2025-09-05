@@ -90,9 +90,7 @@ def main(
                 mags=mags,
             )
         elif re.match(_ANNOTATION_URL_REGEX, url):
-            Annotation.download(
-                annotation_id_or_url=url,
-            ).save(target)
+            Annotation.download(annotation_id_or_url=url).save(target)
         else:
             raise RuntimeError(
                 "The provided URL does not lead to a dataset or annotation."
