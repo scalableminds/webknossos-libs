@@ -53,7 +53,7 @@ from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from shutil import copyfileobj
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, BinaryIO, Literal, Union, cast, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
@@ -155,7 +155,7 @@ class VolumeLayer:
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
 
-    def write_dir_to_zip(self, source: str) -> None:
+    def _write_dir_to_zip(self, source: str) -> None:
         """
         Write all files from the given source directory into the volume layer's zip archive.
 
@@ -248,7 +248,7 @@ class VolumeLayer:
                         executor=executor,
                         target_path=rechunked_dir,
                     )
-                self.write_dir_to_zip(rechunked_dir)
+                self._write_dir_to_zip(rechunked_dir)
 
         if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
             with TemporaryDirectory() as tmp_dir:
@@ -444,8 +444,7 @@ class Annotation:
     metadata: dict[str, str] = attr.Factory(dict)
     task_bounding_box: NDBoundingBox | None = None
     user_bounding_boxes: list[NDBoundingBox] = attr.Factory(list)
-    volume_layers: list[VolumeLayer] = attr.field(factory=list, init=False)
-    volume_layers_root: Path | None = None
+    _volume_layers: list[VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
     def _set_init_docstring(cls) -> None:
@@ -473,7 +472,6 @@ class Annotation:
             metadata: Optional dictionary of custom metadata.
             task_bounding_box: Optional bounding box for task annotations.
             user_bounding_boxes: Optional list of user-defined bounding boxes.
-            volume_layers_root: Optional path to zip, where new volume layers will be stored at
 
         Raises:
             AssertionError: If neither skeleton nor dataset_name/voxel_size are provided,
@@ -627,7 +625,6 @@ class Annotation:
         cls,
         annotation_id_or_url: str,
         webknossos_url: str | None = None,
-        volume_layers_root: Path | None = None,
         *,
         skip_volume_data: bool = False,
     ) -> "Annotation": ...
@@ -638,7 +635,6 @@ class Annotation:
         cls,
         annotation_id_or_url: str,
         webknossos_url: str | None = None,
-        volume_layers_root: Path | None = None,
         *,
         skip_volume_data: bool = False,
         _return_context: bool,
@@ -649,7 +645,6 @@ class Annotation:
         cls,
         annotation_id_or_url: str,
         webknossos_url: str | None = None,
-        volume_layers_root: Path | None = None,
         *,
         skip_volume_data: bool = False,
         retry_count: int = 5,
@@ -661,8 +656,6 @@ class Annotation:
             annotation_id_or_url: Either an annotation ID or complete WEBKNOSSOS URL.
                 Example URL: https://webknossos.org/annotations/[id]
             webknossos_url: Optional custom WEBKNOSSOS instance URL.
-            volume_layers_root: Path to zip, where volume layers will be stored at.
-                Required if annotation contains volume layer data and skip_volume_data is False.
             skip_volume_data: If True, omits downloading volume layer data.
             _return_context: Internal use only.
 
@@ -728,12 +721,10 @@ class Annotation:
             )
             annotation = Annotation._load_from_zip(BytesIO(file_body))
 
-        annotation.volume_layers_root = volume_layers_root
-        if any(layer.zip is not None for layer in annotation.volume_layers):
-            assert volume_layers_root is not None, (
-                "The downloaded annotation contains volume layer data, please provide volume_layers_root to store the data at."
-            )
-            annotation._write_volume_layers(volume_layers_root)
+        volume_zip_root = NamedTemporaryFile(suffix=".zip").name
+        with ZipFile(volume_zip_root, "w"):
+            pass
+        annotation._write_volume_layers(Path(volume_zip_root))
 
         if _return_context:
             return annotation, context
@@ -853,7 +844,7 @@ class Annotation:
                 if i.name not in ["username", "annotationId"]
             },
         )
-        annotation.volume_layers = cls._parse_volumes(nml, possible_volume_paths)
+        annotation._volume_layers = cls._parse_volumes(nml, possible_volume_paths)
         return annotation
 
     @staticmethod
@@ -944,27 +935,27 @@ class Annotation:
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
-    def _write_volume_layers(self, volume_layers_root: Path) -> None:
+    def _write_volume_layers(self, path: Path) -> None:
         """
         Writes all volume layers with zip data to a single zip file at the specified location.
         """
 
-        volume_layers_root.parent.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         with ZipFile(
-            volume_layers_root,
+            path,
             mode="w",
             compression=ZIP_DEFLATED,
             compresslevel=Z_BEST_SPEED,
         ) as zf:
-            for layer in self.volume_layers:
+            for layer in self._volume_layers:
                 if layer.zip is not None:
                     with layer.zip.open(mode="rb") as f:
                         zf.writestr(layer.zip.at, f.read())
 
-        for layer in self.volume_layers:
+        for layer in self._volume_layers:
             if layer.zip is not None:
-                layer.zip = ZipPath(volume_layers_root, layer.zip.at)
+                layer.zip = ZipPath(path, layer.zip.at)
 
     def save(self, path: str | PathLike) -> None:
         """Saves the annotation to a file.
@@ -1001,7 +992,7 @@ class Annotation:
             ) as zipfile:
                 self._write_to_zip(zipfile)
         else:
-            assert len(self.volume_layers) == 0, (
+            assert len(self._volume_layers) == 0, (
                 f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
                 + "Please use a .zip path instead."
             )
@@ -1182,7 +1173,7 @@ class Annotation:
             nml.write(buffer)
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
-        for volume_layer in self.volume_layers:
+        for volume_layer in self._volume_layers:
             if volume_layer.zip is None:
                 with BytesIO() as buffer:
                     with ZipFile(buffer, mode="a"):
@@ -1312,13 +1303,12 @@ class Annotation:
                 print(f"Found layer: {name}")
             ```
         """
-        return (i.name for i in self.volume_layers)
+        return (i.name for i in self._volume_layers)
 
     def add_volume_layer(
         self,
         name: str,
         dtype: DTypeLike,
-        volume_layers_root: Path | None = None,
         fallback_layer: Layer | str | None = None,
         volume_layer_id: int | None = None,
     ) -> VolumeLayer:
@@ -1330,8 +1320,6 @@ class Annotation:
         Args:
             name: Name of the volume layer.
             dtype: Datatype of the volume layer.
-            volume_layers_root: Optional path to zip, where new volume layers will be stored at.
-                    If provided, the `self.volume_layers_root` will be updated
             fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
                           Can be Layer instance or layer name.
             volume_layer_id: Optional explicit ID for the layer.
@@ -1350,23 +1338,15 @@ class Annotation:
             annotation.add_volume_layer("segmentation", fallback_layer="base_segmentation", dtype=np.uint32)
             ```
         """
-        if volume_layers_root is not None:
-            self.volume_layers_root = Path(volume_layers_root)
-        assert self.volume_layers_root is not None, (
-            "volume_layers_root path is required to create new volume layers"
-        )
-        os.makedirs(os.path.dirname(self.volume_layers_root), exist_ok=True)
-        if not self.volume_layers_root.exists():
-            # create zip file if it does not exist
-            with ZipFile(self.volume_layers_root, "w"):
-                pass  # No files added, just creates an empty archive
-
-        zip_path = ZipPath(self.volume_layers_root, f"{name}.zip")
+        volume_zip_root = NamedTemporaryFile(suffix=".zip").name
+        with ZipFile(volume_zip_root, "w"):
+            pass
+        volume_zip_path = ZipPath(volume_zip_root, f"{name}.zip")
 
         if volume_layer_id is None:
-            volume_layer_id = max((i.id for i in self.volume_layers), default=-1) + 1
+            volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
-            assert volume_layer_id not in [i.id for i in self.volume_layers], (
+            assert volume_layer_id not in [i.id for i in self._volume_layers], (
                 f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
             )
         fallback_layer_name: str | None
@@ -1384,13 +1364,13 @@ class Annotation:
             name=name,
             fallback_layer_name=fallback_layer_name,
             data_format=DataFormat.Zarr3,
-            zip=zip_path,
+            zip=volume_zip_path,
             segments={},
             largest_segment_id=None,
             voxel_size=self.voxel_size,
             dtype=dtype,
         )
-        self.volume_layers.append(volume_layer)
+        self._volume_layers.append(volume_layer)
 
         with TemporaryDirectory() as tempdir:
             dataset = Dataset(tempdir, voxel_size=volume_layer.voxel_size)
@@ -1400,7 +1380,7 @@ class Annotation:
                 data_format=DataFormat.Zarr3,
                 dtype_per_channel=dtype,
             )
-            volume_layer.write_dir_to_zip(tempdir)
+            volume_layer._write_dir_to_zip(tempdir)
         return volume_layer
 
     def get_volume_layer(
@@ -1408,10 +1388,10 @@ class Annotation:
         volume_layer_name: str | None = None,
         volume_layer_id: int | None = None,
     ) -> VolumeLayer:
-        assert len(self.volume_layers) > 0, "No volume annotations present."
+        assert len(self._volume_layers) > 0, "No volume annotations present."
 
-        if len(self.volume_layers) == 1:
-            volume_layer = self.volume_layers[0]
+        if len(self._volume_layers) == 1:
+            volume_layer = self._volume_layers[0]
             if volume_layer_id is not None and volume_layer_id != volume_layer.id:
                 warnings.warn(
                     f"[INFO] Only a single volume annotation is present and its id {volume_layer.id} does not fit the given id {volume_layer_id}."
@@ -1428,7 +1408,7 @@ class Annotation:
             return volume_layer
 
         if volume_layer_id is not None:
-            for volume_layer in self.volume_layers:
+            for volume_layer in self._volume_layers:
                 if volume_layer_id == volume_layer.id:
                     if (
                         volume_layer_name is not None
@@ -1440,13 +1420,13 @@ class Annotation:
                             + f"but its name {volume_layer.name} does not fit the given name {volume_layer_name}."
                         )
                     return volume_layer
-            available_ids = [volume_layer.id for volume_layer in self.volume_layers]
+            available_ids = [volume_layer.id for volume_layer in self._volume_layers]
             raise ValueError(
                 f"Couldn't find a volume annotation with the id {volume_layer_id}, available are {available_ids}."
             )
         elif volume_layer_name is not None:
             fitting_volume_layers = [
-                i for i in self.volume_layers if i.name == volume_layer_name
+                i for i in self._volume_layers if i.name == volume_layer_name
             ]
             assert len(fitting_volume_layers) != 0, (
                 f"The specified volume name {volume_layer_name} could not be found in this annotation."
@@ -1491,7 +1471,7 @@ class Annotation:
             volume_layer_name=volume_layer_name,
             volume_layer_id=volume_layer_id,
         ).id
-        self.volume_layers = [i for i in self.volume_layers if i.id != layer_id]
+        self._volume_layers = [i for i in self._volume_layers if i.id != layer_id]
 
     def export_volume_layer_to_dataset(
         self,

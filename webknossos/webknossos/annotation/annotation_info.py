@@ -1,4 +1,3 @@
-from pathlib import Path
 
 import attr
 
@@ -19,9 +18,9 @@ class AnnotationInfo:
     duration_in_seconds: float | None
     modified: int | None
 
-    def download_annotation(self, volume_layers_root: Path | None = None) -> Annotation:
+    def download_annotation(self) -> Annotation:
         """Downloads and returns the annotation that is described by this AnnotationInfo object"""
-        return Annotation.download(self.id, volume_layers_root=volume_layers_root)
+        return Annotation.download(self.id)
 
     @classmethod
     def _from_api_annotation(cls, api_annotation: ApiAnnotation) -> "AnnotationInfo":

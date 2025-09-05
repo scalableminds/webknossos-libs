@@ -659,7 +659,7 @@ def test_merge_fallback_no_fallback_layer(
             ),
         )
 
-        annotation.volume_layers = [
+        annotation._volume_layers = [
             webknossos.annotation.VolumeLayer(  # type: ignore
                 id=0,
                 name=tmp_layer.name,

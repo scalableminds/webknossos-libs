@@ -12,7 +12,7 @@ def main() -> None:
     # Opening a merger mode annotation #
     ####################################
 
-    nml = wk.Annotation.download(
+    skeleton = wk.Annotation.download(
         "https://webknossos.org/annotations/6748612b0100001101c81156",
         skip_volume_data=True,
     ).skeleton
@@ -34,7 +34,7 @@ def main() -> None:
     ##############################
 
     segment_id_mapping = {}
-    for tree in nml.flattened_trees():
+    for tree in skeleton.flattened_trees():
         base = None
         for node in tree.nodes:
             segment_id = in_mag1.read(
@@ -45,7 +45,7 @@ def main() -> None:
             segment_id_mapping[segment_id] = base
 
     print(
-        f"Found {len(list(nml.flattened_trees()))} segment id groups with {len(segment_id_mapping)} nodes"
+        f"Found {len(list(skeleton.flattened_trees()))} segment id groups with {len(segment_id_mapping)} nodes"
     )
     print(segment_id_mapping)
 

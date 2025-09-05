@@ -8,7 +8,7 @@ import webknossos as wk
 # All segments in which a node is placed should be merged and saved as a new dataset.
 
 # for local nml:
-nml = wk.open("merger-mode.nml")
+skeleton = wk.open("merger-mode.nml")
 # wk.Skeleton.load or wk.open_skeleton works, too (and is type-safe)
 
 # for online annotation:
