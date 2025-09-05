@@ -2,6 +2,7 @@ import logging
 import operator
 import re
 import warnings
+from inspect import getframeinfo, stack
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -14,7 +15,7 @@ from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.mag import MagLike
-from ._array import ArrayException, TensorStoreArray, Zarr3Config
+from ._array import ArrayException, TensorStoreArray, Zarr3ArrayInfo, Zarr3Config
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -59,6 +60,8 @@ from .defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_SHARD_SHAPE,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _is_int(s: str) -> bool:
@@ -870,6 +873,53 @@ class Layer:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
+        has_same_shapes = (
+            (
+                chunk_shape is None
+                or Vec3Int.from_vec_or_int(chunk_shape)
+                == foreign_mag_view.info.chunk_shape
+            )
+            and (
+                shard_shape is None
+                or Vec3Int.from_vec_or_int(shard_shape)
+                == foreign_mag_view.info.shard_shape
+            )
+            and (
+                chunks_per_shard is None
+                or Vec3Int.from_vec_or_int(chunks_per_shard)
+                == foreign_mag_view.info.chunks_per_shard
+            )
+        )
+        has_same_format = self.data_format == foreign_mag_view.info.data_format
+        if compress is None:
+            has_same_compression = True
+        elif isinstance(compress, Zarr3Config) and isinstance(
+            foreign_mag_view.info, Zarr3ArrayInfo
+        ):
+            has_same_compression = compress == foreign_mag_view.info.zarr3_config
+        else:
+            has_same_compression = compress == foreign_mag_view.info.compression_mode
+
+        uses_memory_store = (
+            foreign_mag_view.path.protocol == "memory"
+            or (self.path / foreign_mag_view.mag.to_layer_name()).protocol == "memory"
+        )
+
+        if (
+            has_same_shapes
+            and has_same_format
+            and has_same_compression
+            and not uses_memory_store
+        ):
+            logger.debug(
+                f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
+            )
+            return self._add_fs_copy_mag(
+                foreign_mag_view,
+                extend_layer_bounding_box=extend_layer_bounding_box,
+                exists_ok=exists_ok,
+            )
+
         chunk_shape = Vec3Int.from_vec_or_int(
             chunk_shape or foreign_mag_view.info.chunk_shape
         )
@@ -1036,21 +1086,26 @@ class Layer:
 
         return self.get_mag(foreign_mag_view.mag)
 
-    def add_fs_copy_mag(
+    def _add_fs_copy_mag(
         self,
         foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
+        exists_ok: bool = False,
     ) -> MagView:
-        """
-        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
-        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied, too.
-        """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
+        assert foreign_mag_view.info.data_format == self.data_format, (
+            f"Cannot use file-based copy, because the foreign data format {foreign_mag_view.info.data_format} does not match the layer's data format {self.data_format}."
+        )
+
         mag_path = self.path / str(foreign_mag_view.mag)
+        if not exists_ok and mag_path.exists():
+            raise FileExistsError(
+                f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists."
+            )
         copytree(
             foreign_mag_view.path,
             mag_path,
@@ -1066,6 +1121,30 @@ class Layer:
             )
 
         return mag
+
+    def add_fs_copy_mag(
+        self,
+        foreign_mag_view_or_path: PathLike | str | MagView,
+        *,
+        extend_layer_bounding_box: bool = True,
+        exists_ok: bool = False,
+    ) -> MagView:
+        """Deprecated. File-copy is automatically selected when using `Layer.add_mag_as_copy`.
+
+        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied, too.
+        """
+        caller = getframeinfo(stack()[2][0])
+        warnings.warn(
+            f"[DEPRECATION] Direct use of `Layer.add_fs_copy_mag` is deprecated, please use `Layer.add_mag_as_copy` instead (see {caller.filename}:{caller.lineno}), which automatically uses file-based copy if available.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._add_fs_copy_mag(
+            foreign_mag_view_or_path,
+            extend_layer_bounding_box=extend_layer_bounding_box,
+            exists_ok=exists_ok,
+        )
 
     def add_mag_from_zarrarray(
         self,

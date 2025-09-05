@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.11...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,18 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [2.4.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.11) - 2025-09-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.10...v2.4.11)
+
+### Breaking Changes
+- All internal API client methods (`webknossos.client`) use keyword-only arguments. [#1363](https://github.com/scalableminds/webknossos-libs/pull/1363)
+- The signature of `Dataset.trigger_reload_on_datastore` changed. `dataset_name` has been renamed to `dataset_name_or_url`. Alternatively, a `dataset_id` can be supplied. [#1363](https://github.com/scalableminds/webknossos-libs/pull/1363)
+
+### Changed
+- `Layer.add_mag_as_copy` now automatically uses file-based copy, if possible. Therefore, `Dataset.fs_copy_dataset`, `Dataset.add_fs_copy_layer` and `Layer.add_fs_copy_mag` are deprecated. [#1362](https://github.com/scalableminds/webknossos-libs/pull/1362)
+- The API methods now use `v10` API version of Webknossos. Datasets are now referenced by ID instead of dataset name or directory name. [#1363](https://github.com/scalableminds/webknossos-libs/pull/1363)
 
 
 ## [2.4.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.10) - 2025-08-25
