@@ -7,7 +7,7 @@ import pytest
 
 import webknossos as wk
 from webknossos import Annotation, SegmentationLayer
-from webknossos.annotation.annotation import VolumeLayerEditMode
+from webknossos.annotation.volume_layer import VolumeLayerEditMode
 from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
