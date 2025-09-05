@@ -12,7 +12,7 @@ nml = wk.open("merger-mode.nml")
 # wk.Skeleton.load or wk.open_skeleton works, too (and is type-safe)
 
 # for online annotation:
-nml = wk.Annotation.download(
+skeleton = wk.Annotation.download(
     "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640",
     skip_volume_data=True,
 ).skeleton
