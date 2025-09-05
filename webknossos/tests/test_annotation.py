@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from cluster_tools import Executor, MultiprocessingExecutor, SequentialExecutor
+from cluster_tools import get_executor
 
 import webknossos as wk
 from webknossos import Annotation, SegmentationLayer
@@ -379,10 +379,8 @@ def test_tree_metadata(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
 )
-@pytest.mark.parametrize("executor", [SequentialExecutor(), MultiprocessingExecutor()])
-def test_edit_volume_annotation(
-    edit_mode: VolumeLayerEditMode, executor: Executor
-) -> None:
+@pytest.mark.parametrize("executor", ["sequential", "multiprocessing"])
+def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode, executor: str) -> None:
     dtype = np.uint32
     data = np.ones((1, 10, 10, 10), dtype=dtype)
     ann = wk.Annotation(
@@ -395,14 +393,14 @@ def test_edit_volume_annotation(
         name="segmentation",
         dtype=dtype,
     )
-    if edit_mode == VolumeLayerEditMode.MEMORY and isinstance(
-        executor, MultiprocessingExecutor
-    ):
+    if edit_mode == VolumeLayerEditMode.MEMORY and executor == "multiprocessing":
         with pytest.raises(ValueError, match="SequentialExecutor"):
-            with volume_layer.edit(edit_mode, executor=executor) as seg_layer:
+            with volume_layer.edit(
+                edit_mode, executor=get_executor(executor)
+            ) as seg_layer:
                 pass
     else:
-        with volume_layer.edit(edit_mode, executor=executor) as seg_layer:
+        with volume_layer.edit(edit_mode, executor=get_executor(executor)) as seg_layer:
             assert isinstance(seg_layer, SegmentationLayer)
             mag = seg_layer.add_mag(1)
             mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
