@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added context manager `VolumeLayer.edit` for creating and modifying volume annotations. [#1340](https://github.com/scalableminds/webknossos-libs/pull/1340)
 
 ### Changed
 

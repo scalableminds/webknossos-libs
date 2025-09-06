@@ -6,19 +6,19 @@ import networkx as nx
 
 import webknossos as wk
 
-nml = wk.Skeleton.load("trees-in-groups.nml")
+skeleton = wk.Skeleton.load("trees-in-groups.nml")
 
 # Probably we want to keep groups and normal trees in distinct collections (groups/trees).
 # For many use-cases a common view groups_and_trees would be great, but not here:
-for group in nml.groups.values():  # groups is a dict with the name as keys
+for group in skeleton.groups.values():  # groups is a dict with the name as keys
     min_distance_graph = G = nx.Graph()
     for (tree_idx_a, tree_a), (tree_idx_b, tree_b) in combinations(
         enumerate(group.flattened_trees()), 2
     ):
         pos_a = (
-            tree_a.get_node_positions() * nml.voxel_size
+            tree_a.get_node_positions() * skeleton.voxel_size
         )  # or tree_a.get_node_positions_nm?
-        pos_b = tree_b.get_node_positions() * nml.voxel_size
+        pos_b = tree_b.get_node_positions() * skeleton.voxel_size
         node_idx_a, node_idx_b, distance = wk.geometry.closest_pair(pos_a, pos_b)
         G.add_edge((tree_idx_a, node_idx_a), (tree_idx_b, node_idx_b), weight=distance)
     new_edges = nx.algorithms.tree.mst.minimum_spanning_edges()
@@ -35,7 +35,7 @@ for group in nml.groups.values():  # groups is a dict with the name as keys
     final_tree.name = group.name
     final_tree.group = None
 
-    del nml.groups[group.name]
+    del skeleton.groups[group.name]
     # or
     group.delete()
     # The latter only works if everything is double-linked.
@@ -44,4 +44,4 @@ for group in nml.groups.values():  # groups is a dict with the name as keys
     # to do the double-linking. Simply dict-like insertions can't work then:
     # nml["tree-name"] = Tree()
 
-nml.save("merged-trees.nml")
+skeleton.save("merged-trees.nml")

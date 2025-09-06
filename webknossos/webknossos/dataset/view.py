@@ -70,6 +70,7 @@ class View:
         mag: Mag,
         data_format: DataFormat,
         read_only: bool = False,
+        cached_array: BaseArray | None = None,
     ):
         """Initialize a View instance for accessing and manipulating dataset regions.
 
@@ -96,7 +97,7 @@ class View:
         self._data_format = data_format
         self._bounding_box = bounding_box
         self._read_only = read_only
-        self._cached_array = None
+        self._cached_array = cached_array
         self._mag = mag
 
     @property
@@ -797,6 +798,7 @@ class View:
             mag=self._mag,
             data_format=self._data_format,
             read_only=read_only,
+            cached_array=self._cached_array,
         )
 
     def get_buffered_slice_writer(
