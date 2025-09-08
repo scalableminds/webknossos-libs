@@ -17,7 +17,7 @@ from os import PathLike
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 from urllib.parse import urlparse
 
 import httpx
