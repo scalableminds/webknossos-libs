@@ -548,9 +548,7 @@ class TensorStoreArray(BaseArray):
                 "path": parsed_url.path.lstrip("/"),
                 "bucket": parsed_url.netloc,
             }
-            if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
-                "endpoint_url", None
-            ):
+            if endpoint_url := path.storage_options.get("endpoint_url", None):
                 kvstore_spec["endpoint"] = endpoint_url
             if "key" in path.storage_options and "secret" in path.storage_options:
                 kvstore_spec["aws_credentials"] = _aws_credential_manager.add(

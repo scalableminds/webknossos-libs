@@ -63,6 +63,8 @@ from .defaults import (
 
 logger = logging.getLogger(__name__)
 
+COPY_COMPATIBLE_PROTOCOLS = ("", "file", "s3")
+
 
 def _is_int(s: str) -> bool:
     try:
@@ -903,16 +905,17 @@ class Layer:
         else:
             has_same_compression = compress == foreign_mag_view.info.compression_mode
 
-        uses_memory_store = (
-            foreign_mag_view.path.protocol == "memory"
-            or (self.path / foreign_mag_view.mag.to_layer_name()).protocol == "memory"
+        uses_compatible_protocols = (
+            foreign_mag_view.path.protocol in COPY_COMPATIBLE_PROTOCOLS
+            and (self.path / foreign_mag_view.mag.to_layer_name()).protocol
+            in COPY_COMPATIBLE_PROTOCOLS
         )
 
         if (
             has_same_shapes
             and has_same_format
             and has_same_compression
-            and not uses_memory_store
+            and uses_compatible_protocols
         ):
             logger.debug(
                 f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."

@@ -72,16 +72,20 @@ tifffile = ["tifffile >=2024.8.24, <2025.5.21"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
 bioformats = ["JPype1 ~=1.5.0"]
 czi = ["pylibCZIrw ==5.0.0"]
+s3 = [
+    "s3fs >=2023.9.0",
+]
 examples = [
     "fastremap ~=1.15.0",
     "pandas ~=2.2.0",
     "pooch ~=1.5.2",
-    "s3fs >=2023.9.0",
     "tabulate >=0.9.0",
     "scikit-learn ~=1.5.1",
-    "scikit-image ~=0.25.0"
+    "scikit-image ~=0.25.0",
+    "webknossos[s3]",
 ]
 all = [
+    "webknossos[s3]",
     "webknossos[tifffile]",
     "webknossos[imagecodecs]",
     "webknossos[bioformats]",
