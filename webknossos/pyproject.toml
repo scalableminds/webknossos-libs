@@ -206,3 +206,6 @@ license-files = []
 where = ["."]
 include = ["webknossos*", "webknossos/version.py"]
 exclude = ["webknossos.tests", "webknossos/testdata/**"]
+
+[tool.coverage.run]
+patch = ["subprocess"]
