@@ -223,15 +223,15 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Check formatting
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
+        if: ${{ matrix.group == 1 }}
         run: ./format.sh check
 
       - name: Lint code
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
+        if: ${{ matrix.group == 1 }}
         run: ./lint.sh
 
       - name: Check typing
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
+        if: ${{ matrix.group == 1 }}
         run: ./typecheck.sh
 
       - name: Patch Python standard library to assert that fork is not allowed
