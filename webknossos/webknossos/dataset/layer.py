@@ -963,11 +963,15 @@ class Layer:
                 foreign_mag_view.layer.bounding_box
             )
 
+        # use the target shard shape for the copy operation
+        copy_shape = mag_view.info.shard_shape * mag_view.mag.to_vec3_int()
         foreign_mag_view.for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
             progress_desc=progress_desc,
+            source_chunk_shape=copy_shape,
+            target_chunk_shape=copy_shape,
         )
 
         return mag_view
