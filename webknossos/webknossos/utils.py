@@ -372,18 +372,11 @@ def copytree(
     def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
         in_path, out_path, sub_path = args
 
-        if is_fs_path(in_path) and out_path.protocol == "s3":
-            out_path.fs.put_file(
-                _append(in_path, sub_path), _append(out_path, sub_path)
-            )
-        elif is_fs_path(out_path) and in_path.protocol == "s3":
-            in_path.fs.get_file(_append(in_path, sub_path), _append(out_path, sub_path))
-        else:
-            with (
-                _append(in_path, sub_path).open("rb") as in_file,
-                _append(out_path, sub_path).open("wb") as out_file,
-            ):
-                copyfileobj(in_file, out_file)
+        with (
+            _append(in_path, sub_path).open("rb") as in_file,
+            _append(out_path, sub_path).open("wb") as out_file,
+        ):
+            copyfileobj(in_file, out_file)
 
     files_to_copy: list[tuple[UPath, UPath, tuple[str, ...]]] = []
     for in_sub_path, sub_path in _walk(in_path, in_path):
