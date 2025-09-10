@@ -547,6 +547,7 @@ class TensorStoreArray(BaseArray):
                 "driver": "s3",
                 "path": parsed_url.path.lstrip("/"),
                 "bucket": parsed_url.netloc,
+                "use_conditional_write": False,
             }
             if endpoint_url := path.storage_options.get("endpoint_url", None):
                 kvstore_spec["endpoint"] = endpoint_url
