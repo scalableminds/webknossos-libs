@@ -1,11 +1,11 @@
 #! /usr/bin/env bash
 set -Eeo pipefail
 
-if [ ! -d "wk-repo" ]; then
+if [ ! -d "src/webknossos" ]; then
     echo
     echo ERROR!
-    echo 'Either link or clone the webknossos repository to "docs/wk-repo", e.g. with'
-    echo 'git clone --depth 1 git@github.com:scalableminds/webknossos.git docs/wk-repo'
+    echo 'Either link or clone the webknossos repository to "webknossos-libs/docs/src/webknossos", e.g. with'
+    echo 'git clone --depth 1 git@github.com:scalableminds/webknossos.git webknossos-libs/docs/src/webknossos'
     exit 1
 fi
 rm -rf src/api/webknossos
