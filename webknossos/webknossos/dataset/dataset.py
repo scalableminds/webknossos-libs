@@ -520,7 +520,7 @@ class Dataset:
         )
         if datastore_url is None:
             datastore_url = _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(datastore_url)
+        datastore_api = context.get_datastore_api_client(datastore_url, require_auth=True)
         response = datastore_api.dataset_reserve_manual_upload(
             dataset_announce=dataset_announce, token=token
         )
@@ -588,7 +588,7 @@ class Dataset:
             datastore_url = datastore_url or _cached_get_upload_datastore(context)
             organization_id = organization_id or context.organization_id
 
-            datastore_api = context.get_datastore_api_client(datastore_url)
+            datastore_api = context.get_datastore_api_client(datastore_url, require_auth=True)
             datastore_api.dataset_trigger_reload(
                 organization_id=organization_id, dataset_id=dataset_id, token=token
             )
@@ -766,11 +766,10 @@ class Dataset:
 
         with context_manager:
             wk_context = _get_context()
-            token = sharing_token or wk_context.datastore_token
+            token = sharing_token or wk_context.token
             api_dataset_info = wk_context.api_client.dataset_info(
                 dataset_id=dataset_id, sharing_token=token
             )
-            organization_id = api_dataset_info.owning_organization
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 

@@ -37,14 +37,12 @@ class DatastoreApiClient(AbstractApiClient):
         self,
         *,
         upload_information: ApiDatasetUploadInformation,
-        token: str | None,
         retry_count: int,
     ) -> str:
         route = "/datasets/finishUpload"
         json = self._post_json_with_json_response(
             route,
             upload_information,
-            query={"token": token},
             retry_count=retry_count,
             timeout_seconds=LONG_TIMEOUT_SECONDS,
             response_type=ApiDatasetUploadSuccess,
@@ -55,14 +53,13 @@ class DatastoreApiClient(AbstractApiClient):
         self,
         *,
         reserve_upload_information: ApiReserveDatasetUploadInformation,
-        token: str | None,
         retry_count: int,
     ) -> None:
         route = "/datasets/reserveUpload"
+        print(f"reserveUpload with headers {self.headers}")
         self._post_json(
             route,
             reserve_upload_information,
-            query={"token": token},
             retry_count=retry_count,
         )
 
