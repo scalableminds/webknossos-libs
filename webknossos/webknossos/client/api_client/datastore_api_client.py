@@ -56,7 +56,6 @@ class DatastoreApiClient(AbstractApiClient):
         retry_count: int,
     ) -> None:
         route = "/datasets/reserveUpload"
-        print(f"reserveUpload with headers {self.headers}")
         self._post_json(
             route,
             reserve_upload_information,

@@ -110,7 +110,9 @@ def upload_dataset(
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
     datastore_url = datastore_url or _cached_get_upload_datastore(context)
-    datastore_api_client = context.get_datastore_api_client(datastore_url, require_auth=True)
+    datastore_api_client = context.get_datastore_api_client(
+        datastore_url, require_auth=True
+    )
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1

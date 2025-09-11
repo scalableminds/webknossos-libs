@@ -135,7 +135,9 @@ class _WebknossosContext:
     def api_client_with_auth(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.required_token, self.timeout)
 
-    def get_datastore_api_client(self, datastore_url: str, require_auth: bool = False) -> DatastoreApiClient:
+    def get_datastore_api_client(
+        self, datastore_url: str, require_auth: bool = False
+    ) -> DatastoreApiClient:
         token = self.required_token if require_auth else self.token
         return DatastoreApiClient(
             datastore_base_url=datastore_url,
@@ -143,8 +145,11 @@ class _WebknossosContext:
             timeout_seconds=self.timeout,
         )
 
-    def get_tracingstore_api_client(self, require_auth: bool = False) -> TracingStoreApiClient:
+    def get_tracingstore_api_client(
+        self, require_auth: bool = False
+    ) -> TracingStoreApiClient:
         token = self.required_token if require_auth else self.token
+        api_tracingstore = self.api_client_with_auth.tracing_store()
         return TracingStoreApiClient(
             base_url=api_tracingstore.url,
             headers={} if token is None else {"X-Auth-Token": token},
