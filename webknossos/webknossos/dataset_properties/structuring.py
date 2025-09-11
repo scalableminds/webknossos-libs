@@ -1,5 +1,6 @@
 import copy
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import attr
 import cattr
@@ -11,6 +12,7 @@ from ..dataset_properties import (
     AttachmentsProperties,
     DatasetProperties,
     DatasetViewConfiguration,
+    LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
     LengthUnit,
