@@ -18,7 +18,6 @@ from .attachments import (
     MeshAttachment,
     SegmentIndexAttachment,
 )
-from .data_format import AttachmentDataFormat, DataFormat
 from .dataset import Dataset, RemoteDataset
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -27,10 +26,8 @@ from .defaults import (
     DEFAULT_SHARD_SHAPE,
 )
 from .layer import Layer, SegmentationLayer
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
-from .length_unit import LengthUnit
+from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY
 from .mag_view import MagView
-from .properties import VoxelSize
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .view import View

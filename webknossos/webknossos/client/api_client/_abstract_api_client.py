@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 
 import httpx
 
-from ...dataset.defaults import SSL_CONTEXT
+from ...ssl_context import SSL_CONTEXT
 from ._serialization import custom_converter
 from .errors import CannotHandleResponseError, UnexpectedStatusError
 

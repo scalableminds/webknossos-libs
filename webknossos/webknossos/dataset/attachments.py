@@ -8,6 +8,11 @@ from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
 from typing_extensions import Self
 from upath import UPath
 
+from ..dataset_properties import (
+    AttachmentDataFormat,
+    AttachmentProperties,
+    AttachmentsProperties,
+)
 from ..utils import (
     cheap_resolve,
     copytree,
@@ -17,8 +22,6 @@ from ..utils import (
     snake_to_camel_case,
     warn_deprecated,
 )
-from .data_format import AttachmentDataFormat
-from .properties import AttachmentProperties, AttachmentsProperties
 
 if TYPE_CHECKING:
     from .layer import SegmentationLayer

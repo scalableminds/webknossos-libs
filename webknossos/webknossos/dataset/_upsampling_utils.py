@@ -2,8 +2,8 @@ import logging
 
 import numpy as np
 
+from ..dataset_properties import DataFormat
 from ..geometry import Vec3Int
-from .data_format import DataFormat
 from .view import View
 
 logger = logging.getLogger(__name__)

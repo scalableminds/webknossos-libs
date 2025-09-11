@@ -3,7 +3,7 @@ import pytest
 from webknossos.client.api_client import WkApiClient
 from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client
-from webknossos.dataset.properties import DatasetProperties
+from webknossos.dataset_properties import DatasetProperties
 
 pytestmark = [pytest.mark.use_proxay]
 

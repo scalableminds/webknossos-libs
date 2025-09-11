@@ -6,13 +6,11 @@ from typing import TypeVar, cast
 import numpy as np
 from rich.progress import track
 
-from ..dataset import Dataset, LayerCategoryType
+from .. import LayerCategoryType
+from ..dataset import Dataset
 from ..dataset.layer import _element_class_to_dtype_per_channel
-from ..dataset.properties import (
-    LayerProperties,
-    LayerViewConfiguration,
-    dataset_converter,
-)
+from ..dataset_properties import LayerProperties, LayerViewConfiguration
+from ..dataset_properties.structuring import dataset_converter
 from ..geometry import BoundingBox, Mag, Vec3Int
 from .api_client.models import ApiUnusableDataSource
 from .context import _get_context

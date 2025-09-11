@@ -5,65 +5,23 @@ from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
-from typing import NamedTuple
 from uuid import uuid4
 
 import httpx
 
-from ..dataset import Dataset, Layer, RemoteDataset
+from .. import LayerToLink
+from ..dataset import Dataset
 from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
     ApiDatasetUploadInformation,
-    ApiLinkedLayerIdentifier,
-    ApiLinkedLayerIdentifierLegacy,
     ApiReserveDatasetUploadInformation,
 )
 from .context import _get_context, _WebknossosContext, webknossos_context
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 4
-
-
-class LayerToLink(NamedTuple):
-    dataset_id: str
-    layer_name: str
-    new_layer_name: str | None = None
-    organization_id: str | None = (
-        None  # defaults to the user's organization before uploading
-    )
-
-    @classmethod
-    def from_remote_layer(
-        cls,
-        layer: Layer,
-        new_layer_name: str | None = None,
-        organization_id: str | None = None,
-    ) -> "LayerToLink":
-        ds = layer.dataset
-        assert isinstance(ds, RemoteDataset), (
-            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
-        )
-        return cls(ds.dataset_id, layer.name, new_layer_name, organization_id)
-
-    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
-        assert self.dataset_id is not None, f"The dataset id is not set: {self}"
-        return ApiLinkedLayerIdentifier(
-            self.dataset_id,
-            self.layer_name,
-            self.new_layer_name,
-        )
-
-    def as_api_linked_layer_identifier_legacy(self) -> ApiLinkedLayerIdentifierLegacy:
-        context = _get_context()
-        return ApiLinkedLayerIdentifierLegacy(
-            self.organization_id or context.organization_id,
-            #  webknossos checks for id too, if the name cannot be found
-            self.dataset_id,
-            self.layer_name,
-            self.new_layer_name,
-        )
 
 
 @cache

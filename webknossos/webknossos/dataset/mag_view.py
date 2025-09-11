@@ -10,6 +10,7 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
+from ..dataset_properties import DataFormat, MagViewProperties
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ..utils import (
     get_executor_for_args,
@@ -28,8 +29,6 @@ from ._array import (
     Zarr3ArrayInfo,
     Zarr3Config,
 )
-from .data_format import DataFormat
-from .properties import MagViewProperties
 
 if TYPE_CHECKING:
     import tensorstore

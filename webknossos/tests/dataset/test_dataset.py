@@ -20,11 +20,11 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
+from webknossos import LayerCategoryType
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
-    LayerCategoryType,
     RemoteDataset,
     View,
 )
@@ -32,13 +32,13 @@ from webknossos.dataset._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset.data_format import AttachmentDataFormat, DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
-from webknossos.dataset.properties import (
+from webknossos.dataset_properties import (
     DatasetProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
     SegmentationLayerProperties,
-    dataset_converter,
 )
+from webknossos.dataset_properties.structuring import dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,

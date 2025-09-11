@@ -5,7 +5,8 @@ import cattrs
 from attrs import fields as attr_fields
 from attrs import has as is_attr_class
 
-from ...dataset.properties import DatasetProperties, dataset_converter
+from ...dataset_properties import DatasetProperties
+from ...dataset_properties.structuring import dataset_converter
 from ...utils import snake_to_camel_case
 
 T = TypeVar("T")

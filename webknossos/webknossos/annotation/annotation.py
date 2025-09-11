@@ -70,16 +70,17 @@ from ..client.api_client.models import (
 )
 from ..dataset import (
     SEGMENTATION_CATEGORY,
-    DataFormat,
     Dataset,
     Layer,
     RemoteDataset,
     SegmentationLayer,
 )
-from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
-from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
+from ..dataset.defaults import PROPERTIES_FILE_NAME
+from ..dataset_properties import DataFormat, DatasetProperties, VoxelSize
+from ..dataset_properties.structuring import dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
+from ..ssl_context import SSL_CONTEXT
 from ..utils import get_executor_for_args, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 

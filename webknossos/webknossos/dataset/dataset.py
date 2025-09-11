@@ -12,7 +12,7 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Union, cast
 
 import attr
 import numpy as np
@@ -28,6 +28,8 @@ from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
     ApiDatasetReserveManualUploadParameters,
+    ApiLinkedLayerIdentifier,
+    ApiLinkedLayerIdentifierLegacy,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
     ApiUnusableDataSource,
@@ -42,6 +44,7 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
+from ..ssl_context import SSL_CONTEXT
 from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3Config
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
@@ -53,7 +56,6 @@ from .defaults import (
     DEFAULT_SHARD_SHAPE,
     DEFAULT_SHARD_SHAPE_FROM_IMAGES,
     PROPERTIES_FILE_NAME,
-    SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
@@ -66,9 +68,22 @@ if TYPE_CHECKING:
     import pims
 
     from ..administration.user import Team
-    from ..client._upload_dataset import LayerToLink
-    from ..client.context import webknossos_context
+    from ..client.context import _get_context, webknossos_context
 
+from ..dataset_properties import (
+    AttachmentsProperties,
+    DataFormat,
+    DatasetProperties,
+    DatasetViewConfiguration,
+    LayerCategoryType,
+    LayerProperties,
+    SegmentationLayerProperties,
+    VoxelSize,
+)
+from ..dataset_properties.structuring import (
+    _properties_floating_type_to_python_type,
+    dataset_converter,
+)
 from ..utils import (
     cheap_resolve,
     copytree,
@@ -89,7 +104,6 @@ from ._utils.segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
-from .data_format import DataFormat
 from .layer import (
     Layer,
     SegmentationLayer,
@@ -99,17 +113,7 @@ from .layer import (
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
-from .properties import (
-    DatasetProperties,
-    DatasetViewConfiguration,
-    LayerProperties,
-    SegmentationLayerProperties,
-    VoxelSize,
-    _extract_num_channels,
-    _properties_floating_type_to_python_type,
-    dataset_converter,
-)
+from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +153,46 @@ def _find_array_info(layer_path: Path) -> ArrayInfo | None:
 
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
+
+
+class LayerToLink(NamedTuple):
+    dataset_id: str
+    layer_name: str
+    new_layer_name: str | None = None
+    organization_id: str | None = (
+        None  # defaults to the user's organization before uploading
+    )
+
+    @classmethod
+    def from_remote_layer(
+        cls,
+        layer: Layer,
+        new_layer_name: str | None = None,
+        organization_id: str | None = None,
+    ) -> "LayerToLink":
+        ds = layer.dataset
+        assert isinstance(ds, RemoteDataset), (
+            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        )
+        return cls(ds.dataset_id, layer.name, new_layer_name, organization_id)
+
+    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
+        assert self.dataset_id is not None, f"The dataset id is not set: {self}"
+        return ApiLinkedLayerIdentifier(
+            self.dataset_id,
+            self.layer_name,
+            self.new_layer_name,
+        )
+
+    def as_api_linked_layer_identifier_legacy(self) -> ApiLinkedLayerIdentifierLegacy:
+        context = _get_context()
+        return ApiLinkedLayerIdentifierLegacy(
+            self.organization_id or context.organization_id,
+            #  webknossos checks for id too, if the name cannot be found
+            self.dataset_id,
+            self.layer_name,
+            self.new_layer_name,
+        )
 
 
 class Dataset:
@@ -551,9 +595,6 @@ class Dataset:
                     progress_desc=f"copying mag {src_mag.path} to {mag.path}",
                 )
             if isinstance(src_layer, SegmentationLayer):
-                assert isinstance(layer, SegmentationLayer), (
-                    "If src_layer is a SegmentationLayer, then destination layer must be a SegmentationLayer too!"
-                )
                 # iterate over attachments
                 for attachment in layer.attachments:
                     attachment_type = TYPE_MAPPING[type(attachment)]
@@ -1248,7 +1289,7 @@ class Dataset:
                 ```
         """
 
-        from ..client._upload_dataset import LayerToLink, upload_dataset
+        from ..client._upload_dataset import upload_dataset
 
         converted_layers_to_link = (
             None
@@ -1580,8 +1621,6 @@ class Dataset:
         layer_properties = copy.copy(other_layer._properties)
         layer_properties.mags = []
         if isinstance(layer_properties, SegmentationLayerProperties):
-            from .properties import AttachmentsProperties
-
             layer_properties.attachments = AttachmentsProperties()
         layer_properties.name = layer_name
 
@@ -3711,3 +3750,37 @@ class RemoteDataset(Dataset):
             for chunk in mesh_download:
                 f.write(chunk)
         return file_path
+
+
+def _extract_num_channels(
+    num_channels_in_properties: int | None,
+    path: Path,
+    layer: str,
+    mag: int | Mag | None,
+) -> int:
+    # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'numChannels' in the
+    # datasource-properties.json. In this case we need to extract the number of channels from the 'header.wkw'.
+    if num_channels_in_properties is not None:
+        return num_channels_in_properties
+
+    if mag is None:
+        # Unable to extract the 'num_channels' from the 'header.wkw' if the dataset has no magnifications.
+        # This should never be the case because wkw-datasets that are created without this API always have a magnification.
+        raise RuntimeError(
+            "Cannot extract the number of channels of a dataset without a properties file and without any magnifications"
+        )
+
+    mag = Mag(mag)
+    array_file_path = path / layer / mag.to_layer_name()
+    try:
+        array = BaseArray.open(array_file_path)
+    except ArrayException as e:
+        raise Exception(
+            f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
+            f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
+            f"the file {array_file_path} to extract the num_channels from there. "
+            f"Since this file does not exist, the attempt to open the dataset failed. "
+            f"Please add the attribute manually to solve the problem. "
+            f"If the layer does not contain any data, you can also delete the layer and add it again.",
+        ) from e
+    return array.info.num_channels

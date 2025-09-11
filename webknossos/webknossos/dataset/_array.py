@@ -20,9 +20,9 @@ import wkw
 from typing_extensions import NotRequired, Self
 from upath import UPath
 
+from ..dataset_properties import DataFormat
 from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
 from ..utils import call_with_retries, is_fs_path
-from .data_format import DataFormat
 
 logger = getLogger(__name__)
 

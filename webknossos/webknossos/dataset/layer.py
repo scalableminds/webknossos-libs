@@ -13,6 +13,18 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ..dataset_properties import (
+    DataFormat,
+    LayerCategoryType,
+    LayerProperties,
+    LayerViewConfiguration,
+    MagViewProperties,
+    SegmentationLayerProperties,
+)
+from ..dataset_properties.structuring import (
+    _properties_floating_type_to_python_type,
+    _python_floating_type_to_properties_type,
+)
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.mag import MagLike
 from ._array import ArrayException, TensorStoreArray, Zarr3ArrayInfo, Zarr3Config
@@ -27,17 +39,8 @@ from ._downsampling_utils import (
 )
 from ._upsampling_utils import upsample_cube_job
 from .attachments import Attachments
-from .data_format import DataFormat
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
+from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY
 from .mag_view import MagView
-from .properties import (
-    LayerProperties,
-    LayerViewConfiguration,
-    MagViewProperties,
-    SegmentationLayerProperties,
-    _properties_floating_type_to_python_type,
-    _python_floating_type_to_properties_type,
-)
 from .sampling_modes import SamplingModes
 from .view import View, _copy_job
 
