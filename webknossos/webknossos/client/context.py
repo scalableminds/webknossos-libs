@@ -81,25 +81,16 @@ def _cached_get_org(context: "_WebknossosContext") -> str:
     return current_api_user.organization
 
 
-# TODO reset invalid tokens e.g. using cachetools # noqa: FIX002 Line contains TODO
-@cache
-def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
-    api_datastore_token = context.api_client_with_auth.token_generate_for_data_store()
-    return api_datastore_token.token
-
-
 @cache
 def _cached__get_api_client(
     webknossos_url: str,
     token: str | None,
     timeout: int,
 ) -> WkApiClient:
-    """Generates a client which might contain an x-auth-token header."""
-    if token is None:
-        return WkApiClient(base_wk_url=webknossos_url, timeout_seconds=timeout)
+    """Generates a client which might contain an X-Auth-Token header."""
     return WkApiClient(
         base_wk_url=webknossos_url,
-        headers={"X-Auth-Token": token},
+        headers={} if token is None else {"X-Auth-Token": token},
         timeout_seconds=timeout,
     )
 
@@ -107,7 +98,6 @@ def _cached__get_api_client(
 def _clear_all_context_caches() -> None:
     _cached_ask_for_token.cache_clear()
     _cached_get_org.cache_clear()
-    _cached_get_datastore_token.cache_clear()
     _cached__get_api_client.cache_clear()
 
 
@@ -138,17 +128,6 @@ class _WebknossosContext:
         return _cached_get_org(self)
 
     @property
-    def datastore_token(self) -> str | None:
-        if self.token is None:
-            return None
-        else:
-            return _cached_get_datastore_token(self)
-
-    @property
-    def datastore_required_token(self) -> str:
-        return _cached_get_datastore_token(self)
-
-    @property
     def api_client(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.token, self.timeout)
 
@@ -156,25 +135,25 @@ class _WebknossosContext:
     def api_client_with_auth(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.required_token, self.timeout)
 
-    def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
-        headers = None
-        if self.datastore_token is not None:
-            headers = {"X-Auth-Token": self.datastore_token}
+    def get_datastore_api_client(
+        self, datastore_url: str, require_auth: bool = False
+    ) -> DatastoreApiClient:
+        token = self.required_token if require_auth else self.token
         return DatastoreApiClient(
             datastore_base_url=datastore_url,
+            headers={} if token is None else {"X-Auth-Token": token},
             timeout_seconds=self.timeout,
-            headers=headers,
         )
 
-    def get_tracingstore_api_client(self) -> TracingStoreApiClient:
-        if self.datastore_token is not None:
-            headers = {"X-Auth-Token": self.datastore_token}
+    def get_tracingstore_api_client(
+        self, require_auth: bool = False
+    ) -> TracingStoreApiClient:
+        token = self.required_token if require_auth else self.token
         api_tracingstore = self.api_client_with_auth.tracing_store()
-
         return TracingStoreApiClient(
             base_url=api_tracingstore.url,
+            headers={} if token is None else {"X-Auth-Token": token},
             timeout_seconds=self.timeout,
-            headers=headers,
         )
 
 

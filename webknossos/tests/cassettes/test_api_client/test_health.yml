@@ -18,12 +18,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 29 Aug 2025 18:44:37 GMT
-        connection: close
+        date: Thu, 11 Sep 2025 11:48:53 GMT
         content-type: text/plain; charset=UTF-8
         content-length: '2'
       body:

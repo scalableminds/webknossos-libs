@@ -18,12 +18,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 29 Aug 2025 18:44:38 GMT
-        connection: close
+        date: Thu, 11 Sep 2025 11:48:53 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -50,16 +48,14 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 29 Aug 2025 18:44:38 GMT
-        connection: close
+        date: Thu, 11 Sep 2025 11:48:53 GMT
         content-type: application/json
         content-length: '691'
       body:
         encoding: utf8
         data: >-
-          {"loggedTime":[{"paymentInterval":{"month":4,"year":2016},"durationInSeconds":58},{"paymentInterval":{"month":8,"year":2018},"durationInSeconds":265},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":112},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":24},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":158},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":14},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":12},{"paymentInterval":{"month":2,"year":2024},"durationInSeconds":114},{"paymentInterval":{"month":3,"year":2024},"durationInSeconds":200},{"paymentInterval":{"month":8,"year":2025},"durationInSeconds":0}]}
+          {"loggedTime":[{"paymentInterval":{"month":4,"year":2016},"durationInSeconds":58},{"paymentInterval":{"month":8,"year":2018},"durationInSeconds":265},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":112},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":24},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":158},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":14},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":12},{"paymentInterval":{"month":2,"year":2024},"durationInSeconds":114},{"paymentInterval":{"month":3,"year":2024},"durationInSeconds":200},{"paymentInterval":{"month":9,"year":2025},"durationInSeconds":0}]}
         compression: none
