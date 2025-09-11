@@ -44,7 +44,6 @@ def mag_unstructure(mag: Mag) -> list[int]:
 vec3int_to_array: Callable[[Vec3Int], list[int]] = lambda o: o.to_list()  # noqa: E731
 
 
-
 dataset_converter = cattr.Converter()
 # register (un-)structure hooks for non-attr-classes
 dataset_converter.register_unstructure_hook(NDBoundingBox, bbox_to_wkw)
@@ -107,8 +106,6 @@ for cls in [
             },
         ),
     )
-
-
 
 
 def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
@@ -194,8 +191,6 @@ def layer_properties_pre_structure(
     return __layer_properties_pre_structure
 
 
-
-
 for cls in [
     LayerProperties,
     SegmentationLayerProperties,
@@ -230,10 +225,6 @@ for cls in [
     )
 
 
-
-
-
-
 # Disambiguation of Unions only work automatically if the two attrs-classes have at least 1 unique attribute
 # This is not the case here because SegmentationLayerProperties inherits LayerProperties
 def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
@@ -245,6 +236,7 @@ def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
         raise RuntimeError(
             "Failed to read the properties of a layer: the category has to be `color` or `segmentation`."
         )
+
 
 dataset_converter.register_structure_hook(
     SegmentationLayerProperties | LayerProperties,
