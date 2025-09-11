@@ -28,7 +28,7 @@ def make_dataset(dataset_path: UPath) -> tuple[Dataset, SegmentationLayer]:
 
 def test_attachments(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
-
+    assert dataset.path is not None
     # meshes
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
@@ -144,7 +144,7 @@ def test_attachments(tmp_upath: UPath) -> None:
 
 def test_copy_layer(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
-
+    assert dataset.path is not None
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     mesh_path.write_text("test")
@@ -165,6 +165,7 @@ def test_copy_layer(tmp_upath: UPath) -> None:
     )
 
     copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
+    assert copy_dataset.path is not None
     copy_layer = copy_dataset.add_layer_as_copy(seg_layer).as_segmentation_layer()
 
     assert (
@@ -192,7 +193,7 @@ def test_copy_layer(tmp_upath: UPath) -> None:
 
 def test_symlink_layer(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
-
+    assert dataset.path is not None
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     mesh_path.write_text("test")
@@ -265,6 +266,7 @@ def test_remote_layer(tmp_upath: UPath) -> None:
 
 def test_upload_fail(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
+    assert dataset.path is not None
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
         name="meshfile",
@@ -304,7 +306,7 @@ def test_acceptable_attachment_names(tmp_upath: UPath) -> None:
 
 def test_remote_dataset() -> None:
     dataset, seg_layer = make_dataset(UPath("memory://test_attachments"))
-
+    assert dataset.path is not None
     mesh_path = dataset.path / "seg" / "meshes" / "meshfile"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     mesh_path.write_text("test")
@@ -320,7 +322,7 @@ def test_remote_dataset() -> None:
 
 def test_add_attachments(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
-
+    assert dataset.path is not None
     mesh = MeshAttachment.from_path_and_name(
         dataset.path / "seg" / "meshes" / "meshfile",
         "meshfile_4-4-1",
@@ -334,7 +336,7 @@ def test_add_attachments(tmp_upath: UPath) -> None:
 
 def test_add_copy_attachments(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
-
+    assert dataset.path is not None
     # meshes
     mesh_path = tmp_upath / "meshfile"
     mesh_path.write_text("test")
@@ -374,7 +376,7 @@ def test_add_copy_attachments(tmp_upath: UPath) -> None:
 
 def test_add_symlink_attachments(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
-
+    assert dataset.path is not None
     # meshes
     mesh_path = tmp_upath.resolve() / "meshfile"
     mesh_path.write_text("test")
@@ -419,7 +421,7 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
 
 def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
     _, seg_layer = make_dataset(tmp_upath)
-
+    assert seg_layer.path is not None
     # legacy meshes
     mesh_path = seg_layer.path / "meshes" / "meshfile_4-4-1.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)

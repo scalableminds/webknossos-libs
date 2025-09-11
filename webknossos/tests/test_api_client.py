@@ -3,6 +3,7 @@ import pytest
 from webknossos.client.api_client import WkApiClient
 from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client
+from webknossos.dataset.properties import DatasetProperties
 
 pytestmark = [pytest.mark.use_proxay]
 
@@ -74,7 +75,9 @@ def test_dataset_info() -> None:
         dataset_id=dataset_id,
     )
     assert api_dataset.data_store.url == DATASTORE_URL
-    data_layers = api_dataset.data_source.data_layers
+    data_source = api_dataset.data_source
+    assert isinstance(data_source, DatasetProperties)
+    data_layers = data_source.data_layers
     assert data_layers is not None
     assert sorted(
         (layer.name, layer.category, layer.element_class) for layer in data_layers

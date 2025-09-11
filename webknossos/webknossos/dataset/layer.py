@@ -284,9 +284,10 @@ class Layer:
             )
 
     @property
-    def path(self) -> UPath:
+    def path(self) -> UPath | None:
         """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
         Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
+        In case of RemoteDatasets there is no dataset path, so this returns None.
 
         Returns:
             UPath: Filesystem path to this layer's data directory
@@ -294,7 +295,8 @@ class Layer:
         Raises:
             AssertionError: If mags in layer point to different layers
         """
-
+        if self.dataset.path is None:
+            return None
         return self.dataset.path / self.name
 
     @property
@@ -815,6 +817,8 @@ class Layer:
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot delete mag from a remote dataset")
         mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
@@ -886,6 +890,8 @@ class Layer:
         `datasource-properties.json` of the other dataset are copied, too.
         """
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot add mag to a remote dataset")
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
         has_same_shapes = (
@@ -1009,9 +1015,11 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_fs_path(self.path) and self.dataset.resolved_path is not None, (
-            f"Cannot create symlinks in remote layer {self.path}"
-        )
+        assert (
+            self.path is not None
+            and is_fs_path(self.path)
+            and self.dataset.resolved_path is not None
+        ), f"Cannot create symlinks in remote layer {self.path}"
         assert is_fs_path(foreign_mag_view.path), (
             f"Cannot create symlink to remote mag {foreign_mag_view.path}"
         )
@@ -1109,6 +1117,9 @@ class Layer:
         exists_ok: bool = False,
     ) -> MagView:
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot add mag to a remote dataset without a path.")
+
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
@@ -1175,6 +1186,8 @@ class Layer:
         the array is moved, otherwise a copy of the zarrarray is created.
         """
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot add mag to a remote dataset without a path.")
         source_path = enrich_path(path, self.dataset.resolved_path)
 
         try:

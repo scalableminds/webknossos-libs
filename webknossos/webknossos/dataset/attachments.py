@@ -320,6 +320,8 @@ class Attachments:
             self.add_attachment_as_copy(*other)
 
     def add_attachment_as_copy(self, attachment: Attachment) -> None:
+        if self._layer.path is None:
+            raise ValueError("Cannot add attachment to a remote layer")
         new_path = cheap_resolve(
             self._layer.path
             / snake_to_camel_case(TYPE_MAPPING[type(attachment)])

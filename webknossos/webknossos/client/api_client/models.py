@@ -424,7 +424,6 @@ class ApiAdHocMeshInfo:
     seed_position: tuple[int, int, int]
 
 
-
 @attr.s(auto_attribs=True)
 class ApiDatasetReserveManualUploadParameters:
     dataset_name: str
@@ -433,6 +432,7 @@ class ApiDatasetReserveManualUploadParameters:
     require_unique_name: bool
     layers_to_link: list[ApiLinkedLayerIdentifier]
     data_source: DatasetProperties
+    path_prefix: str | None
 
 
 @attr.s(auto_attribs=True)

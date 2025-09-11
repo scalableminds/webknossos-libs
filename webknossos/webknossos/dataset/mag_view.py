@@ -575,6 +575,8 @@ class MagView(View):
             )
         else:
             target_path = UPath(target_path)
+        if self.layer.dataset.path is None:
+            raise ValueError("Cannot rechunk a remote mag without a path.")
 
         rechunked_dataset_path = (
             self.layer.dataset.path / f".rechunk-{uuid4()}"
@@ -674,6 +676,7 @@ class MagView(View):
         if target_path is None:
             rmtree(path)
             rechunked_mag.path.rename(path)
+            assert rechunked_dataset.path is not None, "Target path must not be None"
             rmtree(rechunked_dataset.path)
 
             # update the handle to the new dataset

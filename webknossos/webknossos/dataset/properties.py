@@ -149,6 +149,9 @@ class LayerViewConfiguration:
 class MagViewProperties:
     mag: Mag
     path: str | None = None
+    """
+    Could be None for older datasource-proterties.json files.
+    """
     cube_length: int | None = None
     axis_order: dict[str, int] | None = None
 
@@ -224,6 +227,12 @@ class VoxelSize:
 @attr.define
 class DatasetProperties:
     id: dict[str, str]
+    """
+    This is a legacy field that is not used anymore.
+    name and team are keys.
+    name = dataset directory name
+    team: organization id
+    """
     scale: VoxelSize
     data_layers: list[SegmentationLayerProperties | LayerProperties]
     version: Literal[1] = 1

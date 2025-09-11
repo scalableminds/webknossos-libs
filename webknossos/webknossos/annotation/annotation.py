@@ -1235,7 +1235,7 @@ class Annotation:
         assert volume_zip_path is not None, (
             "The selected volume layer data is not available and cannot be exported."
         )
-
+        assert dataset.path is not None, "Dataset must not be a remote dataset"
         with volume_zip_path.open(mode="rb") as f:
             data_zip = ZipFile(f)
             if volume_layer.data_format == DataFormat.WKW:

@@ -17,7 +17,8 @@ from ._resumable import Resumable
 from .api_client.models import (
     ApiDatasetUploadInformation,
     ApiLinkedLayerIdentifier,
-    ApiReserveDatasetUploadInformation, ApiLinkedLayerIdentifierLegacy,
+    ApiLinkedLayerIdentifierLegacy,
+    ApiReserveDatasetUploadInformation,
 )
 from .context import _get_context, _WebknossosContext, webknossos_context
 
@@ -26,7 +27,7 @@ MAXIMUM_RETRY_COUNT = 4
 
 
 class LayerToLink(NamedTuple):
-    dataset_name: str
+    dataset_id: str
     layer_name: str
     new_layer_name: str | None = None
     organization_id: str | None = (
@@ -44,20 +45,22 @@ class LayerToLink(NamedTuple):
         assert isinstance(ds, RemoteDataset), (
             f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
         )
-        return cls(ds._dataset_id, layer.name, new_layer_name, organization_id)
+        return cls(ds.dataset_id, layer.name, new_layer_name, organization_id)
 
     def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
-        context = _get_context()
+        assert self.dataset_id is not None, f"The dataset id is not set: {self}"
         return ApiLinkedLayerIdentifier(
-            self.dataset_name, # TODO: dataset_id
+            self.dataset_id,
             self.layer_name,
             self.new_layer_name,
         )
+
     def as_api_linked_layer_identifier_legacy(self) -> ApiLinkedLayerIdentifierLegacy:
         context = _get_context()
         return ApiLinkedLayerIdentifierLegacy(
             self.organization_id or context.organization_id,
-            self.dataset_name,
+            #  webknossos checks for id too, if the name cannot be found
+            self.dataset_id,
             self.layer_name,
             self.new_layer_name,
         )
@@ -111,6 +114,7 @@ def upload_dataset(
                 jobs=jobs,
             )
 
+    assert dataset.path is not None, "Cannot upload dataset without path."
     file_infos = list(_walk(dataset.path))
     total_file_size = sum(size for _, _, size in file_infos)
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
@@ -141,7 +145,8 @@ def upload_dataset(
             total_file_count=len(file_infos),
             total_file_size_in_bytes=total_file_size,
             layers_to_link=[
-                layer.as_api_linked_layer_identifier() for layer in layers_to_link
+                layer.as_api_linked_layer_identifier_legacy()
+                for layer in layers_to_link
             ],
             folder_id=None,
             initial_teams=[],
