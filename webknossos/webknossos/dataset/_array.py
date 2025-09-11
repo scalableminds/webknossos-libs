@@ -596,6 +596,7 @@ class TensorStoreArray(BaseArray):
                     open=True,
                     create=False,
                     context=TS_CONTEXT,
+                    recheck_cached="open",
                 ).result(),
                 description="Opening tensorstore array",
             )  # check that everything exists
@@ -663,6 +664,7 @@ class TensorStoreArray(BaseArray):
                         "kvstore": self._make_kvstore(self._path),
                     },
                     context=TS_CONTEXT,
+                    recheck_cached="open",
                 ).result(),
                 description="Opening tensorstore array for resizing",
             )
@@ -777,6 +779,7 @@ class TensorStoreArray(BaseArray):
                             "kvstore": self._make_kvstore(self._path),
                         },
                         context=TS_CONTEXT,
+                        recheck_cached="open",
                     ).result(),
                     description="Creating tensorstore array",
                 )
@@ -903,6 +906,7 @@ class Zarr3Array(TensorStoreArray):
                 "create": True,
             },
             context=TS_CONTEXT,
+            recheck_cached="open",
         ).result()
         return cls(upath, _array)
 
@@ -981,6 +985,7 @@ class Zarr2Array(TensorStoreArray):
                 "create": True,
             },
             context=TS_CONTEXT,
+            recheck_cached="open",
         ).result()
         return cls(upath, _array)
 
