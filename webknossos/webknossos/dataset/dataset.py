@@ -595,19 +595,13 @@ class Dataset:
                     progress_desc=f"copying mag {src_mag.path} to {mag.path}",
                 )
             if isinstance(src_layer, SegmentationLayer):
+                assert isinstance(layer, SegmentationLayerProperties), "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
                 # iterate over attachments
-                for attachment in layer.attachments:
-                    attachment_type = TYPE_MAPPING[type(attachment)]
-                    src_attachments_for_type = {
-                        attachment.name: attachment
-                        for attachment in getattr(
-                            src_layer.attachments, attachment_type
-                        )
-                    }
+                for src_attachment, dst_attachment in zip(src_layer.attachments, layer.attachments):
                     copytree(
-                        src_attachments_for_type[attachment.name].path,
-                        enrich_path(attachment.path),
-                        progress_desc=f"copying attachment {src_attachments_for_type[attachment.name].path} to {attachment.path}",
+                        src_attachment.path,
+                        enrich_path(dst_attachment.path),
+                        progress_desc=f"copying attachment {src_attachment.path} to {dst_attachment.path}",
                     )
         # announce finished upload
         context.api_client_with_auth.dataset_finish_manual_upload(new_dataset_id)
