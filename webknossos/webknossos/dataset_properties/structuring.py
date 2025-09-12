@@ -36,22 +36,19 @@ _python_floating_type_to_properties_type = {
     "float64": "double",
 }
 
+
+dataset_converter = cattr.Converter()
+# register (un-)structure hooks for non-attr-classes
 bbox_to_wkw: Callable[[NDBoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
+dataset_converter.register_unstructure_hook(NDBoundingBox, bbox_to_wkw)
+dataset_converter.register_structure_hook(
+    NDBoundingBox, lambda d, _: NDBoundingBox.from_wkw_dict(d)
+)
 
 
 def mag_unstructure(mag: Mag) -> list[int]:
     return mag.to_list()
 
-
-vec3int_to_array: Callable[[Vec3Int], list[int]] = lambda o: o.to_list()  # noqa: E731
-
-
-dataset_converter = cattr.Converter()
-# register (un-)structure hooks for non-attr-classes
-dataset_converter.register_unstructure_hook(NDBoundingBox, bbox_to_wkw)
-dataset_converter.register_structure_hook(
-    NDBoundingBox, lambda d, _: NDBoundingBox.from_wkw_dict(d)
-)
 
 dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
@@ -60,6 +57,7 @@ dataset_converter.register_structure_hook(
     LengthUnit, lambda d, _: length_unit_from_str(d)
 )
 
+vec3int_to_array: Callable[[Vec3Int], list[int]] = lambda o: o.to_list()  # noqa: E731
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
 dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
