@@ -13,9 +13,9 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from .. import LayerCategoryType
 from ..dataset_properties import (
     DataFormat,
-    LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
     MagViewProperties,

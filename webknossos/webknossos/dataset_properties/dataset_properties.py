@@ -3,6 +3,7 @@ from typing import Literal
 
 import attr
 
+from .. import LayerCategoryType
 from ..geometry import Mag, NDBoundingBox
 from .data_format import AttachmentDataFormat, DataFormat
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
@@ -85,9 +86,6 @@ class MagViewProperties:
     """
     cube_length: int | None = None
     axis_order: dict[str, int] | None = None
-
-
-LayerCategoryType = Literal["color", "segmentation"]
 
 
 @attr.define

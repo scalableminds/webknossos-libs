@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from ...dataset_properties import LayerCategoryType
+from ... import LayerCategoryType
 from ...geometry.vec3_int import Vec3Int
 from ..mag_view import MagView
 

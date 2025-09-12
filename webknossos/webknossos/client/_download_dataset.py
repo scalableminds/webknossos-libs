@@ -6,10 +6,10 @@ from typing import TypeVar, cast
 import numpy as np
 from rich.progress import track
 
+from .. import LayerCategoryType
 from ..dataset import Dataset
 from ..dataset.layer import _element_class_to_dtype_per_channel
 from ..dataset_properties import (
-    LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
 )

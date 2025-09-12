@@ -7,12 +7,12 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from .. import LayerCategoryType
 from ..dataset_properties import (
     AttachmentProperties,
     AttachmentsProperties,
     DatasetProperties,
     DatasetViewConfiguration,
-    LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
     LengthUnit,

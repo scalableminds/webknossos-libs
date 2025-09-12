@@ -69,12 +69,12 @@ if TYPE_CHECKING:
     from ..administration.user import Team
     from ..client.context import _get_context, webknossos_context
 
+from .. import LayerCategoryType
 from ..dataset_properties import (
     AttachmentsProperties,
     DataFormat,
     DatasetProperties,
     DatasetViewConfiguration,
-    LayerCategoryType,
     LayerProperties,
     SegmentationLayerProperties,
     VoxelSize,

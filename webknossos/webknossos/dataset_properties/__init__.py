@@ -5,11 +5,11 @@ from .dataset_properties import (
     AttachmentsProperties,
     DatasetProperties,
     DatasetViewConfiguration,
-    LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
     MagViewProperties,
     SegmentationLayerProperties,
     VoxelSize,
 )
+from .layer_categories import LayerCategoryType
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit, length_unit_from_str
