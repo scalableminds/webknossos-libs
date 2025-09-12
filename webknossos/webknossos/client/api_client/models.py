@@ -89,6 +89,7 @@ class ApiVoxelSize:
 
 @attr.s(auto_attribs=True)
 class ApiUnusableDataSource:
+    id: dict[str, str]
     status: str
 
 
