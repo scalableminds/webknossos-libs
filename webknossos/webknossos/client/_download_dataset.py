@@ -11,9 +11,7 @@ from ..dataset import Dataset
 from ..dataset.layer import _element_class_to_dtype_per_channel
 from ..dataset_properties import (
     LayerProperties,
-    LayerViewConfiguration,
 )
-from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import BoundingBox, Mag, Vec3Int
 from .api_client.models import ApiUnusableDataSource
 from .context import _get_context
@@ -86,11 +84,7 @@ def download_dataset(
             largest_segment_id=getattr(api_data_layer, "largest_segment_id", None),
         )
 
-        if api_data_layer.default_view_configuration is not None:
-            default_view_configuration = get_dataset_converter().structure(
-                api_data_layer.default_view_configuration, LayerViewConfiguration
-            )
-            layer.default_view_configuration = default_view_configuration
+        layer.default_view_configuration = api_data_layer.default_view_configuration
 
         if bbox is None:
             layer.bounding_box = api_data_layer.bounding_box
