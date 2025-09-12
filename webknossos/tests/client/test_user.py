@@ -16,7 +16,7 @@ def assert_valid_user(user: User) -> None:
 def test_get_current_user() -> None:
     user = User.get_current_user()
     assert_valid_user(user)
-    assert user.email == "user_A@scalableminds.com"
+    assert user.email == "user_a@scalableminds.com"
 
 
 @pytest.mark.use_proxay
