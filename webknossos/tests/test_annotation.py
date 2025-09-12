@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import webknossos as wk
-from webknossos.dataset import DataFormat
+from webknossos import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR

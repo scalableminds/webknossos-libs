@@ -28,6 +28,7 @@ from .administration import *
 from .annotation import *
 from .client import *
 from .dataset import *
+from .dataset_properties import *
 from .datastore import *
 from .geometry import *
 from .skeleton import *

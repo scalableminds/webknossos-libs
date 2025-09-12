@@ -29,10 +29,11 @@ from webknossos.dataset import (
     View,
 )
 from webknossos.dataset._array import Zarr3ArrayInfo, Zarr3Config
-from webknossos.dataset.data_format import AttachmentDataFormat, DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
 from webknossos.dataset_properties import (
+    AttachmentDataFormat,
+    DataFormat,
     DatasetProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,

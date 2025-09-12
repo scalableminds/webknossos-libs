@@ -15,15 +15,13 @@ from typing import Annotated, Any, cast
 import numpy as np
 import typer
 
-from webknossos.dataset.length_unit import LengthUnit
-
-from .. import VoxelSize
-from ..dataset import COLOR_CATEGORY, DataFormat, Dataset, View
+from ..dataset import COLOR_CATEGORY, Dataset, View
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_DATA_FORMAT,
     DEFAULT_SHARD_SHAPE,
 )
+from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, time_start, time_stop

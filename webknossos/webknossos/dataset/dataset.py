@@ -48,7 +48,6 @@ from ..ssl_context import SSL_CONTEXT
 from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3Config
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
-from .attachments import TYPE_MAPPING
 from .defaults import (
     DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
@@ -595,9 +594,13 @@ class Dataset:
                     progress_desc=f"copying mag {src_mag.path} to {mag.path}",
                 )
             if isinstance(src_layer, SegmentationLayer):
-                assert isinstance(layer, SegmentationLayerProperties), "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
+                assert isinstance(layer, SegmentationLayerProperties), (
+                    "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
+                )
                 # iterate over attachments
-                for src_attachment, dst_attachment in zip(src_layer.attachments, layer.attachments):
+                for src_attachment, dst_attachment in zip(
+                    src_layer.attachments, layer.attachments
+                ):
                     copytree(
                         src_attachment.path,
                         enrich_path(dst_attachment.path),

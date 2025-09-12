@@ -6,9 +6,9 @@ from typing import Annotated, Any
 
 import typer
 
-from .. import VoxelSize
-from ..dataset import DataFormat, Dataset, LengthUnit
+from ..dataset import Dataset
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
+from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Vec3Int
 from ..utils import get_executor_for_args

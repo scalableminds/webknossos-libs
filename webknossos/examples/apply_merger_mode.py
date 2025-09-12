@@ -88,8 +88,8 @@ def main() -> None:
     dataset.upload(
         "l4_sample_remapped",
         layers_to_link=[
-            webknossos.dataset.dataset.LayerToLink(
-                dataset_name="l4_sample",
+            webknossos.dataset.LayerToLink(
+                dataset_id="l4_sample",  # The dataset name still works, but is deprecated
                 layer_name="color",
                 organization_id="scalable_minds",
             )

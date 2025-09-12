@@ -18,7 +18,7 @@ from .attachments import (
     MeshAttachment,
     SegmentIndexAttachment,
 )
-from .dataset import Dataset, RemoteDataset
+from .dataset import Dataset, LayerToLink, RemoteDataset
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,

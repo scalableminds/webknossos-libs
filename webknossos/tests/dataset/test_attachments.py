@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 from upath import UPath
 
+from webknossos import AttachmentDataFormat
 from webknossos.dataset import (
     SEGMENTATION_CATEGORY,
-    AttachmentDataFormat,
     Dataset,
     MeshAttachment,
     SegmentationLayer,
