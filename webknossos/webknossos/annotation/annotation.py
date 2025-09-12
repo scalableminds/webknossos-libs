@@ -69,17 +69,22 @@ from ..client.api_client.models import (
     ApiPrecomputedMeshInfo,
 )
 from ..dataset import (
-    SEGMENTATION_CATEGORY,
-    DataFormat,
     Dataset,
     Layer,
     RemoteDataset,
     SegmentationLayer,
 )
-from ..dataset.defaults import PROPERTIES_FILE_NAME, SSL_CONTEXT
-from ..dataset.properties import DatasetProperties, VoxelSize, dataset_converter
+from ..dataset.defaults import PROPERTIES_FILE_NAME
+from ..dataset_properties import (
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    DatasetProperties,
+    VoxelSize,
+)
+from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
+from ..ssl_context import SSL_CONTEXT
 from ..utils import get_executor_for_args, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
@@ -1235,7 +1240,7 @@ class Annotation:
         assert volume_zip_path is not None, (
             "The selected volume layer data is not available and cannot be exported."
         )
-
+        assert dataset.path is not None, "Dataset must not be a remote dataset"
         with volume_zip_path.open(mode="rb") as f:
             data_zip = ZipFile(f)
             if volume_layer.data_format == DataFormat.WKW:
@@ -1257,7 +1262,7 @@ class Annotation:
                     ),
                 )
             elif volume_layer.data_format == DataFormat.Zarr3:
-                datasource_properties = dataset_converter.structure(
+                datasource_properties = get_dataset_converter().structure(
                     json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
                 )
                 assert len(datasource_properties.data_layers) == 1, (

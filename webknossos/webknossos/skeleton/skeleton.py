@@ -6,9 +6,7 @@ from pathlib import Path
 import attr
 import networkx as nx
 
-from webknossos.dataset.length_unit import _LENGTH_UNIT_TO_NANOMETER
-from webknossos.dataset.properties import VoxelSize
-
+from ..dataset_properties import _LENGTH_UNIT_TO_NANOMETER, VoxelSize
 from .group import Group
 
 Vector3 = tuple[float, float, float]

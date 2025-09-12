@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 import attr
 
+from webknossos.dataset_properties import DatasetProperties
+
 # Request and response bodies for wk/datastore routes
 # Should contain only the fields that are actually used by the python libs
 # Note that keys are converted to/from camelCase to match this
@@ -86,10 +88,9 @@ class ApiVoxelSize:
 
 
 @attr.s(auto_attribs=True)
-class ApiDataSource:
-    data_layers: list[ApiDataLayer] | None = None
-    status: str | None = None
-    scale: ApiVoxelSize | None = None
+class ApiUnusableDataSource:
+    id: dict[str, str]
+    status: str
 
 
 @attr.s(auto_attribs=True)
@@ -110,7 +111,7 @@ class ApiDataset:
     directory_name: str
     owning_organization: str
     data_store: ApiDataStore
-    data_source: ApiDataSource
+    data_source: ApiUnusableDataSource | DatasetProperties
     created: float
     metadata: list[ApiMetadata] | None = None
     description: str | None = None
@@ -170,6 +171,13 @@ class ApiDatasetManualUploadSuccess:
 
 @attr.s(auto_attribs=True)
 class ApiLinkedLayerIdentifier:
+    dataset_id: str
+    layer_name: str
+    new_layer_name: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiLinkedLayerIdentifierLegacy:
     organization_id: str
     data_set_name: str
     layer_name: str
@@ -184,7 +192,7 @@ class ApiReserveDatasetUploadInformation:
     total_file_count: int
     total_file_size_in_bytes: int
     initial_teams: list[str]
-    layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
+    layers_to_link: list[ApiLinkedLayerIdentifierLegacy] | None = None
     folder_id: str | None = None
 
 
@@ -415,3 +423,28 @@ class ApiAdHocMeshInfo:
     mapping_type: Literal["json", "agglomerate"] | None
     mag: tuple[int, int, int]
     seed_position: tuple[int, int, int]
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadParameters:
+    dataset_name: str
+    initial_team_ids: list[str]
+    folder_id: str | None
+    require_unique_name: bool
+    layers_to_link: list[ApiLinkedLayerIdentifier]
+    data_source: DatasetProperties
+    path_prefix: str | None
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualUploadResponse:
+    new_dataset_id: str
+    data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetReserveManualAttachmentUploadParameters:
+    layer_name: str
+    attachment_name: str
+    attachment_type: str
+    attachment_dataformat: str

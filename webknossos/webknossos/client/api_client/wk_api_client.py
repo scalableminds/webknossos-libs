@@ -9,6 +9,9 @@ from webknossos.client.api_client.models import (
     ApiDatasetExploreAndAddRemote,
     ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
+    ApiDatasetReserveManualAttachmentUploadParameters,
+    ApiDatasetReserveManualUploadParameters,
+    ApiDatasetReserveManualUploadResponse,
     ApiDataStore,
     ApiDataStoreToken,
     ApiFolderWithParent,
@@ -73,7 +76,11 @@ class WkApiClient(AbstractApiClient):
         sharing_token: str | None = None,
     ) -> ApiDataset:
         route = f"/datasets/{dataset_id}"
-        return self._get_json(route, ApiDataset, query={"sharingToken": sharing_token})
+        return self._get_json(
+            route,
+            ApiDataset,
+            query={"sharingToken": sharing_token, "includePaths": True},
+        )
 
     def dataset_id_from_name(self, *, directory_name: str, organization_id: str) -> str:
         route = f"/datasets/disambiguate/{organization_id}/{directory_name}/toId"
@@ -305,3 +312,50 @@ class WkApiClient(AbstractApiClient):
         return self.post_multipart_with_json_response(
             route, ApiTaskCreationResult, multipart_data=data, files=files
         )
+
+    def dataset_reserve_manual_upload(
+        self, reserve_manual_upload_parameters: ApiDatasetReserveManualUploadParameters
+    ) -> ApiDatasetReserveManualUploadResponse:
+        route = "/datasets/reserveManualUpload"
+        return self._post_json_with_json_response(
+            route,
+            reserve_manual_upload_parameters,
+            ApiDatasetReserveManualUploadResponse,
+        )
+
+    def dataset_reserve_manual_attachment_upload(
+        self,
+        dataset_id: str,
+        layer_name: str,
+        attachment_name: str,
+        attachment_type: str,
+        attachment_dataformat: str,
+    ) -> str:
+        route = f"/datasets/{dataset_id}/reserveManualAttachmentUpload"
+        return self._post_json_with_json_response(
+            route,
+            ApiDatasetReserveManualAttachmentUploadParameters(
+                layer_name, attachment_name, attachment_type, attachment_dataformat
+            ),
+            str,
+        )
+
+    def dataset_finish_manual_attachment_upload(
+        self,
+        dataset_id: str,
+        layer_name: str,
+        attachment_name: str,
+        attachment_type: str,
+        attachment_dataformat: str,
+    ) -> None:
+        route = f"/datasets/{dataset_id}/finishManualAttachmentUpload"
+        self._post_json(
+            route,
+            ApiDatasetReserveManualAttachmentUploadParameters(
+                layer_name, attachment_name, attachment_type, attachment_dataformat
+            ),
+        )
+
+    def dataset_finish_manual_upload(self, dataset_id: str) -> None:
+        route = "/datasets/finishManualUpload"
+        self._post(route, query={"datasetId": dataset_id})

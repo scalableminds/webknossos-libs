@@ -9,6 +9,7 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
+from ..dataset_properties import DataFormat
 from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.vec_int import VecIntLike
 from ..utils import (
@@ -18,7 +19,6 @@ from ..utils import (
     wait_and_ensure_success,
 )
 from ._array import ArrayInfo, BaseArray
-from .data_format import DataFormat
 
 if TYPE_CHECKING:
     from ._utils.buffered_slice_reader import BufferedSliceReader

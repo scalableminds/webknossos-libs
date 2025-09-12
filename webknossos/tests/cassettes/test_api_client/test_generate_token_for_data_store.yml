@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: POST
-      path: /api/v10/userToken/generate
+      path: /api/v11/userToken/generate
       headers:
         host: localhost:9000
         content-length: '0'
@@ -23,11 +23,11 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 29 Aug 2025 18:44:38 GMT
+        date: Fri, 12 Sep 2025 13:35:13 GMT
         connection: close
         content-type: application/json
         content-length: '34'
       body:
         encoding: utf8
-        data: '{"token":"kUI1hHhNpH2ubb_eqMq8xg"}'
+        data: '{"token":"XbsA0R3tcQsjeTbXBjYlww"}'
         compression: none

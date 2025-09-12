@@ -88,7 +88,7 @@ def main() -> None:
         "l4_sample_remapped",
         layers_to_link=[
             wk.LayerToLink(
-                dataset_name="l4_sample",
+                dataset_id="l4_sample",  # The dataset name still works, but is deprecated
                 layer_name="color",
                 organization_id="scalable_minds",
             )

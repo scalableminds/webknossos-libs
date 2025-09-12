@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from webknossos import Dataset
-from webknossos.dataset import COLOR_CATEGORY
+from webknossos import COLOR_CATEGORY, Dataset
 
 INPUT_DIR = Path(__file__).parent.parent / "testdata" / "tiff"
 OUTPUT_DIR = Path("testoutput/my_tiff_dataset")
