@@ -3,7 +3,6 @@ from pathlib import Path
 import fastremap
 
 import webknossos as wk
-import webknossos.dataset.dataset
 
 TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
 
@@ -88,7 +87,7 @@ def main() -> None:
     dataset.upload(
         "l4_sample_remapped",
         layers_to_link=[
-            webknossos.dataset.LayerToLink(
+            wk.LayerToLink(
                 dataset_id="l4_sample",  # The dataset name still works, but is deprecated
                 layer_name="color",
                 organization_id="scalable_minds",
