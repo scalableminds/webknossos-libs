@@ -2,7 +2,7 @@ import numpy as np
 from skimage import data
 
 import webknossos as wk
-from webknossos.dataset import COLOR_CATEGORY
+from webknossos import COLOR_CATEGORY
 from webknossos.dataset_properties import (
     DatasetViewConfiguration,
     LayerViewConfiguration,

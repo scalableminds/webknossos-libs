@@ -20,11 +20,11 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
-from webknossos import LayerCategoryType
-from webknossos.dataset import (
+from webknossos import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
+    LayerCategoryType,
     RemoteDataset,
     View,
 )
@@ -39,7 +39,7 @@ from webknossos.dataset_properties import (
     LayerViewConfiguration,
     SegmentationLayerProperties,
 )
-from webknossos.dataset_properties.structuring import dataset_converter
+from webknossos.dataset_properties.structuring import get_dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
@@ -1185,7 +1185,7 @@ def test_properties_with_segmentation() -> None:
 
     with open(ds_path / "datasource-properties.json", encoding="utf-8") as f:
         data = json.load(f)
-        ds_properties = dataset_converter.structure(data, DatasetProperties)
+        ds_properties = get_dataset_converter().structure(data, DatasetProperties)
 
         # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
         segmentation_layer = cast(
@@ -1209,7 +1209,7 @@ def test_properties_with_segmentation() -> None:
     with open(ds_path / "datasource-properties.json", "w", encoding="utf-8") as f:
         # Update the properties on disk (without changing the data)
         json.dump(
-            dataset_converter.unstructure(ds_properties),
+            get_dataset_converter().unstructure(ds_properties),
             f,
             indent=4,
         )

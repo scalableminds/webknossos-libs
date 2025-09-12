@@ -13,7 +13,7 @@ from ..dataset_properties import (
     LayerProperties,
     LayerViewConfiguration,
 )
-from ..dataset_properties.structuring import dataset_converter
+from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import BoundingBox, Mag, Vec3Int
 from .api_client.models import ApiUnusableDataSource
 from .context import _get_context
@@ -87,7 +87,7 @@ def download_dataset(
         )
 
         if api_data_layer.default_view_configuration is not None:
-            default_view_configuration = dataset_converter.structure(
+            default_view_configuration = get_dataset_converter().structure(
                 api_data_layer.default_view_configuration, LayerViewConfiguration
             )
             layer.default_view_configuration = default_view_configuration

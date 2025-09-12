@@ -81,7 +81,7 @@ from ..dataset_properties import (
     DatasetProperties,
     VoxelSize,
 )
-from ..dataset_properties.structuring import dataset_converter
+from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
 from ..ssl_context import SSL_CONTEXT
@@ -1262,7 +1262,7 @@ class Annotation:
                     ),
                 )
             elif volume_layer.data_format == DataFormat.Zarr3:
-                datasource_properties = dataset_converter.structure(
+                datasource_properties = get_dataset_converter().structure(
                     json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
                 )
                 assert len(datasource_properties.data_layers) == 1, (

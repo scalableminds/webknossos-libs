@@ -6,12 +6,13 @@ from attrs import fields as attr_fields
 from attrs import has as is_attr_class
 
 from ...dataset_properties import DatasetProperties
-from ...dataset_properties.structuring import dataset_converter
+from ...dataset_properties.structuring import get_dataset_converter
 from ...utils import snake_to_camel_case
+from .models import ApiUnusableDataSource
 
 T = TypeVar("T")
 
-custom_converter = cattrs.Converter()
+api_client_converter = cattrs.Converter()
 
 # Structuring and destructuring used for the attrs classes in apiclient.models.
 # The server expects and sends camelCase fields, we want snake_case here
@@ -22,7 +23,7 @@ custom_converter = cattrs.Converter()
 def attr_to_camel_case_structure(cl: type[T]) -> Callable[[Mapping[str, Any], Any], T]:
     return cattrs.gen.make_dict_structure_fn(
         cl,
-        custom_converter,
+        api_client_converter,
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
             # https://github.com/python/mypy/issues/16254
@@ -34,7 +35,7 @@ def attr_to_camel_case_structure(cl: type[T]) -> Callable[[Mapping[str, Any], An
 def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]:
     return cattrs.gen.make_dict_unstructure_fn(
         cl,
-        custom_converter,
+        api_client_converter,
         **{
             a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
             # https://github.com/python/mypy/issues/16254
@@ -43,13 +44,31 @@ def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]
     )
 
 
-custom_converter.register_structure_hook(DatasetProperties, dataset_converter.structure)
-custom_converter.register_unstructure_hook(
-    DatasetProperties, dataset_converter.unstructure
-)
-custom_converter.register_structure_hook_factory(
+api_client_converter.register_structure_hook_factory(
     is_attr_class, attr_to_camel_case_structure
 )
-custom_converter.register_unstructure_hook_factory(
+api_client_converter.register_unstructure_hook_factory(
     is_attr_class, attr_to_camel_case_unstructure
+)
+
+api_client_converter.register_structure_hook(
+    DatasetProperties, get_dataset_converter().structure
+)
+api_client_converter.register_unstructure_hook(
+    DatasetProperties, get_dataset_converter().unstructure
+)
+
+
+def disambiguate_usable_from_unusable_data_source(
+    obj: dict, _: Any
+) -> ApiUnusableDataSource | DatasetProperties:
+    if hasattr(obj, "status"):
+        return api_client_converter.structure(obj, ApiUnusableDataSource)
+    else:
+        return api_client_converter.structure(obj, DatasetProperties)
+
+
+api_client_converter.register_structure_hook(
+    ApiUnusableDataSource | DatasetProperties,
+    disambiguate_usable_from_unusable_data_source,
 )

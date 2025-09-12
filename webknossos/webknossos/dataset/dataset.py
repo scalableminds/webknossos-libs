@@ -83,7 +83,7 @@ from ..dataset_properties import (
 )
 from ..dataset_properties.structuring import (
     _properties_floating_type_to_python_type,
-    dataset_converter,
+    get_dataset_converter,
 )
 from ..utils import (
     cheap_resolve,
@@ -437,7 +437,7 @@ class Dataset:
             )
             (self.path / PROPERTIES_FILE_NAME).write_text(
                 json.dumps(
-                    dataset_converter.unstructure(dataset_properties),
+                    get_dataset_converter().unstructure(dataset_properties),
                     indent=4,
                 )
             )
@@ -3079,7 +3079,7 @@ class Dataset:
             raise FileNotFoundError(
                 f"Cannot read dataset at {dataset_path}. datasource-properties.json file not found."
             )
-        properties = dataset_converter.structure(data, DatasetProperties)
+        properties = get_dataset_converter().structure(data, DatasetProperties)
         return properties
 
     def _export_as_json(self) -> None:
@@ -3103,7 +3103,7 @@ class Dataset:
 
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
-                dataset_converter.unstructure(self._properties),
+                get_dataset_converter().unstructure(self._properties),
                 indent=4,
             )
         )
