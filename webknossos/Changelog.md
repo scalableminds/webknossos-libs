@@ -13,10 +13,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.11...HEAD)
 
 ### Breaking Changes
+- The `endpoint_url` in `UPath` objects is now stored directly in the `storage_options` dict, instead of being stored in the `storage_options["client_kwargs"]` dict. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 
 ### Added
 
 ### Changed
+- Disabled conditional writes for S3 buckets in tensorstore. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
+- Only use fs-based copy for mags on local file systems and S3. Other protocols, e.g. memory and HTTP, have caveats that break fs-based copying. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 
 ### Fixed
 

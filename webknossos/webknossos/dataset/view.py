@@ -1279,6 +1279,7 @@ class View:
         self,
         other: "View",
         executor: Executor | None = None,
+        progress_desc: str | None = None,
     ) -> bool:
         """Compare the content of this view with another view.
 
@@ -1317,7 +1318,7 @@ class View:
                     _assert_check_equality,
                     other,
                     executor=executor,
-                    progress_desc="Comparing contents",
+                    progress_desc=progress_desc or "Comparing contents",
                 )
             except AssertionError:
                 return False

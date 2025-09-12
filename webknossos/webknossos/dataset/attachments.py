@@ -305,7 +305,7 @@ class Attachments:
         for attachment in other:
             self.add_attachment_as_ref(attachment)
 
-    def add_attachment_as_ref(self, attachment: Attachment) -> None:
+    def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
         new_attachment = type(attachment).from_path_and_name(
             cheap_resolve(attachment.path),
             attachment.name,
@@ -313,13 +313,14 @@ class Attachments:
             dataset_path=self._layer.dataset.resolved_path,
         )
         self._add_attachment(new_attachment)
+        return new_attachment
 
     def add_copy_attachments(self, *other: Attachment) -> None:
         warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
         for attachment in other:
             self.add_attachment_as_copy(*other)
 
-    def add_attachment_as_copy(self, attachment: Attachment) -> None:
+    def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         new_path = cheap_resolve(
             self._layer.path
             / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
@@ -334,6 +335,7 @@ class Attachments:
         )
         copytree(attachment.path, new_path)
         self._add_attachment(new_attachment)
+        return new_attachment
 
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False

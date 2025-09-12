@@ -547,10 +547,9 @@ class TensorStoreArray(BaseArray):
                 "driver": "s3",
                 "path": parsed_url.path.lstrip("/"),
                 "bucket": parsed_url.netloc,
+                "use_conditional_write": False,
             }
-            if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
-                "endpoint_url", None
-            ):
+            if endpoint_url := path.storage_options.get("endpoint_url", None):
                 kvstore_spec["endpoint"] = endpoint_url
             if "key" in path.storage_options and "secret" in path.storage_options:
                 kvstore_spec["aws_credentials"] = _aws_credential_manager.add(
@@ -597,6 +596,7 @@ class TensorStoreArray(BaseArray):
                     open=True,
                     create=False,
                     context=TS_CONTEXT,
+                    recheck_cached="open",
                 ).result(),
                 description="Opening tensorstore array",
             )  # check that everything exists
@@ -664,6 +664,7 @@ class TensorStoreArray(BaseArray):
                         "kvstore": self._make_kvstore(self._path),
                     },
                     context=TS_CONTEXT,
+                    recheck_cached="open",
                 ).result(),
                 description="Opening tensorstore array for resizing",
             )
@@ -778,6 +779,7 @@ class TensorStoreArray(BaseArray):
                             "kvstore": self._make_kvstore(self._path),
                         },
                         context=TS_CONTEXT,
+                        recheck_cached="open",
                     ).result(),
                     description="Creating tensorstore array",
                 )
@@ -904,6 +906,7 @@ class Zarr3Array(TensorStoreArray):
                 "create": True,
             },
             context=TS_CONTEXT,
+            recheck_cached="open",
         ).result()
         return cls(upath, _array)
 
@@ -982,6 +985,7 @@ class Zarr2Array(TensorStoreArray):
                 "create": True,
             },
             context=TS_CONTEXT,
+            recheck_cached="open",
         ).result()
         return cls(upath, _array)
 

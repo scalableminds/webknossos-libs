@@ -63,6 +63,8 @@ from .defaults import (
 
 logger = logging.getLogger(__name__)
 
+COPY_COMPATIBLE_PROTOCOLS = ("", "file", "s3")
+
 
 def _is_int(s: str) -> bool:
     try:
@@ -873,6 +875,9 @@ class Layer:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
+        if progress_desc is None:
+            progress_desc = f"Copying mag {foreign_mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {self}"
+
         has_same_shapes = (
             (
                 chunk_shape is None
@@ -900,16 +905,17 @@ class Layer:
         else:
             has_same_compression = compress == foreign_mag_view.info.compression_mode
 
-        uses_memory_store = (
-            foreign_mag_view.path.protocol == "memory"
-            or (self.path / foreign_mag_view.mag.to_layer_name()).protocol == "memory"
+        uses_compatible_protocols = (
+            foreign_mag_view.path.protocol in COPY_COMPATIBLE_PROTOCOLS
+            and (self.path / foreign_mag_view.mag.to_layer_name()).protocol
+            in COPY_COMPATIBLE_PROTOCOLS
         )
 
         if (
             has_same_shapes
             and has_same_format
             and has_same_compression
-            and not uses_memory_store
+            and uses_compatible_protocols
         ):
             logger.debug(
                 f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
@@ -918,6 +924,7 @@ class Layer:
                 foreign_mag_view,
                 extend_layer_bounding_box=extend_layer_bounding_box,
                 exists_ok=exists_ok,
+                progress_desc=progress_desc,
             )
 
         chunk_shape = Vec3Int.from_vec_or_int(
@@ -956,14 +963,15 @@ class Layer:
                 foreign_mag_view.layer.bounding_box
             )
 
-        if progress_desc is None:
-            progress_desc = f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}"
-
+        # use the target shard shape for the copy operation
+        copy_shape = mag_view.info.shard_shape * mag_view.mag.to_vec3_int()
         foreign_mag_view.for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
             progress_desc=progress_desc,
+            source_chunk_shape=copy_shape,
+            target_chunk_shape=copy_shape,
         )
 
         return mag_view
@@ -1092,6 +1100,7 @@ class Layer:
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
+        progress_desc: str | None = None,
     ) -> MagView:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -1106,10 +1115,7 @@ class Layer:
             raise FileExistsError(
                 f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists."
             )
-        copytree(
-            foreign_mag_view.path,
-            mag_path,
-        )
+        copytree(foreign_mag_view.path, mag_path, progress_desc=progress_desc)
 
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag, mag_path=mag_path, read_only=False

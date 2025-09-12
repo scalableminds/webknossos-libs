@@ -47,7 +47,7 @@ def test_attachments(tmp_upath: UPath) -> None:
     seg_layer.attachments.add_agglomerate(
         UPath(
             "s3://bucket/agglomerate.zarr",
-            client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
+            endpoint_url="https://s3.eu-central-1.amazonaws.com",
         ),
         name="identity",
         data_format=AttachmentDataFormat.Zarr3,
@@ -243,7 +243,7 @@ def test_remote_layer(tmp_upath: UPath) -> None:
 
     mesh_path = UPath(
         "s3://bucket/meshfile.zarr",
-        client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
+        endpoint_url="https://s3.eu-central-1.amazonaws.com",
     )
 
     seg_layer.attachments.add_mesh(
