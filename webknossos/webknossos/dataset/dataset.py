@@ -526,23 +526,23 @@ class Dataset:
         path_prefix: str | None = None,
         layers_to_link: list[LayerToLink] | None = None,
     ) -> str:
-        """Announce a manual dataset upload to WEBKNOSSOS.
+        """Publishes the dataset to WEBKNOSSOS.
 
-        Used when manually uploading datasets to the file system of a datastore.
         Creates database entries and sets access rights on the webknossos instance before the actual data upload.
+        The client then copies the data directly to the returned paths.
 
         Args:
             dataset_name: Name for the new dataset
-            initial_team_ids: List of team IDs to grant initial access
+            initial_team_ids: Optional list of team IDs to grant initial access
             folder_id: Optional ID of folder where dataset should be placed
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
-            path_prefix: Optional path prefix to select the mount point for the dataset folder.
-            layers_to_link: Optional list of (dataset_id, layer_name, new_layer_name) tuples to already published layers to the dataset.
+            path_prefix: Optional path prefix to select one of the available mount points for the dataset folder.
+            layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
         Returns:
             The ID of the newly created dataset.
         Note:
-            This is typically only used by administrators with direct file system
-            access to the WEBKNOSSOS datastore. Most users should use upload() instead.
+            This is typically only used by administrators with direct file system or S3 access to the WEBKNOSSOS datastore.
+            Most users should use upload() instead.
 
         Examples:
             ```
@@ -582,7 +582,7 @@ class Dataset:
 
         # This needs to be set to make sure the encoding is not chunked when uploading
         os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"
-        # upload data
+        # copy data
         for layer in data_source.data_layers:
             src_layer = self.layers[layer.name]
             for mag in layer.mags:
