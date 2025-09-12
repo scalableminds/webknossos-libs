@@ -62,7 +62,7 @@ api_client_converter.register_unstructure_hook(
 def disambiguate_usable_from_unusable_data_source(
     obj: dict, _: Any
 ) -> ApiUnusableDataSource | DatasetProperties:
-    if hasattr(obj, "status"):
+    if "status" in obj:
         return api_client_converter.structure(obj, ApiUnusableDataSource)
     else:
         return api_client_converter.structure(obj, DatasetProperties)
