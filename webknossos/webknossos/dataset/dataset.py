@@ -69,12 +69,14 @@ if TYPE_CHECKING:
     from ..administration.user import Team
     from ..client.context import _get_context, webknossos_context
 
-from .. import LayerCategoryType
 from ..dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
     AttachmentsProperties,
     DataFormat,
     DatasetProperties,
     DatasetViewConfiguration,
+    LayerCategoryType,
     LayerProperties,
     SegmentationLayerProperties,
     VoxelSize,
@@ -112,7 +114,6 @@ from .layer import (
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY
 
 logger = logging.getLogger(__name__)
 

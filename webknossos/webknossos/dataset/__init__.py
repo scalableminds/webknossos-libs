@@ -26,7 +26,6 @@ from .defaults import (
     DEFAULT_SHARD_SHAPE,
 )
 from .layer import Layer, SegmentationLayer
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY
 from .mag_view import MagView
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes

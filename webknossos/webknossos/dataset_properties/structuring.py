@@ -7,7 +7,6 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from .. import LayerCategoryType
 from ..dataset_properties import (
     AttachmentProperties,
     AttachmentsProperties,
@@ -20,11 +19,11 @@ from ..dataset_properties import (
     SegmentationLayerProperties,
     length_unit_from_str,
 )
-from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT
+from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
+from .layer_categories import LayerCategoryType
 
-DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
 _properties_floating_type_to_python_type: dict[str | type, np.dtype] = {
     "float": np.dtype("float32"),
     #  np.float: np.dtype("float32"),  # np.float is an alias for float

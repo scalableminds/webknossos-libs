@@ -13,9 +13,11 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from .. import LayerCategoryType
 from ..dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
     DataFormat,
+    LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
     MagViewProperties,
@@ -39,7 +41,6 @@ from ._downsampling_utils import (
 )
 from ._upsampling_utils import upsample_cube_job
 from .attachments import Attachments
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY
 from .mag_view import MagView
 from .sampling_modes import SamplingModes
 from .view import View, _copy_job

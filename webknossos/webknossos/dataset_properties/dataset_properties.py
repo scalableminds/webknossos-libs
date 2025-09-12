@@ -3,12 +3,13 @@ from typing import Literal
 
 import attr
 
-from .. import LayerCategoryType
 from ..geometry import Mag, NDBoundingBox
 from .data_format import AttachmentDataFormat, DataFormat
+from .layer_categories import LayerCategoryType
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
+DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
 
 
 def float_tpl(voxel_size: list | tuple) -> Iterable:

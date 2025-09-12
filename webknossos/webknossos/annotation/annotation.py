@@ -69,14 +69,18 @@ from ..client.api_client.models import (
     ApiPrecomputedMeshInfo,
 )
 from ..dataset import (
-    SEGMENTATION_CATEGORY,
     Dataset,
     Layer,
     RemoteDataset,
     SegmentationLayer,
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
-from ..dataset_properties import DataFormat, DatasetProperties, VoxelSize
+from ..dataset_properties import (
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    DatasetProperties,
+    VoxelSize,
+)
 from ..dataset_properties.structuring import dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
