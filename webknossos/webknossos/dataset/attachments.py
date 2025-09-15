@@ -22,6 +22,7 @@ from ..utils import (
     snake_to_camel_case,
     warn_deprecated,
 )
+from .dataset import RemoteDataset
 
 if TYPE_CHECKING:
     from .layer import SegmentationLayer
@@ -324,20 +325,51 @@ class Attachments:
 
     def add_attachment_as_copy(self, attachment: Attachment) -> None:
         if self._layer.path is None:
-            raise ValueError("Cannot add attachment to a remote layer")
-        new_path = cheap_resolve(
-            self._layer.path
-            / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
-            / _maybe_add_suffix(attachment.name, attachment.data_format)
-        )
-        new_path.parent.mkdir(parents=True, exist_ok=True)
+            dataset = self._layer.dataset
+            # In case of a remote dataset, we can ask wk for a path to put the attachment to.
+            if isinstance(dataset, RemoteDataset):
+                target_dataset_id = dataset.dataset_id
+                from webknossos.client.context import _get_context
+
+                context = _get_context()
+                new_path = enrich_path(context.api_client_with_auth.dataset_reserve_manual_attachment_upload(
+                    target_dataset_id,
+                    self._layer.name,
+                    attachment.name,
+                    TYPE_MAPPING[type(attachment)],
+                    str(attachment.data_format),
+                ))
+                # copy to target dataset
+                copytree(attachment.path, new_path)
+
+                context.api_client_with_auth.dataset_finish_manual_attachment_upload(
+                    target_dataset_id,
+                    self._layer.name,
+                    attachment.name,
+                    TYPE_MAPPING[type(attachment)],
+                    str(attachment.data_format),
+                )
+            else:
+                raise ValueError(
+                    "Cannot add attachment to a layer without a path, that does not belong to a RemoteDataset"
+                )
+        else:
+            # In case we have a path, we put the attachment following the convention.
+            new_path = cheap_resolve(
+                self._layer.path
+                / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
+                / _maybe_add_suffix(attachment.name, attachment.data_format)
+            )
+            new_path.parent.mkdir(parents=True, exist_ok=True)
+            copytree(attachment.path, new_path)
+
         new_attachment = type(attachment).from_path_and_name(
             new_path,
             attachment.name,
             data_format=attachment.data_format,
             dataset_path=self._layer.dataset.resolved_path,
         )
-        copytree(attachment.path, new_path)
+
         self._add_attachment(new_attachment)
 
     def add_symlink_attachments(
