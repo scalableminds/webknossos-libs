@@ -22,7 +22,6 @@ from ..utils import (
     snake_to_camel_case,
     warn_deprecated,
 )
-from .dataset import RemoteDataset
 
 if TYPE_CHECKING:
     from .layer import SegmentationLayer
@@ -327,18 +326,20 @@ class Attachments:
         if self._layer.path is None:
             dataset = self._layer.dataset
             # In case of a remote dataset, we can ask wk for a path to put the attachment to.
-            if isinstance(dataset, RemoteDataset):
+            if hasattr(dataset, "dataset_id"):
                 target_dataset_id = dataset.dataset_id
                 from webknossos.client.context import _get_context
 
                 context = _get_context()
-                new_path = enrich_path(context.api_client_with_auth.dataset_reserve_manual_attachment_upload(
-                    target_dataset_id,
-                    self._layer.name,
-                    attachment.name,
-                    TYPE_MAPPING[type(attachment)],
-                    str(attachment.data_format),
-                ))
+                new_path = enrich_path(
+                    context.api_client_with_auth.dataset_reserve_manual_attachment_upload(
+                        target_dataset_id,
+                        self._layer.name,
+                        attachment.name,
+                        TYPE_MAPPING[type(attachment)],
+                        str(attachment.data_format),
+                    )
+                )
                 # copy to target dataset
                 copytree(attachment.path, new_path)
 
