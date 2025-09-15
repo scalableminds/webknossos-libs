@@ -154,10 +154,8 @@ class VoxelSize:
 class DatasetProperties:
     id: dict[str, str]
     """
-    This is a legacy field that is not used anymore.
-    name and team are keys.
-    name = dataset directory name
-    team: organization id
+    id is a legacy field that is not used anymore. Its keys are name (dataset directory name) and team (organization id)
+    However, webknossos will take both from the dataset path and not from what is here in the datasource-properties.json.
     """
     scale: VoxelSize
     data_layers: list[SegmentationLayerProperties | LayerProperties]
