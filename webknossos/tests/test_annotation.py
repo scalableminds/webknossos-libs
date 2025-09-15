@@ -396,15 +396,17 @@ def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode, executor: str) -
     if edit_mode == VolumeLayerEditMode.MEMORY and executor == "multiprocessing":
         with pytest.raises(ValueError, match="SequentialExecutor"):
             with volume_layer.edit(
-                edit_mode, executor=get_executor(executor)
+                edit_mode=edit_mode, executor=get_executor(executor)
             ) as seg_layer:
                 pass
     else:
-        with volume_layer.edit(edit_mode, executor=get_executor(executor)) as seg_layer:
+        with volume_layer.edit(
+            edit_mode=edit_mode, executor=get_executor(executor)
+        ) as seg_layer:
             assert isinstance(seg_layer, SegmentationLayer)
             mag = seg_layer.add_mag(1)
             mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
-        with volume_layer.edit(edit_mode) as seg_layer:
+        with volume_layer.edit(edit_mode=edit_mode) as seg_layer:
             assert len(seg_layer.mags) == 1
             mag = seg_layer.get_mag(1)
             read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
@@ -476,7 +478,7 @@ def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> N
     )
 
     volume_layer = ann.add_volume_layer(name="segmentation", dtype=np.uint32)
-    with volume_layer.edit(edit_mode) as seg_layer:
+    with volume_layer.edit(edit_mode=edit_mode) as seg_layer:
         mag_view = seg_layer.add_mag(1)
         mag_view.write(data, allow_resize=True)
 
@@ -486,7 +488,7 @@ def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> N
 
     volume_layer_downloaded = ann_loaded.get_volume_layer("segmentation")
 
-    with volume_layer_downloaded.edit(edit_mode) as seg_layer:
+    with volume_layer_downloaded.edit(edit_mode=edit_mode) as seg_layer:
         assert len(seg_layer.mags) == 1
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))

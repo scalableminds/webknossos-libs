@@ -142,14 +142,15 @@ class VolumeLayer:
     @contextmanager
     def edit(
         self,
-        volume_layer_edit_mode: VolumeLayerEditMode = VolumeLayerEditMode.TEMPORARY_DIRECTORY,
+        *,
+        edit_mode: VolumeLayerEditMode = VolumeLayerEditMode.TEMPORARY_DIRECTORY,
         executor: Executor | None = None,
     ) -> Generator[Layer | Any, None, None]:
         """
         Context manager to edit the volume layer.
 
         Args:
-            volume_layer_edit_mode: Specifies the edit mode for the volume layer.
+            edit_mode: Specifies the edit mode for the volume layer.
             executor: Optional executor for parallel rechunking.
 
         """
@@ -201,10 +202,10 @@ class VolumeLayer:
             distribution_strategy=DistributionStrategy.SEQUENTIAL.value,
         )
         with get_executor_for_args(fallback_executor_args, executor) as executor:
-            if volume_layer_edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
+            if edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
                 with TemporaryDirectory() as tmp_dir:
                     return _edit(UPath(tmp_dir), executor)
-            elif volume_layer_edit_mode == VolumeLayerEditMode.MEMORY:
+            elif edit_mode == VolumeLayerEditMode.MEMORY:
                 if not isinstance(executor, SequentialExecutor):
                     raise ValueError(
                         "In-memory editing only supports SequentialExecutor to avoid data"
@@ -219,9 +220,7 @@ class VolumeLayer:
                     if path.exists():
                         path.rmdir(recursive=True)
             else:
-                raise ValueError(
-                    f"Unsupported volume layer edit mode: {volume_layer_edit_mode}"
-                )
+                raise ValueError(f"Unsupported volume layer edit mode: {edit_mode}")
 
     def export_to_dataset(
         self,
