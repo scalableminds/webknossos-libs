@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed that some operations that need an authentication token didn’t ask for it but just failed. [#1366](https://github.com/scalableminds/webknossos-libs/pull/1366)
 
 
 ## [2.4.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.11) - 2025-09-02
