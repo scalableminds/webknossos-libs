@@ -62,6 +62,17 @@ class Attachment:
     name: str
     path: UPath
     data_format: AttachmentDataFormat
+    container_name: Literal[
+        "agglomerates", "meshes", "segment_index", "cumsum", "connectomes"
+    ]
+    """
+    The container names are also used to derive the folder names to put the attachments.
+    The container names are converted to camelCase to get the folder names.
+    """
+    type_name: Literal["mesh", "agglomerate", "segmentIndex", "connectome", "cumsum"]
+    """
+    The type names are used to communicate to WEBKNOSSOS which attachment type we want to e.g. upload.
+    """
 
     def __init__(
         self,
@@ -103,31 +114,32 @@ class Attachment:
 
 class MeshAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
+    container_name = "meshes"
+    type_name = "mesh"
 
 
 class SegmentIndexAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
+    container_name = "segment_index"
+    type_name = "segmentIndex"
 
 
 class AgglomerateAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
+    container_name = "agglomerates"
+    type_name = "agglomerate"
 
 
 class CumsumAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.JSON]
+    container_name = "cumsum"
+    type_name = "cumsum"
 
 
 class ConnectomeAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
-
-
-TYPE_MAPPING = {
-    AgglomerateAttachment: "agglomerates",
-    MeshAttachment: "meshes",
-    SegmentIndexAttachment: "segment_index",
-    CumsumAttachment: "cumsum",
-    ConnectomeAttachment: "connectomes",
-}
+    container_name = "connectomes"
+    type_name = "connectome"
 
 
 class Attachments:
@@ -183,7 +195,7 @@ class Attachments:
         attachment: Attachment,
     ) -> None:
         self._layer._ensure_writable()
-        container_name = TYPE_MAPPING[type(attachment)]
+        container_name = attachment.container_name
         if isinstance(attachment, CumsumAttachment) or isinstance(
             attachment, SegmentIndexAttachment
         ):
@@ -206,7 +218,7 @@ class Attachments:
         self,
         attachment: Attachment,
     ) -> None:
-        container_name = TYPE_MAPPING[type(attachment)]
+        container_name = attachment.container_name
         if isinstance(attachment, CumsumAttachment) or isinstance(
             attachment, SegmentIndexAttachment
         ):
@@ -336,7 +348,7 @@ class Attachments:
                         target_dataset_id,
                         self._layer.name,
                         attachment.name,
-                        TYPE_MAPPING[type(attachment)],
+                        attachment.type_name,
                         str(attachment.data_format),
                     )
                 )
@@ -347,7 +359,7 @@ class Attachments:
                     target_dataset_id,
                     self._layer.name,
                     attachment.name,
-                    TYPE_MAPPING[type(attachment)],
+                    attachment.type_name,
                     str(attachment.data_format),
                 )
             else:
@@ -355,10 +367,11 @@ class Attachments:
                     "Cannot add attachment to a layer without a path, that does not belong to a RemoteDataset"
                 )
         else:
+            self._layer._ensure_writable()
             # In case we have a path, we put the attachment following the convention.
             new_path = cheap_resolve(
                 self._layer.path
-                / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
+                / snake_to_camel_case(attachment.container_name)
                 / _maybe_add_suffix(attachment.name, attachment.data_format)
             )
             new_path.parent.mkdir(parents=True, exist_ok=True)
@@ -388,7 +401,7 @@ class Attachments:
             if is_fs_path(attachment.path):
                 new_path = (
                     self._layer.resolved_path
-                    / snake_to_camel_case(TYPE_MAPPING[type(attachment)])
+                    / snake_to_camel_case(attachment.container_name)
                     / _maybe_add_suffix(attachment.name, attachment.data_format)
                 )
                 new_path.parent.mkdir(parents=True, exist_ok=True)
@@ -413,7 +426,7 @@ class Attachments:
             return
 
         def _detect_hdf5(typ: type[Attachment]) -> None:
-            folder_name = snake_to_camel_case(TYPE_MAPPING[typ])
+            folder_name = snake_to_camel_case(typ.container_name)
             if (
                 self._layer.resolved_path is None
                 or self._layer.dataset.resolved_path is None
