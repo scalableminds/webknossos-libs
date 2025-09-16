@@ -190,11 +190,7 @@ class Attachments:
                 for attachment in properties.connectomes
             )
 
-    def _add_attachment(
-        self,
-        attachment: Attachment,
-    ) -> None:
-        self._layer._ensure_writable()
+    def _add_attachment_to_container(self, attachment: Attachment) -> None:
         container_name = attachment.container_name
         if isinstance(attachment, CumsumAttachment) or isinstance(
             attachment, SegmentIndexAttachment
@@ -212,6 +208,13 @@ class Attachments:
                 setattr(self._properties, container_name, [attachment._properties])
             else:
                 properties_container.append(attachment._properties)
+
+    def _add_attachment(
+        self,
+        attachment: Attachment,
+    ) -> None:
+        self._layer._ensure_writable()
+        self._add_attachment_to_container(attachment)
         self._layer.dataset._export_as_json()
 
     def _remove_attachment(
@@ -362,6 +365,12 @@ class Attachments:
                     attachment.type_name,
                     str(attachment.data_format),
                 )
+                new_attachment = type(attachment).from_path_and_name(
+                    new_path,
+                    attachment.name,
+                    data_format=attachment.data_format,
+                )
+                self._add_attachment_to_container(new_attachment)
             else:
                 raise ValueError(
                     "Cannot add attachment to a layer without a path, that does not belong to a RemoteDataset"
@@ -377,14 +386,14 @@ class Attachments:
             new_path.parent.mkdir(parents=True, exist_ok=True)
             copytree(attachment.path, new_path)
 
-        new_attachment = type(attachment).from_path_and_name(
-            new_path,
-            attachment.name,
-            data_format=attachment.data_format,
-            dataset_path=self._layer.dataset.resolved_path,
-        )
+            new_attachment = type(attachment).from_path_and_name(
+                new_path,
+                attachment.name,
+                data_format=attachment.data_format,
+                dataset_path=self._layer.dataset.resolved_path,
+            )
 
-        self._add_attachment(new_attachment)
+            self._add_attachment(new_attachment)
 
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False
