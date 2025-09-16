@@ -77,9 +77,10 @@ def upload_dataset(
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
-    datastore_token = context.datastore_required_token
     datastore_url = datastore_url or _cached_get_upload_datastore(context)
-    datastore_api_client = context.get_datastore_api_client(datastore_url)
+    datastore_api_client = context.get_datastore_api_client(
+        datastore_url, require_auth=True
+    )
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
@@ -108,7 +109,6 @@ def upload_dataset(
             folder_id=None,
             initial_teams=[],
         ),
-        token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
@@ -120,7 +120,7 @@ def upload_dataset(
                 "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
-            headers={"x-auth-token": datastore_token},
+            headers={"X-Auth-Token": context.required_token},
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _,
             relative_path: f"{upload_id}/{relative_path.as_posix()}",
@@ -137,7 +137,6 @@ def upload_dataset(
 
     dataset_id = datastore_api_client.dataset_finish_upload(
         upload_information=ApiDatasetUploadInformation(upload_id),
-        token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 

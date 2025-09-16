@@ -43,11 +43,6 @@ def test_datastore_list(auth_client: WkApiClient) -> None:
     assert internal_datastore in datastores
 
 
-def test_generate_token_for_data_store(auth_client: WkApiClient) -> None:
-    api_datastore_token = auth_client.token_generate_for_data_store()
-    assert len(api_datastore_token.token) > 0
-
-
 def test_current_user_info_and_user_logged_time(auth_client: WkApiClient) -> None:
     current_api_user = auth_client.user_current()
 

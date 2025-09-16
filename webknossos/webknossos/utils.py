@@ -555,7 +555,7 @@ def enrich_path(
 
         # To setup the mag for non-public remote paths, we need to get the token from the context
         wk_context = _get_context()
-        token = wk_context.datastore_token
+        token = wk_context.token
         return UPath(
             path,
             headers={} if token is None else {"X-Auth-Token": token},
