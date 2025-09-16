@@ -2,7 +2,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v10/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+        /api/v11/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -19,22 +19,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:56 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/json
-        content-length: '1629'
+        content-length: '3445'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1757591275501,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"attachments":{"meshes":[{"name":"meshfile_4-4-1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1","dataFormat":"zarr3"},{"name":"meshfile_4-4-1_1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1_1","dataFormat":"zarr3"}],"agglomerates":[],"connectomes":[]},"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758015515758,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
-      path: /api/v10/datasets/59e9cfbdba632ac2ab8b23b5
+      path: /api/v11/datasets/59e9cfbdba632ac2ab8b23b5
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -51,21 +53,23 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:56 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/json
-        content-length: '1627'
+        content-length: '3443'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1757591276558,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"attachments":{"meshes":[{"name":"meshfile_4-4-1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1","dataFormat":"zarr3"},{"name":"meshfile_4-4-1_1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1_1","dataFormat":"zarr3"}],"agglomerates":[],"connectomes":[]},"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758015516366,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}
         compression: none
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -82,6 +86,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -89,7 +94,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:56 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -99,7 +105,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -116,6 +122,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -123,7 +130,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:56 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -133,7 +141,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -150,6 +158,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -157,7 +166,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:56 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '175'
       body:
@@ -167,7 +177,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -184,6 +194,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -191,7 +202,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:56 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '75'
       body:
@@ -201,7 +213,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -218,6 +230,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -225,7 +238,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:57 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '63'
       body:
@@ -235,7 +249,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -252,6 +266,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -259,7 +274,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:57 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '27'
       body:
@@ -268,7 +284,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -285,6 +301,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -292,7 +309,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:57 GMT
+        date: Tue, 16 Sep 2025 09:38:35 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '16'
       body:
@@ -301,7 +319,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -318,6 +336,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -325,7 +344,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:57 GMT
+        date: Tue, 16 Sep 2025 09:38:36 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '8'
       body:
@@ -335,7 +355,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -352,6 +372,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -359,7 +380,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:57 GMT
+        date: Tue, 16 Sep 2025 09:38:36 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '12'
       body:
@@ -368,7 +390,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -385,6 +407,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -392,7 +415,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:57 GMT
+        date: Tue, 16 Sep 2025 09:38:36 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '2800'
       body:
@@ -402,7 +426,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -419,6 +443,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -426,7 +451,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:58 GMT
+        date: Tue, 16 Sep 2025 09:38:36 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1200'
       body:
@@ -436,7 +462,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -453,6 +479,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -460,7 +487,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:58 GMT
+        date: Tue, 16 Sep 2025 09:38:36 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -470,7 +498,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -487,6 +515,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -494,7 +523,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:58 GMT
+        date: Tue, 16 Sep 2025 09:38:36 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -504,7 +534,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -521,6 +551,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -528,7 +559,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:59 GMT
+        date: Tue, 16 Sep 2025 09:38:36 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '252'
       body:
@@ -538,7 +570,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -555,6 +587,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -562,7 +595,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:59 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '108'
       body:
@@ -572,7 +606,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -589,6 +623,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -596,7 +631,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:59 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '64'
       body:
@@ -606,7 +642,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -623,6 +659,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -630,7 +667,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:47:59 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '32'
       body:
@@ -639,7 +677,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -656,6 +694,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -663,7 +702,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:00 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '48'
       body:
@@ -672,7 +712,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v10/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+        /api/v11/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -689,22 +729,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:00 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/json
-        content-length: '1629'
+        content-length: '3445'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1757591276558,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"attachments":{"meshes":[{"name":"meshfile_4-4-1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1","dataFormat":"zarr3"},{"name":"meshfile_4-4-1_1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1_1","dataFormat":"zarr3"}],"agglomerates":[],"connectomes":[]},"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758015516366,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}]
         compression: none
   - request:
       method: GET
-      path: /api/v10/datasets/59e9cfbdba632ac2ab8b23b5
+      path: /api/v11/datasets/59e9cfbdba632ac2ab8b23b5
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -721,21 +763,23 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:00 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/json
-        content-length: '1627'
+        content-length: '3443'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,0,0]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"elementClass":"uint32","largestSegmentId":2504697}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1757591280636,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null,"usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"attachments":{"meshes":[{"name":"meshfile_4-4-1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1","dataFormat":"zarr3"},{"name":"meshfile_4-4-1_1","path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample-59e9cfbdba632ac2ab8b23b5/segmentation/meshes/meshfile_4-4-1_1","dataFormat":"zarr3"}],"agglomerates":[],"connectomes":[]},"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758015518599,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}
         compression: none
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -752,6 +796,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -759,7 +804,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:00 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -769,7 +815,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -786,6 +832,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -793,7 +840,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:00 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -803,7 +851,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -820,6 +868,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -827,7 +876,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:00 GMT
+        date: Tue, 16 Sep 2025 09:38:37 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '2800'
       body:
@@ -837,7 +887,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v11/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -854,6 +904,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -861,7 +912,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:01 GMT
+        date: Tue, 16 Sep 2025 09:38:38 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1200'
       body:
