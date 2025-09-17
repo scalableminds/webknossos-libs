@@ -103,7 +103,7 @@ dev-dependencies = [
     "jsonschema ~=4.6.0",
     "mypy ~=1.15.0",
     "pytest ~=8.3.2",
-    "pytest-cov>=6.0.0",
+    "pytest-cov ~=6.2.1",
     "pytest-custom-exit-code ~=0.3.0",
     "pytest-split ~=0.10.0",
     "pytest-sugar ~=1.0.0",
@@ -206,6 +206,3 @@ license-files = []
 where = ["."]
 include = ["webknossos*", "webknossos/version.py"]
 exclude = ["webknossos.tests", "webknossos/testdata/**"]
-
-[tool.coverage.run]
-patch = ["subprocess"]
