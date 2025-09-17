@@ -134,15 +134,6 @@ class ApiDatasetExploreAndAddRemote:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetAnnounceUpload:
-    dataset_name: str
-    organization: str
-    initial_team_ids: list[str]
-    folder_id: str | None
-    require_unique_name: bool
-
-
-@attr.s(auto_attribs=True)
 class ApiDatasetIsValidNewNameResponse:
     is_valid: bool
     errors: list[str] | None = None
@@ -161,12 +152,6 @@ class ApiDatasetUploadInformation:
 @attr.s(auto_attribs=True)
 class ApiDatasetUploadSuccess:
     new_dataset_id: str
-
-
-@attr.s(auto_attribs=True)
-class ApiDatasetManualUploadSuccess:
-    new_dataset_id: str
-    directory_name: str
 
 
 @attr.s(auto_attribs=True)
@@ -421,7 +406,7 @@ class ApiAdHocMeshInfo:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetReserveManualUploadParameters:
+class ApiReserveDatasetUplaodToPathsParameters:
     dataset_name: str
     initial_team_ids: list[str]
     folder_id: str | None
@@ -432,13 +417,13 @@ class ApiDatasetReserveManualUploadParameters:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetReserveManualUploadResponse:
+class ApiReserveDatasetUploadToPathsResponse:
     new_dataset_id: str
     data_source: DatasetProperties
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetReserveManualAttachmentUploadParameters:
+class ApiReserveAttachmentUploadToPathParameters:
     layer_name: str
     attachment_name: str
     attachment_type: str

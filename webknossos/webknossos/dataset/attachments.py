@@ -347,7 +347,7 @@ class Attachments:
 
                 context = _get_context()
                 new_path = enrich_path(
-                    context.api_client_with_auth.dataset_reserve_manual_attachment_upload(
+                    context.api_client_with_auth.reserve_attachment_upload_to_path(
                         target_dataset_id,
                         self._layer.name,
                         attachment.name,
@@ -358,7 +358,7 @@ class Attachments:
                 # copy to target dataset
                 copytree(attachment.path, new_path)
 
-                context.api_client_with_auth.dataset_finish_manual_attachment_upload(
+                context.api_client_with_auth.finish_attachment_upload_to_path(
                     target_dataset_id,
                     self._layer.name,
                     attachment.name,

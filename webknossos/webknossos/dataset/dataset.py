@@ -27,11 +27,11 @@ from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
-    ApiDatasetReserveManualUploadParameters,
     ApiLinkedLayerIdentifier,
     ApiLinkedLayerIdentifierLegacy,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
+    ApiReserveDatasetUplaodToPathsParameters,
     ApiUnusableDataSource,
 )
 from ..geometry import (
@@ -547,7 +547,7 @@ class Dataset:
 
         Examples:
             ```
-            Dataset.announce_manual_upload(
+            Dataset.publish_to_webknossos(
                 "my_dataset",
                 "my_organization",
                 ["team_a", "team_b"],
@@ -562,8 +562,8 @@ class Dataset:
             folder_id = folder_id.id
 
         context = _get_context()
-        response = context.api_client_with_auth.dataset_reserve_manual_upload(
-            ApiDatasetReserveManualUploadParameters(
+        response = context.api_client_with_auth.reserve_dataset_upload_to_paths(
+            ApiReserveDatasetUplaodToPathsParameters(
                 dataset_name=dataset_name,
                 initial_team_ids=initial_team_ids or [],
                 folder_id=folder_id,
@@ -608,7 +608,7 @@ class Dataset:
                         progress_desc=f"copying attachment {src_attachment.path} to {dst_attachment.path}",
                     )
         # announce finished upload
-        context.api_client_with_auth.dataset_finish_manual_upload(new_dataset_id)
+        context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
         return new_dataset_id
 
     @classmethod
