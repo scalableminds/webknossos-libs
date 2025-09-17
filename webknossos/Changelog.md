@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Disabled conditional writes for S3 buckets in tensorstore. [#1368](https://github.com/scalableminds/webknossos-libs/pull/1368)
 
 ### Fixed
 - Fixed that some operations that need an authentication token didn’t ask for it but just failed. [#1366](https://github.com/scalableminds/webknossos-libs/pull/1366)
