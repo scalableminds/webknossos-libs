@@ -324,11 +324,6 @@ class ApiLoggedTimeForMonth:
 
 
 @attr.s(auto_attribs=True)
-class ApiDataStoreToken:
-    token: str
-
-
-@attr.s(auto_attribs=True)
 class ApiLoggedTimeGroupedByMonth:
     logged_time: list[ApiLoggedTimeForMonth]
 
