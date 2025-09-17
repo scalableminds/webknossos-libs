@@ -6,9 +6,7 @@ import webknossos as wk
 def calculate_path_length(annotation_url: str, auth_token: str) -> None:
     with wk.webknossos_context(token=auth_token):
         # Download a annotation directly from the WEBKNOSSOS server
-        annotation = wk.Annotation.download(
-            annotation_url,
-        )
+        annotation = wk.Annotation.download(annotation_url, skip_volume_data=True)
 
         skeleton = annotation.skeleton
         voxel_size = annotation.voxel_size
