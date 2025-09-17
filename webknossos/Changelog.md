@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.11...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...HEAD)
 
 ### Breaking Changes
 - The `endpoint_url` in `UPath` objects is now stored directly in the `storage_options` dict, instead of being stored in the `storage_options["client_kwargs"]` dict. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
@@ -23,7 +23,17 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The `add_*` methods in `Attachments` now return the created attachment objects, similar to `add_layer` and `add_mag`. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 
 ### Fixed
+
+
+## [2.4.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.12) - 2025-09-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.11...v2.4.12)
+
+### Changed
+- Disabled conditional writes for S3 buckets in tensorstore. [#1368](https://github.com/scalableminds/webknossos-libs/pull/1368)
+
+### Fixed
 - Fixed that some operations that need an authentication token didn’t ask for it but just failed. [#1366](https://github.com/scalableminds/webknossos-libs/pull/1366)
+
 
 
 ## [2.4.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.11) - 2025-09-02
