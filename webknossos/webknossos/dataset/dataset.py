@@ -32,6 +32,7 @@ from ..client.api_client.models import (
     ApiMetadata,
     ApiPrecomputedMeshInfo,
     ApiReserveDatasetUplaodToPathsParameters,
+    ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiUnusableDataSource,
 )
 from ..geometry import (
@@ -518,6 +519,30 @@ class Dataset:
     def resolved_path(self) -> UPath | None:
         return self._resolved_path
 
+    def publish_to_preliminary_dataset(
+        self,
+        dataset_id: str,
+        path_prefix: str | None = None,
+    ) -> None:
+        """
+        Copies the data to paths returned by WEBKNOSSOS
+        The dataset needs to be in status "uploading".
+        The dataset already exists in WEBKNOSSOS but has no dataset_properties.
+        With the dataset_properties WEBKNOSSOS can reserve the paths.
+        """
+        from ..client.context import _get_context
+
+        context = _get_context()
+        response = context.api_client_with_auth.reserve_dataset_upload_to_paths_for_preliminary(
+            dataset_id,
+            ApiReserveDatasetUploadToPathsForPreliminaryParameters(
+                self._properties, path_prefix
+            ),
+        )
+        self._copy_dataset_to_paths(response.data_source)
+
+        context.api_client_with_auth.finish_dataset_upload_to_paths(dataset_id)
+
     def publish_to_webknossos(
         self,
         dataset_name: str,
@@ -581,6 +606,12 @@ class Dataset:
         new_dataset_id = response.new_dataset_id
         data_source = response.data_source
 
+        self._copy_dataset_to_paths(data_source)
+        # announce finished upload
+        context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
+        return new_dataset_id
+
+    def _copy_dataset_to_paths(self, data_source: DatasetProperties) -> None:
         # This needs to be set to make sure the encoding is not chunked when uploading
         os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"
         # copy data
@@ -607,9 +638,6 @@ class Dataset:
                         enrich_path(dst_attachment.path),
                         progress_desc=f"copying attachment {src_attachment.path} to {dst_attachment.path}",
                     )
-        # announce finished upload
-        context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
-        return new_dataset_id
 
     @classmethod
     def trigger_reload_in_datastore(
