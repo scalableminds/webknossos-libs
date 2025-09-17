@@ -9,7 +9,6 @@ from unittest import mock
 
 import numpy as np
 import pytest
-from cattrs import ClassValidationError
 from cluster_tools import get_executor
 from jsonschema import validate
 from upath import UPath
@@ -3377,7 +3376,7 @@ def test_dataset_properties_version() -> None:
     properties["version"] = 9000
     properties_path.write_text(json.dumps(properties))
 
-    with pytest.raises(ClassValidationError):
+    with pytest.raises(AssertionError):
         Dataset.open(ds_path)
 
 
