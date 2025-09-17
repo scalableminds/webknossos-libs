@@ -428,3 +428,14 @@ class ApiReserveAttachmentUploadToPathParameters:
     attachment_name: str
     attachment_type: str
     attachment_dataformat: str
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadToPathsForPreliminaryParameters:
+    data_source: DatasetProperties
+    path_prefix: str | None
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
+    data_source: DatasetProperties

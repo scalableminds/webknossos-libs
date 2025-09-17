@@ -17,6 +17,8 @@ from webknossos.client.api_client.models import (
     ApiProjectCreate,
     ApiReserveAttachmentUploadToPathParameters,
     ApiReserveDatasetUplaodToPathsParameters,
+    ApiReserveDatasetUploadToPathsForPreliminaryParameters,
+    ApiReserveDatasetUploadToPathsForPreliminaryResponse,
     ApiReserveDatasetUploadToPathsResponse,
     ApiSharingToken,
     ApiShortLink,
@@ -319,6 +321,18 @@ class WkApiClient(AbstractApiClient):
             ApiReserveDatasetUploadToPathsResponse,
         )
 
+    def reserve_dataset_upload_to_paths_for_preliminary(
+        self,
+        dataset_id: str,
+        reserve_dataset_upload_to_path_for_preliminary_parameters: ApiReserveDatasetUploadToPathsForPreliminaryParameters,
+    ) -> ApiReserveDatasetUploadToPathsForPreliminaryResponse:
+        route = f"/datasets/{dataset_id}/reserveUploadToPathsForPreliminary"
+        return self._post_json_with_json_response(
+            route,
+            reserve_dataset_upload_to_path_for_preliminary_parameters,
+            ApiReserveDatasetUploadToPathsForPreliminaryResponse,
+        )
+
     def reserve_attachment_upload_to_path(
         self,
         dataset_id: str,
@@ -353,5 +367,4 @@ class WkApiClient(AbstractApiClient):
         )
 
     def finish_dataset_upload_to_paths(self, dataset_id: str) -> None:
-        route = "/datasets/finishUploadToPaths"
-        self._post(route, query={"datasetId": dataset_id})
+        self._post(f"/datasets/{dataset_id}/finishUploadToPaths")
