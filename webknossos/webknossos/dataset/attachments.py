@@ -300,10 +300,9 @@ class Attachments:
         else:
             raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
 
-    def add_attachments(self, *other: Attachment) -> Iterator[Attachment]:
+    def add_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_attachments", "add_attachment_as_ref")
-        for attachment in other:
-            yield self.add_attachment_as_ref(attachment)
+        return [self.add_attachment_as_ref(attachment) for attachment in other]
 
     def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
         new_attachment = type(attachment).from_path_and_name(
@@ -315,10 +314,9 @@ class Attachments:
         self._add_attachment(new_attachment)
         return new_attachment
 
-    def add_copy_attachments(self, *other: Attachment) -> Iterator[Attachment]:
+    def add_copy_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
-        for attachment in other:
-            yield self.add_attachment_as_copy(*other)
+        return [self.add_attachment_as_copy(attachment) for attachment in other]
 
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         new_path = cheap_resolve(
@@ -339,13 +337,14 @@ class Attachments:
 
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False
-    ) -> Iterator[Attachment]:
+    ) -> list[Attachment]:
         warnings.warn(
             "Using symlinks is deprecated and will be removed in a future version. "
             + "Use `add_attachment_as_ref` instead, which adds an attachment as a reference to the layer.",
             DeprecationWarning,
             stacklevel=2,
         )
+        output = []
         for attachment in other:
             new_path = cheap_resolve(attachment.path)
             if is_fs_path(attachment.path):
@@ -366,7 +365,8 @@ class Attachments:
                 dataset_path=self._layer.dataset.resolved_path,
             )
             self._add_attachment(new_attachment)
-            yield new_attachment
+            output.append(new_attachment)
+        return output
 
     def detect_legacy_attachments(self) -> None:
         """Detects and adds legacy attachments.
