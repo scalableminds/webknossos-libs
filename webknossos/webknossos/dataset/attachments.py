@@ -227,63 +227,63 @@ class Attachments:
 
     def add_mesh(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            MeshAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
+    ) -> MeshAttachment:
+        attachment = MeshAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._layer.dataset.resolved_path,
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def add_agglomerate(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            AgglomerateAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
+    ) -> AgglomerateAttachment:
+        attachment = AgglomerateAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._layer.dataset.resolved_path,
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def add_connectome(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            ConnectomeAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
+    ) -> ConnectomeAttachment:
+        attachment = ConnectomeAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._layer.dataset.resolved_path,
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def set_segment_index(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            SegmentIndexAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
+    ) -> SegmentIndexAttachment:
+        attachment = SegmentIndexAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._layer.dataset.resolved_path,
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def set_cumsum(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            CumsumAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
+    ) -> CumsumAttachment:
+        attachment = CumsumAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._layer.dataset.resolved_path,
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def delete_attachment(self, attachment: Attachment) -> None:
         self._layer._ensure_writable()
@@ -300,10 +300,10 @@ class Attachments:
         else:
             raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
 
-    def add_attachments(self, *other: Attachment) -> None:
+    def add_attachments(self, *other: Attachment) -> Iterator[Attachment]:
         warn_deprecated("add_attachments", "add_attachment_as_ref")
         for attachment in other:
-            self.add_attachment_as_ref(attachment)
+            yield self.add_attachment_as_ref(attachment)
 
     def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
         new_attachment = type(attachment).from_path_and_name(
@@ -315,10 +315,10 @@ class Attachments:
         self._add_attachment(new_attachment)
         return new_attachment
 
-    def add_copy_attachments(self, *other: Attachment) -> None:
+    def add_copy_attachments(self, *other: Attachment) -> Iterator[Attachment]:
         warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
         for attachment in other:
-            self.add_attachment_as_copy(*other)
+            yield self.add_attachment_as_copy(*other)
 
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         new_path = cheap_resolve(
@@ -339,7 +339,7 @@ class Attachments:
 
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False
-    ) -> None:
+    ) -> Iterator[Attachment]:
         warnings.warn(
             "Using symlinks is deprecated and will be removed in a future version. "
             + "Use `add_attachment_as_ref` instead, which adds an attachment as a reference to the layer.",
@@ -366,6 +366,7 @@ class Attachments:
                 dataset_path=self._layer.dataset.resolved_path,
             )
             self._add_attachment(new_attachment)
+            yield new_attachment
 
     def detect_legacy_attachments(self) -> None:
         """Detects and adds legacy attachments.
