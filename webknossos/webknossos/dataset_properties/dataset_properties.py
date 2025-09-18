@@ -1,5 +1,4 @@
 from collections.abc import Iterable, Iterator
-from typing import Literal
 
 import attr
 
@@ -159,7 +158,10 @@ class DatasetProperties:
     """
     scale: VoxelSize
     data_layers: list[SegmentationLayerProperties | LayerProperties]
-    version: Literal[1] = 1
+    version: int
+    """
+    A default version is set during structuring
+    """
     default_view_configuration: DatasetViewConfiguration | None = None
 
     def update_for_layer(
