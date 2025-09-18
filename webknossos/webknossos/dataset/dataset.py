@@ -3363,23 +3363,26 @@ class RemoteDataset(Dataset):
         # Atm, the wk backend needs to get previous parameters passed
         # (this is a race-condition with parallel updates).
 
-        info = self._get_dataset_info()
+        dataset_updates: dict[str, Any] = {}
+
         if name is not _UNSET:
-            info.name = name
+            dataset_updates["name"] = name
         if description is not _UNSET:
-            info.description = description
+            dataset_updates["description"] = description
         if tags is not _UNSET:
-            info.tags = tags
+            dataset_updates["tags"] = tags
         if is_public is not _UNSET:
-            info.is_public = is_public
+            dataset_updates["isPublic"] = is_public
         if folder_id is not _UNSET:
-            info.folder_id = folder_id
+            dataset_updates["folderId"] = folder_id
         if metadata is not _UNSET:
-            info.metadata = metadata
+            dataset_updates["metadata"] = metadata
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update(dataset_id=self._dataset_id, updated_dataset=info)
+            client.dataset_update(
+                dataset_id=self._dataset_id, dataset_updates=dataset_updates
+            )
 
     @property
     def metadata(self) -> DatasetMetadata:
