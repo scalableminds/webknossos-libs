@@ -215,7 +215,7 @@ class Attachments:
     ) -> None:
         self._layer._ensure_writable()
         self._add_attachment_to_container(attachment)
-        self._layer.dataset._export_as_json()
+        self._layer.dataset._save_dataset_properties()
 
     def _remove_attachment(
         self,
@@ -241,7 +241,7 @@ class Attachments:
             properties_container.remove(attachment._properties)
             if len(properties_container) == 0:
                 setattr(self._properties, container_name, None)
-        self._layer.dataset._export_as_json()
+        self._layer.dataset._save_dataset_properties()
 
     def add_mesh(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat

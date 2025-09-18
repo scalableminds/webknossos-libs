@@ -402,7 +402,7 @@ class Layer:
             # The new dataset will be opened automatically when needed.
             del mag._array
 
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
     @property
     def dataset(self) -> "Dataset":
@@ -432,7 +432,7 @@ class Layer:
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
         self._properties.bounding_box = bbox
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
         for mag in self.mags.values():
             mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
@@ -514,7 +514,7 @@ class Layer:
     ) -> None:
         self._ensure_metadata_writable()
         self._properties.default_view_configuration = view_configuration
-        self.dataset._export_as_json()  # update properties on disk
+        self.dataset._save_dataset_properties()  # update properties on disk
 
     @property
     def read_only(self) -> bool:
@@ -670,7 +670,7 @@ class Layer:
             )
         ]
 
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
         return self._mags[mag]
 
@@ -731,7 +731,7 @@ class Layer:
                 path=stored_path,
             )
         )
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
         return mag_view
 
@@ -835,7 +835,7 @@ class Layer:
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag
         ]
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
         if not mag_view.is_foreign:
             # delete files on disk
             rmtree(full_path)
@@ -1104,7 +1104,7 @@ class Layer:
                 axis_order=foreign_mag_view._properties.axis_order,
             )
         )
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
@@ -1833,7 +1833,7 @@ class SegmentationLayer(Layer):
             largest_segment_id = int(largest_segment_id)
 
         self._properties.largest_segment_id = largest_segment_id
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
     @property
     def category(self) -> LayerCategoryType:

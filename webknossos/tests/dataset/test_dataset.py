@@ -1139,7 +1139,7 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
 
     ds = Dataset.open(ds_path)
     assert ds.get_layer("color").num_channels == 1
-    ds._export_as_json()
+    ds._save_dataset_properties()
 
     with open(
         ds_path / "datasource-properties.json",
@@ -1244,7 +1244,7 @@ def test_relative_mag_paths(data_format: DataFormat, output_path: UPath) -> None
             else:
                 mag._properties.path = f"{layer.name}/{mag.path.name}"
 
-    ds._export_as_json()
+    ds._save_dataset_properties()
 
     ds = Dataset.open(ds_path)
     for layer in ds.layers.values():
@@ -2181,7 +2181,7 @@ def test_search_dataset_also_for_long_layer_name(
 
     # Remove path from mag to let the path be auto-detected
     ds._properties.data_layers[0].mags[0].path = None
-    ds._export_as_json()
+    ds._save_dataset_properties()
 
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))

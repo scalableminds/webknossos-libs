@@ -372,7 +372,7 @@ class Dataset:
         """
         path = strip_trailing_slash(UPath(dataset_path))
 
-        self._read_only = read_only or path is None
+        self._read_only = read_only
         self.path: UPath | None = path
         """
         Not all datasets need a path, e.g. the RemoteDataset, just points the mags to the remote location.
@@ -882,6 +882,7 @@ class Dataset:
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         use_zarr_streaming: bool = True,
+        read_only: bool = False,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -934,7 +935,9 @@ class Dataset:
                     headers={} if token is None else {"X-Auth-Token": token},
                     ssl=SSL_CONTEXT,
                 )
-                return RemoteDataset(zarr_path, None, dataset_id, context_manager)
+                return RemoteDataset(
+                    zarr_path, None, dataset_id, context_manager, read_only
+                )
             else:
                 if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                     raise RuntimeError(
@@ -942,7 +945,11 @@ class Dataset:
                     )
 
                 return RemoteDataset(
-                    None, api_dataset_info.data_source, dataset_id, context_manager
+                    None,
+                    api_dataset_info.data_source,
+                    dataset_id,
+                    context_manager,
+                    read_only,
                 )
 
     @classmethod
@@ -1270,7 +1277,7 @@ class Dataset:
         current_id = self._properties.id
         current_id["name"] = name
         self._properties.id = current_id
-        self._export_as_json()
+        self._save_dataset_properties()
 
     @property
     def default_view_configuration(self) -> DatasetViewConfiguration | None:
@@ -1299,7 +1306,7 @@ class Dataset:
     ) -> None:
         self._ensure_writable()
         self._properties.default_view_configuration = view_configuration
-        self._export_as_json()  # update properties on disk
+        self._save_dataset_properties()  # update properties on disk
 
     @property
     def read_only(self) -> bool:
@@ -1575,7 +1582,7 @@ class Dataset:
                 f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
             )
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[layer_name]
 
     def get_or_add_layer(
@@ -1702,7 +1709,7 @@ class Dataset:
             raise RuntimeError(
                 f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
             )
-        self._export_as_json()
+        self._save_dataset_properties()
         return self._layers[layer_name]
 
     def _add_existing_layer(self, layer_properties: LayerProperties) -> Layer:
@@ -1719,7 +1726,7 @@ class Dataset:
         )
         self.layers[layer.name] = layer
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[layer.name]
 
     def add_layer_for_existing_files(
@@ -2203,7 +2210,7 @@ class Dataset:
                         self._properties.update_for_layer(
                             layer.name, new_layer_properties
                         )
-                        self._export_as_json()
+                        self._save_dataset_properties()
 
             except Exception:
                 # The used heuristic was not able to guess the layer category, the previous value is kept
@@ -2382,7 +2389,7 @@ class Dataset:
         # delete files on disk
         # rmtree does not recurse into linked dirs, but removes the link
         rmtree(layer_path)
-        self._export_as_json()
+        self._save_dataset_properties()
 
     def add_copy_layer(
         self,
@@ -2645,7 +2652,7 @@ class Dataset:
             new_layer_properties, read_only=True
         )
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[new_layer_name]
 
     def add_remote_layer(
@@ -2778,7 +2785,7 @@ class Dataset:
             new_layer_properties, read_only=False
         )
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[new_layer_name]
 
     def calculate_bounding_box(self) -> NDBoundingBox:
@@ -2904,7 +2911,7 @@ class Dataset:
                     exists_ok=exists_ok,
                     executor=executor,
                 )
-        new_dataset._export_as_json()
+        new_dataset._save_dataset_properties()
         return new_dataset
 
     def fs_copy_dataset(
@@ -2974,7 +2981,7 @@ class Dataset:
             ):
                 for attachment in layer.attachments:
                     new_layer.attachments.add_attachment_as_copy(attachment)
-        new_dataset._export_as_json()
+        new_dataset._save_dataset_properties()
         return new_dataset
 
     def shallow_copy_dataset(
@@ -3149,7 +3156,10 @@ class Dataset:
         properties = get_dataset_converter().structure(data, DatasetProperties)
         return properties
 
-    def _export_as_json(self) -> None:
+    def _save_dataset_properties(self) -> None:
+        """
+        Exports the current dataset properties to json on disk (or in remote dataset case to server)
+        """
         self._ensure_writable()
         assert self.path is not None, "Cannot export properties without path."
         properties_on_disk = self._load_properties(self.path)
@@ -3313,6 +3323,7 @@ class RemoteDataset(Dataset):
         dataset_properties: DatasetProperties | None,
         dataset_id: str,
         context: "webknossos_context",
+        read_only: bool,
     ) -> None:
         """Initialize a remote dataset instance.
 
@@ -3334,7 +3345,7 @@ class RemoteDataset(Dataset):
         )
         self.path = zarr_streaming_path
         self._resolved_path = zarr_streaming_path
-        self._read_only = True
+        self._read_only = read_only
         self._use_zarr_streaming = zarr_streaming_path is not None
 
         try:
@@ -3449,6 +3460,25 @@ class RemoteDataset(Dataset):
             client.dataset_update(
                 dataset_id=self._dataset_id, dataset_updates=dataset_updates
             )
+
+    def _save_dataset_properties(self) -> None:
+        """
+        Exports the current dataset properties to the server.
+        Note that some edits will not be accepted by the server.
+        The client-side RemoteDataset is reinitialized to the new server state.
+        """
+        from ..client.context import _get_api_client
+
+        with self._context:
+            client = _get_api_client()
+            client.dataset_update(
+                dataset_id=self._dataset_id,
+                dataset_updates={"dataSource": self._properties},
+            )
+            dataset_info = client.dataset_info(dataset_id=self._dataset_id)
+            data_source = dataset_info.data_source
+            assert isinstance(data_source, DatasetProperties)
+            self._init_from_properties(data_source)
 
     @property
     def metadata(self) -> DatasetMetadata:
