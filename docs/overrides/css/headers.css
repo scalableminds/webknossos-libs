@@ -1,0 +1,4 @@
+.md-typeset h3{
+    /* Slightly shrink the h3 headers to better differentiate them from the h2 headers */
+    font-size: 1.1em;
+  }
