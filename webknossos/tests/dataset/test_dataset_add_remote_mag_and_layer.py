@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from webknossos.dataset import COLOR_CATEGORY, Dataset
+from webknossos import COLOR_CATEGORY, Dataset
 from webknossos.geometry import BoundingBox
 from webknossos.utils import is_remote_path
 
@@ -95,6 +95,7 @@ def test_ref_layer_from_object(sample_remote_dataset: Dataset) -> None:
     remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
+        assert layer.path is not None, "Zarr streaming sets a remote path."
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_object"
         sample_remote_dataset.add_layer_as_ref(layer, layer_name)
@@ -108,6 +109,7 @@ def test_ref_layer_from_path(sample_remote_dataset: Dataset) -> None:
     remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
+        assert layer.path is not None, "Zarr streaming sets a remote path."
         assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_path"
         sample_remote_dataset.add_layer_as_ref(UPath(layer.path), layer_name)

@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v10/buildinfo
+      path: /api/v11/buildinfo
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -22,13 +22,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 11 Sep 2025 11:48:54 GMT
+        date: Thu, 18 Sep 2025 12:06:49 GMT
         content-type: application/json
         content-length: '400'
       body:
         encoding: utf8
         data: >-
-          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"abcdb07363a32ee530a3c178debb499aae37769e","ciBuild":"17615971194","scalaVersion":"2.13.16","version":"17615971194","sbtVersion":"1.11.4","commitDate":"Wed
-          Sep 10 13:50:33 2025
-          +0000"},"schemaVersion":139,"httpApiVersioning":{"currentApiVersion":10,"oldestSupportedApiVersion":5},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}
+          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"08a00bc7d245faa7bbe89203f0d75562ac8288a9","ciBuild":"17797070893","scalaVersion":"2.13.16","version":"17797070893","sbtVersion":"1.11.4","commitDate":"Wed
+          Sep 17 12:08:59 2025
+          +0000"},"schemaVersion":141,"httpApiVersioning":{"currentApiVersion":11,"oldestSupportedApiVersion":5},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}
         compression: none
