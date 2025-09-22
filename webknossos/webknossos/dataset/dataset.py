@@ -2,6 +2,7 @@ import copy
 import inspect
 import json
 import logging
+import os
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -11,7 +12,7 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Union, cast
 
 import attr
 import numpy as np
@@ -26,6 +27,8 @@ from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
+    ApiLinkedLayerIdentifier,
+    ApiLinkedLayerIdentifierLegacy,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
     ApiReserveDatasetUplaodToPathsParameters,
@@ -56,7 +59,6 @@ from .defaults import (
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
-from .layer_to_link import LayerToLink
 from .ome_metadata import write_ome_metadata
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
@@ -66,7 +68,7 @@ if TYPE_CHECKING:
     import pims
 
     from ..administration.user import Team
-    from ..client.context import webknossos_context
+    from ..client.context import _get_context, webknossos_context
 
 from ..dataset_properties import (
     COLOR_CATEGORY,
@@ -152,6 +154,46 @@ def _find_array_info(layer_path: Path) -> ArrayInfo | None:
 
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
+
+
+class LayerToLink(NamedTuple):
+    dataset_id: str
+    layer_name: str
+    new_layer_name: str | None = None
+    organization_id: str | None = (
+        None  # defaults to the user's organization before uploading
+    )
+
+    @classmethod
+    def from_remote_layer(
+        cls,
+        layer: Layer,
+        new_layer_name: str | None = None,
+        organization_id: str | None = None,
+    ) -> "LayerToLink":
+        ds = layer.dataset
+        assert isinstance(ds, RemoteDataset), (
+            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        )
+        return cls(ds.dataset_id, layer.name, new_layer_name, organization_id)
+
+    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
+        assert self.dataset_id is not None, f"The dataset id is not set: {self}"
+        return ApiLinkedLayerIdentifier(
+            self.dataset_id,
+            self.layer_name,
+            self.new_layer_name,
+        )
+
+    def as_api_linked_layer_identifier_legacy(self) -> ApiLinkedLayerIdentifierLegacy:
+        context = _get_context()
+        return ApiLinkedLayerIdentifierLegacy(
+            self.organization_id or context.organization_id,
+            #  webknossos checks for id too, if the name cannot be found
+            self.dataset_id,
+            self.layer_name,
+            self.new_layer_name,
+        )
 
 
 class Dataset:
