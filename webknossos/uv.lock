@@ -766,7 +766,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/94/c0/7e02f89b006252159c502e1537451dde6ea1e7355196758d4425dede5e3c/imagecodecs-2025.3.30-cp313-cp313-win32.whl", hash = "sha256:66b614488d85d91f456b949fde4ad678dbe95cde38861043122237de086308c1", size = 24104234, upload-time = "2025-03-30T04:44:39.579Z" },
     { url = "https://files.pythonhosted.org/packages/d3/be/e4aa5ed727ab4178362c695ea862d4c3e25988020ec1b05f8fedbef2ef5f/imagecodecs-2025.3.30-cp313-cp313-win_amd64.whl", hash = "sha256:1c51fef75fec66b4ea5e98b4ab47889942049389278749e1f96329c38f31c377", size = 28865173, upload-time = "2025-03-30T04:44:43.932Z" },
     { url = "https://files.pythonhosted.org/packages/d2/ad/5c21694d68a563a0dcbae97b460093ec165efbb795695ea02b24415d6c79/imagecodecs-2025.3.30-cp313-cp313-win_arm64.whl", hash = "sha256:eda70c0b9d2bcf225f7ae12dbefd0e3ab92ea7db30cdb56b292517fb61357ad7", size = 23731786, upload-time = "2025-03-30T04:44:47.697Z" },
-    { url = "https://files.pythonhosted.org/packages/40/46/3d448dc36e8ef758d6e9600bee926ce2fc6f6820402dcf078d0467d80041/imagecodecs-2025.3.30-cp313-cp313t-win_amd64.whl", hash = "sha256:8861d76ca85b823e88604e58ee31131dd5133bfc30147147368d335c5b0e42e1", size = 29134923, upload-time = "2025-04-05T03:00:06.857Z" },
 ]
 
 [[package]]
@@ -2344,6 +2343,7 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "python-dotenv" },
     { name = "rich" },
+    { name = "s3fs" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.scm.io/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.16.0", source = { registry = "https://pypi.scm.io/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "tensorstore" },
@@ -2434,6 +2434,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = "~=2.8.0" },
     { name = "python-dotenv", specifier = "~=1.0.1" },
     { name = "rich", specifier = "~=13.8.0" },
+    { name = "s3fs", specifier = ">=2024.6.1" },
     { name = "s3fs", marker = "extra == 'examples'", specifier = ">=2023.9.0" },
     { name = "scikit-image", marker = "extra == 'examples'", specifier = "~=0.25.0" },
     { name = "scikit-learn", marker = "extra == 'examples'", specifier = "~=1.5.1" },

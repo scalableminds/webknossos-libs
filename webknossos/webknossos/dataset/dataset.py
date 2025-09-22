@@ -11,7 +11,7 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Union, cast
 
 import attr
 import numpy as np
@@ -26,8 +26,13 @@ from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
+    ApiLinkedLayerIdentifier,
+    ApiLinkedLayerIdentifierLegacy,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
+    ApiReserveDatasetUplaodToPathsParameters,
+    ApiReserveDatasetUploadToPathsForPreliminaryParameters,
+    ApiUnusableDataSource,
 )
 from ..geometry import (
     BoundingBox,
@@ -39,6 +44,7 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
+from ..ssl_context import SSL_CONTEXT
 from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3Config
 from ._metadata import DatasetMetadata
 from ._utils import pims_images
@@ -49,7 +55,6 @@ from .defaults import (
     DEFAULT_SHARD_SHAPE,
     DEFAULT_SHARD_SHAPE_FROM_IMAGES,
     PROPERTIES_FILE_NAME,
-    SSL_CONTEXT,
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
@@ -62,14 +67,30 @@ if TYPE_CHECKING:
     import pims
 
     from ..administration.user import Team
-    from ..client._upload_dataset import LayerToLink
-    from ..client.context import webknossos_context
+    from ..client.context import _get_context, webknossos_context
 
+from ..dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    AttachmentsProperties,
+    DataFormat,
+    DatasetProperties,
+    DatasetViewConfiguration,
+    LayerCategoryType,
+    LayerProperties,
+    SegmentationLayerProperties,
+    VoxelSize,
+)
+from ..dataset_properties.structuring import (
+    _properties_floating_type_to_python_type,
+    get_dataset_converter,
+)
 from ..utils import (
     cheap_resolve,
     copytree,
     count_defined_values,
     dump_path,
+    enrich_path,
     get_executor_for_args,
     infer_metadata_type,
     is_fs_path,
@@ -84,7 +105,6 @@ from ._utils.segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
-from .data_format import DataFormat
 from .layer import (
     Layer,
     SegmentationLayer,
@@ -93,17 +113,6 @@ from .layer import (
     _get_shard_shape,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
-)
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
-from .properties import (
-    DatasetProperties,
-    DatasetViewConfiguration,
-    LayerProperties,
-    SegmentationLayerProperties,
-    VoxelSize,
-    _extract_num_channels,
-    _properties_floating_type_to_python_type,
-    dataset_converter,
 )
 
 logger = logging.getLogger(__name__)
@@ -144,6 +153,46 @@ def _find_array_info(layer_path: Path) -> ArrayInfo | None:
 
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
+
+
+class LayerToLink(NamedTuple):
+    dataset_id: str
+    layer_name: str
+    new_layer_name: str | None = None
+    organization_id: str | None = (
+        None  # defaults to the user's organization before uploading
+    )
+
+    @classmethod
+    def from_remote_layer(
+        cls,
+        layer: Layer,
+        new_layer_name: str | None = None,
+        organization_id: str | None = None,
+    ) -> "LayerToLink":
+        ds = layer.dataset
+        assert isinstance(ds, RemoteDataset), (
+            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        )
+        return cls(ds.dataset_id, layer.name, new_layer_name, organization_id)
+
+    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
+        assert self.dataset_id is not None, f"The dataset id is not set: {self}"
+        return ApiLinkedLayerIdentifier(
+            self.dataset_id,
+            self.layer_name,
+            self.new_layer_name,
+        )
+
+    def as_api_linked_layer_identifier_legacy(self) -> ApiLinkedLayerIdentifierLegacy:
+        context = _get_context()
+        return ApiLinkedLayerIdentifierLegacy(
+            self.organization_id or context.organization_id,
+            #  webknossos checks for id too, if the name cannot be found
+            self.dataset_id,
+            self.layer_name,
+            self.new_layer_name,
+        )
 
 
 class Dataset:
@@ -322,8 +371,11 @@ class Dataset:
         path = strip_trailing_slash(UPath(dataset_path))
 
         self._read_only = read_only
-        self.path: UPath = path
-        self._resolved_path: UPath = cheap_resolve(path)
+        self.path: UPath | None = path
+        """
+        Not all datasets need a path, e.g. the RemoteDataset, just points the mags to the remote location.
+        """
+        self._resolved_path: UPath | None = cheap_resolve(path)
 
         if count_defined_values((voxel_size, voxel_size_with_unit)) > 1:
             raise ValueError(
@@ -385,7 +437,7 @@ class Dataset:
             )
             (self.path / PROPERTIES_FILE_NAME).write_text(
                 json.dumps(
-                    dataset_converter.unstructure(dataset_properties),
+                    get_dataset_converter().unstructure(dataset_properties),
                     indent=4,
                 )
             )
@@ -421,17 +473,20 @@ class Dataset:
         self._layers: dict[str, Layer] = {}
         # construct self.layers
         for layer_properties in self._properties.data_layers:
-            num_channels = _extract_num_channels(
-                layer_properties.num_channels,
-                self.path,
-                layer_properties.name,
-                (
-                    layer_properties.mags[0].mag
-                    if len(layer_properties.mags) > 0
-                    else None
-                ),
-            )
-            layer_properties.num_channels = num_channels
+            if layer_properties.num_channels is None:
+                assert self.path is not None, (
+                    "self.path must be set to extract num_channels"
+                )
+                layer_properties.num_channels = _extract_num_channels(
+                    layer_properties.num_channels,
+                    self.path,
+                    layer_properties.name,
+                    (
+                        layer_properties.mags[0].mag
+                        if len(layer_properties.mags) > 0
+                        else None
+                    ),
+                )
 
             layer = self._initialize_layer_from_properties(
                 layer_properties, self.read_only
@@ -460,73 +515,194 @@ class Dataset:
         return dataset._init_from_properties(dataset_properties)
 
     @property
-    def resolved_path(self) -> UPath:
+    def resolved_path(self) -> UPath | None:
         return self._resolved_path
 
-    @classmethod
-    def announce_manual_upload(
-        cls,
-        dataset_name: str,
-        organization: str,
-        initial_team_ids: list[str],
-        folder_id: str | RemoteFolder | None,
-        require_unique_name: bool = False,
-        token: str | None = None,
-        datastore_url: str | None = None,
-    ) -> tuple[str, str]:
-        """Announce a manual dataset upload to WEBKNOSSOS.
+    def publish_to_preliminary_dataset(
+        self,
+        dataset_id: str,
+        path_prefix: str | None = None,
+        symlink_data_instead_of_copy: bool = False,
+    ) -> None:
+        """
+        Copies or symlinks the data to paths returned by WEBKNOSSOS
+        The dataset needs to be in status "uploading".
+        The dataset already exists in WEBKNOSSOS but has no dataset_properties.
+        With the dataset_properties WEBKNOSSOS can reserve the paths.
+        Args:
+            dataset_id: The dataset_id of the already existing dataset
+            path_prefix: The prefix of the storage path, can be used to select one of the storage path options.
+            symlink_data_instead_of_copy: Set to true if the client has access to the same file system as the WEBKNOSSOS datastore.
+        """
+        from ..client.context import _get_context
 
-        Used when manually uploading datasets to the file system of a datastore.
+        context = _get_context()
+        response = context.api_client_with_auth.reserve_dataset_upload_to_paths_for_preliminary(
+            dataset_id,
+            ApiReserveDatasetUploadToPathsForPreliminaryParameters(
+                self._properties, path_prefix
+            ),
+        )
+        self._copy_or_symlink_dataset_to_paths(
+            response.data_source, symlink_data_instead_of_copy
+        )
+
+        context.api_client_with_auth.finish_dataset_upload_to_paths(dataset_id)
+
+    def upload(
+        self,
+        new_dataset_name: str | None = None,
+        initial_team_ids: list[str] | None = None,
+        folder_id: str | RemoteFolder | None = None,
+        require_unique_name: bool = False,
+        layers_to_link: list[LayerToLink | Layer] | None = None,
+        upload_directly_to_common_storage: bool = False,
+        jobs: int | None = None,
+        common_storage_path_prefix: str | None = None,
+        symlink_data_instead_of_copy: bool = False,
+    ) -> "RemoteDataset":
+        """Upload this dataset to webknossos.
+
         Creates database entries and sets access rights on the webknossos instance before the actual data upload.
+        The client then copies the data directly to the returned paths.
 
         Args:
-            dataset_name: Name for the new dataset
-            organization: Organization ID to upload to
-            initial_team_ids: List of team IDs to grant initial access
+            new_dataset_name: Name for the new dataset defaults to the current name.
+            initial_team_ids: Optional list of team IDs to grant initial access
             folder_id: Optional ID of folder where dataset should be placed
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
-            token: Optional authentication token
-            datastore_url: If the WEBKNOSSOS instance has multiple datastores, supply a url to select one.
-
+            layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
+            upload_directly_to_common_storage: Set this to true when the client has access to the same storage system as the WEBKNOSSOS datastore (file system or cloud storage).
+            jobs: Optional number of jobs to use for uploading the data.
+            common_storage_path_prefix: Optional path prefix used when upload_directly_to_common_storage is true to select one of the available mount points for the dataset folder.
+            symlink_data_instead_of_copy: Considered, when upload_directly_to_common_storage is True. Set this to true when the client has access to the same file system as the WEBKNOSSOS datastore.
+            When set to true, the data symlinked to the new location.
+        Returns:
+            RemoteDataset: Reference to the newly created remote dataset
         Note:
-            This is typically only used by administrators with direct file system
-            access to the WEBKNOSSOS datastore. Most users should use upload() instead.
-
+            upload_directly_to_common_storage is typically only used by administrators with direct file system or S3 access to the WEBKNOSSOS datastore.
+            Most users should let upload_directly_to_common_storage to default to False
         Examples:
             ```
-            Dataset.announce_manual_upload(
+            remote_ds = ds.upload(
                 "my_dataset",
-                "my_organization",
                 ["team_a", "team_b"],
                 "folder_123"
             )
+            print(remote_ds.url)
+            ```
+            Link existing layers:
+            ```
+            link = LayerToLink.from_remote_layer(existing_layer)
+            remote_ds = ds.upload(layers_to_link=[link])
             ```
         """
 
-        from ..client._upload_dataset import _cached_get_upload_datastore
-        from ..client.api_client.models import ApiDatasetAnnounceUpload
         from ..client.context import _get_context
+
+        new_dataset_name = new_dataset_name or self.name
 
         if isinstance(folder_id, RemoteFolder):
             folder_id = folder_id.id
 
-        context = _get_context()
-        dataset_announce = ApiDatasetAnnounceUpload(
-            dataset_name=dataset_name,
-            organization=organization,
-            initial_team_ids=initial_team_ids,
-            folder_id=folder_id,
-            require_unique_name=require_unique_name,
+        converted_layers_to_link = (
+            None
+            if layers_to_link is None
+            else [
+                i if isinstance(i, LayerToLink) else LayerToLink.from_remote_layer(i)
+                for i in layers_to_link
+            ]
         )
-        if datastore_url is None:
-            datastore_url = _cached_get_upload_datastore(context)
-        datastore_api = context.get_datastore_api_client(
-            datastore_url, require_auth=True
-        )
-        response = datastore_api.dataset_reserve_manual_upload(
-            dataset_announce=dataset_announce, token=token
-        )
-        return response.new_dataset_id, response.directory_name
+
+        if upload_directly_to_common_storage:
+            context = _get_context()
+            response = context.api_client_with_auth.reserve_dataset_upload_to_paths(
+                ApiReserveDatasetUplaodToPathsParameters(
+                    dataset_name=new_dataset_name,
+                    initial_team_ids=initial_team_ids or [],
+                    folder_id=folder_id,
+                    require_unique_name=require_unique_name,
+                    data_source=self._properties,
+                    layers_to_link=[
+                        layer_to_link.as_api_linked_layer_identifier()
+                        for layer_to_link in converted_layers_to_link
+                    ]
+                    if converted_layers_to_link
+                    else [],
+                    path_prefix=common_storage_path_prefix,
+                )
+            )
+            new_dataset_id = response.new_dataset_id
+            data_source = response.data_source
+
+            self._copy_or_symlink_dataset_to_paths(
+                data_source, symlink_data_instead_of_copy
+            )
+            # announce finished upload
+            context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
+        else:
+            for layer in self.get_segmentation_layers():
+                if not layer.attachments.is_empty:
+                    raise NotImplementedError(
+                        f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
+                    )
+
+            from ..client._upload_dataset import upload_dataset
+
+            new_dataset_id = upload_dataset(
+                self, new_dataset_name, converted_layers_to_link, jobs
+            )
+
+        return self.open_remote(dataset_id=new_dataset_id)
+
+    def _copy_or_symlink_dataset_to_paths(
+        self, data_source: DatasetProperties, symlink_data_instead_of_copy: bool
+    ) -> None:
+        """
+        Iterates over the mags and attachments and copies or symlinks them to the target location.
+        """
+        # copy data
+        for layer in data_source.data_layers:
+            src_layer = self.layers[layer.name]
+            for mag in layer.mags:
+                src_mag = src_layer.mags[mag.mag]
+                assert mag.path is not None, "mag.path must be set to copy/move data"
+                dst_mag_path = enrich_path(mag.path)
+                if symlink_data_instead_of_copy:
+                    assert is_fs_path(src_mag.path) and is_fs_path(dst_mag_path), (
+                        f"Either src_mag.path or mag.path are not pointing to a local file system {src_mag.path}, {mag.path}"
+                    )
+                    dst_mag_path.unlink()
+                    dst_mag_path.symlink_to(src_mag.path)
+                else:
+                    copytree(
+                        src_mag.path,
+                        dst_mag_path,
+                        progress_desc=f"copying mag {src_mag.path} to {mag.path}",
+                    )
+            if isinstance(src_layer, SegmentationLayer):
+                assert isinstance(layer, SegmentationLayerProperties), (
+                    "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
+                )
+                # iterate over attachments
+                for src_attachment, dst_attachment in zip(
+                    src_layer.attachments, layer.attachments
+                ):
+                    dst_attachment_path = enrich_path(dst_attachment.path)
+                    if symlink_data_instead_of_copy:
+                        assert is_fs_path(src_attachment.path) and is_fs_path(
+                            dst_attachment_path
+                        ), (
+                            f"Either src_attachment.path or dst_attachment.path are not pointing to a local file system {src_attachment.path}, {dst_attachment.path}"
+                        )
+                        dst_attachment_path.unlink()
+                        dst_attachment_path.symlink_to(src_attachment.path)
+                    else:
+                        copytree(
+                            src_attachment.path,
+                            enrich_path(dst_attachment.path),
+                            progress_desc=f"copying attachment {src_attachment.path} to {dst_attachment.path}",
+                        )
 
     @classmethod
     def trigger_reload_in_datastore(
@@ -732,6 +908,8 @@ class Dataset:
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
+        use_zarr_streaming: bool = True,
+        read_only: bool = False,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -744,6 +922,7 @@ class Dataset:
             sharing_token: Optional sharing token for dataset access
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
             dataset_id: Optional unique ID of the dataset
+            use_zarr_streaming: Whether to use zarr streaming
 
         Returns:
             RemoteDataset: Dataset instance for remote access
@@ -777,12 +956,28 @@ class Dataset:
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
-            zarr_path = UPath(
-                f"{url_prefix}/zarr/{dataset_id}/",
-                headers={} if token is None else {"X-Auth-Token": token},
-                ssl=SSL_CONTEXT,
-            )
-            return RemoteDataset(zarr_path, dataset_id, context_manager)
+            if use_zarr_streaming:
+                zarr_path = UPath(
+                    f"{url_prefix}/zarr/{dataset_id}/",
+                    headers={} if token is None else {"X-Auth-Token": token},
+                    ssl=SSL_CONTEXT,
+                )
+                return RemoteDataset(
+                    zarr_path, None, dataset_id, context_manager, read_only
+                )
+            else:
+                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+                    raise RuntimeError(
+                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
+                    )
+
+                return RemoteDataset(
+                    None,
+                    api_dataset_info.data_source,
+                    dataset_id,
+                    context_manager,
+                    read_only,
+                )
 
     @classmethod
     def download(
@@ -1109,7 +1304,7 @@ class Dataset:
         current_id = self._properties.id
         current_id["name"] = name
         self._properties.id = current_id
-        self._export_as_json()
+        self._save_dataset_properties()
 
     @property
     def default_view_configuration(self) -> DatasetViewConfiguration | None:
@@ -1138,7 +1333,7 @@ class Dataset:
     ) -> None:
         self._ensure_writable()
         self._properties.default_view_configuration = view_configuration
-        self._export_as_json()  # update properties on disk
+        self._save_dataset_properties()  # update properties on disk
 
     @property
     def read_only(self) -> bool:
@@ -1158,63 +1353,6 @@ class Dataset:
             return self.path == other.path and self.read_only == other.read_only
         else:
             return False
-
-    def upload(
-        self,
-        new_dataset_name: str | None = None,
-        *,
-        layers_to_link: list[Union["LayerToLink", Layer]] | None = None,
-        jobs: int | None = None,
-    ) -> "RemoteDataset":
-        """Upload this dataset to webknossos.
-
-        Copies all data and metadata to webknossos, creating a new dataset that can be accessed remotely.
-        For large datasets, existing layers can be linked instead of re-uploaded.
-
-        Args:
-            new_dataset_name: Optional name for the uploaded dataset
-            layers_to_link: Optional list of layers that should link to existing data instead of being uploaded
-            jobs: Optional number of parallel upload jobs, defaults to 5
-
-        Returns:
-            RemoteDataset: Reference to the newly created remote dataset
-
-        Examples:
-            Simple upload:
-                ```
-                remote_ds = ds.upload("my_new_dataset")
-                print(remote_ds.url)
-                ```
-
-            Link existing layers:
-                ```
-                link = LayerToLink.from_remote_layer(existing_layer)
-                remote_ds = ds.upload(layers_to_link=[link])
-                ```
-        """
-
-        from ..client._upload_dataset import LayerToLink, upload_dataset
-
-        converted_layers_to_link = (
-            None
-            if layers_to_link is None
-            else [
-                i if isinstance(i, LayerToLink) else LayerToLink.from_remote_layer(i)
-                for i in layers_to_link
-            ]
-        )
-
-        for layer in self.get_segmentation_layers():
-            if not layer.attachments.is_empty:
-                raise NotImplementedError(
-                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
-                )
-
-        dataset_id = upload_dataset(
-            self, new_dataset_name, converted_layers_to_link, jobs
-        )
-
-        return self.open_remote(dataset_id=dataset_id)
 
     def get_layer(self, layer_name: str) -> Layer:
         """Get a specific layer from this dataset.
@@ -1414,7 +1552,7 @@ class Dataset:
                 f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
             )
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[layer_name]
 
     def get_or_add_layer(
@@ -1525,8 +1663,6 @@ class Dataset:
         layer_properties = copy.copy(other_layer._properties)
         layer_properties.mags = []
         if isinstance(layer_properties, SegmentationLayerProperties):
-            from .properties import AttachmentsProperties
-
             layer_properties.attachments = AttachmentsProperties()
         layer_properties.name = layer_name
 
@@ -1543,7 +1679,7 @@ class Dataset:
             raise RuntimeError(
                 f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
             )
-        self._export_as_json()
+        self._save_dataset_properties()
         return self._layers[layer_name]
 
     def _add_existing_layer(self, layer_properties: LayerProperties) -> Layer:
@@ -1560,7 +1696,7 @@ class Dataset:
         )
         self.layers[layer.name] = layer
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[layer.name]
 
     def add_layer_for_existing_files(
@@ -1615,6 +1751,9 @@ class Dataset:
             Magnifications are discovered automatically.
         """
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot add layer. The path to the dataset is not set.")
+
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
         array_info = _find_array_info(self.path / layer_name)
@@ -1634,6 +1773,9 @@ class Dataset:
             data_format=data_format,
             **kwargs,
         )
+        assert layer.path is not None, (
+            "If the dataset.path is set the layer must have a path too."
+        )
         for mag_dir in layer.path.iterdir():
             try:
                 # Tests if directory entry is a valid mag.
@@ -1643,7 +1785,10 @@ class Dataset:
                 continue
             # Mags are only writable if they are local to the dataset
             resolved_mag_path = cheap_resolve(mag_dir)
-            read_only = resolved_mag_path.parent != self.resolved_path / layer_name
+            read_only = (
+                self.resolved_path is None
+                or resolved_mag_path.parent != self.resolved_path / layer_name
+            )
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
             )
@@ -2035,7 +2180,7 @@ class Dataset:
                         self._properties.update_for_layer(
                             layer.name, new_layer_properties
                         )
-                        self._export_as_json()
+                        self._save_dataset_properties()
 
             except Exception:
                 # The used heuristic was not able to guess the layer category, the previous value is kept
@@ -2204,6 +2349,9 @@ class Dataset:
                 f"Removing layer {layer_name} failed. There is no layer with this name"
             )
         layer_path = self._layers[layer_name].path
+        assert layer_path is not None, (
+            "Cannot delete layer without path, probably a remote layer."
+        )
         del self._layers[layer_name]
         self._properties.data_layers = [
             layer for layer in self._properties.data_layers if layer.name != layer_name
@@ -2211,7 +2359,7 @@ class Dataset:
         # delete files on disk
         # rmtree does not recurse into linked dirs, but removes the link
         rmtree(layer_path)
-        self._export_as_json()
+        self._save_dataset_properties()
 
     def add_copy_layer(
         self,
@@ -2414,10 +2562,10 @@ class Dataset:
             )
         foreign_layer_path = foreign_layer.path
 
-        assert is_fs_path(self.path), (
+        assert is_fs_path(self.path) and self.path is not None, (
             f"Cannot create symlinks in remote dataset {self.path}"
         )
-        assert is_fs_path(foreign_layer_path), (
+        assert is_fs_path(foreign_layer_path) and foreign_layer_path is not None, (
             f"Cannot create symlink to remote layer {foreign_layer_path}"
         )
 
@@ -2444,6 +2592,9 @@ class Dataset:
                     else foreign_mag.path.resolve()
                 ).as_posix()
             else:
+                assert self.resolved_path is not None, (
+                    "resolved_path is not set as it is a remote dataset"
+                )
                 mag_prop.path = dump_path(foreign_mag.path, self.resolved_path)
 
         if (
@@ -2454,6 +2605,9 @@ class Dataset:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
+                        assert foreign_layer.dataset.resolved_path is not None, (
+                            "resolved_path is not set. This should only happen for remote datasets"
+                        )
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
@@ -2468,7 +2622,7 @@ class Dataset:
             new_layer_properties, read_only=True
         )
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[new_layer_name]
 
     def add_remote_layer(
@@ -2566,6 +2720,12 @@ class Dataset:
             raise IndexError(
                 f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
+        assert foreign_layer.path is not None, (
+            "Cannot copy layer without path, probably a remote layer."
+        )
+        assert self.path is not None, (
+            "Cannot copy layer to remote dataset without path."
+        )
 
         copytree(foreign_layer.path, self.path / new_layer_name)
         new_layer_properties = copy.deepcopy(foreign_layer._properties)
@@ -2579,6 +2739,7 @@ class Dataset:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
+                        assert foreign_layer.dataset.resolved_path is not None
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
@@ -2594,7 +2755,7 @@ class Dataset:
             new_layer_properties, read_only=False
         )
 
-        self._export_as_json()
+        self._save_dataset_properties()
         return self.layers[new_layer_name]
 
     def calculate_bounding_box(self) -> NDBoundingBox:
@@ -2720,7 +2881,7 @@ class Dataset:
                     exists_ok=exists_ok,
                     executor=executor,
                 )
-        new_dataset._export_as_json()
+        new_dataset._save_dataset_properties()
         return new_dataset
 
     def fs_copy_dataset(
@@ -2790,7 +2951,7 @@ class Dataset:
             ):
                 for attachment in layer.attachments:
                     new_layer.attachments.add_attachment_as_copy(attachment)
-        new_dataset._export_as_json()
+        new_dataset._save_dataset_properties()
         return new_dataset
 
     def shallow_copy_dataset(
@@ -2962,12 +3123,15 @@ class Dataset:
             raise FileNotFoundError(
                 f"Cannot read dataset at {dataset_path}. datasource-properties.json file not found."
             )
-        properties = dataset_converter.structure(data, DatasetProperties)
+        properties = get_dataset_converter().structure(data, DatasetProperties)
         return properties
 
-    def _export_as_json(self) -> None:
+    def _save_dataset_properties(self) -> None:
+        """
+        Exports the current dataset properties to json on disk (or in remote dataset case to server)
+        """
         self._ensure_writable()
-
+        assert self.path is not None, "Cannot export properties without path."
         properties_on_disk = self._load_properties(self.path)
         try:
             if properties_on_disk != self._last_read_properties:
@@ -2986,7 +3150,7 @@ class Dataset:
 
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
-                dataset_converter.unstructure(self._properties),
+                get_dataset_converter().unstructure(self._properties),
                 indent=4,
             )
         )
@@ -3005,7 +3169,7 @@ class Dataset:
 
         for layer in self.layers.values():
             # Only write out OME metadata if the layer is a child of the dataset
-            if not layer.is_foreign and layer.path.exists():
+            if not layer.is_foreign and layer.path is not None and layer.path.exists():
                 write_ome_metadata(self, layer)
 
     def _initialize_layer_from_properties(
@@ -3125,15 +3289,18 @@ class RemoteDataset(Dataset):
 
     def __init__(
         self,
-        dataset_path: UPath,
+        zarr_streaming_path: UPath | None,
+        dataset_properties: DatasetProperties | None,
         dataset_id: str,
         context: "webknossos_context",
+        read_only: bool,
     ) -> None:
         """Initialize a remote dataset instance.
 
         Args:
-            dataset_path: Path to remote dataset location
-            dataset_id: ID of dataset in WEBKNOSSOS
+            zarr_streaming_path: Path to the zarr streaming directory
+            dataset_properties: Properties of the remote dataset
+            dataset_id: dataset id of the remote dataset
             context: Context manager for WEBKNOSSOS connection
 
         Raises:
@@ -3143,16 +3310,28 @@ class RemoteDataset(Dataset):
             Do not call this constructor directly, use Dataset.open_remote() instead.
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
-        self.path = dataset_path
-        self._resolved_path = dataset_path
-        self._read_only = True
+        assert (zarr_streaming_path is not None) != (dataset_properties is not None), (
+            "Either zarr_streaming_path or dataset_properties must be set, but not both."
+        )
+        self.path = zarr_streaming_path
+        self._resolved_path = zarr_streaming_path
+        self._read_only = read_only
+        self._use_zarr_streaming = zarr_streaming_path is not None
+
         try:
-            dataset_properties = self._load_properties(self.path)
+            if self._use_zarr_streaming:
+                assert self.path is not None, (
+                    "Cannot open remote zarr streaming dataset without path."
+                )
+                dataset_properties = self._load_properties(self.path)
+            assert dataset_properties is not None, (
+                "Cannot open remote dataset dataset_properties is None."
+            )
             self._init_from_properties(dataset_properties)
         except FileNotFoundError as e:
             if hasattr(self, "_properties"):
                 warnings.warn(
-                    f"[WARNING] Cannot open remote webknossos dataset {dataset_path} as zarr. "
+                    f"[WARNING] Cannot open remote webknossos dataset {dataset_id}. "
                     + "Returning a stub dataset instead, accessing metadata properties might still work.",
                 )
                 self.path = None  # type: ignore[assignment]
@@ -3172,6 +3351,10 @@ class RemoteDataset(Dataset):
 
     def __repr__(self) -> str:
         return f"RemoteDataset({repr(self.url)})"
+
+    @property
+    def dataset_id(self) -> str:
+        return self._dataset_id
 
     @property
     def url(self) -> str:
@@ -3227,23 +3410,45 @@ class RemoteDataset(Dataset):
         # Atm, the wk backend needs to get previous parameters passed
         # (this is a race-condition with parallel updates).
 
-        info = self._get_dataset_info()
+        dataset_updates: dict[str, Any] = {}
+
         if name is not _UNSET:
-            info.name = name
+            dataset_updates["name"] = name
         if description is not _UNSET:
-            info.description = description
+            dataset_updates["description"] = description
         if tags is not _UNSET:
-            info.tags = tags
+            dataset_updates["tags"] = tags
         if is_public is not _UNSET:
-            info.is_public = is_public
+            dataset_updates["isPublic"] = is_public
         if folder_id is not _UNSET:
-            info.folder_id = folder_id
+            dataset_updates["folderId"] = folder_id
         if metadata is not _UNSET:
-            info.metadata = metadata
+            dataset_updates["metadata"] = metadata
 
         with self._context:
             client = _get_api_client()
-            client.dataset_update(dataset_id=self._dataset_id, updated_dataset=info)
+            client.dataset_update(
+                dataset_id=self._dataset_id, dataset_updates=dataset_updates
+            )
+
+    def _save_dataset_properties(self) -> None:
+        """
+        Exports the current dataset properties to the server.
+        Note that some edits will not be accepted by the server.
+        The client-side RemoteDataset is reinitialized to the new server state.
+        """
+        from ..client.context import _get_api_client
+
+        with self._context:
+            client = _get_api_client()
+            client.dataset_update(
+                dataset_id=self._dataset_id,
+                dataset_updates={"dataSource": self._properties},
+            )
+            dataset_info = client.dataset_info(dataset_id=self._dataset_id)
+            data_source = dataset_info.data_source
+            assert isinstance(data_source, DatasetProperties)
+            self._init_from_properties(data_source)
 
     @property
     def metadata(self) -> DatasetMetadata:
@@ -3509,7 +3714,7 @@ class RemoteDataset(Dataset):
 
         Note:
             The dataset files must be accessible from the WEBKNOSSOS server
-            for this to work. The data will be streamed directly from the source.
+            for this to work. The data will be streamed through webknossos from the source.
         """
         from ..client.context import _get_context
 
@@ -3613,3 +3818,37 @@ class RemoteDataset(Dataset):
             for chunk in mesh_download:
                 f.write(chunk)
         return file_path
+
+
+def _extract_num_channels(
+    num_channels_in_properties: int | None,
+    path: Path,
+    layer: str,
+    mag: int | Mag | None,
+) -> int:
+    # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'numChannels' in the
+    # datasource-properties.json. In this case we need to extract the number of channels from the 'header.wkw'.
+    if num_channels_in_properties is not None:
+        return num_channels_in_properties
+
+    if mag is None:
+        # Unable to extract the 'num_channels' from the 'header.wkw' if the dataset has no magnifications.
+        # This should never be the case because wkw-datasets that are created without this API always have a magnification.
+        raise RuntimeError(
+            "Cannot extract the number of channels of a dataset without a properties file and without any magnifications"
+        )
+
+    mag = Mag(mag)
+    array_file_path = path / layer / mag.to_layer_name()
+    try:
+        array = BaseArray.open(array_file_path)
+    except ArrayException as e:
+        raise Exception(
+            f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
+            f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
+            f"the file {array_file_path} to extract the num_channels from there. "
+            f"Since this file does not exist, the attempt to open the dataset failed. "
+            f"Please add the attribute manually to solve the problem. "
+            f"If the layer does not contain any data, you can also delete the layer and add it again.",
+        ) from e
+    return array.info.num_channels

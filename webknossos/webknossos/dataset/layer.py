@@ -13,6 +13,20 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ..dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    LayerCategoryType,
+    LayerProperties,
+    LayerViewConfiguration,
+    MagViewProperties,
+    SegmentationLayerProperties,
+)
+from ..dataset_properties.structuring import (
+    _properties_floating_type_to_python_type,
+    _python_floating_type_to_properties_type,
+)
 from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ..geometry.mag import MagLike
 from ._array import ArrayException, TensorStoreArray, Zarr3ArrayInfo, Zarr3Config
@@ -27,17 +41,7 @@ from ._downsampling_utils import (
 )
 from ._upsampling_utils import upsample_cube_job
 from .attachments import Attachments
-from .data_format import DataFormat
-from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .mag_view import MagView
-from .properties import (
-    LayerProperties,
-    LayerViewConfiguration,
-    MagViewProperties,
-    SegmentationLayerProperties,
-    _properties_floating_type_to_python_type,
-    _python_floating_type_to_properties_type,
-)
 from .sampling_modes import SamplingModes
 from .view import View, _copy_job
 
@@ -247,18 +251,26 @@ class Layer:
             properties.element_class, properties.num_channels
         )
         self._mags: dict[Mag, MagView] = {}
-        resolved_path = cheap_resolve(self.dataset.resolved_path / self.name)
-        self._resolved_path: UPath = resolved_path
+        resolved_path = (
+            cheap_resolve(self.dataset.resolved_path / self.name)
+            if self.dataset.resolved_path is not None
+            else None
+        )
+        self._resolved_path: UPath | None = resolved_path
         self._read_only = read_only
 
         for mag in properties.mags:
-            mag_path = (
-                _find_mag_path(resolved_path, mag.mag)
-                if mag.path is None
-                else enrich_path(mag.path, self.dataset.resolved_path)
-            )
-            mag_is_read_only = read_only or _is_foreign_mag(
-                self.dataset.resolved_path, self.name, mag_path
+            if mag.path is None:
+                assert resolved_path is not None, (
+                    "Layer has no resolved path, but mag has no path"
+                )
+                mag_path = _find_mag_path(resolved_path, mag.mag)
+            else:
+                mag_path = enrich_path(mag.path, self.dataset.resolved_path)
+            mag_is_read_only = (
+                read_only
+                or self.dataset.resolved_path is None
+                or _is_foreign_mag(self.dataset.resolved_path, self.name, mag_path)
             )
             self._setup_mag(Mag(mag.mag), mag_path, read_only=mag_is_read_only)
         self._properties.mags = [
@@ -276,9 +288,10 @@ class Layer:
             )
 
     @property
-    def path(self) -> UPath:
+    def path(self) -> UPath | None:
         """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
         Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
+        In case of RemoteDatasets there is no dataset path, so this returns None.
 
         Returns:
             UPath: Filesystem path to this layer's data directory
@@ -286,11 +299,12 @@ class Layer:
         Raises:
             AssertionError: If mags in layer point to different layers
         """
-
+        if self.dataset.path is None:
+            return None
         return self.dataset.path / self.name
 
     @property
-    def resolved_path(self) -> UPath:
+    def resolved_path(self) -> UPath | None:
         return self._resolved_path
 
     @property
@@ -299,6 +313,8 @@ class Layer:
         Returns:
             bool: True if layer path parent differs from dataset path
         """
+        if self.dataset.resolved_path is None or self.resolved_path is None:
+            return True
         return self.resolved_path.parent != self.dataset.resolved_path
 
     @property
@@ -344,7 +360,12 @@ class Layer:
         if layer_name == self.name:
             return
         self._ensure_metadata_writable()
-        if not is_fs_path(self.path):
+        if (
+            self.path is None
+            or self.dataset.path is None
+            or self.dataset.resolved_path is None
+            or not is_fs_path(self.path)
+        ):
             raise RuntimeError(f"Cannot rename remote layer {self.path}")
         if layer_name in self.dataset.layers.keys():
             raise ValueError(
@@ -368,7 +389,7 @@ class Layer:
         for mag in self._mags.values():
             if not mag.is_foreign:
                 mag._properties.path = dump_path(
-                    self.resolved_path / mag.path.name, self.dataset.resolved_path
+                    self._resolved_path / mag.path.name, self.dataset.resolved_path
                 )
             else:
                 assert mag._properties.path is not None  # for type checking
@@ -381,7 +402,7 @@ class Layer:
             # The new dataset will be opened automatically when needed.
             del mag._array
 
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
     @property
     def dataset(self) -> "Dataset":
@@ -411,7 +432,7 @@ class Layer:
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
         self._properties.bounding_box = bbox
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
         for mag in self.mags.values():
             mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
@@ -493,7 +514,7 @@ class Layer:
     ) -> None:
         self._ensure_metadata_writable()
         self._properties.default_view_configuration = view_configuration
-        self.dataset._export_as_json()  # update properties on disk
+        self.dataset._save_dataset_properties()  # update properties on disk
 
     @property
     def read_only(self) -> bool:
@@ -649,7 +670,7 @@ class Layer:
             )
         ]
 
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
         return self._mags[mag]
 
@@ -710,7 +731,7 @@ class Layer:
                 path=stored_path,
             )
         )
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
         return mag_view
 
@@ -800,6 +821,8 @@ class Layer:
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot delete mag from a remote dataset")
         mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
@@ -812,7 +835,7 @@ class Layer:
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag
         ]
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
         if not mag_view.is_foreign:
             # delete files on disk
             rmtree(full_path)
@@ -871,6 +894,8 @@ class Layer:
         `datasource-properties.json` of the other dataset are copied, too.
         """
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot add mag to a remote dataset")
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
         has_same_shapes = (
@@ -994,9 +1019,11 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_fs_path(self.path), (
-            f"Cannot create symlinks in remote layer {self.path}"
-        )
+        assert (
+            self.path is not None
+            and is_fs_path(self.path)
+            and self.dataset.resolved_path is not None
+        ), f"Cannot create symlinks in remote layer {self.path}"
         assert is_fs_path(foreign_mag_view.path), (
             f"Cannot create symlink to remote mag {foreign_mag_view.path}"
         )
@@ -1077,7 +1104,7 @@ class Layer:
                 axis_order=foreign_mag_view._properties.axis_order,
             )
         )
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
@@ -1094,6 +1121,9 @@ class Layer:
         exists_ok: bool = False,
     ) -> MagView:
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot add mag to a remote dataset without a path.")
+
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
@@ -1160,6 +1190,8 @@ class Layer:
         the array is moved, otherwise a copy of the zarrarray is created.
         """
         self._ensure_writable()
+        if self.path is None:
+            raise ValueError("Cannot add mag to a remote dataset without a path.")
         source_path = enrich_path(path, self.dataset.resolved_path)
 
         try:
@@ -1195,6 +1227,10 @@ class Layer:
             return mag_view
 
     def _create_dir_for_mag(self, mag: MagLike) -> UPath:
+        if self.resolved_path is None:
+            raise RuntimeError(
+                "Cannot create directory for magnification, layer has no resolved path."
+            )
         mag_name = Mag(mag).to_layer_name()
         full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
@@ -1797,7 +1833,7 @@ class SegmentationLayer(Layer):
             largest_segment_id = int(largest_segment_id)
 
         self._properties.largest_segment_id = largest_segment_id
-        self.dataset._export_as_json()
+        self.dataset._save_dataset_properties()
 
     @property
     def category(self) -> LayerCategoryType:
