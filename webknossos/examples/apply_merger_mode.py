@@ -1,8 +1,8 @@
-from pathlib import Path
 
 import fastremap
 
 import webknossos as wk
+
 
 def main() -> None:
     ####################################
@@ -47,7 +47,9 @@ def main() -> None:
     ############################
     # Creating an output layer #
     ############################
-    output_dataset = wk.Dataset("testoutput/l4_sample", voxel_size=input_dataset.voxel_size)
+    output_dataset = wk.Dataset(
+        "testoutput/l4_sample", voxel_size=input_dataset.voxel_size
+    )
     out_layer = output_dataset.add_layer(
         "segmentation_remapped",
         wk.SEGMENTATION_CATEGORY,
@@ -81,9 +83,7 @@ def main() -> None:
     out_layer.downsample()
     output_dataset.upload(
         "l4_sample_remapped",
-        layers_to_link=[
-            input_dataset.get_layer("color")
-        ],
+        layers_to_link=[input_dataset.get_layer("color")],
     )
 
 

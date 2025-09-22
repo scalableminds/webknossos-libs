@@ -2,7 +2,6 @@ import copy
 import inspect
 import json
 import logging
-import os
 import re
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -649,6 +648,7 @@ class Dataset:
                     )
 
             from ..client._upload_dataset import upload_dataset
+
             new_dataset_id = upload_dataset(
                 self, new_dataset_name, converted_layers_to_link, jobs
             )
@@ -1350,11 +1350,9 @@ class Dataset:
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
-            # TODO
             return self.path == other.path and self.read_only == other.read_only
         else:
             return False
-
 
     def get_layer(self, layer_name: str) -> Layer:
         """Get a specific layer from this dataset.
