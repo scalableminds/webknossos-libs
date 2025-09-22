@@ -15,8 +15,8 @@ def main() -> None:
     )
     # Publish the dataset to webknossos
     # The data will be uploaded to the upload destination folder
-    dataset.publish_to_webknossos(
-        dataset_name="my_new_dataset_name",
+    dataset.upload(
+        new_dataset_name="my_new_dataset_name",
         folder_id=folder_id,
         layers_to_link=[
             LayerToLink(

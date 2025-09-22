@@ -508,78 +508,110 @@ class Dataset:
 
         context.api_client_with_auth.finish_dataset_upload_to_paths(dataset_id)
 
-    def publish_to_webknossos(
+    def upload(
         self,
-        dataset_name: str,
+        new_dataset_name: str | None = None,
         initial_team_ids: list[str] | None = None,
         folder_id: str | RemoteFolder | None = None,
         require_unique_name: bool = False,
-        path_prefix: str | None = None,
-        layers_to_link: list[LayerToLink] | None = None,
+        layers_to_link: list[LayerToLink | Layer] | None = None,
+        upload_directly_to_common_storage: bool = False,
+        jobs: int | None = None,
+        common_storage_path_prefix: str | None = None,
         symlink_data_instead_of_copy: bool = False,
-    ) -> str:
-        """Publishes the dataset to WEBKNOSSOS.
+    ) -> "RemoteDataset":
+        """Upload this dataset to webknossos.
 
         Creates database entries and sets access rights on the webknossos instance before the actual data upload.
         The client then copies the data directly to the returned paths.
 
         Args:
-            dataset_name: Name for the new dataset
+            new_dataset_name: Name for the new dataset defaults to the current name.
             initial_team_ids: Optional list of team IDs to grant initial access
             folder_id: Optional ID of folder where dataset should be placed
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
-            path_prefix: Optional path prefix to select one of the available mount points for the dataset folder.
             layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
-            symlink_data_instead_of_copy: Set this to true when the client has access to the same file system as the WEBKNOSSOS datastore.
-            When set to true, the data is moved and a backlink from the original location to the new location is crated.
+            upload_directly_to_common_storage: Set this to true when the client has access to the same storage system as the WEBKNOSSOS datastore (file system or cloud storage).
+            jobs: Optional number of jobs to use for uploading the data.
+            common_storage_path_prefix: Optional path prefix used when upload_directly_to_common_storage is true to select one of the available mount points for the dataset folder.
+            symlink_data_instead_of_copy: Considered, when upload_directly_to_common_storage is True. Set this to true when the client has access to the same file system as the WEBKNOSSOS datastore.
+            When set to true, the data symlinked to the new location.
         Returns:
-            The ID of the newly created dataset.
+            RemoteDataset: Reference to the newly created remote dataset
         Note:
-            This is typically only used by administrators with direct file system or S3 access to the WEBKNOSSOS datastore.
-            Most users should use upload() instead.
-
+            upload_directly_to_common_storage is typically only used by administrators with direct file system or S3 access to the WEBKNOSSOS datastore.
+            Most users should let upload_directly_to_common_storage to default to False
         Examples:
             ```
-            Dataset.publish_to_webknossos(
+            remote_ds = ds.upload(
                 "my_dataset",
-                "my_organization",
                 ["team_a", "team_b"],
                 "folder_123"
             )
+            print(remote_ds.url)
+            ```
+            Link existing layers:
+            ```
+            link = LayerToLink.from_remote_layer(existing_layer)
+            remote_ds = ds.upload(layers_to_link=[link])
             ```
         """
 
         from ..client.context import _get_context
 
+        new_dataset_name = new_dataset_name or self.name
+
         if isinstance(folder_id, RemoteFolder):
             folder_id = folder_id.id
 
-        context = _get_context()
-        response = context.api_client_with_auth.reserve_dataset_upload_to_paths(
-            ApiReserveDatasetUplaodToPathsParameters(
-                dataset_name=dataset_name,
-                initial_team_ids=initial_team_ids or [],
-                folder_id=folder_id,
-                require_unique_name=require_unique_name,
-                data_source=self._properties,
-                layers_to_link=[
-                    layer_to_link.as_api_linked_layer_identifier()
-                    for layer_to_link in layers_to_link
-                ]
-                if layers_to_link
-                else [],
-                path_prefix=path_prefix,
-            )
+        converted_layers_to_link = (
+            None
+            if layers_to_link is None
+            else [
+                i if isinstance(i, LayerToLink) else LayerToLink.from_remote_layer(i)
+                for i in layers_to_link
+            ]
         )
-        new_dataset_id = response.new_dataset_id
-        data_source = response.data_source
 
-        self._copy_or_symlink_dataset_to_paths(
-            data_source, symlink_data_instead_of_copy
-        )
-        # announce finished upload
-        context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
-        return new_dataset_id
+        if upload_directly_to_common_storage:
+            context = _get_context()
+            response = context.api_client_with_auth.reserve_dataset_upload_to_paths(
+                ApiReserveDatasetUplaodToPathsParameters(
+                    dataset_name=new_dataset_name,
+                    initial_team_ids=initial_team_ids or [],
+                    folder_id=folder_id,
+                    require_unique_name=require_unique_name,
+                    data_source=self._properties,
+                    layers_to_link=[
+                        layer_to_link.as_api_linked_layer_identifier()
+                        for layer_to_link in converted_layers_to_link
+                    ]
+                    if layers_to_link
+                    else [],
+                    path_prefix=common_storage_path_prefix,
+                )
+            )
+            new_dataset_id = response.new_dataset_id
+            data_source = response.data_source
+
+            self._copy_or_symlink_dataset_to_paths(
+                data_source, symlink_data_instead_of_copy
+            )
+            # announce finished upload
+            context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
+        else:
+            for layer in self.get_segmentation_layers():
+                if not layer.attachments.is_empty:
+                    raise NotImplementedError(
+                        f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
+                    )
+
+            from ..client._upload_dataset import upload_dataset
+            new_dataset_id = upload_dataset(
+                self, new_dataset_name, converted_layers_to_link, jobs
+            )
+
+        return self.open_remote(dataset_id=new_dataset_id)
 
     def _copy_or_symlink_dataset_to_paths(
         self, data_source: DatasetProperties, symlink_data_instead_of_copy: bool
@@ -1276,66 +1308,11 @@ class Dataset:
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
+            # TODO
             return self.path == other.path and self.read_only == other.read_only
         else:
             return False
 
-    def upload(
-        self,
-        new_dataset_name: str | None = None,
-        *,
-        layers_to_link: list[Union["LayerToLink", Layer]] | None = None,
-        jobs: int | None = None,
-    ) -> "RemoteDataset":
-        """Upload this dataset to webknossos.
-
-        Copies all data and metadata to webknossos, creating a new dataset that can be accessed remotely.
-        For large datasets, existing layers can be linked instead of re-uploaded.
-
-        Args:
-            new_dataset_name: Optional name for the uploaded dataset
-            layers_to_link: Optional list of layers that should link to existing data instead of being uploaded
-            jobs: Optional number of parallel upload jobs, defaults to 5
-
-        Returns:
-            RemoteDataset: Reference to the newly created remote dataset
-
-        Examples:
-            Simple upload:
-                ```
-                remote_ds = ds.upload("my_new_dataset")
-                print(remote_ds.url)
-                ```
-
-            Link existing layers:
-                ```
-                link = LayerToLink.from_remote_layer(existing_layer)
-                remote_ds = ds.upload(layers_to_link=[link])
-                ```
-        """
-
-        from ..client._upload_dataset import upload_dataset
-
-        converted_layers_to_link = (
-            None
-            if layers_to_link is None
-            else [
-                i if isinstance(i, LayerToLink) else LayerToLink.from_remote_layer(i)
-                for i in layers_to_link
-            ]
-        )
-
-        for layer in self.get_segmentation_layers():
-            if not layer.attachments.is_empty:
-                raise NotImplementedError(
-                    f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
-                )
-
-        dataset_id = upload_dataset(
-            self, new_dataset_name, converted_layers_to_link, jobs
-        )
-
-        return self.open_remote(dataset_id=dataset_id)
 
     def get_layer(self, layer_name: str) -> Layer:
         """Get a specific layer from this dataset.
