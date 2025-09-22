@@ -627,7 +627,7 @@ class Dataset:
                         layer_to_link.as_api_linked_layer_identifier()
                         for layer_to_link in converted_layers_to_link
                     ]
-                    if layers_to_link
+                    if converted_layers_to_link
                     else [],
                     path_prefix=common_storage_path_prefix,
                 )

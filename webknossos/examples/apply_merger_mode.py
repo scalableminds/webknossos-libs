@@ -1,4 +1,3 @@
-
 import fastremap
 
 import webknossos as wk
