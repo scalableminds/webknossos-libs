@@ -523,17 +523,17 @@ class Dataset:
         self,
         dataset_id: str,
         path_prefix: str | None = None,
-        move_data_instead_of_copy: bool = False,
+        symlink_data_instead_of_copy: bool = False,
     ) -> None:
         """
-        Copies or moves the data to paths returned by WEBKNOSSOS
+        Copies or symlinks the data to paths returned by WEBKNOSSOS
         The dataset needs to be in status "uploading".
         The dataset already exists in WEBKNOSSOS but has no dataset_properties.
         With the dataset_properties WEBKNOSSOS can reserve the paths.
         Args:
             dataset_id: The dataset_id of the already existing dataset
             path_prefix: The prefix of the storage path, can be used to select one of the storage path options.
-            move_data_instead_of_copy: Set to true if the client has access to the same file system as the WEBKNOSSOS datastore.
+            symlink_data_instead_of_copy: Set to true if the client has access to the same file system as the WEBKNOSSOS datastore.
         """
         from ..client.context import _get_context
 
@@ -545,7 +545,7 @@ class Dataset:
             ),
         )
         self._copy_or_symlink_dataset_to_paths(
-            response.data_source, move_data_instead_of_copy
+            response.data_source, symlink_data_instead_of_copy
         )
 
         context.api_client_with_auth.finish_dataset_upload_to_paths(dataset_id)
@@ -629,8 +629,6 @@ class Dataset:
         """
         Iterates over the mags and attachments and copies or symlinks them to the target location.
         """
-        # This needs to be set to make sure the encoding is not chunked when uploading
-        os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"
         # copy data
         for layer in data_source.data_layers:
             src_layer = self.layers[layer.name]
