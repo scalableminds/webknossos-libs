@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import re
-import shutil
 import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import datetime
@@ -545,7 +544,7 @@ class Dataset:
                 self._properties, path_prefix
             ),
         )
-        self._copy_or_move_dataset_to_paths(
+        self._copy_or_symlink_dataset_to_paths(
             response.data_source, move_data_instead_of_copy
         )
 
@@ -559,7 +558,7 @@ class Dataset:
         require_unique_name: bool = False,
         path_prefix: str | None = None,
         layers_to_link: list[LayerToLink] | None = None,
-        move_data_instead_of_copy: bool = False,
+        symlink_data_instead_of_copy: bool = False,
     ) -> str:
         """Publishes the dataset to WEBKNOSSOS.
 
@@ -573,7 +572,7 @@ class Dataset:
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             path_prefix: Optional path prefix to select one of the available mount points for the dataset folder.
             layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
-            move_data_instead_of_copy: Set this to true when the client has access to the same file system as the WEBKNOSSOS datastore.
+            symlink_data_instead_of_copy: Set this to true when the client has access to the same file system as the WEBKNOSSOS datastore.
             When set to true, the data is moved and a backlink from the original location to the new location is crated.
         Returns:
             The ID of the newly created dataset.
@@ -617,16 +616,18 @@ class Dataset:
         new_dataset_id = response.new_dataset_id
         data_source = response.data_source
 
-        self._copy_or_move_dataset_to_paths(data_source, move_data_instead_of_copy)
+        self._copy_or_symlink_dataset_to_paths(
+            data_source, symlink_data_instead_of_copy
+        )
         # announce finished upload
         context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
         return new_dataset_id
 
-    def _copy_or_move_dataset_to_paths(
-        self, data_source: DatasetProperties, move_data_instead_of_copy: bool
+    def _copy_or_symlink_dataset_to_paths(
+        self, data_source: DatasetProperties, symlink_data_instead_of_copy: bool
     ) -> None:
         """
-        Iterates over the mags and attachments and copies or moves them to the target location.
+        Iterates over the mags and attachments and copies or symlinks them to the target location.
         """
         # This needs to be set to make sure the encoding is not chunked when uploading
         os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"
@@ -636,19 +637,17 @@ class Dataset:
             for mag in layer.mags:
                 src_mag = src_layer.mags[mag.mag]
                 assert mag.path is not None, "mag.path must be set to copy/move data"
-                if move_data_instead_of_copy:
-                    assert is_fs_path(src_mag.path) and is_fs_path(
-                        enrich_path(mag.path)
-                    ), (
+                dst_mag_path = enrich_path(mag.path)
+                if symlink_data_instead_of_copy:
+                    assert is_fs_path(src_mag.path) and is_fs_path(dst_mag_path), (
                         f"Either src_mag.path or mag.path are not pointing to a local file system {src_mag.path}, {mag.path}"
                     )
-                    shutil.move(src_mag.path, enrich_path(mag.path))
-                    # create backlink
-                    src_mag.path.symlink_to(mag.path)
+                    dst_mag_path.unlink()
+                    dst_mag_path.symlink_to(src_mag.path)
                 else:
                     copytree(
                         src_mag.path,
-                        enrich_path(mag.path),
+                        dst_mag_path,
                         progress_desc=f"copying mag {src_mag.path} to {mag.path}",
                     )
             if isinstance(src_layer, SegmentationLayer):
@@ -659,17 +658,15 @@ class Dataset:
                 for src_attachment, dst_attachment in zip(
                     src_layer.attachments, layer.attachments
                 ):
-                    if move_data_instead_of_copy:
+                    dst_attachment_path = enrich_path(dst_attachment.path)
+                    if symlink_data_instead_of_copy:
                         assert is_fs_path(src_attachment.path) and is_fs_path(
-                            enrich_path(dst_attachment.path)
+                            dst_attachment_path
                         ), (
                             f"Either src_attachment.path or dst_attachment.path are not pointing to a local file system {src_attachment.path}, {dst_attachment.path}"
                         )
-                        shutil.move(
-                            src_attachment.path, enrich_path(dst_attachment.path)
-                        )
-                        # create backlink
-                        src_attachment.path.symlink_to(dst_attachment.path)
+                        dst_attachment_path.unlink()
+                        dst_attachment_path.symlink_to(src_attachment.path)
                     else:
                         copytree(
                             src_attachment.path,
