@@ -198,7 +198,9 @@ class WkApiClient(AbstractApiClient):
     ) -> tuple[bytes, str]:
         route = f"/annotations/{annotation_id}/download"
         return self._get_file(
-            route, query={"skipVolumeData": skip_volume_data}, retry_count=retry_count
+            route,
+            query={"skipVolumeData": skip_volume_data, "volumeDataZipFormat": "zarr3"},
+            retry_count=retry_count,
         )
 
     def annotation_upload(
