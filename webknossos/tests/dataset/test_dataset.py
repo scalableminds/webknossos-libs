@@ -2010,6 +2010,40 @@ def test_add_mag_as_ref(data_format: DataFormat, output_path: UPath) -> None:
     assert (ds_path / "color" / "4").exists()
 
 
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_add_mag_as_ref_with_mag(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "original")
+    new_path = prepare_dataset_path(data_format, output_path, "with_ref")
+
+    original_ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    original_layer = original_ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel="uint8",
+        bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
+    )
+    original_layer.add_mag(1).write(
+        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    )
+
+    ds = Dataset(new_path, voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_channel="uint8",
+        bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
+    )
+    layer.add_mag_as_ref(original_layer.get_mag(1), mag="2")
+
+    assert list(layer.mags.values())[0].mag == Mag("2")
+    assert list(layer.mags.values())[0]._properties.path == dump_path(
+        ds_path / "color" / "1", new_path
+    )
+
+    assure_exported_properties(ds)
+    assure_exported_properties(original_ds)
+
+
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
     src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
