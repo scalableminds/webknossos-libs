@@ -9,8 +9,6 @@ def main() -> None:
     #####################
     # Opening a dataset #
     #####################
-    remote_dataset = wk.RemoteDataset.open("testdata/simple_wkw_dataset")
-    remote_dataset.get_layer("color").get_mag("1")
     dataset = wk.Dataset.open("testdata/simple_wkw_dataset")
     # Assuming that the dataset has a layer "color"
     # and the layer has the magnification 1
