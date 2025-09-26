@@ -9,7 +9,8 @@ import typer
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
-from ..dataset.dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX, Dataset
+from ..dataset import Dataset
+from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
 from ..geometry import BoundingBox, Mag
 from ._utils import parse_bbox, parse_mag, parse_path
 

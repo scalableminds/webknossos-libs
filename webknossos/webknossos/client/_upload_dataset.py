@@ -9,7 +9,8 @@ from uuid import uuid4
 
 import httpx
 
-from ..dataset import Dataset, LayerToLink
+from .. import LayerToLink
+from ..dataset import Dataset
 from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable

@@ -63,6 +63,7 @@ from zipp import Path as ZipPath
 import webknossos._nml as wknml
 from webknossos.geometry.mag import Mag, MagLike
 
+from .. import RemoteDataset
 from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiAnnotation,
@@ -71,7 +72,6 @@ from ..client.api_client.models import (
 from ..dataset import (
     Dataset,
     Layer,
-    RemoteDataset,
     SegmentationLayer,
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
@@ -84,7 +84,6 @@ from ..dataset_properties import (
 from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
-from ..ssl_context import SSL_CONTEXT
 from ..utils import get_executor_for_args, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 
@@ -532,7 +531,7 @@ class Annotation:
         cls,
         annotation_id_or_url: str,
         webknossos_url: str | None = None,
-    ) -> Dataset:
+    ) -> RemoteDataset:
         """Opens an annotation directly as a remote dataset from WEBKNOSSOS.
 
         This is a convenience method that combines downloading an annotation and converting it
@@ -926,7 +925,7 @@ class Annotation:
                 layer_content,
             )
 
-    def get_remote_annotation_dataset(self) -> Dataset:
+    def get_remote_annotation_dataset(self) -> RemoteDataset:
         """Returns a streamed dataset of the annotation from WEBKNOSSOS.
 
         Creates a remote dataset that includes fallback layers and potentially any active agglomerate mappings.
@@ -962,7 +961,8 @@ class Annotation:
         context = _get_context()
         token: str | None
         if self.organization_id is None:
-            token = context.required_token
+            # ask for token, if necessary
+            _ = context.required_token
             organization_id = context.organization_id
         else:
             token = context.token
@@ -976,24 +976,15 @@ class Annotation:
                         + f"The annotation uses {organization_id}, the context {context.organization_id}.",
                         UserWarning,
                     )
-        if self.dataset_id is None:
-            dataset_id = context.api_client.dataset_id_from_name(
-                directory_name=self.dataset_name, organization_id=organization_id
-            )
-        else:
-            dataset_id = self.dataset_id
 
-        dataset_info = context.api_client.dataset_info(dataset_id=dataset_id)
-
-        datastore_url = dataset_info.data_store.url
-        url_prefix = context.get_datastore_api_client(datastore_url).url_prefix
-
-        zarr_path = UPath(
-            f"{url_prefix}/annotations/zarr/{self.annotation_id}/",
-            headers={} if token is None else {"X-Auth-Token": token},
-            ssl=SSL_CONTEXT,
+        return RemoteDataset.open(
+            dataset_name_or_url=self.dataset_name,
+            organization_id=organization_id,
+            dataset_id=self.dataset_id,
+            annotation_id=self.annotation_id,
+            use_zarr_streaming=True,
+            read_only=True,
         )
-        return Dataset.open(zarr_path)
 
     def get_remote_base_dataset(
         self,

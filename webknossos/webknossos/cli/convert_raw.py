@@ -10,6 +10,7 @@ from typing import Annotated, Any, Literal
 import numpy as np
 import typer
 
+from .. import Layer
 from ..dataset import Dataset, MagView, SamplingModes
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -81,7 +82,7 @@ def convert_raw(
     flip_axes: int | tuple[int, ...] | None = None,
     compress: bool = True,
     executor_args: Namespace | None = None,
-) -> MagView:
+) -> tuple[MagView, Layer]:
     """Performs the conversion step from RAW file to WEBKNOSSOS"""
     time_start(f"Conversion of {source_raw_path}")
 
@@ -122,7 +123,7 @@ def convert_raw(
         )
 
     time_stop(f"Conversion of {source_raw_path}")
-    return wk_mag
+    return wk_mag, wk_layer
 
 
 def main(
@@ -297,7 +298,7 @@ def main(
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
-    mag_view = convert_raw(
+    mag_view, layer = convert_raw(
         source,
         target,
         layer_name,
@@ -314,7 +315,7 @@ def main(
     )
 
     with get_executor_for_args(executor_args) as executor:
-        mag_view.layer.downsample(
+        layer.downsample(
             from_mag=mag_view.mag,
             coarsest_mag=max_mag,
             interpolation_mode=interpolation_mode,

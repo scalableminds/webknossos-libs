@@ -12,6 +12,7 @@ import numpy as np
 import tensorstore
 import typer
 
+from .. import Layer
 from ..dataset import Dataset, MagView, SegmentationLayer
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -80,7 +81,7 @@ def convert_zarr(
     flip_axes: int | tuple[int, ...] | None = None,
     compress: bool = True,
     executor_args: Namespace | None = None,
-) -> MagView:
+) -> tuple[MagView, Layer]:
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
 
@@ -129,7 +130,7 @@ def convert_zarr(
     logger.debug(
         "Conversion of %s took %.8fs", source_zarr_path, time.time() - ref_time
     )
-    return wk_mag
+    return wk_mag, wk_layer
 
 
 def main(
@@ -283,7 +284,7 @@ When converting a folder, this option is ignored."
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
-    mag_view = convert_zarr(
+    mag_view, layer = convert_zarr(
         source,
         target,
         layer_name=layer_name,
@@ -298,7 +299,7 @@ When converting a folder, this option is ignored."
     )
 
     with get_executor_for_args(executor_args) as executor:
-        mag_view.layer.downsample(
+        layer.downsample(
             from_mag=mag_view.mag,
             coarsest_mag=max_mag,
             interpolation_mode=interpolation_mode,

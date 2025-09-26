@@ -20,7 +20,7 @@ from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
 from ..dataset import Dataset, MagView, View
-from ..dataset.dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
+from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, is_fs_path, wait_and_ensure_success
