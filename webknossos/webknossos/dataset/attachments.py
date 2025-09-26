@@ -1,4 +1,5 @@
 import warnings
+from abc import abstractmethod
 from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
@@ -24,7 +25,7 @@ from ..utils import (
 )
 
 if TYPE_CHECKING:
-    from .layer import SegmentationLayer
+    from .layer import AbstractLayer, RemoteSegmentationLayer, SegmentationLayer
 
 
 def _validate_data_format(
@@ -142,8 +143,8 @@ class ConnectomeAttachment(Attachment):
     type_name = "connectome"
 
 
-class Attachments:
-    _layer: "SegmentationLayer"
+class AbstractAttachments:
+    _layer: "AbstractLayer"
     _properties: AttachmentsProperties
     meshes: tuple[MeshAttachment, ...] = ()
     agglomerates: tuple[AgglomerateAttachment, ...] = ()
@@ -151,15 +152,16 @@ class Attachments:
     cumsum: CumsumAttachment | None = None
     connectomes: tuple[ConnectomeAttachment, ...] = ()
 
-    def __init__(self, layer: "SegmentationLayer", properties: "AttachmentsProperties"):
-        self._layer = layer
+    def __init__(self, layer: "AbstractLayer", properties: "AttachmentsProperties"):
         self._properties = properties
+        self._layer = layer
+        optional_dataset_path = self._get_optional_dataset_path()
 
         if properties.meshes is not None:
             self.meshes = tuple(
                 MeshAttachment(
                     attachment,
-                    enrich_path(attachment.path, layer.dataset.resolved_path),
+                    enrich_path(attachment.path, optional_dataset_path),
                 )
                 for attachment in properties.meshes
             )
@@ -167,30 +169,63 @@ class Attachments:
             self.agglomerates = tuple(
                 AgglomerateAttachment(
                     attachment,
-                    enrich_path(attachment.path, layer.dataset.resolved_path),
+                    enrich_path(attachment.path, optional_dataset_path),
                 )
                 for attachment in properties.agglomerates
             )
         if properties.segment_index is not None:
             self.segment_index = SegmentIndexAttachment(
                 properties.segment_index,
-                enrich_path(properties.segment_index.path, layer.dataset.resolved_path),
+                enrich_path(properties.segment_index.path, optional_dataset_path),
             )
         if properties.cumsum is not None:
             self.cumsum = CumsumAttachment(
                 properties.cumsum,
-                enrich_path(properties.cumsum.path, layer.dataset.resolved_path),
+                enrich_path(properties.cumsum.path, optional_dataset_path),
             )
         if properties.connectomes is not None:
             self.connectomes = tuple(
                 ConnectomeAttachment(
                     attachment,
-                    enrich_path(attachment.path, layer.dataset.resolved_path),
+                    enrich_path(attachment.path, optional_dataset_path),
                 )
                 for attachment in properties.connectomes
             )
 
-    def _add_attachment_to_container(self, attachment: Attachment) -> None:
+    @abstractmethod
+    def _get_optional_dataset_path(self) -> UPath | None:
+        pass
+
+    def _ensure_writable(self) -> None:
+        self._layer._ensure_writable()
+
+    def _save_properties(self) -> None:
+        self._layer._save_layer_properties()
+
+    @property
+    def is_empty(self) -> bool:
+        return (
+            (len(self.meshes) == 0)
+            and (len(self.agglomerates) == 0)
+            and (len(self.connectomes) == 0)
+            and (self.segment_index is None)
+            and (self.cumsum is None)
+        )
+
+    def __iter__(self) -> Iterator[Attachment]:
+        yield from (self.meshes or [])
+        yield from (self.agglomerates or [])
+        if self.segment_index is not None:
+            yield self.segment_index
+        if self.cumsum is not None:
+            yield self.cumsum
+        yield from (self.connectomes or [])
+
+    def _add_attachment(
+        self,
+        attachment: Attachment,
+    ) -> None:
+        self._ensure_writable()
         container_name = attachment.container_name
         if isinstance(attachment, CumsumAttachment) or isinstance(
             attachment, SegmentIndexAttachment
@@ -208,19 +243,77 @@ class Attachments:
                 setattr(self._properties, container_name, [attachment._properties])
             else:
                 properties_container.append(attachment._properties)
+        self._save_properties()
 
-    def _add_attachment(
-        self,
-        attachment: Attachment,
-    ) -> None:
-        self._layer._ensure_writable()
-        self._add_attachment_to_container(attachment)
-        self._layer.dataset._save_dataset_properties()
+    def add_copy_attachments(self, *other: Attachment) -> None:
+        warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
+        for attachment in other:
+            self.add_attachment_as_copy(*other)
+
+    @abstractmethod
+    def add_attachment_as_copy(self, attachment: Attachment) -> None:
+        pass
+
+
+class RemoteAttachments(AbstractAttachments):
+    _layer: "RemoteSegmentationLayer"
+
+    def __init__(
+        self, layer: "RemoteSegmentationLayer", properties: "AttachmentsProperties"
+    ):
+        super().__init__(layer, properties)
+
+    def _get_optional_dataset_path(self) -> UPath | None:
+        return None
+
+    def add_attachment_as_copy(self, attachment: Attachment) -> None:
+        self._ensure_writable()
+        # In case of a remote dataset, we can ask wk for a path to put the attachment to.
+        target_dataset_id = self._layer.dataset.dataset_id
+        from webknossos.client.context import _get_context
+
+        context = _get_context()
+        new_path = enrich_path(
+            context.api_client_with_auth.reserve_attachment_upload_to_path(
+                target_dataset_id,
+                self._layer.name,
+                attachment.name,
+                attachment.type_name,
+                str(attachment.data_format),
+            )
+        )
+        # copy to target dataset
+        copytree(attachment.path, new_path)
+
+        context.api_client_with_auth.finish_attachment_upload_to_path(
+            target_dataset_id,
+            self._layer.name,
+            attachment.name,
+            attachment.type_name,
+            str(attachment.data_format),
+        )
+        new_attachment = type(attachment).from_path_and_name(
+            new_path,
+            attachment.name,
+            data_format=attachment.data_format,
+        )
+        self._add_attachment(new_attachment)
+
+
+class Attachments(AbstractAttachments):
+    _layer: "SegmentationLayer"
+
+    def __init__(self, layer: "SegmentationLayer", properties: "AttachmentsProperties"):
+        super().__init__(layer, properties)
+
+    def _get_optional_dataset_path(self) -> UPath | None:
+        return self._layer.dataset.resolved_path
 
     def _remove_attachment(
         self,
         attachment: Attachment,
     ) -> None:
+        self._ensure_writable()
         container_name = attachment.container_name
         if isinstance(attachment, CumsumAttachment) or isinstance(
             attachment, SegmentIndexAttachment
@@ -241,7 +334,7 @@ class Attachments:
             properties_container.remove(attachment._properties)
             if len(properties_container) == 0:
                 setattr(self._properties, container_name, None)
-        self._layer.dataset._save_dataset_properties()
+        self._save_properties()
 
     def add_mesh(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
@@ -251,7 +344,7 @@ class Attachments:
                 UPath(path),
                 name,
                 data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
+                dataset_path=self._get_optional_dataset_path(),
             )
         )
 
@@ -263,7 +356,7 @@ class Attachments:
                 UPath(path),
                 name,
                 data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
+                dataset_path=self._get_optional_dataset_path(),
             )
         )
 
@@ -275,7 +368,7 @@ class Attachments:
                 UPath(path),
                 name,
                 data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
+                dataset_path=self._get_optional_dataset_path(),
             )
         )
 
@@ -287,7 +380,7 @@ class Attachments:
                 UPath(path),
                 name,
                 data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
+                dataset_path=self._get_optional_dataset_path(),
             )
         )
 
@@ -299,12 +392,11 @@ class Attachments:
                 UPath(path),
                 name,
                 data_format=data_format,
-                dataset_path=self._layer.dataset.resolved_path,
+                dataset_path=self._get_optional_dataset_path(),
             )
         )
 
     def delete_attachment(self, attachment: Attachment) -> None:
-        self._layer._ensure_writable()
         if isinstance(attachment, MeshAttachment):
             self._remove_attachment(attachment)
         elif isinstance(attachment, AgglomerateAttachment):
@@ -328,72 +420,29 @@ class Attachments:
             cheap_resolve(attachment.path),
             attachment.name,
             data_format=attachment.data_format,
-            dataset_path=self._layer.dataset.resolved_path,
+            dataset_path=self._get_optional_dataset_path(),
         )
         self._add_attachment(new_attachment)
 
-    def add_copy_attachments(self, *other: Attachment) -> None:
-        warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
-        for attachment in other:
-            self.add_attachment_as_copy(*other)
-
     def add_attachment_as_copy(self, attachment: Attachment) -> None:
-        if self._layer.path is None:
-            dataset = self._layer.dataset
-            # In case of a remote dataset, we can ask wk for a path to put the attachment to.
-            if hasattr(dataset, "dataset_id"):
-                target_dataset_id = dataset.dataset_id
-                from webknossos.client.context import _get_context
+        self._ensure_writable()
+        # In case we have a path, we put the attachment following the convention.
+        new_path = cheap_resolve(
+            self._layer.path
+            / snake_to_camel_case(attachment.container_name)
+            / _maybe_add_suffix(attachment.name, attachment.data_format)
+        )
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+        copytree(attachment.path, new_path)
 
-                context = _get_context()
-                new_path = enrich_path(
-                    context.api_client_with_auth.reserve_attachment_upload_to_path(
-                        target_dataset_id,
-                        self._layer.name,
-                        attachment.name,
-                        attachment.type_name,
-                        str(attachment.data_format),
-                    )
-                )
-                # copy to target dataset
-                copytree(attachment.path, new_path)
+        new_attachment = type(attachment).from_path_and_name(
+            new_path,
+            attachment.name,
+            data_format=attachment.data_format,
+            dataset_path=self._get_optional_dataset_path(),
+        )
 
-                context.api_client_with_auth.finish_attachment_upload_to_path(
-                    target_dataset_id,
-                    self._layer.name,
-                    attachment.name,
-                    attachment.type_name,
-                    str(attachment.data_format),
-                )
-                new_attachment = type(attachment).from_path_and_name(
-                    new_path,
-                    attachment.name,
-                    data_format=attachment.data_format,
-                )
-                self._add_attachment_to_container(new_attachment)
-            else:
-                raise ValueError(
-                    "Cannot add attachment to a layer without a path, that does not belong to a RemoteDataset"
-                )
-        else:
-            self._layer._ensure_writable()
-            # In case we have a path, we put the attachment following the convention.
-            new_path = cheap_resolve(
-                self._layer.path
-                / snake_to_camel_case(attachment.container_name)
-                / _maybe_add_suffix(attachment.name, attachment.data_format)
-            )
-            new_path.parent.mkdir(parents=True, exist_ok=True)
-            copytree(attachment.path, new_path)
-
-            new_attachment = type(attachment).from_path_and_name(
-                new_path,
-                attachment.name,
-                data_format=attachment.data_format,
-                dataset_path=self._layer.dataset.resolved_path,
-            )
-
-            self._add_attachment(new_attachment)
+        self._add_attachment(new_attachment)
 
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False
@@ -404,7 +453,6 @@ class Attachments:
             DeprecationWarning,
             stacklevel=2,
         )
-        assert self._layer.resolved_path is not None
         for attachment in other:
             new_path = cheap_resolve(attachment.path)
             if is_fs_path(attachment.path):
@@ -429,9 +477,7 @@ class Attachments:
     def detect_legacy_attachments(self) -> None:
         """Detects and adds legacy attachments.
         Legacy attachments are attachments that were stored in the folder hierarchy of the layer without explicit metadata."""
-        if self._layer.resolved_path is None or not is_fs_path(
-            self._layer.resolved_path
-        ):
+        if not is_fs_path(self._layer.resolved_path):
             return
 
         def _detect_hdf5(typ: type[Attachment]) -> None:
@@ -464,22 +510,3 @@ class Attachments:
                 name="cumsum",
                 data_format=AttachmentDataFormat.JSON,
             )
-
-    @property
-    def is_empty(self) -> bool:
-        return (
-            (len(self.meshes) == 0)
-            and (len(self.agglomerates) == 0)
-            and (len(self.connectomes) == 0)
-            and (self.segment_index is None)
-            and (self.cumsum is None)
-        )
-
-    def __iter__(self) -> Iterator[Attachment]:
-        yield from (self.meshes or [])
-        yield from (self.agglomerates or [])
-        if self.segment_index is not None:
-            yield self.segment_index
-        if self.cumsum is not None:
-            yield self.cumsum
-        yield from (self.connectomes or [])

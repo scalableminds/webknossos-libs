@@ -2,17 +2,19 @@ import logging
 import operator
 import re
 import warnings
+from abc import abstractmethod
 from inspect import getframeinfo, stack
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union
 
 import numpy as np
 from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from .. import LayerToLink, RemoteDataset
 from ..dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -40,13 +42,13 @@ from ._downsampling_utils import (
     parse_interpolation_mode,
 )
 from ._upsampling_utils import upsample_cube_job
-from .attachments import Attachments
+from .attachments import AbstractAttachments, Attachments, RemoteAttachments
 from .mag_view import MagView
 from .sampling_modes import SamplingModes
 from .view import View, _copy_job
 
 if TYPE_CHECKING:
-    from .dataset import Dataset
+    from .dataset import AbstractDataset, Dataset
 
 from ..utils import (
     cheap_resolve,
@@ -207,120 +209,54 @@ def _find_mag_path(
         )
 
 
-class Layer:
+class AbstractLayer:
+    _dataset: "AbstractDataset"
+
     def __init__(
-        self, dataset: "Dataset", properties: LayerProperties, read_only: bool
+        self, dataset: "AbstractDataset", properties: LayerProperties, read_only: bool
     ) -> None:
-        """A Layer represents a portion of hierarchical data at multiple magnifications.
-
-        A Layer consists of multiple MagViews, which store the same data in different magnifications.
-        Layers are components of a Dataset and provide access to the underlying data arrays.
-
-        Attributes:
-            name (str): Name identifier for this layer
-            dataset (Dataset): Parent dataset containing this layer
-            path (Path): Filesystem path to this layer's data
-            category (LayerCategoryType): Category of data (e.g. color, segmentation)
-            dtype_per_layer (str): Deprecated, use dtype_per_channel. Data type used for the entire layer
-            dtype_per_channel (np.dtype): Data type used per channel
-            num_channels (int): Number of channels in the layer
-            data_format (DataFormat): Format used to store the data
-            default_view_configuration (LayerViewConfiguration | None): View configuration
-            read_only (bool): Whether layer is read-only
-            mags (dict[Mag, MagView]): Dictionary of magnification levels
-
-        Args:
-            dataset (Dataset): The parent dataset that contains this layer
-            properties (LayerProperties): Properties defining this layer's attributes. Must contain num_channels.
-            read_only (bool): Whether layer is read-only
-
-        Raises:
-            AssertionError: If properties.num_channels is None
-
-        Note:
-            Do not use this constructor manually. Instead use Dataset.add_layer() to create a Layer.
-        """
-
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
-
-        self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
         self._dataset = dataset
+        self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
+
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
             properties.element_class, properties.num_channels
         )
         self._mags: dict[Mag, MagView] = {}
-        resolved_path = (
-            cheap_resolve(self.dataset.resolved_path / self.name)
-            if self.dataset.resolved_path is not None
-            else None
-        )
-        self._resolved_path: UPath | None = resolved_path
         self._read_only = read_only
 
         for mag in properties.mags:
-            if mag.path is None:
-                assert resolved_path is not None, (
-                    "Layer has no resolved path, but mag has no path"
-                )
-                mag_path = _find_mag_path(resolved_path, mag.mag)
-            else:
-                mag_path = enrich_path(mag.path, self.dataset.resolved_path)
-            mag_is_read_only = (
-                read_only
-                or self.dataset.resolved_path is None
-                or _is_foreign_mag(self.dataset.resolved_path, self.name, mag_path)
+            mag_read_only, mag_path = self._determine_read_only_and_path_for_mag(mag)
+            self._setup_mag(
+                Mag(mag.mag), mag_path, read_only=read_only or mag_read_only
             )
-            self._setup_mag(Mag(mag.mag), mag_path, read_only=mag_is_read_only)
+
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) in self._mags
         ]
 
-    def _ensure_writable(self) -> None:
-        if self.read_only:
-            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
+    @abstractmethod
+    @property
+    def dataset(self) -> "AbstractDataset":
+        pass
+
+    @abstractmethod
+    def as_segmentation_layer(self) -> "AbstractSegmentationLayer":
+        pass
+
+    @abstractmethod
+    def _determine_read_only_and_path_for_mag(
+        self, mag_properties: MagViewProperties
+    ) -> tuple[bool, UPath]:
+        pass
 
     def _ensure_metadata_writable(self) -> None:
         if self.dataset.read_only:
             raise RuntimeError(
                 f"{self.dataset} is read-only, the changes to the metadata of {self} will not be saved!"
             )
-
-    @property
-    def path(self) -> UPath | None:
-        """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
-        Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
-        In case of RemoteDatasets there is no dataset path, so this returns None.
-
-        Returns:
-            UPath: Filesystem path to this layer's data directory
-
-        Raises:
-            AssertionError: If mags in layer point to different layers
-        """
-        if self.dataset.path is None:
-            return None
-        return self.dataset.path / self.name
-
-    @property
-    def resolved_path(self) -> UPath | None:
-        return self._resolved_path
-
-    @property
-    def is_foreign(self) -> bool:
-        """Whether this layer's data is stored remotely relative to its dataset.
-        Returns:
-            bool: True if layer path parent differs from dataset path
-        """
-        if self.dataset.resolved_path is None or self.resolved_path is None:
-            return True
-        return self.resolved_path.parent != self.dataset.resolved_path
-
-    @property
-    def is_remote_to_dataset(self) -> bool:
-        warn_deprecated("is_remote_to_dataset", "is_foreign")
-        return self.is_foreign
 
     @property
     def _properties(self) -> LayerProperties:
@@ -339,80 +275,55 @@ class Layer:
             if layer_property.name == self.name
         )
 
-    @property
-    def name(self) -> str:
-        """Gets the name identifier of this layer.
-
-        Returns:
-            str: Layer name
-        """
-
-        return self._name
-
-    @name.setter
-    def name(self, layer_name: str) -> None:
-        """
-        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
-        Only layers on local file systems can be renamed.
-        """
-        from .dataset import _ALLOWED_LAYER_NAME_REGEX
-
-        if layer_name == self.name:
-            return
-        self._ensure_metadata_writable()
-        if (
-            self.path is None
-            or self.dataset.path is None
-            or self.dataset.resolved_path is None
-            or not is_fs_path(self.path)
-        ):
-            raise RuntimeError(f"Cannot rename remote layer {self.path}")
-        if layer_name in self.dataset.layers.keys():
-            raise ValueError(
-                f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-            )
-        if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
-            raise ValueError(
-                f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
-            )
-
-        if self.path.exists():
-            self.path.rename(self.dataset.path / layer_name)
-        self._path = self.dataset.path / layer_name
-        self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
-        del self.dataset.layers[self.name]
-        self.dataset.layers[layer_name] = self
-        self._properties.name = layer_name
-        self._name = layer_name
-
-        # The MagViews need to be updated
-        for mag in self._mags.values():
-            if not mag.is_foreign:
-                mag._properties.path = dump_path(
-                    self._resolved_path / mag.path.name, self.dataset.resolved_path
-                )
-            else:
-                assert mag._properties.path is not None  # for type checking
-            mag._path = (
-                enrich_path(mag._properties.path, self.dataset.resolved_path)
-                if mag._properties.path is not None
-                else self._resolved_path / mag.path.name
-            )
-            # Deleting the dataset will close the file handle.
-            # The new dataset will be opened automatically when needed.
-            del mag._array
-
+    def _save_layer_properties(self) -> None:
         self.dataset._save_dataset_properties()
 
-    @property
-    def dataset(self) -> "Dataset":
-        """Gets the dataset containing this layer.
+    def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
+        """Initialize a magnification level when opening the Dataset.
 
-        Returns:
-            Dataset: Parent dataset object
+        Does not create storage headers/metadata, e.g. wk_header.
+
+        Args:
+            mag: Magnification level to setup
+            mag_path: Optional path override for mag data
+            read_only: Whether the mag is read_only
+
+        Raises:
+            ArrayException: If mag setup fails
         """
 
-        return self._dataset
+        mag_name = mag.to_layer_name()
+
+        self._assert_mag_does_not_exist_yet(mag)
+        try:
+            self._mags[mag] = MagView(
+                self,
+                mag,
+                mag_path,
+                read_only=read_only,
+            )
+        except ArrayException:
+            logging.exception(
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
+            )
+
+    def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:
+        """Verifies a magnification does not already exist.
+
+        Args:
+            mag: Magnification to check
+
+        Raises:
+            IndexError: If magnification exists
+        """
+        if mag in self.mags.keys():
+            raise IndexError(
+                f"Adding mag {mag} failed. There is already a mag with this name"
+            )
+
+    def _ensure_writable(self) -> None:
+        if self.read_only:
+            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
     @property
     def bounding_box(self) -> NDBoundingBox:
@@ -432,7 +343,7 @@ class Layer:
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
         self._properties.bounding_box = bbox
-        self.dataset._save_dataset_properties()
+        self._save_layer_properties()
         for mag in self.mags.values():
             mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
@@ -514,7 +425,7 @@ class Layer:
     ) -> None:
         self._ensure_metadata_writable()
         self._properties.default_view_configuration = view_configuration
-        self.dataset._save_dataset_properties()  # update properties on disk
+        self._save_layer_properties()  # update properties on disk
 
     @property
     def read_only(self) -> bool:
@@ -531,6 +442,16 @@ class Layer:
         Getter for dictionary containing all mags.
         """
         return self._mags
+
+    @property
+    def name(self) -> str:
+        """Gets the name identifier of this layer.
+
+        Returns:
+            str: Layer name
+        """
+
+        return self._name
 
     def get_mag(self, mag: MagLike) -> MagView:
         """Gets the MagView for the specified magnification level.
@@ -561,6 +482,364 @@ class Layer:
             MagView: View of data at finest available magnification
         """
         return self.get_mag(min(self.mags.keys()))
+
+    def _get_largest_segment_id_maybe(self) -> int | None:
+        return None
+
+
+AttachmentsTypeT = TypeVar("AttachmentsTypeT", bound=AbstractAttachments)
+
+
+class AbstractSegmentationLayer(AbstractLayer, Generic[AttachmentsTypeT]):
+    """A specialized Layer subclass for segmentation data.
+
+    A SegmentationLayer extends the base Layer class with functionality specific
+    to segmentation data, such as tracking the largest segment ID. The key
+    differences are:
+
+    - Always uses the SEGMENTATION_CATEGORY category type
+    - Tracks the largest segment ID present in the data
+    - Provides methods for updating the largest segment ID
+    - Adds an `attachments` property for managing attachment files
+
+    Attributes:
+        largest_segment_id (int | None): Highest segment ID present in data, or None if empty
+        category (LayerCategoryType): Always SEGMENTATION_CATEGORY for this class
+
+    Note:
+        When creating a new SegmentationLayer, use Dataset.add_layer() rather than
+        instantiating directly.
+    """
+
+    _properties: SegmentationLayerProperties
+    _attachments: AttachmentsTypeT
+
+    def __init__(
+        self,
+        dataset: "AbstractDataset",
+        properties: SegmentationLayerProperties,
+        read_only: bool,
+    ):
+        super().__init__(dataset, properties, read_only)
+        self._attachments = self.attachments_type(self, properties.attachments)
+
+    @abstractmethod
+    @property
+    def attachments_type(self) -> type[AttachmentsTypeT]:
+        pass
+
+    @property
+    def largest_segment_id(self) -> int | None:
+        """Gets the largest segment ID present in the data.
+
+        The largest segment ID is the highest numerical identifier assigned to any
+        segment in this layer. This is useful for:
+        - Allocating new segment IDs
+        - Validating segment ID ranges
+        - Optimizing data structures
+
+        Returns:
+            int | None: The highest segment ID present, or None if no segments exist
+        """
+        return self._properties.largest_segment_id
+
+    @largest_segment_id.setter
+    def largest_segment_id(self, largest_segment_id: int | None) -> None:
+        """Sets the largest segment ID.
+
+        Updates the stored largest segment ID value and persists it to properties.
+
+        Args:
+            largest_segment_id (int | None): New largest segment ID value to set.
+                Pass None to indicate no segments exist.
+
+        Raises:
+            AssertionError: If value is not None and cannot be converted to an integer.
+        """
+
+        self._ensure_writable()
+        if largest_segment_id is not None and not isinstance(largest_segment_id, int):
+            assert largest_segment_id == int(largest_segment_id), (
+                f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
+            )
+            largest_segment_id = int(largest_segment_id)
+
+        self._properties.largest_segment_id = largest_segment_id
+        self._save_layer_properties()
+
+    @property
+    def category(self) -> LayerCategoryType:
+        return SEGMENTATION_CATEGORY
+
+    @property
+    def attachments(self) -> AttachmentsTypeT:
+        """Access, add and remove the attachments of this layer.
+
+        Attachments are additional files that can be attached to a segmentation layer.
+        They can be used to store additional information, such as meshes, agglomerations, segment indices, cumsums and connectomes.
+
+        Examples:
+            ```
+            # Add a mesh attachment to the segmentation layer
+            layer.attachments.add_mesh(
+                mesh_path,
+                name="meshfile",
+                data_format=AttachmentDataFormat.Zarr3,
+            )
+
+            # Access the mesh attachment path
+            layer.attachments.meshes[0].path
+
+            # Remove the mesh attachment
+            layer.attachments.delete_attachment(layer.attachments.meshes[0])
+            ```
+        """
+        return self._attachments
+
+    def _get_largest_segment_id_maybe(self) -> int | None:
+        return self.largest_segment_id
+
+    def _get_largest_segment_id(self, view: View) -> int:
+        """Gets the largest segment ID within a view.
+
+        Args:
+            view: View of segmentation data
+
+        Returns:
+            int: Maximum segment ID value found
+        """
+        return np.max(view.read(), initial=0)
+
+    def refresh_largest_segment_id(
+        self,
+        *,
+        chunk_shape: Vec3Int | None = None,
+        executor: Executor | None = None,
+    ) -> None:
+        """Updates largest_segment_id based on actual data content.
+
+        Scans through the data to find the highest segment ID value.
+        Sets to None if data is empty.
+
+        Args:
+            chunk_shape: Shape of chunks for processing
+            executor: Executor for parallel processing
+        """
+
+        try:
+            chunk_results = self.get_finest_mag().map_chunk(
+                self._get_largest_segment_id,
+                chunk_shape=chunk_shape,
+                executor=executor,
+                progress_desc="Searching largest segment id",
+            )
+            self.largest_segment_id = max(chunk_results)
+        except ValueError:
+            self.largest_segment_id = None
+
+
+class RemoteLayer(AbstractLayer):
+    _dataset: RemoteDataset
+
+    def __init__(
+        self, dataset: RemoteDataset, properties: LayerProperties, read_only: bool
+    ):
+        super().__init__(dataset, properties, read_only)
+
+    def _determine_read_only_and_path_for_mag(
+        self, mag_properties: MagViewProperties
+    ) -> tuple[bool, UPath]:
+        assert mag_properties.path is not None, (
+            f"Remote mags must have a path: {mag_properties}"
+        )
+        # In case of zarr-streaming remote datasets, the mag paths are relative to the dataset path.
+        # In the case of non-streaming remote datasets, the mag paths are absolute.
+        mag_path = enrich_path(mag_properties.path, self._dataset.zarr_streaming_path)
+        read_only = True
+        return read_only, mag_path
+
+    @property
+    def dataset(self) -> RemoteDataset:
+        return self._dataset
+
+    def to_layer_to_link(self) -> LayerToLink:
+        return LayerToLink(self.dataset.dataset_id, self.name)
+
+    def as_segmentation_layer(self) -> "RemoteSegmentationLayer":
+        """Casts into SegmentationLayer."""
+        if isinstance(self, RemoteSegmentationLayer):
+            return self
+        else:
+            raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
+
+
+class RemoteSegmentationLayer(
+    AbstractSegmentationLayer[RemoteAttachments], RemoteLayer
+):
+    def __init__(
+        self,
+        dataset: RemoteDataset,
+        properties: SegmentationLayerProperties,
+        read_only: bool,
+    ) -> None:
+        super().__init__(dataset, properties, read_only)
+
+    @property
+    def attachments_type(self) -> type[RemoteAttachments]:
+        return RemoteAttachments
+
+
+class Layer(AbstractLayer):
+    _dataset: Dataset
+
+    def __init__(
+        self, dataset: Dataset, properties: LayerProperties, read_only: bool
+    ) -> None:
+        """A Layer represents a portion of hierarchical data at multiple magnifications.
+
+        A Layer consists of multiple MagViews, which store the same data in different magnifications.
+        Layers are components of a Dataset and provide access to the underlying data arrays.
+
+        Attributes:
+            name (str): Name identifier for this layer
+            dataset (Dataset): Parent dataset containing this layer
+            path (Path): Filesystem path to this layer's data
+            category (LayerCategoryType): Category of data (e.g. color, segmentation)
+            dtype_per_layer (str): Deprecated, use dtype_per_channel. Data type used for the entire layer
+            dtype_per_channel (np.dtype): Data type used per channel
+            num_channels (int): Number of channels in the layer
+            data_format (DataFormat): Format used to store the data
+            default_view_configuration (LayerViewConfiguration | None): View configuration
+            read_only (bool): Whether layer is read-only
+            mags (dict[Mag, MagView]): Dictionary of magnification levels
+
+        Args:
+            dataset (Dataset): The parent dataset that contains this layer
+            properties (LayerProperties): Properties defining this layer's attributes. Must contain num_channels.
+            read_only (bool): Whether layer is read-only
+
+        Raises:
+            AssertionError: If properties.num_channels is None
+
+        Note:
+            Do not use this constructor manually. Instead use Dataset.add_layer() to create a Layer.
+        """
+        super().__init__(dataset, properties, read_only)
+        self._resolved_path: UPath = cheap_resolve(
+            self.dataset.resolved_path / self.name
+        )
+
+    def _determine_read_only_and_path_for_mag(
+        self, mag_properties: MagViewProperties
+    ) -> tuple[bool, UPath]:
+        if mag_properties.path is None:
+            mag_path = _find_mag_path(self.resolved_path, mag_properties.mag)
+        else:
+            mag_path = enrich_path(mag_properties.path, self.dataset.resolved_path)
+
+        mag_is_read_only = _is_foreign_mag(
+            self.dataset.resolved_path, self.name, mag_path
+        )
+        return mag_is_read_only, mag_path
+
+    @property
+    def dataset(self) -> Dataset:
+        return self._dataset
+
+    @property
+    def path(self) -> UPath:
+        """Gets the filesystem path to this layer's data. This is defined as a subdirectory of the dataset directory named like the layer.
+        Therefore, this directory does not contain the actual data of any linked or remote layers or mags.
+        In case of RemoteDatasets there is no dataset path, so this returns None.
+
+        Returns:
+            UPath: Filesystem path to this layer's data directory
+
+        Raises:
+            AssertionError: If mags in layer point to different layers
+        """
+        return self.dataset.path / self.name
+
+    @property
+    def resolved_path(self) -> UPath:
+        return self._resolved_path
+
+    @property
+    def is_foreign(self) -> bool:
+        """Whether this layer's data is stored remotely relative to its dataset.
+        Returns:
+            bool: True if layer path parent differs from dataset path
+        """
+        return self.resolved_path.parent != self.dataset.resolved_path
+
+    @property
+    def is_remote_to_dataset(self) -> bool:
+        warn_deprecated("is_remote_to_dataset", "is_foreign")
+        return self.is_foreign
+
+    @property
+    def name(self) -> str:
+        """
+        Returns the name of the layer.
+        """
+        return self._name
+
+    @name.setter
+    def name(self, layer_name: str) -> None:
+        """
+        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
+        Only layers on local file systems can be renamed.
+        """
+        from .dataset import _ALLOWED_LAYER_NAME_REGEX
+
+        if layer_name == self.name:
+            return
+        self._ensure_metadata_writable()
+        if not is_fs_path(self.path):
+            raise RuntimeError(f"Cannot rename remote layer {self.path}")
+        if layer_name in self.dataset.layers.keys():
+            raise ValueError(
+                f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+            )
+        if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+            raise ValueError(
+                f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+            )
+
+        if self.path.exists():
+            self.path.rename(self.dataset.path / layer_name)
+        self._path = self.dataset.path / layer_name
+        self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
+        del self.dataset.layers[self.name]
+        self.dataset.layers[layer_name] = self
+        self._properties.name = layer_name
+        self._name = layer_name
+
+        # The MagViews need to be updated
+        for mag in self._mags.values():
+            if not self.is_mag_view_foreign(mag):
+                mag._properties.path = dump_path(
+                    self._resolved_path / mag.path.name, self.dataset.resolved_path
+                )
+            else:
+                assert mag._properties.path is not None  # for type checking
+            mag._path = (
+                enrich_path(mag._properties.path, self.dataset.resolved_path)
+                if mag._properties.path is not None
+                else self._resolved_path / mag.path.name
+            )
+            # Deleting the dataset will close the file handle.
+            # The new dataset will be opened automatically when needed.
+            del mag._array
+
+        self._save_layer_properties()
+
+    def is_mag_view_foreign(self, mag: MagView) -> bool:
+        """Check if this magnification's data is stored not as part of to the dataset.
+        Returns:
+            bool: True if data is stored in a different location than the parent dataset.
+        """
+        return mag.path.parent.parent != self.dataset.resolved_path
 
     def add_mag(
         self,
@@ -670,7 +949,7 @@ class Layer:
             )
         ]
 
-        self.dataset._save_dataset_properties()
+        self._save_layer_properties()
 
         return self._mags[mag]
 
@@ -731,7 +1010,7 @@ class Layer:
                 path=stored_path,
             )
         )
-        self.dataset._save_dataset_properties()
+        self._save_layer_properties()
 
         return mag_view
 
@@ -750,7 +1029,6 @@ class Layer:
 
         See `add_mag` for more information.
         """
-
         from ._array import Zarr3ArrayInfo
 
         # normalize the name of the mag
@@ -835,8 +1113,8 @@ class Layer:
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag
         ]
-        self.dataset._save_dataset_properties()
-        if not mag_view.is_foreign:
+        self._save_layer_properties()
+        if not self.is_mag_view_foreign(mag_view):
             # delete files on disk
             rmtree(full_path)
         else:
@@ -1104,7 +1382,7 @@ class Layer:
                 axis_order=foreign_mag_view._properties.axis_order,
             )
         )
-        self.dataset._save_dataset_properties()
+        self._save_layer_properties()
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
@@ -1121,8 +1399,6 @@ class Layer:
         exists_ok: bool = False,
     ) -> MagView:
         self._ensure_writable()
-        if self.path is None:
-            raise ValueError("Cannot add mag to a remote dataset without a path.")
 
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
@@ -1190,8 +1466,6 @@ class Layer:
         the array is moved, otherwise a copy of the zarrarray is created.
         """
         self._ensure_writable()
-        if self.path is None:
-            raise ValueError("Cannot add mag to a remote dataset without a path.")
         source_path = enrich_path(path, self.dataset.resolved_path)
 
         try:
@@ -1227,29 +1501,11 @@ class Layer:
             return mag_view
 
     def _create_dir_for_mag(self, mag: MagLike) -> UPath:
-        if self.resolved_path is None:
-            raise RuntimeError(
-                "Cannot create directory for magnification, layer has no resolved path."
-            )
         mag_name = Mag(mag).to_layer_name()
         full_path = self.resolved_path / mag_name
         full_path.mkdir(parents=True, exist_ok=True)
         full_path = cheap_resolve(full_path)
         return full_path
-
-    def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:
-        """Verifies a magnification does not already exist.
-
-        Args:
-            mag: Magnification to check
-
-        Raises:
-            IndexError: If magnification exists
-        """
-        if mag in self.mags.keys():
-            raise IndexError(
-                f"Adding mag {mag} failed. There is already a mag with this name"
-            )
 
     def _get_dataset_from_align_with_other_layers(
         self, align_with_other_layers: Union[bool, "Dataset"]
@@ -1413,7 +1669,6 @@ class Layer:
 
         Raises:
             AssertionError: If from_mag doesn't exist or target exists without overwrite"""
-
         self._dataset._ensure_writable()
 
         assert from_mag in self.mags.keys(), (
@@ -1686,35 +1941,6 @@ class Layer:
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 
-    def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
-        """Initialize a magnification level when opening the Dataset.
-
-        Does not create storage headers/metadata, e.g. wk_header.
-
-        Args:
-            mag: Magnification level to setup
-            mag_path: Optional path override for mag data
-            read_only: Whether the mag is read_only
-
-        Raises:
-            ArrayException: If mag setup fails
-        """
-
-        mag_name = mag.to_layer_name()
-
-        self._assert_mag_does_not_exist_yet(mag)
-        try:
-            self._mags[mag] = MagView(
-                self,
-                mag,
-                mag_path,
-                read_only=read_only,
-            )
-        except ArrayException:
-            logging.exception(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
-            )
-
     def _initialize_mag_from_other_mag(
         self,
         new_mag_name: str | Mag,
@@ -1741,9 +1967,6 @@ class Layer:
     def __repr__(self) -> str:
         return f"Layer({repr(self.name)}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
 
-    def _get_largest_segment_id_maybe(self) -> int | None:
-        return None
-
     def as_segmentation_layer(self) -> "SegmentationLayer":
         """Casts into SegmentationLayer."""
         if isinstance(self, SegmentationLayer):
@@ -1763,144 +1986,12 @@ class Layer:
             return Dataset.open(layer_path.parent).get_layer(layer_path.name)
 
 
-class SegmentationLayer(Layer):
-    """A specialized Layer subclass for segmentation data.
-
-    A SegmentationLayer extends the base Layer class with functionality specific
-    to segmentation data, such as tracking the largest segment ID. The key
-    differences are:
-
-    - Always uses the SEGMENTATION_CATEGORY category type
-    - Tracks the largest segment ID present in the data
-    - Provides methods for updating the largest segment ID
-    - Adds an `attachments` property for managing attachment files
-
-    Attributes:
-        largest_segment_id (int | None): Highest segment ID present in data, or None if empty
-        category (LayerCategoryType): Always SEGMENTATION_CATEGORY for this class
-
-    Note:
-        When creating a new SegmentationLayer, use Dataset.add_layer() rather than
-        instantiating directly.
-    """
-
-    _properties: SegmentationLayerProperties
-    _attachments: Attachments
-
+class SegmentationLayer(AbstractSegmentationLayer[Attachments], Layer):
     def __init__(
-        self,
-        dataset: "Dataset",
-        properties: SegmentationLayerProperties,
-        read_only: bool,
+        self, dataset: Dataset, properties: SegmentationLayerProperties, read_only: bool
     ):
         super().__init__(dataset, properties, read_only)
-        self._attachments = Attachments(self, properties.attachments)
 
     @property
-    def largest_segment_id(self) -> int | None:
-        """Gets the largest segment ID present in the data.
-
-        The largest segment ID is the highest numerical identifier assigned to any
-        segment in this layer. This is useful for:
-        - Allocating new segment IDs
-        - Validating segment ID ranges
-        - Optimizing data structures
-
-        Returns:
-            int | None: The highest segment ID present, or None if no segments exist
-        """
-        return self._properties.largest_segment_id
-
-    @largest_segment_id.setter
-    def largest_segment_id(self, largest_segment_id: int | None) -> None:
-        """Sets the largest segment ID.
-
-        Updates the stored largest segment ID value and persists it to properties.
-
-        Args:
-            largest_segment_id (int | None): New largest segment ID value to set.
-                Pass None to indicate no segments exist.
-
-        Raises:
-            AssertionError: If value is not None and cannot be converted to an integer.
-        """
-
-        self._ensure_writable()
-        if largest_segment_id is not None and not isinstance(largest_segment_id, int):
-            assert largest_segment_id == int(largest_segment_id), (
-                f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
-            )
-            largest_segment_id = int(largest_segment_id)
-
-        self._properties.largest_segment_id = largest_segment_id
-        self.dataset._save_dataset_properties()
-
-    @property
-    def category(self) -> LayerCategoryType:
-        return SEGMENTATION_CATEGORY
-
-    @property
-    def attachments(self) -> Attachments:
-        """Access, add and remove the attachments of this layer.
-
-        Attachments are additional files that can be attached to a segmentation layer.
-        They can be used to store additional information, such as meshes, agglomerations, segment indices, cumsums and connectomes.
-
-        Examples:
-            ```
-            # Add a mesh attachment to the segmentation layer
-            layer.attachments.add_mesh(
-                mesh_path,
-                name="meshfile",
-                data_format=AttachmentDataFormat.Zarr3,
-            )
-
-            # Access the mesh attachment path
-            layer.attachments.meshes[0].path
-
-            # Remove the mesh attachment
-            layer.attachments.delete_attachment(layer.attachments.meshes[0])
-            ```
-        """
-        return self._attachments
-
-    def _get_largest_segment_id_maybe(self) -> int | None:
-        return self.largest_segment_id
-
-    def _get_largest_segment_id(self, view: View) -> int:
-        """Gets the largest segment ID within a view.
-
-        Args:
-            view: View of segmentation data
-
-        Returns:
-            int: Maximum segment ID value found
-        """
-        return np.max(view.read(), initial=0)
-
-    def refresh_largest_segment_id(
-        self,
-        *,
-        chunk_shape: Vec3Int | None = None,
-        executor: Executor | None = None,
-    ) -> None:
-        """Updates largest_segment_id based on actual data content.
-
-        Scans through the data to find the highest segment ID value.
-        Sets to None if data is empty.
-
-        Args:
-            chunk_shape: Shape of chunks for processing
-            executor: Executor for parallel processing
-        """
-
-        try:
-            chunk_results = self.get_finest_mag().map_chunk(
-                self._get_largest_segment_id,
-                chunk_shape=chunk_shape,
-                executor=executor,
-                progress_desc="Searching largest segment id",
-            )
-            self.largest_segment_id = max(chunk_results)
-        except ValueError:
-            self.largest_segment_id = None
+    def attachments_type(self) -> type[Attachments]:
+        return Attachments

@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     import tensorstore
 
     from .layer import (
-        Layer,
+        AbstractLayer,
     )
 
 from .view import View
@@ -112,12 +112,12 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
-    _layer: "Layer"
+    _layer: "AbstractLayer"
 
     @classmethod
     def create(
         cls,
-        layer: "Layer",
+        layer: "AbstractLayer",
         mag: Mag,
         *,
         path: UPath,
@@ -192,7 +192,7 @@ class MagView(View):
 
     def __init__(
         self,
-        layer: "Layer",
+        layer: "AbstractLayer",
         mag: Mag,
         path: UPath,
         read_only: bool = False,
@@ -233,7 +233,7 @@ class MagView(View):
     # Own methods:
 
     @property
-    def layer(self) -> "Layer":
+    def layer(self) -> "AbstractLayer":
         """Get the parent Layer object.
 
         Returns:
@@ -256,19 +256,6 @@ class MagView(View):
             - Path may be local or remote depending on dataset configuration
         """
         return self._path
-
-    @property
-    def is_foreign(self) -> bool:
-        """Check if this magnification's data is stored not as part of to the dataset.
-        Returns:
-            bool: True if data is stored in a different location than the parent dataset.
-        """
-        return self.path.parent.parent != self.layer.dataset.resolved_path
-
-    @property
-    def is_remote_to_dataset(self) -> bool:
-        warn_deprecated("is_remote_to_dataset", "is_foreign")
-        return self.is_foreign
 
     @property
     def name(self) -> str:
@@ -568,19 +555,15 @@ class MagView(View):
 
         self._ensure_writable()
         path = self._path
+
         if target_path is None:
             assert is_fs_path(path), (
                 "Cannot rechunk a remote mag without `target_path`."
             )
         else:
             target_path = UPath(target_path)
-        if self.layer.dataset.path is None:
-            raise ValueError("Cannot rechunk a remote mag without a path.")
-
         rechunked_dataset_path = (
-            self.layer.dataset.path / f".rechunk-{uuid4()}"
-            if target_path is None
-            else target_path
+            path.parent / f".rechunk-{uuid4()}" if target_path is None else target_path
         )
         rechunked_dataset = Dataset(
             rechunked_dataset_path,

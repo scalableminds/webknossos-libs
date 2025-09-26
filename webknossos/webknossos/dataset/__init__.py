@@ -18,7 +18,7 @@ from .attachments import (
     MeshAttachment,
     SegmentIndexAttachment,
 )
-from .dataset import Dataset, LayerToLink, RemoteDataset
+from .dataset import Dataset
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
@@ -26,7 +26,9 @@ from .defaults import (
     DEFAULT_SHARD_SHAPE,
 )
 from .layer import Layer, SegmentationLayer
+from .layer_to_link import LayerToLink
 from .mag_view import MagView
+from .remote_dataset import RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .view import View
