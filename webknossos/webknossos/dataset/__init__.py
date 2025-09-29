@@ -10,14 +10,6 @@ Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), wh
 """
 # ruff: noqa: F401 imported but unused
 
-from .attachments import (
-    AgglomerateAttachment,
-    Attachment,
-    ConnectomeAttachment,
-    CumsumAttachment,
-    MeshAttachment,
-    SegmentIndexAttachment,
-)
 from .dataset import Dataset
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -25,10 +17,20 @@ from .defaults import (
     DEFAULT_DATA_FORMAT,
     DEFAULT_SHARD_SHAPE,
 )
-from .layer import Layer, SegmentationLayer
+from .layer import (
+    AgglomerateAttachment,
+    Attachment,
+    ConnectomeAttachment,
+    CumsumAttachment,
+    Layer,
+    MagView,
+    MeshAttachment,
+    RemoteSegmentationLayer,
+    SegmentationLayer,
+    SegmentIndexAttachment,
+    View,
+)
 from .layer_to_link import LayerToLink
-from .mag_view import MagView
 from .remote_dataset import RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
-from .view import View

@@ -8,7 +8,7 @@ from rich.progress import track
 
 from .. import LayerCategoryType
 from ..dataset import Dataset
-from ..dataset.layer import _element_class_to_dtype_per_channel
+from ..dataset.layer.abstract_layer import _element_class_to_dtype_per_channel
 from ..dataset_properties import (
     LayerProperties,
 )

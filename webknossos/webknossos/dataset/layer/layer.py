@@ -1,38 +1,16 @@
 import logging
-import operator
-import re
 import warnings
-from abc import abstractmethod
 from inspect import getframeinfo, stack
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 from cluster_tools import Executor
-from numpy.typing import DTypeLike
 from upath import UPath
 
-from .. import LayerToLink, RemoteDataset
-from ..dataset_properties import (
-    COLOR_CATEGORY,
-    SEGMENTATION_CATEGORY,
-    DataFormat,
-    LayerCategoryType,
-    LayerProperties,
-    LayerViewConfiguration,
-    MagViewProperties,
-    SegmentationLayerProperties,
-)
-from ..dataset_properties.structuring import (
-    _properties_floating_type_to_python_type,
-    _python_floating_type_to_properties_type,
-)
-from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
-from ..geometry.mag import MagLike
-from ._array import ArrayException, TensorStoreArray, Zarr3ArrayInfo, Zarr3Config
-from ._downsampling_utils import (
+from webknossos.dataset._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
@@ -41,16 +19,34 @@ from ._downsampling_utils import (
     downsample_cube_job,
     parse_interpolation_mode,
 )
-from ._upsampling_utils import upsample_cube_job
-from .attachments import AbstractAttachments, Attachments, RemoteAttachments
-from .mag_view import MagView
-from .sampling_modes import SamplingModes
-from .view import View, _copy_job
+from webknossos.dataset._upsampling_utils import upsample_cube_job
+from webknossos.dataset.layer.view import MagView, View
+from webknossos.dataset.layer.view._array import (
+    ArrayException,
+    TensorStoreArray,
+    Zarr3ArrayInfo,
+    Zarr3Config,
+)
+from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.dataset_properties import (
+    DataFormat,
+    LayerProperties,
+    MagViewProperties,
+)
+from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
+from webknossos.geometry.mag import MagLike
+
+from .abstract_layer import AbstractLayer
+from .segmentation_layer import SegmentationLayer
 
 if TYPE_CHECKING:
-    from .dataset import AbstractDataset, Dataset
+    from webknossos.dataset import Dataset
 
-from ..utils import (
+from webknossos.dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_SHARD_SHAPE,
+)
+from webknossos.utils import (
     cheap_resolve,
     copytree,
     dump_path,
@@ -62,100 +58,14 @@ from ..utils import (
     rmtree,
     warn_deprecated,
 )
-from .defaults import (
-    DEFAULT_CHUNK_SHAPE,
-    DEFAULT_SHARD_SHAPE,
-)
 
 logger = logging.getLogger(__name__)
 
 
-def _is_int(s: str) -> bool:
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
-
-def _convert_dtypes(
-    dtype: DTypeLike,
-    num_channels: int,
-    dtype_per_layer_to_dtype_per_channel: bool,
-) -> str:
-    op = operator.truediv if dtype_per_layer_to_dtype_per_channel else operator.mul
-
-    # split the dtype into the actual type and the number of bits
-    # example: "uint24" -> ["uint", "24"]
-    dtype_parts = re.split(r"(\d+)", str(dtype))
-    # calculate number of bits for dtype_per_channel
-    converted_dtype_parts = [
-        (str(int(op(int(part), num_channels))) if _is_int(part) else part)
-        for part in dtype_parts
-    ]
-    return "".join(converted_dtype_parts)
-
-
-def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
-    try:
-        return np.dtype(dtype_per_channel)
-    except TypeError as e:
-        raise TypeError(
-            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
-        ) from e
-
-
-def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
-    try:
-        dtype_per_layer = str(np.dtype(dtype_per_layer))
-    except Exception:
-        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
-    return dtype_per_layer  # type: ignore[return-value]
-
-
-def _dtype_per_layer_to_dtype_per_channel(
-    dtype_per_layer: DTypeLike, num_channels: int
-) -> np.dtype:
-    try:
-        return np.dtype(
-            _convert_dtypes(
-                dtype_per_layer, num_channels, dtype_per_layer_to_dtype_per_channel=True
-            )
-        )
-    except TypeError as e:
-        raise TypeError(
-            "Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct."
-        ) from e
-
-
-def _dtype_per_channel_to_dtype_per_layer(
-    dtype_per_channel: DTypeLike, num_channels: int
-) -> str:
-    return _convert_dtypes(
-        np.dtype(dtype_per_channel),
-        num_channels,
-        dtype_per_layer_to_dtype_per_channel=False,
-    )
-
-
-def _dtype_per_channel_to_element_class(
-    dtype_per_channel: DTypeLike, num_channels: int
-) -> str:
-    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
-        dtype_per_channel, num_channels
-    )
-    return _python_floating_type_to_properties_type.get(
-        dtype_per_layer, dtype_per_layer
-    )
-
-
-def _element_class_to_dtype_per_channel(
-    element_class: str, num_channels: int
-) -> np.dtype:
-    dtype_per_layer = _properties_floating_type_to_python_type.get(
-        element_class, element_class
-    )
-    return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
+def _copy_job(args: tuple[View, View, int]) -> None:
+    (source_view, target_view, _) = args
+    # Copy the data form one view to the other in a buffered fashion
+    target_view.write(source_view.read())
 
 
 def _get_shard_shape(
@@ -207,486 +117,6 @@ def _find_mag_path(
         raise FileNotFoundError(
             f"Could not find any valid mag `{mag}` in `{layer_path}`."
         )
-
-
-class AbstractLayer:
-    _dataset: "AbstractDataset"
-
-    def __init__(
-        self, dataset: "AbstractDataset", properties: LayerProperties, read_only: bool
-    ) -> None:
-        # It is possible that the properties on disk do not contain the number of channels.
-        # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
-        assert properties.num_channels is not None
-        self._dataset = dataset
-        self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
-
-        self._dtype_per_channel = _element_class_to_dtype_per_channel(
-            properties.element_class, properties.num_channels
-        )
-        self._mags: dict[Mag, MagView] = {}
-        self._read_only = read_only
-
-        for mag in properties.mags:
-            mag_read_only, mag_path = self._determine_read_only_and_path_for_mag(mag)
-            self._setup_mag(
-                Mag(mag.mag), mag_path, read_only=read_only or mag_read_only
-            )
-
-        self._properties.mags = [
-            res for res in self._properties.mags if Mag(res.mag) in self._mags
-        ]
-
-    @abstractmethod
-    @property
-    def dataset(self) -> "AbstractDataset":
-        pass
-
-    @abstractmethod
-    def as_segmentation_layer(self) -> "AbstractSegmentationLayer":
-        pass
-
-    @abstractmethod
-    def _determine_read_only_and_path_for_mag(
-        self, mag_properties: MagViewProperties
-    ) -> tuple[bool, UPath]:
-        pass
-
-    def _ensure_metadata_writable(self) -> None:
-        if self.dataset.read_only:
-            raise RuntimeError(
-                f"{self.dataset} is read-only, the changes to the metadata of {self} will not be saved!"
-            )
-
-    @property
-    def _properties(self) -> LayerProperties:
-        """Gets the LayerProperties object containing layer attributes.
-
-        Returns:
-            LayerProperties: Properties object for this layer
-
-        Note:
-            Internal property used to access underlying properties storage.
-        """
-
-        return next(
-            layer_property
-            for layer_property in self.dataset._properties.data_layers
-            if layer_property.name == self.name
-        )
-
-    def _save_layer_properties(self) -> None:
-        self.dataset._save_dataset_properties()
-
-    def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
-        """Initialize a magnification level when opening the Dataset.
-
-        Does not create storage headers/metadata, e.g. wk_header.
-
-        Args:
-            mag: Magnification level to setup
-            mag_path: Optional path override for mag data
-            read_only: Whether the mag is read_only
-
-        Raises:
-            ArrayException: If mag setup fails
-        """
-
-        mag_name = mag.to_layer_name()
-
-        self._assert_mag_does_not_exist_yet(mag)
-        try:
-            self._mags[mag] = MagView(
-                self,
-                mag,
-                mag_path,
-                read_only=read_only,
-            )
-        except ArrayException:
-            logging.exception(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
-            )
-
-    def _assert_mag_does_not_exist_yet(self, mag: MagLike) -> None:
-        """Verifies a magnification does not already exist.
-
-        Args:
-            mag: Magnification to check
-
-        Raises:
-            IndexError: If magnification exists
-        """
-        if mag in self.mags.keys():
-            raise IndexError(
-                f"Adding mag {mag} failed. There is already a mag with this name"
-            )
-
-    def _ensure_writable(self) -> None:
-        if self.read_only:
-            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
-
-    @property
-    def bounding_box(self) -> NDBoundingBox:
-        """Gets the bounding box encompassing this layer's data.
-
-        Returns:
-            NDBoundingBox: Bounding box with layer dimensions
-        """
-
-        return self._properties.bounding_box
-
-    @bounding_box.setter
-    def bounding_box(self, bbox: NDBoundingBox) -> None:
-        """Updates the offset and size of the bounding box of this layer in the properties."""
-        self._ensure_metadata_writable()
-        assert bbox.topleft.is_positive(), (
-            f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
-        )
-        self._properties.bounding_box = bbox
-        self._save_layer_properties()
-        for mag in self.mags.values():
-            mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
-
-    @property
-    def category(self) -> LayerCategoryType:
-        """Gets the category type of this layer.
-
-        Returns:
-            LayerCategoryType: Layer category (e.g. COLOR_CATEGORY)
-        """
-
-        return COLOR_CATEGORY
-
-    @property
-    def dtype_per_layer(self) -> str:
-        """Deprecated, use dtype_per_channel instead.
-        Gets the data type used for the entire layer.
-
-        Returns:
-            str: Data type string (e.g. "uint8")
-        """
-
-        warn_deprecated("dtype_per_layer", "dtype_per_channel")
-        return _dtype_per_channel_to_dtype_per_layer(
-            self.dtype_per_channel, self.num_channels
-        )
-
-    @property
-    def dtype_per_channel(self) -> np.dtype:
-        """Gets the data type used per channel.
-
-        Returns:
-            np.dtype: NumPy data type for individual channels
-        """
-
-        return self._dtype_per_channel
-
-    @property
-    def num_channels(self) -> int:
-        """Gets the number of channels in this layer.
-
-        Returns:
-            int: Number of channels
-
-        Raises:
-            AssertionError: If num_channels is not set in properties
-        """
-
-        assert self._properties.num_channels is not None
-        return self._properties.num_channels
-
-    @property
-    def data_format(self) -> DataFormat:
-        """Gets the data storage format used by this layer.
-
-        Returns:
-            DataFormat: Format used to store data
-
-        Raises:
-            AssertionError: If data_format is not set in properties
-        """
-
-        assert self._properties.data_format is not None
-        return self._properties.data_format
-
-    @property
-    def default_view_configuration(self) -> LayerViewConfiguration | None:
-        """Gets the default view configuration for this layer.
-
-        Returns:
-            LayerViewConfiguration | None: View configuration if set, otherwise None
-        """
-
-        return self._properties.default_view_configuration
-
-    @default_view_configuration.setter
-    def default_view_configuration(
-        self, view_configuration: LayerViewConfiguration
-    ) -> None:
-        self._ensure_metadata_writable()
-        self._properties.default_view_configuration = view_configuration
-        self._save_layer_properties()  # update properties on disk
-
-    @property
-    def read_only(self) -> bool:
-        """Whether this layer is read-only.
-
-        Returns:
-            bool: True if layer is read-only, False if writable
-        """
-        return self._read_only
-
-    @property
-    def mags(self) -> dict[Mag, MagView]:
-        """
-        Getter for dictionary containing all mags.
-        """
-        return self._mags
-
-    @property
-    def name(self) -> str:
-        """Gets the name identifier of this layer.
-
-        Returns:
-            str: Layer name
-        """
-
-        return self._name
-
-    def get_mag(self, mag: MagLike) -> MagView:
-        """Gets the MagView for the specified magnification level.
-
-        Returns a view of the data at the requested magnification level. The mag
-        parameter can be specified in various formats that will be normalized.
-
-        Args:
-            mag: Magnification identifier in multiple formats (int, str, list, etc)
-
-        Returns:
-            MagView: View of data at the specified magnification
-
-        Raises:
-            IndexError: If specified magnification does not exist
-        """
-        mag = Mag(mag)
-        if mag not in self.mags.keys():
-            raise IndexError(
-                f"The mag {mag.to_layer_name()} is not a mag of this layer"
-            )
-        return self.mags[mag]
-
-    def get_finest_mag(self) -> MagView:
-        """Gets the MagView with the finest/smallest magnification.
-
-        Returns:
-            MagView: View of data at finest available magnification
-        """
-        return self.get_mag(min(self.mags.keys()))
-
-    def _get_largest_segment_id_maybe(self) -> int | None:
-        return None
-
-
-AttachmentsTypeT = TypeVar("AttachmentsTypeT", bound=AbstractAttachments)
-
-
-class AbstractSegmentationLayer(AbstractLayer, Generic[AttachmentsTypeT]):
-    """A specialized Layer subclass for segmentation data.
-
-    A SegmentationLayer extends the base Layer class with functionality specific
-    to segmentation data, such as tracking the largest segment ID. The key
-    differences are:
-
-    - Always uses the SEGMENTATION_CATEGORY category type
-    - Tracks the largest segment ID present in the data
-    - Provides methods for updating the largest segment ID
-    - Adds an `attachments` property for managing attachment files
-
-    Attributes:
-        largest_segment_id (int | None): Highest segment ID present in data, or None if empty
-        category (LayerCategoryType): Always SEGMENTATION_CATEGORY for this class
-
-    Note:
-        When creating a new SegmentationLayer, use Dataset.add_layer() rather than
-        instantiating directly.
-    """
-
-    _properties: SegmentationLayerProperties
-    _attachments: AttachmentsTypeT
-
-    def __init__(
-        self,
-        dataset: "AbstractDataset",
-        properties: SegmentationLayerProperties,
-        read_only: bool,
-    ):
-        super().__init__(dataset, properties, read_only)
-        self._attachments = self.attachments_type(self, properties.attachments)
-
-    @abstractmethod
-    @property
-    def attachments_type(self) -> type[AttachmentsTypeT]:
-        pass
-
-    @property
-    def largest_segment_id(self) -> int | None:
-        """Gets the largest segment ID present in the data.
-
-        The largest segment ID is the highest numerical identifier assigned to any
-        segment in this layer. This is useful for:
-        - Allocating new segment IDs
-        - Validating segment ID ranges
-        - Optimizing data structures
-
-        Returns:
-            int | None: The highest segment ID present, or None if no segments exist
-        """
-        return self._properties.largest_segment_id
-
-    @largest_segment_id.setter
-    def largest_segment_id(self, largest_segment_id: int | None) -> None:
-        """Sets the largest segment ID.
-
-        Updates the stored largest segment ID value and persists it to properties.
-
-        Args:
-            largest_segment_id (int | None): New largest segment ID value to set.
-                Pass None to indicate no segments exist.
-
-        Raises:
-            AssertionError: If value is not None and cannot be converted to an integer.
-        """
-
-        self._ensure_writable()
-        if largest_segment_id is not None and not isinstance(largest_segment_id, int):
-            assert largest_segment_id == int(largest_segment_id), (
-                f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
-            )
-            largest_segment_id = int(largest_segment_id)
-
-        self._properties.largest_segment_id = largest_segment_id
-        self._save_layer_properties()
-
-    @property
-    def category(self) -> LayerCategoryType:
-        return SEGMENTATION_CATEGORY
-
-    @property
-    def attachments(self) -> AttachmentsTypeT:
-        """Access, add and remove the attachments of this layer.
-
-        Attachments are additional files that can be attached to a segmentation layer.
-        They can be used to store additional information, such as meshes, agglomerations, segment indices, cumsums and connectomes.
-
-        Examples:
-            ```
-            # Add a mesh attachment to the segmentation layer
-            layer.attachments.add_mesh(
-                mesh_path,
-                name="meshfile",
-                data_format=AttachmentDataFormat.Zarr3,
-            )
-
-            # Access the mesh attachment path
-            layer.attachments.meshes[0].path
-
-            # Remove the mesh attachment
-            layer.attachments.delete_attachment(layer.attachments.meshes[0])
-            ```
-        """
-        return self._attachments
-
-    def _get_largest_segment_id_maybe(self) -> int | None:
-        return self.largest_segment_id
-
-    def _get_largest_segment_id(self, view: View) -> int:
-        """Gets the largest segment ID within a view.
-
-        Args:
-            view: View of segmentation data
-
-        Returns:
-            int: Maximum segment ID value found
-        """
-        return np.max(view.read(), initial=0)
-
-    def refresh_largest_segment_id(
-        self,
-        *,
-        chunk_shape: Vec3Int | None = None,
-        executor: Executor | None = None,
-    ) -> None:
-        """Updates largest_segment_id based on actual data content.
-
-        Scans through the data to find the highest segment ID value.
-        Sets to None if data is empty.
-
-        Args:
-            chunk_shape: Shape of chunks for processing
-            executor: Executor for parallel processing
-        """
-
-        try:
-            chunk_results = self.get_finest_mag().map_chunk(
-                self._get_largest_segment_id,
-                chunk_shape=chunk_shape,
-                executor=executor,
-                progress_desc="Searching largest segment id",
-            )
-            self.largest_segment_id = max(chunk_results)
-        except ValueError:
-            self.largest_segment_id = None
-
-
-class RemoteLayer(AbstractLayer):
-    _dataset: RemoteDataset
-
-    def __init__(
-        self, dataset: RemoteDataset, properties: LayerProperties, read_only: bool
-    ):
-        super().__init__(dataset, properties, read_only)
-
-    def _determine_read_only_and_path_for_mag(
-        self, mag_properties: MagViewProperties
-    ) -> tuple[bool, UPath]:
-        assert mag_properties.path is not None, (
-            f"Remote mags must have a path: {mag_properties}"
-        )
-        # In case of zarr-streaming remote datasets, the mag paths are relative to the dataset path.
-        # In the case of non-streaming remote datasets, the mag paths are absolute.
-        mag_path = enrich_path(mag_properties.path, self._dataset.zarr_streaming_path)
-        read_only = True
-        return read_only, mag_path
-
-    @property
-    def dataset(self) -> RemoteDataset:
-        return self._dataset
-
-    def to_layer_to_link(self) -> LayerToLink:
-        return LayerToLink(self.dataset.dataset_id, self.name)
-
-    def as_segmentation_layer(self) -> "RemoteSegmentationLayer":
-        """Casts into SegmentationLayer."""
-        if isinstance(self, RemoteSegmentationLayer):
-            return self
-        else:
-            raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
-
-
-class RemoteSegmentationLayer(
-    AbstractSegmentationLayer[RemoteAttachments], RemoteLayer
-):
-    def __init__(
-        self,
-        dataset: RemoteDataset,
-        properties: SegmentationLayerProperties,
-        read_only: bool,
-    ) -> None:
-        super().__init__(dataset, properties, read_only)
-
-    @property
-    def attachments_type(self) -> type[RemoteAttachments]:
-        return RemoteAttachments
 
 
 class Layer(AbstractLayer):
@@ -790,7 +220,7 @@ class Layer(AbstractLayer):
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
         Only layers on local file systems can be renamed.
         """
-        from .dataset import _ALLOWED_LAYER_NAME_REGEX
+        from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
 
         if layer_name == self.name:
             return
@@ -813,7 +243,7 @@ class Layer(AbstractLayer):
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
-        self._name = layer_name
+        self._name: str = layer_name
 
         # The MagViews need to be updated
         for mag in self._mags.values():
@@ -1984,14 +1414,3 @@ class Layer(AbstractLayer):
 
             layer_path = UPath(layer)
             return Dataset.open(layer_path.parent).get_layer(layer_path.name)
-
-
-class SegmentationLayer(AbstractSegmentationLayer[Attachments], Layer):
-    def __init__(
-        self, dataset: Dataset, properties: SegmentationLayerProperties, read_only: bool
-    ):
-        super().__init__(dataset, properties, read_only)
-
-    @property
-    def attachments_type(self) -> type[Attachments]:
-        return Attachments

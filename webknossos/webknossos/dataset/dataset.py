@@ -1,7 +1,6 @@
 import copy
 import json
 import logging
-import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
 from enum import Enum, unique
@@ -18,6 +17,13 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.dataset.layer.view._array import (
+    ArrayException,
+    ArrayInfo,
+    BaseArray,
+    Zarr3Config,
+)
+
 from .. import LayerToLink, RemoteDataset
 from ..client.api_client.models import (
     ApiReserveDatasetUplaodToPathsParameters,
@@ -33,7 +39,6 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
-from ._array import ArrayException, ArrayInfo, BaseArray, Zarr3Config
 from ._utils import pims_images
 from .abstract_dataset import DEFAULT_VERSION, AbstractDataset
 from .defaults import (
@@ -46,6 +51,11 @@ from .defaults import (
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
+from .layer.abstract_layer import (
+    _UNALLOWED_LAYER_NAME_CHARS,
+    _dtype_per_channel_to_dtype_per_layer,
+)
+from .layer.layer import _get_shard_shape
 from .ome_metadata import write_ome_metadata
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
@@ -53,6 +63,15 @@ from .sampling_modes import SamplingModes
 if TYPE_CHECKING:
     import pims
 
+
+from webknossos.dataset.layer import (
+    Layer,
+    RemoteLayer,
+    SegmentationLayer,
+)
+from webknossos.dataset.layer.abstract_layer import (
+    _dtype_per_layer_to_dtype_per_channel,
+)
 
 from ..dataset_properties import (
     COLOR_CATEGORY,
@@ -67,6 +86,7 @@ from ..dataset_properties import (
 )
 from ..dataset_properties.structuring import (
     _properties_floating_type_to_python_type,
+    _python_floating_type_to_properties_type,
     get_dataset_converter,
 )
 from ..utils import (
@@ -88,26 +108,9 @@ from ._utils.segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
-from .layer import (
-    Layer,
-    RemoteLayer,
-    SegmentationLayer,
-    _dtype_per_channel_to_element_class,
-    _dtype_per_layer_to_dtype_per_channel,
-    _get_shard_shape,
-    _normalize_dtype_per_channel,
-    _normalize_dtype_per_layer,
-)
 
 logger = logging.getLogger(__name__)
 
-
-# A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
-# As the begin and the end are anchored, all of the name must match the regex.
-# The first regex group ensures that the name does not start with a dot.
-_ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$")
-# This regex matches any character that is not allowed in a layer name.
-_UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
@@ -1113,10 +1116,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
 
         self._ensure_writable()
-
-        assert _ALLOWED_LAYER_NAME_REGEX.match(layer_name), (
-            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
-        )
 
         if num_channels is None:
             num_channels = 1
@@ -2722,3 +2721,31 @@ def _extract_num_channels(
             f"If the layer does not contain any data, you can also delete the layer and add it again.",
         ) from e
     return array.info.num_channels
+
+
+def _dtype_per_channel_to_element_class(
+    dtype_per_channel: DTypeLike, num_channels: int
+) -> str:
+    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
+        dtype_per_channel, num_channels
+    )
+    return _python_floating_type_to_properties_type.get(
+        dtype_per_layer, dtype_per_layer
+    )
+
+
+def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
+    try:
+        return np.dtype(dtype_per_channel)
+    except TypeError as e:
+        raise TypeError(
+            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
+        ) from e
+
+
+def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
+    try:
+        dtype_per_layer = str(np.dtype(dtype_per_layer))
+    except Exception:
+        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+    return dtype_per_layer  # type: ignore[return-value]

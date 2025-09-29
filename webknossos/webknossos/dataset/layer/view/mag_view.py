@@ -3,24 +3,14 @@ import warnings
 from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 from uuid import uuid4
 
 import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from ..dataset_properties import DataFormat, MagViewProperties
-from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
-from ..utils import (
-    get_executor_for_args,
-    is_fs_path,
-    rmtree,
-    strip_trailing_slash,
-    wait_and_ensure_success,
-    warn_deprecated,
-)
-from ._array import (
+from webknossos.dataset.layer.view._array import (
     ArrayInfo,
     BaseArray,
     TensorStoreArray,
@@ -29,11 +19,22 @@ from ._array import (
     Zarr3ArrayInfo,
     Zarr3Config,
 )
+from webknossos.utils import (
+    get_executor_for_args,
+    is_fs_path,
+    rmtree,
+    strip_trailing_slash,
+    wait_and_ensure_success,
+    warn_deprecated,
+)
+
+from ....dataset_properties import DataFormat, MagViewProperties
+from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 
 if TYPE_CHECKING:
     import tensorstore
 
-    from .layer import (
+    from ..abstract_layer import (
         AbstractLayer,
     )
 
@@ -49,7 +50,10 @@ def _copy_view_data(args: tuple[View, View, int]) -> None:
     )
 
 
-class MagView(View):
+LayerTypeT = TypeVar("LayerTypeT", bound=AbstractLayer)
+
+
+class MagView(View, Generic[LayerTypeT]):
     """A view of a specific magnification level within a WEBKNOSSOS layer.
 
     MagView provides access to volumetric data at a specific resolution/magnification level.
@@ -112,12 +116,12 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
-    _layer: "AbstractLayer"
+    _layer: LayerTypeT
 
     @classmethod
     def create(
         cls,
-        layer: "AbstractLayer",
+        layer: LayerTypeT,
         mag: Mag,
         *,
         path: UPath,
@@ -192,7 +196,7 @@ class MagView(View):
 
     def __init__(
         self,
-        layer: "AbstractLayer",
+        layer: LayerTypeT,
         mag: Mag,
         path: UPath,
         read_only: bool = False,
@@ -233,7 +237,7 @@ class MagView(View):
     # Own methods:
 
     @property
-    def layer(self) -> "AbstractLayer":
+    def layer(self) -> LayerTypeT:
         """Get the parent Layer object.
 
         Returns:
@@ -551,7 +555,7 @@ class MagView(View):
             - Progress is displayed during rechunking
             - Compressed data may have slower read/write speeds
         """
-        from .dataset import Dataset
+        from ....dataset import Dataset
 
         self._ensure_writable()
         path = self._path
@@ -768,7 +772,7 @@ class MagView(View):
             return mag_view_or_path
         else:
             # local import to prevent circular dependency
-            from .dataset import Dataset
+            from ...dataset import Dataset
 
             mag_view_path = strip_trailing_slash(UPath(mag_view_or_path))
             return (
