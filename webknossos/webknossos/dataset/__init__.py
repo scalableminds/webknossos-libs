@@ -23,6 +23,7 @@ from .layer import (
     ConnectomeAttachment,
     CumsumAttachment,
     Layer,
+    LayerToLink,
     MagView,
     MeshAttachment,
     RemoteSegmentationLayer,
@@ -30,7 +31,6 @@ from .layer import (
     SegmentIndexAttachment,
     View,
 )
-from .layer_to_link import LayerToLink
 from .remote_dataset import RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes

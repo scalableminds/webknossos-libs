@@ -1,18 +1,23 @@
-from webknossos.dataset import RemoteDataset
+from typing import TYPE_CHECKING
+
 from webknossos.dataset.layer.remote_layer import RemoteLayer
 from webknossos.dataset.layer.segmentation_layer import (
-    AbstractSegmentationLayer,
     RemoteAttachments,
+)
+from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import (
+    AbstractSegmentationLayer,
 )
 from webknossos.dataset_properties import SegmentationLayerProperties
 
+if TYPE_CHECKING:
+    from webknossos.dataset import RemoteDataset
 
 class RemoteSegmentationLayer(
     AbstractSegmentationLayer[RemoteAttachments], RemoteLayer
 ):
     def __init__(
         self,
-        dataset: RemoteDataset,
+        dataset: "RemoteDataset",
         properties: SegmentationLayerProperties,
         read_only: bool,
     ) -> None:

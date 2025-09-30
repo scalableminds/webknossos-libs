@@ -2,19 +2,12 @@ import logging
 from collections.abc import Sequence
 from datetime import datetime
 from os import PathLike
-from typing import Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 from boltons.typeutils import make_sentinel
 from upath import UPath
 
-from webknossos import (
-    DatasetProperties,
-    Mag,
-    RemoteFolder,
-    Team,
-    Vec3Int,
-    webknossos_context,
-)
+from webknossos.client import webknossos_context
 from webknossos.client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiDataset,
@@ -26,14 +19,21 @@ from webknossos.client.api_client.models import (
 from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.dataset.abstract_dataset import AbstractDataset
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
+from webknossos.dataset_properties import (
+    DatasetProperties,
+)
+from webknossos.geometry import Mag, Vec3Int
 from webknossos.geometry.mag import MagLike
 from webknossos.ssl_context import SSL_CONTEXT
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
+from .remote_folder import RemoteFolder
+
 logger = logging.getLogger(__name__)
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
-
+if TYPE_CHECKING:
+    from webknossos.administration.user import Team
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     """A representation of a dataset on a webknossos server.
 
@@ -78,7 +78,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         zarr_streaming_path: UPath | None,
         dataset_properties: DatasetProperties | None,
         dataset_id: str,
-        context: "webknossos_context",
+        context: webknossos_context,
         read_only: bool,
     ) -> None:
         """Initialize a remote dataset instance.

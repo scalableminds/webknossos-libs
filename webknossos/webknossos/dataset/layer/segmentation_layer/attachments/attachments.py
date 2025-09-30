@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from webknossos import AttachmentDataFormat, AttachmentsProperties
+from webknossos.dataset_properties import AttachmentDataFormat, AttachmentsProperties
 from webknossos.utils import (
     cheap_resolve,
     copytree,
@@ -29,10 +29,10 @@ from .attachment import (
 
 if TYPE_CHECKING:
     from webknossos.dataset.layer import (
-        AbstractLayer,
         RemoteSegmentationLayer,
         SegmentationLayer,
     )
+    from webknossos.dataset.layer.abstract_layer import AbstractLayer
 
 
 def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -> str:

@@ -3,9 +3,9 @@ from typing import Any, Literal
 
 import attr
 
+from webknossos.dataset import RemoteDataset
 from webknossos.geometry.vec3_int import Vec3IntLike
 
-from .. import RemoteDataset
 from ..annotation import Annotation, AnnotationInfo
 from ..client.api_client.models import (
     ApiBoundingBox,

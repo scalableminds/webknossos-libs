@@ -17,14 +17,14 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset.layer.view._array import (
+from webknossos._array._array import (
     ArrayException,
     ArrayInfo,
     BaseArray,
     Zarr3Config,
 )
+from .layer.layer_to_link import LayerToLink
 
-from .. import LayerToLink, RemoteDataset
 from ..client.api_client.models import (
     ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
@@ -57,6 +57,7 @@ from .layer.abstract_layer import (
 )
 from .layer.layer import _get_shard_shape
 from .ome_metadata import write_ome_metadata
+from .remote_dataset import RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 
@@ -386,7 +387,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                         f"Cannot open Dataset: The dataset {self.path} already exists, but the names do not match ({self.name} != {name})"
                     )
         else:
-            self._save_dataset_properties()
+            self._save_dataset_properties(check_existing_properties=False)
 
     @property
     def _LayerType(self) -> type[Layer]:
@@ -541,6 +542,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def _save_dataset_properties_impl(self) -> None:
         """
         Exports the current dataset properties to json on disk.
+        And writes out Zarr and OME-Ngff metadata if there is a Zarr layer.
         """
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
@@ -549,20 +551,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             )
         )
 
-    def _save_dataset_properties(self) -> None:
-        """
-        Exports the current dataset properties to json on disk.
-        And writes out Zarr and OME-Ngff metadata if there is a Zarr layer.
-        """
-        super()._save_dataset_properties()
-
         # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
         if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
             with (self.path / ZGROUP_FILE_NAME).open("w", encoding="utf-8") as outfile:
                 json.dump({"zarr_format": "2"}, outfile, indent=4)
         if any(layer.data_format == DataFormat.Zarr3 for layer in self.layers.values()):
             with (self.path / ZARR_JSON_FILE_NAME).open(
-                "w", encoding="utf-8"
+                    "w", encoding="utf-8"
             ) as outfile:
                 json.dump({"zarr_format": 3, "node_type": "group"}, outfile, indent=4)
 
@@ -570,6 +565,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             # Only write out OME metadata if the layer is a child of the dataset
             if not layer.is_foreign and layer.path.exists():
                 write_ome_metadata(self, layer)
+
+
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):

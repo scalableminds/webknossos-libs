@@ -2,15 +2,15 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from webknossos import LayerToLink
 from webknossos.dataset_properties import LayerProperties, MagViewProperties
 
 from ...utils import enrich_path
 from .abstract_layer import AbstractLayer
-from .segmentation_layer.remote_segmentation_layer import RemoteSegmentationLayer
+from .layer_to_link import LayerToLink
 
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
+    from .segmentation_layer import RemoteSegmentationLayer
 
 
 class RemoteLayer(AbstractLayer):
@@ -34,7 +34,7 @@ class RemoteLayer(AbstractLayer):
         return read_only, mag_path
 
     @property
-    def dataset(self) -> RemoteDataset:
+    def dataset(self) -> "RemoteDataset":
         return self._dataset
 
     def to_layer_to_link(self) -> LayerToLink:
@@ -42,6 +42,7 @@ class RemoteLayer(AbstractLayer):
 
     def as_segmentation_layer(self) -> "RemoteSegmentationLayer":
         """Casts into SegmentationLayer."""
+        from .segmentation_layer import RemoteSegmentationLayer
         if isinstance(self, RemoteSegmentationLayer):
             return self
         else:

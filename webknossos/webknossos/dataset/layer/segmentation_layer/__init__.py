@@ -1,5 +1,4 @@
 # ruff: noqa: F401 imported but unused
-from .abstract_segmentation_layer import AbstractSegmentationLayer
 from .attachments import (
     AgglomerateAttachment,
     Attachment,

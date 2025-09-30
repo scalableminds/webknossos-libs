@@ -2,9 +2,9 @@ import logging
 
 import numpy as np
 
-from ..dataset_properties import DataFormat
-from ..geometry import Vec3Int
-from .view import View
+from webknossos.dataset.layer.view import View
+from webknossos.dataset_properties import DataFormat
+from webknossos.geometry import Vec3Int
 
 logger = logging.getLogger(__name__)
 

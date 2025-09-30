@@ -8,11 +8,7 @@ import numpy as np
 from numpy._typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset.layer.segmentation_layer import (
-    AbstractSegmentationLayer,
-)
-from webknossos.dataset.layer.view import MagView
-from webknossos.dataset.layer.view._array import ArrayException
+from webknossos._array._array import ArrayException
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     DataFormat,
@@ -28,9 +24,11 @@ from webknossos.geometry import NDBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
 from ...utils import warn_deprecated
+from .view import MagView
 
 if TYPE_CHECKING:
     from ..abstract_dataset import AbstractDataset
+    from .segmentation_layer.abstract_segmentation_layer import AbstractSegmentationLayer
 
 
 def _is_int(s: str) -> bool:
@@ -132,8 +130,8 @@ class AbstractLayer:
             res for res in self._properties.mags if Mag(res.mag) in self._mags
         ]
 
-    @abstractmethod
     @property
+    @abstractmethod
     def dataset(self) -> "AbstractDataset":
         pass
 

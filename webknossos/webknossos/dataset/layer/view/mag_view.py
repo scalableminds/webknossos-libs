@@ -3,14 +3,14 @@ import warnings
 from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Generic, TypeVar, Union
+from typing import TYPE_CHECKING, Union
 from uuid import uuid4
 
 import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset.layer.view._array import (
+from webknossos._array._array import (
     ArrayInfo,
     BaseArray,
     TensorStoreArray,
@@ -34,9 +34,7 @@ from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 if TYPE_CHECKING:
     import tensorstore
 
-    from ..abstract_layer import (
-        AbstractLayer,
-    )
+    from ..abstract_layer import AbstractLayer
 
 from .view import View
 
@@ -50,10 +48,8 @@ def _copy_view_data(args: tuple[View, View, int]) -> None:
     )
 
 
-LayerTypeT = TypeVar("LayerTypeT", bound=AbstractLayer)
 
-
-class MagView(View, Generic[LayerTypeT]):
+class MagView(View):
     """A view of a specific magnification level within a WEBKNOSSOS layer.
 
     MagView provides access to volumetric data at a specific resolution/magnification level.
@@ -116,12 +112,12 @@ class MagView(View, Generic[LayerTypeT]):
         - Dataset: Root container for all layers
     """
 
-    _layer: LayerTypeT
+    _layer: "AbstractLayer"
 
     @classmethod
     def create(
         cls,
-        layer: LayerTypeT,
+        layer: "AbstractLayer",
         mag: Mag,
         *,
         path: UPath,
@@ -196,7 +192,7 @@ class MagView(View, Generic[LayerTypeT]):
 
     def __init__(
         self,
-        layer: LayerTypeT,
+        layer: "AbstractLayer",
         mag: Mag,
         path: UPath,
         read_only: bool = False,
@@ -237,7 +233,7 @@ class MagView(View, Generic[LayerTypeT]):
     # Own methods:
 
     @property
-    def layer(self) -> LayerTypeT:
+    def layer(self) -> "AbstractLayer":
         """Get the parent Layer object.
 
         Returns:

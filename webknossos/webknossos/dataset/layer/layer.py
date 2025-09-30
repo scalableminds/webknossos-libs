@@ -10,7 +10,13 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset._downsampling_utils import (
+from webknossos._array._array import (
+    ArrayException,
+    TensorStoreArray,
+    Zarr3ArrayInfo,
+    Zarr3Config,
+)
+from webknossos.dataset.layer._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
@@ -19,14 +25,8 @@ from webknossos.dataset._downsampling_utils import (
     downsample_cube_job,
     parse_interpolation_mode,
 )
-from webknossos.dataset._upsampling_utils import upsample_cube_job
+from webknossos.dataset.layer._upsampling_utils import upsample_cube_job
 from webknossos.dataset.layer.view import MagView, View
-from webknossos.dataset.layer.view._array import (
-    ArrayException,
-    TensorStoreArray,
-    Zarr3ArrayInfo,
-    Zarr3Config,
-)
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import (
     DataFormat,
@@ -37,10 +37,10 @@ from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import MagLike
 
 from .abstract_layer import AbstractLayer
-from .segmentation_layer import SegmentationLayer
 
 if TYPE_CHECKING:
     from webknossos.dataset import Dataset
+    from .segmentation_layer import SegmentationLayer
 
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -120,10 +120,10 @@ def _find_mag_path(
 
 
 class Layer(AbstractLayer):
-    _dataset: Dataset
+    _dataset: "Dataset"
 
     def __init__(
-        self, dataset: Dataset, properties: LayerProperties, read_only: bool
+        self, dataset: "Dataset", properties: LayerProperties, read_only: bool
     ) -> None:
         """A Layer represents a portion of hierarchical data at multiple magnifications.
 
@@ -154,10 +154,12 @@ class Layer(AbstractLayer):
         Note:
             Do not use this constructor manually. Instead use Dataset.add_layer() to create a Layer.
         """
-        super().__init__(dataset, properties, read_only)
         self._resolved_path: UPath = cheap_resolve(
-            self.dataset.resolved_path / self.name
+            dataset.resolved_path / properties.name
         )
+        super().__init__(dataset, properties, read_only)
+
+
 
     def _determine_read_only_and_path_for_mag(
         self, mag_properties: MagViewProperties
@@ -173,7 +175,7 @@ class Layer(AbstractLayer):
         return mag_is_read_only, mag_path
 
     @property
-    def dataset(self) -> Dataset:
+    def dataset(self) -> "Dataset":
         return self._dataset
 
     @property
@@ -459,7 +461,6 @@ class Layer(AbstractLayer):
 
         See `add_mag` for more information.
         """
-        from ._array import Zarr3ArrayInfo
 
         # normalize the name of the mag
         mag = Mag(mag)
@@ -1399,6 +1400,7 @@ class Layer(AbstractLayer):
 
     def as_segmentation_layer(self) -> "SegmentationLayer":
         """Casts into SegmentationLayer."""
+        from .segmentation_layer.segmentation_layer import SegmentationLayer
         if isinstance(self, SegmentationLayer):
             return self
         else:
@@ -1410,7 +1412,7 @@ class Layer(AbstractLayer):
             return layer
         else:
             # local import to prevent circular dependency
-            from .dataset import Dataset
+            from webknossos.dataset import Dataset
 
             layer_path = UPath(layer)
             return Dataset.open(layer_path.parent).get_layer(layer_path.name)

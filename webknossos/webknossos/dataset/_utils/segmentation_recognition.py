@@ -5,7 +5,7 @@ import numpy as np
 
 from ...dataset_properties import LayerCategoryType
 from ...geometry.vec3_int import Vec3Int
-from ..mag_view import MagView
+from ..layer.view import MagView
 
 NUM_SAMPLES = 20
 THRESHOLD = (

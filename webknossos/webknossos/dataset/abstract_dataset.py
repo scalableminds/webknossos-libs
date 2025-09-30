@@ -10,24 +10,26 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, cast
 
 from upath import UPath
 
-from webknossos import (
+from webknossos.client.api_client.errors import UnexpectedStatusError
+from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
-    BoundingBox,
     DatasetProperties,
     DatasetViewConfiguration,
     LayerProperties,
-    NDBoundingBox,
-    RemoteFolder,
     SegmentationLayerProperties,
     VoxelSize,
     get_dataset_converter,
 )
-from webknossos.client.api_client.errors import UnexpectedStatusError
-from webknossos.dataset.layer import AbstractLayer, AbstractSegmentationLayer
-from webknossos.dataset.remote_dataset_registry import RemoteDatasetRegistry
+from webknossos.geometry import BoundingBox, NDBoundingBox
 
 from .defaults import PROPERTIES_FILE_NAME
+from .layer.abstract_layer import AbstractLayer
+from .layer.segmentation_layer.abstract_segmentation_layer import (
+    AbstractSegmentationLayer,
+)
+from .remote_dataset_registry import RemoteDatasetRegistry
+from .remote_folder import RemoteFolder
 
 if TYPE_CHECKING:
     from ..client.context import webknossos_context
@@ -63,13 +65,13 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
     ):
         self._init_from_properties(dataset_properties, read_only)
 
-    @abstractmethod
     @property
+    @abstractmethod
     def _LayerType(self) -> type[LayerType]:
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def _SegmentationLayerType(self) -> type[SegmentationLayerType]:
         pass
 
@@ -124,23 +126,24 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
     def _save_dataset_properties_impl(self) -> None:
         pass
 
-    def _save_dataset_properties(self) -> None:
+    def _save_dataset_properties(self, check_existing_properties: bool = True) -> None:
         self._ensure_writable()
-        stored_properties = self._load_dataset_properties()
-        try:
-            if stored_properties != self._last_read_properties:
+        if check_existing_properties:
+            stored_properties = self._load_dataset_properties()
+            try:
+                if stored_properties != self._last_read_properties:
+                    warnings.warn(
+                        "[WARNING] While exporting the dataset's properties, stored properties were found which are "
+                        + "newer than the ones that were seen last time. The properties will be overwritten. This is "
+                        + "likely happening because multiple processes changed the metadata of this dataset."
+                    )
+            except ValueError:
+                # the __eq__ operator raises a ValueError when two bboxes are not comparable. This is the case when the
+                # axes are not the same. During initialization axes are added or moved sometimes.
                 warnings.warn(
-                    "[WARNING] While exporting the dataset's properties, stored properties were found which are "
-                    + "newer than the ones that were seen last time. The properties will be overwritten. This is "
-                    + "likely happening because multiple processes changed the metadata of this dataset."
+                    "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
+                    + "the bounding box naming or axis order changed."
                 )
-        except ValueError:
-            # the __eq__ operator raises a ValueError when two bboxes are not comparable. This is the case when the
-            # axes are not the same. During initialization axes are added or moved sometimes.
-            warnings.warn(
-                "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
-                + "the bounding box naming or axis order changed."
-            )
         self._save_dataset_properties_impl()
         self._last_read_properties = copy.deepcopy(self._properties)
 

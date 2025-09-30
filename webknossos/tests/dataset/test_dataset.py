@@ -27,9 +27,9 @@ from webknossos import (
     RemoteDataset,
     View,
 )
+from webknossos._array._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
-from webknossos.dataset.layer.view._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset_properties import (
     AttachmentDataFormat,
     DataFormat,

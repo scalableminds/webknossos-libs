@@ -9,7 +9,7 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset.layer.view._array import ArrayInfo, BaseArray
+from webknossos._array._array import ArrayInfo, BaseArray
 
 from ....dataset_properties import DataFormat
 from ....geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
