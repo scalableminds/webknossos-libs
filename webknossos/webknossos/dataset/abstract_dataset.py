@@ -6,6 +6,7 @@ import re
 import warnings
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
+from os import PathLike
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, cast
 
 from upath import UPath
@@ -21,7 +22,7 @@ from webknossos.dataset_properties import (
     VoxelSize,
     get_dataset_converter,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox
+from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 
 from .defaults import PROPERTIES_FILE_NAME
 from .layer.abstract_layer import AbstractLayer
@@ -33,7 +34,7 @@ from .remote_folder import RemoteFolder
 
 if TYPE_CHECKING:
     from ..client.context import webknossos_context
-    from .dataset import RemoteDataset
+    from .dataset import Dataset, RemoteDataset
 
 logger = logging.getLogger(__name__)
 SUPPORTED_VERSIONS: list[Literal[1]] = [1]
@@ -566,3 +567,55 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
             )
         properties = get_dataset_converter().structure(data, DatasetProperties)
         return properties
+
+    @classmethod
+    def download(
+        cls,
+        dataset_name_or_url: str,
+        *,
+        organization_id: str | None = None,
+        sharing_token: str | None = None,
+        webknossos_url: str | None = None,
+        bbox: BoundingBox | None = None,
+        layers: list[str] | str | None = None,
+        mags: list[Mag] | None = None,
+        path: PathLike | str | None = None,
+        exist_ok: bool = False,
+    ) -> "Dataset":
+        """Downloads a dataset and returns the Dataset instance.
+
+        * `dataset_name_or_url` may be a dataset name or a full URL to a dataset view, e.g.
+          `https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`
+          If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
+        * `organization_id` may be supplied if a dataset name was used in the previous argument,
+          it defaults to your current organization from the `webknossos_context`.
+          You can find your `organization_id` [here](https://webknossos.org/auth/token).
+        * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
+        * `webknossos_url` may be supplied if a dataset name was used,
+          and allows to specify in which webknossos instance to search for the dataset.
+          It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
+        * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
+          If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
+        * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
+          if the `path` exists.
+        """
+
+        from ..client._download_dataset import download_dataset
+
+        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
+            dataset_name_or_url, organization_id, sharing_token, webknossos_url
+        )
+
+        if isinstance(layers, str):
+            layers = [layers]
+
+        with context_manager:
+            return download_dataset(
+                dataset_id=dataset_id,
+                sharing_token=sharing_token,
+                bbox=bbox,
+                layers=layers,
+                mags=mags,
+                path=path,
+                exist_ok=exist_ok,
+            )
