@@ -9,8 +9,6 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos._array._array import ArrayInfo, BaseArray
-
 from ....dataset_properties import DataFormat
 from ....geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from ....geometry.vec_int import VecIntLike
@@ -20,6 +18,7 @@ from ....utils import (
     get_rich_progress,
     wait_and_ensure_success,
 )
+from ._array import ArrayInfo, BaseArray
 
 if TYPE_CHECKING:
     from ..._utils.buffered_slice_reader import BufferedSliceReader

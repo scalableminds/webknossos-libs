@@ -14,4 +14,13 @@ from .segmentation_layer import (
     SegmentationLayer,
     SegmentIndexAttachment,
 )
-from .view import MagView, View
+from .view import (
+    ArrayException,
+    ArrayInfo,
+    BaseArray,
+    MagView,
+    TensorStoreArray,
+    View,
+    Zarr3ArrayInfo,
+    Zarr3Config,
+)

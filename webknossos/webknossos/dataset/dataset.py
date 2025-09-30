@@ -17,14 +17,6 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos._array._array import (
-    ArrayException,
-    ArrayInfo,
-    BaseArray,
-    Zarr3Config,
-)
-from .layer.layer_to_link import LayerToLink
-
 from ..client.api_client.models import (
     ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
@@ -50,6 +42,13 @@ from .defaults import (
     PROPERTIES_FILE_NAME,
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
+)
+from .layer import (
+    ArrayException,
+    ArrayInfo,
+    BaseArray,
+    LayerToLink,
+    Zarr3Config,
 )
 from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
@@ -557,7 +556,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 json.dump({"zarr_format": "2"}, outfile, indent=4)
         if any(layer.data_format == DataFormat.Zarr3 for layer in self.layers.values()):
             with (self.path / ZARR_JSON_FILE_NAME).open(
-                    "w", encoding="utf-8"
+                "w", encoding="utf-8"
             ) as outfile:
                 json.dump({"zarr_format": 3, "node_type": "group"}, outfile, indent=4)
 
@@ -565,8 +564,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             # Only write out OME metadata if the layer is a child of the dataset
             if not layer.is_foreign and layer.path.exists():
                 write_ome_metadata(self, layer)
-
-
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):

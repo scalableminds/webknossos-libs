@@ -10,23 +10,6 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos._array._array import (
-    ArrayException,
-    TensorStoreArray,
-    Zarr3ArrayInfo,
-    Zarr3Config,
-)
-from webknossos.dataset.layer._downsampling_utils import (
-    calculate_default_coarsest_mag,
-    calculate_mags_to_downsample,
-    calculate_mags_to_upsample,
-    determine_downsample_buffer_shape,
-    determine_upsample_buffer_shape,
-    downsample_cube_job,
-    parse_interpolation_mode,
-)
-from webknossos.dataset.layer._upsampling_utils import upsample_cube_job
-from webknossos.dataset.layer.view import MagView, View
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import (
     DataFormat,
@@ -36,10 +19,29 @@ from webknossos.dataset_properties import (
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import MagLike
 
+from ._downsampling_utils import (
+    calculate_default_coarsest_mag,
+    calculate_mags_to_downsample,
+    calculate_mags_to_upsample,
+    determine_downsample_buffer_shape,
+    determine_upsample_buffer_shape,
+    downsample_cube_job,
+    parse_interpolation_mode,
+)
+from ._upsampling_utils import upsample_cube_job
 from .abstract_layer import AbstractLayer
+from .view import (
+    ArrayException,
+    MagView,
+    TensorStoreArray,
+    View,
+    Zarr3ArrayInfo,
+    Zarr3Config,
+)
 
 if TYPE_CHECKING:
     from webknossos.dataset import Dataset
+
     from .segmentation_layer import SegmentationLayer
 
 from webknossos.dataset.defaults import (
@@ -158,8 +160,6 @@ class Layer(AbstractLayer):
             dataset.resolved_path / properties.name
         )
         super().__init__(dataset, properties, read_only)
-
-
 
     def _determine_read_only_and_path_for_mag(
         self, mag_properties: MagViewProperties
@@ -1401,6 +1401,7 @@ class Layer(AbstractLayer):
     def as_segmentation_layer(self) -> "SegmentationLayer":
         """Casts into SegmentationLayer."""
         from .segmentation_layer.segmentation_layer import SegmentationLayer
+
         if isinstance(self, SegmentationLayer):
             return self
         else:

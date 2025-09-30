@@ -12,6 +12,7 @@ from webknossos.dataset_properties import SegmentationLayerProperties
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
 
+
 class RemoteSegmentationLayer(
     AbstractSegmentationLayer[RemoteAttachments], RemoteLayer
 ):

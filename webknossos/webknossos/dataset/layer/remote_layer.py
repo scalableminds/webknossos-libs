@@ -10,6 +10,7 @@ from .layer_to_link import LayerToLink
 
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
+
     from .segmentation_layer import RemoteSegmentationLayer
 
 
@@ -43,6 +44,7 @@ class RemoteLayer(AbstractLayer):
     def as_segmentation_layer(self) -> "RemoteSegmentationLayer":
         """Casts into SegmentationLayer."""
         from .segmentation_layer import RemoteSegmentationLayer
+
         if isinstance(self, RemoteSegmentationLayer):
             return self
         else:

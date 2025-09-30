@@ -61,9 +61,9 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
+from webknossos.dataset import RemoteDataset
 from webknossos.geometry.mag import Mag, MagLike
 
-from webknossos.dataset import RemoteDataset
 from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiAnnotation,

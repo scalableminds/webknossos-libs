@@ -10,15 +10,6 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos._array._array import (
-    ArrayInfo,
-    BaseArray,
-    TensorStoreArray,
-    WKWArray,
-    Zarr3Array,
-    Zarr3ArrayInfo,
-    Zarr3Config,
-)
 from webknossos.utils import (
     get_executor_for_args,
     is_fs_path,
@@ -30,6 +21,15 @@ from webknossos.utils import (
 
 from ....dataset_properties import DataFormat, MagViewProperties
 from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from ._array import (
+    ArrayInfo,
+    BaseArray,
+    TensorStoreArray,
+    WKWArray,
+    Zarr3Array,
+    Zarr3ArrayInfo,
+    Zarr3Config,
+)
 
 if TYPE_CHECKING:
     import tensorstore
@@ -46,7 +46,6 @@ def _copy_view_data(args: tuple[View, View, int]) -> None:
     target_view.write(
         source_view.read(), absolute_bounding_box=target_view.bounding_box
     )
-
 
 
 class MagView(View):

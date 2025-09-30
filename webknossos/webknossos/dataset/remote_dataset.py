@@ -34,6 +34,8 @@ _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
+
+
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     """A representation of a dataset on a webknossos server.
 
