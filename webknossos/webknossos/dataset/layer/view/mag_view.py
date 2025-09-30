@@ -35,6 +35,8 @@ if TYPE_CHECKING:
     import tensorstore
 
     from ..abstract_layer import AbstractLayer
+    from ..layer import Layer
+    from ..remote_layer import RemoteLayer
 
 from .view import View
 
@@ -232,17 +234,50 @@ class MagView(View):
     # Own methods:
 
     @property
-    def layer(self) -> "AbstractLayer":
+    def layer(self) -> "Layer":
         """Get the parent Layer object.
 
         Returns:
             Layer: The Layer object that contains this magnification level.
 
+        Raises:
+            TypeError: If the view is not a layer view.
+
         Notes:
             - The Layer provides context about data type, category, and overall properties
             - Used internally for coordinate transformations and data validation
         """
-        return self._layer
+        from ..layer import Layer
+
+        if isinstance(self._layer, Layer):
+            return self._layer
+        else:
+            raise TypeError(
+                f"This view ({self}) is not a layer view. It is a {type(self._layer)}."
+            )
+
+    @property
+    def remote_layer(self) -> "RemoteLayer":
+        """Get the parent RemoteLayer object.
+
+        Returns:
+            RemoteLayer: The RemoteLayer object that contains this magnification level.
+
+        Raises:
+            TypeError: If the view is not a remote layer view.
+
+        Notes:
+            - The RemoteLayer provides context about data type, category, and overall properties
+            - Used internally for coordinate transformations and data validation
+        """
+        from ..remote_layer import RemoteLayer
+
+        if isinstance(self._layer, RemoteLayer):
+            return self._layer
+        else:
+            raise TypeError(
+                f"This view ({self}) is not a remote layer view. It is a {type(self._layer)}."
+            )
 
     @property
     def path(self) -> UPath:
