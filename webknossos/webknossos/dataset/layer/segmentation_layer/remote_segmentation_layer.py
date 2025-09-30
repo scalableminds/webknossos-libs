@@ -25,5 +25,5 @@ class RemoteSegmentationLayer(
         super().__init__(dataset, properties, read_only)
 
     @property
-    def attachments_type(self) -> type[RemoteAttachments]:
+    def _AttachmentsType(self) -> type[RemoteAttachments]:
         return RemoteAttachments

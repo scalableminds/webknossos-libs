@@ -21,5 +21,5 @@ class SegmentationLayer(AbstractSegmentationLayer[Attachments], Layer):
         super().__init__(dataset, properties, read_only)
 
     @property
-    def attachments_type(self) -> type[Attachments]:
+    def _AttachmentsType(self) -> type[Attachments]:
         return Attachments

@@ -51,11 +51,11 @@ class AbstractSegmentationLayer(AbstractLayer, Generic[AttachmentsTypeT]):
         read_only: bool,
     ):
         super().__init__(dataset, properties, read_only)
-        self._attachments = self.attachments_type(self, properties.attachments)
+        self._attachments = self._AttachmentsType(self, properties.attachments)
 
     @property
     @abstractmethod
-    def attachments_type(self) -> type[AttachmentsTypeT]:
+    def _AttachmentsType(self) -> type[AttachmentsTypeT]:
         pass
 
     @property
