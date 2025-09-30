@@ -14,7 +14,6 @@ from webknossos.client.api_client.models import (
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
     ApiPrecomputedMeshInfo,
-    ApiUnusableDataSource,
 )
 from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.dataset.abstract_dataset import AbstractDataset
@@ -24,7 +23,6 @@ from webknossos.dataset_properties import (
 )
 from webknossos.geometry import Mag, Vec3Int
 from webknossos.geometry.mag import MagLike
-from webknossos.ssl_context import SSL_CONTEXT
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
 from .remote_folder import RemoteFolder
@@ -72,7 +70,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         ```
 
     Note:
-        Do not instantiate directly, use `Dataset.open_remote()` instead.
+        Do not instantiate directly, use `Dataset.open_remote()` or `RemoteDataset.open_remote` instead.
     """
 
     def __init__(
@@ -112,74 +110,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         self._dataset_id = dataset_id
         self._context = context
-
-    @classmethod
-    def open(
-        cls,
-        dataset_name_or_url: str | None = None,
-        organization_id: str | None = None,
-        sharing_token: str | None = None,
-        webknossos_url: str | None = None,
-        dataset_id: str | None = None,
-        annotation_id: str | None = None,
-        use_zarr_streaming: bool = True,
-        read_only: bool = False,
-    ) -> "RemoteDataset":
-        if annotation_id is not None:
-            assert use_zarr_streaming, (
-                "Annotations are only supported with zarr streaming"
-            )
-
-        from ..client.context import _get_context
-
-        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-        )
-
-        with context_manager:
-            wk_context = _get_context()
-            token = sharing_token or wk_context.token
-            api_dataset_info = wk_context.api_client.dataset_info(
-                dataset_id=dataset_id, sharing_token=token
-            )
-            datastore_url = api_dataset_info.data_store.url
-            url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
-
-            if use_zarr_streaming:
-                if not read_only:
-                    logger.warning("zarr streaming is supported in read-only mode only")
-                if annotation_id is not None:
-                    zarr_path = UPath(
-                        f"{url_prefix}/annotations/zarr/{annotation_id}/",
-                        headers={} if token is None else {"X-Auth-Token": token},
-                        ssl=SSL_CONTEXT,
-                    )
-                else:
-                    zarr_path = UPath(
-                        f"{url_prefix}/zarr/{dataset_id}/",
-                        headers={} if token is None else {"X-Auth-Token": token},
-                        ssl=SSL_CONTEXT,
-                    )
-                return RemoteDataset(
-                    zarr_path, None, dataset_id, context_manager, read_only=True
-                )
-            else:
-                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
-                    raise RuntimeError(
-                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
-                    )
-
-                return RemoteDataset(
-                    None,
-                    api_dataset_info.data_source,
-                    dataset_id,
-                    context_manager,
-                    read_only,
-                )
 
     @property
     def _LayerType(self) -> type[RemoteLayer]:
@@ -300,7 +230,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         )
         context.api_client_with_auth.dataset_explore_and_add_remote(dataset=dataset)
 
-        return cls.open(
+        return cls.open_remote(
             dataset_name_or_url=dataset_name, organization_id=context.organization_id
         )
 

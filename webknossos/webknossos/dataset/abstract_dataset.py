@@ -24,6 +24,8 @@ from webknossos.dataset_properties import (
 )
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 
+from ..client.api_client.models import ApiUnusableDataSource
+from ..ssl_context import SSL_CONTEXT
 from .defaults import PROPERTIES_FILE_NAME
 from .layer.abstract_layer import AbstractLayer
 from .layer.segmentation_layer.abstract_segmentation_layer import (
@@ -619,3 +621,98 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
                 path=path,
                 exist_ok=exist_ok,
             )
+
+    @classmethod
+    def open_remote(
+        cls,
+        dataset_name_or_url: str | None = None,
+        organization_id: str | None = None,
+        sharing_token: str | None = None,
+        webknossos_url: str | None = None,
+        dataset_id: str | None = None,
+        annotation_id: str | None = None,
+        use_zarr_streaming: bool = True,
+        read_only: bool = False,
+    ) -> "RemoteDataset":
+        """Opens a remote webknossos dataset. Image data is accessed via network requests.
+        Dataset metadata such as allowed teams or the sharing token can be read and set
+        via the respective `RemoteDataset` properties.
+
+        Args:
+            dataset_name_or_url: Either dataset name or full URL to dataset view, e.g.
+                https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view
+            organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/auth/token)
+            sharing_token: Optional sharing token for dataset access
+            webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
+            dataset_id: Optional unique ID of the dataset
+            use_zarr_streaming: Whether to use zarr streaming
+
+        Returns:
+            RemoteDataset: Dataset instance for remote access
+
+        Examples:
+            ```
+            ds = Dataset.open_remote("`https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`")
+            ```
+
+        Note:
+            If supplying an URL, organization_id, webknossos_url and sharing_token
+            must not be set.
+        """
+
+        if annotation_id is not None:
+            assert use_zarr_streaming, (
+                "Annotations are only supported with zarr streaming"
+            )
+
+        from ..client.context import _get_context
+        from .remote_dataset import RemoteDataset
+
+        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
+            dataset_name_or_url,
+            organization_id,
+            sharing_token,
+            webknossos_url,
+            dataset_id,
+        )
+
+        with context_manager:
+            wk_context = _get_context()
+            token = sharing_token or wk_context.token
+            api_dataset_info = wk_context.api_client.dataset_info(
+                dataset_id=dataset_id, sharing_token=token
+            )
+            datastore_url = api_dataset_info.data_store.url
+            url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
+
+            if use_zarr_streaming:
+                if not read_only:
+                    logger.warning("zarr streaming is supported in read-only mode only")
+                if annotation_id is not None:
+                    zarr_path = UPath(
+                        f"{url_prefix}/annotations/zarr/{annotation_id}/",
+                        headers={} if token is None else {"X-Auth-Token": token},
+                        ssl=SSL_CONTEXT,
+                    )
+                else:
+                    zarr_path = UPath(
+                        f"{url_prefix}/zarr/{dataset_id}/",
+                        headers={} if token is None else {"X-Auth-Token": token},
+                        ssl=SSL_CONTEXT,
+                    )
+                return RemoteDataset(
+                    zarr_path, None, dataset_id, context_manager, read_only=True
+                )
+            else:
+                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+                    raise RuntimeError(
+                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
+                    )
+
+                return RemoteDataset(
+                    None,
+                    api_dataset_info.data_source,
+                    dataset_id,
+                    context_manager,
+                    read_only,
+                )

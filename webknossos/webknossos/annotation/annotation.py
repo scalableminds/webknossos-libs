@@ -977,7 +977,7 @@ class Annotation:
                         UserWarning,
                     )
 
-        return RemoteDataset.open(
+        return RemoteDataset.open_remote(
             dataset_name_or_url=self.dataset_name,
             organization_id=organization_id,
             dataset_id=self.dataset_id,

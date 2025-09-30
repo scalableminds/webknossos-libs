@@ -429,54 +429,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         dataset._init_from_properties(dataset_properties, read_only)
         return dataset
 
-    @classmethod
-    def open_remote(
-        cls,
-        dataset_name_or_url: str | None = None,
-        organization_id: str | None = None,
-        sharing_token: str | None = None,
-        webknossos_url: str | None = None,
-        dataset_id: str | None = None,
-        annotation_id: str | None = None,
-        use_zarr_streaming: bool = True,
-        read_only: bool = False,
-    ) -> "RemoteDataset":
-        """Opens a remote webknossos dataset. Image data is accessed via network requests.
-        Dataset metadata such as allowed teams or the sharing token can be read and set
-        via the respective `RemoteDataset` properties.
-
-        Args:
-            dataset_name_or_url: Either dataset name or full URL to dataset view, e.g.
-                https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view
-            organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/auth/token)
-            sharing_token: Optional sharing token for dataset access
-            webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
-            dataset_id: Optional unique ID of the dataset
-            use_zarr_streaming: Whether to use zarr streaming
-
-        Returns:
-            RemoteDataset: Dataset instance for remote access
-
-        Examples:
-            ```
-            ds = Dataset.open_remote("`https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`")
-            ```
-
-        Note:
-            If supplying an URL, organization_id, webknossos_url and sharing_token
-            must not be set.
-        """
-        return RemoteDataset.open(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-            annotation_id,
-            use_zarr_streaming,
-            read_only,
-        )
-
     def __repr__(self) -> str:
         return f"Dataset({repr(self.path)})"
 
@@ -658,7 +610,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 self, new_dataset_name, converted_layers_to_link, jobs
             )
 
-        return RemoteDataset.open(dataset_id=new_dataset_id, read_only=True)
+        return self.open_remote(dataset_id=new_dataset_id, read_only=True)
 
     def _copy_or_symlink_dataset_to_paths(
         self, data_source: DatasetProperties, symlink_data_instead_of_copy: bool
