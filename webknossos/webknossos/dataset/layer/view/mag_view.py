@@ -3,7 +3,7 @@ import warnings
 from collections.abc import Iterator
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 from uuid import uuid4
 
 import numpy as np
@@ -35,8 +35,6 @@ if TYPE_CHECKING:
     import tensorstore
 
     from ..abstract_layer import AbstractLayer
-    from ..layer import Layer
-    from ..remote_layer import RemoteLayer
 
 from .view import View
 
@@ -50,7 +48,10 @@ def _copy_view_data(args: tuple[View, View, int]) -> None:
     )
 
 
-class MagView(View):
+LayerTypeT = TypeVar("LayerTypeT", bound="AbstractLayer")
+
+
+class MagView(View, Generic[LayerTypeT]):
     """A view of a specific magnification level within a WEBKNOSSOS layer.
 
     MagView provides access to volumetric data at a specific resolution/magnification level.
@@ -113,12 +114,12 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
-    _layer: "AbstractLayer"
+    _layer: LayerTypeT
 
     @classmethod
     def create(
         cls,
-        layer: "AbstractLayer",
+        layer: LayerTypeT,
         mag: Mag,
         *,
         path: UPath,
@@ -193,7 +194,7 @@ class MagView(View):
 
     def __init__(
         self,
-        layer: "AbstractLayer",
+        layer: LayerTypeT,
         mag: Mag,
         path: UPath,
         read_only: bool = False,
@@ -234,7 +235,7 @@ class MagView(View):
     # Own methods:
 
     @property
-    def layer(self) -> "Layer":
+    def layer(self) -> LayerTypeT:
         """Get the parent Layer object.
 
         Returns:
@@ -247,37 +248,7 @@ class MagView(View):
             - The Layer provides context about data type, category, and overall properties
             - Used internally for coordinate transformations and data validation
         """
-        from ..layer import Layer
-
-        if isinstance(self._layer, Layer):
-            return self._layer
-        else:
-            raise TypeError(
-                f"This view ({self}) is not a layer view. It is a {type(self._layer)}."
-            )
-
-    @property
-    def remote_layer(self) -> "RemoteLayer":
-        """Get the parent RemoteLayer object.
-
-        Returns:
-            RemoteLayer: The RemoteLayer object that contains this magnification level.
-
-        Raises:
-            TypeError: If the view is not a remote layer view.
-
-        Notes:
-            - The RemoteLayer provides context about data type, category, and overall properties
-            - Used internally for coordinate transformations and data validation
-        """
-        from ..remote_layer import RemoteLayer
-
-        if isinstance(self._layer, RemoteLayer):
-            return self._layer
-        else:
-            raise TypeError(
-                f"This view ({self}) is not a remote layer view. It is a {type(self._layer)}."
-            )
+        return self._layer
 
     @property
     def path(self) -> UPath:
@@ -696,7 +667,7 @@ class MagView(View):
             rmtree(rechunked_dataset.path)
 
             # update the handle to the new dataset
-            MagView.__init__(self, self.layer, self._mag, path)
+            MagView[LayerTypeT].__init__(self, self.layer, self._mag, path)
 
     def merge_with_view(
         self,

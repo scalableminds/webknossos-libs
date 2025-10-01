@@ -275,7 +275,7 @@ def main(
 ) -> None:
     """Export your WEBKNOSSOS dataset to TIFF image data."""
 
-    mag_view = None
+    mag_view: MagView | None = None
     source_path = UPath(source)
     if not is_fs_path(source_path):
         url = resolve_short_link(source)

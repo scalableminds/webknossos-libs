@@ -102,6 +102,7 @@ _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
 
 class AbstractLayer:
     _dataset: "AbstractDataset"
+    _mags: dict[Mag, MagView]
 
     def __init__(
         self, dataset: "AbstractDataset", properties: LayerProperties, read_only: bool
@@ -118,7 +119,7 @@ class AbstractLayer:
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
             properties.element_class, properties.num_channels
         )
-        self._mags: dict[Mag, MagView] = {}
+        self._mags = {}
         self._read_only = read_only
 
         for mag in properties.mags:

@@ -123,6 +123,7 @@ def _find_mag_path(
 
 class Layer(AbstractLayer):
     _dataset: "Dataset"
+    _mags: dict[Mag, MagView["Layer"]]
 
     def __init__(
         self, dataset: "Dataset", properties: LayerProperties, read_only: bool
@@ -281,7 +282,7 @@ class Layer(AbstractLayer):
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: int | Vec3IntLike | None = None,
         compress: bool | Zarr3Config = True,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """Creates and adds a new magnification level to the layer.
 
         The new magnification can be configured with various storage parameters to
@@ -343,7 +344,7 @@ class Layer(AbstractLayer):
         self._assert_mag_does_not_exist_yet(mag)
         mag_path = self._create_dir_for_mag(mag)
 
-        mag_view = MagView.create(
+        mag_view = MagView["Layer"].create(
             self,
             mag,
             chunk_shape=chunk_shape,
@@ -391,7 +392,7 @@ class Layer(AbstractLayer):
         mag_path: UPath,
         read_only: bool,
         override_stored_path: str | None = None,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """Creates a MagView for existing data files.
 
         Adds a magnification level by linking to data files that already exist
@@ -446,6 +447,9 @@ class Layer(AbstractLayer):
 
         return mag_view
 
+    def get_mag(self, mag: MagLike) -> MagView["Layer"]:
+        return super().get_mag(mag)
+
     def get_or_add_mag(
         self,
         mag: MagLike,
@@ -454,7 +458,7 @@ class Layer(AbstractLayer):
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,
         compress: bool | Zarr3Config | None = None,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """
         Creates a new mag and adds it to the dataset, in case it did not exist before.
         Then, returns the mag.
@@ -522,6 +526,9 @@ class Layer(AbstractLayer):
                 shard_shape=shard_shape,
                 compress=compress if compress is not None else True,
             )
+
+    def get_finest_mag(self) -> MagView["Layer"]:
+        return super().get_finest_mag()
 
     def delete_mag(self, mag: MagLike) -> None:
         """
@@ -596,7 +603,7 @@ class Layer(AbstractLayer):
         exists_ok: bool = False,
         executor: Executor | None = None,
         progress_desc: str | None = None,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
         to the current dataset. Additionally, the relevant information from the
@@ -708,7 +715,7 @@ class Layer(AbstractLayer):
         *,
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """Deprecated. Use `Layer.add_mag_as_ref` instead.
 
         Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
@@ -769,7 +776,7 @@ class Layer(AbstractLayer):
         foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """Deprecated. Use `Layer.add_mag_as_ref` instead."""
         warn_deprecated("add_remote_mag", "add_mag_as_ref")
         return self.add_mag_as_ref(
@@ -782,7 +789,7 @@ class Layer(AbstractLayer):
         foreign_mag_view_or_path: PathLike | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """
         Adds the mag at `foreign_mag_view_or_path` which belongs to foreign dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
@@ -828,7 +835,7 @@ class Layer(AbstractLayer):
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         self._ensure_writable()
 
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -865,7 +872,7 @@ class Layer(AbstractLayer):
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """Deprecated. File-copy is automatically selected when using `Layer.add_mag_as_copy`.
 
         Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
@@ -890,7 +897,7 @@ class Layer(AbstractLayer):
         *,
         move: bool = False,
         extend_layer_bounding_box: bool = True,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """
         Copies the data at `path` to the current layer of the dataset
         via the filesystem and adds it as `mag`. When `move` flag is set
@@ -1377,7 +1384,7 @@ class Layer(AbstractLayer):
         new_mag_name: str | Mag,
         other_mag: MagView,
         compress: bool | Zarr3Config,
-    ) -> MagView:
+    ) -> MagView["Layer"]:
         """Creates a new magnification based on settings from existing mag.
 
         Args:

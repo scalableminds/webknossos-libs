@@ -4,9 +4,11 @@ from upath import UPath
 
 from webknossos.dataset_properties import LayerProperties, MagViewProperties
 
+from ...geometry.mag import Mag, MagLike
 from ...utils import enrich_path
 from .abstract_layer import AbstractLayer
 from .layer_to_link import LayerToLink
+from .view import MagView
 
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
@@ -16,6 +18,7 @@ if TYPE_CHECKING:
 
 class RemoteLayer(AbstractLayer):
     _dataset: "RemoteDataset"
+    _mags: dict[Mag, MagView["RemoteLayer"]]
 
     def __init__(
         self, dataset: "RemoteDataset", properties: LayerProperties, read_only: bool
@@ -49,3 +52,9 @@ class RemoteLayer(AbstractLayer):
             return self
         else:
             raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
+
+    def get_mag(self, mag: MagLike) -> MagView["RemoteLayer"]:
+        return super().get_mag(mag)
+
+    def get_finest_mag(self) -> MagView["RemoteLayer"]:
+        return super().get_finest_mag()
