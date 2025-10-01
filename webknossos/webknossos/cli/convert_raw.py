@@ -22,6 +22,7 @@ from ..dataset.defaults import (
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
     get_executor_for_args,
+    rmtree,
     time_start,
     time_stop,
     wait_and_ensure_success,
@@ -178,19 +179,6 @@ def main(
             metavar="Vec3Int",
         ),
     ],
-    order: Annotated[
-        Order,
-        typer.Option(
-            help="The input data storage layout: "
-            "either 'F' for Fortran-style/column-major order (the default), "
-            "or 'C' for C-style/row-major order. "
-            "Note: Axes are expected in  (x, y, z) order."
-        ),
-    ] = Order.F,
-    layer_name: Annotated[
-        str,
-        typer.Option(help="Name of the cubed layer (color or segmentation)"),
-    ] = "color",
     voxel_size: Annotated[
         VoxelSizeTuple,
         typer.Option(
@@ -217,10 +205,24 @@ def main(
             "If omitted, it is assumed to be the same as the target datatype."
         ),
     ] = None,
+    order: Annotated[
+        Order,
+        typer.Option(
+            help="The input data storage layout: "
+            "either 'F' for Fortran-style/column-major order (the default), "
+            "or 'C' for C-style/row-major order. "
+            "Note: Axes are expected in  (x, y, z) order."
+        ),
+    ] = Order.F,
+    layer_name: Annotated[
+        str,
+        typer.Option(help="Name of the cubed layer (color or segmentation)"),
+    ] = "color",
     rescale_min_max: Annotated[
         RescaleValues | None,
         typer.Option(
-            help="Rescale the values of the target dataset to the specified range. "
+            help="Rescale the values of the target dataset by specifying the min and max values. "
+            "Will be scaled to the range from 0 to the maximum value of the target data type or 1.0 for floats. "
             "Should be a comma separated string (e.g. `0.2,0.8`).",
             parser=parse_rescale_values,
             metavar="RescaleValues",
@@ -260,21 +262,6 @@ def main(
             metavar="Vec3Int",
         ),
     ] = None,
-    max_mag: Annotated[
-        Mag | None,
-        typer.Option(
-            help="Max resolution to be downsampled. "
-            "Should be number or minus separated string (e.g. `2` or `2-2-2`).",
-            parser=parse_mag,
-        ),
-    ] = None,
-    interpolation_mode: Annotated[
-        str,
-        typer.Option(
-            help="The interpolation mode that should be used "
-            "(median, mode, nearest, bilinear or bicubic)."
-        ),
-    ] = "default",
     flip_axes: Annotated[
         Vec3Int | None,
         typer.Option(
@@ -291,9 +278,31 @@ def main(
     downsample: Annotated[
         bool, typer.Option(help="Downsample the target dataset.")
     ] = True,
+    max_mag: Annotated[
+        Mag | None,
+        typer.Option(
+            help="Max resolution to be downsampled. "
+            "Should be number or minus separated string (e.g. `2` or `2-2-2`).",
+            parser=parse_mag,
+        ),
+    ] = None,
+    interpolation_mode: Annotated[
+        str,
+        typer.Option(
+            help="The interpolation mode that should be used "
+            "(median, mode, nearest, bilinear or bicubic)."
+        ),
+    ] = "default",
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,
+    overwrite_existing: Annotated[
+        bool,
+        typer.Option(
+            help="Clear target folder, if it already exists. Not enabled by default. Use with caution.",
+            show_default=False,
+        ),
+    ] = False,
     jobs: Annotated[
         int,
         typer.Option(
@@ -345,6 +354,9 @@ def main(
         job_resources=job_resources,
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
+
+    if overwrite_existing and target.exists():
+        rmtree(target)
 
     mag_view = convert_raw(
         source_raw_path=source,

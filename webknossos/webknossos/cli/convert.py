@@ -6,15 +6,17 @@ from typing import Annotated, Any
 
 import typer
 
-from ..dataset import DataFormat, Dataset, LengthUnit
+from ..dataset import DataFormat, Dataset, LengthUnit, SamplingModes
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
-from ..geometry import Vec3Int
-from ..utils import get_executor_for_args
+from ..geometry import Mag, Vec3Int
+from ..utils import get_executor_for_args, rmtree
 from ._utils import (
     DistributionStrategy,
     LayerCategory,
+    SamplingMode,
     VoxelSizeTuple,
+    parse_mag,
     parse_path,
     parse_vec3int,
     parse_voxel_size,
@@ -114,6 +116,24 @@ def main(
     downsample: Annotated[
         bool, typer.Option(help="Downsample the target dataset.")
     ] = True,
+    max_mag: Annotated[
+        Mag | None,
+        typer.Option(
+            help="Max resolution to be downsampled. "
+            "Should be number or minus separated string (e.g. `2` or `2-2-2`).",
+            parser=parse_mag,
+        ),
+    ] = None,
+    interpolation_mode: Annotated[
+        str,
+        typer.Option(
+            help="The interpolation mode that should be used "
+            "(median, mode, nearest, bilinear or bicubic)."
+        ),
+    ] = "default",
+    sampling_mode: Annotated[
+        SamplingMode, typer.Option(help="The sampling mode to use.")
+    ] = SamplingMode.ANISOTROPIC,
     batch_size: Annotated[
         int | None,
         typer.Option(
@@ -123,6 +143,13 @@ def main(
             "shard shape (chunk-shape x chunks-per-shard).",
         ),
     ] = None,
+    overwrite_existing: Annotated[
+        bool,
+        typer.Option(
+            help="Clear target folder, if it already exists. Not enabled by default. Use with caution.",
+            show_default=False,
+        ),
+    ] = False,
     jobs: Annotated[
         int,
         typer.Option(
@@ -160,6 +187,10 @@ def main(
         job_resources=job_resources,
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
+    mode = SamplingModes.parse(sampling_mode.value)
+
+    if overwrite_existing and target.exists():
+        rmtree(target)
 
     with get_executor_for_args(args=executor_args) as executor:
         dataset = Dataset.from_images(
@@ -178,4 +209,10 @@ def main(
         )
     if downsample:
         with get_executor_for_args(args=executor_args) as executor:
-            dataset.downsample(executor=executor)
+            dataset.downsample(
+                coarsest_mag=max_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                sampling_mode=mode,
+                executor=executor,
+            )

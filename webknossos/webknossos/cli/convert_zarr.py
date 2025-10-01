@@ -22,7 +22,7 @@ from ..dataset.defaults import (
     DEFAULT_SHARD_SHAPE,
 )
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, wait_and_ensure_success
+from ..utils import get_executor_for_args, rmtree, wait_and_ensure_success
 from ._utils import (
     DistributionStrategy,
     SamplingMode,
@@ -152,10 +152,6 @@ def main(
             parser=parse_path,
         ),
     ],
-    layer_name: Annotated[
-        str,
-        typer.Option(help="Name of the cubed layer (color or segmentation)"),
-    ] = "color",
     voxel_size: Annotated[
         VoxelSizeTuple,
         typer.Option(
@@ -172,6 +168,17 @@ def main(
             help="The unit of the voxel size.",
         ),
     ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    layer_name: Annotated[
+        str,
+        typer.Option(help="Name of the cubed layer (color or segmentation)"),
+    ] = "color",
+    is_segmentation_layer: Annotated[
+        bool,
+        typer.Option(
+            help="When converting one layer, signals whether layer is segmentation layer. \
+When converting a folder, this option is ignored."
+        ),
+    ] = False,
     data_format: Annotated[
         DataFormat,
         typer.Option(
@@ -205,21 +212,6 @@ def main(
             metavar="Vec3Int",
         ),
     ] = None,
-    max_mag: Annotated[
-        Mag | None,
-        typer.Option(
-            help="Max resolution to be downsampled. "
-            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
-            parser=parse_mag,
-        ),
-    ] = None,
-    interpolation_mode: Annotated[
-        str,
-        typer.Option(
-            help="The interpolation mode that should be used "
-            "(median, mode, nearest, bilinear or bicubic)."
-        ),
-    ] = "default",
     flip_axes: Annotated[
         Vec3Int | None,
         typer.Option(
@@ -236,14 +228,29 @@ def main(
     downsample: Annotated[
         bool, typer.Option(help="Downsample the target dataset.")
     ] = True,
+    max_mag: Annotated[
+        Mag | None,
+        typer.Option(
+            help="Max resolution to be downsampled. "
+            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
+            parser=parse_mag,
+        ),
+    ] = None,
+    interpolation_mode: Annotated[
+        str,
+        typer.Option(
+            help="The interpolation mode that should be used "
+            "(median, mode, nearest, bilinear or bicubic)."
+        ),
+    ] = "default",
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,
-    is_segmentation_layer: Annotated[
+    overwrite_existing: Annotated[
         bool,
         typer.Option(
-            help="When converting one layer, signals whether layer is segmentation layer. \
-When converting a folder, this option is ignored."
+            help="Clear target folder, if it already exists. Not enabled by default. Use with caution.",
+            show_default=False,
         ),
     ] = False,
     jobs: Annotated[
@@ -287,6 +294,9 @@ When converting a folder, this option is ignored."
         job_resources=job_resources,
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
+
+    if overwrite_existing and target.exists():
+        rmtree(target)
 
     mag_view = convert_zarr(
         source_zarr_path=source,
