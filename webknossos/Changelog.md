@@ -16,6 +16,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added context manager `VolumeLayer.edit` for creating and modifying volume annotations. [#1340](https://github.com/scalableminds/webknossos-libs/pull/1340)
+- Added `overwrite_existing` flag to `convert`, `convert-raw` and `convert-zarr` CLI commands. Use with caution. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `downsample`, `max-mag`, `interpolation-mode`, `sampling-mode` args to `convert`, `convert-raw` and `convert-zarr` CLI commands, where it was missing, for consistency. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added value rescaling to `convert-raw` CLI command through `source-dtype` and `rescale-min-max` args. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `interpolation_mode` and `compress` kwargs to `Dataset.downsample` method. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
 
 ### Changed
 
