@@ -70,6 +70,7 @@ def _zarr_chunk_converter(
 
 
 def convert_zarr(
+    *,
     source_zarr_path: Path,
     target_path: Path,
     layer_name: str,
@@ -232,6 +233,9 @@ def main(
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
     ] = True,
+    downsample: Annotated[
+        bool, typer.Option(help="Downsample the target dataset.")
+    ] = True,
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,
@@ -285,8 +289,8 @@ When converting a folder, this option is ignored."
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     mag_view = convert_zarr(
-        source,
-        target,
+        source_zarr_path=source,
+        target_path=target,
         layer_name=layer_name,
         data_format=data_format,
         chunk_shape=chunk_shape,
@@ -298,12 +302,13 @@ When converting a folder, this option is ignored."
         executor_args=executor_args,
     )
 
-    with get_executor_for_args(executor_args) as executor:
-        mag_view.layer.downsample(
-            from_mag=mag_view.mag,
-            coarsest_mag=max_mag,
-            interpolation_mode=interpolation_mode,
-            compress=compress,
-            sampling_mode=sampling_mode,
-            executor=executor,
-        )
+    if downsample:
+        with get_executor_for_args(executor_args) as executor:
+            mag_view.layer.downsample(
+                from_mag=mag_view.mag,
+                coarsest_mag=max_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                sampling_mode=sampling_mode,
+                executor=executor,
+            )

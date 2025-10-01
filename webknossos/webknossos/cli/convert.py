@@ -113,7 +113,7 @@ def main(
     ] = True,
     downsample: Annotated[
         bool, typer.Option(help="Downsample the target dataset.")
-    ] = False,
+    ] = True,
     batch_size: Annotated[
         int | None,
         typer.Option(
