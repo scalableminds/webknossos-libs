@@ -131,10 +131,16 @@ class Team:
         ]
 
     @classmethod
-    def add(cls, team_name: str) -> None:
+    def add(cls, team_name: str) -> "Team":
         """Adds a new team with the specified name."""
         client = _get_api_client(enforce_auth=True)
         client.team_add(team=ApiTeamAdd(team_name))
+        return cls.get_by_name(team_name)
+
+    def delete(self) -> None:
+        """Deletes the team."""
+        client = _get_api_client(enforce_auth=True)
+        client.team_delete(team_id=self.id)
 
 
 @attr.frozen

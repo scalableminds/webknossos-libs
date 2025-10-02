@@ -378,6 +378,12 @@ class ApiAnnotationUploadResult:
 
 
 @attr.s(auto_attribs=True)
+class ApiFolderAdd:
+    parent_id: str
+    name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiFolderWithParent:
     id: str
     name: str

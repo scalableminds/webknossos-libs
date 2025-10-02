@@ -24,8 +24,17 @@ class RemoteFolder:
     id: str
     name: str
 
+    def add_subfolder(self, name: str) -> "RemoteFolder":
+        """Adds a new folder with the specified name."""
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        folder = client.folder_add("/folders", folder_name=name, parent_id=self.id)
+        return RemoteFolder(name=folder.name, id=folder.id)
+
     @classmethod
     def get_by_id(cls, folder_id: str) -> "RemoteFolder":
+        """Returns the folder specified by the passed id."""
         from ..client.context import _get_api_client
 
         client = _get_api_client(enforce_auth=True)
@@ -39,6 +48,8 @@ class RemoteFolder:
 
     @classmethod
     def get_by_path(cls, path: str) -> "RemoteFolder":
+        """Returns the folder specified by the passed path.
+        Separate multiple folder names with a slash."""
         from ..client.context import _get_api_client
 
         path = path.rstrip("/")
@@ -51,6 +62,16 @@ class RemoteFolder:
                 return cls(name=folder_info.name, id=folder_info.id)
 
         raise KeyError(f"Could not find folder {path}.")
+
+    @classmethod
+    def get_root(cls) -> "RemoteFolder":
+        """Returns the root folder of the current organization."""
+
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        root_folder = client.folder_root()
+        return cls(name=root_folder.name, id=root_folder.id)
 
     @property
     def metadata(self) -> FolderMetadata:
@@ -71,3 +92,40 @@ class RemoteFolder:
             ]
         folder.metadata = api_metadata
         client._put_json(f"/folders/{self.id}", folder)
+
+    def move(self, new_parent: "str | RemoteFolder | None") -> None:
+        """Move the folder to a new parent folder."""
+        from ..client.context import _get_api_client
+
+        if isinstance(new_parent, str):
+            new_parent = RemoteFolder.get_by_path(new_parent)
+        elif new_parent is None:
+            new_parent = RemoteFolder.get_root()
+
+        client = _get_api_client(enforce_auth=True)
+        client.folder_move(folder_id=self.id, parent_id=new_parent.id)
+
+    @property
+    def allowed_teams(self) -> list["Team"]:
+        """Returns the teams that are allowed to access this folder."""
+        pass
+
+    @allowed_teams.setter
+    def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
+        pass
+
+    @property
+    def name(self) -> str:
+        """Name of the folder."""
+        pass
+
+    @name.setter
+    def name(self, name: str) -> None:
+        pass
+
+    def delete(self) -> None:
+        """Deletes the folder."""
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        client.folder_delete(folder_id=self.id)
