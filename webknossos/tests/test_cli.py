@@ -68,6 +68,7 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
         "convert",
         "--jobs",
         2,
+        "--no-downsample",
         "--voxel-size",
         "11.24,11.24,25",
         "--data-format",
@@ -322,6 +323,44 @@ def test_convert_with_all_params() -> None:
 
         assert result.exit_code == 0, result.stdout
         assert (wkw_path / PROPERTIES_FILE_NAME).exists()
+
+
+def test_convert_raw() -> None:
+    """Tests the functionality of convert-raw subcommand."""
+
+    with tmp_cwd():
+        origin_path = Path("test.raw")
+        origin_path.write_bytes(
+            np.array([[0.2, 0.4], [0.6, 0.8]], dtype="float32").tobytes(order="F")
+        )
+        out_path = Path(f"wkw_from_{origin_path.name}")
+        result = runner.invoke(
+            app,
+            [
+                "convert-raw",
+                "--voxel-size",
+                "11.0,11.0,11.0",
+                "--shape",
+                "2,2,1",
+                "--dtype",
+                "uint8",
+                "--source-dtype",
+                "float32",
+                "--rescale-min-max",
+                "0.2,0.8",
+                str(origin_path),
+                str(out_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.stdout
+        assert (out_path / PROPERTIES_FILE_NAME).exists()
+
+        out_ds = Dataset.open(out_path)
+        np.testing.assert_array_equal(
+            out_ds.get_layer("color").get_finest_mag().read()[0],
+            np.array([[[0], [85]], [[170], [255]]], dtype="uint8"),
+        )
 
 
 @pytest.mark.use_proxay
