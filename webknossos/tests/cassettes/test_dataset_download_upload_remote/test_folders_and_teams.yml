@@ -22,7 +22,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:48 GMT
         connection: close
         content-type: application/json
         content-length: '175'
@@ -34,7 +34,7 @@ http_interactions:
   - request:
       method: POST
       path: >-
-        /api/v10/folders/create?parentId=570b9f4e4bb848d0885ea917&name=test_folder-6b977318-b601-4da2-957d-44c77cba2e08
+        /api/v10/folders/create?parentId=570b9f4e4bb848d0885ea917&name=test_folder
       headers:
         host: localhost:9000
         content-length: '0'
@@ -56,14 +56,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:48 GMT
         connection: close
         content-type: application/json
-        content-length: '169'
+        content-length: '132'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08","metadata":[],"allowedTeams":[],"allowedTeamsCumulative":[],"isEditable":true}
+          {"id":"68debe0dcb0000bb60b0527c","name":"test_folder","metadata":[],"allowedTeams":[],"allowedTeamsCumulative":[],"isEditable":true}
         compression: none
   - request:
       method: POST
@@ -76,11 +76,11 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '58'
+        content-length: '21'
         content-type: application/json
       body:
         encoding: utf8
-        data: '{"name": "test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc"}'
+        data: '{"name": "test_team"}'
         compression: none
     response:
       status:
@@ -90,14 +90,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:48 GMT
         connection: close
         content-type: application/json
-        content-length: '205'
+        content-length: '168'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false,"messages":[{"success":"Team
+          {"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false,"messages":[{"success":"Team
           was created successfully"}]}
         compression: none
   - request:
@@ -123,18 +123,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:48 GMT
         connection: close
         content-type: application/json
-        content-length: '589'
+        content-length: '552'
       body:
         encoding: utf8
         data: >-
-          [{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X","isOrganizationTeam":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X","isOrganizationTeam":false},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X","isOrganizationTeam":false},{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}]
+          [{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","organization":"Organization_X","isOrganizationTeam":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","organization":"Organization_X","isOrganizationTeam":false},{"id":"69882b370d889b84020efd4f","name":"team_X2","organization":"Organization_X","isOrganizationTeam":false},{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}]
         compression: none
   - request:
       method: GET
-      path: /api/v10/folders/68de6873cb00008fe40d480e
+      path: /api/v10/folders/68debe0dcb0000bb60b0527c
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -155,18 +155,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:48 GMT
         connection: close
         content-type: application/json
-        content-length: '169'
+        content-length: '132'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08","metadata":[],"allowedTeams":[],"allowedTeamsCumulative":[],"isEditable":true}
+          {"id":"68debe0dcb0000bb60b0527c","name":"test_folder","metadata":[],"allowedTeams":[],"allowedTeamsCumulative":[],"isEditable":true}
         compression: none
   - request:
       method: PUT
-      path: /api/v10/folders/68de6873cb00008fe40d480e
+      path: /api/v10/folders/68debe0dcb0000bb60b0527c
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -175,13 +175,13 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '122'
+        content-length: '85'
         content-type: application/json
       body:
         encoding: utf8
         data: >-
-          {"name": "test_folder-6b977318-b601-4da2-957d-44c77cba2e08",
-          "allowedTeams": ["68de6873cb00008fe40d480f"], "metadata": []}
+          {"name": "test_folder", "allowedTeams": ["68debe0dcb0000bb60b0527d"],
+          "metadata": []}
         compression: none
     response:
       status:
@@ -191,18 +191,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
-        content-length: '465'
+        content-length: '354'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08","metadata":[],"allowedTeams":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
+          {"id":"68debe0dcb0000bb60b0527c","name":"test_folder","metadata":[],"allowedTeams":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
         compression: none
   - request:
       method: GET
-      path: /api/v10/folders/68de6873cb00008fe40d480e
+      path: /api/v10/folders/68debe0dcb0000bb60b0527c
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -223,18 +223,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
-        content-length: '465'
+        content-length: '354'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08","metadata":[],"allowedTeams":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
+          {"id":"68debe0dcb0000bb60b0527c","name":"test_folder","metadata":[],"allowedTeams":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
         compression: none
   - request:
       method: GET
-      path: /api/v10/folders/68de6873cb00008fe40d480e
+      path: /api/v10/folders/68debe0dcb0000bb60b0527c
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -255,18 +255,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
-        content-length: '465'
+        content-length: '354'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08","metadata":[],"allowedTeams":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
+          {"id":"68debe0dcb0000bb60b0527c","name":"test_folder","metadata":[],"allowedTeams":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
         compression: none
   - request:
       method: PUT
-      path: /api/v10/folders/68de6873cb00008fe40d480e
+      path: /api/v10/folders/68debe0dcb0000bb60b0527c
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -275,13 +275,13 @@ http_interactions:
         user-agent: python-httpx/0.27.2
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-        content-length: '130'
+        content-length: '93'
         content-type: application/json
       body:
         encoding: utf8
         data: >-
-          {"name": "test_folder-6b977318-b601-4da2-957d-44c77cba2e08_renamed",
-          "allowedTeams": ["68de6873cb00008fe40d480f"], "metadata": []}
+          {"name": "test_folder_renamed", "allowedTeams":
+          ["68debe0dcb0000bb60b0527d"], "metadata": []}
         compression: none
     response:
       status:
@@ -291,19 +291,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
-        content-length: '473'
+        content-length: '362'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08_renamed","metadata":[],"allowedTeams":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
+          {"id":"68debe0dcb0000bb60b0527c","name":"test_folder_renamed","metadata":[],"allowedTeams":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"allowedTeamsCumulative":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
         compression: none
   - request:
       method: POST
       path: >-
-        /api/v10/folders/create?parentId=68de6873cb00008fe40d480e&name=test_folder-6b977318-b601-4da2-957d-44c77cba2e08_subfolder
+        /api/v10/folders/create?parentId=68debe0dcb0000bb60b0527c&name=test_folder_subfolder
       headers:
         host: localhost:9000
         content-length: '0'
@@ -325,14 +325,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
-        content-length: '327'
+        content-length: '253'
       body:
         encoding: utf8
         data: >-
-          {"id":"68de6873cb00008fe40d4810","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08_subfolder","metadata":[],"allowedTeams":[],"allowedTeamsCumulative":[{"id":"68de6873cb00008fe40d480f","name":"test_team-10e503ae-808d-4a63-910f-9ddd1a8852dc","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
+          {"id":"68debe0dcb0000ca60b0527e","name":"test_folder_subfolder","metadata":[],"allowedTeams":[],"allowedTeamsCumulative":[{"id":"68debe0dcb0000bb60b0527d","name":"test_team","organization":"Organization_X","isOrganizationTeam":false}],"isEditable":true}
         compression: none
   - request:
       method: GET
@@ -357,20 +357,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:35 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
-        content-length: '737'
+        content-length: '663'
       body:
         encoding: utf8
         data: >-
           [{"id":"570b9f4e4bb848d08880712a","name":"A
           subfolder!","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"570b9f4e4bb848d08880712b","name":"Another
-          subfolder!","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08_renamed","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"68de6873cb00008fe40d4810","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08_subfolder","parent":"68de6873cb00008fe40d480e","metadata":[],"isEditable":true},{"id":"570b9f4e4bb848d0885ea917","name":"Organization_X","parent":null,"metadata":[{"key":"key","type":"number","value":10}],"isEditable":true}]
+          subfolder!","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"68debe0dcb0000bb60b0527c","name":"test_folder_renamed","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"68debe0dcb0000ca60b0527e","name":"test_folder_subfolder","parent":"68debe0dcb0000bb60b0527c","metadata":[],"isEditable":true},{"id":"570b9f4e4bb848d0885ea917","name":"Organization_X","parent":null,"metadata":[{"key":"key","type":"number","value":10}],"isEditable":true}]
         compression: none
   - request:
       method: DELETE
-      path: /api/v10/folders/68de6873cb00008fe40d4810
+      path: /api/v10/folders/68debe0dcb0000ca60b0527e
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -391,7 +391,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:36 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-length: '0'
       body:
@@ -421,20 +421,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:36 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
-        content-length: '567'
+        content-length: '530'
       body:
         encoding: utf8
         data: >-
           [{"id":"570b9f4e4bb848d08880712a","name":"A
           subfolder!","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"570b9f4e4bb848d08880712b","name":"Another
-          subfolder!","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"68de6873cb00008fe40d480e","name":"test_folder-6b977318-b601-4da2-957d-44c77cba2e08_renamed","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"570b9f4e4bb848d0885ea917","name":"Organization_X","parent":null,"metadata":[{"key":"key","type":"number","value":10}],"isEditable":true}]
+          subfolder!","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"68debe0dcb0000bb60b0527c","name":"test_folder_renamed","parent":"570b9f4e4bb848d0885ea917","metadata":[],"isEditable":true},{"id":"570b9f4e4bb848d0885ea917","name":"Organization_X","parent":null,"metadata":[{"key":"key","type":"number","value":10}],"isEditable":true}]
         compression: none
   - request:
       method: DELETE
-      path: /api/v10/folders/68de6873cb00008fe40d480e
+      path: /api/v10/folders/68debe0dcb0000bb60b0527c
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -455,7 +455,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:36 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-length: '0'
       body:
@@ -464,7 +464,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v10/teams/68de6873cb00008fe40d480f
+      path: /api/v10/teams/68debe0dcb0000bb60b0527d
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -485,7 +485,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 02 Oct 2025 11:56:36 GMT
+        date: Thu, 02 Oct 2025 18:01:49 GMT
         connection: close
         content-type: application/json
         content-length: '41'

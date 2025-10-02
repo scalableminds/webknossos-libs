@@ -1,7 +1,6 @@
 import pickle
 import sys
 from pathlib import Path
-from uuid import uuid4
 
 import numpy as np
 import pytest
@@ -137,8 +136,8 @@ def test_remote_dataset(tmp_path: Path) -> None:
 
 
 def test_folders_and_teams() -> None:
-    folder_name = f"test_folder-{uuid4()}"
-    team_name = f"test_team-{uuid4()}"
+    folder_name = "test_folder"
+    team_name = "test_team"
 
     remote_folder = wk.RemoteFolder.get_root().add_subfolder(folder_name)
     assert remote_folder.name == folder_name
