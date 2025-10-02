@@ -262,10 +262,6 @@ class WkApiClient(AbstractApiClient):
             query={"parentId": parent_id, "name": folder_name},
         )
 
-    def folder_edit(self, *, folder_id: str, folder_name: str) -> None:
-        # TODO
-        pass
-
     def folder_move(self, *, folder_id: str, new_parent_id: str) -> ApiFolderWithParent:
         route = "/folders/create"
         return self._post_json_with_json_response(
