@@ -84,7 +84,7 @@ class User:
         api_users = client.user_list()
         return [cls._from_api_user(i) for i in api_users]
 
-    def assign_team_roles(self, team_name: str, is_team_manager: bool) -> None:
+    def assign_team_roles(self, team_name: "str | Team", is_team_manager: bool) -> None:
         """Assigns the specified roles to the user for the specified team."""
         client = _get_api_client(enforce_auth=True)
         api_user = client.user_by_id(user_id=self.user_id)
