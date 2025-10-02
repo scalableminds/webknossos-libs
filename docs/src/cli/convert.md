@@ -73,8 +73,9 @@ webknossos convert [OPTIONS] SOURCE TARGET
     Default: `True`.
 
 - `--max-mag`  
-    Max resolution to be downsampled.
-    Example: `--shard-shape 2-2-1`.
+    Create downsampled magnifications up to the magnification specified by this argument.
+    If omitted, the coarsest magnification will be determined by using the bounding box of the layer
+    Example: `--max-mag 2-2-1`.
 
 - `--interpolation-mode`  
     The interpolation mode that should be used.
@@ -178,7 +179,7 @@ webknossos convert-raw [OPTIONS] SOURCE TARGET
 
 - `--flip-axes`  
     The axes at which should be flipped. 
-    Input format is a comma separated list of axis indices. 
+    Input format is a comma-separated list of axis indices. 
     For example, 1,2,3 will flip the x, y and z axes.
 
 - `--data-format`  
@@ -203,8 +204,9 @@ webknossos convert-raw [OPTIONS] SOURCE TARGET
     Default: `True`.
 
 - `--max-mag`  
-    Max resolution to be downsampled.
-    Example: `--shard-shape 2-2-1`.
+    Create downsampled magnifications up to the magnification specified by this argument.
+    If omitted, the coarsest magnification will be determined by using the bounding box of the layer
+    Example: `--max-mag 2-2-1`.
 
 - `--interpolation-mode`  
     The interpolation mode that should be used.
@@ -374,7 +376,7 @@ webknossos convert-zarr [OPTIONS] SOURCE TARGET
 
 - `--flip-axes`  
     The axes at which should be flipped. 
-    Input format is a comma separated list of axis indices. 
+    Input format is a comma-separated list of axis indices. 
     For example, 1,2,3 will flip the x, y and z axes.
 
 - `--compress`  
@@ -386,8 +388,9 @@ webknossos convert-zarr [OPTIONS] SOURCE TARGET
     Default: `True`.
 
 - `--max-mag`  
-    Max resolution to be downsampled.
-    Example: `--shard-shape 2-2-1`.
+    Create downsampled magnifications up to the magnification specified by this argument.
+    If omitted, the coarsest magnification will be determined by using the bounding box of the layer
+    Example: `--max-mag 2-2-1`.
 
 - `--interpolation-mode`  
     The interpolation mode that should be used.

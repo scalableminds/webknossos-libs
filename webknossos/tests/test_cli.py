@@ -68,6 +68,7 @@ def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
         "convert",
         "--jobs",
         2,
+        "--no-downsample",
         "--voxel-size",
         "11.24,11.24,25",
         "--data-format",

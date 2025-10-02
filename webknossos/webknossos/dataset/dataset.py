@@ -2902,7 +2902,7 @@ class Dataset:
         Args:
             sampling_mode: Strategy for downsampling (e.g. ANISOTROPIC, MAX)
             coarsest_mag: Optional maximum/coarsest magnification to generate
-            interpolation_mode: Interpolation method to use. Defaults to "default".
+            interpolation_mode: Interpolation method to use. Defaults to "default" (= "mode" for segmentation, "median" for color).
             compress: Whether to compress generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             executor: Optional executor for parallel processing
 
