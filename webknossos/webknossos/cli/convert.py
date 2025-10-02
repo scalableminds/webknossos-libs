@@ -46,7 +46,7 @@ def main(
         VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VoxelSize",
             show_default=False,
@@ -119,8 +119,9 @@ def main(
     max_mag: Annotated[
         Mag | None,
         typer.Option(
-            help="Max resolution to be downsampled. "
-            "Should be number or minus separated string (e.g. `2` or `2-2-2`).",
+            help="Create downsampled magnifications up to the magnification specified by this argument. "
+            "If omitted, the coarsest magnification will be determined by using the bounding box of the layer. "
+            "Should be number or hyphen-separated string (e.g. `2` or `2-2-2`).",
             parser=parse_mag,
         ),
     ] = None,
@@ -146,7 +147,7 @@ def main(
     overwrite_existing: Annotated[
         bool,
         typer.Option(
-            help="Clear target folder, if it already exists. Not enabled by default. Use with caution.",
+            help="Clear target folder if it already exists. Not enabled by default. Use with caution.",
             show_default=False,
         ),
     ] = False,

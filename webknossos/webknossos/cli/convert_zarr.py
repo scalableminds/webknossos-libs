@@ -156,7 +156,7 @@ def main(
         VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VoxelSize",
             show_default=False,
@@ -170,7 +170,7 @@ def main(
     ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     layer_name: Annotated[
         str,
-        typer.Option(help="Name of the cubed layer (color or segmentation)"),
+        typer.Option(help="Name of the output layer (color or segmentation)"),
     ] = "color",
     is_segmentation_layer: Annotated[
         bool,
@@ -215,8 +215,8 @@ When converting a folder, this option is ignored."
     flip_axes: Annotated[
         Vec3Int | None,
         typer.Option(
-            help="The axes at which should be flipped. "
-            "Input format is a comma separated list of axis indices. "
+            help="The axes that should be flipped. "
+            "Input format is a comma-separated list of axis indices. "
             "For example, 1,2,3 will flip the x, y and z axes.",
             parser=parse_vec3int,
             metavar="Vec3Int",
@@ -231,8 +231,9 @@ When converting a folder, this option is ignored."
     max_mag: Annotated[
         Mag | None,
         typer.Option(
-            help="Max resolution to be downsampled. "
-            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
+            help="Create downsampled magnifications up to the magnification specified by this argument. "
+            "If omitted, the coarsest magnification will be determined by using the bounding box of the layer. "
+            "Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ] = None,
@@ -249,7 +250,7 @@ When converting a folder, this option is ignored."
     overwrite_existing: Annotated[
         bool,
         typer.Option(
-            help="Clear target folder, if it already exists. Not enabled by default. Use with caution.",
+            help="Clear target folder if it already exists. Not enabled by default. Use with caution.",
             show_default=False,
         ),
     ] = False,
