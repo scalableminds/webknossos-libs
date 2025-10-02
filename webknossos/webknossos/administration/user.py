@@ -84,22 +84,23 @@ class User:
         api_users = client.user_list()
         return [cls._from_api_user(i) for i in api_users]
 
-    def assign_team_roles(self, team_name: "str | Team", is_team_manager: bool) -> None:
+    def assign_team_roles(self, team: "str | Team", is_team_manager: bool) -> None:
         """Assigns the specified roles to the user for the specified team."""
         client = _get_api_client(enforce_auth=True)
         api_user = client.user_by_id(user_id=self.user_id)
-        if team_name in [team.name for team in api_user.teams]:
+        team_name = team if isinstance(team, str) else team.name
+        team = Team.get_by_name(team_name) if isinstance(team, str) else team
+        if team_name in [t.name for t in api_user.teams]:
+            # updates tean membership
             api_user.teams = [
-                team
-                if team.name != team_name
-                else ApiTeamMembership(team.id, team.name, is_team_manager)
-                for team in api_user.teams
+                t
+                if t.name != team_name
+                else ApiTeamMembership(t.id, t.name, is_team_manager)
+                for t in api_user.teams
             ]
         else:
             api_user.teams.append(
-                ApiTeamMembership(
-                    Team.get_by_name(team_name).id, team_name, is_team_manager
-                )
+                ApiTeamMembership(team.id, team_name, is_team_manager)
             )
         client.user_update(user=api_user)
 
@@ -121,6 +122,16 @@ class Team:
         raise KeyError(f"Could not find team {name}.")
 
     @classmethod
+    def get_by_id(cls, team_id: str) -> "Team":
+        """Returns the Team specified by the passed ID."""
+        client = _get_api_client(enforce_auth=True)
+        api_teams = client.team_list()
+        for api_team in api_teams:
+            if api_team.id == team_id:
+                return cls(api_team.id, api_team.name, api_team.organization)
+        raise KeyError(f"Could not find team {team_id}.")
+
+    @classmethod
     def get_list(cls) -> list["Team"]:
         """Returns all teams of the current user."""
         client = _get_api_client(enforce_auth=True)
@@ -136,6 +147,10 @@ class Team:
         client = _get_api_client(enforce_auth=True)
         client.team_add(team=ApiTeamAdd(team_name))
         return cls.get_by_name(team_name)
+
+    def add_user(self, user: "User", *, is_team_manager: bool = False) -> None:
+        """Adds a user to the team."""
+        user.assign_team_roles(self, is_team_manager=is_team_manager)
 
     def delete(self) -> None:
         """Deletes the team."""

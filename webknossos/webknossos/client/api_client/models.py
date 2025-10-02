@@ -401,6 +401,13 @@ class ApiFolder:
 
 
 @attr.s(auto_attribs=True)
+class ApiFolderUpdate:
+    name: str
+    allowed_teams: list[str]
+    metadata: list[ApiMetadata] | None = None
+
+
+@attr.s(auto_attribs=True)
 class ApiPrecomputedMeshInfo:
     lod: int
     mesh_file_name: str

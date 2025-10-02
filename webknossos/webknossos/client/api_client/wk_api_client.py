@@ -10,7 +10,8 @@ from webknossos.client.api_client.models import (
     ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
-    ApiFolderAdd,
+    ApiFolder,
+    ApiFolderUpdate,
     ApiFolderWithParent,
     ApiLoggedTimeGroupedByMonth,
     ApiNmlTaskParameters,
@@ -239,6 +240,14 @@ class WkApiClient(AbstractApiClient):
     def folder_root(self) -> ApiFolderWithParent:
         route = "/folders/root"
         return self._get_json(route, ApiFolderWithParent)
+
+    def folder_get(self, *, folder_id: str) -> ApiFolder:
+        route = f"/folders/{folder_id}"
+        return self._get_json(route, ApiFolder)
+
+    def folder_update(self, *, folder_id: str, folder: ApiFolderUpdate) -> None:
+        route = f"/folders/{folder_id}"
+        self._put_json(route, folder)
 
     def folder_tree(self) -> list[ApiFolderWithParent]:
         route = "/folders/tree"

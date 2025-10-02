@@ -1,10 +1,15 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from typing import TYPE_CHECKING, Union
 
 import attr
 
-from ..client.api_client.models import ApiFolder, ApiFolderWithParent, ApiMetadata
+from ..administration.user import Team
+from ..client.api_client.models import ApiFolderUpdate, ApiFolderWithParent, ApiMetadata
 from ..utils import infer_metadata_type
 from ._metadata import FolderMetadata
+
+if TYPE_CHECKING:
+    from .dataset import RemoteDataset
 
 
 def _get_folder_path(
@@ -22,14 +27,14 @@ class RemoteFolder:
     """This class is used to access and edit metadata of a folder on the webknossos server."""
 
     id: str
-    name: str
+    _name: str
 
     def add_subfolder(self, name: str) -> "RemoteFolder":
         """Adds a new folder with the specified name."""
         from ..client.context import _get_api_client
 
         client = _get_api_client(enforce_auth=True)
-        folder = client.folder_add("/folders", folder_name=name, parent_id=self.id)
+        folder = client.folder_add(folder_name=name, parent_id=self.id)
         return RemoteFolder(name=folder.name, id=folder.id)
 
     @classmethod
@@ -73,6 +78,26 @@ class RemoteFolder:
         root_folder = client.folder_root()
         return cls(name=root_folder.name, id=root_folder.id)
 
+    def get_datasets(self) -> Mapping[str, "RemoteDataset"]:
+        """Returns all datasets in this folder."""
+
+        from .dataset import Dataset
+
+        return Dataset.get_remote_datasets(folder_id=self.id)
+
+    def get_subfolders(self) -> tuple["RemoteFolder", ...]:
+        """Returns all subfolders in this folder."""
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
+
+        return tuple(
+            RemoteFolder(name=folder_info.name, id=folder_info.id)
+            for folder_info in folder_tree_response
+            if folder_info.parent == self.id
+        )
+
     @property
     def metadata(self) -> FolderMetadata:
         return FolderMetadata(self.id)
@@ -84,44 +109,82 @@ class RemoteFolder:
         from ..client.context import _get_api_client
 
         client = _get_api_client(enforce_auth=True)
-        folder = client._get_json(f"/folders/{self.id}", ApiFolder)
+        folder = client.folder_get(folder_id=self.id)
         if metadata is not None:
             api_metadata = [
                 ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
                 for k, v in metadata.items()
             ]
-        folder.metadata = api_metadata
-        client._put_json(f"/folders/{self.id}", folder)
+        new_folder = ApiFolderUpdate(
+            name=folder.name,
+            allowed_teams=[t.id for t in folder.allowed_teams],
+            metadata=api_metadata,
+        )
+        client.folder_update(folder_id=self.id, folder=new_folder)
 
-    def move(self, new_parent: "str | RemoteFolder | None") -> None:
+    def move_to(self, new_parent: "RemoteFolder") -> None:
         """Move the folder to a new parent folder."""
         from ..client.context import _get_api_client
 
-        if isinstance(new_parent, str):
-            new_parent = RemoteFolder.get_by_path(new_parent)
-        elif new_parent is None:
-            new_parent = RemoteFolder.get_root()
-
         client = _get_api_client(enforce_auth=True)
-        client.folder_move(folder_id=self.id, parent_id=new_parent.id)
+        client.folder_move(folder_id=self.id, new_parent_id=new_parent.id)
 
     @property
-    def allowed_teams(self) -> list["Team"]:
-        """Returns the teams that are allowed to access this folder."""
-        pass
+    def allowed_teams(self) -> tuple[Team, ...]:
+        """Teams that are allowed to access this folder.
+        Controls which teams have read access to view and use this folder.
+        Changes are immediately synchronized with WEBKNOSSOS.
+
+        Returns:
+            tuple[Team, ...]: Teams currently having access
+        """
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        return tuple(
+            Team(id=t.id, name=t.name, organization_id=t.organization)
+            for t in client.folder_get(folder_id=self.id).allowed_teams
+        )
 
     @allowed_teams.setter
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
-        pass
+        """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
+        from ..client.context import _get_api_client
+
+        team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
+
+        client = _get_api_client(enforce_auth=True)
+        folder = client.folder_get(folder_id=self.id)
+        new_folder = ApiFolderUpdate(
+            name=folder.name,
+            allowed_teams=team_ids,
+            metadata=folder.metadata,
+        )
+        client.folder_update(folder_id=self.id, folder=new_folder)
 
     @property
     def name(self) -> str:
-        """Name of the folder."""
-        pass
+        """The human-readable name for the folder in the WEBKNOSSOS interface.
+        Changes are immediately synchronized with WEBKNOSSOS.
+        """
+        return self._name
 
     @name.setter
     def name(self, name: str) -> None:
-        pass
+        """Updates the human-readable name for the folder in the WEBKNOSSOS interface.
+        Changes are immediately synchronized with WEBKNOSSOS.
+        """
+        from ..client.context import _get_api_client
+
+        client = _get_api_client(enforce_auth=True)
+        folder = client.folder_get(folder_id=self.id)
+        new_folder = ApiFolderUpdate(
+            name=name,
+            allowed_teams=[t.id for t in folder.allowed_teams],
+            metadata=folder.metadata,
+        )
+        client.folder_update(folder_id=self.id, folder=new_folder)
+        self._name = name
 
     def delete(self) -> None:
         """Deletes the folder."""
