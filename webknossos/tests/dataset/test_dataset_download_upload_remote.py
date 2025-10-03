@@ -143,7 +143,7 @@ def test_folders_and_teams() -> None:
     assert remote_folder.name == folder_name
 
     remote_team = wk.Team.add(team_name)
-    remote_folder.allowed_teams = [remote_team]
+    remote_folder.allowed_teams = (remote_team,)
     assert remote_folder.allowed_teams == (remote_team,)
 
     remote_folder.name = f"{folder_name}_renamed"
