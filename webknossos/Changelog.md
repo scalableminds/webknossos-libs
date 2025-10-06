@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)
 
 ### Added
 - Added context manager `VolumeLayer.edit` for creating and modifying volume annotations. [#1340](https://github.com/scalableminds/webknossos-libs/pull/1340)
@@ -26,8 +36,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 - `Team.add` now returns the created team object. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
 - Moved `Team` to `webknossos.administration.team` module. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
-
-### Fixed
 
 
 ## [2.4.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.12) - 2025-09-17
