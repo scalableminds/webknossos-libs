@@ -88,19 +88,18 @@ class User:
         """Assigns the specified roles to the user for the specified team."""
         client = _get_api_client(enforce_auth=True)
         api_user = client.user_by_id(user_id=self.user_id)
-        team_name = team if isinstance(team, str) else team.name
-        team = Team.get_by_name(team_name) if isinstance(team, str) else team
-        if team_name in [t.name for t in api_user.teams]:
+        team_obj = Team.get_by_name(team) if isinstance(team, str) else team
+        if team_obj.id in [t.id for t in api_user.teams]:
             # updates tean membership
             api_user.teams = [
                 t
-                if t.id != team.id
+                if t.id != team_obj.id
                 else ApiTeamMembership(t.id, t.name, is_team_manager)
                 for t in api_user.teams
             ]
         else:
             api_user.teams.append(
-                ApiTeamMembership(team.id, team_name, is_team_manager)
+                ApiTeamMembership(team_obj.id, team_obj.name, is_team_manager)
             )
         client.user_update(user=api_user)
 
