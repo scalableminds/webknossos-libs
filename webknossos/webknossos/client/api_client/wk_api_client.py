@@ -10,6 +10,8 @@ from webknossos.client.api_client.models import (
     ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
     ApiDataStore,
+    ApiFolder,
+    ApiFolderUpdate,
     ApiFolderWithParent,
     ApiLoggedTimeGroupedByMonth,
     ApiNmlTaskParameters,
@@ -235,9 +237,41 @@ class WkApiClient(AbstractApiClient):
         route = "/tasks/list"
         return self._post_json_with_json_response(route, {}, list[ApiTask])
 
+    def folder_root(self) -> ApiFolderWithParent:
+        route = "/folders/root"
+        return self._get_json(route, ApiFolderWithParent)
+
+    def folder_get(self, *, folder_id: str) -> ApiFolder:
+        route = f"/folders/{folder_id}"
+        return self._get_json(route, ApiFolder)
+
+    def folder_update(self, *, folder_id: str, folder: ApiFolderUpdate) -> None:
+        route = f"/folders/{folder_id}"
+        self._put_json(route, folder)
+
     def folder_tree(self) -> list[ApiFolderWithParent]:
         route = "/folders/tree"
         return self._get_json(route, list[ApiFolderWithParent])
+
+    def folder_add(self, *, folder_name: str, parent_id: str) -> ApiFolderWithParent:
+        route = "/folders/create"
+        return self._post_with_json_response(
+            route,
+            ApiFolderWithParent,
+            query={"parentId": parent_id, "name": folder_name},
+        )
+
+    def folder_move(self, *, folder_id: str, new_parent_id: str) -> ApiFolderWithParent:
+        route = "/folders/create"
+        return self._post_with_json_response(
+            route,
+            ApiFolderWithParent,
+            query={"newParentId": new_parent_id, "id": folder_id},
+        )
+
+    def folder_delete(self, *, folder_id: str) -> None:
+        route = f"/folders/{folder_id}"
+        self._delete(route)
 
     def user_by_id(self, *, user_id: str) -> ApiUser:
         route = f"/users/{user_id}"
@@ -266,6 +300,10 @@ class WkApiClient(AbstractApiClient):
     def team_add(self, *, team: ApiTeamAdd) -> None:
         route = "/teams"
         self._post_json(route, team)
+
+    def team_delete(self, *, team_id: str) -> None:
+        route = f"/teams/{team_id}"
+        self._delete(route)
 
     def tasks_create(
         self, *, task_parameters: list[ApiTaskParameters]

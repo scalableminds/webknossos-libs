@@ -2,11 +2,11 @@ import attr
 
 from ..client.api_client.models import (
     ApiLoggedTimeGroupedByMonth,
-    ApiTeamAdd,
     ApiTeamMembership,
     ApiUser,
 )
 from ..client.context import _get_api_client
+from .team import Team
 
 
 @attr.frozen
@@ -21,7 +21,7 @@ class User:
     last_name: str
     created: int
     last_activity: int
-    teams: tuple["Team", ...]
+    teams: tuple[Team, ...]
     experiences: dict[str, int]
     is_active: bool
     is_admin: bool
@@ -84,57 +84,24 @@ class User:
         api_users = client.user_list()
         return [cls._from_api_user(i) for i in api_users]
 
-    def assign_team_roles(self, team_name: str, is_team_manager: bool) -> None:
+    def assign_team_roles(self, team: "str | Team", is_team_manager: bool) -> None:
         """Assigns the specified roles to the user for the specified team."""
         client = _get_api_client(enforce_auth=True)
         api_user = client.user_by_id(user_id=self.user_id)
-        if team_name in [team.name for team in api_user.teams]:
+        team_obj = Team.get_by_name(team) if isinstance(team, str) else team
+        if team_obj.id in [t.id for t in api_user.teams]:
+            # updates tean membership
             api_user.teams = [
-                team
-                if team.name != team_name
-                else ApiTeamMembership(team.id, team.name, is_team_manager)
-                for team in api_user.teams
+                t
+                if t.id != team_obj.id
+                else ApiTeamMembership(t.id, t.name, is_team_manager)
+                for t in api_user.teams
             ]
         else:
             api_user.teams.append(
-                ApiTeamMembership(
-                    Team.get_by_name(team_name).id, team_name, is_team_manager
-                )
+                ApiTeamMembership(team_obj.id, team_obj.name, is_team_manager)
             )
         client.user_update(user=api_user)
-
-
-@attr.frozen
-class Team:
-    id: str
-    name: str
-    organization_id: str
-
-    @classmethod
-    def get_by_name(cls, name: str) -> "Team":
-        """Returns the Team specified by the passed name if your token authorizes you to see it."""
-        client = _get_api_client(enforce_auth=True)
-        api_teams = client.team_list()
-        for api_team in api_teams:
-            if api_team.name == name:
-                return cls(api_team.id, api_team.name, api_team.organization)
-        raise KeyError(f"Could not find team {name}.")
-
-    @classmethod
-    def get_list(cls) -> list["Team"]:
-        """Returns all teams of the current user."""
-        client = _get_api_client(enforce_auth=True)
-        api_teams = client.team_list()
-        return [
-            cls(api_team.id, api_team.name, api_team.organization)
-            for api_team in api_teams
-        ]
-
-    @classmethod
-    def add(cls, team_name: str) -> None:
-        """Adds a new team with the specified name."""
-        client = _get_api_client(enforce_auth=True)
-        client.team_add(team=ApiTeamAdd(team_name))
 
 
 @attr.frozen

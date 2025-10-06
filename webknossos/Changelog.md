@@ -20,8 +20,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `downsample`, `max-mag`, `interpolation-mode`, `sampling-mode` args to `convert`, `convert-raw` and `convert-zarr` CLI commands, where it was missing, for consistency. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
 - Added value rescaling to `convert-raw` CLI command through `source-dtype` and `rescale-min-max` args. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
 - Added `interpolation_mode` and `compress` kwargs to `Dataset.downsample` method. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `Team.get_by_id`, `Team.add_user` and `Team.delete` methods. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+- Added `RemoteFolder.get_root`, `RemoteFolder.get_subfolders`, `RemoteFolder.get_datasets`, `RemoteFolder.add_subfolder`, `RemoteFolder.move_to`, `RemoteFolder.delete` methods and `RemoteFolder.allowed_teams`, `RemoteFolder.name` properties. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
 
 ### Changed
+- `Team.add` now returns the created team object. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+- Moved `Team` to `webknossos.administration.team` module. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
 
 ### Fixed
 

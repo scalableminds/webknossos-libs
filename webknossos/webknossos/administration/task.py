@@ -21,7 +21,7 @@ from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
 from ..utils import warn_deprecated
 from .project import Project
-from .user import Team
+from .team import Team
 
 logger = logging.getLogger(__name__)
 
