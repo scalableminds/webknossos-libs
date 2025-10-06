@@ -134,8 +134,20 @@ class AbstractApiClient(ABC):
         response = self._get(route, query, retry_count=retry_count)
         return response.content, self._parse_filename_from_header(response)
 
-    def _post_with_json_response(self, route: str, response_type: type[T]) -> T:
-        response = self._post(route)
+    def _post_with_json_response(
+        self,
+        route: str,
+        response_type: type[T],
+        query: Query | None = None,
+        retry_count: int = 0,
+        timeout_seconds: float | None = None,
+    ) -> T:
+        response = self._post(
+            route,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+        )
         return self._parse_json(response, response_type)
 
     def _post_json_with_json_response(

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Union
 
 import attr
 
-from ..administration.user import Team
+from ..administration.team import Team
 from ..client.api_client.models import ApiFolderUpdate, ApiFolderWithParent, ApiMetadata
 from ..utils import infer_metadata_type
 from ._metadata import FolderMetadata
@@ -34,8 +34,8 @@ class RemoteFolder:
         from ..client.context import _get_api_client
 
         client = _get_api_client(enforce_auth=True)
-        folder = client.folder_add(folder_name=name, parent_id=self.id)
-        return RemoteFolder(name=folder.name, id=folder.id)
+        api_folder = client.folder_add(folder_name=name, parent_id=self.id)
+        return RemoteFolder(name=api_folder.name, id=api_folder.id)
 
     @classmethod
     def get_by_id(cls, folder_id: str) -> "RemoteFolder":
@@ -132,7 +132,8 @@ class RemoteFolder:
     @property
     def allowed_teams(self) -> tuple[Team, ...]:
         """Teams that are allowed to access this folder.
-        Controls which teams have read access to view and use this folder.
+        Controls which teams have read access to view and use this folder,
+        as well as its datasets.
         Changes are immediately synchronized with WEBKNOSSOS.
 
         Returns:
@@ -164,14 +165,14 @@ class RemoteFolder:
 
     @property
     def name(self) -> str:
-        """The human-readable name for the folder in the WEBKNOSSOS interface.
+        """The name for the folder in the WEBKNOSSOS interface.
         Changes are immediately synchronized with WEBKNOSSOS.
         """
         return self._name
 
     @name.setter
     def name(self, name: str) -> None:
-        """Updates the human-readable name for the folder in the WEBKNOSSOS interface.
+        """Updates the name for the folder in the WEBKNOSSOS interface.
         Changes are immediately synchronized with WEBKNOSSOS.
         """
         from ..client.context import _get_api_client

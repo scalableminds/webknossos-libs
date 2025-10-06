@@ -25,6 +25,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - `Team.add` now returns the created team object. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+- Moved `Team` to `webknossos.administration.team` module. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
 
 ### Fixed
 

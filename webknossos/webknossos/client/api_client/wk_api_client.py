@@ -255,18 +255,16 @@ class WkApiClient(AbstractApiClient):
 
     def folder_add(self, *, folder_name: str, parent_id: str) -> ApiFolderWithParent:
         route = "/folders/create"
-        return self._post_json_with_json_response(
+        return self._post_with_json_response(
             route,
-            None,
             ApiFolderWithParent,
             query={"parentId": parent_id, "name": folder_name},
         )
 
     def folder_move(self, *, folder_id: str, new_parent_id: str) -> ApiFolderWithParent:
         route = "/folders/create"
-        return self._post_json_with_json_response(
+        return self._post_with_json_response(
             route,
-            None,
             ApiFolderWithParent,
             query={"newParentId": new_parent_id, "id": folder_id},
         )
