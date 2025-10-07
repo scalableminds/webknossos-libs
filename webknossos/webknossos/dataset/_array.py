@@ -325,7 +325,7 @@ class WKWArray(BaseArray):
             return int(match[0])
 
         def _extract_file_index(file_path: UPath) -> Vec3Int:
-            z, y, x = [_extract_num(el) for el in file_path.parts]
+            z, y, x = [_extract_num(el) for el in file_path.parts[-3:]]
             return Vec3Int(x, y, z)
 
         shard_shape = self.info.shard_shape
