@@ -560,7 +560,7 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
         )
 
     if not upath.is_absolute():
-        return cheap_resolve(dataset_path / upath)
+        return cheap_resolve(dataset_path / upath.as_posix())
     return cheap_resolve(upath)
 
 
