@@ -249,6 +249,9 @@ class VolumeLayer:
         assert self.zip is not None, (
             "The selected volume layer data is not available and cannot be exported."
         )
+        assert is_fs_path(dataset.path), (
+            "The dataset path must be a local path to export the volume layer."
+        )
 
         with self.zip.open(mode="rb") as f:
             data_zip = ZipFile(f)

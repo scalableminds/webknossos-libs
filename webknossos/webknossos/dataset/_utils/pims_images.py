@@ -11,6 +11,7 @@ import numpy as np
 import pims
 from natsort import natsorted
 from numpy.typing import DTypeLike
+from upath import UPath
 
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
@@ -75,7 +76,9 @@ class PimsImages:
 
     def __init__(
         self,
-        images: Union[str, Path, "pims.FramesSequence", list[str | PathLike]],
+        images: Union[
+            str, Path, UPath, "pims.FramesSequence", list[str | PathLike | UPath]
+        ],
         channel: int | None,
         timepoint: int | None,
         czi_channel: int | None,
@@ -750,7 +753,7 @@ def get_valid_bioformats_suffixes() -> set[str]:
 
 
 def has_image_z_dimension(
-    filepath: Path,
+    filepath: UPath,
     use_bioformats: bool | None,
     is_segmentation: bool,
 ) -> bool:

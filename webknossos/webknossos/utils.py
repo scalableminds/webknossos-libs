@@ -20,6 +20,7 @@ from threading import Thread
 from typing import (
     Any,
     Protocol,
+    TypeGuard,
     TypeVar,
 )
 from urllib.parse import urlparse
@@ -31,6 +32,7 @@ from cluster_tools import Executor, get_executor
 from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
+from upath.implementations.local import PosixUPath, WindowsUPath
 
 from .dataset.defaults import DEFAULT_BACKOFF_FACTOR, DEFAULT_NUM_RETRIES
 
@@ -296,9 +298,9 @@ def count_defined_values(values: Iterable[Any | None]) -> int:
     return sum(i is not None for i in values)
 
 
-def is_fs_path(path: UPath) -> bool:
-    from upath.implementations.local import PosixUPath, WindowsUPath
-
+def is_fs_path(
+    path: Path | UPath,
+) -> TypeGuard[PosixPath | WindowsPath | PosixUPath | WindowsUPath]:
     return not isinstance(path, UPath) or isinstance(
         path, PosixPath | WindowsPath | PosixUPath | WindowsUPath
     )
@@ -358,11 +360,11 @@ def copytree(
     threads: int | None = 10,
     progress_desc: str | None = None,
 ) -> None:
-    def _walk(path: UPath, base_path: UPath) -> Iterator[tuple[Path, tuple[str, ...]]]:
+    def _walk(path: UPath, base_path: UPath) -> Iterator[tuple[UPath, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
         assert path.parts[: len(base_path.parts)] == base_path.parts
-        yield (path, path.parts[len(base_path.parts) :])
+        yield (path, tuple(path.parts[len(base_path.parts) :]))
 
         if path.is_dir():
             for p in path.iterdir():
@@ -401,6 +403,10 @@ def copytree(
 
 
 def movetree(in_path: UPath, out_path: UPath) -> None:
+    assert is_fs_path(in_path), f"Move is only supported for local paths, got {in_path}"
+    assert is_fs_path(out_path), (
+        f"Move is only supported for local paths, got {out_path}"
+    )
     move(in_path, out_path)
 
 

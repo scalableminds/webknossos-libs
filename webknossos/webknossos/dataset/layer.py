@@ -356,6 +356,9 @@ class Layer:
             )
 
         if self.path.exists():
+            assert is_fs_path(self.dataset.path), (
+                "Renaming layers is only supported for local paths."
+            )
             self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
         self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
@@ -994,30 +997,35 @@ class Layer:
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert is_fs_path(self.path), (
-            f"Cannot create symlinks in remote layer {self.path}"
-        )
+        self_path = self.path
+        self_resolved_path = self.resolved_path
+        dataset_resolved_path = self.dataset.resolved_path
+        assert (
+            is_fs_path(self_path)
+            and is_fs_path(self_resolved_path)
+            and is_fs_path(dataset_resolved_path)
+        ), f"Cannot create symlinks in remote layer {self_path}"
         assert is_fs_path(foreign_mag_view.path), (
             f"Cannot create symlink to remote mag {foreign_mag_view.path}"
         )
 
         foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self.resolved_path))
+            Path(relpath(foreign_mag_view.path, self_resolved_path))
             if make_relative
             else foreign_mag_view.path
         )
 
-        (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
+        (self_path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
         new_mag_path = (
-            relpath(foreign_mag_view.path, self.dataset.resolved_path)
+            relpath(foreign_mag_view.path, dataset_resolved_path)
             if make_relative
             else str(foreign_mag_view.path.resolve())
         )
 
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag,
-            mag_path=foreign_mag_view.path,
+            mag_path=UPath(foreign_mag_view.path),
             override_stored_path=new_mag_path,
             read_only=True,
         )
@@ -1716,7 +1724,7 @@ class Layer:
             raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
 
     @classmethod
-    def _ensure_layer(cls, layer: Union[str, PathLike, "Layer"]) -> "Layer":
+    def _ensure_layer(cls, layer: Union[str, PathLike, UPath, "Layer"]) -> "Layer":
         if isinstance(layer, Layer):
             return layer
         else:

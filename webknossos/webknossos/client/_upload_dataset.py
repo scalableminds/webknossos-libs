@@ -2,13 +2,13 @@ import os
 import warnings
 from collections.abc import Iterator
 from functools import cache
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
 from typing import NamedTuple
 from uuid import uuid4
 
 import httpx
+from upath import UPath
 
 from ..dataset import Dataset, Layer, RemoteDataset
 from ..datastore import Datastore
@@ -63,9 +63,9 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
 
 
 def _walk(
-    path: Path,
-    base_path: Path | None = None,
-) -> Iterator[tuple[Path, Path, int]]:
+    path: UPath,
+    base_path: UPath | None = None,
+) -> Iterator[tuple[UPath, UPath, int]]:
     if base_path is None:
         base_path = path
     if path.is_dir():

@@ -226,7 +226,11 @@ class Attachments:
         self._layer.dataset._export_as_json()
 
     def add_mesh(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> None:
         self._add_attachment(
             MeshAttachment.from_path_and_name(
@@ -238,7 +242,11 @@ class Attachments:
         )
 
     def add_agglomerate(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> None:
         self._add_attachment(
             AgglomerateAttachment.from_path_and_name(
@@ -250,7 +258,11 @@ class Attachments:
         )
 
     def add_connectome(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> None:
         self._add_attachment(
             ConnectomeAttachment.from_path_and_name(
@@ -262,7 +274,11 @@ class Attachments:
         )
 
     def set_segment_index(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> None:
         self._add_attachment(
             SegmentIndexAttachment.from_path_and_name(
@@ -274,7 +290,11 @@ class Attachments:
         )
 
     def set_cumsum(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> None:
         self._add_attachment(
             CumsumAttachment.from_path_and_name(
@@ -354,6 +374,9 @@ class Attachments:
                 )
                 new_path.parent.mkdir(parents=True, exist_ok=True)
                 if make_relative:
+                    assert is_fs_path(new_path.parent), (
+                        "Relative symlinks are only supported for local paths."
+                    )
                     new_path.symlink_to(Path(relpath(attachment.path, new_path.parent)))
                 else:
                     new_path.symlink_to(attachment.path)

@@ -529,7 +529,7 @@ class MagView(View):
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         compress: bool | Zarr3Config | None = None,
-        target_path: str | Path | None = None,
+        target_path: str | Path | UPath | None = None,
         executor: Executor | None = None,
         _progress_desc: str | None = None,
     ) -> None:

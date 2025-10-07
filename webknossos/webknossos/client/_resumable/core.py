@@ -3,10 +3,10 @@ from collections.abc import Callable, Sequence
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from functools import partial
 from os import PathLike
-from pathlib import Path
 from typing import Any
 
 import httpx
+from upath import UPath
 
 from .chunk import resolve_chunk
 from .file import ResumableFile
@@ -50,7 +50,7 @@ class Resumable:
         max_chunk_retries: int = 100,
         permanent_errors: Sequence[int] = (400, 404, 415, 500, 501),
         query: dict[str, Any] | None = None,
-        generate_unique_identifier: Callable[[Path, Path], str] = lambda _path,
+        generate_unique_identifier: Callable[[UPath, UPath], str] = lambda _path,
         _relative_path: str(uuid.uuid4()),
         client: httpx.Client = httpx.Client(),
     ) -> None:
@@ -84,10 +84,10 @@ class Resumable:
         self.chunk_completed = CallbackDispatcher()
 
     def add_file(
-        self, path: PathLike | str, relative_path: Path | None
+        self, path: PathLike | UPath | str, relative_path: UPath | None
     ) -> ResumableFile:
         file = ResumableFile(
-            Path(path),
+            UPath(path),
             relative_path,
             self.config.chunk_size,
             self.config.generate_unique_identifier,

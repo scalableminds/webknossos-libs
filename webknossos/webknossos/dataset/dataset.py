@@ -132,7 +132,7 @@ SUPPORTED_VERSIONS: list[Literal[1]] = [1]
 DEFAULT_VERSION: Literal[1] = 1
 
 
-def _find_array_info(layer_path: Path) -> ArrayInfo | None:
+def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
     for f in layer_path.iterdir():
         if f.is_dir():
             try:
@@ -238,10 +238,10 @@ class Dataset:
 
         def _to_callable(
             self,
-            input_path: Path,
-            input_files: Sequence[Path],
+            input_path: UPath,
+            input_files: Sequence[UPath],
             use_bioformats: bool | None,
-        ) -> Callable[[Path], str]:
+        ) -> Callable[[UPath], str]:
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
@@ -289,7 +289,7 @@ class Dataset:
 
     def __init__(
         self,
-        dataset_path: str | PathLike,
+        dataset_path: str | PathLike | UPath,
         voxel_size: tuple[float, float, float] | None = None,  # in nanometers
         name: str | None = None,
         exist_ok: bool = False,
@@ -440,7 +440,9 @@ class Dataset:
         return self
 
     @classmethod
-    def open(cls, dataset_path: str | PathLike, read_only: bool = False) -> "Dataset":
+    def open(
+        cls, dataset_path: str | PathLike | UPath, read_only: bool = False
+    ) -> "Dataset":
         """
         To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
         This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
@@ -840,13 +842,13 @@ class Dataset:
     def from_images(
         cls,
         input_path: str | PathLike,
-        output_path: str | PathLike,
+        output_path: str | PathLike | UPath,
         voxel_size: tuple[float, float, float] | None = None,
         name: str | None = None,
         *,
         map_filepath_to_layer_name: ConversionLayerMapping
-        | Callable[[Path], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
-        z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
+        | Callable[[UPath], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
+        z_slices_sort_key: Callable[[UPath], Any] = natsort_keygen(),
         voxel_size_with_unit: VoxelSize | None = None,
         layer_name: str | None = None,
         layer_category: LayerCategoryType | None = None,
@@ -975,7 +977,7 @@ class Dataset:
 
         ds = cls(output_path, voxel_size_with_unit=voxel_size_with_unit, name=name)
 
-        filepaths_per_layer: dict[str, list[Path]] = {}
+        filepaths_per_layer: dict[str, list[UPath]] = {}
         for input_file in input_files:
             layer_name_from_mapping = map_filepath_to_layer_name_func(input_file)
             # Remove characters from layer name that are not allowed
@@ -1656,7 +1658,7 @@ class Dataset:
 
     def add_layer_from_images(
         self,
-        images: Union[str, "pims.FramesSequence", list[str | PathLike]],
+        images: Union[str, "pims.FramesSequence", list[str | PathLike | UPath]],
         ## add_layer arguments
         layer_name: str,
         category: LayerCategoryType | None = "color",
@@ -1721,11 +1723,11 @@ class Dataset:
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
         if category is None:
-            image_path_for_category_guess: Path
+            image_path_for_category_guess: UPath
             if isinstance(images, str) or isinstance(images, PathLike):
-                image_path_for_category_guess = Path(images)
+                image_path_for_category_guess = UPath(images)
             else:
-                image_path_for_category_guess = Path(images[0])
+                image_path_for_category_guess = UPath(images[0])
             category = (
                 "segmentation"
                 if guess_if_segmentation_path(image_path_for_category_guess)
@@ -2414,20 +2416,21 @@ class Dataset:
             )
         foreign_layer_path = foreign_layer.path
 
-        assert is_fs_path(self.path), (
-            f"Cannot create symlinks in remote dataset {self.path}"
+        self_path = self.path
+        assert is_fs_path(self_path), (
+            f"Cannot create symlinks in remote dataset {self_path}"
         )
         assert is_fs_path(foreign_layer_path), (
             f"Cannot create symlink to remote layer {foreign_layer_path}"
         )
 
         foreign_layer_symlink_path = (
-            Path(relpath(foreign_layer_path, self.path))
+            Path(relpath(foreign_layer_path, self_path))
             if make_relative
             else foreign_layer_path.resolve()
         )
 
-        new_layer_path = self.path / new_layer_name
+        new_layer_path = self_path / new_layer_name
         new_layer_path.symlink_to(foreign_layer_symlink_path)
         new_layer_properties = copy.deepcopy(foreign_layer._properties)
         new_layer_properties.name = new_layer_name
@@ -2439,7 +2442,7 @@ class Dataset:
             )
             if is_fs_path(foreign_mag.path):
                 mag_prop.path = (
-                    Path(relpath(foreign_mag.path.resolve(), self.path))
+                    Path(relpath(foreign_mag.path.resolve(), self_path))
                     if make_relative
                     else foreign_mag.path.resolve()
                 ).as_posix()
@@ -2457,8 +2460,9 @@ class Dataset:
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
+                    assert is_fs_path(old_path)
                     attachment.path = (
-                        Path(relpath(old_path, self.path))
+                        Path(relpath(old_path, self_path))
                         if make_relative
                         else old_path.resolve()
                     ).as_posix()
@@ -2473,7 +2477,7 @@ class Dataset:
 
     def add_remote_layer(
         self,
-        foreign_layer: str | PathLike | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Deprecated. Use `Dataset.add_layer_as_ref` instead."""
@@ -2482,7 +2486,7 @@ class Dataset:
 
     def add_layer_as_ref(
         self,
-        foreign_layer: str | PathLike | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Add a layer from another dataset by reference.
@@ -2578,9 +2582,10 @@ class Dataset:
             for attachment in new_layer_properties.attachments:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
+                    assert isinstance(old_path, UPath)  # for mypy
                     if not old_path.is_absolute():
                         old_path = (
-                            foreign_layer.dataset.resolved_path / old_path
+                            foreign_layer.dataset.resolved_path / old_path.as_posix()
                         ).resolve()
                     else:
                         old_path = old_path.resolve()
@@ -2625,7 +2630,7 @@ class Dataset:
 
     def copy_dataset(
         self,
-        new_dataset_path: str | Path,
+        new_dataset_path: str | Path | UPath,
         *,
         voxel_size: tuple[float, float, float] | None = None,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2725,7 +2730,7 @@ class Dataset:
 
     def fs_copy_dataset(
         self,
-        new_dataset_path: str | Path,
+        new_dataset_path: str | Path | UPath,
         *,
         exists_ok: bool = False,
         layers_to_ignore: Iterable[str] | None = None,
@@ -2795,7 +2800,7 @@ class Dataset:
 
     def shallow_copy_dataset(
         self,
-        new_dataset_path: str | PathLike,
+        new_dataset_path: str | PathLike | UPath,
         *,
         name: str | None = None,
         layers_to_ignore: Iterable[str] | None = None,
@@ -2961,7 +2966,7 @@ class Dataset:
             raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
 
     @staticmethod
-    def _load_properties(dataset_path: Path) -> DatasetProperties:
+    def _load_properties(dataset_path: UPath) -> DatasetProperties:
         try:
             data = json.loads((dataset_path / PROPERTIES_FILE_NAME).read_bytes())
         except FileNotFoundError:
@@ -3170,7 +3175,7 @@ class RemoteDataset(Dataset):
     @classmethod
     def open(
         cls,
-        dataset_path: str | PathLike,  # noqa: ARG003
+        dataset_path: str | PathLike | UPath,  # noqa: ARG003
         read_only: bool = True,  # noqa: ARG003
     ) -> "Dataset":
         """Do not call manually, please use `Dataset.open_remote()` instead."""
@@ -3489,7 +3494,7 @@ class RemoteDataset(Dataset):
 
     @classmethod
     def explore_and_add_remote(
-        cls, dataset_uri: str | PathLike, dataset_name: str, folder_path: str
+        cls, dataset_uri: str | PathLike | UPath, dataset_name: str, folder_path: str
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 
