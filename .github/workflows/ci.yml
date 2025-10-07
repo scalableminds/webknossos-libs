@@ -260,12 +260,10 @@ jobs:
         with:
           name: coverage-report-${{ matrix.group }}
           path: "~/.local/share/coverage/${{ matrix.group }}.coverage"
-          retention-days: 1  # Automatically deletes after 1 day
+          retention-days: 1 # Automatically deletes after 1 day
 
       - name: Check if git is dirty
-        run: |
-          git diff --no-ext-diff --exit-code
-          [[ -z $(git status -s) ]]
+        run: ../_tooling/check_clean.sh
 
   webknossos_windows:
     needs: changes
@@ -307,7 +305,6 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
-
 
   coverage_report:
     needs: [webknossos_linux]
