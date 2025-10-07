@@ -47,7 +47,6 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
-from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import BinaryIO, Literal, Union, overload
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -79,7 +78,7 @@ from ..dataset.defaults import SSL_CONTEXT
 from ..dataset.properties import VoxelSize
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
-from ..utils import get_executor_for_args, time_since_epoch_in_ms
+from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
 
@@ -298,7 +297,7 @@ class Annotation:
         self.skeleton.description = description
 
     @classmethod
-    def load(cls, annotation_path: str | PathLike) -> "Annotation":
+    def load(cls, annotation_path: str | PathLike | UPath) -> "Annotation":
         """Loads an annotation from a file.
 
         Supports loading from:
@@ -324,7 +323,7 @@ class Annotation:
             ann = Annotation.load("annotation.zip")
             ```
         """
-        annotation_path = Path(annotation_path)
+        annotation_path = UPath(annotation_path)
         assert annotation_path.exists(), (
             f"Annotation path {annotation_path} does not exist."
         )
@@ -443,7 +442,7 @@ class Annotation:
         volume_zip_root = NamedTemporaryFile(suffix=".zip").name
         with ZipFile(volume_zip_root, "w"):
             pass
-        annotation._write_volume_layers(Path(volume_zip_root))
+        annotation._write_volume_layers(UPath(volume_zip_root))
 
         if _return_context:
             return annotation, context
@@ -643,7 +642,7 @@ class Annotation:
         return volume_layers
 
     @classmethod
-    def _load_from_zip(cls, content: str | PathLike | BinaryIO) -> "Annotation":
+    def _load_from_zip(cls, content: str | UPath | BinaryIO) -> "Annotation":
         zipfile = ZipFile(content)
         paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
         nml_paths = [i for i in paths if i.suffix == ".nml"]
@@ -654,11 +653,12 @@ class Annotation:
         with nml_paths[0].open(mode="rb") as f:
             return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
-    def _write_volume_layers(self, path: Path) -> None:
+    def _write_volume_layers(self, path: UPath) -> None:
         """
         Writes all volume layers with zip data to a single zip file at the specified location.
         """
 
+        assert is_fs_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
         with ZipFile(
@@ -676,7 +676,7 @@ class Annotation:
             if layer.zip is not None:
                 layer.zip = ZipPath(path, layer.zip.at)
 
-    def save(self, path: str | PathLike) -> None:
+    def save(self, path: str | PathLike | UPath) -> None:
         """Saves the annotation to a file.
 
         For skeleton-only annotations, saves as .nml file.
@@ -699,7 +699,7 @@ class Annotation:
             annotation.save("full_annotation.zip")
             ```
         """
-        path = Path(path)
+        path = UPath(path)
         assert path.suffix in [
             ".zip",
             ".nml",
@@ -716,13 +716,13 @@ class Annotation:
                 + "Please use a .zip path instead."
             )
             nml = annotation_to_nml(self)
-            with open(path, "wb") as f:
+            with path.open("wb") as f:
                 nml.write(f)
 
     def merge_fallback_layer(
         self,
-        target: Path,
-        dataset_directory: Path,
+        target: UPath,
+        dataset_directory: UPath,
         volume_layer_name: str | None = None,
         executor: Executor | None = None,
     ) -> None:

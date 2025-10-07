@@ -1,9 +1,9 @@
 import difflib
 from os import PathLike
-from pathlib import Path
 
 import networkx as nx
 import pytest
+from upath import UPath
 
 import webknossos as wk
 
@@ -157,7 +157,7 @@ def test_add_nx_graph() -> None:
         assert (edge[0].id, edge[1].id) == (max_node_id - 1, max_node_id)
 
 
-def test_nml_generation(tmp_path: Path) -> None:
+def test_nml_generation(tmp_upath: UPath) -> None:
     OLD_NML_PATH = TESTDATA_DIR / "nmls" / "generate_nml_snapshot.nml"
 
     tree1 = create_dummy_nx_graph()
@@ -169,7 +169,7 @@ def test_nml_generation(tmp_path: Path) -> None:
     # old_nml was generated with the old wknml library as follows:
     # params_wknml = {"name": "MyDataset", "scale": (1, 1, 1), "zoomLevel": 0.4}
     # old_nml = generate_nml(tree_dict=tree_dict, parameters=params_wknml)
-    # with open(tmp_path / "annotation_old.nml", "wb") as f:
+    # with open(tmp_upath / "annotation_old.nml", "wb") as f:
     #     write_nml(f, old_nml)
 
     tree_dict = {"first_group": [tree1], "second_group": [tree2]}
@@ -183,10 +183,10 @@ def test_nml_generation(tmp_path: Path) -> None:
 
     annotation.skeleton.add_nx_graphs(tree_dict)
 
-    annotation.save(tmp_path / "annotation_new.nml")
+    annotation.save(tmp_upath / "annotation_new.nml")
 
     old_skeleton = wk.Skeleton.load(OLD_NML_PATH)
-    new_skeleton = wk.Skeleton.load(tmp_path / "annotation_new.nml")
+    new_skeleton = wk.Skeleton.load(tmp_upath / "annotation_new.nml")
 
     for old_group, new_group in zip(
         old_skeleton.flattened_groups(), new_skeleton.flattened_groups()
@@ -224,9 +224,9 @@ def diff_files(path_a: PathLike, path_b: PathLike) -> None:
             )
 
 
-def test_export_to_nml(tmp_path: Path) -> None:
+def test_export_to_nml(tmp_upath: UPath) -> None:
     nml = create_dummy_skeleton()
-    output_path = tmp_path / "out.nml"
+    output_path = tmp_upath / "out.nml"
     nml.save(output_path)
 
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_skeleton_snapshot.nml"
@@ -244,9 +244,9 @@ def test_import_from_nml() -> None:
     )
 
 
-def test_simple_initialization_and_representations(tmp_path: Path) -> None:
+def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
     nml = wk.Skeleton(dataset_name="ds_name", voxel_size=(0.5, 0.5, 0.5))
-    nml_path = tmp_path / "my_skeleton.nml"
+    nml_path = tmp_upath / "my_skeleton.nml"
     EXPECTED_NML = """<?xml version="1.0" encoding="utf-8"?>
 <things>
   <parameters>
@@ -325,9 +325,9 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     assert str(nml.get_tree_by_id(9)) == "Tree named 'my_tree' with 1 nodes and 0 edges"
 
 
-def test_import_export_round_trip(tmp_path: Path) -> None:
+def test_import_export_round_trip(tmp_upath: UPath) -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_skeleton_snapshot.nml"
-    export_path = tmp_path / "exported_in.nml"
+    export_path = tmp_upath / "exported_in.nml"
     nml = wk.Skeleton.load(snapshot_path)
 
     g6 = nml.get_tree_by_id(6)
@@ -339,14 +339,14 @@ def test_import_export_round_trip(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("layer_name", [None, "my_layer"])
-def test_volume_dump_round_trip(tmp_path: Path, layer_name: str | None) -> None:
+def test_volume_dump_round_trip(tmp_upath: UPath, layer_name: str | None) -> None:
     import xml.etree.ElementTree as ET
 
     from loxun import XmlWriter
 
     from webknossos._nml import Volume
 
-    export_path = tmp_path / "volume_dump.xml"
+    export_path = tmp_upath / "volume_dump.xml"
     volume_in = Volume(
         id=0,
         location="data_Volume.zip",
@@ -367,9 +367,9 @@ def test_volume_dump_round_trip(tmp_path: Path, layer_name: str | None) -> None:
     assert volume_in == volume_out
 
 
-def test_load_nml(tmp_path: Path) -> None:
+def test_load_nml(tmp_upath: UPath) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
-    output_path = tmp_path / "test_a.nml"
+    output_path = tmp_upath / "test_a.nml"
     skeleton_a = wk.Skeleton.load(input_path)
     skeleton_a.save(output_path)
     assert skeleton_a == wk.Skeleton.load(output_path)
@@ -381,9 +381,9 @@ def test_load_nml_with_scale_unit() -> None:
     assert skeleton_a.voxel_size == (4000.0, 4000.0, 35000.0)
 
 
-def test_remove_tree(tmp_path: Path) -> None:
+def test_remove_tree(tmp_upath: UPath) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
-    output_path = tmp_path / "test_a.nml"
+    output_path = tmp_upath / "test_a.nml"
     skeleton_a = wk.Skeleton.load(input_path)
 
     # Check that tree exists
@@ -410,9 +410,9 @@ def test_remove_tree(tmp_path: Path) -> None:
     assert tree in list(skeleton_a.children)
 
 
-def test_add_tree_with_obj(tmp_path: Path) -> None:
+def test_add_tree_with_obj(tmp_upath: UPath) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
-    output_path = tmp_path / "test_a.nml"
+    output_path = tmp_upath / "test_a.nml"
     skeleton_a = wk.Skeleton.load(input_path)
 
     # Check that tree exists
@@ -429,9 +429,9 @@ def test_add_tree_with_obj(tmp_path: Path) -> None:
     skeleton_b.save(output_path)
 
 
-def test_add_tree_with_obj_and_properties(tmp_path: Path) -> None:
+def test_add_tree_with_obj_and_properties(tmp_upath: UPath) -> None:
     input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
-    output_path = tmp_path / "test_a.nml"
+    output_path = tmp_upath / "test_a.nml"
     skeleton_a = wk.Skeleton.load(input_path)
 
     # Check that tree exists

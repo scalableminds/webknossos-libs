@@ -1,13 +1,13 @@
 import json
 import warnings
 from collections.abc import Iterator
-from pathlib import Path
 from shutil import copytree
 
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
 from tifffile import TiffFile
+from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset
@@ -20,10 +20,10 @@ def ignore_warnings() -> Iterator:
         yield
 
 
-def test_compare_tifffile(tmp_path: Path) -> None:
+def test_compare_tifffile(tmp_upath: UPath) -> None:
     ds = Dataset.from_images(
         TESTDATA_DIR / "tiff",
-        tmp_path,
+        tmp_upath,
         (1, 1, 1),
         compress=True,
         layer_name="tiff_stack",
@@ -40,10 +40,10 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-def test_multiple_multitiffs(tmp_path: Path) -> None:
+def test_multiple_multitiffs(tmp_upath: UPath) -> None:
     ds = Dataset.from_images(
         TESTDATA_DIR / "various_tiff_formats",
-        tmp_path,
+        tmp_upath,
         (1, 1, 1),
         data_format="zarr3",
         layer_name="tiffs",
@@ -81,10 +81,10 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         assert array_shape == [channels] + shard_aligned_bottomright.to_list()
 
 
-def test_from_dicom_images(tmp_path: Path) -> None:
+def test_from_dicom_images(tmp_upath: UPath) -> None:
     ds = Dataset.from_images(
         TESTDATA_DIR / "dicoms",
-        tmp_path,
+        tmp_upath,
         (1, 1, 1),
     )
     assert len(ds.layers) == 1
@@ -96,8 +96,8 @@ def test_from_dicom_images(tmp_path: Path) -> None:
     )
 
 
-def test_no_slashes_in_layername(tmp_path: Path) -> None:
-    (input_path := tmp_path / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
+def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
+    (input_path := tmp_upath / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
         TESTDATA_DIR / "tiff_with_different_shapes",
         input_path,
@@ -107,8 +107,8 @@ def test_no_slashes_in_layername(tmp_path: Path) -> None:
     for strategy in Dataset.ConversionLayerMapping:
         with SequentialExecutor() as executor:
             dataset = Dataset.from_images(
-                tmp_path / "tiff",
-                tmp_path / str(strategy),
+                tmp_upath / "tiff",
+                tmp_upath / str(strategy),
                 voxel_size=(10, 10, 10),
                 map_filepath_to_layer_name=strategy,
                 executor=executor,
