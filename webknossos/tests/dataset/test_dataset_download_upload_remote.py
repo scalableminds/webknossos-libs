@@ -37,9 +37,7 @@ def test_get_remote_datasets() -> None:
     datasets_by_name = wk.RemoteDataset.list(name="l4_sample")
     assert len(datasets_by_name) == 1
 
-    datasets_by_organization = wk.RemoteDataset.list(
-        organization_id="Organization_X"
-    )
+    datasets_by_organization = wk.RemoteDataset.list(organization_id="Organization_X")
     assert len(datasets_by_organization) > 0
 
 

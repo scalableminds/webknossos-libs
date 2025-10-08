@@ -82,6 +82,7 @@ class RemoteFolder:
         """Returns all datasets in this folder."""
 
         from .dataset import RemoteDataset
+
         return RemoteDataset.list(folder_id=self.id)
 
     def get_subfolders(self) -> tuple["RemoteFolder", ...]:
