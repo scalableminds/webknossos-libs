@@ -32,7 +32,7 @@ if TYPE_CHECKING:
         RemoteSegmentationLayer,
         SegmentationLayer,
     )
-    from webknossos.dataset.layer.abstract_layer import AbstractLayer
+    from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import AbstractSegmentationLayer
 
 
 def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -> str:
@@ -42,7 +42,7 @@ def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -
 
 
 class AbstractAttachments:
-    _layer: "AbstractLayer"
+    _layer: "AbstractSegmentationLayer"
     _properties: AttachmentsProperties
     meshes: tuple[MeshAttachment, ...] = ()
     agglomerates: tuple[AgglomerateAttachment, ...] = ()
@@ -50,7 +50,9 @@ class AbstractAttachments:
     cumsum: CumsumAttachment | None = None
     connectomes: tuple[ConnectomeAttachment, ...] = ()
 
-    def __init__(self, layer: "AbstractLayer", properties: "AttachmentsProperties"):
+    def __init__(
+        self, layer: "AbstractSegmentationLayer", properties: "AttachmentsProperties"
+    ):
         self._properties = properties
         self._layer = layer
         optional_dataset_path = self._get_optional_dataset_path()
@@ -204,7 +206,7 @@ class Attachments(AbstractAttachments):
     def __init__(self, layer: "SegmentationLayer", properties: "AttachmentsProperties"):
         super().__init__(layer, properties)
 
-    def _get_optional_dataset_path(self) -> UPath | None:
+    def _get_optional_dataset_path(self) -> UPath:
         return self._layer.dataset.resolved_path
 
     def _remove_attachment(
@@ -324,7 +326,7 @@ class Attachments(AbstractAttachments):
 
     def add_attachment_as_copy(self, attachment: Attachment) -> None:
         self._ensure_writable()
-        # In case we have a path, we put the attachment following the convention.
+        # We set the attachment path following the convention.
         new_path = cheap_resolve(
             self._layer.path
             / snake_to_camel_case(attachment.container_name)
@@ -380,11 +382,6 @@ class Attachments(AbstractAttachments):
 
         def _detect_hdf5(typ: type[Attachment]) -> None:
             folder_name = snake_to_camel_case(typ.container_name)
-            if (
-                self._layer.resolved_path is None
-                or self._layer.dataset.resolved_path is None
-            ):
-                return
             if (self._layer.resolved_path / folder_name).exists():
                 for attachment_path in (self._layer.resolved_path / folder_name).glob(
                     "*.hdf5"

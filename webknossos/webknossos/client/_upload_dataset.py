@@ -72,7 +72,6 @@ def upload_dataset(
                 jobs=jobs,
             )
 
-    assert dataset.path is not None, "Cannot upload dataset without path."
     file_infos = list(_walk(dataset.path))
     total_file_size = sum(size for _, _, size in file_infos)
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js

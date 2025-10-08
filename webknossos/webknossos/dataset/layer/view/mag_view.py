@@ -241,9 +241,6 @@ class MagView(View, Generic[LayerTypeT]):
         Returns:
             Layer: The Layer object that contains this magnification level.
 
-        Raises:
-            TypeError: If the view is not a layer view.
-
         Notes:
             - The Layer provides context about data type, category, and overall properties
             - Used internally for coordinate transformations and data validation
@@ -556,7 +553,7 @@ class MagView(View, Generic[LayerTypeT]):
             - Progress is displayed during rechunking
             - Compressed data may have slower read/write speeds
         """
-        from ....dataset import Dataset
+        from webknossos.dataset import Dataset
 
         self._ensure_writable()
         path = self._path
@@ -663,7 +660,6 @@ class MagView(View, Generic[LayerTypeT]):
         if target_path is None:
             rmtree(path)
             rechunked_mag.path.rename(path)
-            assert rechunked_dataset.path is not None, "Target path must not be None"
             rmtree(rechunked_dataset.path)
 
             # update the handle to the new dataset
@@ -773,7 +769,7 @@ class MagView(View, Generic[LayerTypeT]):
             return mag_view_or_path
         else:
             # local import to prevent circular dependency
-            from ...dataset import Dataset
+            from webknossos.dataset import Dataset
 
             mag_view_path = strip_trailing_slash(UPath(mag_view_or_path))
             return (
