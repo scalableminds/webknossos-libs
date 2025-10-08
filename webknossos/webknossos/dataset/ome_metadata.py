@@ -105,7 +105,6 @@ def get_ome_0_4_multiscale_metadata(
 
 
 def write_ome_metadata(dataset: "Dataset", layer: "Layer") -> None:
-    assert layer.path is not None
     if not is_writable_path(layer.path):
         return
     if layer.data_format == DataFormat.Zarr3:

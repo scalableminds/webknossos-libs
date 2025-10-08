@@ -307,11 +307,9 @@ def count_defined_values(values: Iterable[Any | None]) -> int:
     return sum(i is not None for i in values)
 
 
-def is_fs_path(path: UPath | None) -> bool:
+def is_fs_path(path: UPath) -> bool:
     from upath.implementations.local import PosixUPath, WindowsUPath
 
-    if path is None:
-        return False
     return not isinstance(path, UPath) or isinstance(
         path, PosixPath | WindowsPath | PosixUPath | WindowsUPath
     )
@@ -329,11 +327,10 @@ def cheap_resolve(path: UPath) -> UPath:
     return path.resolve()
 
 
-def is_writable_path(path: UPath | None) -> bool:
+def is_writable_path(path: UPath) -> bool:
     from upath.implementations.http import HTTPPath
 
-    if path is None:
-        return False
+
     # cannot write to http paths
     return not isinstance(path, HTTPPath)
 

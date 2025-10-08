@@ -1317,9 +1317,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             Magnifications are discovered automatically.
         """
         self._ensure_writable()
-        if self.path is None:
-            raise ValueError("Cannot add layer. The path to the dataset is not set.")
-
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
         array_info = _find_array_info(self.path / layer_name)
@@ -1339,9 +1336,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             data_format=data_format,
             **kwargs,
         )
-        assert layer.path is not None, (
-            "If the dataset.path is set the layer must have a path too."
-        )
+
         for mag_dir in layer.path.iterdir():
             try:
                 # Tests if directory entry is a valid mag.
@@ -1352,8 +1347,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             # Mags are only writable if they are local to the dataset
             resolved_mag_path = cheap_resolve(mag_dir)
             read_only = (
-                self.resolved_path is None
-                or resolved_mag_path.parent != self.resolved_path / layer_name
+                resolved_mag_path.parent != self.resolved_path / layer_name
             )
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
@@ -1851,9 +1845,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 f"Removing layer {layer_name} failed. There is no layer with this name"
             )
         layer_path = self._layers[layer_name].path
-        assert layer_path is not None, (
-            "Cannot delete layer without path, probably a remote layer."
-        )
         del self._layers[layer_name]
         self._properties.data_layers = [
             layer for layer in self._properties.data_layers if layer.name != layer_name
@@ -2064,9 +2055,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             )
         foreign_layer_path = foreign_layer.path
 
-        assert is_fs_path(self.path) and self.path is not None, (
-            f"Cannot create symlinks in remote dataset {self.path}"
-        )
+        assert is_fs_path(self.path), f"Cannot create symlinks in remote dataset {self.path}"
+
         assert is_fs_path(foreign_layer_path) and foreign_layer_path is not None, (
             f"Cannot create symlink to remote layer {foreign_layer_path}"
         )
@@ -2094,9 +2084,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     else foreign_mag.path.resolve()
                 ).as_posix()
             else:
-                assert self.resolved_path is not None, (
-                    "resolved_path is not set as it is a remote dataset"
-                )
                 mag_prop.path = dump_path(foreign_mag.path, self.resolved_path)
 
         if (
@@ -2107,9 +2094,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
-                        assert foreign_layer.dataset.resolved_path is not None, (
-                            "resolved_path is not set. This should only happen for remote datasets"
-                        )
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
@@ -2223,12 +2207,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             raise IndexError(
                 f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
-        assert foreign_layer.path is not None, (
-            "Cannot copy layer without path, probably a remote layer."
-        )
-        assert self.path is not None, (
-            "Cannot copy layer to remote dataset without path."
-        )
 
         copytree(foreign_layer.path, self.path / new_layer_name)
         new_layer_properties = copy.deepcopy(foreign_layer._properties)
@@ -2242,7 +2220,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
                     if not old_path.is_absolute():
-                        assert foreign_layer.dataset.resolved_path is not None
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
