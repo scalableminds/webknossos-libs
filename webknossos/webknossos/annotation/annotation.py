@@ -670,12 +670,15 @@ class Annotation:
         assert is_fs_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        with ZipFile(
-            path,
-            mode="w",
-            compression=ZIP_DEFLATED,
-            compresslevel=Z_BEST_SPEED,
-        ) as zf:
+        with (
+            path.open(mode="wb") as f,
+            ZipFile(
+                f,
+                mode="w",
+                compression=ZIP_DEFLATED,
+                compresslevel=Z_BEST_SPEED,
+            ) as zf,
+        ):
             for layer in self._volume_layers:
                 if layer.zip is not None:
                     with layer.zip.open(mode="rb") as f:
