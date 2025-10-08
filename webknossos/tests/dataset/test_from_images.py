@@ -21,16 +21,18 @@ def ignore_warnings() -> Iterator:
 
 
 def test_compare_tifffile(tmp_upath: UPath) -> None:
-    ds = Dataset.from_images(
-        TESTDATA_DIR / "tiff",
-        tmp_upath,
-        (1, 1, 1),
-        compress=True,
-        layer_name="tiff_stack",
-        layer_category="segmentation",
-        shard_shape=(256, 256, 256),
-        map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
-    )
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            TESTDATA_DIR / "tiff",
+            tmp_upath,
+            (1, 1, 1),
+            compress=True,
+            layer_name="tiff_stack",
+            layer_category="segmentation",
+            shard_shape=(256, 256, 256),
+            map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
+            executor=executor,
+        )
     assert len(ds.layers) == 1
     assert "tiff_stack" in ds.layers
     data = ds.layers["tiff_stack"].get_finest_mag().read()[0, :, :]
@@ -44,13 +46,15 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
 
 
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
-    ds = Dataset.from_images(
-        TESTDATA_DIR / "various_tiff_formats",
-        tmp_upath,
-        (1, 1, 1),
-        data_format="zarr3",
-        layer_name="tiffs",
-    )
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            TESTDATA_DIR / "various_tiff_formats",
+            tmp_upath,
+            (1, 1, 1),
+            data_format="zarr3",
+            layer_name="tiffs",
+            executor=executor,
+        )
     assert len(ds.layers) == 12
 
     expected_dtype_channels_size_per_layer = {
