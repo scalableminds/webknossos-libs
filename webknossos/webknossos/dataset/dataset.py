@@ -1216,7 +1216,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 **kwargs,
             )
 
-    def add_layer_like(self, other_layer: Layer, layer_name: str) -> Layer:
+    def add_layer_like(self, other_layer: Layer | RemoteLayer, layer_name: str) -> Layer:
         self._ensure_writable()
 
         if layer_name in self.layers.keys():
@@ -2136,7 +2136,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_as_ref(
         self,
-        foreign_layer: str | PathLike | Layer,
+        foreign_layer: str | PathLike | Layer | RemoteLayer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Add a layer from another dataset by reference.
@@ -2171,7 +2171,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
 
         self._ensure_writable()
-        foreign_layer = Layer._ensure_layer(foreign_layer)
+        if not isinstance(foreign_layer, RemoteLayer):
+            foreign_layer = Layer._ensure_layer(foreign_layer)
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
@@ -2180,7 +2181,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             raise IndexError(
                 f"Cannot add foreign layer {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
-        assert foreign_layer.dataset.path != self.path, (
+        assert not foreign_layer.dataset == self, (
             "Cannot add layer with the same origin dataset as foreign layer"
         )
 

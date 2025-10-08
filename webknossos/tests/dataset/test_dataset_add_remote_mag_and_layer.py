@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from upath import UPath
 
 from webknossos import COLOR_CATEGORY, Dataset
 from webknossos.geometry import BoundingBox
@@ -91,28 +90,18 @@ def test_add_remote_mags_from_path(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-def test_ref_layer_from_object(sample_remote_dataset: Dataset) -> None:
+def test_ref_layer_from_remote_layer(sample_remote_dataset: Dataset) -> None:
     remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    assert remote_dataset.zarr_streaming_path is not None, (
+        "Zarr streaming sets a remote path."
+    )
+    assert is_remote_path(remote_dataset.zarr_streaming_path), (
+        "zarr streaming path should be remote."
+    )
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
-        assert layer.path is not None, "Zarr streaming sets a remote path."
-        assert is_remote_path(layer.path), "Remote mag does not have remote path."
-        layer_name = f"test_remote_layer_{layer.category}_object"
-        sample_remote_dataset.add_layer_as_ref(layer, layer_name)
-        new_layer = sample_remote_dataset.layers[layer_name]
-        assert is_remote_path(new_layer.get_mag(1).path) and (
-            str(layer.get_mag(1).path) == str(new_layer.get_mag(1).path)
-        ), "Mag path of added layer should be equal to mag path in source layer."
-
-
-def test_ref_layer_from_path(sample_remote_dataset: Dataset) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
-    sample_remote_layer = list(remote_dataset.layers.values())
-    for layer in sample_remote_layer:
-        assert layer.path is not None, "Zarr streaming sets a remote path."
-        assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_path"
-        sample_remote_dataset.add_layer_as_ref(UPath(layer.path), layer_name)
+        sample_remote_dataset.add_layer_as_ref(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
         assert is_remote_path(new_layer.get_mag(1).path) and (
             str(new_layer.get_mag(1).path) == str(layer.get_mag(1).path)
