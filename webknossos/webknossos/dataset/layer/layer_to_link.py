@@ -5,6 +5,7 @@ from webknossos.client.api_client.models import (
     ApiLinkedLayerIdentifierLegacy,
 )
 from webknossos.client.context import _get_context
+from webknossos.dataset.layer import RemoteLayer
 
 
 class LayerToLink(NamedTuple):
@@ -31,4 +32,11 @@ class LayerToLink(NamedTuple):
             self.dataset_id,
             self.layer_name,
             self.new_layer_name,
+        )
+    @classmethod
+    def from_remote_layer(cls, remote_layer: RemoteLayer) -> "LayerToLink":
+        return cls(
+            remote_layer.dataset.dataset_id,
+            remote_layer.name,
+            new_layer_name=None,
         )

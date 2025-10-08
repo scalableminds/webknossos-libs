@@ -566,7 +566,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             None
             if layers_to_link is None
             else [
-                i if isinstance(i, LayerToLink) else i.to_layer_to_link()
+                i if isinstance(i, LayerToLink) else LayerToLink.from_remote_layer(i)
                 for i in layers_to_link
             ]
         )

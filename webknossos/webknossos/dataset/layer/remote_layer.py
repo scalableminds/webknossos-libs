@@ -41,9 +41,6 @@ class RemoteLayer(AbstractLayer):
     def dataset(self) -> "RemoteDataset":
         return self._dataset
 
-    def to_layer_to_link(self) -> LayerToLink:
-        return LayerToLink(self.dataset.dataset_id, self.name)
-
     def as_segmentation_layer(self) -> "RemoteSegmentationLayer":
         """Casts into SegmentationLayer."""
         from .segmentation_layer import RemoteSegmentationLayer
