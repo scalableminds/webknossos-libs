@@ -331,7 +331,8 @@ jobs:
         env:
           COVERAGE_FILE: "~/coverage-files/result.coverage"
         run: |
-          coverage combine ~/coverage-files/**/.coverage.*
+          tree ~/coverage-files
+          coverage combine ~/coverage-files/**/.coverage
           coverage xml -i -o ~/coverage-files/result.xml
 
       - name: Report coverage
