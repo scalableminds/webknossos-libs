@@ -1,11 +1,13 @@
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from webknossos.client.api_client.models import (
     ApiLinkedLayerIdentifier,
     ApiLinkedLayerIdentifierLegacy,
 )
 from webknossos.client.context import _get_context
-from webknossos.dataset.layer import RemoteLayer
+
+if TYPE_CHECKING:
+    from webknossos.dataset.layer import RemoteLayer
 
 
 class LayerToLink(NamedTuple):
@@ -35,7 +37,7 @@ class LayerToLink(NamedTuple):
         )
 
     @classmethod
-    def from_remote_layer(cls, remote_layer: RemoteLayer) -> "LayerToLink":
+    def from_remote_layer(cls, remote_layer: "RemoteLayer") -> "LayerToLink":
         return cls(
             remote_layer.dataset.dataset_id,
             remote_layer.name,

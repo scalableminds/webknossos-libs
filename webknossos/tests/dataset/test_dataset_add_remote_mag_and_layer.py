@@ -18,8 +18,7 @@ pytestmark = [
 
 @pytest.fixture
 def sample_remote_dataset(tmp_path: Path) -> Iterator[Dataset]:
-    yield Dataset.download(
-        "l4_sample",
+    yield RemoteDataset.open("l4_sample").download(
         path=tmp_path / "l4_sample",
         bbox=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
     )

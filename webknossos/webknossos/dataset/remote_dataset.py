@@ -20,11 +20,10 @@ from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
 from webknossos.dataset_properties import (
     DatasetProperties,
 )
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
-from .. import BoundingBox
 from ..ssl_context import SSL_CONTEXT
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder

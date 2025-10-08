@@ -401,10 +401,10 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         organization_id: str,
     ) -> str:
         from ..client.context import _get_context
-
+        from webknossos import RemoteDataset
         current_context = _get_context()
         possible_ids = list(
-            cls.get_remote_datasets(
+            RemoteDataset.list(
                 name=dataset_name, organization_id=organization_id
             ).keys()
         )

@@ -471,18 +471,18 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             json.dumps(
                 get_dataset_converter().unstructure(self._properties),
                 indent=4,
-            )
+            ),
         )
 
         # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
         if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
-            with (self.path / ZGROUP_FILE_NAME).open("w", encoding="utf-8") as outfile:
-                json.dump({"zarr_format": "2"}, outfile, indent=4)
+            (self.path / ZGROUP_FILE_NAME).write_text(
+                json.dumps({"zarr_format": "2"}, indent=4),
+            )
         if any(layer.data_format == DataFormat.Zarr3 for layer in self.layers.values()):
-            with (self.path / ZARR_JSON_FILE_NAME).open(
-                "w", encoding="utf-8"
-            ) as outfile:
-                json.dump({"zarr_format": 3, "node_type": "group"}, outfile, indent=4)
+            (self.path / ZARR_JSON_FILE_NAME).write_text(
+                json.dumps({"zarr_format": 3, "node_type": "group"}, indent=4),
+            )
 
         for layer in self.layers.values():
             # Only write out OME metadata if the layer is a child of the dataset
@@ -675,7 +675,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 self, new_dataset_name, converted_layers_to_link, jobs
             )
 
-        return self.open_remote(dataset_id=new_dataset_id, read_only=True)
+        return RemoteDataset.open(dataset_id=new_dataset_id, read_only=True)
 
     def _copy_or_symlink_dataset_to_paths(
         self, data_source: DatasetProperties, symlink_data_instead_of_copy: bool

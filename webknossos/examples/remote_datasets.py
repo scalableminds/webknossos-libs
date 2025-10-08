@@ -14,7 +14,7 @@ def main() -> None:
     print("Tags:", ", ".join(l4_sample_dataset.tags))
 
     # List all accessible remote datasets via get_remote_datasets():
-    own_remote_datasets = wk.Dataset.get_remote_datasets()
+    own_remote_datasets = wk.RemoteDataset.list()
 
     # Print the first 10 dataset names from your organization:
     print()
@@ -26,7 +26,7 @@ def main() -> None:
     l4_sample_dataset.tags = ("demo",)
 
     # List all accessible demo datasets:
-    remote_demo_datasets = wk.Dataset.get_remote_datasets(tags="demo")
+    remote_demo_datasets = wk.RemoteDataset.list(tags="demo")
     print("Remote demo datasets:", list(remote_demo_datasets))
     assert l4_sample_dataset in remote_demo_datasets.values()
 

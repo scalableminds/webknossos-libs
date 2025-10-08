@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Literal
 
 from upath import UPath
 
-from webknossos import Vec3Int
 from webknossos.client.api_client.models import ApiAdHocMeshInfo, ApiPrecomputedMeshInfo
 from webknossos.dataset.layer.remote_layer import RemoteLayer
 from webknossos.dataset.layer.segmentation_layer import (
@@ -13,6 +12,7 @@ from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer imp
     AbstractSegmentationLayer,
 )
 from webknossos.dataset_properties import SegmentationLayerProperties
+from webknossos.geometry import Vec3Int
 from webknossos.geometry.mag import Mag, MagLike
 
 if TYPE_CHECKING:
