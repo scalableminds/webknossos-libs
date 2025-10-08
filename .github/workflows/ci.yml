@@ -305,7 +305,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration -s
 
   coverage_report:
     needs: [webknossos_linux]
@@ -445,8 +445,8 @@ jobs:
           cd docs
           ./generate.sh --persist
 
-      - name: Push docs (for branch)
-        if: github.ref_type == 'branch'
+      - name: Push docs (for master)
+        if: github.ref == 'refs/heads/master'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
