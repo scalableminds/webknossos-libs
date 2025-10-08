@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
 
 ### Breaking Changes
 - MagView.is_foreign() is now defined with the Layer.is_mag_view_foreign() method.
@@ -24,6 +24,23 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Changed the folder hierarchy in webknossos.dataset.
 
 ### Fixed
+
+
+## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)
+
+### Added
+- Added context manager `VolumeLayer.edit` for creating and modifying volume annotations. [#1340](https://github.com/scalableminds/webknossos-libs/pull/1340)
+- Added `overwrite_existing` flag to `convert`, `convert-raw` and `convert-zarr` CLI commands. Use with caution. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `downsample`, `max-mag`, `interpolation-mode`, `sampling-mode` args to `convert`, `convert-raw` and `convert-zarr` CLI commands, where it was missing, for consistency. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added value rescaling to `convert-raw` CLI command through `source-dtype` and `rescale-min-max` args. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `interpolation_mode` and `compress` kwargs to `Dataset.downsample` method. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `Team.get_by_id`, `Team.add_user` and `Team.delete` methods. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+- Added `RemoteFolder.get_root`, `RemoteFolder.get_subfolders`, `RemoteFolder.get_datasets`, `RemoteFolder.add_subfolder`, `RemoteFolder.move_to`, `RemoteFolder.delete` methods and `RemoteFolder.allowed_teams`, `RemoteFolder.name` properties. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+
+### Changed
+- `Team.add` now returns the created team object. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+- Moved `Team` to `webknossos.administration.team` module. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
 
 
 ## [2.4.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.12) - 2025-09-17

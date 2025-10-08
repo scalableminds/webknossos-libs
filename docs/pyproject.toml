@@ -9,11 +9,11 @@ requires-python = ">=3.10,<3.13"
 dependencies = [
     "webknossos",
     "mkdocs-glightbox ~=0.4.0",
-    "mkdocstrings-python ~=1.12.1",
+    "mkdocstrings-python ~=1.18.1",
     "mkdocs-gen-files ~=0.5.0", 
     "mkdocs-redirects ~=1.2.0",
     "mkdocs-video ~=1.5.0",
-    "mkdocs-material ~=9.5.32",
+    "mkdocs-material ~=9.6.20",
     "LinkChecker ~=10.0.1",
 ]
 

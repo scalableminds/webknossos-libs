@@ -108,6 +108,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         assert dataset_properties is not None
         super().__init__(dataset_properties, read_only)
 
+
         self._dataset_id = dataset_id
         self._context = context
 
@@ -493,7 +494,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             - An empty list makes the dataset private
         """
 
-        from ..administration.user import Team
+        from ..administration.team import Team
 
         return tuple(
             Team(id=i.id, name=i.name, organization_id=i.organization)
@@ -503,7 +504,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @allowed_teams.setter
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
         """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
-        from ..administration.user import Team
+        from ..administration.team import Team
         from ..client.context import _get_api_client
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]

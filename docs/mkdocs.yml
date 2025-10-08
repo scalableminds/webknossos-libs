@@ -42,11 +42,15 @@ theme:
     - navigation.footer
     - toc.follow
     - search
+    - search.highlight
+    - search.suggest
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/scalableminds/webknossos
+    - icon: fontawesome/brands/bluesky 
+      link: https://bsky.app/profile/webknossos.org
     - icon: fontawesome/brands/x-twitter 
       link: https://x.com/webknossos
     - icon: fontawesome/brands/mastodon 
@@ -122,6 +126,7 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.blocks.caption
   - toc:
       title: ON THIS PAGE
       permalink: true  
@@ -190,7 +195,7 @@ nav:
         - Teams: webknossos/users/teams.md
         - Access rights/roles: webknossos/users/access_rights.md
         - Users: webknossos/users/new_users.md
-        - Password & Account: webknossos/users/password.md
+        - Account & Password: webknossos/users/password.md
       - Tasks & Projects:
         - webknossos/tasks_projects/index.md
         - Concepts: webknossos/tasks_projects/concepts.md
@@ -270,6 +275,7 @@ nav:
         - Layer: api/webknossos/dataset/layer.md
         - MagView: api/webknossos/dataset/mag_view.md
         - View: api/webknossos/dataset/view.md
+        - RemoteFolder: api/webknossos/dataset/remote_folder.md
       - Annotation: api/webknossos/annotation/annotation.md
       - Skeleton:
         - Skeleton: api/webknossos/skeleton/skeleton.md
@@ -279,6 +285,7 @@ nav:
       - Authentication & Server Context: api/webknossos/client/context.md
       - Administration:
         - User: api/webknossos/administration/user.md
+        - Team: api/webknossos/administration/team.md
         - Project: api/webknossos/administration/project.md
         - Task: api/webknossos/administration/task.md
     - CLI Reference:

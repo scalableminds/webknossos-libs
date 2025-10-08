@@ -50,7 +50,7 @@ function ensure_local_test_wk {
     fi
 
     if ! curl -s -H "X-Auth-Token: $WK_TOKEN" localhost:9000/api/user | grep user_a@scalableminds.com > /dev/null; then
-        echo "The login user user_A@scalableminds.com could not be found or changed."
+        echo "The login user user_a@scalableminds.com could not be found or changed."
         echo "Please ensure that the test-db is prepared by running this in the webknossos repo"
         echo "(⚠️ this overwrites your local webknossos database):"
         echo "tools/postgres/dbtool.js prepare-test-db"

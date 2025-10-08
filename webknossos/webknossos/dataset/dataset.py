@@ -2526,6 +2526,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         *,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
         coarsest_mag: Mag | None = None,
+        interpolation_mode: str = "default",
+        compress: bool | Zarr3Config = True,
         executor: Executor | None = None,
     ) -> None:
         """Generate downsampled magnifications for all layers.
@@ -2536,6 +2538,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Args:
             sampling_mode: Strategy for downsampling (e.g. ANISOTROPIC, MAX)
             coarsest_mag: Optional maximum/coarsest magnification to generate
+            interpolation_mode: Interpolation method to use. Defaults to "default" (= "mode" for segmentation, "median" for color).
+            compress: Whether to compress generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             executor: Optional executor for parallel processing
 
         Raises:
@@ -2564,6 +2568,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             layer.downsample(
                 coarsest_mag=coarsest_mag,
                 sampling_mode=sampling_mode,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
                 executor=executor,
             )
 

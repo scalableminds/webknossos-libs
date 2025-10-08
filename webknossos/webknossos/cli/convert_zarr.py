@@ -22,7 +22,7 @@ from ..dataset.defaults import (
 from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, wait_and_ensure_success
+from ..utils import get_executor_for_args, rmtree, wait_and_ensure_success
 from ._utils import (
     DistributionStrategy,
     SamplingMode,
@@ -70,6 +70,7 @@ def _zarr_chunk_converter(
 
 
 def convert_zarr(
+    *,
     source_zarr_path: Path,
     target_path: Path,
     layer_name: str,
@@ -81,7 +82,7 @@ def convert_zarr(
     flip_axes: int | tuple[int, ...] | None = None,
     compress: bool = True,
     executor_args: Namespace | None = None,
-) -> tuple[MagView, Layer]:
+) -> MagView:
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
 
@@ -130,7 +131,7 @@ def convert_zarr(
     logger.debug(
         "Conversion of %s took %.8fs", source_zarr_path, time.time() - ref_time
     )
-    return wk_mag, wk_layer
+    return wk_mag
 
 
 def main(
@@ -151,15 +152,11 @@ def main(
             parser=parse_path,
         ),
     ],
-    layer_name: Annotated[
-        str,
-        typer.Option(help="Name of the cubed layer (color or segmentation)"),
-    ] = "color",
     voxel_size: Annotated[
         VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VoxelSize",
             show_default=False,
@@ -171,6 +168,17 @@ def main(
             help="The unit of the voxel size.",
         ),
     ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    layer_name: Annotated[
+        str,
+        typer.Option(help="Name of the output layer (color or segmentation)"),
+    ] = "color",
+    is_segmentation_layer: Annotated[
+        bool,
+        typer.Option(
+            help="When converting one layer, signals whether layer is segmentation layer. \
+When converting a folder, this option is ignored."
+        ),
+    ] = False,
     data_format: Annotated[
         DataFormat,
         typer.Option(
@@ -204,11 +212,28 @@ def main(
             metavar="Vec3Int",
         ),
     ] = None,
+    flip_axes: Annotated[
+        Vec3Int | None,
+        typer.Option(
+            help="The axes that should be flipped. "
+            "Input format is a comma-separated list of axis indices. "
+            "For example, 1,2,3 will flip the x, y and z axes.",
+            parser=parse_vec3int,
+            metavar="Vec3Int",
+        ),
+    ] = None,
+    compress: Annotated[
+        bool, typer.Option(help="Enable compression of the target dataset.")
+    ] = True,
+    downsample: Annotated[
+        bool, typer.Option(help="Downsample the target dataset.")
+    ] = True,
     max_mag: Annotated[
         Mag | None,
         typer.Option(
-            help="Max resolution to be downsampled. "
-            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
+            help="Create downsampled magnifications up to the magnification specified by this argument. "
+            "If omitted, the coarsest magnification will be determined by using the bounding box of the layer. "
+            "Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ] = None,
@@ -219,27 +244,14 @@ def main(
             "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
-    flip_axes: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="The axes at which should be flipped. "
-            "Input format is a comma separated list of axis indices. "
-            "For example, 1,2,3 will flip the x, y and z axes.",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
-    compress: Annotated[
-        bool, typer.Option(help="Enable compression of the target dataset.")
-    ] = True,
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,
-    is_segmentation_layer: Annotated[
+    overwrite_existing: Annotated[
         bool,
         typer.Option(
-            help="When converting one layer, signals whether layer is segmentation layer. \
-When converting a folder, this option is ignored."
+            help="Clear target folder if it already exists. Not enabled by default. Use with caution.",
+            show_default=False,
         ),
     ] = False,
     jobs: Annotated[
@@ -284,9 +296,12 @@ When converting a folder, this option is ignored."
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
-    mag_view, layer = convert_zarr(
-        source,
-        target,
+    if overwrite_existing and target.exists():
+        rmtree(target)
+
+    mag_view = convert_zarr(
+        source_zarr_path=source,
+        target_path=target,
         layer_name=layer_name,
         data_format=data_format,
         chunk_shape=chunk_shape,
@@ -298,12 +313,13 @@ When converting a folder, this option is ignored."
         executor_args=executor_args,
     )
 
-    with get_executor_for_args(executor_args) as executor:
-        layer.downsample(
-            from_mag=mag_view.mag,
-            coarsest_mag=max_mag,
-            interpolation_mode=interpolation_mode,
-            compress=compress,
-            sampling_mode=sampling_mode,
-            executor=executor,
-        )
+    if downsample:
+        with get_executor_for_args(executor_args) as executor:
+            mag_view.layer.downsample(
+                from_mag=mag_view.mag,
+                coarsest_mag=max_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                sampling_mode=sampling_mode,
+                executor=executor,
+            )

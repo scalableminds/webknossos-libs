@@ -371,6 +371,12 @@ class ApiAnnotationUploadResult:
 
 
 @attr.s(auto_attribs=True)
+class ApiFolderAdd:
+    parent_id: str
+    name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiFolderWithParent:
     id: str
     name: str
@@ -384,6 +390,13 @@ class ApiFolder:
     allowed_teams: list[ApiTeam]
     allowed_teams_cumulative: list[ApiTeam]
     is_editable: bool
+    metadata: list[ApiMetadata] | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiFolderUpdate:
+    name: str
+    allowed_teams: list[str]
     metadata: list[ApiMetadata] | None = None
 
 
