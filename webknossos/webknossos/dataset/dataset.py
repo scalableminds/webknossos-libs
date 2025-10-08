@@ -151,7 +151,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         Open a remote dataset:
             ```
-            ds = Dataset.open_remote("my_dataset", "organization_id")
+            ds = RemoteDataset.open("my_dataset", "organization_id")
             ```
     """
 
@@ -429,6 +429,30 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         dataset._init_from_properties(dataset_properties, read_only)
         return dataset
 
+    @classmethod
+    def open_remote(
+        cls,
+        dataset_name_or_url: str | None = None,
+        organization_id: str | None = None,
+        sharing_token: str | None = None,
+        webknossos_url: str | None = None,
+        dataset_id: str | None = None,
+        annotation_id: str | None = None,
+        use_zarr_streaming: bool = True,
+        read_only: bool = False,
+    ) -> "RemoteDataset":
+        warn_deprecated("Dataset.open_remote", "RemoteDataset.open")
+        return RemoteDataset.open(
+            dataset_name_or_url,
+            organization_id,
+            sharing_token,
+            webknossos_url,
+            dataset_id,
+            annotation_id,
+            use_zarr_streaming,
+            read_only,
+        )
+
     def __repr__(self) -> str:
         return f"Dataset({repr(self.path)})"
 
@@ -474,6 +498,47 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     @property
     def resolved_path(self) -> UPath:
         return self._resolved_path
+
+    @classmethod
+    def download(
+        cls,
+        dataset_name_or_url: str,
+        *,
+        organization_id: str | None = None,
+        sharing_token: str | None = None,
+        webknossos_url: str | None = None,
+        bbox: BoundingBox | None = None,
+        layers: list[str] | str | None = None,
+        mags: list[Mag] | None = None,
+        path: PathLike | str | None = None,
+        exist_ok: bool = False,
+    ) -> "Dataset":
+        """Downloads a dataset and returns the Dataset instance.
+
+        * `dataset_name_or_url` may be a dataset name or a full URL to a dataset view, e.g.
+          `https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`
+          If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
+        * `organization_id` may be supplied if a dataset name was used in the previous argument,
+          it defaults to your current organization from the `webknossos_context`.
+          You can find your `organization_id` [here](https://webknossos.org/auth/token).
+        * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
+        * `webknossos_url` may be supplied if a dataset name was used,
+          and allows to specify in which webknossos instance to search for the dataset.
+          It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
+        * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
+          If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
+        * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
+          if the `path` exists.
+        """
+
+        warn_deprecated("Dataset.download", "RemoteDataset.download")
+
+        remote_dataset = RemoteDataset.open(
+            dataset_name_or_url, organization_id, sharing_token, webknossos_url
+        )
+        return remote_dataset.download(
+            sharing_token, bbox, layers, mags, path, exist_ok
+        )
 
     def publish_to_preliminary_dataset(
         self,
@@ -2145,7 +2210,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Examples:
             ```
             ds = Dataset.open("other/dataset")
-            remote_ds = Dataset.open_remote("my_dataset", "my_org_id")
+            remote_ds = RemoteDataset.open("my_dataset", "my_org_id")
             new_layer = ds.add_layer_as_ref(
                 remote_ds.get_layer("color")
             )

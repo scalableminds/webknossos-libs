@@ -2,7 +2,8 @@ import logging
 import operator
 import re
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Mapping
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy._typing import DTypeLike

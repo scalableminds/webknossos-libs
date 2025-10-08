@@ -6,7 +6,6 @@ import re
 import warnings
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
-from os import PathLike
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, cast
 
 from upath import UPath
@@ -22,21 +21,19 @@ from webknossos.dataset_properties import (
     VoxelSize,
     get_dataset_converter,
 )
-from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
+from webknossos.geometry import BoundingBox, NDBoundingBox
 
-from ..client.api_client.models import ApiUnusableDataSource
-from ..ssl_context import SSL_CONTEXT
+from ..utils import warn_deprecated
 from .defaults import PROPERTIES_FILE_NAME
 from .layer.abstract_layer import AbstractLayer
 from .layer.segmentation_layer.abstract_segmentation_layer import (
     AbstractSegmentationLayer,
 )
-from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 
 if TYPE_CHECKING:
     from ..client.context import webknossos_context
-    from .dataset import Dataset, RemoteDataset
+    from .dataset import RemoteDataset
 
 logger = logging.getLogger(__name__)
 SUPPORTED_VERSIONS: list[Literal[1]] = [1]
@@ -392,58 +389,10 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         name: str | None = None,
         folder_id: RemoteFolder | str | None = None,
     ) -> Mapping[str, "RemoteDataset"]:
-        """Get all available datasets from the WEBKNOSSOS server.
+        warn_deprecated("Dataset.get_remote_datasets", "RemoteDataset.list")
+        from webknossos import RemoteDataset
 
-        Returns a mapping of dataset ids to lazy-initialized RemoteDataset objects for all
-        datasets visible to the specified organization or current user. Datasets can be further filtered by tags, name or folder.
-
-        Args:
-            organization_id: Optional organization to get datasets from. Defaults to
-                organization of logged in user.
-            tags: Optional tag(s) to filter datasets by. Can be a single tag string or
-                sequence of tags. Only returns datasets with all specified tags.
-            name: Optional name to filter datasets by. Only returns datasets with
-                matching name.
-            folder: Optional folder to filter datasets by. Only returns datasets in
-                the specified folder.
-
-        Returns:
-            Mapping[str, RemoteDataset]: Dict mapping dataset ids to RemoteDataset objects
-
-        Examples:
-            List all available datasets:
-            ```
-            datasets = Dataset.get_remote_datasets()
-            print(sorted(datasets.keys()))
-            ```
-
-            Get datasets for specific organization:
-            ```
-            org_datasets = Dataset.get_remote_datasets("my_organization")
-            ds = org_datasets["dataset_name"]
-            ```
-
-            Filter datasets by tag:
-            ```
-            published = Dataset.get_remote_datasets(tags="published")
-            tagged = Dataset.get_remote_datasets(tags=["tag1", "tag2"])
-            ```
-
-            Filter datasets by name:
-            ```
-            fun_datasets = Dataset.get_remote_datasets(name="MyFunDataset")
-            ```
-
-        Note:
-            RemoteDataset objects are initialized lazily when accessed for the first time.
-            The mapping object provides a fast way to list and look up available datasets.
-        """
-        if isinstance(folder_id, RemoteFolder):
-            folder_id = folder_id.id
-
-        return RemoteDatasetRegistry(
-            name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
-        )
+        return RemoteDataset.list(organization_id, tags, name, folder_id)
 
     @classmethod
     def _disambiguate_remote(
@@ -569,150 +518,3 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
             )
         properties = get_dataset_converter().structure(data, DatasetProperties)
         return properties
-
-    @classmethod
-    def download(
-        cls,
-        dataset_name_or_url: str,
-        *,
-        organization_id: str | None = None,
-        sharing_token: str | None = None,
-        webknossos_url: str | None = None,
-        bbox: BoundingBox | None = None,
-        layers: list[str] | str | None = None,
-        mags: list[Mag] | None = None,
-        path: PathLike | str | None = None,
-        exist_ok: bool = False,
-    ) -> "Dataset":
-        """Downloads a dataset and returns the Dataset instance.
-
-        * `dataset_name_or_url` may be a dataset name or a full URL to a dataset view, e.g.
-          `https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`
-          If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
-        * `organization_id` may be supplied if a dataset name was used in the previous argument,
-          it defaults to your current organization from the `webknossos_context`.
-          You can find your `organization_id` [here](https://webknossos.org/auth/token).
-        * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
-        * `webknossos_url` may be supplied if a dataset name was used,
-          and allows to specify in which webknossos instance to search for the dataset.
-          It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
-        * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
-          If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
-        * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
-          if the `path` exists.
-        """
-
-        from ..client._download_dataset import download_dataset
-
-        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
-            dataset_name_or_url, organization_id, sharing_token, webknossos_url
-        )
-
-        if isinstance(layers, str):
-            layers = [layers]
-
-        with context_manager:
-            return download_dataset(
-                dataset_id=dataset_id,
-                sharing_token=sharing_token,
-                bbox=bbox,
-                layers=layers,
-                mags=mags,
-                path=path,
-                exist_ok=exist_ok,
-            )
-
-    @classmethod
-    def open_remote(
-        cls,
-        dataset_name_or_url: str | None = None,
-        organization_id: str | None = None,
-        sharing_token: str | None = None,
-        webknossos_url: str | None = None,
-        dataset_id: str | None = None,
-        annotation_id: str | None = None,
-        use_zarr_streaming: bool = True,
-        read_only: bool = False,
-    ) -> "RemoteDataset":
-        """Opens a remote webknossos dataset. Image data is accessed via network requests.
-        Dataset metadata such as allowed teams or the sharing token can be read and set
-        via the respective `RemoteDataset` properties.
-
-        Args:
-            dataset_name_or_url: Either dataset name or full URL to dataset view, e.g.
-                https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view
-            organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/auth/token)
-            sharing_token: Optional sharing token for dataset access
-            webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
-            dataset_id: Optional unique ID of the dataset
-            use_zarr_streaming: Whether to use zarr streaming
-
-        Returns:
-            RemoteDataset: Dataset instance for remote access
-
-        Examples:
-            ```
-            ds = Dataset.open_remote("`https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`")
-            ```
-
-        Note:
-            If supplying an URL, organization_id, webknossos_url and sharing_token
-            must not be set.
-        """
-
-        if annotation_id is not None:
-            assert use_zarr_streaming, (
-                "Annotations are only supported with zarr streaming"
-            )
-
-        from ..client.context import _get_context
-        from .remote_dataset import RemoteDataset
-
-        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-        )
-
-        with context_manager:
-            wk_context = _get_context()
-            token = sharing_token or wk_context.token
-            api_dataset_info = wk_context.api_client.dataset_info(
-                dataset_id=dataset_id, sharing_token=token
-            )
-            datastore_url = api_dataset_info.data_store.url
-            url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
-
-            if use_zarr_streaming:
-                if not read_only:
-                    logger.warning("zarr streaming is supported in read-only mode only")
-                if annotation_id is not None:
-                    zarr_path = UPath(
-                        f"{url_prefix}/annotations/zarr/{annotation_id}/",
-                        headers={} if token is None else {"X-Auth-Token": token},
-                        ssl=SSL_CONTEXT,
-                    )
-                else:
-                    zarr_path = UPath(
-                        f"{url_prefix}/zarr/{dataset_id}/",
-                        headers={} if token is None else {"X-Auth-Token": token},
-                        ssl=SSL_CONTEXT,
-                    )
-                return RemoteDataset(
-                    zarr_path, None, dataset_id, context_manager, read_only=True
-                )
-            else:
-                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
-                    raise RuntimeError(
-                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
-                    )
-
-                return RemoteDataset(
-                    None,
-                    api_dataset_info.data_source,
-                    dataset_id,
-                    context_manager,
-                    read_only,
-                )
