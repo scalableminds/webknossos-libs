@@ -715,11 +715,13 @@ class Annotation:
         ], "The target path must have a .zip or .nml suffix."
 
         if path.suffix == ".zip":
-            with path.open(mode="wb") as f:
-                with ZipFile(
-                    f, compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
-                ) as zipfile:
-                    self._write_to_zip(zipfile)
+            with (
+                path.open(mode="wb") as f,
+                ZipFile(
+                    f, mode="w", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
+                ) as zipfile,
+            ):
+                self._write_to_zip(zipfile)
         else:
             assert len(self._volume_layers) == 0, (
                 f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
