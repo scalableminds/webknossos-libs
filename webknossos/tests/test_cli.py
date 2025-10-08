@@ -7,6 +7,7 @@ import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from math import ceil
+import sys
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -81,6 +82,9 @@ def _tiff_cubing(out_path: UPath, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="crashes on windows, when opening tensorstore"
+)
 def test_tiff_cubing_zarr_s3() -> None:
     """Tests zarr support when performing tiff cubing."""
 
