@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from webknossos import COLOR_CATEGORY, Dataset
+from webknossos import COLOR_CATEGORY, Dataset, RemoteDataset
 from webknossos.geometry import BoundingBox
 from webknossos.utils import is_remote_path
 
@@ -36,7 +36,7 @@ def test_add_remote_mags_from_mag_view(
     sample_remote_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     sample_remote_mags = [
         remote_dataset.get_layer(layer).get_mag(mag)
         for layer, mag in sample_layer_and_mag_name
@@ -64,7 +64,7 @@ def test_add_remote_mags_from_path(
     sample_remote_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     sample_remote_mags = [
         remote_dataset.get_layer(layer).get_mag(mag)
         for layer, mag in sample_layer_and_mag_name
@@ -91,7 +91,7 @@ def test_add_remote_mags_from_path(
 
 
 def test_ref_layer_from_remote_layer(sample_remote_dataset: Dataset) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     assert remote_dataset.zarr_streaming_path is not None, (
         "Zarr streaming sets a remote path."
     )
@@ -112,7 +112,7 @@ def test_ref_layer_non_public(tmp_path: Path) -> None:
     dataset = Dataset.open("testdata/simple_zarr3_dataset").copy_dataset(
         tmp_path / "simple_zarr3_dataset"
     )
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     remote_dataset.is_public = False
     dataset.add_layer_as_ref(remote_dataset.get_layer("segmentation"), "segmentation")
 
@@ -127,7 +127,7 @@ def test_ref_layer_non_public(tmp_path: Path) -> None:
 
 def test_shallow_copy_remote_layers(tmp_path: Path) -> None:
     dataset = Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     dataset.add_layer_as_ref(remote_dataset.get_layer("color"), "color")
     dataset_copy = dataset.shallow_copy_dataset(tmp_path / "copy")
     data = dataset_copy.get_layer("color").get_mag("16-16-4").read()

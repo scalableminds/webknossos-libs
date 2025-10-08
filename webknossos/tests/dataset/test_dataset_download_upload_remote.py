@@ -23,7 +23,7 @@ def get_sample_dataset(tmpdir: Path) -> wk.Dataset:
 def test_get_remote_datasets() -> None:
     datasets = wk.Dataset.get_remote_datasets()
     assert any(ds.name == "l4_sample" for ds in datasets.values())
-    l4_sample = wk.Dataset.open_remote("l4_sample")
+    l4_sample = wk.RemoteDataset.open("l4_sample")
     l4_sample_id = l4_sample._dataset_id
     assert l4_sample_id in datasets
     l4_from_datasets = datasets[l4_sample_id]
@@ -75,7 +75,7 @@ def test_url_download(url: str, tmp_path: Path) -> None:
 )
 def test_url_open_remote(url: str, tmp_path: Path) -> None:
     sample_dataset = get_sample_dataset(tmp_path)
-    ds = wk.Dataset.open_remote(url)
+    ds = wk.RemoteDataset.open(url)
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
         ds.get_color_layers()[0]

@@ -16,6 +16,7 @@ from PIL import Image
 from scipy.ndimage import zoom
 from upath import UPath
 
+from .. import RemoteDataset
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
@@ -286,7 +287,7 @@ def main(
             if re.match(_DATASET_URL_REGEX, url) or re.match(
                 _DATASET_DEPRECATED_URL_REGEX, url
             ):
-                mag_view = Dataset.open_remote(url).get_layer(layer_name).get_mag(mag)
+                mag_view = RemoteDataset.open(url).get_layer(layer_name).get_mag(mag)
             elif re.match(_ANNOTATION_URL_REGEX, url):
                 mag_view = (
                     Annotation.open_as_remote_dataset(annotation_id_or_url=url)

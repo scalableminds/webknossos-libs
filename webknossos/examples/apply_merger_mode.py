@@ -17,7 +17,7 @@ def main() -> None:
     # Open the corresponding dataset #
     ###############################################
 
-    input_dataset = wk.Dataset.open_remote(
+    input_dataset = wk.RemoteDataset.open(
         "l4_sample",
         organization_id="scalable_minds",
     )

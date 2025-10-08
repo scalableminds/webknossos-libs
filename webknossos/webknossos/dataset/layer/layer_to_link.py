@@ -33,6 +33,7 @@ class LayerToLink(NamedTuple):
             self.layer_name,
             self.new_layer_name,
         )
+
     @classmethod
     def from_remote_layer(cls, remote_layer: RemoteLayer) -> "LayerToLink":
         return cls(

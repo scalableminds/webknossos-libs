@@ -25,7 +25,6 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
     ) -> None:
         from ..administration.user import User
         from ..client.context import _get_context
-        from .dataset import Dataset
 
         context = _get_context()
         client = context.api_client_with_auth
@@ -54,7 +53,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         super().__init__(
             entries=dict(zip(datasets_ids, datasets_ids)),
             func=webknossos_context(context.url, context.token)(
-                lambda dataset_id: Dataset.open_remote(dataset_id=dataset_id),
+                lambda dataset_id: RemoteDataset.open(dataset_id=dataset_id),
             ),
         )
 

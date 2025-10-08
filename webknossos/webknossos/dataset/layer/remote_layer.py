@@ -7,7 +7,6 @@ from webknossos.dataset_properties import LayerProperties, MagViewProperties
 from ...geometry.mag import Mag, MagLike
 from ...utils import enrich_path
 from .abstract_layer import AbstractLayer
-from .layer_to_link import LayerToLink
 from .view import MagView
 
 if TYPE_CHECKING:

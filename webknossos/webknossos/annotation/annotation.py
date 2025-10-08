@@ -960,7 +960,7 @@ class Annotation:
                         UserWarning,
                     )
 
-        return RemoteDataset.open_remote(
+        return RemoteDataset.open(
             dataset_name_or_url=self.dataset_name,
             organization_id=organization_id,
             dataset_id=self.dataset_id,
@@ -996,7 +996,7 @@ class Annotation:
             )
             ```
         """
-        return Dataset.open_remote(
+        return RemoteDataset.open(
             self.dataset_name,
             self.organization_id,
             sharing_token=sharing_token,

@@ -10,7 +10,7 @@ def main() -> None:
     # Open your unpublished dataset
     dataset = wk.Dataset.open("my_dataset.wkw")
 
-    existing_dataset = wk.Dataset.open_remote(
+    existing_dataset = wk.RemoteDataset.open(
         "https://webknossos.org/datasets/liconn_expid82-678f98e3010000dd017f4449/#3825,4866,795,0,1.3"
     )
     # Publish the dataset to webknossos
