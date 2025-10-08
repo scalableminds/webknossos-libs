@@ -202,7 +202,6 @@ def get_multichanneled_data(dtype: type) -> np.ndarray:
 
 
 def assure_exported_properties(ds: Dataset) -> None:
-    assert ds.path is not None
     reopened_ds = Dataset.open(ds.path)
     assert ds._properties == reopened_ds._properties, (
         "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
@@ -2157,7 +2156,6 @@ def test_search_dataset_also_for_long_layer_name(
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "long_layer_name")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    assert ds.path is not None
     mag = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format).add_mag("2")
 
     assert mag.name == "2"
@@ -2223,7 +2221,6 @@ def test_dataset_shallow_copy(data_format: DataFormat, output_path: UPath) -> No
         data_format=data_format,
     ).as_segmentation_layer()
     original_layer_2.add_mag(4)
-    assert original_layer_2.path is not None
     agglomerates_path = original_layer_2.path / "agglomerates" / "agglomerate_view.hdf5"
     agglomerates_path.parent.mkdir(parents=True)
     agglomerates_path.touch()
@@ -2829,7 +2826,6 @@ def test_zarr3_no_sharding(output_path: UPath) -> None:
 def test_dataset_view_configuration() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds1 = Dataset(ds_path, voxel_size=(2, 2, 1))
-    assert ds1.path is not None
     default_view_configuration = ds1.default_view_configuration
     assert default_view_configuration is None
 
@@ -2898,7 +2894,6 @@ def test_dataset_view_configuration() -> None:
 def test_layer_view_configuration() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds1 = Dataset(ds_path, voxel_size=(2, 2, 1))
-    assert ds1.path is not None
     layer1 = ds1.add_layer("color", COLOR_CATEGORY)
     default_view_configuration = layer1.default_view_configuration
     assert default_view_configuration is None
@@ -2934,7 +2929,6 @@ def test_layer_view_configuration() -> None:
 
     # Test if the data is persisted to disk
     ds2 = Dataset.open(ds_path)
-    assert ds2.path is not None
     default_view_configuration = ds2.get_layer("color").default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.color == (255, 0, 0)
@@ -3367,7 +3361,6 @@ def test_warn_outdated_properties(data_format: DataFormat, output_path: UPath) -
 def test_dataset_properties_version() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    assert ds.path is not None
     properties_path = ds.path / PROPERTIES_FILE_NAME
     properties = json.loads((properties_path).read_bytes())
     assert properties["version"] == 1
@@ -3563,7 +3556,6 @@ def test_copy_dataset_with_attachments(input_path: UPath, output_path: UPath) ->
     seg_mag = seg_layer.add_mag(1)
     seg_mag.write(data=np.zeros((10, 10, 10), dtype=np.uint8))
 
-    assert seg_layer.path is not None
     meshfile_path = seg_layer.path / "meshes" / "meshfile"
     meshfile_path.mkdir(parents=True, exist_ok=True)
     (meshfile_path / "zarr.json").write_text("test")
