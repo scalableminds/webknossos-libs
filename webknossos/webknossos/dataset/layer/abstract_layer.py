@@ -2,7 +2,7 @@ import logging
 import operator
 import re
 from abc import abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Mapping
 
 import numpy as np
 from numpy._typing import DTypeLike
@@ -332,7 +332,7 @@ class AbstractLayer:
         return self._read_only
 
     @property
-    def mags(self) -> dict[Mag, MagView]:
+    def mags(self) -> Mapping[Mag, MagView]:
         """
         Getter for dictionary containing all mags.
         """
