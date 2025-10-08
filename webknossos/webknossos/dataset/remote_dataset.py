@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
-    """A representation of a dataset on a webknossos server.
+    """A representation of a dataset managed by a WEBKNOSSOS server.
 
     This class is returned from `Dataset.open_remote()` and provides read-only access to
     image data streamed from the webknossos server. It uses the same interface as `Dataset`
