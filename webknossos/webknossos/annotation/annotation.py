@@ -73,14 +73,11 @@ from ..dataset import (
     Layer,
     SegmentationLayer,
 )
-from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset_properties import (
     SEGMENTATION_CATEGORY,
     DataFormat,
-    DatasetProperties,
     VoxelSize,
 )
-from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, time_since_epoch_in_ms

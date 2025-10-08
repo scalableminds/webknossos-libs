@@ -108,7 +108,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         assert dataset_properties is not None
         super().__init__(dataset_properties, read_only)
 
-
         self._dataset_id = dataset_id
         self._context = context
 

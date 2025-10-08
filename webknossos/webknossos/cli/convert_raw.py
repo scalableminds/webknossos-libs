@@ -10,7 +10,6 @@ from typing import Annotated, Any, Literal
 import numpy as np
 import typer
 
-from .. import Layer
 from ..dataset import Dataset, MagView, SamplingModes
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,

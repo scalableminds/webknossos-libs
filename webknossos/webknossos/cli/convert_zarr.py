@@ -12,7 +12,6 @@ import numpy as np
 import tensorstore
 import typer
 
-from .. import Layer
 from ..dataset import Dataset, MagView, SegmentationLayer
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,

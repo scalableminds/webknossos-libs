@@ -20,7 +20,13 @@ from numpy._typing import DTypeLike
 from upath import UPath
 from zipp import Path as ZipPath
 
-from webknossos.dataset_properties import DataFormat, SEGMENTATION_CATEGORY, get_dataset_converter, DatasetProperties
+from webknossos.dataset_properties import (
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    DatasetProperties,
+    get_dataset_converter,
+)
+
 from ..cli._utils import DistributionStrategy
 from ..dataset import (
     Dataset,

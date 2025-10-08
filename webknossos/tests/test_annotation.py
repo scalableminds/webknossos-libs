@@ -7,9 +7,8 @@ import pytest
 from cluster_tools import get_executor
 
 import webknossos as wk
-from webknossos import Annotation, SegmentationLayer
+from webknossos import Annotation, DataFormat, SegmentationLayer
 from webknossos.annotation.volume_layer import VolumeLayerEditMode
-from webknossos import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR

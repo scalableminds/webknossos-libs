@@ -1216,7 +1216,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 **kwargs,
             )
 
-    def add_layer_like(self, other_layer: Layer | RemoteLayer, layer_name: str) -> Layer:
+    def add_layer_like(
+        self, other_layer: Layer | RemoteLayer, layer_name: str
+    ) -> Layer:
         self._ensure_writable()
 
         if layer_name in self.layers.keys():
