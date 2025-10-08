@@ -9,11 +9,9 @@ from upath import UPath
 
 from webknossos.client import webknossos_context
 from webknossos.client.api_client.models import (
-    ApiAdHocMeshInfo,
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
     ApiMetadata,
-    ApiPrecomputedMeshInfo,
 )
 from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.dataset.abstract_dataset import AbstractDataset
@@ -21,7 +19,7 @@ from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
 from webknossos.dataset_properties import (
     DatasetProperties,
 )
-from webknossos.geometry import Mag, Vec3Int
+from webknossos.geometry import Vec3Int
 from webknossos.geometry.mag import MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
@@ -553,52 +551,27 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         seed_position: Vec3Int | None = None,
         token: str | None = None,
     ) -> UPath:
-        from ..client.context import _get_context
-        from ..datastore import Datastore
-
-        context = _get_context()
-        datastore_url = datastore_url or Datastore.get_upload_url()
-        mesh_info: ApiAdHocMeshInfo | ApiPrecomputedMeshInfo
-        if mesh_file_name is not None:
-            mesh_info = ApiPrecomputedMeshInfo(
-                lod=lod,
-                mesh_file_name=mesh_file_name,
-                segment_id=segment_id,
-                mapping_name=mapping_name,
-            )
+        warn_deprecated(
+            "RemoteDataset.download_mesh", "RemoteSegmentationLayer.download"
+        )
+        if layer_name is None:
+            segmentation_layers = self.get_segmentation_layers()
+            if len(segmentation_layers) != 1:
+                raise ValueError(
+                    "When you attempt to download a mesh without a layer_name, there must be exactly one segmentation layer."
+                )
+            segmentation_layer = segmentation_layers[0]
         else:
-            assert mag is not None, "mag is required for downloading ad-hoc mesh"
-            assert seed_position is not None, (
-                "seed_position is required for downloading ad-hoc mesh"
-            )
-            mesh_info = ApiAdHocMeshInfo(
-                lod=lod,
-                segment_id=segment_id,
-                mapping_name=mapping_name,
-                mapping_type=mapping_type,
-                mag=Mag(mag).to_tuple(),
-                seed_position=seed_position.to_tuple(),
-            )
-        file_path: UPath
-        datastore = context.get_datastore_api_client(datastore_url=datastore_url)
-        api_dataset = context.api_client.dataset_info(dataset_id=self._dataset_id)
-        directory_name = api_dataset.directory_name
-        assert layer_name is not None, (
-            "When you attempt to download a mesh without a tracing_id, the layer_name must be set."
+            segmentation_layer = self.get_segmentation_layer(layer_name)
+        return segmentation_layer.download_mesh(
+            segment_id,
+            output_dir,
+            mesh_file_name,
+            datastore_url,
+            lod,
+            mapping_name,
+            mapping_type,
+            mag,
+            seed_position,
+            token,
         )
-        mesh_download = datastore.download_mesh(
-            mesh_info=mesh_info,
-            dataset_id=self._dataset_id,
-            layer_name=layer_name,
-            token=token,
-        )
-        file_path = (
-            UPath(output_dir) / f"{directory_name}_{layer_name}_{segment_id}.stl"
-        )
-
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with file_path.open("wb") as f:
-            for chunk in mesh_download:
-                f.write(chunk)
-        return file_path
