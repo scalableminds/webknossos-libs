@@ -114,18 +114,12 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{dataset_id}/teams"
         self._patch_json(route, team_ids)
 
-    def dataset_update_old(
-        self, *, dataset_id: str, updated_dataset: ApiDataset
-    ) -> None:
-        route = f"/datasets/{dataset_id}"
-        self._patch_json(route, updated_dataset)
-
-    # Dataset_updates is not an attrs class because we need to distinguish between absent keys and null values
-    # The server will use all present keys to set the value to their value, including to null/None.
-    # So we need to craft the updates dict manually, depending on what fields should be updated.
     def dataset_update(
         self, *, dataset_id: str, dataset_updates: dict[str, Any]
     ) -> None:
+        # Dataset_updates is not an attrs class because we need to distinguish between absent keys and null values
+        # The server will use all present keys to set the value to their value, including to null/None.
+        # So we need to craft the updates dict manually, depending on what fields should be updated.
         route = f"/datasets/{dataset_id}/updatePartial"
         self._patch_json(route, dataset_updates)
 
