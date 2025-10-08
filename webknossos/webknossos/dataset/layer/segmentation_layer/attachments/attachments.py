@@ -32,7 +32,9 @@ if TYPE_CHECKING:
         RemoteSegmentationLayer,
         SegmentationLayer,
     )
-    from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import AbstractSegmentationLayer
+    from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import (
+        AbstractSegmentationLayer,
+    )
 
 
 def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -> str:

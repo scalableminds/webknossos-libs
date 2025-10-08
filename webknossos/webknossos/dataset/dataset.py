@@ -1346,9 +1346,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 continue
             # Mags are only writable if they are local to the dataset
             resolved_mag_path = cheap_resolve(mag_dir)
-            read_only = (
-                resolved_mag_path.parent != self.resolved_path / layer_name
-            )
+            read_only = resolved_mag_path.parent != self.resolved_path / layer_name
             layer._add_mag_for_existing_files(
                 mag_dir.name, mag_path=resolved_mag_path, read_only=read_only
             )
@@ -2055,7 +2053,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             )
         foreign_layer_path = foreign_layer.path
 
-        assert is_fs_path(self.path), f"Cannot create symlinks in remote dataset {self.path}"
+        assert is_fs_path(self.path), (
+            f"Cannot create symlinks in remote dataset {self.path}"
+        )
 
         assert is_fs_path(foreign_layer_path) and foreign_layer_path is not None, (
             f"Cannot create symlink to remote layer {foreign_layer_path}"

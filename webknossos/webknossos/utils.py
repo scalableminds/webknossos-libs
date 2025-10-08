@@ -330,7 +330,6 @@ def cheap_resolve(path: UPath) -> UPath:
 def is_writable_path(path: UPath) -> bool:
     from upath.implementations.http import HTTPPath
 
-
     # cannot write to http paths
     return not isinstance(path, HTTPPath)
 
