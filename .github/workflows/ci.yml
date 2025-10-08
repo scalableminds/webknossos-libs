@@ -244,8 +244,8 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-          COVERAGE_FILE: ".coverage.${{ matrix.group }}"
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+        run: |
+          ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
@@ -259,7 +259,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ matrix.group }}
-          path: ".coverage.${{ matrix.group }}"
+          path: ".coverage"
           retention-days: 1 # Automatically deletes after 1 day
 
       - name: Check if git is dirty
