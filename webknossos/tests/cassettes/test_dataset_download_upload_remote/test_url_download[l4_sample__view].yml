@@ -19,18 +19,20 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:41 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/json
-        content-length: '2583'
+        content-length: '2991'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758197141425,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1759908828791,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
@@ -51,16 +53,18 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:41 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/json
-        content-length: '2581'
+        content-length: '2989'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758197142630,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1759908829348,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: GET
@@ -82,6 +86,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -89,7 +94,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:41 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -116,6 +122,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -123,7 +130,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:41 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -150,6 +158,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -157,7 +166,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:42 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '175'
       body:
@@ -184,6 +194,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -191,7 +202,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:42 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '75'
       body:
@@ -218,6 +230,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -225,7 +238,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:42 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '63'
       body:
@@ -252,6 +266,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -259,7 +274,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:42 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '27'
       body:
@@ -285,6 +301,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -292,7 +309,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:42 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '16'
       body:
@@ -318,6 +336,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -325,7 +344,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:42 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '8'
       body:
@@ -352,6 +372,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -359,7 +380,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:43 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '12'
       body:
@@ -385,6 +407,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -392,13 +415,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:43 GMT
+        date: Wed, 08 Oct 2025 07:33:49 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '2800'
       body:
-        encoding: base64
-        data: >-
-          u/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAA==
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -419,6 +443,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -426,13 +451,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:43 GMT
+        date: Wed, 08 Oct 2025 07:33:50 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1200'
       body:
-        encoding: base64
-        data: >-
-          wJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAA
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -453,6 +479,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -460,13 +487,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:43 GMT
+        date: Wed, 08 Oct 2025 07:33:50 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
-        encoding: base64
-        data: >-
-          u/IAALvyAAC78gAAu/IAALvyAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAA==
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -487,6 +515,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -494,13 +523,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:44 GMT
+        date: Wed, 08 Oct 2025 07:33:50 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
-        encoding: base64
-        data: >-
-          wJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAwJsAAMCbAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAA
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -521,6 +551,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -528,13 +559,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:44 GMT
+        date: Wed, 08 Oct 2025 07:33:50 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '252'
       body:
-        encoding: base64
-        data: >-
-          wJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAA
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -555,6 +587,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -562,13 +595,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:44 GMT
+        date: Wed, 08 Oct 2025 07:33:50 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '108'
       body:
-        encoding: base64
-        data: >-
-          wJsAAMCbAAB68AAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAA
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -589,6 +623,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -596,13 +631,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:45 GMT
+        date: Wed, 08 Oct 2025 07:33:50 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '64'
       body:
-        encoding: base64
-        data: >-
-          wJsAALvyAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAADAmwAAwJsAAA==
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -623,6 +659,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -630,12 +667,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:45 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '32'
       body:
-        encoding: base64
-        data: wJsAAHrwAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAAA=
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -656,6 +695,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -663,12 +703,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:45 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '48'
       body:
-        encoding: base64
-        data: u/IAALvyAADAmwAAwJsAAMCbAAC78gAAwJsAAMCbAADAmwAAevAAAMCbAADAmwAA
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -689,18 +731,20 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:46 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/json
-        content-length: '2583'
+        content-length: '2991'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758197142630,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1759908829348,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
@@ -721,16 +765,18 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:46 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/json
-        content-length: '2581'
+        content-length: '2989'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758197147342,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1759908831503,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: GET
@@ -752,6 +798,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -759,7 +806,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:46 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -786,6 +834,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -793,7 +842,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:46 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -820,6 +870,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -827,13 +878,14 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:46 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '2800'
       body:
-        encoding: base64
-        data: >-
-          u/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAAC78gAAu/IAALvyAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAA==
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
   - request:
       method: GET
       path: >-
@@ -854,6 +906,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -861,10 +914,11 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 18 Sep 2025 12:05:48 GMT
+        date: Wed, 08 Oct 2025 07:33:51 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1200'
       body:
-        encoding: base64
-        data: >-
-          wJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAHrwAAB68AAAevAAAHrwAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAevAAAHrwAAB68AAAevAAAHrwAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAAB68AAAevAAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAevAAAHrwAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAAB68AAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAAwJsAAMCbAADAmwAA
+        encoding: utf8
+        data: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        compression: none
