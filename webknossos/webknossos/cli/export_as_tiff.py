@@ -6,7 +6,6 @@ from argparse import Namespace
 from functools import partial
 from math import ceil
 from multiprocessing import cpu_count
-from pathlib import Path
 from typing import Annotated, Any
 from urllib.parse import urlparse
 
@@ -68,7 +67,7 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
 
 
 def export_tiff_slice(
-    dest_path: Path,
+    dest_path: UPath,
     name: str,
     tiling_size: None | tuple[int, int],
     downsample: int,
@@ -104,7 +103,8 @@ def export_tiff_slice(
             tiff_file_path = dest_path / tiff_file_name
 
             image = _slice_to_image(tiff_data[:, :, :, slice_index], downsample)
-            image.save(tiff_file_path)
+            with tiff_file_path.open("wb") as f:
+                image.save(f)
             logger.debug("Saved slice %s", slice_name_number)
 
         else:
@@ -127,7 +127,8 @@ def export_tiff_slice(
                         downsample,
                     )
 
-                    tile_image.save(tile_tiff_path / tile_tiff_filename)
+                    with (tile_tiff_path / tile_tiff_filename).open("wb") as f:
+                        tile_image.save(f)
 
             logger.debug("Saved tiles for slice %s", slice_name_number)
 
@@ -137,7 +138,7 @@ def export_tiff_slice(
 def export_tiff_stack(
     mag_view: MagView,
     bbox: BoundingBox,
-    destination_path: Path,
+    destination_path: UPath,
     name: str,
     tiling_slice_size: None | tuple[int, int],
     batch_size: int,

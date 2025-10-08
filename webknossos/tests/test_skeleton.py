@@ -1,5 +1,4 @@
 import difflib
-from os import PathLike
 
 import networkx as nx
 import pytest
@@ -215,9 +214,9 @@ def diff_lines(lines_a: list[str], lines_b: list[str]) -> list[str]:
     return diff
 
 
-def diff_files(path_a: PathLike, path_b: PathLike) -> None:
-    with open(path_a, encoding="utf-8") as file_a:
-        with open(path_b, encoding="utf-8") as file_b:
+def diff_files(path_a: UPath, path_b: UPath) -> None:
+    with path_a.open("r", encoding="utf-8") as file_a:
+        with path_b.open("r", encoding="utf-8") as file_b:
             diff = diff_lines(file_a.readlines(), file_b.readlines())
             assert len(diff) == 0, (
                 f"Files {path_a} and {path_b} are not equal:\n{''.join(diff)}"
@@ -259,7 +258,7 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
 </things>
 """
     nml.save(nml_path)
-    with open(nml_path, encoding="utf-8") as f:
+    with nml_path.open(mode="r", encoding="utf-8") as f:
         diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
         assert len(diff) == 0, (
             f"Written nml does not look as expected:\n{''.join(diff)}"
@@ -307,7 +306,7 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
 </things>
 """
     nml.save(nml_path)
-    with open(nml_path, encoding="utf-8") as f:
+    with nml_path.open("r", encoding="utf-8") as f:
         diff = diff_lines(
             f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
         )
@@ -356,12 +355,12 @@ def test_volume_dump_round_trip(tmp_upath: UPath, layer_name: str | None) -> Non
     )
     volume_out = None
 
-    with open(export_path, "wb") as f:
+    with export_path.open("wb") as f:
         with XmlWriter(f) as xf:
             volume_in._dump(xf)
 
-    with open(export_path, "rb") as f:
-        tree = ET.parse(export_path)
+    with export_path.open("rb") as f:
+        tree = ET.parse(f)
         volume_out = Volume._parse(next(tree.iter()))
 
     assert volume_in == volume_out

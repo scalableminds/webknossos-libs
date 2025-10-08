@@ -2,9 +2,8 @@ import gc
 import os
 import warnings
 from collections.abc import Generator, Iterator
-from os import makedirs
 from pathlib import Path
-from shutil import rmtree, unpack_archive
+from shutil import unpack_archive
 from typing import Any
 
 import fsspec.implementations.http as http
@@ -16,6 +15,7 @@ from upath import UPath
 import webknossos as wk
 from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
+from webknossos.utils import rmtree
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
@@ -98,7 +98,7 @@ def aiohttp_use_env_variables(monkeypatch: pytest.MonkeyPatch) -> Generator:
 
 @pytest.fixture(autouse=True, scope="function")
 def clear_testoutput() -> Generator:
-    makedirs(TESTOUTPUT_DIR, exist_ok=True)
+    TESTOUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     yield
     rmtree(TESTOUTPUT_DIR)
 
@@ -145,12 +145,9 @@ def use_replay_proxay(request: Any) -> Generator:
 
 
 @pytest.fixture(scope="session")
-def WT1_path() -> Path:
+def WT1_path() -> UPath:
     ds_path = TESTDATA_DIR / "WT1_wkw"
     if ds_path.exists():
         rmtree(ds_path)
-    unpack_archive(
-        TESTDATA_DIR / "WT1_wkw.tar.gz",
-        ds_path,
-    )
+    unpack_archive(str(TESTDATA_DIR / "WT1_wkw.tar.gz"), str(ds_path))
     return ds_path

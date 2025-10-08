@@ -1,10 +1,10 @@
 from collections.abc import Iterator
 from contextlib import closing, contextmanager
 from os import PathLike
-from pathlib import Path
 
 import numpy as np
 from pims import FramesSequenceND
+from upath import UPath
 
 from .vendor.dm3 import DM3  # type: ignore[attr-defined]
 from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING  # type: ignore[attr-defined]
@@ -21,8 +21,8 @@ class PimsDm3Reader(FramesSequenceND):
     # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
     class_priority = 20
 
-    def __init__(self, path: PathLike) -> None:
-        self.path = Path(path)
+    def __init__(self, path: PathLike | UPath) -> None:
+        self.path = UPath(path)
         super().__init__()
         dm3_file = DM3(self.path)
         self._init_axis("x", dm3_file.width)
@@ -53,8 +53,8 @@ class PimsDm4Reader(FramesSequenceND):
     # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
     class_priority = 20
 
-    def __init__(self, path: PathLike) -> None:
-        self.path = Path(path)
+    def __init__(self, path: PathLike | UPath) -> None:
+        self.path = UPath(path)
         super().__init__()
         with self.dm4_file() as dm4_file:
             tags = dm4_file.read_directory()

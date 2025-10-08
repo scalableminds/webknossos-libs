@@ -5,7 +5,6 @@ import warnings
 from inspect import getframeinfo, stack
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
@@ -830,7 +829,7 @@ class Layer:
 
     def add_copy_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -857,7 +856,7 @@ class Layer:
 
     def add_mag_as_copy(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -973,7 +972,7 @@ class Layer:
 
     def add_symlink_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
@@ -1010,7 +1009,7 @@ class Layer:
         )
 
         foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self_resolved_path))
+            UPath(relpath(foreign_mag_view.path, self_resolved_path))
             if make_relative
             else foreign_mag_view.path
         )
@@ -1038,7 +1037,7 @@ class Layer:
 
     def add_remote_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
@@ -1051,7 +1050,7 @@ class Layer:
 
     def add_mag_as_ref(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
@@ -1096,7 +1095,7 @@ class Layer:
 
     def _add_fs_copy_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
@@ -1132,7 +1131,7 @@ class Layer:
 
     def add_fs_copy_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
@@ -1157,7 +1156,7 @@ class Layer:
     def add_mag_from_zarrarray(
         self,
         mag: MagLike,
-        path: PathLike,
+        path: PathLike | UPath,
         *,
         move: bool = False,
         extend_layer_bounding_box: bool = True,

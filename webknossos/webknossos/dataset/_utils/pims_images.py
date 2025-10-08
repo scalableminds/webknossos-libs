@@ -3,7 +3,6 @@ from collections.abc import Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
 from os import PathLike, environ
-from pathlib import Path
 from typing import TypeVar, Union, cast
 from urllib.error import HTTPError
 
@@ -77,7 +76,7 @@ class PimsImages:
     def __init__(
         self,
         images: Union[
-            str, Path, UPath, "pims.FramesSequence", list[str | PathLike | UPath]
+            str, PathLike, UPath, "pims.FramesSequence", list[str | PathLike | UPath]
         ],
         channel: int | None,
         timepoint: int | None,
@@ -312,8 +311,8 @@ class PimsImages:
 
     def _normalize_original_images(self) -> str | list[str]:
         original_images = self._original_images
-        if isinstance(original_images, str | Path):
-            original_images_path = Path(original_images)
+        if isinstance(original_images, str | UPath):
+            original_images_path = UPath(original_images)
             if original_images_path.is_dir():
                 valid_suffixes = get_valid_pims_suffixes()
                 if self._use_bioformats is not False:

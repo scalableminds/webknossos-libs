@@ -48,7 +48,7 @@ from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import BinaryIO, Literal, Union, overload
+from typing import IO, BinaryIO, Literal, Union, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -643,15 +643,24 @@ class Annotation:
 
     @classmethod
     def _load_from_zip(cls, content: str | UPath | BinaryIO) -> "Annotation":
-        zipfile = ZipFile(content)
+        f: IO[bytes]
+        if isinstance(content, str):
+            f = open(content, mode="rb")
+        elif isinstance(content, UPath):
+            f = content.open(mode="rb")
+        else:
+            f = content
+        zipfile = ZipFile(f)
         paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
         nml_paths = [i for i in paths if i.suffix == ".nml"]
         assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
         assert len(nml_paths) == 1, (
             f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         )
-        with nml_paths[0].open(mode="rb") as f:
-            return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
+        with nml_paths[0].open(mode="rb") as nml_f:
+            return cls._load_from_nml(
+                nml_paths[0].stem, nml_f, possible_volume_paths=paths
+            )
 
     def _write_volume_layers(self, path: UPath) -> None:
         """
@@ -706,10 +715,11 @@ class Annotation:
         ], "The target path must have a .zip or .nml suffix."
 
         if path.suffix == ".zip":
-            with ZipFile(
-                path, mode="x", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
-            ) as zipfile:
-                self._write_to_zip(zipfile)
+            with path.open(mode="wb") as f:
+                with ZipFile(
+                    f, compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
+                ) as zipfile:
+                    self._write_to_zip(zipfile)
         else:
             assert len(self._volume_layers) == 0, (
                 f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
@@ -1468,7 +1478,7 @@ class RemoteAnnotation(Annotation):
             ),
         )
 
-    def save(self, path: str | PathLike) -> None:
+    def save(self, path: str | PathLike | UPath) -> None:
         raise NotImplementedError(
             "Remote annotations cannot be saved. Changes are applied ."
         )

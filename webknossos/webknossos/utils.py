@@ -3,7 +3,6 @@ import calendar
 import functools
 import json
 import logging
-import sys
 import time
 import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -14,7 +13,6 @@ from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from os import PathLike
-from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
 from typing import (
@@ -241,31 +239,6 @@ def setup_warnings() -> None:
     warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
 
 
-def setup_logging(args: argparse.Namespace) -> None:
-    log_path = Path(f"./logs/cuber_{time.strftime('%Y-%m-%d_%H%M%S')}.txt")
-
-    console_log_level = logging.DEBUG if args.verbose else logging.INFO
-    file_log_level = logging.DEBUG
-
-    logging_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-
-    # Always set the global log level to the more verbose of console_log_level and
-    # file_log_level to allow to log with different log levels to console and files.
-    root_logger = logging.getLogger()
-    root_logger.setLevel(min(console_log_level, file_log_level))
-
-    console = logging.StreamHandler(sys.stdout)
-    console.setLevel(console_log_level)
-    console.setFormatter(logging_formatter)
-    root_logger.addHandler(console)
-
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    file_handler = logging.FileHandler(log_path, mode="w", encoding="UTF-8")
-    file_handler.setLevel(file_log_level)
-    file_handler.setFormatter(logging_formatter)
-    root_logger.addHandler(file_handler)
-
-
 def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--verbose", help="Verbose output", dest="verbose", action="store_true"
@@ -299,11 +272,9 @@ def count_defined_values(values: Iterable[Any | None]) -> int:
 
 
 def is_fs_path(
-    path: Path | UPath,
-) -> TypeGuard[PosixPath | WindowsPath | PosixUPath | WindowsUPath]:
-    return not isinstance(path, UPath) or isinstance(
-        path, PosixPath | WindowsPath | PosixUPath | WindowsUPath
-    )
+    path: UPath,
+) -> TypeGuard[PosixUPath | WindowsUPath]:
+    return not isinstance(path, UPath) or isinstance(path, PosixUPath | WindowsUPath)
 
 
 def is_remote_path(path: UPath) -> bool:

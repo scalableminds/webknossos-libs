@@ -1,9 +1,9 @@
 import warnings
-from pathlib import Path
 from typing import Literal
 
 import numpy as np
 import pytest
+from upath import UPath
 
 from tests.constants import TESTOUTPUT_DIR
 from webknossos.dataset import COLOR_CATEGORY, Dataset
@@ -67,7 +67,7 @@ def test_buffered_slice_writer() -> None:
 
 @pytest.mark.parametrize("dim", [0, 1, 2])
 def test_buffered_slice_writer_along_different_axis(
-    tmp_path: Path, dim: Literal[0, 1, 2]
+    tmp_upath: UPath, dim: Literal[0, 1, 2]
 ) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
     cube_size_without_channel = test_cube.shape[1:]
@@ -76,7 +76,7 @@ def test_buffered_slice_writer_along_different_axis(
     shard_shape = [1024, 1024, 1024]
     shard_shape[dim] = 32
 
-    ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
+    ds = Dataset(tmp_upath / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -102,13 +102,13 @@ def test_buffered_slice_writer_along_different_axis(
     )
 
 
-def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
+def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
     cube_size_without_channel = Vec3Int(test_cube.shape[1:])
     offset = Vec3Int(5, 10, 20)
 
     for dim in [0, 1, 2]:
-        ds = Dataset(tmp_path / f"buffered_slice_reader_{dim}", voxel_size=(1, 1, 1))
+        ds = Dataset(tmp_upath / f"buffered_slice_reader_{dim}", voxel_size=(1, 1, 1))
         layer = ds.add_layer(
             "color",
             COLOR_CATEGORY,
@@ -142,13 +142,13 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
                 assert np.array_equal(slice_data_b, original_slice)
 
 
-def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
+def test_basic_buffered_slice_writer(tmp_upath: UPath) -> None:
     # Allocate some data (~ 8 MB)
     shape = (512, 512, 32)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
     # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
@@ -173,10 +173,10 @@ def test_basic_buffered_slice_writer(tmp_path: Path) -> None:
 
 
 def test_buffered_slice_writer_unaligned(
-    tmp_path: Path,
+    tmp_upath: UPath,
 ) -> None:
     # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
@@ -219,10 +219,10 @@ def test_buffered_slice_writer_unaligned(
 
 
 def test_buffered_slice_writer_should_raise_unaligned_usage(
-    tmp_path: Path,
+    tmp_upath: UPath,
 ) -> None:
     # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
@@ -251,9 +251,9 @@ def test_buffered_slice_writer_should_raise_unaligned_usage(
                 writer.send(section)
 
 
-def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
+def test_basic_buffered_slice_writer_multi_shard(tmp_upath: UPath) -> None:
     # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
@@ -282,9 +282,11 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_path: Path) -> None:
     np.testing.assert_array_equal(data, written_data)
 
 
-def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -> None:
+def test_basic_buffered_slice_writer_multi_shard_multi_channel(
+    tmp_upath: UPath,
+) -> None:
     # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
@@ -309,9 +311,9 @@ def test_basic_buffered_slice_writer_multi_shard_multi_channel(tmp_path: Path) -
     assert np.all(data == written_data)
 
 
-def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
+def test_buffered_slice_writer_reset_offset(tmp_upath: UPath) -> None:
     # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
@@ -352,13 +354,13 @@ def test_buffered_slice_writer_reset_offset(tmp_path: Path) -> None:
     assert np.all(data == written_data)
 
 
-def test_buffered_slice_writer_resize_error(tmp_path: Path) -> None:
+def test_buffered_slice_writer_resize_error(tmp_upath: UPath) -> None:
     # Allocate some data (~ 8 MB)
     shape = (512, 512, 32)
     data = np.random.randint(0, 255, shape, dtype=np.uint8)
 
     # Create DS
-    dataset = Dataset(tmp_path, voxel_size=(1, 1, 1))
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color",
         category="color",

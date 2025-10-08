@@ -3,7 +3,6 @@ import json
 import os
 import pickle
 from collections.abc import Iterator
-from pathlib import Path
 from typing import cast
 from unittest import mock
 
@@ -328,10 +327,13 @@ def test_ome_ngff_0_5_metadata(output_path: UPath) -> None:
 
 
 def test_ome_ngff_0_5_metadata_symlink() -> None:
-    def recursive_chmod(ds_path: Path, mode: int) -> None:
+    def recursive_chmod(ds_path: UPath, mode: int) -> None:
+        from pathlib import Path
+
         # See https://docs.python.org/3/library/os.html#os.chmod for how to use mode
-        os.chmod(ds_path, mode)
-        for root, dirs, files in os.walk(ds_path):
+        pathlib_path = Path(str(ds_path))
+        os.chmod(pathlib_path, mode)
+        for root, dirs, files in os.walk(pathlib_path):
             root_path = Path(root)
             for _dir in dirs:
                 path = root_path / _dir
@@ -1129,23 +1131,15 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "old_wkw")
     copytree(TESTDATA_DIR / "old_wkw_dataset", ds_path)
 
-    with open(
-        ds_path / "datasource-properties.json",
-        encoding="utf-8",
-    ) as datasource_properties:
-        data = json.load(datasource_properties)
-        assert data["dataLayers"][0].get("num_channels") is None
+    data = json.loads((ds_path / PROPERTIES_FILE_NAME).read_text())
+    assert data["dataLayers"][0].get("num_channels") is None
 
     ds = Dataset.open(ds_path)
     assert ds.get_layer("color").num_channels == 1
     ds._export_as_json()
 
-    with open(
-        ds_path / "datasource-properties.json",
-        encoding="utf-8",
-    ) as datasource_properties:
-        data = json.load(datasource_properties)
-        assert data["dataLayers"][0].get("numChannels") == 1
+    data = json.loads((ds_path / PROPERTIES_FILE_NAME).read_text())
+    assert data["dataLayers"][0].get("numChannels") == 1
 
     assure_exported_properties(ds)
 
@@ -1181,54 +1175,46 @@ def test_properties_with_segmentation() -> None:
     )
     copytree(TESTDATA_DIR / "complex_property_ds", ds_path)
 
-    with open(ds_path / "datasource-properties.json", encoding="utf-8") as f:
-        data = json.load(f)
-        ds_properties = dataset_converter.structure(data, DatasetProperties)
+    data = json.loads((ds_path / PROPERTIES_FILE_NAME).read_text())
+    ds_properties = dataset_converter.structure(data, DatasetProperties)
 
-        # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
-        segmentation_layer = cast(
-            SegmentationLayerProperties,
-            [
-                layer
-                for layer in ds_properties.data_layers
-                if layer.name == "segmentation"
-            ][0],
-        )
-        assert segmentation_layer.largest_segment_id == 1000000000
-        assert segmentation_layer.mappings == [
-            "larger5um1",
-            "axons",
-            "astrocyte-ge-7",
-            "astrocyte",
-            "mitochondria",
-            "astrocyte-full",
-        ]
+    # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
+    segmentation_layer = cast(
+        SegmentationLayerProperties,
+        [layer for layer in ds_properties.data_layers if layer.name == "segmentation"][
+            0
+        ],
+    )
+    assert segmentation_layer.largest_segment_id == 1000000000
+    assert segmentation_layer.mappings == [
+        "larger5um1",
+        "axons",
+        "astrocyte-ge-7",
+        "astrocyte",
+        "mitochondria",
+        "astrocyte-full",
+    ]
 
-    with open(ds_path / "datasource-properties.json", "w", encoding="utf-8") as f:
-        # Update the properties on disk (without changing the data)
-        json.dump(
+    # Update the properties on disk (without changing the data)
+    (ds_path / PROPERTIES_FILE_NAME).write_text(
+        json.dumps(
             dataset_converter.unstructure(ds_properties),
-            f,
             indent=4,
         )
+    )
 
     # validate if contents match
-    with open(
-        TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json",
-        encoding="utf-8",
-    ) as input_properties:
-        input_data = json.load(input_properties)
+    input_data = json.loads(
+        (TESTDATA_DIR / "complex_property_ds" / PROPERTIES_FILE_NAME).read_text()
+    )
 
-        with open(
-            ds_path / "datasource-properties.json", encoding="utf-8"
-        ) as output_properties:
-            output_data = json.load(output_properties)
-            for layer in output_data["dataLayers"]:
-                # remove the num_channels because they are not part of the original json
-                if "numChannels" in layer:
-                    del layer["numChannels"]
+    output_data = json.loads((ds_path / PROPERTIES_FILE_NAME).read_text())
+    for layer in output_data["dataLayers"]:
+        # remove the num_channels because they are not part of the original json
+        if "numChannels" in layer:
+            del layer["numChannels"]
 
-            assert input_data == output_data
+    assert input_data == output_data
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1580,16 +1566,12 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
             "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
         )
 
-        with open(
-            ds_path / "datasource-properties.json",
-            encoding="utf-8",
-        ) as f:
-            data = json.load(f)
-            # The order of the layers in the properties equals the order of creation
-            assert data["dataLayers"][0]["elementClass"] == "uint24"
-            assert data["dataLayers"][1]["elementClass"] == "uint8"
-            assert data["dataLayers"][2]["elementClass"] == "uint24"
-            assert data["dataLayers"][3]["elementClass"] == "uint24"
+        data = json.loads((ds_path / PROPERTIES_FILE_NAME).read_text())
+        # The order of the layers in the properties equals the order of creation
+        assert data["dataLayers"][0]["elementClass"] == "uint24"
+        assert data["dataLayers"][1]["elementClass"] == "uint8"
+        assert data["dataLayers"][2]["elementClass"] == "uint24"
+        assert data["dataLayers"][3]["elementClass"] == "uint24"
 
         reopened_ds = Dataset.open(
             ds_path
@@ -2843,9 +2825,8 @@ def test_dataset_view_configuration() -> None:
     assert default_view_configuration.rotation is None
 
     # Test if only the set parameters are stored in the properties
-    with open(ds1.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
-        properties = json.load(f)
-        assert properties["defaultViewConfiguration"] == {"fourBit": True}
+    properties = json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())
+    assert properties["defaultViewConfiguration"] == {"fourBit": True}
 
     ds1.default_view_configuration = DatasetViewConfiguration(
         four_bit=True,
@@ -2883,11 +2864,10 @@ def test_dataset_view_configuration() -> None:
     assert default_view_configuration.rotation == (1, 2, 3)
 
     # Test camel case
-    with open(ds1.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
-        properties = json.load(f)
-        view_configuration_dict = properties["defaultViewConfiguration"]
-        for k in view_configuration_dict.keys():
-            assert snake_to_camel_case(k) == k
+    properties = json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())
+    view_configuration_dict = properties["defaultViewConfiguration"]
+    for k in view_configuration_dict.keys():
+        assert snake_to_camel_case(k) == k
 
     assure_exported_properties(ds1)
 
@@ -2907,11 +2887,10 @@ def test_layer_view_configuration() -> None:
     assert default_view_configuration.intensity_range is None
     assert default_view_configuration.is_inverted is None
     # Test if only the set parameters are stored in the properties
-    with open(ds1.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
-        properties = json.load(f)
-        assert properties["dataLayers"][0]["defaultViewConfiguration"] == {
-            "color": [255, 0, 0]
-        }
+    properties = json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())
+    assert properties["dataLayers"][0]["defaultViewConfiguration"] == {
+        "color": [255, 0, 0]
+    }
 
     layer1.default_view_configuration = LayerViewConfiguration(
         color=(255, 0, 0),
@@ -2939,13 +2918,10 @@ def test_layer_view_configuration() -> None:
     assert default_view_configuration.min == 55.0
 
     # Test camel case
-    with open(ds2.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
-        properties = json.load(f)
-        view_configuration_dict = properties["dataLayers"][0][
-            "defaultViewConfiguration"
-        ]
-        for k in view_configuration_dict.keys():
-            assert snake_to_camel_case(k) == k
+    properties = json.loads((ds2.path / PROPERTIES_FILE_NAME).read_text())
+    view_configuration_dict = properties["dataLayers"][0]["defaultViewConfiguration"]
+    for k in view_configuration_dict.keys():
+        assert snake_to_camel_case(k) == k
 
     assure_exported_properties(ds1)
 

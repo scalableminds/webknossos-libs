@@ -2,7 +2,6 @@ import warnings
 from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, get_args, get_type_hints
 
 from typing_extensions import Self
@@ -377,7 +376,9 @@ class Attachments:
                     assert is_fs_path(new_path.parent), (
                         "Relative symlinks are only supported for local paths."
                     )
-                    new_path.symlink_to(Path(relpath(attachment.path, new_path.parent)))
+                    new_path.symlink_to(
+                        UPath(relpath(attachment.path, new_path.parent))
+                    )
                 else:
                     new_path.symlink_to(attachment.path)
             new_attachment = type(attachment).from_path_and_name(

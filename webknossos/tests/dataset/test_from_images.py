@@ -35,7 +35,10 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
     assert "tiff_stack" in ds.layers
     data = ds.layers["tiff_stack"].get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
-        with TiffFile(TESTDATA_DIR / "tiff" / "test.0000.tiff") as tif_file:
+        with (
+            (TESTDATA_DIR / "tiff" / "test.0000.tiff").open("rb") as f,
+            TiffFile(f) as tif_file,
+        ):
             comparison_slice = tif_file.asarray().T
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
@@ -99,8 +102,8 @@ def test_from_dicom_images(tmp_upath: UPath) -> None:
 def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
     (input_path := tmp_upath / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
-        TESTDATA_DIR / "tiff_with_different_shapes",
-        input_path,
+        str(TESTDATA_DIR / "tiff_with_different_shapes"),
+        str(input_path),
         dirs_exist_ok=True,
     )
 

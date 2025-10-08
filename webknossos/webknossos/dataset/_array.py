@@ -4,7 +4,6 @@ from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from logging import getLogger
-from pathlib import Path
 from tempfile import mkdtemp
 from typing import (
     Any,
@@ -372,9 +371,9 @@ class WKWArray(BaseArray):
 
 class AWSCredentialManager:
     entries: dict[int, tuple[str, str]]
-    folder_path: Path
+    folder_path: UPath
 
-    def __init__(self, folder_path: Path) -> None:
+    def __init__(self, folder_path: UPath) -> None:
         self.entries = {}
         self.folder_path = folder_path
 
@@ -382,11 +381,11 @@ class AWSCredentialManager:
         self.config_file_path.write_text("[default]\n")
 
     @property
-    def credentials_file_path(self) -> Path:
+    def credentials_file_path(self) -> UPath:
         return self.folder_path / "credentials"
 
     @property
-    def config_file_path(self) -> Path:
+    def config_file_path(self) -> UPath:
         return self.folder_path / "config"
 
     def _dump_credentials(self) -> None:
@@ -416,8 +415,8 @@ class AWSCredentialManager:
 
 
 @lru_cache
-def _aws_credential_folder() -> Path:
-    return Path(mkdtemp())
+def _aws_credential_folder() -> UPath:
+    return UPath(mkdtemp())
 
 
 _aws_credential_manager = AWSCredentialManager(_aws_credential_folder())

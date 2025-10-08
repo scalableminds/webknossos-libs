@@ -7,7 +7,6 @@ from argparse import Namespace
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from enum import Enum
-from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import Any, cast
@@ -311,7 +310,7 @@ class VolumeLayer:
         return layer
 
 
-def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
+def _extract_zip_folder(zip_file: ZipFile, out_path: UPath, prefix: str) -> None:
     for zip_entry in zip_file.filelist:
         if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
             out_file_path = out_path / (zip_entry.filename[len(prefix) :])

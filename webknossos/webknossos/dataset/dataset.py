@@ -10,7 +10,6 @@ from enum import Enum, unique
 from itertools import product
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Union, cast
 
 import attr
@@ -251,11 +250,11 @@ class Dataset:
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
                 return lambda p: (
                     input_path.name
-                    if p.parent == Path()
+                    if p.parent == UPath()
                     else p.parent.as_posix().replace("/", "_")
                 )
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_TOPLEVEL_FOLDER:
-                return lambda p: input_path.name if p.parent == Path() else p.parts[0]
+                return lambda p: input_path.name if p.parent == UPath() else p.parts[0]
             elif self == ConversionLayerMapping.INSPECT_EVERY_FILE:
                 # If a file has z dimensions, it becomes its own layer,
                 # if it's 2D, the folder becomes a layer.
@@ -268,7 +267,7 @@ class Dataset:
                     )
                     else (
                         input_path.name
-                        if p.parent == Path()
+                        if p.parent == UPath()
                         else p.parent.as_posix().replace("/", "_")
                     )
                 )
@@ -282,7 +281,7 @@ class Dataset:
                     return str
                 else:
                     return lambda p: (
-                        input_path.name if p.parent == Path() else p.parts[-2]
+                        input_path.name if p.parent == UPath() else p.parts[-2]
                     )
             else:
                 raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
@@ -797,7 +796,7 @@ class Dataset:
         bbox: BoundingBox | None = None,
         layers: list[str] | str | None = None,
         mags: list[Mag] | None = None,
-        path: PathLike | str | None = None,
+        path: PathLike | UPath | str | None = None,
         exist_ok: bool = False,
     ) -> "Dataset":
         """Downloads a dataset and returns the Dataset instance.
@@ -841,7 +840,7 @@ class Dataset:
     @classmethod
     def from_images(
         cls,
-        input_path: str | PathLike,
+        input_path: str | PathLike | UPath,
         output_path: str | PathLike | UPath,
         voxel_size: tuple[float, float, float] | None = None,
         name: str | None = None,
@@ -1724,7 +1723,11 @@ class Dataset:
         """
         if category is None:
             image_path_for_category_guess: UPath
-            if isinstance(images, str) or isinstance(images, PathLike):
+            if (
+                isinstance(images, str)
+                or isinstance(images, PathLike)
+                or isinstance(images, UPath)
+            ):
                 image_path_for_category_guess = UPath(images)
             else:
                 image_path_for_category_guess = UPath(images[0])
@@ -2217,7 +2220,7 @@ class Dataset:
 
     def add_copy_layer(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
         *,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2246,7 +2249,7 @@ class Dataset:
 
     def add_layer_as_copy(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
         *,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2357,7 +2360,7 @@ class Dataset:
 
     def add_symlink_layer(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
         *,
         make_relative: bool = False,
@@ -2425,7 +2428,7 @@ class Dataset:
         )
 
         foreign_layer_symlink_path = (
-            Path(relpath(foreign_layer_path, self_path))
+            UPath(relpath(foreign_layer_path, self_path))
             if make_relative
             else foreign_layer_path.resolve()
         )
@@ -2442,7 +2445,7 @@ class Dataset:
             )
             if is_fs_path(foreign_mag.path):
                 mag_prop.path = (
-                    Path(relpath(foreign_mag.path.resolve(), self_path))
+                    UPath(relpath(foreign_mag.path.resolve(), self_path))
                     if make_relative
                     else foreign_mag.path.resolve()
                 ).as_posix()
@@ -2462,7 +2465,7 @@ class Dataset:
                         ).resolve()
                     assert is_fs_path(old_path)
                     attachment.path = (
-                        Path(relpath(old_path, self_path))
+                        UPath(relpath(old_path, self_path))
                         if make_relative
                         else old_path.resolve()
                     ).as_posix()
@@ -2548,7 +2551,7 @@ class Dataset:
 
     def add_fs_copy_layer(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Deprecated. File-based copy is automatically used in `Dataset.add_layer_as_copy`.
@@ -2630,7 +2633,7 @@ class Dataset:
 
     def copy_dataset(
         self,
-        new_dataset_path: str | Path | UPath,
+        new_dataset_path: str | PathLike | UPath,
         *,
         voxel_size: tuple[float, float, float] | None = None,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2730,7 +2733,7 @@ class Dataset:
 
     def fs_copy_dataset(
         self,
-        new_dataset_path: str | Path | UPath,
+        new_dataset_path: str | PathLike | UPath,
         *,
         exists_ok: bool = False,
         layers_to_ignore: Iterable[str] | None = None,
@@ -3564,7 +3567,7 @@ class RemoteDataset(Dataset):
     def download_mesh(
         self,
         segment_id: int,
-        output_dir: PathLike | str,
+        output_dir: PathLike | UPath | str,
         layer_name: str | None = None,
         mesh_file_name: str | None = None,
         datastore_url: str | None = None,

@@ -1,10 +1,10 @@
 import itertools
 from collections.abc import Iterator
 from os import PathLike
-from pathlib import Path
 
 import attr
 import networkx as nx
+from upath import UPath
 
 from webknossos.dataset.length_unit import _LENGTH_UNIT_TO_NANOMETER
 from webknossos.dataset.properties import VoxelSize
@@ -154,7 +154,7 @@ class Skeleton(Group):
         self._voxel_size = voxel_size
 
     @staticmethod
-    def load(file_path: PathLike | str) -> "Skeleton":
+    def load(file_path: PathLike | UPath | str) -> "Skeleton":
         """Load a skeleton annotation from a file.
 
         This method can load skeleton annotations from either a .nml file or a .zip file
@@ -190,7 +190,7 @@ class Skeleton(Group):
 
         return Annotation.load(file_path).skeleton
 
-    def save(self, out_path: str | PathLike) -> None:
+    def save(self, out_path: str | PathLike | UPath) -> None:
         """Save the skeleton annotation to a file.
 
         Saves the skeleton data to either a .nml file or a .zip archive. The .zip
@@ -222,7 +222,7 @@ class Skeleton(Group):
         """
         from ..annotation import Annotation
 
-        out_path = Path(out_path)
+        out_path = UPath(out_path)
         assert out_path.suffix in [
             ".nml",
             ".zip",
