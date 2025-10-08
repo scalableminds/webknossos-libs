@@ -164,7 +164,6 @@ def test_copy_layer(tmp_upath: UPath) -> None:
     )
 
     copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
-    assert copy_dataset.path is not None
     copy_layer = copy_dataset.add_layer_as_copy(seg_layer).as_segmentation_layer()
 
     assert (
@@ -420,7 +419,6 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
 
 def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
     _, seg_layer = make_dataset(tmp_upath)
-    assert seg_layer.path is not None
     # legacy meshes
     mesh_path = seg_layer.path / "meshes" / "meshfile_4-4-1.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)

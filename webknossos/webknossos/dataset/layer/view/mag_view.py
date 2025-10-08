@@ -667,7 +667,7 @@ class MagView(View, Generic[LayerTypeT]):
             rmtree(rechunked_dataset.path)
 
             # update the handle to the new dataset
-            MagView[LayerTypeT].__init__(self, self.layer, self._mag, path)
+            MagView.__init__(self, self.layer, self._mag, path)
 
     def merge_with_view(
         self,
