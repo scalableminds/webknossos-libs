@@ -13,10 +13,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...HEAD)
 
 ### Breaking Changes
+- MagView.is_foreign() is now defined with the Layer.is_mag_view_foreign() method.
+- Dataset.add_layer_as_ref() does not accept a path to a remote layer anymore.
 
 ### Added
+- Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects.
 
 ### Changed
+- Refactored the architecture, by introducing RemoteDatasets, RemoteLayers, RemoteSegmentationLayers and their abstract base classes.
+- Changed the folder hierarchy in webknossos.dataset.
 
 ### Fixed
 
