@@ -39,8 +39,10 @@ def local_test_wk() -> Iterator[None]:
         wk_docker_dir = Path("tests")
 
         if not requests.get(f"{WK_URL}/api/health").ok:
-            print(f"Using docker compose setup with the docker tag {wk_docker_tag}")
-            print("  To change this, please update DOCKER_TAG in local_wk_setup.sh")
+            print(
+                f"Starting webknossos via docker compose with tag {wk_docker_tag}",
+                flush=True,
+            )
 
             subprocess.check_call(
                 ["docker", "compose", "pull", "webknossos"], cwd=wk_docker_dir
@@ -99,21 +101,21 @@ def local_test_wk() -> Iterator[None]:
 
         else:
             print(
-                "Using the already running local webknossos setup at localhost:9000. Make sure l4_sample exists and is set to public first!"
+                f"Using the already running webknossos at {WK_URL}. Make sure l4_sample exists and is set to public first!",
+                flush=True,
             )
 
         user_req = requests.get(
             f"{WK_URL}/api/user", headers={"X-Auth-Token": WK_TOKEN}
         )
-        if user_req.ok and "user_a@scalableminds.com" in user_req.text:
+        if not user_req.ok or "user_a@scalableminds.com" not in user_req.text:
             print(
-                "The login user user_a@scalableminds.com could not be found or changed."
+                """The login user user_a@scalableminds.com could not be found or changed.
+Please ensure that the test-db is prepared by running this in the webknossos repo
+(⚠️ this overwrites your local webknossos database):
+"tools/postgres/dbtool.js prepare-test-db""",
+                flush=True,
             )
-            print(
-                "Please ensure that the test-db is prepared by running this in the webknossos repo"
-            )
-            print("(⚠️ this overwrites your local webknossos database):")
-            print("tools/postgres/dbtool.js prepare-test-db")
             raise RuntimeError("Login user could not be found or changed.")
 
         requests.post(
@@ -145,7 +147,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
 
     proxay_process = None
     try:
-        print(f"Starting proxay with command: {cmd} {quiet=}")
+        print(f"Starting proxay with command: {cmd} {quiet=}", flush=True)
         if quiet:
             proxay_process = subprocess.Popen(
                 cmd,
@@ -162,7 +164,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
         yield
     finally:
         if proxay_process is not None:
-            print("Terminating proxay")
+            print("Terminating proxay", flush=True)
             proxay_process.terminate()
             proxay_process.wait(5)
             proxay_process.kill()
