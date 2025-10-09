@@ -245,7 +245,6 @@ nav:
         - webknossos-py/examples/download_tiff_stack.md
         - webknossos-py/examples/remote_datasets.md
         - webknossos-py/examples/convert_4d_tiff.md
-        - webknossos-py/examples/announce_dataset_upload.md
         - webknossos-py/examples/accessing_metadata.md
         - webknossos-py/examples/explore_and_add_remote.md
         - webknossos-py/examples/upload_to_webknossos.md
