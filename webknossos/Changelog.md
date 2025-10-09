@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378) 
 
 ### Fixed
 
