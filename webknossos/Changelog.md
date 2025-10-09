@@ -28,6 +28,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Refactored the architecture, by introducing RemoteLayers, RemoteSegmentationLayers and their abstract base classes. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- Updated the api version of the webknossos-api to 12. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 
 ### Fixed
 

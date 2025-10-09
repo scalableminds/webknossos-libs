@@ -103,7 +103,7 @@ def upload_dataset(
             total_file_count=len(file_infos),
             total_file_size_in_bytes=total_file_size,
             layers_to_link=[
-                layer.as_api_linked_layer_identifier_legacy()
+                layer._as_api_linked_layer_identifier()
                 for layer in layers_to_link
             ],
             folder_id=None,

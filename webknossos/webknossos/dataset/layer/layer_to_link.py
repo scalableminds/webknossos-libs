@@ -18,19 +18,9 @@ class LayerToLink(NamedTuple):
         None  # defaults to the user's organization before uploading
     )
 
-    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
+    def _as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
         assert self.dataset_id is not None, f"The dataset id is not set: {self}"
         return ApiLinkedLayerIdentifier(
-            self.dataset_id,
-            self.layer_name,
-            self.new_layer_name,
-        )
-
-    def as_api_linked_layer_identifier_legacy(self) -> ApiLinkedLayerIdentifierLegacy:
-        context = _get_context()
-        return ApiLinkedLayerIdentifierLegacy(
-            self.organization_id or context.organization_id,
-            #  webknossos checks for id too, if the name cannot be found
             self.dataset_id,
             self.layer_name,
             self.new_layer_name,

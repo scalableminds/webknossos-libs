@@ -177,7 +177,7 @@ class ApiReserveDatasetUploadInformation:
     total_file_count: int
     total_file_size_in_bytes: int
     initial_teams: list[str]
-    layers_to_link: list[ApiLinkedLayerIdentifierLegacy] | None = None
+    layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
     folder_id: str | None = None
 
 

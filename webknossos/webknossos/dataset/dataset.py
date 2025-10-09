@@ -647,7 +647,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     require_unique_name=require_unique_name,
                     data_source=self._properties,
                     layers_to_link=[
-                        layer_to_link.as_api_linked_layer_identifier()
+                        layer_to_link._as_api_linked_layer_identifier()
                         for layer_to_link in converted_layers_to_link
                     ]
                     if converted_layers_to_link
