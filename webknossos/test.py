@@ -215,7 +215,7 @@ def main(snapshot: Literal["refresh", "add"] | None, args: list[str]) -> None:
         with proxay("record", quiet=False), local_test_wk():
             subprocess.check_call(pytest_cmd + ["-m", "use_proxay"] + args)
     else:
-        with proxay("replay", quiet=True):
+        with proxay("replay", quiet=False):
             subprocess.check_call(pytest_cmd + ["--timeout=360"] + args)
 
 
