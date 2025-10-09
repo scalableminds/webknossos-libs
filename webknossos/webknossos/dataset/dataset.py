@@ -8,7 +8,7 @@ from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast, Mapping
 
 import attr
 import numpy as np
@@ -733,6 +733,19 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                             progress_desc=f"copying attachment {src_attachment.path} to {dst_attachment.path}",
                         )
 
+    @staticmethod
+    def get_remote_datasets(
+            *,
+            organization_id: str | None = None,
+            tags: str | Sequence[str] | None = None,
+            name: str | None = None,
+            folder_id: RemoteFolder | str | None = None,
+    ) -> Mapping[str, "RemoteDataset"]:
+        warn_deprecated("Dataset.get_remote_datasets", "RemoteDataset.list")
+        from webknossos import RemoteDataset
+
+        return RemoteDataset.list(organization_id, tags, name, folder_id)
+
     @classmethod
     def trigger_reload_in_datastore(
         cls,
@@ -744,70 +757,23 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         token: str | None = None,
         datastore_url: str | None = None,
     ) -> None:
-        """Trigger a manual reload of the dataset's properties.
-
-        For manually uploaded datasets, properties are normally updated automatically
-        after a few minutes. This method forces an immediate reload.
-
-        This is typically only needed after manual changes to the dataset's files.
-        Cannot be used for local datasets.
-
-        Args:
-            dataset_name_or_url: Name or URL of dataset to reload
-            dataset_id: ID of dataset to reload
-            organization_id: Organization ID where dataset is located
-            datastore_url: Optional URL to the datastore
-            webknossos_url: Optional URL to the webknossos server
-            token: Optional authentication token
-
-        Examples:
-            ```
-            # Force reload after manual file changes
-            Dataset.trigger_reload_in_datastore(
-                "my_dataset",
-                "organization_id"
-            )
-            ```
-        """
-
-        from ..client._upload_dataset import _cached_get_upload_datastore
-        from ..client.context import _get_context
-
-        if organization is not None:
-            warn_deprecated("organization", "organization_id")
-            if organization_id is None:
-                organization_id = organization
-            else:
-                raise ValueError(
-                    "Both organization and organization_id were provided. Only one is allowed."
-                )
-
-        (context_manager, dataset_id, _) = cls._parse_remote(
-            dataset_name_or_url,
-            organization_id,
-            None,
-            webknossos_url,
-            dataset_id,
+        warn_deprecated("Dataset.trigger_reload_in_datastore", "RemoteDataset.trigger_reload_in_datastore")
+        RemoteDataset.trigger_reload_in_datastore(
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
+            organization=organization,
+            token=token,
+            datastore_url=datastore_url,
         )
-
-        with context_manager:
-            context = _get_context()
-            datastore_url = datastore_url or _cached_get_upload_datastore(context)
-            organization_id = organization_id or context.organization_id
-
-            datastore_api = context.get_datastore_api_client(
-                datastore_url, require_auth=True
-            )
-            datastore_api.dataset_trigger_reload(
-                organization_id=organization_id, dataset_id=dataset_id, token=token
-            )
 
     @classmethod
     def trigger_dataset_import(
         cls, directory_name: str, organization: str, token: str | None = None
     ) -> None:
         """Deprecated. Use `Dataset.trigger_reload_in_datastore` instead."""
-        warn_deprecated("trigger_dataset_import", "trigger_reload_in_datastore")
+        warn_deprecated("trigger_dataset_import", "RemoteDataset.trigger_reload_in_datastore")
 
         cls.trigger_reload_in_datastore(
             dataset_name_or_url=directory_name,

@@ -1,4 +1,6 @@
+import inspect
 import logging
+import warnings
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from os import PathLike
@@ -15,7 +17,7 @@ from webknossos.client.api_client.models import (
     ApiUnusableDataSource,
 )
 from webknossos.dataset._metadata import DatasetMetadata
-from webknossos.dataset.abstract_dataset import AbstractDataset
+from webknossos.dataset.abstract_dataset import AbstractDataset, _DATASET_URL_REGEX, _DATASET_DEPRECATED_URL_REGEX
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
 from webknossos.dataset_properties import (
     DatasetProperties,
@@ -23,6 +25,7 @@ from webknossos.dataset_properties import (
 from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
+from ..client.api_client.errors import UnexpectedStatusError
 
 from ..ssl_context import SSL_CONTEXT
 from .remote_dataset_registry import RemoteDatasetRegistry
@@ -287,47 +290,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             "%B %d, %Y %I:%M:%S"
         )
 
-    @classmethod
-    def explore_and_add_remote(
-        cls, dataset_uri: str | PathLike, dataset_name: str, folder_path: str
-    ) -> "RemoteDataset":
-        """Explore and add an external dataset as a remote dataset.
 
-        Adds a dataset from an external location (e.g. S3, Google Cloud Storage, or HTTPs) to WEBKNOSSOS by inspecting
-        its layout and metadata without copying the data.
-
-        Args:
-            dataset_uri: URI pointing to the remote dataset location
-            dataset_name: Name to register dataset under in WEBKNOSSOS
-            folder_path: Path in WEBKNOSSOS folder structure where dataset should appear
-
-        Returns:
-            RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
-
-        Examples:
-            ```
-            remote = Dataset.explore_and_add_remote(
-                "s3://bucket/dataset",
-                "my_dataset",
-                "Datasets/Research"
-            )
-            ```
-
-        Note:
-            The dataset files must be accessible from the WEBKNOSSOS server
-            for this to work. The data will be streamed through webknossos from the source.
-        """
-        from ..client.context import _get_context
-
-        context = _get_context()
-        dataset = ApiDatasetExploreAndAddRemote(
-            UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
-        )
-        context.api_client_with_auth.dataset_explore_and_add_remote(dataset=dataset)
-
-        return cls.open(
-            dataset_name_or_url=dataset_name, organization_id=context.organization_id
-        )
 
     def _get_dataset_info(self) -> ApiDataset:
         from ..client.context import _get_api_client
@@ -762,4 +725,231 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         return RemoteDatasetRegistry(
             name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
+        )
+
+    @classmethod
+    def _disambiguate_remote(
+            cls,
+            dataset_name: str,
+            organization_id: str,
+    ) -> str:
+        from webknossos import RemoteDataset
+
+        from ..client.context import _get_context
+
+        current_context = _get_context()
+        possible_ids = list(
+            RemoteDataset.list(
+                name=dataset_name, organization_id=organization_id
+            ).keys()
+        )
+        if len(possible_ids) == 0:
+            try:
+                dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
+                    directory_name=dataset_name, organization_id=organization_id
+                )
+                possible_ids.append(dataset_id)
+            except UnexpectedStatusError:
+                raise ValueError(
+                    f"Dataset with name {dataset_name} not found in organization {organization_id}"
+                )
+        elif len(possible_ids) > 1:
+            logger.warning(
+                f"There are several datasets with same name '{dataset_name}' available online. Opened dataset with ID {possible_ids[0]}. "
+                "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
+                "of your datasets with `Dataset.get_remote_datasets(name=<dataset_name>)."
+            )
+        return possible_ids[0]
+
+    @classmethod
+    def _parse_remote(
+            cls,
+            dataset_name_or_url: str | None = None,
+            organization_id: str | None = None,
+            sharing_token: str | None = None,
+            webknossos_url: str | None = None,
+            dataset_id: str | None = None,
+    ) -> tuple["webknossos_context", str, str | None]:
+        """Parses the given arguments to
+        * context_manager that should be entered,
+        * dataset_id,
+        """
+        from ..client._resolve_short_link import resolve_short_link
+        from ..client.context import _get_context, webknossos_context
+
+        caller = inspect.stack()[1].function
+        current_context = _get_context()
+
+        if dataset_id is None:
+            assert dataset_name_or_url is not None, (
+                f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
+            )
+            dataset_name_or_url = resolve_short_link(dataset_name_or_url)
+
+            match = _DATASET_URL_REGEX.match(dataset_name_or_url)
+            deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
+            if match is not None:
+                assert (
+                        organization_id is None
+                        and sharing_token is None
+                        and webknossos_url is None
+                ), (
+                        f"When Dataset.{caller}() is called with an url, "
+                        + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                        + "organization_id, sharing_token and webknossos_url must not be set."
+                )
+                dataset_id = match.group("dataset_id")
+                sharing_token = match.group("sharing_token")
+                webknossos_url = match.group("webknossos_url")
+                assert dataset_id is not None
+            elif deprecated_match is not None:
+                assert (
+                        organization_id is None
+                        and sharing_token is None
+                        and webknossos_url is None
+                ), (
+                        f"When Dataset.{caller}() is called with an url, "
+                        + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                        + "organization_id, sharing_token and webknossos_url must not be set."
+                )
+                dataset_name = deprecated_match.group("dataset_name")
+                organization_id = deprecated_match.group("organization_id")
+                sharing_token = deprecated_match.group("sharing_token")
+                webknossos_url = deprecated_match.group("webknossos_url")
+
+                assert organization_id is not None
+                assert dataset_name is not None
+
+                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+            else:
+                dataset_name = dataset_name_or_url
+                organization_id = organization_id or current_context.organization_id
+
+                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+
+        if webknossos_url is None:
+            webknossos_url = current_context.url
+        webknossos_url = webknossos_url.rstrip("/")
+        context_manager = webknossos_context(
+            webknossos_url, token=sharing_token or current_context.token
+        )
+        if webknossos_url != current_context.url:
+            if sharing_token is None:
+                warnings.warn(
+                    f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
+                    + f"Using no token, only public datasets can used with Dataset.{caller}(). "
+                    + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
+                )
+                context_manager = webknossos_context(webknossos_url, None)
+        return (context_manager, dataset_id, sharing_token)
+
+    @classmethod
+    def trigger_reload_in_datastore(
+            cls,
+            dataset_name_or_url: str | None = None,
+            organization_id: str | None = None,
+            webknossos_url: str | None = None,
+            dataset_id: str | None = None,
+            organization: str | None = None,
+            token: str | None = None,
+            datastore_url: str | None = None,
+    ) -> None:
+        """Trigger a manual reload of the dataset's properties.
+
+        For manually uploaded datasets, properties are normally updated automatically
+        after a few minutes. This method forces an immediate reload.
+
+        This is typically only needed after manual changes to the dataset's files.
+        Cannot be used for local datasets.
+
+        Args:
+            dataset_name_or_url: Name or URL of dataset to reload
+            dataset_id: ID of dataset to reload
+            organization_id: Organization ID where dataset is located
+            datastore_url: Optional URL to the datastore
+            webknossos_url: Optional URL to the webknossos server
+            token: Optional authentication token
+
+        Examples:
+            ```
+            # Force reload after manual file changes
+            Dataset.trigger_reload_in_datastore(
+                "my_dataset",
+                "organization_id"
+            )
+            ```
+        """
+
+        from ..client._upload_dataset import _cached_get_upload_datastore
+        from ..client.context import _get_context
+
+        if organization is not None:
+            warn_deprecated("organization", "organization_id")
+            if organization_id is None:
+                organization_id = organization
+            else:
+                raise ValueError(
+                    "Both organization and organization_id were provided. Only one is allowed."
+                )
+
+        (context_manager, dataset_id, _) = cls._parse_remote(
+            dataset_name_or_url,
+            organization_id,
+            None,
+            webknossos_url,
+            dataset_id,
+        )
+
+        with context_manager:
+            context = _get_context()
+            datastore_url = datastore_url or _cached_get_upload_datastore(context)
+            organization_id = organization_id or context.organization_id
+
+            datastore_api = context.get_datastore_api_client(
+                datastore_url, require_auth=True
+            )
+            datastore_api.dataset_trigger_reload(
+                organization_id=organization_id, dataset_id=dataset_id, token=token
+            )
+
+    @classmethod
+    def explore_and_add_remote(
+            cls, dataset_uri: str | PathLike, dataset_name: str, folder_path: str
+    ) -> "RemoteDataset":
+        """Explore and add an external dataset as a remote dataset.
+
+        Adds a dataset from an external location (e.g. S3, Google Cloud Storage, or HTTPs) to WEBKNOSSOS by inspecting
+        its layout and metadata without copying the data.
+
+        Args:
+            dataset_uri: URI pointing to the remote dataset location
+            dataset_name: Name to register dataset under in WEBKNOSSOS
+            folder_path: Path in WEBKNOSSOS folder structure where dataset should appear
+
+        Returns:
+            RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
+
+        Examples:
+            ```
+            remote = Dataset.explore_and_add_remote(
+                "s3://bucket/dataset",
+                "my_dataset",
+                "Datasets/Research"
+            )
+            ```
+
+        Note:
+            The dataset files must be accessible from the WEBKNOSSOS server
+            for this to work. The data will be streamed through webknossos from the source.
+        """
+        from ..client.context import _get_context
+
+        context = _get_context()
+        dataset = ApiDatasetExploreAndAddRemote(
+            UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+        )
+        context.api_client_with_auth.dataset_explore_and_add_remote(dataset=dataset)
+
+        return cls.open(
+            dataset_name_or_url=dataset_name, organization_id=context.organization_id
         )

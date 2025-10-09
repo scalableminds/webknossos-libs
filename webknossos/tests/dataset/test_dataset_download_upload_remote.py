@@ -187,7 +187,7 @@ def test_upload_download_roundtrip(tmp_path: Path) -> None:
     uploaded_dataset = ds_original.upload(
         new_dataset_name="test_upload_download_roundtrip"
     )
-    wk.Dataset.trigger_reload_in_datastore(
+    wk.RemoteDataset.trigger_reload_in_datastore(
         "test_upload_download_roundtrip", "Organization_X"
     )
     ds_roundtrip = wk.RemoteDataset.open(uploaded_dataset.url).download(

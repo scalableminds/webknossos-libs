@@ -148,7 +148,7 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         self._last_read_properties = copy.deepcopy(self._properties)
 
     @property
-    def layers(self) -> dict[str, LayerType]:
+    def layers(self) -> Mapping[str, LayerType]:
         """Dictionary containing all layers of this dataset.
 
         Returns:
@@ -381,134 +381,6 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
             dataset_bbox = dataset_bbox.extended_by(bbox)
         return dataset_bbox
 
-    @staticmethod
-    def get_remote_datasets(
-        *,
-        organization_id: str | None = None,
-        tags: str | Sequence[str] | None = None,
-        name: str | None = None,
-        folder_id: RemoteFolder | str | None = None,
-    ) -> Mapping[str, "RemoteDataset"]:
-        warn_deprecated("Dataset.get_remote_datasets", "RemoteDataset.list")
-        from webknossos import RemoteDataset
-
-        return RemoteDataset.list(organization_id, tags, name, folder_id)
-
-    @classmethod
-    def _disambiguate_remote(
-        cls,
-        dataset_name: str,
-        organization_id: str,
-    ) -> str:
-        from webknossos import RemoteDataset
-
-        from ..client.context import _get_context
-
-        current_context = _get_context()
-        possible_ids = list(
-            RemoteDataset.list(
-                name=dataset_name, organization_id=organization_id
-            ).keys()
-        )
-        if len(possible_ids) == 0:
-            try:
-                dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
-                    directory_name=dataset_name, organization_id=organization_id
-                )
-                possible_ids.append(dataset_id)
-            except UnexpectedStatusError:
-                raise ValueError(
-                    f"Dataset with name {dataset_name} not found in organization {organization_id}"
-                )
-        elif len(possible_ids) > 1:
-            logger.warning(
-                f"There are several datasets with same name '{dataset_name}' available online. Opened dataset with ID {possible_ids[0]}. "
-                "If this is not the correct dataset, please provide the dataset ID. You can get the dataset IDs "
-                "of your datasets with `Dataset.get_remote_datasets(name=<dataset_name>)."
-            )
-        return possible_ids[0]
-
-    @classmethod
-    def _parse_remote(
-        cls,
-        dataset_name_or_url: str | None = None,
-        organization_id: str | None = None,
-        sharing_token: str | None = None,
-        webknossos_url: str | None = None,
-        dataset_id: str | None = None,
-    ) -> tuple["webknossos_context", str, str | None]:
-        """Parses the given arguments to
-        * context_manager that should be entered,
-        * dataset_id,
-        """
-        from ..client._resolve_short_link import resolve_short_link
-        from ..client.context import _get_context, webknossos_context
-
-        caller = inspect.stack()[1].function
-        current_context = _get_context()
-
-        if dataset_id is None:
-            assert dataset_name_or_url is not None, (
-                f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
-            )
-            dataset_name_or_url = resolve_short_link(dataset_name_or_url)
-
-            match = _DATASET_URL_REGEX.match(dataset_name_or_url)
-            deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
-            if match is not None:
-                assert (
-                    organization_id is None
-                    and sharing_token is None
-                    and webknossos_url is None
-                ), (
-                    f"When Dataset.{caller}() is called with an url, "
-                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                    + "organization_id, sharing_token and webknossos_url must not be set."
-                )
-                dataset_id = match.group("dataset_id")
-                sharing_token = match.group("sharing_token")
-                webknossos_url = match.group("webknossos_url")
-                assert dataset_id is not None
-            elif deprecated_match is not None:
-                assert (
-                    organization_id is None
-                    and sharing_token is None
-                    and webknossos_url is None
-                ), (
-                    f"When Dataset.{caller}() is called with an url, "
-                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                    + "organization_id, sharing_token and webknossos_url must not be set."
-                )
-                dataset_name = deprecated_match.group("dataset_name")
-                organization_id = deprecated_match.group("organization_id")
-                sharing_token = deprecated_match.group("sharing_token")
-                webknossos_url = deprecated_match.group("webknossos_url")
-
-                assert organization_id is not None
-                assert dataset_name is not None
-
-                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
-            else:
-                dataset_name = dataset_name_or_url
-                organization_id = organization_id or current_context.organization_id
-
-                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
-
-        if webknossos_url is None:
-            webknossos_url = current_context.url
-        webknossos_url = webknossos_url.rstrip("/")
-        context_manager = webknossos_context(
-            webknossos_url, token=sharing_token or current_context.token
-        )
-        if webknossos_url != current_context.url:
-            if sharing_token is None:
-                warnings.warn(
-                    f"[INFO] The supplied url {webknossos_url} does not match your current context {current_context.url}. "
-                    + f"Using no token, only public datasets can used with Dataset.{caller}(). "
-                    + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
-                )
-                context_manager = webknossos_context(webknossos_url, None)
-        return (context_manager, dataset_id, sharing_token)
 
     @staticmethod
     def _load_dataset_properties_from_path(dataset_path: UPath) -> DatasetProperties:
