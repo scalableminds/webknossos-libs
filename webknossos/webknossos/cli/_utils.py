@@ -1,8 +1,8 @@
 """Utilities to work with the CLI of webknossos."""
 
-from collections import namedtuple
 from enum import Enum
 from os import environ
+from typing import NamedTuple
 
 import numpy as np
 from upath import UPath
@@ -10,8 +10,21 @@ from upath import UPath
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 
-VoxelSizeTuple = namedtuple("VoxelSizeTuple", ("x", "y", "z"))
-Vec2Int = namedtuple("Vec2Int", ("x", "y"))
+
+class VoxelSizeTuple(NamedTuple):
+    x: float
+    y: float
+    z: float
+
+
+class RescaleValues(NamedTuple):
+    min: float
+    max: float
+
+
+class Vec2Int(NamedTuple):
+    x: int
+    y: int
 
 
 class DistributionStrategy(str, Enum):
@@ -76,6 +89,22 @@ def parse_voxel_size(voxel_size_str: str) -> tuple[float, float, float]:
         raise ValueError(
             "The value could not be parsed to VoxelSize. "
             "Please format the voxel size like 1.0,1.0,2.0 ."
+        ) from err
+
+
+def parse_rescale_values(rescale_str: str) -> RescaleValues:
+    """Parses str input to tuple of two floats."""
+    try:
+        result = tuple(float(x) for x in rescale_str.split(","))
+        if len(result) == 2:
+            return RescaleValues(*result)
+        raise ValueError(
+            f"Expected two values formatted like: 1.0,2.0 but got: {rescale_str}"
+        )
+    except Exception as err:
+        raise ValueError(
+            "The value could not be parsed to RescaleValues. "
+            "Please format the voxel size like 1.0,2.0 ."
         ) from err
 
 

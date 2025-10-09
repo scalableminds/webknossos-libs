@@ -61,7 +61,7 @@ from .sampling_modes import SamplingModes
 if TYPE_CHECKING:
     import pims
 
-    from ..administration.user import Team
+    from ..administration.team import Team
     from ..client._upload_dataset import LayerToLink
     from ..client.context import webknossos_context
 
@@ -2890,6 +2890,8 @@ class Dataset:
         *,
         sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
         coarsest_mag: Mag | None = None,
+        interpolation_mode: str = "default",
+        compress: bool | Zarr3Config = True,
         executor: Executor | None = None,
     ) -> None:
         """Generate downsampled magnifications for all layers.
@@ -2900,6 +2902,8 @@ class Dataset:
         Args:
             sampling_mode: Strategy for downsampling (e.g. ANISOTROPIC, MAX)
             coarsest_mag: Optional maximum/coarsest magnification to generate
+            interpolation_mode: Interpolation method to use. Defaults to "default" (= "mode" for segmentation, "median" for color).
+            compress: Whether to compress generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             executor: Optional executor for parallel processing
 
         Raises:
@@ -2928,6 +2932,8 @@ class Dataset:
             layer.downsample(
                 coarsest_mag=coarsest_mag,
                 sampling_mode=sampling_mode,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
                 executor=executor,
             )
 
@@ -3462,7 +3468,7 @@ class RemoteDataset(Dataset):
             - An empty list makes the dataset private
         """
 
-        from ..administration.user import Team
+        from ..administration.team import Team
 
         return tuple(
             Team(id=i.id, name=i.name, organization_id=i.organization)
@@ -3472,7 +3478,7 @@ class RemoteDataset(Dataset):
     @allowed_teams.setter
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
         """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
-        from ..administration.user import Team
+        from ..administration.team import Team
         from ..client.context import _get_api_client
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]

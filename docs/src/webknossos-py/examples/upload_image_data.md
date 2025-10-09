@@ -9,3 +9,6 @@ webknossos/examples/upload_image_data.py
 ```
 
 ![Cell Dataset uploaded to WEBKNOSSOS](./upload_image_data_dataset.jpg)
+/// caption
+Cell Dataset uploaded to WEBKNOSSOS
+///

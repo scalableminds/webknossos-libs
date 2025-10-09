@@ -14,6 +14,7 @@ from typing import (
     TypeVar,
     cast,
 )
+from warnings import warn
 from weakref import ReferenceType, ref
 
 from typing_extensions import ParamSpec
@@ -116,6 +117,12 @@ class DaskExecutor(futures.Executor):
                 'The distributed Python package for Dask is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[dask]` or `uv sync --extra "dask"` to install Dask support.'
             )
             exit()
+
+        warn(
+            "Dask support is deprecated and will be removed in a future version.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
 
         self.client = client
         self.pending_futures = set()

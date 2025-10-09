@@ -8,6 +8,7 @@ from concurrent.futures import Future
 from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
+from warnings import warn
 
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
@@ -57,6 +58,12 @@ class KubernetesExecutor(ClusterExecutor):
                 'The Kubernetes Python package is not installed. cluster_tools does not install this dependency be default. Run `pip install cluster_tools[kubernetes]` or `uv sync --extra "kubernetes"` to install Kubernetes support.'
             )
             exit()
+
+        warn(
+            "Kubernetes support is deprecated and will be removed in a future version.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
 
         super().__init__(
             debug=debug,

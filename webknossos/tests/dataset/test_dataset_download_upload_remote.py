@@ -135,6 +135,29 @@ def test_remote_dataset(tmp_path: Path) -> None:
     assert remote_ds.folder.name == "A subfolder!"
 
 
+def test_folders_and_teams() -> None:
+    folder_name = "test_folder"
+    team_name = "test_team"
+
+    remote_folder = wk.RemoteFolder.get_root().add_subfolder(folder_name)
+    assert remote_folder.name == folder_name
+
+    remote_team = wk.Team.add(team_name)
+    remote_folder.allowed_teams = (remote_team,)
+    assert remote_folder.allowed_teams == (remote_team,)
+
+    remote_folder.name = f"{folder_name}_renamed"
+    assert remote_folder.name == f"{folder_name}_renamed"
+
+    subfolder = remote_folder.add_subfolder(f"{folder_name}_subfolder")
+    assert remote_folder.get_subfolders() == (subfolder,)
+    subfolder.delete()
+    assert remote_folder.get_subfolders() == ()
+
+    remote_folder.delete()
+    remote_team.delete()
+
+
 def test_upload_download_roundtrip(tmp_path: Path) -> None:
     ds_original = get_sample_dataset(tmp_path)
     uploaded_dataset = ds_original.upload(
