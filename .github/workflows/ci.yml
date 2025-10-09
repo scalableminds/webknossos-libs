@@ -228,7 +228,6 @@ jobs:
 
       - name: Python tests
         timeout-minutes: 30
-        shell: bash
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
