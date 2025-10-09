@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
 
 ### Breaking Changes
+- Removed Docker image `scalableminds/webknossos-cli` build. It will not be released further. [#1376](https://github.com/scalableminds/webknossos-libs/pull/1376)
 
 ### Added
 
