@@ -17,6 +17,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from .. import RemoteSegmentationLayer
 from ..client.api_client.models import (
     ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
@@ -1948,7 +1949,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_as_copy(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | Path | Layer | RemoteLayer,
         new_layer_name: str | None = None,
         *,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2050,7 +2051,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         if (
             with_attachments
             and isinstance(layer, SegmentationLayer)
-            and isinstance(foreign_layer, SegmentationLayer)
+            and isinstance(foreign_layer, SegmentationLayer | RemoteSegmentationLayer)
         ):
             for attachment in foreign_layer.attachments:
                 layer.attachments.add_attachment_as_copy(attachment)
@@ -2107,7 +2108,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             stacklevel=2,
         )
 
-        foreign_layer = Layer._ensure_layer(foreign_layer)
+        maybe_remote_foreign_layer = Layer._ensure_layer(foreign_layer)
+        if not isinstance(maybe_remote_foreign_layer, Layer):
+            raise TypeError(f"Cannot create symlink to remote layer {foreign_layer}.")
+
+        foreign_layer = maybe_remote_foreign_layer
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
@@ -2222,8 +2227,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
 
         self._ensure_writable()
-        if not isinstance(foreign_layer, RemoteLayer):
-            foreign_layer = Layer._ensure_layer(foreign_layer)
+        foreign_layer = Layer._ensure_layer(foreign_layer)
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
@@ -2241,9 +2245,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_layer.add_mag_as_ref(mag_view, extend_layer_bounding_box=False)
 
         # reference-copy all attachments
-        if isinstance(foreign_layer, SegmentationLayer) and isinstance(
-            new_layer, SegmentationLayer
-        ):
+        if isinstance(
+            foreign_layer, SegmentationLayer | RemoteSegmentationLayer
+        ) and isinstance(new_layer, SegmentationLayer):
             for attachment in foreign_layer.attachments:
                 new_layer.attachments.add_attachment_as_ref(attachment)
         return new_layer
@@ -2263,8 +2267,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
         warn_deprecated("add_fs_copy_layer", "add_layer_as_copy")
         self._ensure_writable()
-        foreign_layer = Layer._ensure_layer(foreign_layer)
+        maybe_remote_foreign_layer = Layer._ensure_layer(foreign_layer)
+        if not isinstance(maybe_remote_foreign_layer, Layer):
+            raise TypeError(f"Cannot create symlink to remote layer {foreign_layer}.")
 
+        foreign_layer = maybe_remote_foreign_layer
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
 

@@ -41,6 +41,7 @@ from .view import (
 
 if TYPE_CHECKING:
     from webknossos.dataset import Dataset
+    from webknossos.dataset.layer import RemoteLayer
 
     from .segmentation_layer import SegmentationLayer
 
@@ -1405,12 +1406,18 @@ class Layer(AbstractLayer):
             raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
 
     @classmethod
-    def _ensure_layer(cls, layer: Union[str, PathLike, "Layer"]) -> "Layer":
-        if isinstance(layer, Layer):
-            return layer
-        else:
-            # local import to prevent circular dependency
-            from webknossos.dataset import Dataset
+    def _ensure_layer(
+        cls, layer: str | PathLike | "Layer" | "RemoteLayer"
+    ) -> Union["Layer", "RemoteLayer"]:
+        # local import to prevent circular dependency
+        from webknossos.dataset import Dataset, RemoteDataset
 
-            layer_path = UPath(layer)
+        if isinstance(layer, Layer | RemoteLayer):
+            return layer
+
+        layer_path = UPath(layer)
+        if is_fs_path(layer_path):
             return Dataset.open(layer_path.parent).get_layer(layer_path.name)
+        else:
+            # Zarr streaming paths behave like regular paths
+            return RemoteDataset.open(str(layer_path.parent)).get_layer(layer_path.name)
