@@ -11,7 +11,6 @@ from webknossos import Annotation, SegmentationLayer
 from webknossos.annotation.volume_layer import VolumeLayerEditMode
 from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.utils import is_fs_path
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 

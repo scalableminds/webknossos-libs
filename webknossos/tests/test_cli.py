@@ -7,7 +7,6 @@ import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from math import ceil
-import sys
 from tempfile import TemporaryDirectory
 
 import numpy as np
